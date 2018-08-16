@@ -11,11 +11,11 @@ from leadgalaxy.models import UserProfile, GroupPlan
 class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
-        self.generate_product_feeds()
-        self.generate_chq_product_feeds()
-
         plan = GroupPlan.objects.get(slug='subuser-plan')
         UserProfile.objects.exclude(subuser_parent=None).exclude(plan=plan).update(plan=plan)
+
+        self.generate_product_feeds()
+        self.generate_chq_product_feeds()
 
     def generate_product_feeds(self):
         an_hour_ago = timezone.now() - datetime.timedelta(hours=1)
@@ -24,6 +24,7 @@ class Command(DropifiedBaseCommand):
         self.stdout.write('Generate {} feeds'.format(len(statuses)))
 
         for status in statuses:
+            self.stdout.write(u'Store Feed: {}'.format(status.store.shop))
             generate_product_feed(status, nocache=True)
 
     def generate_chq_product_feeds(self):
