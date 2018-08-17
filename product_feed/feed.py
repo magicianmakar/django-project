@@ -88,6 +88,10 @@ class ProductFeed():
         if not count:
             return
 
+        if count > 5000:
+            print 'Ignore Feed for ', self.store.shop, 'with', count, 'Products'
+            return
+
         pages = int(ceil(count / float(limit)))
         for page in xrange(1, pages + 1):
             products = get_shopify_products(store=self.store, page=page, limit=limit, all_products=False)
@@ -212,6 +216,10 @@ class CommerceHQProductFeed():
         count = get_chq_products_count(self.store)
 
         if not count:
+            return
+
+        if count > 5000:
+            print 'Ignore Feed for CHQ', self.store.id, 'with', count, 'Products'
             return
 
         pages = int(ceil(count / float(limit)))
