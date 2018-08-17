@@ -25,6 +25,7 @@ from unidecode import unidecode
 from django.conf import settings
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+from django.utils.functional import cached_property
 from django.core.paginator import Paginator
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
@@ -2433,22 +2434,21 @@ class ProductsCollectionPaginator(Paginator):
         rep = self._api_request()
         self._products = rep.get('products', [])
 
-    def _get_product_count(self):
+    @cached_property
+    def count(self):
         """
         Returns the total number of objects, across all pages.
         """
-        if self._count is None:
-            try:
-                rep = self._api_request()
-                self._count = rep.get('count', 0)
-                self._products = rep.get('products')
-            except:
-                raven_client.captureException()
-                self._count = 0
+        try:
+            rep = self._api_request()
+            self._count = rep.get('count', 0)
+            self._products = rep.get('products')
+        except:
+            raven_client.captureException()
+            self._products = []
+            self._count = 0
 
         return self._count
-
-    count = property(_get_product_count)
 
     def _api_request(self):
         params = {

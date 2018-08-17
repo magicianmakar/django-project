@@ -8,6 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache, caches
+from django.utils.functional import cached_property
 
 from unidecode import unidecode
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -556,6 +557,8 @@ class CommerceHQOrdersPaginator(Paginator):
     query_field = 'id'
 
     _products = None
+    _count = None
+    _num_pages = None
 
     def set_size(self, size):
         self.size = size
@@ -624,7 +627,8 @@ class CommerceHQOrdersPaginator(Paginator):
         rep = self._orders_request()
         self._products = rep['items']
 
-    def _get_product_count(self):
+    @cached_property
+    def count(self):
         """
         Returns the total number of objects, across all pages.
         """
@@ -635,17 +639,14 @@ class CommerceHQOrdersPaginator(Paginator):
 
         return self._count
 
-    count = property(_get_product_count)
-
-    def _get_num_pages(self):
+    @cached_property
+    def num_pages(self):
         if self._num_pages is None:
             rep = self._orders_count_request()
             self._count = rep['_meta']['totalCount']
             self._num_pages = rep['_meta']['pageCount']
 
         return self._num_pages
-
-    num_pages = property(_get_num_pages)
 
     def _request_filters(self):
         filters = {
