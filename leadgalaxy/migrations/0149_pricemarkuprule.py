@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 from django.conf import settings
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('markup_value', models.FloatField(default=0.0)),
                 ('markup_compare_value', models.FloatField(default=0.0)),
                 ('markup_type', models.CharField(default=b'margin_percent', max_length=25, choices=[(b'margin_percent', b'Increase by pecenatge'), (b'margin_amount', b'Increase by amount'), (b'fixed_amount', b'Set to fixed amount')])),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
     ]

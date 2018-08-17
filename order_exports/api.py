@@ -10,7 +10,7 @@ from math import ceil
 
 import requests
 from django.db.models.query_utils import Q
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client

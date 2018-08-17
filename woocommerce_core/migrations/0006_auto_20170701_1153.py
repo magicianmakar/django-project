@@ -20,11 +20,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='wooproduct',
             name='store',
-            field=models.ForeignKey(related_name='products', to='woocommerce_core.WooStore', null=True),
+            field=models.ForeignKey(related_name='products', to='woocommerce_core.WooStore', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AlterField(
             model_name='woosupplier',
             name='store',
-            field=models.ForeignKey(related_name='suppliers', to='woocommerce_core.WooStore', null=True),
+            field=models.ForeignKey(related_name='suppliers', to='woocommerce_core.WooStore', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
     ]

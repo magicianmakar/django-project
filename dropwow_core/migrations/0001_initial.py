@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('api_key', models.CharField(max_length=2048)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.OneToOneField(related_name='dropwow_account', to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(related_name='dropwow_account', to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -39,7 +39,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('product', models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, blank=True, to='leadgalaxy.ShopifyProduct', null=True)),
-                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore')),
+                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
     ]

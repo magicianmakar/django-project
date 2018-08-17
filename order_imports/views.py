@@ -2,7 +2,7 @@ import simplejson as json
 
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 

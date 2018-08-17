@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('codename', models.CharField(max_length=100)),
                 ('name', models.CharField(max_length=255)),
-                ('store', models.ForeignKey(related_name='subuser_chq_permissions', to='commercehq_core.CommerceHQStore')),
+                ('store', models.ForeignKey(related_name='subuser_chq_permissions', to='commercehq_core.CommerceHQStore', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ('pk',),

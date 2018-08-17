@@ -59,7 +59,7 @@ class LastSeenManager(models.Manager):
 
 
 class LastSeen(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     module = models.CharField(default=settings.LAST_SEEN_DEFAULT_MODULE, max_length=20)
     last_seen = models.DateTimeField(default=timezone.now)
 

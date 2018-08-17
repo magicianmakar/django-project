@@ -1,7 +1,7 @@
 import json
 
-from django.test import TestCase
-from django.core.urlresolvers import reverse
+from django.test import TransactionTestCase
+from django.urls import reverse
 from django.core.cache import cache
 
 from mock import Mock, patch
@@ -12,7 +12,7 @@ from leadgalaxy.tests.factories import UserFactory
 from analytic_events.models import SuccessfulPaymentEvent
 
 
-class InvoicePayView(TestCase):
+class InvoicePayView(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'

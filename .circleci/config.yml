@@ -8,7 +8,7 @@ jobs:
           DEBUG_APP: "TRUE"
 
           DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/circle_test
-          DATA_STORE_DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/store_test
+          DATA_STORE_DATABASE_URL: ""
 
           REDISCLOUD_URL: redis://localhost:6379
           REDISCLOUD_CACHE: redis://localhost:6379
@@ -101,7 +101,7 @@ jobs:
           command: |
             source venv/bin/activate
             ./scripts/common_issues.sh
-            python manage.py test
+            python manage.py test --noinput --parallel 8
 
       - run:
           name: Static Files

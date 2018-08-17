@@ -1,11 +1,11 @@
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from ..utils import (
     aliexpress_variants,
 )
 
 
-class UtilTestCase(TestCase):
+class UtilTestCase(TransactionTestCase):
     def setUp(self):
         self.product_id = 32825336375
 

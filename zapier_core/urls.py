@@ -7,10 +7,10 @@ router = routers.DefaultRouter()
 router.include_root_view = False
 
 router.register(r'hooks', views.HookViewSet)
-router.register(r'stores/shopify', views.ShopifyStoreViewSet)
-router.register(r'stores/chq', views.CommerceHQStoreViewSet)
-router.register(r'products/shopify', views.ShopifyProductViewSet)
-router.register(r'products/chq', views.CommerceHQProductViewSet)
+router.register(r'stores/shopify', views.ShopifyStoreViewSet, base_name='shopifystore')
+router.register(r'stores/chq', views.CommerceHQStoreViewSet, base_name='commercehqstore')
+router.register(r'products/shopify', views.ShopifyProductViewSet, base_name='shopifyproduct')
+router.register(r'products/chq', views.CommerceHQProductViewSet, base_name='commercehqproduct')
 
 urlpatterns = [
     url(r'^', include(router.urls)),

@@ -49,7 +49,7 @@
             <h3 class="welcome-title">Welcome {{ user.first_name|default:'Back'}}!</h3>
             <p class="welcome-text">Enter your password to login to your account</p>
             {% endif %}
-            <form method="POST" class="m-t" role="form" action="{% url 'django.contrib.auth.views.login' %}">
+            <form method="POST" class="m-t" role="form" action="{% url 'login' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{request.GET.next|default:'/'}}" />
 
@@ -87,7 +87,7 @@
                 <a href="/accounts/password/reset/" class="forgot-password">Forgot password?</a>
                 {% if not target_user %}
                 <p class="text-muted text-center no-account">Don't have an account yet?</p>
-                <a class="big-btn btn btn-info" href="{% url 'leadgalaxy.views.register' %}">Create an account</a>
+                <a class="big-btn btn btn-info" href="{% url 'register' %}">Create an account</a>
                 {% endif %}
             </form>
             {% if not target_user %}

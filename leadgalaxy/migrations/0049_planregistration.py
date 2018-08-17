@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -20,7 +21,7 @@ class Migration(migrations.Migration):
                 ('expired', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name=b'Last update')),
-                ('plan', models.ForeignKey(to='leadgalaxy.GroupPlan')),
+                ('plan', models.ForeignKey(to='leadgalaxy.GroupPlan', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ['-created_at'],

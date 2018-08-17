@@ -87,7 +87,7 @@ class Migration(migrations.Migration):
                 ('store_hash', models.CharField(default=b'', unique=True, max_length=50, editable=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ['-created_at'],
@@ -106,8 +106,8 @@ class Migration(migrations.Migration):
                 ('is_default', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('product', models.ForeignKey(to='commercehq_core.CommerceHQProduct')),
-                ('store', models.ForeignKey(related_name='suppliers', to='commercehq_core.CommerceHQStore')),
+                ('product', models.ForeignKey(to='commercehq_core.CommerceHQProduct', on_delete=django.db.models.deletion.CASCADE)),
+                ('store', models.ForeignKey(related_name='suppliers', to='commercehq_core.CommerceHQStore', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.AddField(
@@ -123,22 +123,22 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='commercehqproduct',
             name='store',
-            field=models.ForeignKey(related_name='products', to='commercehq_core.CommerceHQStore'),
+            field=models.ForeignKey(related_name='products', to='commercehq_core.CommerceHQStore', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='commercehqproduct',
             name='user',
-            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='commercehqordertrack',
             name='store',
-            field=models.ForeignKey(to='commercehq_core.CommerceHQStore', null=True),
+            field=models.ForeignKey(to='commercehq_core.CommerceHQStore', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='commercehqordertrack',
             name='user',
-            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='commercehqboard',
@@ -148,7 +148,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='commercehqboard',
             name='user',
-            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AlterIndexTogether(
             name='commercehqordertrack',

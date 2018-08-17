@@ -295,7 +295,7 @@ def unlock_account_email(username):
     except:
         return False
 
-    from django.core.urlresolvers import reverse
+    from django.urls import reverse
 
     unlock_token = random_hash()
     if cache.get('unlock_email_{}'.format(hash_text(username.lower()))) is not None:

@@ -31,7 +31,7 @@ class StripeCustomer(models.Model):
         verbose_name = "Customer"
         verbose_name_plural = "Customers"
 
-    user = models.OneToOneField(User, related_name='stripe_customer')
+    user = models.OneToOneField(User, related_name='stripe_customer', on_delete=models.CASCADE)
 
     customer_id = models.CharField(max_length=255, null=True, verbose_name='Stripe Customer ID')
     can_trial = models.BooleanField(default=True, verbose_name='Can have trial')
@@ -130,7 +130,7 @@ class StripePlan(models.Model):
         verbose_name_plural = "Plans"
 
     name = models.CharField(max_length=150)
-    plan = models.OneToOneField(GroupPlan, null=True, related_name='stripe_plan')
+    plan = models.OneToOneField(GroupPlan, null=True, related_name='stripe_plan', on_delete=models.CASCADE)
 
     amount = models.DecimalField(decimal_places=2, max_digits=9, verbose_name='Amount(in USD)')
     currency = models.CharField(max_length=15, default='usd')
@@ -186,8 +186,8 @@ class StripeSubscription(models.Model):
         verbose_name_plural = "Subscriptions"
         get_latest_by = 'created_at'
 
-    user = models.ForeignKey(User)
-    plan = models.ForeignKey(GroupPlan)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    plan = models.ForeignKey(GroupPlan, on_delete=models.CASCADE)
 
     subscription_id = models.CharField(max_length=255, unique=True, editable=False, verbose_name='Stripe Subscription ID')
     status = models.CharField(null=True, blank=True, max_length=64, editable=False, verbose_name='Subscription Status')
@@ -268,8 +268,8 @@ class ExtraStore(models.Model):
         verbose_name = "Extra Store"
         verbose_name_plural = "Extra Stores"
 
-    user = models.ForeignKey(User)
-    store = models.ForeignKey(ShopifyStore)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
 
     status = models.CharField(max_length=64, null=True, blank=True, default='pending')
     period_start = models.DateTimeField(null=True)
@@ -288,8 +288,8 @@ class ExtraCHQStore(models.Model):
         verbose_name = "Extra CHQ Store"
         verbose_name_plural = "Extra CHQ Stores"
 
-    user = models.ForeignKey(User)
-    store = models.ForeignKey(CommerceHQStore)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(CommerceHQStore, on_delete=models.CASCADE)
 
     status = models.CharField(max_length=64, null=True, blank=True, default='pending')
     period_start = models.DateTimeField(null=True)

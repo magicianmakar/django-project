@@ -33,12 +33,12 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='productsupplier',
             name='product',
-            field=models.ForeignKey(to='leadgalaxy.ShopifyProduct'),
+            field=models.ForeignKey(to='leadgalaxy.ShopifyProduct', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='productsupplier',
             name='store',
-            field=models.ForeignKey(to='leadgalaxy.ShopifyStore', null=True),
+            field=models.ForeignKey(to='leadgalaxy.ShopifyStore', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='shopifyproduct',

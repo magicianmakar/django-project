@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -14,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='plan',
-            field=models.ForeignKey(to='leadgalaxy.GroupPlan'),
+            field=models.ForeignKey(to='leadgalaxy.GroupPlan', on_delete=django.db.models.deletion.CASCADE),
             preserve_default=False,
         ),
     ]

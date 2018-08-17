@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 from django.conf import settings
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -23,8 +23,8 @@ class Migration(migrations.Migration):
                 ('period_end', models.DateTimeField(null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'verbose_name': 'Extra Store',

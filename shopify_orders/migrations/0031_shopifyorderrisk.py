@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('order_id', models.BigIntegerField()),
                 ('data', models.TextField(null=True, blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore')),
+                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
     ]

@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(null=True, blank=True)),
                 ('fb_access_at', models.DateTimeField(null=True, verbose_name=b'Last Facebook Access', blank=True)),
-                ('store', models.OneToOneField(related_name='feedstatus', to='woocommerce_core.WooStore')),
+                ('store', models.OneToOneField(related_name='feedstatus', to='woocommerce_core.WooStore', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'verbose_name': 'WooCommerce Feed Status',

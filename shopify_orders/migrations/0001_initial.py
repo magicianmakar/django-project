@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 from django.conf import settings
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -32,8 +32,8 @@ class Migration(migrations.Migration):
                 ('country_code', models.CharField(default=b'', max_length=32, blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('store', models.ForeignKey(related_name='store', to='leadgalaxy.ShopifyStore')),
-                ('user', models.ForeignKey(related_name='user', to=settings.AUTH_USER_MODEL)),
+                ('store', models.ForeignKey(related_name='store', to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.ForeignKey(related_name='user', to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ['-created_at'],
@@ -50,8 +50,8 @@ class Migration(migrations.Migration):
                 ('quantity', models.IntegerField()),
                 ('variant_id', models.BigIntegerField()),
                 ('variant_title', models.CharField(default=b'', max_length=64, blank=True)),
-                ('order', models.ForeignKey(to='shopify_orders.ShopifyOrder')),
-                ('product', models.ForeignKey(to='leadgalaxy.ShopifyProduct', null=True)),
+                ('order', models.ForeignKey(to='shopify_orders.ShopifyOrder', on_delete=django.db.models.deletion.CASCADE)),
+                ('product', models.ForeignKey(to='leadgalaxy.ShopifyProduct', null=True, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -62,7 +62,7 @@ class Migration(migrations.Migration):
                 ('sync_status', models.IntegerField(default=0, choices=[(0, b'Pending'), (1, b'Started'), (2, b'Completed'), (3, b'Unauthorized'), (4, b'Error')])),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore')),
+                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.AlterUniqueTogether(

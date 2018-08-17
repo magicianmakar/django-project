@@ -8,10 +8,5 @@ if [ "$?" == "0" ]; then
     exit -1
 fi
 
-python manage.py makemigrations | grep 'No changes detected'
+python manage.py makemigrations 
 
-if [ ! "$?" == "0" ]; then
-    echo
-    echo "[-] Your models have changes that are not yet reflected in a migration, run: manage.py makemigrations"
-    exit -2
-fi

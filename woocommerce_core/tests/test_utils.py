@@ -2,7 +2,7 @@ import json
 
 from mock import patch, Mock
 
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from ..utils import WooListQuery, woo_customer_address
 from .factories import WooStoreFactory, WooProductFactory
@@ -10,7 +10,7 @@ from .factories import WooStoreFactory, WooProductFactory
 from shopified_core.utils import hash_url_filename, update_product_data_images
 
 
-class WooListQueryTest(TestCase):
+class WooListQueryTest(TransactionTestCase):
     def setUp(self):
         self.response = Mock()
         self.response.raise_for_status = Mock(return_value=None)
@@ -47,7 +47,7 @@ class WooListQueryTest(TestCase):
             get.assert_called_once()
 
 
-class WooCommerceAddressTest(TestCase):
+class WooCommerceAddressTest(TransactionTestCase):
     def setUp(self):
         self.order = {
             'shipping': {
@@ -79,7 +79,7 @@ class WooCommerceAddressTest(TestCase):
             self.assertEqual(value, '')
 
 
-class UpdateProductDataImageVariantsTestCase(TestCase):
+class UpdateProductDataImageVariantsTestCase(TransactionTestCase):
     def setUp(self):
         self.old_url = 'https://example.com/example.png'
         self.new_url = 'https://example.com/new-image.png'

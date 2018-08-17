@@ -2227,7 +2227,7 @@ class TimezoneMiddleware(object):
     def process_request(self, request):
         tzname = request.session.get('django_timezone')
         if not tzname:
-            if request.user.is_authenticated():
+            if request.user.is_authenticated:
                 tzname = request.user.profile.timezone
                 request.session['django_timezone'] = request.user.profile.timezone
 
@@ -2240,7 +2240,7 @@ class TimezoneMiddleware(object):
 class UserIpSaverMiddleware(object):
 
     def process_request(self, request):
-        if request.user.is_authenticated() and not request.session.get('is_hijacked_user'):
+        if request.user.is_authenticated and not request.session.get('is_hijacked_user'):
             save_user_ip(request)
 
 

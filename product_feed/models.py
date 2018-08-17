@@ -44,7 +44,7 @@ class FeedStatusAbstract(models.Model):
 
 
 class FeedStatus(FeedStatusAbstract):
-    store = models.OneToOneField(ShopifyStore)
+    store = models.OneToOneField(ShopifyStore, on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Feed Status'
@@ -58,7 +58,7 @@ class FeedStatus(FeedStatusAbstract):
 
 
 class CommerceHQFeedStatus(FeedStatusAbstract):
-    store = models.OneToOneField('commercehq_core.CommerceHQStore', related_name='feedstatus')
+    store = models.OneToOneField('commercehq_core.CommerceHQStore', related_name='feedstatus', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'Commerce HQ Feed Status'
@@ -72,7 +72,7 @@ class CommerceHQFeedStatus(FeedStatusAbstract):
 
 
 class WooFeedStatus(FeedStatusAbstract):
-    store = models.OneToOneField('woocommerce_core.WooStore', related_name='feedstatus')
+    store = models.OneToOneField('woocommerce_core.WooStore', related_name='feedstatus', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'WooCommerce Feed Status'

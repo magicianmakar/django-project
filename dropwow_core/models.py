@@ -7,7 +7,7 @@ from leadgalaxy.models import ShopifyStore, ShopifyProduct
 
 
 class DropwowAccount(models.Model):
-    user = models.OneToOneField(User, related_name='dropwow_account')
+    user = models.OneToOneField(User, related_name='dropwow_account', on_delete=models.CASCADE)
     email = models.CharField(max_length=2048)
     api_key = models.CharField(max_length=2048)
 
@@ -19,7 +19,7 @@ class DropwowAccount(models.Model):
 
 
 class DropwowOrderStatus(models.Model):
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
 
     shopify_order_id = models.BigIntegerField()
     shopify_line_id = models.BigIntegerField()

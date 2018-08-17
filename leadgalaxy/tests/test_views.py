@@ -5,8 +5,8 @@ import urllib3
 import mock
 from hashlib import sha256
 
-from django.test import TestCase
-from django.core.urlresolvers import reverse
+from django.test import TransactionTestCase
+from django.urls import reverse
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -27,7 +27,7 @@ from leadgalaxy.tasks import delete_shopify_store
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
 
 
-class ProfileViewTestCase(TestCase):
+class ProfileViewTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
         self.password = 'test'
@@ -44,7 +44,7 @@ class ProfileViewTestCase(TestCase):
         self.assertFalse(get_invoices.called)
 
 
-class ProfileInvoicesTestCase(TestCase):
+class ProfileInvoicesTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
         self.password = 'test'
@@ -66,7 +66,7 @@ class ProfileInvoicesTestCase(TestCase):
         self.assertEquals(get_invoices.call_count, 1)
 
 
-class GetProductTestCase(TestCase):
+class GetProductTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
         self.password = 'test'
@@ -166,7 +166,7 @@ class GetProductTestCase(TestCase):
         )
 
 
-class SubuserpermissionsApiTestCase(TestCase):
+class SubuserpermissionsApiTestCase(TransactionTestCase):
     def setUp(self):
         self.error_message = "Permission Denied: You don't have permission to perform this action"
         self.parent_user = f.UserFactory()
@@ -299,7 +299,7 @@ class SubuserpermissionsApiTestCase(TestCase):
         self.assertEquals(r.status_code, 403)
 
 
-class AutocompleteTestCase(TestCase):
+class AutocompleteTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
         self.password = 'test'
@@ -334,7 +334,7 @@ class AutocompleteTestCase(TestCase):
         self.assertEquals(r.status_code, 403)
 
 
-class AffiliateTestCase(TestCase):
+class AffiliateTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
         self.password = 'test'
@@ -467,7 +467,7 @@ class AffiliateTestCase(TestCase):
         get_aliexpress_affiliate_url.assert_not_called()
 
 
-class AutoFulfillLimitsTestCase(TestCase):
+class AutoFulfillLimitsTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
         self.password = 'test'
@@ -541,7 +541,7 @@ class AutoFulfillLimitsTestCase(TestCase):
             pass
 
 
-class RegisterTestCase(TestCase):
+class RegisterTestCase(TransactionTestCase):
     def setUp(self):
         self.credentials = {'password1': 'test',
                             'password2': 'test',
@@ -569,7 +569,7 @@ def delete_shopify_store_callback(*args, **kwargs):
     delete_shopify_store(*args)
 
 
-class ShopifyMandatoryWebhooksTestCase(TestCase):
+class ShopifyMandatoryWebhooksTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
         self.password = 'test'

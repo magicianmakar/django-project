@@ -83,7 +83,7 @@ class ApiResponseMixin():
                     level='warning'
                 )
 
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             if user is None:
                 user = request.user
             else:

@@ -37,7 +37,7 @@ def date_humanize(context, date, html=True):
 
     date_str = date.humanize()
     user = context['request'].user
-    if user.is_authenticated() and not bool(user.get_config('use_relative_dates', True)):
+    if user.is_authenticated and not bool(user.get_config('use_relative_dates', True)):
         date_str = date.format('MM/DD/YYYY')
 
     if html:
@@ -272,11 +272,6 @@ def user_orders_count(user):
         orders_count += store.get_orders_count(all_orders=True)
 
     return mark_safe('{}'.format(orders_count))
-
-
-@register.assignment_tag
-def items_per_page_list():
-    return ['10', '50', '100']
 
 
 @register.simple_tag(takes_context=True)

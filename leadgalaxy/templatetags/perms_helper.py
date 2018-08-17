@@ -11,7 +11,7 @@ def can(user, perm_name):
     {% endif %}
     """
 
-    if user.is_authenticated():
+    if user.is_authenticated:
         if 'leadgalaxy.' in perm_name:
             return user.has_perm(perm_name)
         else:

@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import *
 from django import forms
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')

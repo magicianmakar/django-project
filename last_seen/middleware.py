@@ -12,7 +12,7 @@ class LastSeenMiddleware(object):
             from django.http import Http404
             raise Http404
 
-        if request.user.is_authenticated() and not request.session.get('is_hijacked_user'):
+        if request.user.is_authenticated and not request.session.get('is_hijacked_user'):
             module = None
             user = request.user.models_user
 

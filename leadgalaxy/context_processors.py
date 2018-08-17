@@ -12,7 +12,7 @@ from shopified_core.utils import execute_once_in
 
 def extra_bundles(request):
     """ Extra bundles link """
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return {}
 
     # Terms of Service update message
@@ -34,7 +34,7 @@ def extra_bundles(request):
 def store_limits_check(request):
     stores_limit_reached = False
 
-    if request.user.is_authenticated() and \
+    if request.user.is_authenticated and \
             not request.user.profile.is_subuser and \
             not request.path.startswith('/user/profile') and \
             not settings.DEBUG:
@@ -82,7 +82,7 @@ def intercom(request):
         'INTERCOM_APP_ID': settings.INTERCOM_APP_ID
     }
 
-    if request.user.is_authenticated() and settings.INTERCOM_SECRET_KEY:
+    if request.user.is_authenticated and settings.INTERCOM_SECRET_KEY:
         ctx['INTERCOM_USER_HASH'] = hmac.new(settings.INTERCOM_SECRET_KEY,
                                              str(request.user.id),
                                              hashlib.sha256).hexdigest()
@@ -99,7 +99,7 @@ def facebook_pixel(request):
 def tapafilate_conversaion(request):
     affilaite = None
 
-    if request.user.is_authenticated() \
+    if request.user.is_authenticated \
             and request.user.is_stripe_customer() \
             and cache.get('affilaite_{}'.format(request.user.stripe_customer.customer_id)):
             affilaite = request.user.stripe_customer.customer_id

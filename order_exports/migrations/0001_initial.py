@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
                 ('successful', models.BooleanField(default=False)),
                 ('csv_url', models.CharField(default=b'', max_length=512, blank=True)),
                 ('type', models.CharField(default=b'sample', max_length=100, choices=[(b'sample', b'Sample file'), (b'complete', b'Complete file')])),
-                ('order_export', models.ForeignKey(related_name='logs', to='order_exports.OrderExport')),
+                ('order_export', models.ForeignKey(related_name='logs', to='order_exports.OrderExport', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -65,7 +65,7 @@ class Migration(migrations.Migration):
                 ('code', models.CharField(max_length=50, null=True, blank=True)),
                 ('params', models.TextField(default=b'')),
                 ('count', models.IntegerField(default=0)),
-                ('order_export', models.ForeignKey(related_name='queries', to='order_exports.OrderExport')),
+                ('order_export', models.ForeignKey(related_name='queries', to='order_exports.OrderExport', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ['created_at'],
@@ -76,19 +76,19 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('raw_password', models.CharField(max_length=255, null=True, blank=True)),
-                ('owner', models.ForeignKey(related_name='vendors', to=settings.AUTH_USER_MODEL)),
-                ('user', models.OneToOneField(related_name='vendor', to=settings.AUTH_USER_MODEL)),
+                ('owner', models.ForeignKey(related_name='vendors', to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.OneToOneField(related_name='vendor', to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.AddField(
             model_name='orderexport',
             name='filters',
-            field=models.OneToOneField(to='order_exports.OrderExportFilter'),
+            field=models.OneToOneField(to='order_exports.OrderExportFilter', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='orderexport',
             name='store',
-            field=models.ForeignKey(to='leadgalaxy.ShopifyStore'),
+            field=models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='orderexport',

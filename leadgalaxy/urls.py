@@ -1,14 +1,13 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 from leadgalaxy.forms import EmailAuthenticationForm
-from django.contrib.auth.views import password_reset
+import django.contrib.auth.views
 
 import leadgalaxy.views
 import leadgalaxy.api
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^$', leadgalaxy.views.index_view, name='index'),
-    url(r'^logout$', leadgalaxy.views.logout),
+    url(r'^logout$', leadgalaxy.views.logout, name="logout"),
 
     url(r'^webhook/(?P<provider>[a-z-]+)/(?P<option>[a-z:-]+)/?$', leadgalaxy.views.webhook),
     url(r'^product/edit/(?P<what>[a-z-]+)$', leadgalaxy.views.bulk_edit, name='bulk_edit'),
@@ -50,22 +49,22 @@ urlpatterns = patterns(
 
     url(r'^accounts/register/?(?P<registration>[a-z0-9-]+)?$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/sudo/$', leadgalaxy.views.sudo_login, name='sudo_login'),
-    url(r'^accounts/login/$', 'django.contrib.auth.views.login',
+    url(r'^accounts/login/$', django.contrib.auth.views.login,
         {'authentication_form': EmailAuthenticationForm}, name='login'),
-    url(r'^accounts/password/reset/$', password_reset,
+    url(r'^accounts/password/reset/$', django.contrib.auth.views.password_reset,
         {'template_name': 'registration/password_reset.html', 'html_email_template_name': 'registration/password_reset_email2.html'}),
-    url(r'^accounts/password_reset/done/$', 'django.contrib.auth.views.password_reset_done',
+    url(r'^accounts/password_reset/done/$', django.contrib.auth.views.password_reset_done,
         {'template_name': 'registration/password_reset_done2.html', 'extra_context': {'site_header': 'Dropified'}}),
-    url(r'^accounts/password_change/done/$', 'django.contrib.auth.views.password_change_done',
+    url(r'^accounts/password_change/done/$', django.contrib.auth.views.password_change_done,
         {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header': 'Dropified'}}),
     url(r'^accounts/reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        'django.contrib.auth.views.password_reset_confirm',
+        django.contrib.auth.views.password_reset_confirm,
         {'template_name': 'registration/password_reset_confirm2.html', 'extra_context': {'site_header': 'Dropified'}},
         name='password_reset_confirm'),
-    url(r'^accounts/reset/done/$', 'django.contrib.auth.views.password_reset_complete',
+    url(r'^accounts/reset/done/$', django.contrib.auth.views.password_reset_complete,
         {'template_name': 'registration/password_reset_complete2.html', 'extra_context': {'site_header': 'Dropified'}},
         name='password_reset_complete'),
 
     url(r'^robots\.txt$', leadgalaxy.views.robots_txt, name='robots_txt'),
     url(r'^crossdomain\.xml$', leadgalaxy.views.crossdomain, name='crossdomain'),
-)
+]

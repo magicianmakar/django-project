@@ -29,8 +29,7 @@
                     </div>
                     <div class="col-sm-6 text-right">
                         <label>Items Per Page</label>
-                        {% items_per_page_list as ps %}
-                        {% for value in ps %}
+                        {% for value in items_per_page_list %}
                             {% if value == ppp %}
                             <span class='btn btn-primary btn-rounded' >{% if value == 'all' %}ALL{% else %}{{ value }}{% endif %}</span>
                             {% else %}

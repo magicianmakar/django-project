@@ -13,9 +13,9 @@ class ShopifySubscription(models.Model):
         verbose_name_plural = "Subscriptions"
         get_latest_by = 'created_at'
 
-    user = models.ForeignKey(User)
-    store = models.ForeignKey(ShopifyStore)
-    plan = models.ForeignKey(GroupPlan, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
+    plan = models.ForeignKey(GroupPlan, null=True, on_delete=models.CASCADE)
 
     subscription_id = models.CharField(max_length=255, unique=True, verbose_name='Shopify Charge ID')
     status = models.CharField(null=True, blank=True, max_length=64, verbose_name='Shopify Charge Status')

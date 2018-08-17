@@ -7,7 +7,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import caches
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Q
 from django.http import HttpResponse, Http404
 from django.http import JsonResponse
@@ -814,7 +814,7 @@ class OrdersList(ListView):
 
 
 def autocomplete(request, target):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return JsonResponse({'error': 'User login required'})
 
     q = request.GET.get('query', '').strip()

@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('image_url', models.TextField()),
                 ('title', models.TextField()),
                 ('product_id', models.BigIntegerField()),
-                ('order_export', models.ForeignKey(related_name='found_products', to='order_exports.OrderExport')),
+                ('order_export', models.ForeignKey(related_name='found_products', to='order_exports.OrderExport', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.AlterModelOptions(

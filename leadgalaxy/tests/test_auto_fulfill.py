@@ -1,7 +1,7 @@
 import os
 from StringIO import StringIO
 
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.utils import timezone
 from django.core.management import call_command
 
@@ -23,12 +23,12 @@ class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = ShopifyOrderTrack
-        django_get_or_create = ['line_id', 'order_id', 'user_id']
+        django_get_or_create = ['line_id', 'order_id', 'user']
 
     line_id = factory.fuzzy.FuzzyInteger(1000000, 9999999)
     order_id = '5415135175'
     source_tracking = 'MA7565915257226HK'
-    user_id = 1
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store_id = 1
     status_updated_at = timezone.now()
 
@@ -54,7 +54,7 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
 
     title = 'uncommonnow'
     api_url = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
-    user_id = 1
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     is_active = True
     auto_fulfill = 'enable'
 
@@ -67,7 +67,7 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
 
     order_id = '5415135175'
     country_code = 'US'
-    user_id = 1
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store_id = 1
     order_number = 31
     total_price = 100
@@ -91,7 +91,7 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     order = factory.SubFactory(ShopifyOrderFactory)
 
 
-class AutoFulfillTestCase(TestCase):
+class AutoFulfillTestCase(TransactionTestCase):
 
     def setUp(self):
         self.parent_user = f.UserFactory()
@@ -136,7 +136,7 @@ class AutoFulfillTestCase(TestCase):
         fulfill_order.assert_not_called()
 
 
-class AutoFulfillCombinedTestCase(TestCase):
+class AutoFulfillCombinedTestCase(TransactionTestCase):
 
     def setUp(self):
         self.parent_user = f.UserFactory()
@@ -242,7 +242,7 @@ class AutoFulfillCombinedTestCase(TestCase):
         get_fulfillment_data.assert_called_with(track, data)
 
 
-class FulfillApiTestCase(TestCase):
+class FulfillApiTestCase(TransactionTestCase):
     def setUp(self):
         self.parent_user = f.UserFactory()
         self.user = f.UserFactory()

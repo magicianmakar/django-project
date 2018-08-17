@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 from django.conf import settings
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -26,9 +26,9 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('notified_at', models.DateTimeField(null=True, verbose_name=b'Email Notification Sate')),
-                ('chq_product', models.ForeignKey(to='commercehq_core.CommerceHQProduct', null=True)),
-                ('shopify_product', models.ForeignKey(to='leadgalaxy.ShopifyProduct', null=True)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True)),
+                ('chq_product', models.ForeignKey(to='commercehq_core.CommerceHQProduct', null=True, on_delete=django.db.models.deletion.CASCADE)),
+                ('shopify_product', models.ForeignKey(to='leadgalaxy.ShopifyProduct', null=True, on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ['-updated_at'],

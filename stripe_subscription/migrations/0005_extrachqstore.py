@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 from django.conf import settings
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -24,8 +24,8 @@ class Migration(migrations.Migration):
                 ('last_invoice', models.CharField(max_length=64, null=True, verbose_name=b'Last Invoice Item', blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('store', models.ForeignKey(to='commercehq_core.CommerceHQStore')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('store', models.ForeignKey(to='commercehq_core.CommerceHQStore', on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'verbose_name': 'Extra CHQ Store',

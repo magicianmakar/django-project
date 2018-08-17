@@ -320,7 +320,7 @@ class SubuserPermissionsChoiceField(forms.ModelMultipleChoiceField):
         return obj.name
 
 
-class SubuserPermissionsCheckboxFieldRenderer(forms.widgets.CheckboxFieldRenderer):
+class SubuserPermissionsCheckboxFieldRenderer(forms.widgets.CheckboxSelectMultiple):
     outer_html = '<ul{id_attr} class="list-unstyled">{content}</ul>'
 
 

@@ -1,11 +1,11 @@
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from mock import Mock
 
 from leadgalaxy.templatetags import template_helper
 
 
-class TagsTestCase(TestCase):
+class TagsTestCase(TransactionTestCase):
     def setUp(self):
         pass
 

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -19,7 +20,7 @@ class Migration(migrations.Migration):
                 ('data', models.TextField(default=b'', blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name=b'Last update')),
-                ('product', models.ForeignKey(to='leadgalaxy.ShopifyProduct')),
+                ('product', models.ForeignKey(to='leadgalaxy.ShopifyProduct', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ['-updated_at'],

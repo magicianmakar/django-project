@@ -24,9 +24,9 @@ class ProductChange(models.Model):
         ordering = ['-updated_at']
         index_together = ['user', 'seen', 'hidden']
 
-    user = models.ForeignKey(User, null=True)
-    shopify_product = models.ForeignKey(ShopifyProduct, null=True)
-    chq_product = models.ForeignKey(CommerceHQProduct, null=True)
+    user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
+    shopify_product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
+    chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE)
     store_type = models.CharField(max_length=255, blank=True, default='shopify')
     data = models.TextField(blank=True, default='')
     hidden = models.BooleanField(default=False, verbose_name='Archived change')
@@ -317,9 +317,9 @@ class ProductVariantPriceHistory(models.Model):
         ordering = ['-updated_at']
         index_together = [['shopify_product', 'variant_id'], ['chq_product', 'variant_id']]
 
-    user = models.ForeignKey(User)
-    shopify_product = models.ForeignKey(ShopifyProduct, null=True)
-    chq_product = models.ForeignKey(CommerceHQProduct, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    shopify_product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
+    chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE)
     variant_id = models.BigIntegerField(null=True, verbose_name='Source Variant ID')
     data = models.TextField(null=True, blank=True)
     old_price = models.FloatField(null=True)

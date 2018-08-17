@@ -95,7 +95,7 @@ def sort_es_orders(orders, hits, db_orders):
     return resorted
 
 
-def get_elastic(verify_certs=False):
+def get_elastic(verify_certs=True):
     if any(settings.ELASTICSEARCH_API):
         if any(settings.ELASTICSEARCH_AUTH):
             return Elasticsearch(settings.ELASTICSEARCH_API, http_auth=settings.ELASTICSEARCH_AUTH, verify_certs=verify_certs)

@@ -13,7 +13,7 @@ from django.views.generic import View
 from django.core import serializers
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError, PermissionDenied
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.cache import cache
 from django.conf import settings
 from django.utils import timezone

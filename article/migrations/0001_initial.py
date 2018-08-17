@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import models, migrations
 from django.conf import settings
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -22,7 +23,7 @@ class Migration(migrations.Migration):
                 ('stat', models.IntegerField(default=2, verbose_name=b'Publish stat', choices=[(0, b'Published'), (1, b'Draft'), (2, b'Waitting review')])),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Submittion date')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name=b'Last update')),
-                ('author', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('author', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -36,8 +37,8 @@ class Migration(migrations.Migration):
                 ('parent', models.IntegerField(default=0, verbose_name=b'Parent comment')),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Submittion date')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name=b'Last update')),
-                ('article', models.ForeignKey(to='article.Article')),
-                ('author', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('article', models.ForeignKey(to='article.Article', on_delete=django.db.models.deletion.CASCADE)),
+                ('author', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -46,9 +47,9 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Vote date')),
                 ('vote_value', models.IntegerField(verbose_name=b'Vore Value')),
-                ('article', models.ForeignKey(to='article.Article')),
-                ('comment', models.ForeignKey(to='article.Comment')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('article', models.ForeignKey(to='article.Article', on_delete=django.db.models.deletion.CASCADE)),
+                ('comment', models.ForeignKey(to='article.Comment', on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
     ]

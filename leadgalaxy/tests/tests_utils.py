@@ -2,7 +2,7 @@
 
 import re
 import random
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.conf import settings
 
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
@@ -26,24 +26,24 @@ import requests
 class ShopifyStoreFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = utils.ShopifyStore
-        django_get_or_create = ['id', 'api_url']
+        django_get_or_create = ['id']
 
     id = 1
     title = 'uncommonnow'
     api_url = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
-    user_id = 1
     primary_location = 1234567899
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
 
 
 class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ShopifyOrderTrack
-        django_get_or_create = ['line_id', 'order_id', 'user_id']
+        django_get_or_create = ['line_id', 'order_id', 'user']
 
     line_id = '1654811'
     order_id = '5415135175'
     source_tracking = 'MA7565915257226HK'
-    user_id = 1
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory(ShopifyStoreFactory)
 
 
@@ -54,7 +54,7 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
 
     order_id = '5415135175'
     country_code = 'US'
-    user_id = 1
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory(ShopifyStoreFactory)
     order_number = 31
     total_price = 100
@@ -76,7 +76,7 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     order = factory.SubFactory(ShopifyOrderFactory)
 
 
-class FulfillmentTestCase(TestCase):
+class FulfillmentTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -436,7 +436,7 @@ class FulfillmentTestCase(TestCase):
         self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
 
 
-class OrdersTestCase(TestCase):
+class OrdersTestCase(TransactionTestCase):
     def setUp(self):
         pass
 
@@ -480,7 +480,7 @@ class OrdersTestCase(TestCase):
 
     def test_order_updater_note(self):
         store = ShopifyStoreFactory()
-        order_id = 4905209738
+        order_id = 579111223384
 
         note = 'Test Note #%s' % utils.random_hash()
 
@@ -495,7 +495,7 @@ class OrdersTestCase(TestCase):
 
     def test_order_updater_note_unicode(self):
         store = ShopifyStoreFactory()
-        order_id = 4905209738
+        order_id = 579111518296
 
         feed = requests.get('http://feeds.bbci.co.uk/japanese/rss.xml')
         if not feed.ok:
@@ -520,7 +520,7 @@ class OrdersTestCase(TestCase):
 
     def test_order_updater_tags(self):
         store = ShopifyStoreFactory()
-        order_id = 4905209738
+        order_id = 579111714904
 
         tag = '#%s' % utils.random_hash()
 
@@ -535,7 +535,7 @@ class OrdersTestCase(TestCase):
 
     def test_order_updater_attributes(self):
         store = ShopifyStoreFactory()
-        order_id = 4905209738
+        order_id = 579111845976
 
         attrib = {'name': utils.random_hash(), 'value': utils.random_hash()}
 
@@ -549,29 +549,28 @@ class OrdersTestCase(TestCase):
         self.assertEqual([attrib], utils.get_shopify_order(store, order_id)['note_attributes'])
 
     def test_order_updater_have_changes_attributes(self):
-        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 4905209738)
+        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 579431268440)
         self.assertFalse(updater.have_changes())
 
         updater.add_attribute({'name': utils.random_hash(), 'value': utils.random_hash()})
         self.assertTrue(updater.have_changes())
 
     def test_order_updater_have_changes_tags(self):
-        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 4905209738)
+        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 579431661656)
         self.assertFalse(updater.have_changes())
 
         updater.add_tag('tag')
         self.assertTrue(updater.have_changes())
 
-    def test_order_updater_have_changes_tags(self):
-        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 4905209738)
+    def test_order_updater_have_changes_notes(self):
+        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 579432153176)
         self.assertFalse(updater.have_changes())
 
         updater.add_note('note')
         self.assertTrue(updater.have_changes())
 
-
-    def test_order_updater_have_changes_tags(self):
-        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 4905209738)
+    def test_order_updater_have_changes_all(self):
+        updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 579432546392)
         self.assertFalse(updater.have_changes())
 
         updater.add_tag('tag')
@@ -581,7 +580,7 @@ class OrdersTestCase(TestCase):
         self.assertTrue(updater.have_changes())
 
 
-class UtilsTestCase(TestCase):
+class UtilsTestCase(TransactionTestCase):
     def setUp(self):
         pass
 
@@ -719,7 +718,7 @@ class UtilsTestCase(TestCase):
         self.assertEqual(utils.ensure_title(u'vari\xe9t\xe9'), u'vari\xe9t\xe9')
 
 
-class CustomerAddressTestCase(TestCase):
+class CustomerAddressTestCase(TransactionTestCase):
     def test_german_umlauts(self):
         order = {
             'shipping_address': {
@@ -759,7 +758,7 @@ class CustomerAddressTestCase(TestCase):
             self.assertEqual(addr['address1'], v)
 
 
-class ShippingHelperTestCase(TestCase):
+class ShippingHelperTestCase(TransactionTestCase):
     def get_order(self, **kwargs):
         shipping_address = {
             "country_code": "US",

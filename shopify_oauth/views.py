@@ -3,7 +3,7 @@ import hashlib
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
 from django.utils.crypto import get_random_string
@@ -121,7 +121,7 @@ def index(request):
         return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
     except ShopifyStore.MultipleObjectsReturned:
         # TODO: Handle multi stores
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             return HttpResponseRedirect('/')
         else:
             return HttpResponseRedirect('/accounts/login/')
@@ -130,7 +130,7 @@ def index(request):
         raven_client.captureException()
         return HttpResponseRedirect('/accounts/login/')
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         if permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
             messages.success(request, u'Welcome Back, {}'.format(request.user.first_name))
             return HttpResponseRedirect('/')
@@ -157,7 +157,7 @@ def install(request, store):
     reinstall_store = request.GET.get('reinstall') and \
         permissions.user_can_view(request.user, ShopifyStore.objects.get(id=request.GET.get('reinstall')), superuser_can=False)
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         user = request.user
 
         if user.is_subuser:
@@ -261,7 +261,7 @@ def callback(request):
             store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True)
 
             # We have one store/user account, try to log him in if he doesn't have sub users
-            if user.is_authenticated():
+            if user.is_authenticated:
                 if permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
                     store.update_token(token)
                     messages.success(request, u'Welcome Back, {}'.format(user.first_name))
@@ -278,12 +278,12 @@ def callback(request):
         except:
             raven_client.captureException()
 
-    if user.is_authenticated():
+    if user.is_authenticated:
         from_shopify_store = user.profile.from_shopify_app_store()
     else:
         from_shopify_store = True
 
-    if from_shopify_store and user.is_authenticated():
+    if from_shopify_store and user.is_authenticated:
         user_logout(request)
 
     if from_shopify_store:

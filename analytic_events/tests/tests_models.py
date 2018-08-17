@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.sessions.models import Session
 
@@ -13,13 +13,13 @@ from ..models import (
 )
 
 
-class EventTestCase(TestCase):
+class EventTestCase(TransactionTestCase):
     def test_must_be_polymorphic(self):
         RegistrationEvent.objects.create(user=UserFactory())
         self.assertEquals(Event.objects.count(), 1)
 
 
-class RegistrationEventTestCase(TestCase):
+class RegistrationEventTestCase(TransactionTestCase):
     def setUp(self):
         self.registration_event = RegistrationEvent.objects.create(user=UserFactory())
 
@@ -33,7 +33,7 @@ class RegistrationEventTestCase(TestCase):
         self.assertIn(self.registration_event.mixpanel_script, self.registration_event.fire())
 
 
-class PlanSelectionEventTestCase(TestCase):
+class PlanSelectionEventTestCase(TransactionTestCase):
     def setUp(self):
         self.plan_selection_event = PlanSelectionEvent.objects.create(user=UserFactory())
 
@@ -47,7 +47,7 @@ class PlanSelectionEventTestCase(TestCase):
         self.assertIn(self.plan_selection_event.mixpanel_script, self.plan_selection_event.fire())
 
 
-class BillingInformationEntryEventTestCase(TestCase):
+class BillingInformationEntryEventTestCase(TransactionTestCase):
     def setUp(self):
         source = '{}'
         self.billing_event = BillingInformationEntryEvent.objects.create(user=UserFactory(), source=source)
@@ -62,7 +62,7 @@ class BillingInformationEntryEventTestCase(TestCase):
         self.assertIn(self.billing_event.mixpanel_script, self.billing_event.fire())
 
 
-class SuccessfulPaymentEventTestCase(TestCase):
+class SuccessfulPaymentEventTestCase(TransactionTestCase):
     def setUp(self):
         charge = '{}'
         self.payment_event = SuccessfulPaymentEvent.objects.create(user=UserFactory(), charge=charge)

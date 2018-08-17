@@ -35,7 +35,7 @@ class Article(models.Model):
     title = models.CharField(max_length=140)
     slug = models.CharField(max_length=140)
     body = models.TextField()
-    author = models.ForeignKey(User)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
     stat = models.IntegerField(choices=PUBLISH_STAT, default=0, verbose_name='Publish stat')
     tags = models.ManyToManyField('ArticleTag', blank=True)
     views = models.IntegerField(default=0)
@@ -131,17 +131,17 @@ class Comment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    author = models.ForeignKey(User)
-    article = models.ForeignKey(Article)
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
 
     def __unicode__(self):
         return self.title
 
 
 class CommentVote(models.Model):
-    article = models.ForeignKey(Article)
-    comment = models.ForeignKey(Comment)
-    user = models.ForeignKey(User)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE)
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Vote date')
     vote_value = models.IntegerField(verbose_name='Vore Value')
 

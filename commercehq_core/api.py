@@ -7,7 +7,7 @@ import copy
 from django.conf import settings
 from django.core import serializers
 from django.core.cache import cache, caches
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import transaction
 from django.db.models import F
 from django.views.generic import View

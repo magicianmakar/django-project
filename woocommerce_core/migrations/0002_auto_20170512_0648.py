@@ -44,8 +44,8 @@ class Migration(migrations.Migration):
                 ('is_default', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('product', models.ForeignKey(to='woocommerce_core.WooProduct')),
-                ('store', models.ForeignKey(related_name='suppliers', to='woocommerce_core.WooStore')),
+                ('product', models.ForeignKey(to='woocommerce_core.WooProduct', on_delete=django.db.models.deletion.CASCADE)),
+                ('store', models.ForeignKey(related_name='suppliers', to='woocommerce_core.WooStore', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.AddField(
@@ -56,11 +56,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='wooproduct',
             name='store',
-            field=models.ForeignKey(related_name='products', to='woocommerce_core.WooStore'),
+            field=models.ForeignKey(related_name='products', to='woocommerce_core.WooStore', on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='wooproduct',
             name='user',
-            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE),
         ),
     ]

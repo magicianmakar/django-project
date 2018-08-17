@@ -2,8 +2,8 @@ import json
 
 from mock import patch, Mock
 
-from django.test import TestCase
-from django.core.urlresolvers import reverse
+from django.test import TransactionTestCase
+from django.urls import reverse
 
 from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, AppPermissionFactory
 from leadgalaxy.models import SubuserPermission
@@ -16,7 +16,7 @@ from .factories import (
 from ..models import CommerceHQStore, CommerceHQBoard
 
 
-class StoreListTestCase(TestCase):
+class StoreListTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -61,7 +61,7 @@ class StoreListTestCase(TestCase):
         self.assertEqual(r.context['breadcrumbs'], ['Stores'])
 
 
-class StoreCreateTestCase(TestCase):
+class StoreCreateTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -134,7 +134,7 @@ class StoreCreateTestCase(TestCase):
         self.assertIn(r.status_code, [401, 403])
 
 
-class StoreUpdateTestCase(TestCase):
+class StoreUpdateTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -184,7 +184,7 @@ class StoreUpdateTestCase(TestCase):
         self.assertEqual(r.status_code, 403)
 
 
-class StoreDeleteTestCase(TestCase):
+class StoreDeleteTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -218,7 +218,7 @@ class StoreDeleteTestCase(TestCase):
         self.assertEqual(r.status_code, 403)
 
 
-class BoardsListTestCase(TestCase):
+class BoardsListTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -280,7 +280,7 @@ class BoardsListTestCase(TestCase):
             self.assertEqual(r.status_code, 403)
 
 
-class BoardCreateTestCase(TestCase):
+class BoardCreateTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -321,7 +321,7 @@ class BoardCreateTestCase(TestCase):
         self.assertEqual(r.status_code, 501)
 
 
-class BoardUpdateTestCase(TestCase):
+class BoardUpdateTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -368,7 +368,7 @@ class BoardUpdateTestCase(TestCase):
         self.assertEqual(r.status_code, 403)
 
 
-class BoardDeleteTestCase(TestCase):
+class BoardDeleteTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -391,7 +391,7 @@ class BoardDeleteTestCase(TestCase):
         self.assertEqual(r.status_code, 200)
 
 
-class BoardEmptyTestCase(TestCase):
+class BoardEmptyTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -416,7 +416,7 @@ class BoardEmptyTestCase(TestCase):
         self.assertEqual(count, 0)
 
 
-class BoardDetailTestCase(TestCase):
+class BoardDetailTestCase(TransactionTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -487,7 +487,7 @@ class BoardDetailTestCase(TestCase):
             self.assertEqual(r.status_code, 403)
 
 
-class SubuserpermissionsApiTestCase(TestCase):
+class SubuserpermissionsApiTestCase(TransactionTestCase):
     def setUp(self):
         self.error_message = "Permission Denied: You don't have permission to perform this action"
         self.parent_user = UserFactory()

@@ -1,10 +1,9 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 import commercehq_core.views
 import subusers.views
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^$', commercehq_core.views.StoresList.as_view(), name='index'),
 
     url(r'^store-update/(?P<store_id>[0-9]+)$', commercehq_core.views.store_update, name='store_update'),
@@ -34,4 +33,4 @@ urlpatterns = patterns(
         subusers.views.subuser_woo_store_permissions, name='subuser_woo_store_permissions'),
     url(r'^subusers/gear-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
         subusers.views.subuser_gear_store_permissions, name='subuser_gear_store_permissions'),
-)
+]

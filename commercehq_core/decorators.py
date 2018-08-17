@@ -3,7 +3,7 @@ from django.http import HttpResponse, Http404
 
 def must_be_authenticated(func):
     def _func(request, *args, **kwargs):
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return HttpResponse(status=401)
         return func(request, *args, **kwargs)
     return _func

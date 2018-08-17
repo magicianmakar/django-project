@@ -5,7 +5,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from leadgalaxy import utils
 from shopified_core.paginators import SimplePaginator

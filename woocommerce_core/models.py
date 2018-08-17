@@ -10,7 +10,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.utils.crypto import get_random_string
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 
 def add_to_class(cls, name):
@@ -40,7 +40,7 @@ class WooStore(models.Model):
     class Meta:
         verbose_name = 'WooCommerce Store'
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=300, blank=True, default='')
     api_url = models.CharField(max_length=512)
     api_key = models.CharField(max_length=300)
@@ -126,8 +126,8 @@ class WooProduct(models.Model):
         verbose_name = 'WooCommerce Product'
         ordering = ['-created_at']
 
-    store = models.ForeignKey('WooStore', related_name='products', null=True)
-    user = models.ForeignKey(User)
+    store = models.ForeignKey('WooStore', related_name='products', null=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     data = models.TextField(default='{}', blank=True)
     notes = models.TextField(null=True, blank=True)
@@ -533,8 +533,8 @@ class WooProduct(models.Model):
 
 
 class WooSupplier(models.Model):
-    store = models.ForeignKey('WooStore', null=True, related_name='suppliers')
-    product = models.ForeignKey('WooProduct')
+    store = models.ForeignKey('WooStore', null=True, related_name='suppliers', on_delete=models.CASCADE)
+    product = models.ForeignKey('WooProduct', on_delete=models.CASCADE)
 
     product_url = models.CharField(max_length=512, null=True, blank=True)
     supplier_name = models.CharField(max_length=512, null=True, blank=True, db_index=True)
@@ -605,8 +605,8 @@ class WooOrderTrack(models.Model):
         ordering = ['-created_at']
         index_together = ['store', 'order_id', 'line_id']
 
-    user = models.ForeignKey(User)
-    store = models.ForeignKey(WooStore, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(WooStore, null=True, on_delete=models.CASCADE)
     order_id = models.BigIntegerField()
     line_id = models.BigIntegerField()
     product_id = models.BigIntegerField()
@@ -688,7 +688,7 @@ class WooBoard(models.Model):
         verbose_name = "WooCommerce Board"
         verbose_name_plural = "WooCommerce Boards"
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=512)
     products = models.ManyToManyField('WooProduct', blank=True)
     config = models.CharField(max_length=512, blank=True, default='')
@@ -710,8 +710,8 @@ class WooUserUpload(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    user = models.ForeignKey(User)
-    product = models.ForeignKey(WooProduct, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(WooProduct, null=True, on_delete=models.CASCADE)
     url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')

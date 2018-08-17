@@ -96,7 +96,7 @@ def add_to_class(cls, name):
 
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, related_name='profile')
+    user = models.OneToOneField(User, related_name='profile', on_delete=models.CASCADE)
     plan = models.ForeignKey('GroupPlan', null=True, on_delete=models.SET_NULL)
     bundles = models.ManyToManyField('FeatureBundle', blank=True)
 
@@ -125,7 +125,7 @@ class UserProfile(models.Model):
     plan_after_expire = models.ForeignKey('GroupPlan', blank=True, null=True, related_name="expire_plan",
                                           on_delete=models.SET_NULL, verbose_name="Plan to user after Expire Date")
 
-    company = models.ForeignKey('UserCompany', null=True, blank=True)
+    company = models.ForeignKey('UserCompany', null=True, blank=True, on_delete=models.CASCADE)
     subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True)
     subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
     subuser_woo_permissions = models.ManyToManyField('SubuserWooPermission', blank=True)
@@ -502,7 +502,7 @@ class UserCompany(models.Model):
 class SubuserPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    store = models.ForeignKey('ShopifyStore', blank=True, null=True, related_name='subuser_permissions')
+    store = models.ForeignKey('ShopifyStore', blank=True, null=True, related_name='subuser_permissions', on_delete=models.CASCADE)
 
     class Meta:
         ordering = 'pk',
@@ -515,7 +515,7 @@ class SubuserPermission(models.Model):
 class SubuserCHQPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    store = models.ForeignKey('commercehq_core.CommerceHQStore', related_name='subuser_chq_permissions')
+    store = models.ForeignKey('commercehq_core.CommerceHQStore', related_name='subuser_chq_permissions', on_delete=models.CASCADE)
 
     class Meta:
         ordering = 'pk',
@@ -528,7 +528,7 @@ class SubuserCHQPermission(models.Model):
 class SubuserWooPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    store = models.ForeignKey('woocommerce_core.WooStore', related_name='subuser_woo_permissions')
+    store = models.ForeignKey('woocommerce_core.WooStore', related_name='subuser_woo_permissions', on_delete=models.CASCADE)
 
     class Meta:
         ordering = 'pk',
@@ -659,7 +659,7 @@ class ShopifyStore(models.Model):
     list_index = models.IntegerField(default=0)
     auto_fulfill = models.CharField(max_length=50, null=True, blank=True, db_index=True)
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -877,7 +877,7 @@ class AccessToken(models.Model):
         ordering = ['-created_at']
 
     token = models.CharField(max_length=512, unique=True)
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
@@ -890,8 +890,8 @@ class ShopifyProduct(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    store = models.ForeignKey(ShopifyStore, blank=True, null=True)
-    user = models.ForeignKey(User)
+    store = models.ForeignKey(ShopifyStore, blank=True, null=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     data = models.TextField()
     original_data = models.TextField(default='', blank=True)
@@ -1482,8 +1482,8 @@ class ShopifyProduct(models.Model):
 
 
 class ProductSupplier(models.Model):
-    store = models.ForeignKey(ShopifyStore, null=True)
-    product = models.ForeignKey(ShopifyProduct)
+    store = models.ForeignKey(ShopifyStore, null=True, on_delete=models.CASCADE)
+    product = models.ForeignKey(ShopifyProduct, on_delete=models.CASCADE)
 
     product_url = models.CharField(max_length=512, null=True, blank=True)
     supplier_name = models.CharField(max_length=512, null=True, blank=True, db_index=True)
@@ -1569,8 +1569,8 @@ class ShopifyProductExport(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    store = models.ForeignKey(ShopifyStore)
-    product = models.ForeignKey(ShopifyProduct, null=True)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
+    product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
 
     shopify_id = models.BigIntegerField(default=0, verbose_name='Shopify Product ID')
     original_url = models.CharField(max_length=512, blank=True, default='')
@@ -1590,7 +1590,7 @@ class ShopifyProductExport(models.Model):
 class ShopifyProductImage(models.Model):
     product = models.BigIntegerField(verbose_name="Shopify Product ID")
     variant = models.BigIntegerField(default=0, verbose_name="Shopify Product ID")
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
 
     image = models.CharField(max_length=512, blank=True, default='')
 
@@ -1603,8 +1603,8 @@ class ShopifyOrderTrack(models.Model):
         ordering = ['-created_at']
         index_together = ['store', 'order_id', 'line_id']
 
-    user = models.ForeignKey(User)
-    store = models.ForeignKey(ShopifyStore, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(ShopifyStore, null=True, on_delete=models.CASCADE)
     order_id = models.BigIntegerField()
     line_id = models.BigIntegerField()
     shopify_status = models.CharField(max_length=128, blank=True, null=True, default='',
@@ -1836,7 +1836,7 @@ class ShopifyBoard(models.Model):
     title = models.CharField(max_length=512, blank=True, default='')
     config = models.CharField(max_length=512, blank=True, default='')
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     products = models.ManyToManyField(ShopifyProduct, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
@@ -1867,7 +1867,7 @@ class ShopifyWebhook(models.Model):
         ordering = ['-created_at']
         unique_together = ('store', 'topic')
 
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
     topic = models.CharField(max_length=64)
     token = models.CharField(max_length=64)
     shopify_id = models.BigIntegerField(default=0, verbose_name='Webhook Shopify ID')
@@ -1914,7 +1914,7 @@ class ClippingMagic(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    user = models.OneToOneField(User, related_name='clippingmagic')
+    user = models.OneToOneField(User, related_name='clippingmagic', on_delete=models.CASCADE)
 
     remaining_credits = models.BigIntegerField(default=0)
 
@@ -1937,7 +1937,7 @@ class CaptchaCredit(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    user = models.OneToOneField(User, related_name='captchacredit')
+    user = models.OneToOneField(User, related_name='captchacredit', on_delete=models.CASCADE)
 
     remaining_credits = models.BigIntegerField(default=0)
 
@@ -2067,8 +2067,8 @@ class UserUpload(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    user = models.ForeignKey(User)
-    product = models.ForeignKey(ShopifyProduct, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
     url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
@@ -2085,8 +2085,8 @@ class PlanRegistration(models.Model):
     plan = models.ForeignKey(GroupPlan, blank=True, null=True, on_delete=models.SET_NULL, verbose_name='Purchased Plan')
     bundle = models.ForeignKey(FeatureBundle, blank=True, null=True, on_delete=models.SET_NULL, verbose_name='Purchased Bundle')
 
-    user = models.ForeignKey(User, blank=True, null=True)
-    sender = models.ForeignKey(User, blank=True, null=True, related_name='sender', verbose_name='Plan Generated By')
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    sender = models.ForeignKey(User, blank=True, null=True, related_name='sender', verbose_name='Plan Generated By', on_delete=models.CASCADE)
     email = models.CharField(blank=True, default='', max_length=120)
     register_hash = models.CharField(max_length=40, unique=True, editable=False)
     data = models.TextField(blank=True, default='')
@@ -2166,8 +2166,8 @@ class AliexpressProductChange(models.Model):
         ordering = ['-updated_at']
         index_together = ['user', 'seen', 'hidden']
 
-    user = models.ForeignKey(User, null=True)
-    product = models.ForeignKey(ShopifyProduct)
+    user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
+    product = models.ForeignKey(ShopifyProduct, on_delete=models.CASCADE)
     hidden = models.BooleanField(default=False, verbose_name='Archived change')
     seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
     data = models.TextField(blank=True, default='')
@@ -2190,7 +2190,7 @@ class PlanPayment(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    user = models.ForeignKey(User, null=True)
+    user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     fullname = models.CharField(blank=True, max_length=120)
     email = models.CharField(blank=True, max_length=120)
     provider = models.CharField(max_length=50)
@@ -2205,7 +2205,7 @@ class PlanPayment(models.Model):
 
 
 class DescriptionTemplate(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField()
 
@@ -2214,7 +2214,7 @@ class DescriptionTemplate(models.Model):
 
 
 class PriceMarkupRule(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=255, null=True, blank=True)
     min_price = models.FloatField(default=0.0)
     max_price = models.FloatField(default=0.0)
@@ -2238,8 +2238,8 @@ class AdminEvent(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    user = models.ForeignKey(User)
-    target_user = models.ForeignKey(User, null=True, related_name='target_user')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    target_user = models.ForeignKey(User, null=True, related_name='target_user', on_delete=models.CASCADE)
     event_type = models.CharField(max_length=30, blank=True, null=True)
     data = models.TextField(null=True, blank=True)
 

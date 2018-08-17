@@ -129,7 +129,7 @@ class ShopifiedApi(ApiResponseMixin, View):
         user = authenticate(username=username, password=password)
         if user is not None:
             if user.is_active:
-                if request.user.is_authenticated():
+                if request.user.is_authenticated:
                     if user != request.user:
                         user_logout(request)
                         user_login(request, user)
@@ -159,7 +159,7 @@ class ShopifiedApi(ApiResponseMixin, View):
         return self.api_error('Invalid Email or password')
 
     def get_me(self, request, **kwargs):
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return self.api_error('Logging is required', status=403)
         else:
             return JsonResponse({

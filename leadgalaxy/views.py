@@ -17,7 +17,7 @@ from django.contrib.auth import logout as user_logout
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache, caches
 from django.core.mail import send_mail
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.exceptions import PermissionDenied
 from django.core.signing import Signer
 from django.db import transaction
@@ -1248,6 +1248,7 @@ def shopify_migration(request):
         'status': status,
         'title': title,
         'user_filter': utils.get_shopify_products_filter(request),
+        'items_per_page_list': [10, 50, 100],
         'page': 'shopify_migration',
         'breadcrumbs': breadcrumbs,
         'ppp': ppp,
@@ -1834,8 +1835,8 @@ def get_shipping_info(request):
     if request.GET.get('type') == 'json':
         return JsonResponse(shippement_data, safe=False)
 
-    if not request.user.is_authenticated():
-        return HttpResponseRedirect('%s?%s' % (reverse('django.contrib.auth.views.login'),
+    if not request.user.is_authenticated:
+        return HttpResponseRedirect('%s?%s' % (reverse('login'),
                                                urllib.urlencode({'next': request.get_full_path()})))
 
     if request.GET.get('chq'):
@@ -2378,7 +2379,7 @@ def acp_users_emails(request):
 
 
 def autocomplete(request, target):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return JsonResponse({'error': 'User login required'})
 
     q = request.GET.get('query', '').strip()
@@ -2804,7 +2805,7 @@ def save_image_s3(request):
 
 def orders_view(request):
     try:
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             mixing = ApiResponseMixin()
             user = mixing.get_user(request)
             if user:
@@ -3865,7 +3866,7 @@ def orders_track(request):
 
 def orders_place(request):
     try:
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             mixing = ApiResponseMixin()
             user = mixing.get_user(request)
             if user:
@@ -4145,7 +4146,7 @@ def bundles_bonus(request, bundle_id):
     else:
         initial = {}
 
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
             initial = {'email': request.user.email}
 
         form = RegisterForm(initial=initial)
@@ -4200,7 +4201,7 @@ def logout(request):
 
 
 def register(request, registration=None, subscribe_plan=None):
-    if request.user.is_authenticated() and not request.user.is_superuser:
+    if request.user.is_authenticated and not request.user.is_superuser:
         messages.warning(request, 'You are already logged in')
         return HttpResponseRedirect('/')
 

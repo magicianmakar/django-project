@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -24,8 +24,8 @@ class Migration(migrations.Migration):
                 ('phone', models.CharField(max_length=256, null=True, blank=True)),
                 ('carrier_identifier', models.CharField(max_length=256, null=True, blank=True)),
                 ('requested_fulfillment_service_id', models.CharField(max_length=256, null=True, blank=True)),
-                ('order', models.ForeignKey(related_name='shipping_lines', to='shopify_orders.ShopifyOrder')),
-                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore')),
+                ('order', models.ForeignKey(related_name='shipping_lines', to='shopify_orders.ShopifyOrder', on_delete=django.db.models.deletion.CASCADE)),
+                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
     ]

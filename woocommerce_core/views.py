@@ -11,7 +11,7 @@ from django.views.generic.detail import DetailView
 from django.views.generic.base import RedirectView
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
-from django.core.urlresolvers import reverse, reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.core.cache import caches
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect

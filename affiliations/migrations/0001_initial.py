@@ -23,7 +23,7 @@ class Migration(migrations.Migration):
                 ('last_name', models.CharField(default=b'', max_length=255, null=True)),
                 ('affiliate_dashboard_url', models.CharField(max_length=512)),
                 ('affiliate_url', models.CharField(max_length=512)),
-                ('user', models.OneToOneField(related_name='lead_dyno_affiliation', null=True, to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(related_name='lead_dyno_affiliation', null=True, to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.CreateModel(
@@ -64,8 +64,8 @@ class Migration(migrations.Migration):
                 ('count_visitors', models.IntegerField(default=0)),
                 ('count_leads', models.IntegerField(default=0)),
                 ('count_purchases', models.IntegerField(default=0)),
-                ('last_synced_lead', models.ForeignKey(to='affiliations.LeadDynoLead', null=True)),
-                ('last_synced_purchase', models.ForeignKey(to='affiliations.LeadDynoPurchase', null=True)),
+                ('last_synced_lead', models.ForeignKey(to='affiliations.LeadDynoLead', null=True, on_delete=django.db.models.deletion.CASCADE)),
+                ('last_synced_purchase', models.ForeignKey(to='affiliations.LeadDynoPurchase', null=True, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'ordering': ['-created_at'],
@@ -90,6 +90,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='leaddynosync',
             name='last_synced_visitor',
-            field=models.ForeignKey(to='affiliations.LeadDynoVisitor', null=True),
+            field=models.ForeignKey(to='affiliations.LeadDynoVisitor', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
     ]

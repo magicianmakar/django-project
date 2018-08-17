@@ -31,9 +31,9 @@
           </ul>
         <ul class="nav navbar-nav navbar-right">
             {% if user.is_authenticated %}
-            <li><a href="{% url 'django.contrib.auth.views.logout'%}?next={% url 'django.contrib.auth.views.login' %}" id="logoutButton">Log out</a></li>
+            <li><a href="{% url 'django.contrib.auth.views.logout'%}?next={% url 'login' %}" id="logoutButton">Log out</a></li>
             {% else %}
-            <li><a href="{% url 'django.contrib.auth.views.login' %}" id="logoutButton">Log in</a></li>
+            <li><a href="{% url 'login' %}" id="logoutButton">Log in</a></li>
             {% endif %}
           </ul>
 

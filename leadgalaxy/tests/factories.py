@@ -10,6 +10,7 @@ TOMORROW = NOW + datetime.timedelta(days=1)
 
 
 class UserFactory(factory.DjangoModelFactory):
+    id = factory.fuzzy.FuzzyInteger(999)
     username = factory.fuzzy.FuzzyText()
     first_name = factory.fuzzy.FuzzyText()
     last_name = factory.fuzzy.FuzzyText()
@@ -17,6 +18,7 @@ class UserFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = settings.AUTH_USER_MODEL
+        django_get_or_create = ['id']
 
 
 class UserProfileFactory(factory.DjangoModelFactory):
@@ -31,6 +33,7 @@ class UserProfileFactory(factory.DjangoModelFactory):
 
 
 class ShopifyProductFactory(factory.DjangoModelFactory):
+    id = factory.fuzzy.FuzzyInteger(9999)
     store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     data = '{}'
@@ -41,6 +44,7 @@ class ShopifyProductFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'leadgalaxy.ShopifyProduct'
+        django_get_or_create = ['id']
 
 
 class ProductSupplierFactory(factory.DjangoModelFactory):

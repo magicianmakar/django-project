@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db import transaction
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponseRedirect, Http404
@@ -135,7 +135,7 @@ def subuser_store_permissions(request, user_id, store_id):
             subuser.profile.subuser_permissions.remove(*subuser_permissions)
             subuser.profile.subuser_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('{}subusers.views.subuser_store_permissions'.format(get_namespace(request)), user_id, store_id)
+            return redirect('{}subusers.views.subuser_store_permissions'.format(get_namespace(request)), user_id, store_id)  # TODO: give a 404 error
     else:
         form = SubuserPermissionsForm(initial=initial)
 

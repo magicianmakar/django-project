@@ -1,9 +1,9 @@
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.utils import timezone
 from django.db.models import Max
 
 from shopify_orders.models import *
-
+from leadgalaxy.tests.factories import ShopifyProductFactory
 import factory
 
 
@@ -14,8 +14,8 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
 
     order_id = '5415135175'
     country_code = 'US'
-    user_id = 1
-    store_id = 1
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     order_number = 31
     total_price = 100
     customer_id = 1
@@ -34,9 +34,10 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     quantity = 100
     variant_id = 12345
     order = factory.SubFactory(ShopifyOrderFactory)
+    product = factory.SubFactory('leadgalaxy.tests.factories.ShopifyProductFactory')
 
 
-class UtilsTestCase(TestCase):
+class UtilsTestCase(TransactionTestCase):
     def setUp(self):
         pass
 
@@ -45,7 +46,7 @@ class UtilsTestCase(TestCase):
 
         order = ShopifyOrderFactory(order_id=order_id)
         for i in line_ids:
-            lines.append(ShopifyOrderLineFactory(order=order, line_id=i[0], product_id=i[1]))
+            lines.append(ShopifyOrderLineFactory(order=order, line_id=i[0], product=ShopifyProductFactory(id=i[1])))
 
         return lines
 

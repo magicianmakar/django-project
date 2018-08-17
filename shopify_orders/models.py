@@ -22,7 +22,7 @@ SYNC_STATUS = (
 
 
 class ShopifySyncStatus(models.Model):
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
     sync_type = models.CharField(max_length=32)
     sync_status = models.IntegerField(default=0, choices=SYNC_STATUS)
     orders_count = models.IntegerField(default=0)
@@ -72,8 +72,8 @@ class ShopifyOrder(models.Model):
     class Meta:
         unique_together = ('store', 'order_id')
 
-    user = models.ForeignKey(User)
-    store = models.ForeignKey(ShopifyStore)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
 
     order_id = models.BigIntegerField()
     order_number = models.IntegerField()
@@ -114,7 +114,7 @@ class ShopifyOrderLine(models.Model):
     class Meta:
         unique_together = ('order', 'line_id')
 
-    order = models.ForeignKey(ShopifyOrder)
+    order = models.ForeignKey(ShopifyOrder, on_delete=models.CASCADE)
     product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.deletion.SET_NULL)
     track = models.ForeignKey(ShopifyOrderTrack, null=True, on_delete=models.deletion.SET_NULL)
 
@@ -133,8 +133,8 @@ class ShopifyOrderLine(models.Model):
 
 
 class ShopifyOrderShippingLine(models.Model):
-    store = models.ForeignKey(ShopifyStore)
-    order = models.ForeignKey(ShopifyOrder, related_name='shipping_lines')
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
+    order = models.ForeignKey(ShopifyOrder, related_name='shipping_lines', on_delete=models.CASCADE)
     shipping_line_id = models.BigIntegerField()
     price = models.FloatField()
     title = models.CharField(max_length=256, null=True, blank=True, db_index=True)
@@ -149,7 +149,7 @@ class ShopifyOrderShippingLine(models.Model):
 
 
 class ShopifyOrderVariant(models.Model):
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
     changed_by = models.ForeignKey(User, null=True, on_delete=models.deletion.SET_NULL)
 
     order_id = models.BigIntegerField(verbose_name='Shopify Order ID')
@@ -166,7 +166,7 @@ class ShopifyOrderVariant(models.Model):
 
 
 class ShopifyOrderRisk(models.Model):
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
     order_id = models.BigIntegerField()
     data = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

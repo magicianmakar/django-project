@@ -16,8 +16,8 @@ CONFIG_CHOICES = (
 
 
 class FacebookAccess(models.Model):
-    user = models.ForeignKey(User)
-    store = models.ForeignKey(ShopifyStore, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(ShopifyStore, null=True, on_delete=models.CASCADE)
 
     access_token = models.CharField(max_length=255)
     expires_in = models.DateTimeField(default=None, null=True, blank=True)
@@ -88,8 +88,8 @@ class FacebookAccess(models.Model):
 
 
 class FacebookAccount(models.Model):
-    access = models.ForeignKey(FacebookAccess, related_name='accounts')
-    store = models.ForeignKey(ShopifyStore, null=True)
+    access = models.ForeignKey(FacebookAccess, related_name='accounts', on_delete=models.CASCADE)
+    store = models.ForeignKey(ShopifyStore, null=True, on_delete=models.CASCADE)
 
     last_sync = models.DateField(null=True)
     account_id = models.CharField(max_length=50)
@@ -118,7 +118,7 @@ class AliexpressFulfillmentCost(models.Model):
         ordering = ['-created_at']
         index_together = ['store', 'order_id', 'source_id']
 
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
     order_id = models.BigIntegerField()
     source_id = models.CharField(max_length=512, blank=True, default='')
 
@@ -130,7 +130,7 @@ class AliexpressFulfillmentCost(models.Model):
 
 
 class OtherCost(models.Model):
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
     date = models.DateField()
     amount = models.DecimalField(decimal_places=2, max_digits=9, default=0)
 

@@ -42,7 +42,7 @@ class CommerceHQStore(models.Model):
         verbose_name = 'CHQ Store'
         ordering = ['-created_at']
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=300, blank=True, default='')
     api_url = models.CharField(max_length=512)
     api_key = models.CharField(max_length=300)
@@ -138,8 +138,8 @@ class CommerceHQProduct(models.Model):
         verbose_name = 'CHQ Product'
         ordering = ['-created_at']
 
-    store = models.ForeignKey('CommerceHQStore', related_name='products')
-    user = models.ForeignKey(User)
+    store = models.ForeignKey('CommerceHQStore', related_name='products', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     data = models.TextField(default='{}', blank=True)
     notes = models.TextField(null=True, blank=True)
@@ -652,8 +652,8 @@ class CommerceHQProduct(models.Model):
 
 
 class CommerceHQSupplier(models.Model):
-    store = models.ForeignKey(CommerceHQStore, related_name='suppliers')
-    product = models.ForeignKey(CommerceHQProduct)
+    store = models.ForeignKey(CommerceHQStore, related_name='suppliers', on_delete=models.CASCADE)
+    product = models.ForeignKey(CommerceHQProduct, on_delete=models.CASCADE)
 
     product_url = models.CharField(max_length=512, null=True, blank=True)
     supplier_name = models.CharField(max_length=512, null=True, blank=True, db_index=True)
@@ -724,7 +724,7 @@ class CommerceHQBoard(models.Model):
         verbose_name = "CHQ Board"
         verbose_name_plural = "CHQ Boards"
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=512)
     products = models.ManyToManyField('CommerceHQProduct', blank=True)
     config = models.CharField(max_length=512, blank=True, default='')
@@ -747,8 +747,8 @@ class CommerceHQOrderTrack(models.Model):
         ordering = ['-created_at']
         index_together = ['store', 'order_id', 'line_id']
 
-    user = models.ForeignKey(User)
-    store = models.ForeignKey(CommerceHQStore, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(CommerceHQStore, null=True, on_delete=models.CASCADE)
     order_id = models.BigIntegerField()
     line_id = models.BigIntegerField()
     commercehq_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="CHQ Fulfillment Status")
@@ -916,8 +916,8 @@ class CommerceHQUserUpload(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    user = models.ForeignKey(User)
-    product = models.ForeignKey(CommerceHQProduct, null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE)
     url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')

@@ -1,10 +1,9 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 import woocommerce_core.views
 import subusers.views
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^$', woocommerce_core.views.StoresList.as_view(), name='index'),
     url(r'^callback-endpoint/(?P<store_hash>[a-z0-9]+)$', woocommerce_core.views.CallbackEndpoint.as_view(), name='callback_endpoint'),
     url(r'^products/?(?P<tpl>(grid|table))?$', woocommerce_core.views.ProductsList.as_view(), name='products_list'),
@@ -29,4 +28,4 @@ urlpatterns = patterns(
         subusers.views.subuser_woo_store_permissions, name='subuser_woo_store_permissions'),
     url(r'^subusers/gear-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
         subusers.views.subuser_gear_store_permissions, name='subuser_gear_store_permissions'),
-)
+]

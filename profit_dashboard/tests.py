@@ -8,7 +8,7 @@ import factory
 import factory.fuzzy
 
 from django.conf import settings
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.test.utils import override_settings
 from django.utils import timezone
 from django.db.models import Sum
@@ -60,7 +60,7 @@ class FacebookAdCostFactory(factory.DjangoModelFactory):
         model = 'profit_dashboard.FacebookAdCost'
 
 
-class FacebookAdCostsTestCase(TestCase):
+class FacebookAdCostsTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory(username='test')
         self.user.save()
@@ -121,7 +121,7 @@ class FacebookAdCostsTestCase(TestCase):
         )
 
 
-class RevenueTestCase(TestCase):
+class RevenueTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory()
         self.store = f.ShopifyStoreFactory(
@@ -146,7 +146,7 @@ class RevenueTestCase(TestCase):
         self.assertAlmostEqual(self.totals['revenue'], total_revenue)
 
 
-class FulfillmentCostTestCase(TestCase):
+class FulfillmentCostTestCase(TransactionTestCase):
     def setUp(self):
         self.user = f.UserFactory()
         self.store = f.ShopifyStoreFactory(

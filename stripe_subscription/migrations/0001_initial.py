@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 from django.conf import settings
-
+import django.db.models.deletion
 
 class Migration(migrations.Migration):
 
@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('data', models.TextField(null=True, blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('user', models.OneToOneField(related_name='stripe_customer', to=settings.AUTH_USER_MODEL)),
+                ('user', models.OneToOneField(related_name='stripe_customer', to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'verbose_name': 'Customer',
@@ -57,7 +57,7 @@ class Migration(migrations.Migration):
                 ('statement_descriptor', models.TextField(null=True, blank=True)),
                 ('stripe_id', models.CharField(verbose_name=b'Stripe Plan ID', unique=True, max_length=255, editable=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('plan', models.OneToOneField(related_name='stripe_plan', null=True, to='leadgalaxy.GroupPlan')),
+                ('plan', models.OneToOneField(related_name='stripe_plan', null=True, to='leadgalaxy.GroupPlan', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'verbose_name': 'Plan',
@@ -75,8 +75,8 @@ class Migration(migrations.Migration):
                 ('period_end', models.DateTimeField(null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('plan', models.ForeignKey(to='leadgalaxy.GroupPlan')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('plan', models.ForeignKey(to='leadgalaxy.GroupPlan', on_delete=django.db.models.deletion.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
                 'get_latest_by': 'created_at',

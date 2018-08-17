@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
@@ -21,7 +22,7 @@ class Migration(migrations.Migration):
                 ('stores', models.IntegerField(default=0)),
                 ('products', models.IntegerField(default=0)),
                 ('boards', models.IntegerField(default=0)),
-                ('group', models.ForeignKey(to='auth.Group')),
+                ('group', models.ForeignKey(to='auth.Group', on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
     ]

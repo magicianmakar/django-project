@@ -121,8 +121,8 @@ def fix_fields(data, choices_list, prefix=''):
 
 
 class OrderExportVendor(models.Model):
-    owner = models.ForeignKey(User, related_name='owned_vendors')
-    user = models.ForeignKey(User, related_name='vendors')
+    owner = models.ForeignKey(User, related_name='owned_vendors', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='vendors', on_delete=models.CASCADE)
     raw_password = models.CharField(max_length=255, blank=True, null=True)
 
     def generate_password(self):
@@ -161,8 +161,8 @@ class OrderExport(models.Model):
         'shipping_address': ORDER_SHIPPING_ADDRESS_CHOICES
     }
 
-    store = models.ForeignKey(ShopifyStore)
-    filters = models.OneToOneField(OrderExportFilter)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
+    filters = models.OneToOneField(OrderExportFilter, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     schedule = models.TimeField(null=True, blank=True)
     receiver = models.TextField(null=True, blank=True)
@@ -309,14 +309,14 @@ class OrderExport(models.Model):
 
 
 class OrderExportFoundProduct(models.Model):
-    order_export = models.ForeignKey(OrderExport, related_name='found_products')
+    order_export = models.ForeignKey(OrderExport, related_name='found_products', on_delete=models.CASCADE)
     image_url = models.TextField()
     title = models.TextField()
     product_id = models.BigIntegerField()
 
 
 class OrderExportQuery(models.Model):
-    order_export = models.ForeignKey(OrderExport, related_name="queries")
+    order_export = models.ForeignKey(OrderExport, related_name="queries", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     code = models.CharField(max_length=50, null=True, blank=True)
     params = models.TextField(default="")
@@ -343,7 +343,7 @@ class OrderExportLog(models.Model):
     started_by = models.DateTimeField(auto_now_add=True)
     finished_by = models.DateTimeField(blank=True, null=True)
 
-    order_export = models.ForeignKey(OrderExport, related_name="logs")
+    order_export = models.ForeignKey(OrderExport, related_name="logs", on_delete=models.CASCADE)
     successful = models.BooleanField(default=False)
     csv_url = models.CharField(max_length=512, blank=True, default='')
     type = models.CharField(max_length=100, choices=TYPE_CHOICES, default=SAMPLE)

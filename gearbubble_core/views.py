@@ -49,7 +49,7 @@ from .utils import (
 
 
 def autocomplete(request, target):
-    if not request.user.is_authenticated():
+    if not request.user.is_authenticated:
         return JsonResponse({'error': 'User login required'})
 
     q = request.GET.get('query', '').strip()

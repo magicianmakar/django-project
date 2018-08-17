@@ -4,9 +4,9 @@ from leadgalaxy.models import ShopifyStore, ShopifyProduct, AliexpressProductCha
 
 
 class ProductRevision(models.Model):
-    store = models.ForeignKey(ShopifyStore, null=True, blank=True)
-    product = models.ForeignKey(ShopifyProduct)
-    product_change = models.ForeignKey(AliexpressProductChange)
+    store = models.ForeignKey(ShopifyStore, null=True, blank=True, on_delete=models.CASCADE)
+    product = models.ForeignKey(ShopifyProduct, on_delete=models.CASCADE)
+    product_change = models.ForeignKey(AliexpressProductChange, on_delete=models.CASCADE)
 
     shopify_id = models.BigIntegerField(default=0)
     data = models.TextField(default='', blank=True)

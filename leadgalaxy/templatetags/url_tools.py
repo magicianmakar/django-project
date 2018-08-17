@@ -115,7 +115,7 @@ def query_active(context, field, value, selector, islist=False):
 @register.simple_tag(takes_context=True)
 def build_absolute_uri(context, path, reverse_url=False, **kwargs):
     if reverse_url:
-        from django.core.urlresolvers import reverse as reverse
+        from django.urls import reverse as reverse
         return context['request'].build_absolute_uri(reverse(path, kwargs=kwargs))
     else:
         return context['request'].build_absolute_uri(path)

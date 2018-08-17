@@ -1,10 +1,9 @@
-from django.conf.urls import patterns, url
+from django.conf.urls import url
 
 import gearbubble_core.views
 import subusers.views
 
-urlpatterns = patterns(
-    '',
+urlpatterns = [
     url(r'^$', gearbubble_core.views.StoresList.as_view(), name='index'),
     url(r'^products/?(?P<tpl>(grid|table))?$', gearbubble_core.views.ProductsList.as_view(), name='products_list'),
     url(r'^product/(?P<pk>[0-9]+)$', gearbubble_core.views.ProductDetailView.as_view(), name='product_detail'),
@@ -29,4 +28,4 @@ urlpatterns = patterns(
         subusers.views.subuser_woo_store_permissions, name='subuser_woo_store_permissions'),
     url(r'^subusers/gear-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
         subusers.views.subuser_gear_store_permissions, name='subuser_gear_store_permissions'),
-)
+]

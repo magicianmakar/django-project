@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from .factories import WooStoreFactory
 
@@ -6,7 +6,7 @@ from leadgalaxy.models import SUBUSER_WOO_STORE_PERMISSIONS
 from leadgalaxy.tests.factories import UserFactory
 
 
-class WooStoreFactoryTestCase(TestCase):
+class WooStoreFactoryTestCase(TransactionTestCase):
     def test_must_have_subuser_permissions(self):
         store = WooStoreFactory()
         self.assertEqual(store.subuser_woo_permissions.count(), len(SUBUSER_WOO_STORE_PERMISSIONS))
@@ -18,7 +18,7 @@ class WooStoreFactoryTestCase(TestCase):
         self.assertEqual(store.subuser_woo_permissions.count(), len(SUBUSER_WOO_STORE_PERMISSIONS))
 
 
-class UserProfileTestCase(TestCase):
+class UserProfileTestCase(TransactionTestCase):
     def test_subusers_must_have_all_store_permissions_when_assigned_a_store(self):
         parent_user = UserFactory()
         store = WooStoreFactory(user=parent_user)

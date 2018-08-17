@@ -3,8 +3,8 @@ from StringIO import StringIO
 
 import requests_mock
 from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.test import TestCase
+from django.urls import reverse
+from django.test import TransactionTestCase
 
 import factory
 from factory import fuzzy
@@ -38,7 +38,7 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
         model = ShopifyStore
 
 
-class OrderImportReadOrdersTestCase(TestCase):
+class OrderImportReadOrdersTestCase(TransactionTestCase):
 
     def setUp(self):
         self.user = UserFactory()
@@ -80,7 +80,7 @@ class OrderImportReadOrdersTestCase(TestCase):
         self.assertEqual(self.empty_orders, {})
 
 
-class OrderImportFetchOrdersTestCase(TestCase):
+class OrderImportFetchOrdersTestCase(TransactionTestCase):
 
     def setUp(self):
         self.user = UserFactory()
@@ -141,7 +141,7 @@ class OrderImportFetchOrdersTestCase(TestCase):
                     self.assertTrue(item['shopify'] is not None)
 
 
-class OrderImportSyncShopifyTestCase(TestCase):
+class OrderImportSyncShopifyTestCase(TransactionTestCase):
 
     def setUp(self):
         self.user = UserFactory()

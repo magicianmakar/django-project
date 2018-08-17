@@ -3,7 +3,7 @@ import json
 from mock import patch, Mock
 from requests.exceptions import HTTPError
 
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.core.cache import cache, caches
 
 from leadgalaxy.models import User
@@ -32,7 +32,7 @@ CHQ_API_KEY = 'gsycAdWxbv56CAQFNWVkN53sLxnzcSEF'
 CHQ_API_PASSWORD = 'euld-IWsmA1SkT5dved51decAcrXoz6n'
 
 
-class GetShippingCarrierTestCase(TestCase):
+class GetShippingCarrierTestCase(TransactionTestCase):
     def setUp(self):
         self.store = CommerceHQStoreFactory()
         self.store_shipping_carriers = [{
@@ -69,7 +69,7 @@ class GetShippingCarrierTestCase(TestCase):
         self.assertEqual(shipping_carrier.get('title'), "AfterShip")
 
 
-class CheckNotifyCustomerTestCase(TestCase):
+class CheckNotifyCustomerTestCase(TransactionTestCase):
     def setUp(self):
         self.invalid_tracking_number = '65141515'
 
@@ -109,7 +109,7 @@ class CheckNotifyCustomerTestCase(TestCase):
         self.assertFalse(notify)
 
 
-class AddAftershipToStoreCarriers(TestCase):
+class AddAftershipToStoreCarriers(TransactionTestCase):
     def setUp(self):
         self.store = CommerceHQStoreFactory()
         self.aftership = {
@@ -128,7 +128,7 @@ class AddAftershipToStoreCarriers(TestCase):
         self.assertEqual(shipping_carrier.get('title'), 'AfterShip')
 
 
-class CacheFulfillmentData(TestCase):
+class CacheFulfillmentData(TransactionTestCase):
     def setUp(self):
         self.store = CommerceHQStoreFactory()
         self.orders = {
@@ -278,7 +278,7 @@ class CacheFulfillmentData(TestCase):
         caches['orders'].delete_many(cache_keys)
 
 
-class OrdersTestCase(TestCase):
+class OrdersTestCase(TransactionTestCase):
     def setUp(self):
         self.user = User.objects.create(username='me', email='me@localhost.com')
         self.store = CommerceHQStore.objects.create(
@@ -311,7 +311,7 @@ class OrdersTestCase(TestCase):
         self.assertEqual(note, utils.get_chq_order_note(store, order_id))
 
 
-class UpdateProductDataImageVariantsTestCase(TestCase):
+class UpdateProductDataImageVariantsTestCase(TransactionTestCase):
     def setUp(self):
         self.old_url = 'https://example.com/example.png'
         self.new_url = 'https://example.com/new-image.png'
