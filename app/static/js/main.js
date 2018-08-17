@@ -643,7 +643,7 @@ $(function() {
     var tout = null;
     var showOnMouseEnter = ['#hijacked-warning', '.tos-update'];
 
-    $(showOnMouseEnter[0]).css('top', '-35px').prop('el-top', 36);
+    $(showOnMouseEnter[0]).css('top', '-76px').prop('el-top', 77);
     $(showOnMouseEnter.join(',')).mouseenter(function(e) {
         $(this).animate({
             top: "0",
