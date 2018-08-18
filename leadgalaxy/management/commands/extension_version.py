@@ -20,10 +20,10 @@ class Command(DropifiedBaseCommand):
         cache.persist('extension_required')
 
         self.stdout.write('Minimum Version: {}'.format(
-            self.style.MIGRATE_SUCCESS(cache.get('extension_min_version'))), self.style.HTTP_INFO)
+            self.style.SUCCESS(cache.get('extension_min_version'))), self.style.HTTP_INFO)
 
         self.stdout.write('Latest Version: {}'.format(
-            self.style.MIGRATE_SUCCESS(cache.get('extension_release'))), self.style.HTTP_INFO)
+            self.style.SUCCESS(cache.get('extension_release'))), self.style.HTTP_INFO)
 
         self.stdout.write('      Required: {}'.format(
-            self.style.MIGRATE_SUCCESS(cache.get('extension_required'))), self.style.HTTP_INFO)
+            self.style.SUCCESS(cache.get('extension_required'))), self.style.HTTP_INFO)

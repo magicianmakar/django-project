@@ -31,7 +31,7 @@ class Command(DropifiedBaseCommand):
 
             profile = user.profile
             self.stdout.write(u'Change user {} ({}) Plan from {} to {}'.format(
-                user.username, user.email, profile.plan.title, reg.plan.title), self.style.MIGRATE_SUCCESS)
+                user.username, user.email, profile.plan.title, reg.plan.title), self.style.SUCCESS)
 
             self.apply_plan_registrations(profile, reg)
 
@@ -50,7 +50,7 @@ class Command(DropifiedBaseCommand):
 
             profile = user.profile
             self.stdout.write(u'Add Bundle: {} for: {} ({})'.format(
-                reg.bundle.title, user.username, user.email), self.style.MIGRATE_SUCCESS)
+                reg.bundle.title, user.username, user.email), self.style.SUCCESS)
 
             profile.bundles.add(reg.bundle)
             reg.user = user

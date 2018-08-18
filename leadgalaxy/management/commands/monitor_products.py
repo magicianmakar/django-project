@@ -60,7 +60,7 @@ class Command(DropifiedBaseCommand):
         for plan_id in options['plan_id']:
             try:
                 plan = GroupPlan.objects.get(pk=plan_id)
-                self.stdout.write(self.style.MIGRATE_SUCCESS('Plan: {}'.format(plan.title)))
+                self.stdout.write(self.style.SUCCESS('Plan: {}'.format(plan.title)))
 
                 for profile in plan.userprofile_set.select_related('user').all():
                     self.handle_user(profile.user, options)
@@ -75,13 +75,13 @@ class Command(DropifiedBaseCommand):
                         self.stdout.write('* Ignore Plan: {}'.format(plan.title))
                         continue
 
-                    self.stdout.write(self.style.MIGRATE_SUCCESS(u'Plan: {}'.format(plan.title)))
+                    self.stdout.write(self.style.SUCCESS(u'Plan: {}'.format(plan.title)))
 
                     for profile in plan.userprofile_set.select_related('user').all():
                         self.handle_user(profile.user, options)
 
                 for bundle in p.featurebundle_set.all():
-                    self.stdout.write(self.style.MIGRATE_SUCCESS(u'Bundle: {}'.format(bundle.title)))
+                    self.stdout.write(self.style.SUCCESS(u'Bundle: {}'.format(bundle.title)))
 
                     for profile in bundle.userprofile_set.select_related('user').all():
                         self.handle_user(profile.user, options)

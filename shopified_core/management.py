@@ -41,4 +41,4 @@ class DropifiedBaseCommand(BaseCommand):
         self.stdout.write(msg, style_func, ending)
 
     def write_success(self, message):
-        self.stdout.write(self.style.MIGRATE_SUCCESS(message))
+        self.stdout.write(self.style.SUCCESS(message))

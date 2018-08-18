@@ -98,4 +98,4 @@ class Command(DropifiedBaseCommand):
             self.write('{:3,} line items connected to {}'.format(
                 line_items_count,
                 supplier_domain.title()),
-                self.style.MIGRATE_SUCCESS)
+                self.style.SUCCESS)
