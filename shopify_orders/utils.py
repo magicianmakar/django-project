@@ -175,7 +175,7 @@ def update_shopify_order(store, data, sync_check=True):
             'order_number': data['number'],
             'customer_id': customer.get('id', 0),
             'customer_name': str_max(get_customer_name(customer), 255),
-            'customer_email': str_max(customer.get('email'), 255),
+            'customer_email': str_max(customer.get('email'), 255).replace('\x00', ''),
             'financial_status': data['financial_status'],
             'fulfillment_status': data['fulfillment_status'],
             'total_price': data['total_price'],
