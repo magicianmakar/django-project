@@ -28,7 +28,7 @@ def str_max(text, max_len):
     if not text:
         return ''
     else:
-        return text[:max_len]
+        return text.strip(' \t\r\n\x00')[:max_len]
 
 
 def get_customer_name(customer):
