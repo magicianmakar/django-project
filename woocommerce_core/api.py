@@ -626,7 +626,7 @@ class WooStoreApi(ApiResponseMixin, View):
             return self.api_error('Store not found', status=404)
 
         try:
-            product = WooProduct.objects.get(source_id=product_id)
+            product = WooProduct.objects.get(store=store, source_id=product_id)
             permissions.user_can_edit(user, product)
         except WooProduct.DoesNotExist:
             return self.api_error('Product not found', status=404)

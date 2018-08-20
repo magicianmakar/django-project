@@ -1045,7 +1045,7 @@ class GearBubbleApi(ApiResponseMixin, View):
         permissions.user_can_view(user, store)
 
         try:
-            product = GearBubbleProduct.objects.get(source_id=product_id)
+            product = GearBubbleProduct.objects.get(store=store, source_id=product_id)
         except GearBubbleProduct.DoesNotExist:
             return self.api_error('Product not found', status=404)
 
