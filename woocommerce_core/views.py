@@ -305,7 +305,16 @@ class VariantsEditView(DetailView):
         return super(VariantsEditView, self).dispatch(request, *args, **kwargs)
 
     def get_object(self, queryset=None):
-        product = super(VariantsEditView, self).get_object(queryset)
+        kwarg = {
+            'source_id': self.kwargs['pid'],
+            'store': self.get_store(),
+        }
+
+        try:
+            product = WooProduct.objects.get(**kwarg)
+        except WooProduct.MultipleObjectsReturned:
+            product = WooProduct.objects.filter(**kwarg).first()
+
         permissions.user_can_view(self.request.user, product)
 
         return product
