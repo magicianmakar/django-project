@@ -41,10 +41,14 @@ class ShopifyStoreFactory(factory.django.DjangoModelFactory):
 class OrderImportReadOrdersTestCase(TransactionTestCase):
 
     def setUp(self):
-        self.user = UserFactory()
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
         self.user.save()
+
+        self.client.login(username=self.user.username, password=self.password)
+
         self.store = ShopifyStoreFactory(user=self.user)
-        self.client.post(reverse('login'), {'username': self.user.username, 'password': 'pass1'})
         self.api = ShopifyOrderImportAPI(store=self.store)
 
         csv_file = StringIO()
@@ -83,10 +87,14 @@ class OrderImportReadOrdersTestCase(TransactionTestCase):
 class OrderImportFetchOrdersTestCase(TransactionTestCase):
 
     def setUp(self):
-        self.user = UserFactory()
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
         self.user.save()
+
+        self.client.login(username=self.user.username, password=self.password)
+
         self.store = ShopifyStoreFactory(user=self.user)
-        self.client.post(reverse('login'), {'username': self.user.username, 'password': 'pass1'})
         self.api = ShopifyOrderImportAPI(store=self.store)
 
         csv_file = StringIO()
@@ -144,10 +152,14 @@ class OrderImportFetchOrdersTestCase(TransactionTestCase):
 class OrderImportSyncShopifyTestCase(TransactionTestCase):
 
     def setUp(self):
-        self.user = UserFactory()
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
         self.user.save()
+
+        self.client.login(username=self.user.username, password=self.password)
+
         self.store = ShopifyStoreFactory(user=self.user)
-        self.client.post(reverse('login'), {'username': self.user.username, 'password': 'pass1'})
         self.api = ShopifyOrderImportAPI(store=self.store)
 
         tracking_items = [

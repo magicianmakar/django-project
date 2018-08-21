@@ -71,14 +71,11 @@ class GetProductTestCase(TransactionTestCase):
         self.user = f.UserFactory(username='test')
         self.password = 'test'
         self.user.set_password(self.password)
-        self.user.profile.delete()
         self.user.save()
 
         self.store = f.ShopifyStoreFactory()
         self.store.user = self.user
         self.store.save()
-
-        f.UserProfileFactory(user=self.user)
 
         self.client.login(username=self.user.username, password=self.password)
 
@@ -304,14 +301,11 @@ class AutocompleteTestCase(TransactionTestCase):
         self.user = f.UserFactory(username='test')
         self.password = 'test'
         self.user.set_password(self.password)
-        self.user.profile.delete()
         self.user.save()
 
         self.store = f.ShopifyStoreFactory()
         self.store.user = self.user
         self.store.save()
-
-        f.UserProfileFactory(user=self.user)
 
         self.client.login(username=self.user.username, password=self.password)
 

@@ -69,8 +69,9 @@ class OrderExportTestCase(TransactionTestCase):
 
     def setUp(self):
         order_export_done.disconnect(generate_reports, sender=OrderExport)
-        self.user = UserFactory()
-        self.user.set_password('pass1')
+        self.user = UserFactory(username='test')
+        self.user.password = 'pass1'
+        self.user.set_password(self.user.password)
         self.user.save()
 
         self.store = ShopifyStoreFactory(user=self.user)
@@ -79,7 +80,7 @@ class OrderExportTestCase(TransactionTestCase):
         self.order_export = OrderExportFactory(store=self.store, filters=filters)
         self.order_export.save()
 
-        self.client.post(reverse('login'), {'username': self.user.username, 'password': 'pass1'})
+        self.client.login(username=self.user.username, password=self.user.password)
 
     def test_add_order(self):
         post_data = {
