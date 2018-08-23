@@ -225,6 +225,9 @@
 
 {% block extrajs %}
 <script type="text/javascript">
+    var bootstrapButton = $.fn.button.noConflict()
+    $.fn.bootstrapBtn = bootstrapButton
+
     var boardsMenu = {
     {% for item in request.user.get_gear_boards %}
         "{{item.id}}": {name: "{{item.title}}"},
