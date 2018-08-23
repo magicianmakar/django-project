@@ -1373,6 +1373,8 @@ def delete_shopify_store(self, store_id):
 def delete_user(self, user_id):
     try:
         user = User.objects.get(id=user_id)
+        print 'DELETEUSER:', user.id, user.email
+        return
 
         if not user.is_subuser:
             for store in user.profile.get_shopify_stores():
