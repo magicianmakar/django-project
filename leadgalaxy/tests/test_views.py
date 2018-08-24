@@ -259,6 +259,7 @@ class SubuserpermissionsApiTestCase(TransactionTestCase):
 
     @patch('leadgalaxy.models.ShopifyStore.pusher_trigger', Mock(return_value=None))
     @patch('leadgalaxy.tasks.mark_as_ordered_note')
+    @patch('leadgalaxy.utils.ShopifyOrderUpdater.delay_save', Mock(return_value=None))
     def test_subuser_can_order_fulfill_with_permission(self, mark_as_ordered_note):
         mark_as_ordered_note.delay = Mock(return_value=None)
         self.user.profile.subuser_stores.add(self.store)
@@ -277,6 +278,7 @@ class SubuserpermissionsApiTestCase(TransactionTestCase):
     @patch('leadgalaxy.views.utils.order_track_fulfillment', Mock(return_value=None))
     @patch('leadgalaxy.models.ShopifyStore.get_link', Mock(return_value=None))
     @patch('leadgalaxy.models.ShopifyStore.get_primary_location', Mock(return_value=None))
+    @patch('leadgalaxy.utils.ShopifyOrderUpdater.delay_save', Mock(return_value=None))
     @patch('leadgalaxy.views.requests.post')
     def test_subuser_can_fulfill_order_without_permission(self, request_post):
         response = Mock()
@@ -287,6 +289,7 @@ class SubuserpermissionsApiTestCase(TransactionTestCase):
         r = self.client.post('/api/fulfill-order', data)
         self.assertEquals(r.status_code, 200)
 
+    @patch('leadgalaxy.utils.ShopifyOrderUpdater.delay_save', Mock(return_value=None))
     def test_subuser_cant_fulfill_order_without_permission(self):
         self.user.profile.subuser_stores.add(self.store)
         permission = self.user.profile.subuser_permissions.get(codename='place_orders')
