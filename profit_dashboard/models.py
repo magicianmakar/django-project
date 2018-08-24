@@ -23,42 +23,21 @@ class FacebookAccess(models.Model):
     expires_in = models.DateTimeField(default=None, null=True, blank=True)
     account_ids = models.CharField(max_length=255, default='', blank=True)
 
-    def update_token(self, access_token, expires_in=0):
-        print access_token
-        expires_in = arrow.get().replace(seconds=expires_in).datetime
-        update = False
-
-        if self.expires_in is None:
-            update = True
-        elif (self.expires_in - arrow.now().datetime).seconds < 7200:  # Less than 2 hours
-            update = True
-        elif self.expires_in < arrow.now().datetime:
-            update = True
-
-        print (self.expires_in - arrow.now().datetime).seconds
-
-        print update
-        if update:
-            self.access_token = access_token
-            self.expires_in = expires_in
-            self.save()
-
-    def exchange_long_lived_token(self, new_access_token=None, new_expires_in=0):
+    def get_or_update_token(self, new_access_token=None, new_expires_in=0):
         """
         Exchange current access token for long lived one with +59 days expiration
         """
         # Renew only if old token expires in less than 2 weeks
         if self.expires_in is not None:
             delta_expires_in = self.expires_in - arrow.now().datetime
-            if delta_expires_in.days > 14:
+            if delta_expires_in.days > 7:
                 return self.access_token
 
         # Check if new token is expired
-        if new_expires_in is not None:
-            new_expires_in = arrow.get().replace(seconds=new_expires_in).datetime
-            delta_expires_in = new_expires_in - arrow.now().datetime
-            if delta_expires_in.seconds < 60:
-                raise Exception('Facebook token has expired')
+        new_expires_in = arrow.get().replace(seconds=new_expires_in).datetime
+        delta_expires_in = new_expires_in - arrow.now().datetime
+        if delta_expires_in.seconds < 60:
+            raise Exception('Facebook token has expired')
 
         if new_access_token is not None:
             self.access_token = new_access_token

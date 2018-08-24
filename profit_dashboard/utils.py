@@ -7,12 +7,12 @@ from collections import OrderedDict
 
 from django.conf import settings
 from django.db.models import Sum
+from django.utils import timezone
 
 from facebookads.api import FacebookAdsApi
 from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.adaccount import AdAccount
 
-from shopified_core.utils import ALIEXPRESS_REJECTED_STATUS
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.models import ShopifyOrder
 from leadgalaxy.utils import safeFloat, get_shopify_orders
@@ -26,6 +26,19 @@ from .models import (
     OtherCost
 )
 
+ALIEXPRESS_CANCELLED_STATUS = [
+    'buyer_pay_timeout',
+    'risk_reject_closed',
+    # 'buyer_accept_goods_timeout',
+    'buyer_cancel_notpay_order',
+    'cancel_order_close_trade',
+    'seller_send_goods_timeout',
+    'buyer_cancel_order_in_risk',
+    'buyer_accept_goods',
+    'seller_accept_issue_no_goods_return',
+    'seller_response_issue_timeout',
+]
+
 
 def get_facebook_api(access_token):
     return FacebookAdsApi.init(
@@ -38,7 +51,7 @@ def get_facebook_api(access_token):
 
 def get_facebook_ads(user, store, access_token=None, expires_in=None):
     access = FacebookAccess.objects.get(user=user, store=store)
-    access_token = access.exchange_long_lived_token(access_token, expires_in)
+    access_token = access.get_or_update_token(access_token, expires_in)
 
     api = get_facebook_api(access_token)
     user = FBUser(fbid='me', api=api)
@@ -119,6 +132,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
             'revenue': 0.0,
             'fulfillment_cost': 0.0,
             'fulfillments_count': 0,
+            'orders_count': 0,
             'ad_spend': 0.0,
             'other_costs': 0.0,
             'outcome': 0.0,
@@ -148,7 +162,9 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
+        profits_data[date_key]['profit'] += order['total_price']
         profits_data[date_key]['revenue'] += order['total_price']
+        profits_data[date_key]['orders_count'] += 1
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
 
@@ -163,6 +179,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
 
         refund_amount = get_refund_amount(refund.get('transactions'))
         if refund_amount:
+            profits_data[date_key]['profit'] -= refund_amount
             profits_data[date_key]['revenue'] -= refund_amount
             profits_data[date_key]['empty'] = False
             profits_data[date_key]['css_empty'] = ''
@@ -177,6 +194,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
+        profits_data[date_key]['profit'] -= safeFloat(shipping.total_cost)
         profits_data[date_key]['fulfillment_cost'] += safeFloat(shipping.total_cost)
         profits_data[date_key]['fulfillments_count'] += 1
         total_fulfillments_count += 1
@@ -197,6 +215,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
+        profits_data[date_key]['profit'] -= safeFloat(ad_cost['spend__sum'])
         profits_data[date_key]['ad_spend'] = safeFloat(ad_cost['spend__sum'])
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
@@ -217,6 +236,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         other_cost_value = safeFloat(other_cost['amount__sum'])
         is_empty = profits_data[date_key]['empty']
 
+        profits_data[date_key]['profit'] -= other_cost_value
         profits_data[date_key]['other_costs'] = other_cost_value
         # Other costs might be saved as 0
         profits_data[date_key]['empty'] = is_empty and other_cost_value == 0
@@ -226,14 +246,20 @@ def get_profits(user_id, store, start, end, store_timezone=''):
     totals = {
         'revenue': orders.aggregate(total=Sum('total_price'))['total'] or 0.0,
         'fulfillment_cost': shippings.aggregate(total=Sum('total_cost'))['total'] or 0.0,
-        'ad_spend': ad_costs.aggregate(total=Sum('spend__sum'))['total'] or 0.0,
+        'ads_spend': ad_costs.aggregate(total=Sum('spend__sum'))['total'] or 0.0,
         'other_costs': other_costs.aggregate(total=Sum('amount__sum'))['total'] or 0.0,
+        'average_profit': 0.0,
+        'average_revenue': 0.0,
     }
-    totals['outcome'] = safeFloat(totals['fulfillment_cost']) + safeFloat(totals['ad_spend']) + safeFloat(totals['other_costs'])
+    totals['outcome'] = safeFloat(totals['fulfillment_cost']) + safeFloat(totals['ads_spend']) + safeFloat(totals['other_costs'])
     totals['profit'] = safeFloat(totals['revenue']) - safeFloat(totals['outcome'])
     totals['orders_count'] = ShopifyOrder.objects.filter(store_id=store_id, created_at__range=(start, end)).count()
     totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)
+    totals['fulfillments_per_day'] = total_fulfillments_count / len(days)
+    if totals['orders_count'] != 0:
+        totals['average_profit'] = totals['profit'] / totals['orders_count']
+        totals['average_revenue'] = totals['revenue'] / totals['orders_count']
 
     # Details
     date_range = (arrow.get(start).to(store_timezone).datetime,
@@ -254,7 +280,7 @@ def calculate_profits(profits):
         profit['outcome'] = profit['fulfillment_cost'] + profit['ad_spend'] + profit['other_costs']
         profit['profit'] = profit['revenue'] - profit['outcome']
 
-        if profit['revenue'] == 0 or profit['revenue'] < profit['profit'] or profit['profit'] < 0:
+        if profit['revenue'] < profit['profit'] or profit['revenue'] == 0 or profit['profit'] < 0:
             percentage = 0
         else:
             percentage = profit['profit'] / profit['revenue'] * 100
@@ -298,7 +324,7 @@ def get_costs_from_track(track, commit=False):
             costs['shipping_cost'] = cost.get('shipping').replace(',', '.')
             costs['products_cost'] = cost.get('products').replace(',', '.')
 
-        if data['aliexpress']['end_reason'] and data['aliexpress']['end_reason'].lower() in ALIEXPRESS_REJECTED_STATUS:
+        if data['aliexpress']['end_reason'] and data['aliexpress']['end_reason'].lower() in ALIEXPRESS_CANCELLED_STATUS:
             return
 
         try:
@@ -518,3 +544,23 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
         detail['order_name'] = shopify_order.get('name')
 
     return profit_details, paginator
+
+
+def get_date_range(request):
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+    tz = timezone.localtime(timezone.now()).strftime(' %z')
+    if end is None:
+        end = arrow.now()
+    else:
+        end = arrow.get(end + tz, r'MM/DD/YYYY Z')
+
+    if start is None:
+        start = arrow.now().replace(days=-30)
+    else:
+        start = arrow.get(start + tz, r'MM/DD/YYYY Z')
+
+    end = end.to(request.session['django_timezone']).datetime
+    start = start.to(request.session['django_timezone']).datetime
+
+    return start, end

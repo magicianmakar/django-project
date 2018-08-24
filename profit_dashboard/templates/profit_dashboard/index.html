@@ -28,15 +28,14 @@
           <input type="hidden" name="store" value="{{ store.id }}">
           <input type="hidden" class="form-control" name="start" value="{{ start }}"/>
           <input type="hidden" class="form-control" name="end" value="{{ end }}" />
-          <!-- <div class="form-group" id="profit-range">
-            <label>Range date</label>
+          <div class="form-group" id="profit-range">
             <div class="input-daterange input-group" id="datepicker" style="width: auto;">
               <input type="text" class="form-control" name="start" value="{{ start }}"/>
               <span class="input-group-addon">to</span>
               <input type="text" class="form-control" name="end" value="{{ end }}" />
             </div>
           </div>
-          <button type="submit" class="btn btn-success">Filter</button> -->
+          <button type="submit" class="btn btn-success">Filter</button>
 
           <!-- <ul id="pagination-limit" class="top-controls pull-right">
             <li>
@@ -59,18 +58,20 @@
             </li>
           </ul> -->
 
-          <ul id="table-view" class="top-controls pull-right">
-            <li><label>View:</label></li>
-            <li><a href="javascript:;" class="btn active btn-success daily" data-time="daily">Daily</a></li>
-            <li><a href="javascript:;" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
-          </ul>
+          <div class="form-group pull-right">
+            <ul id="table-view" class="top-controls pull-right">
+              <li><label>View:</label></li>
+              <li><a href="javascript:;" class="btn active btn-success daily" data-time="daily">Daily</a></li>
+              <li><a href="javascript:;" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
+            </ul>
 
-          <ul id="graph-view" class="top-controls pull-right hidden">
-            <li><label>View:</label></li>
-            <li><a href="#" class="btn btn-default daily" data-time="daily">Daily</a></li>
-            <li><a href="#" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
-            <!-- <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li> -->
-          </ul>
+            <ul id="graph-view" class="top-controls pull-right hidden">
+              <li><label>View:</label></li>
+              <li><a href="#" class="btn btn-default daily" data-time="daily">Daily</a></li>
+              <li><a href="#" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
+              <!-- <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li> -->
+            </ul>
+          </div>
         </form>
 
         <div id="top-controls-menu">
@@ -112,7 +113,7 @@
   <script type="text/javascript">
     var config = {
       facebook: {
-        {% if user|can:'profit_dashboard_facebook.use' %}
+        {% if user_facebook_permission %}
         appId: "{% app_setting 'FACEBOOK_APP_ID' %}"
         {% else %}
         appId: null
