@@ -664,8 +664,8 @@ class ShopifyMandatoryWebhooksTestCase(TransactionTestCase):
                                     **self.store_headers)
         self.assertEquals(response.status_code, 200)
 
-        stores = ShopifyStore.objects.all()
-        orders = ShopifyOrder.objects.all()
+        store = ShopifyStore.objects.get(id=self.store.id)
+        orders = ShopifyOrder.objects.filter(store__delete_request_at=None)
 
-        self.assertEquals(stores.count(), 0)
+        self.assertNotEquals(store, store.delete_request_at)
         self.assertEquals(orders.count(), 0)

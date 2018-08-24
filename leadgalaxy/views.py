@@ -785,7 +785,9 @@ def webhook(request, provider, option):
                     ).delete()
 
                 elif topic == 'delete/store':
-                    tasks.delete_shopify_store.delay(store.id)
+                    if not store.is_active:
+                        store.delete_request_at = timezone.now()
+                        store.save()
 
                 else:
                     raven_client.captureMessage('Shopify GDPR Topic', level='warning', extra={'topic': topic})
