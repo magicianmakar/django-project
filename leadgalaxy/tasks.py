@@ -1341,9 +1341,6 @@ def delete_shopify_store(self, store_id):
     try:
         store = ShopifyStore.objects.get(id=store_id)
 
-        print 'DELETESTORE:', store.id, store.shop
-        return
-
         match = {
             'store': store
         }
