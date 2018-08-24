@@ -9,8 +9,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
+
 import os
 import dj_database_url
+import warnings
 
 # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -155,6 +157,9 @@ DATABASES = {
 }
 
 DATABASE_STATEMENT_TIMEOUT = os.environ.get('DATABASE_STATEMENT_TIMEOUT')
+
+# Ignore psycopg2-binary warnings
+warnings.filterwarnings("ignore", module="psycopg2")
 
 # Cache
 CACHES = {
