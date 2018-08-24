@@ -33,6 +33,7 @@ def extra_bundles(request):
 
 def store_limits_check(request):
     stores_limit_reached = False
+    stores_limit_max = 1
 
     if request.user.is_authenticated and \
             not request.user.profile.is_subuser and \
@@ -48,6 +49,7 @@ def store_limits_check(request):
             can_add, total_allowed, user_count = can_add_store(request.user)
             if not can_add and total_allowed < user_count:  # if the user `can_add` a store he definetly didn't reach the limit
                 stores_limit_reached = True
+                stores_limit_max = total_allowed
 
                 @execute_once_in([request.user.id], 120)
                 def record_limit_event(can_add, total_allowed, user_count):
@@ -65,7 +67,8 @@ def store_limits_check(request):
                 cache.set(cache_key, False, timeout=900)
 
     return {
-        'stores_limit_reached': stores_limit_reached
+        'stores_limit_reached': stores_limit_reached,
+        'stores_limit_max': stores_limit_max,
     }
 
 

@@ -16,7 +16,19 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-12 b-r">
-                        <h3 class="m-t-none m-b">You've exceeded the number of stores for your plan. Only one can be active, please select which stores to deactivate.</h3>
+                        <h3 class="m-t-none m-b">
+                            {% if stores_limit_max == 0 %}
+                            Your current plan doesn't allow adding any stores
+                            {% elif stores_limit_max == 1%}
+                            You've exceeded the number of stores for your plan. <br>Only one store can be active.
+                            {% else %}
+                            You've exceeded the number of stores for your plan. <br>Only {{stores_limit_max}} stores can be active.
+                            {% endif %}
+                        </h3>
+
+                        <h3 class="m-b">
+                        Please <a class="" href="/user/profile#plan">upgraded your plan</a> or select which stores to deactivate:</h3>
+                        </h3>
 
                         <form id="check-plan-limits-form" method="post" action="">
                             <table id="check-plan-limits-stores" class="table table-ligthborder">
