@@ -14,7 +14,8 @@
         <th>Total Costs</th>
         <th>Profit</th>
         <th>Profit Margin</th>
-        <th></th>
+        <th style="width: 40px;"></th>
+        <th style="width: 65px;"></th>
       </tr>
     </thead>
     <tbody>
@@ -58,6 +59,11 @@
         </td>
         <td class="percentage">{{ profit.return_over_investment }}</td>
         <td class="actions"></td>
+        <td>
+          <a href="javascript:;" class="btn btn-info btn-xs btn-outline details-link" data-date="{{ profit.date_as_string }}">
+            Details
+          </a>
+        </td>
       </tr>
       {% endfor %}
     </tbody>

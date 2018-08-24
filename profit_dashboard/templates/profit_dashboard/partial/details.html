@@ -1,55 +1,67 @@
 {% load template_helper %}
 
-<table id="details" class="table">
-  <thead>
-    <tr>
-      <th>Date</th>
-      <th>Product</th>
-      <th>Revenue/Refunds</th>
-      <th>Aliexpress Cost</th>
-      <th>Profit</th>
-      <th>Aliexpress Order ID</th>
-      <th>Shopify Order ID</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for detail in profit_details %}
-    <tr>
-      <td>{{ detail.date_as_string }}</td>
-      <td class="products">
-        {% for product in detail.products %}
-          <span>{{ product.quantity }} x {{ product.title }}</span>
-        {% endfor %}
-        {% for product in detail.refunded_products %}
-          <span class="label label-danger">{{ product.quantity }} x {{ product.title }}</span>
-        {% endfor %}
-      </td>
-      <td>
-        {% if detail.total_price %}
-        <span class="label label-success">{% money_format detail.total_price store True %}</span>
-        {% endif %}
-        {% if detail.total_refund %}
-        <span class="label label-danger">{% money_format detail.total_refund store True %}</span>
-        {% endif %}
-      </td>
-      <td>
-        <span class="label label-danger">{% money_format detail.fulfillment_cost store True %}</span>
-      </td>
-      <td>{% money_format detail.profit store True %}</td>
-      <td>
-        {% for track in detail.aliexpress_tracks %}
-          <a href="{{ track.source_url }}" target="_blank">{{ track.source_id }}</a>{% if not forloop.last %},{% endif %}
-        {% endfor %}
-      </td>
-      <td>
-        <a href="{{ detail.shopify_url }}" target="_blank">
-          {{ detail.order_name }}
-        </a>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+
+<div id="details-table-wrapper">
+  <div id="details-loading" style="display: none;">
+    <div class="sk-spinner sk-spinner-wave">
+        <div class="sk-rect1"></div>
+        <div class="sk-rect2"></div>
+        <div class="sk-rect3"></div>
+        <div class="sk-rect4"></div>
+        <div class="sk-rect5"></div>
+    </div>
+  </div>
+  <table id="details" class="table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Product</th>
+        <th>Revenue/Refunds</th>
+        <th>Aliexpress Cost</th>
+        <th>Profit</th>
+        <th>Aliexpress Order ID</th>
+        <th>Shopify Order ID</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for detail in profit_details %}
+      <tr class="profit-detail" data-detail-date="{{ detail.date_as_string }}">
+        <td>{{ detail.date_as_string }}</td>
+        <td class="products">
+          {% for product in detail.products %}
+            <span>{{ product.quantity }} x {{ product.title }}</span>
+          {% endfor %}
+          {% for product in detail.refunded_products %}
+            <span class="label label-danger">{{ product.quantity }} x {{ product.title }}</span>
+          {% endfor %}
+        </td>
+        <td>
+          {% if detail.total_price %}
+          <span class="label label-success">{% money_format detail.total_price store True %}</span>
+          {% endif %}
+          {% if detail.total_refund %}
+          <span class="label label-danger">{% money_format detail.total_refund store True %}</span>
+          {% endif %}
+        </td>
+        <td>
+          <span class="label label-danger">{% money_format detail.fulfillment_cost store True %}</span>
+        </td>
+        <td>{% money_format detail.profit store True %}</td>
+        <td>
+          {% for track in detail.aliexpress_tracks %}
+            <a href="{{ track.source_url }}" target="_blank">{{ track.source_id }}</a>{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        </td>
+        <td>
+          <a href="{{ detail.shopify_url }}" target="_blank">
+            {{ detail.order_name }}
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
 
 <div id="details-pagination">
   {% include "partial/paginator.html" with paginator=details_paginator current_page=profit_details %}
@@ -59,7 +71,7 @@
 {% verbatim %}
 <script id="profit-details" type="text/x-handlebars-template">
   {{#each details}}
-  <tr>
+  <tr class="profit-detail" data-detail-date="{{this.date_as_string}}">
     <td>{{this.date_as_string}}</td>
     <td class="products">
       {{#each this.products}}

@@ -60,7 +60,7 @@
                         </div>
                     </div>
                     <div class="form-group col-xs-3">
-                        <label for="product-type" style="display: block">Weight</label>
+                        <label for="product-weight" style="display: block">Weight</label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="product-weight" style="width:70%">
                             <select name="product-weight-unit" id="product-weight-unit" class="input-group-addon form-control" style="width:30%;padding: 0 5px">
@@ -278,15 +278,13 @@
                                 </li>
                                 {% endif %}
 
-                                {% if 'variants_images' in product.parsed %}
-                                    <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
+                                <li><a id="duplicate-btn" href="#" product-id="{{product.id}}" target="_blank"><i class="fa fa-copy"></i> Duplicate</a></li>
 
-                                    <li><a id="btn-split-variants" product-id="{{product.id}}" shopify-id="{{product.get_shopify_id}}"
-                                           type="button" target="_blank" class="itooltip" title="Split Variants into Separate Products"
-                                           data-placement="right">
-                                        <i class="fa fa-code-fork"></i> Split Variants</a>
-                                    </li>
-                                {% endif %}
+                                <li><a id="btn-split-variants" product-id="{{product.id}}" shopify-id="{{product.get_shopify_id}}"
+                                       type="button" target="_blank" class="itooltip" title="Split Variants into Separate Products"
+                                       data-placement="right">
+                                    <i class="fa fa-code-fork"></i> Split Variants</a>
+                                </li>
 
                                 {% if product.parsed.original_url %}
                                     <li><a href="{{product.parsed.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product</a></li>

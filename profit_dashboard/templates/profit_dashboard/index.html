@@ -73,28 +73,25 @@
           </ul>
         </form>
 
-        <div id="top-controls-menu" class="clients-list">
-          <ul class="nav nav-tabs">
+        <div id="top-controls-menu">
+          <ul class="nav nav-tabs clients-list">
               <li class="active"><a data-toggle="tab" href="#tab-data-table" data-top-controls="#pagination-limit, #table-view"><i class="fa fa-table"></i> Table</a></li>
               <li class=""><a data-toggle="tab" href="#tab-charts" data-top-controls="#graph-view"><i class="fa fa-line-chart"></i> Charts</a></li>
               <li class=""><a data-toggle="tab" href="#tab-details" data-top-controls="#details-view"><i class="fa fa-line-chart"></i> Details</a></li>
           </ul>
           <div class="tab-content">
-              <div id="tab-data-table" class="tab-pane active">
+              <div id="tab-data-table" class="tab-pane active clients-list">
                 {% include 'profit_dashboard/partial/totals.html' %}
                 <br>
                 {% include 'profit_dashboard/partial/table.html' %}
               </div>
               <div id="tab-charts" class="tab-pane">
-                <div>
-                  <h2>Profits</h2>
-                  {% include 'profit_dashboard/partial/chart.html' %}
-                </div>
+                <br>
+                {% include 'profit_dashboard/partial/chart.html' %}
               </div>
               <div id="tab-details" class="tab-pane">
-                <div>
-                  {% include 'profit_dashboard/partial/details.html' %}
-                </div>
+                <br>
+                {% include 'profit_dashboard/partial/details.html' %}
               </div>
           </div>
         </div>

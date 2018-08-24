@@ -603,8 +603,7 @@ class VariantsEditView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super(VariantsEditView, self).get_context_data(**kwargs)
-        product_data = self.object.retrieve()
-        product_data = GearBubbleProduct.update_variant_properties(product_data)
+        product_data = self.object.get_product_data()
         context['product'] = product_data
         context['store'] = self.object.store
         context['product_id'] = self.object.source_id

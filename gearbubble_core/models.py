@@ -263,52 +263,53 @@ class GearBubbleProduct(models.Model):
         supplier.save()
 
     def retrieve(self):
-        if self.source_id:
-            url = GearBubbleStore.get_api_url('private_products/{}'.format(self.source_id))
-            r = self.store.request.get(url)
-            r.raise_for_status()
+        if not self.source_id:
+            raise ValueError('The product is not connected to a store.')
 
-            return r.json()['product']
+        url = GearBubbleStore.get_api_url('private_products/{}'.format(self.source_id))
+        r = self.store.request.get(url)
+        r.raise_for_status()
+
+        return r.json()['product']
+
+    def get_product_data(self):
+        product_data = self.retrieve()
+        product_data = GearBubbleProduct.update_variant_properties(product_data)
+
+        return product_data
 
     def sync(self):
-        product_data = self.retrieve()
+        product_data = self.get_product_data()
+        images = product_data.get('images', [])
+        images = [img['src'] for img in images if not img['variant_id']]
 
-        if product_data:
-            product_data = GearBubbleProduct.update_variant_properties(product_data)
-            original_images = self.parsed.get('images', [])
-            images = product_data.get('images', [])
-            images = [img['src'] for img in images if not img['variant_id']]
+        self.update_data({'images': images})
+        self.update_data({'title': product_data['title']})
+        self.update_data({'description': product_data['body_html']})
+        self.update_data({'tags': product_data['tags']})
+        self.update_data({'variants': product_data.get('variants', [])})
+        self.update_data({'options': product_data.get('options', [])})
+        self.update_data({'source_id': product_data['id']})
+        self.update_data({'source_slug': product_data['slug']})
 
-            if 'original_images' not in self.parsed:
-                self.update_data({'original_images': original_images[:]})
+        if 'price' in product_data:
+            self.update_data({'price': product_data['price']})
 
-            self.update_data({'images': images})
-            self.update_data({'title': product_data['title']})
-            self.update_data({'description': product_data['body_html']})
-            self.update_data({'tags': product_data['tags']})
-            self.update_data({'variants': product_data.get('variants', [])})
-            self.update_data({'options': product_data.get('options', [])})
-            self.update_data({'source_id': product_data['id']})
-            self.update_data({'source_slug': product_data['slug']})
+        if 'compare_at_price' in product_data:
+            self.update_data({'compare_at_price': product_data['compare_at_price']})
 
-            if 'price' in product_data:
-                self.update_data({'price': product_data['price']})
+        if 'available_qty' in product_data:
+            self.update_data({'available_qty': product_data['available_qty']})
 
-            if 'compare_at_price' in product_data:
-                self.update_data({'compare_at_price': product_data['compare_at_price']})
+        if 'weight' in product_data:
+            self.update_data({'weight': product_data['weight']})
 
-            if 'available_qty' in product_data:
-                self.update_data({'available_qty': product_data['available_qty']})
+        if 'weight_unit' in product_data:
+            self.update_data({'weight_unit': product_data['weight_unit']})
 
-            if 'weight' in product_data:
-                self.update_data({'weight': product_data['weight']})
+        self.save()
 
-            if 'weight_unit' in product_data:
-                self.update_data({'weight_unit': product_data['weight_unit']})
-
-            self.save()
-
-            return self.parsed
+        return self.parsed
 
     def get_mapping_config(self):
         try:

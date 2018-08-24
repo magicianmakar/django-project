@@ -120,6 +120,7 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
             this.onTabsChange();
             this.onChartToggleDataClick();
             this.onDetailsPaginationClick();
+            this.onDetailsClick();
 
             if (window.location.hash) {
                 $('#top-controls-menu a[href="' + window.location.hash + '"]').trigger('click');
@@ -783,11 +784,22 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                 }
             });
         },
-        reloadProfitDetails: function(page) {
+        reloadProfitDetails: function(page, singleDate) {
+            var data = {'page': page};
+
+            if (singleDate) {
+                var start = moment(singleDate.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
+                data['start'] = start.format('MM/DD/YYYY');
+                data['end'] = start.add(1, 'days').format('MM/DD/YYYY');
+            }
+
             $.ajax({
                 type: 'POST',
                 url: '/profit-dashboard/details',
-                data: {'page': page},
+                data: data,
+                beforeSend: function() {
+                    ProfitDashboard.detailsLoading.start();
+                },
                 success: function(data) {
                     var template = Handlebars.compile($("#profit-details").html());
 
@@ -796,8 +808,27 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                 },
                 error: function(data) {
                     displayAjaxError('Profit Details Page', data);
+                },
+                complete: function() {
+                    ProfitDashboard.detailsLoading.stop();
                 }
             });
+        },
+        onDetailsClick: function() {
+            $('.details-link').on('click', function(e) {
+                e.preventDefault();
+
+                ProfitDashboard.reloadProfitDetails(1, $(this).attr('data-date'));
+                $('.nav li a[href="#tab-details"]').trigger('click');
+            });
+        },
+        detailsLoading: {
+            start: function() {
+                $('#details-loading').css('display', '');
+            },
+            stop: function() {
+                $('#details-loading').css('display', 'none');
+            }
         }
     };
 
