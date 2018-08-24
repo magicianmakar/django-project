@@ -98,11 +98,14 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
         otherCostsAjaxTimeout: {},
         chartsData: {},
         chartsLabels: [],
+        miniCharts: {amounts: {data: {}, labels: {}}, counts: {data: {}, labels: {}}, averages: {data: {}, labels: {}}},
+        miniChartsLabels: [],
         profitChart: null,
         profitChartData: null,
         chartTime: 'daily',  // daily, weekly, monthly
         min_months_for_weekly_chart: 4,
         min_months_for_daily_chart: 2,
+        currentYear: new Date().getFullYear(),
         init: function() {
             this.initTooltip();
             this.initDatepicker();
@@ -133,8 +136,8 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
             $('#profit-range .input-daterange').datepicker({
                 keyboardNavigation: false,
                 forceParse: false,
-                autoclose: true,
-                startDate: moment().subtract(35, 'days').format('MM/DD/YYYY')
+                autoclose: false,
+                startDate: '06/01/2018'
             });
         },
         initExpandable: function() {
@@ -350,9 +353,30 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                 });
             }, 2000);
         },
+        calculateAverages: function(profit, revenue, ordersCount) {
+            if (!ordersCount) {
+                return [0.0, 0.0];
+            }
+
+            var averageProfit = profit / ordersCount,
+                averageRevenue = revenue / ordersCount;
+
+            return [averageProfit, averageRevenue];
+        },
         loadChartsData: function() {
-            var results = {revenue: [], fulfillment_cost: [], ads_spend: [], other_costs: [], total_costs: [], fulfillments_count: []},
-                activeGraphViewCssClass = '.' + this.chartTime;
+            var results = {
+                revenue: [],
+                fulfillment_cost: [],
+                ads_spend: [],
+                other_costs: [],
+                total_costs: [],
+                fulfillments_count: [],
+                profit: [],
+                orders_count: [],
+                average_profit: [],
+                average_revenue: []
+            };
+            var activeGraphViewCssClass = '.' + this.chartTime;
 
             if (this.chartTime == 'daily') {
                 for (var iLength = this.profitsData.length, i = 0; i <= iLength; i++) {
@@ -361,24 +385,35 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                         continue;
                     }
 
+                    var total_costs = profit.fulfillment_cost + profit.ad_spend + profit.other_costs,
+                        averages = this.calculateAverages(profit.profit, profit.revenue, profit.orders_count),
+                        average_profit = averages[0],
+                        average_revenue = averages[1];
+                    results.profit.push(+profit.profit.toFixed(2));
                     results.revenue.push(+profit.revenue.toFixed(2));
                     results.fulfillment_cost.push(+profit.fulfillment_cost.toFixed(2));
                     results.ads_spend.push(+profit.ad_spend.toFixed(2));
                     results.other_costs.push(+profit.other_costs.toFixed(2));
                     results.fulfillments_count.push(+profit.fulfillments_count);
-                    var total_costs = profit.fulfillment_cost + profit.ad_spend + profit.other_costs;
+                    results.orders_count.push(+profit.orders_count);
+                    results.average_profit.push(+average_profit.toFixed(2));
+                    results.average_revenue.push(+average_revenue.toFixed(2));
                     results.total_costs.push(+total_costs.toFixed(2));
                 }
             } else if (this.chartTime == 'weekly') {
                 var position = 0,
                     nextMonday = moment(this.profitsData[0].date_as_string.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
 
+                results.profit[position] = 0.0;
                 results.revenue[position] = 0.0;
                 results.fulfillment_cost[position] = 0.0;
                 results.ads_spend[position] = 0.0;
                 results.other_costs[position] = 0.0;
                 results.fulfillments_count[position] = 0;
+                results.orders_count[position] = 0;
                 results.total_costs[position] = 0.0;
+                results.average_profit[position] = 0.0;
+                results.average_revenue[position] = 0.0;
                 for (var iLength = this.profitsData.length, i = 0; i <= iLength; i++) {
                     var profit = this.profitsData[i];
                     if (!profit) {
@@ -387,23 +422,34 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
 
                     var profitDate = moment(profit.date_as_string.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
                     if (profitDate.isAfter(nextMonday)) {
+
+                        var averages = this.calculateAverages(results.profit[position], results.revenue[position], results.orders_count[position]),
+                            average_profit = averages[0],
+                            average_revenue = averages[1];
+                        results.average_profit[position] = +average_profit.toFixed(2);
+                        results.average_revenue[position] = +average_revenue.toFixed(2);
+
                         position += 1;
                         nextMonday = nextMonday.add(1, 'weeks');
 
+                        results.profit[position] = 0.0;
                         results.revenue[position] = 0.0;
                         results.fulfillment_cost[position] = 0.0;
                         results.ads_spend[position] = 0.0;
                         results.other_costs[position] = 0.0;
                         results.fulfillments_count[position] = 0;
+                        results.orders_count[position] = 0;
                         results.total_costs[position] = 0.0;
                     }
 
                     var total_costs = profit.fulfillment_cost + profit.ad_spend + profit.other_costs;
+                    results.profit[position] = +(results.profit[position] + profit.profit).toFixed(2);
                     results.revenue[position] = +(results.revenue[position] + profit.revenue).toFixed(2);
                     results.fulfillment_cost[position] = +(results.fulfillment_cost[position] + profit.fulfillment_cost).toFixed(2);
                     results.ads_spend[position] = +(results.ads_spend[position] + profit.ad_spend).toFixed(2);
                     results.other_costs[position] = +(results.other_costs[position] + profit.other_costs).toFixed(2);
                     results.fulfillments_count[position] = +(results.fulfillments_count[position] + profit.fulfillments_count).toFixed(2);
+                    results.orders_count[position] = +(results.orders_count[position] + profit.orders_count).toFixed(2);
                     results.total_costs[position] = +(results.total_costs[position] + total_costs).toFixed(2);
                 }
             } else if (this.chartTime == 'monthly') {
@@ -419,21 +465,32 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                         total_costs = profit.fulfillment_cost + profit.ad_spend + profit.other_costs;
 
                     if (currentDate != lastDate) {
+                        if (lastDate) {
+                            var averages = this.calculateAverages(results.profit[position], results.revenue[position], results.orders_count[position]),
+                                average_profit = averages[0],
+                                average_revenue = averages[1];
+                            results.average_profit[position] = +average_profit.toFixed(2);
+                            results.average_revenue[position] = +average_revenue.toFixed(2);
+                        }
                         position += 1;
                         lastDate = currentDate;
+                        results.profit[position] = +profit.profit.toFixed(2);
                         results.revenue[position] = +profit.revenue.toFixed(2);
                         results.fulfillment_cost[position] = +profit.fulfillment_cost.toFixed(2);
                         results.ads_spend[position] = +profit.ad_spend.toFixed(2);
                         results.other_costs[position] = +profit.other_costs.toFixed(2);
                         results.fulfillments_count[position] = +profit.fulfillments_count;
+                        results.orders_count[position] = +profit.orders_count;
                         results.total_costs[position] = +total_costs.toFixed(2);
 
                     } else {
+                        results.profit[position] = +(results.profit[position] + profit.profit).toFixed(2);
                         results.revenue[position] = +(results.revenue[position] + profit.revenue).toFixed(2);
                         results.fulfillment_cost[position] = +(results.fulfillment_cost[position] + profit.fulfillment_cost).toFixed(2);
                         results.ads_spend[position] = +(results.ads_spend[position] + profit.ad_spend).toFixed(2);
                         results.other_costs[position] = +(results.other_costs[position] + profit.other_costs).toFixed(2);
                         results.fulfillments_count[position] = +(results.fulfillments_count[position] + profit.fulfillments_count);
+                        results.orders_count[position] = +(results.orders_count[position] + profit.orders_count);
                         results.total_costs[position] = +(results.total_costs[position] + total_costs).toFixed(2);
                     }
                 }
@@ -443,12 +500,21 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
 
             this.chartsData = results;
         },
+        getFormatFromMoment: function(momentDate) {
+            if (momentDate.year() == this.currentYear) {
+                return 'MMM DD';
+            } else {
+                return 'MMM DD, YYYY';
+            }
+        },
         loadChartLabels: function(start, end) {
-            var result = [];
+            var result = [],
+                miniResult = [];
 
             if (this.chartTime == 'daily') {
                 while (start <= end) {
                     result.push(start.format('MMM DD, YYYY'));
+                    miniResult.push(start.format(this.getFormatFromMoment(start)));
                     start.add(1, 'days');
                 }
             } else if (this.chartTime == 'weekly') {
@@ -457,8 +523,10 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
 
                 end.add(7, 'days');
                 result.push(current.format('MMM DD, YYYY'));
+                miniResult.push(current.format(this.getFormatFromMoment(current)));
                 while (current.add(1, 'week').isBefore(end)) {
                     result.push(current.format('MMM DD, YYYY'));
+                    miniResult.push(current.format(this.getFormatFromMoment(current)));
                 }
             } else if (this.chartTime == 'monthly') {
                 var end = end.toDate(),
@@ -474,11 +542,13 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                         start.setMonth(start.getMonth() + 1);
                     }
 
-                    result[i] = moment(start).format("MMM YYYY");
+                    result[i] = moment(start).format('MMM DD, YYYY');
+                    miniResult[i] = moment(start).format(this.getFormatFromMoment(moment(start)));
                 }
             }
 
             this.chartsLabels = result;
+            this.miniChartsLabels = miniResult;
         },
         setChartViewByDate: function(start, end) {
             monthsBetween = moment(end - start).month();
@@ -518,6 +588,63 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                     }
                 ]
             };
+
+            this.miniCharts.amounts.data = {
+                labels: this.miniChartsLabels,
+                datasets: [
+                    {
+                        label: "Revenue",
+                        fill: 1,
+                        backgroundColor: 'rgba(125, 171, 196, 0.5)',
+                        borderColor: "rgba(125, 171, 196, 0.7)",
+                        data: this.chartsData.revenue
+                    }, {
+                        label: "Total Costs",
+                        fill: false,
+                        backgroundColor: 'rgba(236, 71, 88, 0.5)',
+                        borderColor: "rgba(236, 71, 88, 0.7)",
+                        data: this.chartsData.total_costs
+                    }
+                ]
+            };
+
+            this.miniCharts.counts.data = {
+                labels: this.miniChartsLabels,
+                datasets: [
+                    {
+                        label: "Orders",
+                        fill: false,
+                        backgroundColor: 'rgba(125, 171, 196, 0.5)',
+                        borderColor: "rgba(125, 171, 196, 0.7)",
+                        data: this.chartsData.orders_count
+                    }, {
+                        label: "Fulfillments",
+                        fill: false,
+                        backgroundColor: 'rgba(236, 71, 88, 0.5)',
+                        borderColor: "rgba(236, 71, 88, 0.7)",
+                        data: this.chartsData.fulfillments_count
+                    }
+                ]
+            };
+
+            this.miniCharts.averages.data = {
+                labels: this.miniChartsLabels,
+                datasets: [
+                    {
+                        label: "Average Revenue",
+                        fill: 1,
+                        backgroundColor: 'rgba(125, 171, 196, 0.5)',
+                        borderColor: "rgba(125, 171, 196, 0.7)",
+                        data: this.chartsData.average_revenue
+                    }, {
+                        label: "Average Profit",
+                        fill: false,
+                        backgroundColor: 'rgba(236, 71, 88, 0.5)',
+                        borderColor: "rgba(236, 71, 88, 0.7)",
+                        data: this.chartsData.average_profit
+                    }
+                ]
+            };
         },
         loadCharts: function() {
             var ctx = $("#profits-chart").get(0).getContext("2d");
@@ -552,6 +679,54 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                         }]
                     }
                 }
+            });
+
+            var miniChartOptions = {
+                responsive: true,
+                tooltips: {mode: 'index', intersect: false},
+                hover: {mode: 'nearest', intersect: true},
+                legend: {display: false},
+                elements: {point: 'line'},
+                scales: {
+                    xAxes: [{
+                        gridLines: {display: false},
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return '';
+                            }
+                        }
+                    }],
+                    yAxes: [{
+                        gridLines: {display: false},
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function(value, index, values) {
+                                return '';
+                            }
+                        }
+                    }]
+                }
+            };
+            ctx = $("#amounts-chart-mini").get(0).getContext("2d");
+            new Chart(ctx, {
+                type: 'line',
+                data: this.miniCharts.amounts.data,
+                options: miniChartOptions
+            });
+
+            ctx = $("#counts-chart-mini").get(0).getContext("2d");
+            new Chart(ctx, {
+                type: 'line',
+                data: this.miniCharts.counts.data,
+                options: miniChartOptions
+            });
+
+            ctx = $("#averages-chart-mini").get(0).getContext("2d");
+            new Chart(ctx, {
+                type: 'line',
+                data: this.miniCharts.averages.data,
+                options: miniChartOptions
             });
         },
         reloadCharts: function() {
@@ -794,7 +969,7 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
             }
 
             $.ajax({
-                type: 'POST',
+                type: 'GET',
                 url: '/profit-dashboard/details',
                 data: data,
                 beforeSend: function() {

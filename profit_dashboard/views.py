@@ -7,7 +7,6 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
-from django.utils import timezone
 
 from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.adaccount import AdAccount
@@ -20,6 +19,7 @@ from .utils import (
     calculate_profits,
     get_facebook_api,
     get_profit_details,
+    get_date_range,
 )
 from .models import (
     CONFIG_CHOICES,
@@ -44,24 +44,9 @@ def index(request):
         messages.warning(request, 'Your orders are not synced yet')
         return HttpResponseRedirect('/')
 
-    start = request.GET.get('start')
-    end = request.GET.get('end')
-    limit = utils.safeInt(request.GET.get('limit'), 0)
+    start, end = get_date_range(request)
+    limit = utils.safeInt(request.GET.get('limit'), 30)
     current_page = utils.safeInt(request.GET.get('page'), 1)
-
-    tz = timezone.localtime(timezone.now()).strftime(' %z')
-    if end is None:
-        end = arrow.now()
-    else:
-        end = arrow.get(end + tz, r'MM/DD/YYYY Z')
-
-    if start is None:
-        start = arrow.now().replace(days=-30)
-    else:
-        start = arrow.get(start + tz, r'MM/DD/YYYY Z')
-
-    end = end.to(request.session['django_timezone']).datetime
-    start = start.to(request.session['django_timezone']).datetime
 
     profits, totals, details = get_profits(request.user.pk, store, start, end, request.session['django_timezone'])
     profit_details, details_paginator = details
@@ -133,9 +118,7 @@ def facebook_accounts(request):
         'access_token': access_token,
         'expires_in': arrow.get().replace(seconds=expires_in).datetime
     })
-
-    if not created:
-        facebook_access.update_token(access_token, expires_in)
+    access_token = facebook_access.get_or_update_token(access_token, expires_in)
 
     api = get_facebook_api(access_token)
     user = FBUser(fbid='me', api=api)
@@ -152,7 +135,7 @@ def facebook_campaign(request):
     """
     store = utils.get_store_from_request(request)
     facebook_access = FacebookAccess.objects.get(user=request.user, store=store)
-    access_token = facebook_access.access_token
+    access_token = facebook_access.get_or_update_token()
     account_id = request.GET.get('account_id')
     account_name = request.GET.get('account_name')
 
@@ -246,31 +229,15 @@ def profit_details(request):
             'error': 'Please add at least one store before using the Profits Dashboard.'
         }, status=500)
 
-    start = request.POST.get('start')
-    end = request.POST.get('end')
-    limit = utils.safeInt(request.POST.get('limit'), 20)
-    current_page = utils.safeInt(request.POST.get('page'), 1)
-
-    tz = timezone.localtime(timezone.now()).strftime(' %z')
-    if end is None:
-        end = arrow.now()
-    else:
-        end = arrow.get(end + tz, r'MM/DD/YYYY Z')
-
-    if start is None:
-        start = arrow.now().replace(days=-30)
-    else:
-        start = arrow.get(start + tz, r'MM/DD/YYYY Z')
-
-    store_timezone = request.session['django_timezone']
-    end = end.to(store_timezone).datetime
-    start = start.to(store_timezone).datetime
+    start, end = get_date_range(request)
+    limit = utils.safeInt(request.GET.get('limit'), 20)
+    current_page = utils.safeInt(request.GET.get('page'), 1)
 
     details, paginator = get_profit_details(store,
                                             (start, end),
                                             limit=limit,
                                             page=current_page,
-                                            store_timezone=store_timezone)
+                                            store_timezone=request.session['django_timezone'])
 
     pagination = render_to_string('partial/paginator.html', {
         'request': request,

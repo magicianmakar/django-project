@@ -99,7 +99,7 @@
 #totals-profit,
 #totals-other-costs,
 #totals-total-costs {
-  margin-left: -3px;
+  /*margin-left: -3px;*/
 }
 
 .pagination .active span {
@@ -198,4 +198,41 @@
   position: absolute;
   top: calc(50% - 15px);
   left: calc(50% - 25px);
+}
+
+.expandable .well {
+  /*padding-bottom: 0;*/
+}
+
+.expandable .well hr {
+  border-top: 1px solid #ccc;
+  margin: 3px 0 10px;
+}
+
+.expandable .well h3 span {
+  border-bottom: 2px dotted #c4cdd5;
+  color: #000;
+}
+
+.expandable .well .main-value {
+  color: #000;
+  font-size: 15px;
+  margin-bottom: 15px;
+  display: inline-block;
+}
+
+.expandable .well dl {
+  margin: 0;
+}
+
+.expandable .well dl dt {
+  text-align: left !important;
+}
+
+.expandable .well dl dd {
+  text-align: right !important;
+}
+
+.expandable .well .totals-detail {
+  height: 140px;
 }

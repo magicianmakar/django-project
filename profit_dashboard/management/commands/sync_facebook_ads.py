@@ -28,9 +28,16 @@ class Command(DropifiedBaseCommand):
         start = 0
 
         for account in facebook_accounts_list:
+            try:
+                access_token = account.access.get_or_update_token()
+            except:
+                raven_client.captureException()
+                continue
+
             kwargs = {
                 'user': account.access.user,
                 'store': account.store,
+                'access_token': access_token,
             }
 
             try:
