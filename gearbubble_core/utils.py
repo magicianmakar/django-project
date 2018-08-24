@@ -3,6 +3,8 @@ import copy
 import json
 import itertools
 
+import requests
+
 from unidecode import unidecode
 
 from django.conf import settings
@@ -112,17 +114,70 @@ def format_gear_errors(e):
     return e.response.json().get('error', '')
 
 
+def get_image_hash_to_etag_map(images):
+    image_hash_to_etag_map = {}
+
+    for img in images:
+        image_hash = hash_url_filename(img['src'])
+        image_key = 'gearbubble_image_etag_{}'.format(image_hash)
+        image_etag = cache.get(image_key)
+
+        if not image_etag:
+            r = requests.head(img['src'])
+            r.raise_for_status()
+            image_etag = r.headers['ETag']
+            cache.set(image_key, image_etag)
+
+        image_hash_to_etag_map[image_hash] = image_etag
+
+    return image_hash_to_etag_map
+
+
+def map_images(product, product_data):
+    images = product_data.get('images', [])[:]
+    image_hash_to_etag_map = get_image_hash_to_etag_map(images)
+    variants_images = {}
+    deletables = []
+
+    for variant in product_data.get('variants', []):
+        option = variant['options'][0]
+        src = variant['image']['src']
+        hash_src = hash_url_filename(src)
+        hash_src_sha = image_hash_to_etag_map[hash_src]
+        for img in images:
+            hash_img_src = hash_url_filename(img['src'])
+            hash_img_sha = image_hash_to_etag_map[hash_img_src]
+            same_url = hash_img_src == hash_src
+            same_image = hash_img_sha == hash_src_sha
+            if not img['variant_id'] and not same_url and same_image:
+                variants_images[hash_img_src] = option
+                deletables.append(src)
+                break
+        else:
+            variants_images[hash_src] = option
+
+    images = [img['src'] for img in images if img['src'] not in deletables]
+    product.update_data({'images': images})
+    product.update_data({'variants_images': variants_images})
+
+
+def map_variants(product, product_data):
+    variants = []
+
+    for option in product_data.get('options', []):
+        title, values = option['name'], option['values'].split(',')
+        variants.append({'title': title, 'values': values})
+
+    product.update_data({'variants': variants})
+
+
 def disconnect_data(product):
+    product_data = product.get_product_data()
+    map_images(product, product_data)
+    map_variants(product, product_data)
     data = product.parsed
     data.pop('source_id')
     data.pop('source_slug')
-    data['images'] = data.pop('original_images')
-    data['variants'] = []
-
-    for option in product.parent_product.parsed.get('options', []):
-        title, values = option['name'], option['values'].split(',')
-        data['variants'].append({'title': title, 'values': values})
-
     product.data = json.dumps(data)
 
     return product
@@ -132,12 +187,12 @@ def disconnect_data(product):
 def duplicate_product(product, store=None):
     parent_product = GearBubbleProduct.objects.get(id=product.id)
     product = copy.deepcopy(parent_product)
-    product.pk = None
     product.parent_product = parent_product
+    product = disconnect_data(product) if product.parsed.get('source_id') else product
+    product.pk = None
     product.source_id = 0
     product.source_slug = ''
     product.store = store
-    product = disconnect_data(product) if product.parsed.get('source_id') else product
     product.save()
 
     for supplier in parent_product.gearbubblesupplier_set.all():
@@ -563,11 +618,11 @@ def get_product_export_data(product):
     data = product.parsed
     vendor_product = {}
     vendor_product['title'] = data.get('title', '')
-    vendor_product['cost'] = data.get('price', '')
+    vendor_product['cost'] = data.get('price') or 0
     vendor_product['available_qty'] = data.get('available_qty', settings.GEARBUBBLE_DEFAULT_QTY)
     vendor_product['body_html'] = data.get('description', '')
     vendor_product['tags'] = data.get('tags', '')
-    vendor_product['weight'] = data.get('weight', '')
+    vendor_product['weight'] = data.get('weight') or 0
     vendor_product['weight_unit'] = data.get('weight_unit', '')
     vendor_product['images'] = [{'src': src} for src in data.get('images', [])]
 
@@ -582,10 +637,10 @@ def get_product_export_data(product):
 
         for variant_product in itertools.product(*options):
             variant = {}
-            variant['cost'] = data.get('price', 0)
+            variant['cost'] = data.get('price') or 0
             variant['compare_at_price'] = data.get('compare_at_price')
             variant['available_qty'] = data.get('available_qty', settings.GEARBUBBLE_DEFAULT_QTY)
-            variant['weight'] = data.get('weight', '0')
+            variant['weight'] = data.get('weight') or 0
             variant['weight_unit'] = data.get('weight_unit', 'g')
 
             for i, option in enumerate(variant_product, start=1):
@@ -603,11 +658,11 @@ def get_product_export_data(product):
 def get_product_update_data(product, data):
     api_data = {'id': product.source_id}
     api_data['title'] = data.get('title', '')
-    api_data['cost'] = data.get('price', '')
+    api_data['cost'] = data.get('price') or 0
     api_data['compare_at_price'] = data.get('compare_at_price', '')
     api_data['body_html'] = data.get('description') or '<p></p>'
     api_data['tags'] = data.get('tags', '')
-    api_data['weight'] = data.get('weight', '')
+    api_data['weight'] = data.get('weight') or 0
     api_data['weight_unit'] = data.get('weight_unit', '')
 
     effect_on_current_images = get_effect_on_current_images(product, data)
@@ -627,7 +682,7 @@ def get_product_update_data(product, data):
         for variant_data in data['variants']:
             variant = {}
             variant['id'] = variant_data['id']
-            variant['cost'] = variant_data['price']
+            variant['cost'] = variant_data['price'] or 0
             variant['compare_at_price'] = variant_data['compare_at_price']
             variant['sku'] = variant_data['sku']
 
