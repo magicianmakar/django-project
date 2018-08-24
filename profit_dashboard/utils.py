@@ -499,16 +499,22 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
 
     # Merge tracks with orders
     for detail in profit_details:
-        detail['aliexpress_tracks'] = tracks_map.get(detail.get('order_id'))
-        detail['shopify_url'] = store.get_link('/admin/orders/{}'.format(detail.get('order_id')))
+        order_id = detail.get('order_id')
+        shopify_order = shopify_orders.get(order_id, {})
+        row_with_order = 'total_price' in detail
 
-        shopify_order = shopify_orders.get(detail['order_id'], {})
+        if row_with_order:  # Only get tracks and line items if not just a refund
+            detail['products'] = shopify_order.get('line_items', [])
+
+            order_tracks = tracks_map.get(order_id, [])
+            fulfillment_cost = reduce(sum_costs, order_tracks, 0)
+
+            if fulfillment_cost:
+                detail['aliexpress_tracks'] = order_tracks
+                detail['profit'] -= fulfillment_cost
+                detail['fulfillment_cost'] = fulfillment_cost
+
+        detail['shopify_url'] = store.get_link('/admin/orders/{}'.format(order_id))
         detail['order_name'] = shopify_order.get('name')
-        detail['products'] = shopify_order.get('line_items', [])
-
-        if detail['aliexpress_tracks']:
-            fulfillment_cost = reduce(sum_costs, detail['aliexpress_tracks'], 0)
-            detail['profit'] -= fulfillment_cost
-            detail['fulfillment_cost'] = fulfillment_cost
 
     return profit_details, paginator

@@ -23,12 +23,17 @@
   display: none;
 }
 
-.table > tbody > tr.closed .other-costs-form {
+.table > tbody > tr.closed .other-costs-form,
+.table > tbody > tr.closed .details-link {
   display: none;
 }
 
 .table > tbody > tr.closed .other-costs-value {
   display: inline;
+}
+
+#details .profit-detail {
+  transition: background-color 0.2s;
 }
 
 #graph-view,
@@ -174,4 +179,23 @@
   white-space: nowrap;
   overflow: hidden;
   margin: 1px 0;
+}
+
+#details-table-wrapper {
+  position: relative;
+}
+
+#details-loading {
+  background-color: rgba(255, 255, 255, 0.6);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 35px;
+  bottom: 0;
+}
+
+#details-loading .sk-spinner {
+  position: absolute;
+  top: calc(50% - 15px);
+  left: calc(50% - 25px);
 }
