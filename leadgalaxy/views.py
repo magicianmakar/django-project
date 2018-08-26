@@ -3952,6 +3952,10 @@ def orders_place(request):
         order_data = order_data_cache(order_key)
         prefix, store, order, line = order_key.split('_')
 
+    if order_data:
+        order_data['url'] = redirect_url
+        caches['orders'].set(order_key, order_data, timeout=caches['orders'].ttl(order_key))
+
     if order_data and settings.KEEN_PROJECT_ID and not cache.get(event_key):
         try:
             store = ShopifyStore.objects.get(id=store)
