@@ -1,6 +1,7 @@
 import arrow
 import simplejson as json
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
@@ -77,7 +78,7 @@ def index(request):
         'profits_json': profits_json,
         'profit_details': profit_details,
         'details_paginator': details_paginator,
-        'user_facebook_permission': request.user.can('profit_dashboard_facebook.use')
+        'user_facebook_permission': settings.FACEBOOK_APP_ID
     })
 
 
