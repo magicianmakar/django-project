@@ -77,9 +77,9 @@ def app_link(*args, **kwargs):
     Get full link to a web app page
 
     Example:
-        app_link('order')
-        app_link('order/track') or app_link('order', 'track')
-        app_link('order/track', query=1001)
+        app_link('orders')
+        app_link('orders/track') or app_link('orders', 'track')
+        app_link('orders/track', query=1001)
     """
 
     path = u'/'.join([str(i) for i in args]).lstrip('/') if args else ''
@@ -654,7 +654,7 @@ class CancelledOrderAlert():
                 data={
                     'username': self.user.username,
                     'track': self.order_track,
-                    'track_url': app_link('{}/order/track'.format(self.store_type), **params),
+                    'track_url': app_link('{}/orders/track'.format(self.store_type), **params),
                 },
             )
         elif cancelled_orders_count == 10:
@@ -669,7 +669,7 @@ class CancelledOrderAlert():
                 data={
                     'username': self.user.username,
                     'track': self.order_track,
-                    'track_url': app_link('{}/order/track'.format(self.store_type), **params),
+                    'track_url': app_link('{}/orders/track'.format(self.store_type), **params),
                     'bulk': True
                 },
             )
