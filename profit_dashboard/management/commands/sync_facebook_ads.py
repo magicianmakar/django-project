@@ -14,8 +14,7 @@ class Command(DropifiedBaseCommand):
     help = 'Sync Aliexpress fulfillment costs from last month'
 
     def add_arguments(self, parser):
-        parser.add_argument('--noprogress', dest='progress', action='store_false',
-                            help='Hide Progress')
+        parser.add_argument('--progress', dest='progress', action='store_true', help='Show Progress')
 
     def start_command(self, *args, **options):
         progress = options['progress']
