@@ -97,10 +97,11 @@ class Command(DropifiedBaseCommand):
 
         api_data, line = utils.order_track_fulfillment(order_track=order, user_config=user.get_config(), return_line=True)
 
+        locations = []
         fulfilled = False
         tries = 3
 
-        while tries > 0:
+        while tries > 0 or locations:
             try:
                 rep = requests.post(
                     url=store.get_link('/admin/orders/{}/fulfillments.json'.format(order.order_id), api=True),
@@ -137,6 +138,52 @@ class Command(DropifiedBaseCommand):
                         order.shopify_status = 'fulfilled'
                         order.save()
                         return False
+
+                    elif 'must be stocked at the same location' in rep.text:
+                        if locations:
+                            # We are trying locations one by one
+                            location = locations.pop()
+                            self.write(u'Re-trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
+                        else:
+                            order_line = utils.get_shopify_order_line(store, order.order_id, order.line_id)
+                            location = store.get_location(name=order_line['origin_location']['name'] if order_line.get('origin_location') else None)
+
+                            if not location:
+                                # Try locations one by one
+                                locations = store.get_locations(fulfillments_only=True)
+                                location = locations.pop()
+                                self.write(u'Trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
+
+                        if location:
+                            api_data["fulfillment"]["location_id"] = location['id']
+
+                            self.write(u'Change location to {} in #{} [{}]'.format(location['name'], order.order_id, order.store.shop))
+
+                            ShopifyOrderLog.objects.update_order_log(
+                                store=store,
+                                user=None,
+                                log=u'Fulfill in location: {}'.format(location['name']),
+                                level='info',
+                                order_id=order.order_id,
+                                line_id=order.line_id
+                            )
+                        else:
+                            raven_client.captureMessage(u'No location found', extra={'track': order.id, 'store': order.store.shop})
+
+                            ShopifyOrderLog.objects.update_order_log(
+                                store=store,
+                                user=None,
+                                log=u'No location found',
+                                level='error',
+                                icon='times',
+                                order_id=order.order_id,
+                                line_id=order.line_id
+                            )
+
+                            order.hidden = True
+                            order.save()
+
+                        continue
 
                 elif e.response.status_code == 404:
                     self.write(u'Not found #{} in [{}]'.format(order.order_id, order.store.title))

@@ -872,6 +872,42 @@ class ShopifyStore(models.Model):
 
         return primary_location
 
+    def get_locations(self, fulfillments_only=False):
+        locations_key = 'stoe_locations_{}'.format(self.id)
+        locations = cache.get(locations_key)
+        if locations is None:
+
+            rep = requests.get(self.get_link('/admin/locations.json', api=True))
+            rep.raise_for_status()
+
+            locations = rep.json()['locations']
+
+            cache.set(locations_key, locations, timeout=3600)
+
+        if fulfillments_only:
+            locations = [i for i in locations if i['legacy']]
+
+        return locations
+
+    def get_location(self, name=None, location_id=None):
+        locations = self.get_locations(fulfillments_only=True)
+
+        if locations:
+            for l in locations:
+                if name and name == l['name']:
+                    return l
+                elif location_id and location_id == l['id']:
+                    return l
+
+        if len(locations) == 1:
+            if self.primary_location != locations[0]['id']:
+                self.primary_location = locations[0]['id']
+                self.save()
+
+            return locations[0]
+
+        return None
+
 
 class AccessToken(models.Model):
     class Meta:

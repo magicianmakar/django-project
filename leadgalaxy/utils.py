@@ -1571,7 +1571,7 @@ def order_track_fulfillment(**kwargs):
     if kwargs.get('order_track'):
         order_id = kwargs.get('order_track').order_id
         line_id = kwargs.get('order_track').line_id
-        location_id = kwargs.get('order_track').store.get_primary_location()
+        location_id = kwargs.get('location_id', kwargs.get('order_track').store.get_primary_location())
         source_tracking = kwargs.get('order_track').source_tracking
         store_id = kwargs.get('order_track').store_id
     else:
