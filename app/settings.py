@@ -266,7 +266,7 @@ if not DEBUG:
     AWS_S3_SECURE_URLS = False
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_URL_PROTOCOL = ''
-    AWS_S3_CUSTOM_DOMAIN = os.environ.get('S3_CUSTOM_DOMAIN', 'd2kadg5e284yn4.cloudfront.net')
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get('S3_CUSTOM_DOMAIN', 'cdn.dropified.com')
 
     AWS_IS_GZIPPED = False
     AWS_HEADERS = {

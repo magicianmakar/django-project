@@ -168,7 +168,7 @@
                         variants.push({
                             id: el.data,
                             text: el.value,
-                            image: el.image || '//d2kadg5e284yn4.cloudfront.net/static/img/blank.gif',
+                            image: el.image || '//cdn.dropified.com/static/img/blank.gif',
                         });
                     });
 

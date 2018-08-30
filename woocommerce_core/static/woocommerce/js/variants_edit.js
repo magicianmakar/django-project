@@ -130,7 +130,7 @@ function setupVariantsLinking() {
             });
 
             d.append(img);
-            d.append($('<img class="link-success" src="//d2kadg5e284yn4.cloudfront.net/static/img/checked-checkbox-24.png" ' +
+            d.append($('<img class="link-success" src="//cdn.dropified.com/static/img/checked-checkbox-24.png" ' +
                 'style="display:none;position: absolute;left: 25px;' +
                 'top: 5px;background-color: #fff;border-radius: 5px;">'
             ));

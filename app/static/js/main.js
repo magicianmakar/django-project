@@ -809,7 +809,7 @@ $('img.no-img').on('error', function(e) {
         return;
     }
 
-    var img = '//d2kadg5e284yn4.cloudfront.net/static/img/' + ($(this).hasClass('no-img-sm') ? 'no-image-sm.png' : 'no-image.png');
+    var img = '//cdn.dropified.com/static/img/' + ($(this).hasClass('no-img-sm') ? 'no-image-sm.png' : 'no-image.png');
     $(this).attr('src', img);
 
     if ($(this).attr('no-img-width')) {
