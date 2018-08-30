@@ -7,7 +7,7 @@ import leadgalaxy.api
 
 urlpatterns = [
     url(r'^$', leadgalaxy.views.index_view, name='index'),
-    url(r'^logout$', leadgalaxy.views.logout, name="logout"),
+    url(r'^logout$', leadgalaxy.views.logout, name="leadgalaxy.views.logout"),
 
     url(r'^webhook/(?P<provider>[a-z-]+)/(?P<option>[a-z:-]+)/?$', leadgalaxy.views.webhook),
     url(r'^product/edit/(?P<what>[a-z-]+)$', leadgalaxy.views.bulk_edit, name='bulk_edit'),
