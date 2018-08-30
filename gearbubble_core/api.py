@@ -698,7 +698,7 @@ class GearBubbleApi(ApiResponseMixin, View):
         data = {'track': track.id, 'order_id': order_id, 'line_id': line_id, 'source_id': source_id}
         store.pusher_trigger('order-source-id-add', data)
 
-        return self.api_success()
+        return self.api_success({'order_track_id': track.id})
 
     def delete_order_fulfill(self, request, user, data):
         user = user.models_user

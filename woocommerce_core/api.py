@@ -897,7 +897,7 @@ class WooStoreApi(ApiResponseMixin, View):
         if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
             order_updater.delay_save()
 
-        return self.api_success()
+        return self.api_success({'order_track_id': track.id})
 
     def post_order_fullfill_hide(self, request, user, data):
         order = WooOrderTrack.objects.get(id=data.get('order'))

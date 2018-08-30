@@ -34,7 +34,7 @@ ALIEXPRESS_CANCELLED_STATUS = [
     'cancel_order_close_trade',
     'seller_send_goods_timeout',
     'buyer_cancel_order_in_risk',
-    'buyer_accept_goods',
+    # 'buyer_accept_goods',
     'seller_accept_issue_no_goods_return',
     'seller_response_issue_timeout',
 ]
@@ -290,11 +290,13 @@ def calculate_profits(profits):
 
 
 def get_costs_from_track(track, commit=False):
-    """Get Aliexpress cost data from Order Track
+    """Get Aliexpress cost data from Order Track and (optionally) commit changes to the database
 
     Args:
         track (ShopifyOrderTrack): Order Track
-        commit (bool, optional): Update or create AliexpressFulfillmentCost from the track data
+        commit (bool, optional): Commit changes to the database:
+            - Update or create AliexpressFulfillmentCost from the track data
+            - Remove AliexpressFulfillmentCost is the order is canceled in Aliexpress
 
     Returns:
         (dict/None): Return None in case of error or track doesn't have costs
@@ -325,6 +327,13 @@ def get_costs_from_track(track, commit=False):
             costs['products_cost'] = cost.get('products').replace(',', '.')
 
         if data['aliexpress']['end_reason'] and data['aliexpress']['end_reason'].lower() in ALIEXPRESS_CANCELLED_STATUS:
+            # Remove cancelled fulfillment costs
+            if commit:
+                AliexpressFulfillmentCost.objects.filter(
+                    store=track.store,
+                    order_id=track.order_id,
+                    source_id=track.source_id
+                ).delete()
             return
 
         try:

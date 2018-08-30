@@ -2306,7 +2306,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if track.data and not from_oberlo:
             shopify_orders_tasks.check_track_errors.delay(track.id)
 
-        return self.api_success()
+        return self.api_success({'order_track_id': track.id})
 
     def delete_order_fulfill(self, request, user, data):
         order_id = data.get('order_id')
