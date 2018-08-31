@@ -2399,7 +2399,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except:
             raven_client.captureException(level='warning')
 
-        if data.get('bundle'):
+        if data.get('bundle') and data['bundle'] != 'false':
             if not order_data.get('bundle'):
                 order_data['bundle'] = {}
 
