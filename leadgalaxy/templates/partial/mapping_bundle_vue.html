@@ -30,13 +30,13 @@
     <div class="well" style="padding:5px">
         <div style="display: inline-flex;align-items: center;padding: 3px 10px 3px 3px;border: 1px solid #ccc;border-radius: 5px;background-color: white;">
                 <img v-if="variant.image" class="variant-image thumb unveil no-img"
-                    style="height:50px;margin:0 10px 0 0;" src="//cdn.dropified.com/static/img/blank.gif"
+                    style="height:50px;margin:0 10px 0 0;" src="//d2kadg5e284yn4.cloudfront.net/static/img/blank.gif"
                     onerror="this.style.display='none'"
                     :data-src="variant.image" />
 
                 <img v-else
                     style="width: 40px" class="variant-image"
-                    src="//cdn.dropified.com/static/img/no-image-sm.png" />
+                    src="//d2kadg5e284yn4.cloudfront.net/static/img/no-image-sm.png" />
 
             <label>{{variant.title}}</label>
         </div>
@@ -59,7 +59,7 @@
 
             <img v-else
                 style="width: 40px"
-                src="//cdn.dropified.com/static/img/no-image-sm.png" />
+                src="//d2kadg5e284yn4.cloudfront.net/static/img/no-image-sm.png" />
 
             <a :href="'/product/mapping/' + product.id" target="_blank">{{product.title | truncate}}</a>
          </div>

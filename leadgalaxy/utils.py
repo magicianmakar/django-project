@@ -93,8 +93,7 @@ def upload_from_url(url, stores=[]):
     allowed_paths = [r'^https?://s3.amazonaws.com/feather(-client)?-files-aviary-prod-us-east-1/']  # Aviary
     allowed_domains = ['%s.s3.amazonaws.com' % i for i in [settings.S3_STATIC_BUCKET, settings.S3_UPLOADS_BUCKET]]
     allowed_domains += ['cdn.shopify.com', 'shopifiedapp.s3.amazonaws.com', 'ecx.images-amazon.com',
-                        'images-na.ssl-images-amazon.com', 'www.dhresource.com', 'd2kadg5e284yn4.cloudfront.net',
-                        'cdn.dropified.com']
+                        'images-na.ssl-images-amazon.com', 'www.dhresource.com', 'd2kadg5e284yn4.cloudfront.net']
 
     allowed_mimetypes = ['image/jpeg', 'image/png', 'image/gif']
 

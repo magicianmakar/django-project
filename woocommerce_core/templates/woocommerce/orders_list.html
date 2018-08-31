@@ -330,12 +330,12 @@
                                         {% if order.has_shipping_address %}
                                             <img class="itooltip" style="width: 16px"
                                                  title="{{order.shipping.country}}"
-                                                 src="//cdn.dropified.com/static/flags/{{order.shipping.country|lower}}.svg">
+                                                 src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.shipping.country|lower}}.svg">
                                             <br />
                                         {% else %}
                                             <img class="itooltip" style="width: 16px"
                                                  title="{{order.billing.country}}"
-                                                 src="//cdn.dropified.com/static/flags/{{order.billing.country|lower}}.svg">
+                                                 src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.billing.country|lower}}.svg">
                                             <br />
                                         {% endif %}
                                         {% if order.billing.email %}
