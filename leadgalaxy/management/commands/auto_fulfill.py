@@ -150,14 +150,10 @@ class Command(DropifiedBaseCommand):
                             location = locations.pop()
                             self.write(u'Re-trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
                         else:
-                            order_line = utils.get_shopify_order_line(store, order.order_id, order.line_id)
-                            location = store.get_location(name=order_line['origin_location']['name'] if order_line.get('origin_location') else None)
-
-                            if not location:
-                                # Try locations one by one
-                                locations = store.get_locations(fulfillments_only=True)
-                                location = locations.pop()
-                                self.write(u'Trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
+                            # Try locations one by one
+                            locations = store.get_locations()
+                            location = locations.pop()
+                            self.write(u'Trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
 
                         if location:
                             api_data["fulfillment"]["location_id"] = location['id']
