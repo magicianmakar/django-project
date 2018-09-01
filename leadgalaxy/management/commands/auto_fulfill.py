@@ -60,6 +60,7 @@ class Command(DropifiedBaseCommand):
         }
 
         self.store_countdown = {}
+        self.store_locations = {}
         self.start_at = timezone.now()
 
         for order in orders[:fulfill_max]:
@@ -95,7 +96,11 @@ class Command(DropifiedBaseCommand):
         store = order.store
         user = store.user
 
-        api_data, line = utils.order_track_fulfillment(order_track=order, user_config=user.get_config(), return_line=True)
+        api_data, line = utils.order_track_fulfillment(
+            order_track=order,
+            user_config=user.get_config(),
+            return_line=True,
+            location_id=self.store_locations.get(order.store.id))
 
         locations = []
         fulfilled = False
@@ -157,6 +162,7 @@ class Command(DropifiedBaseCommand):
                         if location:
                             api_data["fulfillment"]["location_id"] = location['id']
 
+                            self.store_locations[order.store.id] = location['id']
                             self.write(u'Change location to {} in #{} [{}]'.format(location['name'], order.order_id, order.store.shop))
 
                             ShopifyOrderLog.objects.update_order_log(
