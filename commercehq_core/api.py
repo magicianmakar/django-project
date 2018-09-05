@@ -1104,7 +1104,7 @@ class CHQStoreApi(ApiResponseMixin, View):
         except:
             pass
 
-        if data.get('bundle'):
+        if data.get('bundle') and data['bundle'] != 'false':
             if not order_data.get('bundle'):
                 order_data['bundle'] = {}
 
