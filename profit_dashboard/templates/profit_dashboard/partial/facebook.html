@@ -91,7 +91,11 @@
   <p>Please Select a Facebook Ad Account:</p>
   <ul class="list-group" style="overflow:auto;max-height:400px;">
     {{#each accounts}}
-    <li class="list-group-item" data-name="{{this.name}}"><input type="radio" name="account" value="{{this.id}}"> {{this.name}}</li>
+    <li class="list-group-item" data-name="{{this.name}}">
+      <label>
+        <input type="radio" name="account" value="{{this.id}}"> {{this.name}}
+      </label>
+    </li>
     {{/each}}
   </ul>
 </script>

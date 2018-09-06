@@ -4,7 +4,7 @@
   <div class="well">
     <h3><span>Profit</span></h3>
     <div class="totals-detail">
-      <span class="totals-profit main-value" data-original-amount="{{ totals.profit|default:'0'|floatformat:2 }}">
+      <span class="totals-profit main-value">
         {% money_format totals.profit store True %}
       </span>
       <dl class="dl-horizontal">
@@ -13,16 +13,16 @@
         <dt>Fulfillment Costs</dt>
         <dd id="totals-fulfillment-cost">{% money_format totals.fulfillment_cost store True %}</dd>
         <dt>Ads Spend</dt>
-        <dd id="totals-other-costs">{% money_format totals.ads_spend store True %}</dd>
+        <dd>{% money_format totals.ads_spend store True %}</dd>
         <dt>Other Costs</dt>
         <dd id="totals-other-costs">{% money_format totals.other_costs store True %}</dd>
       </dl>
       <hr>
       <dl class="dl-horizontal">
         <dt>Profit</dt>
-        <dd class="totals-profit" data-original-amount="{{ totals.profit|default:'0'|floatformat:2 }}">{% money_format totals.profit store True %}</dd>
+        <dd class="totals-profit">{% money_format totals.profit store True %}</dd>
         <dt>Profit Margin</dt>
-        <dd id="totals-profit-margin">{{ totals.profit_margin|default:"50%" }}</dd>
+        <dd id="totals-profit-margin">{{ totals.profit_margin }}</dd>
       </dl>
     </div>
     <canvas id="amounts-chart-mini" height="100"></canvas>
@@ -51,11 +51,11 @@
     <div class="totals-detail">
       <dl class="dl-horizontal">
         <dt>Profit</dt>
-        <dd id="totals-profit" data-original-amount="{{ totals.profit|default:'0'|floatformat:2 }}">
+        <dd id="average-totals-profit" data-original-amount="{{ totals.profit|default:'0'|floatformat:2 }}">
           {% money_format totals.average_profit store True %}
         </dd>
         <dt>Revenue</dt>
-        <dd id="total-revenue">{% money_format totals.average_revenue store True %}</dd>
+        <dd id="average-total-revenue">{% money_format totals.average_revenue store True %}</dd>
       </dl>
     </div>
     <canvas id="averages-chart-mini" height="100"></canvas>

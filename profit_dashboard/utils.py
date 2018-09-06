@@ -26,6 +26,8 @@ from .models import (
     OtherCost
 )
 
+INITIAL_DATE = arrow.get('2018-06-01')
+
 ALIEXPRESS_CANCELLED_STATUS = [
     'buyer_pay_timeout',
     'risk_reject_closed',
@@ -63,11 +65,14 @@ def get_facebook_ads(user, store, access_token=None, expires_in=None):
         if account['id'] not in account_ids:
             continue
 
-        account_model = FacebookAccount.objects.get(
-            account_id=account.get(account.Field.id),
-            access=access,
-            store=store
-        )
+        try:
+            account_model = FacebookAccount.objects.get(
+                account_id=account.get(account.Field.id),
+                access=access,
+                store=store
+            )
+        except FacebookAccount.DoesNotExist:
+            continue
 
         if account_model.last_sync:
             params['time_range'] = {
@@ -115,6 +120,23 @@ def get_facebook_ads(user, store, access_token=None, expires_in=None):
         account_model.campaigns = ','.join(campaigns)
         account_model.last_sync = date.today()
         account_model.save()
+
+
+def calculate_profit_margin(revenue, profit):
+    if revenue < profit or revenue == 0 or profit < 0:
+        percentage = 0
+    else:
+        percentage = profit / revenue * 100
+    return '{}%'.format(int(percentage))
+
+
+def calculate_profits(profits):
+    for profit in profits:
+        profit['outcome'] = profit['fulfillment_cost'] + profit['ad_spend'] + profit['other_costs']
+        profit['profit'] = profit['revenue'] - profit['outcome']
+        profit['return_over_investment'] = calculate_profit_margin(profit['revenue'], profit['profit'])
+
+    return profits
 
 
 def get_profits(user_id, store, start, end, store_timezone=''):
@@ -257,6 +279,7 @@ def get_profits(user_id, store, start, end, store_timezone=''):
     totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)
     totals['fulfillments_per_day'] = total_fulfillments_count / len(days)
+    totals['profit_margin'] = calculate_profit_margin(totals['revenue'], totals['profit'])
     if totals['orders_count'] != 0:
         totals['average_profit'] = totals['profit'] / totals['orders_count']
         totals['average_revenue'] = totals['revenue'] / totals['orders_count']
@@ -273,20 +296,6 @@ def get_profits(user_id, store, start, end, store_timezone=''):
                                  store_timezone=store_timezone)
 
     return profits_data.values(), totals, details
-
-
-def calculate_profits(profits):
-    for profit in profits:
-        profit['outcome'] = profit['fulfillment_cost'] + profit['ad_spend'] + profit['other_costs']
-        profit['profit'] = profit['revenue'] - profit['outcome']
-
-        if profit['revenue'] < profit['profit'] or profit['revenue'] == 0 or profit['profit'] < 0:
-            percentage = 0
-        else:
-            percentage = profit['profit'] / profit['revenue'] * 100
-        profit['return_over_investment'] = '{}%'.format(int(percentage))
-
-    return profits
 
 
 def get_costs_from_track(track, commit=False):
