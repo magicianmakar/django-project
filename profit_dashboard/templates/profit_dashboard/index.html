@@ -37,38 +37,10 @@
           </div>
           <button type="submit" class="btn btn-success">Filter</button>
 
-          <!-- <ul id="pagination-limit" class="top-controls pull-right">
-            <li>
-              <label>Items per page:</label>
-            </li>
-            <li{% if limit == 10 %} class="active"{% endif %}>
-              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&limit=10">10</a>
-            </li>
-            <li{% if limit == 50 %} class="active"{% endif %}>
-              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&limit=50">50</a>
-            </li>
-            <li{% if limit == 100 %} class="active"{% endif %}>
-              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&limit=100">100</a>
-            </li>
-            <li{% if limit == 0 %} class="active"{% endif %}>
-              <a href="?store={{ store.pk }}&start={{ start }}&end={{ end }}&limit=0">All</a>
-            </li>
-            <li>
-              <input type="text" name="limit" placeholder="Type here" value="{{ limit|default:"" }}" />
-            </li>
-          </ul> -->
-
           <div class="form-group pull-right">
-            <ul id="table-view" class="top-controls pull-right">
-              <li><label>View:</label></li>
+            <ul id="data-view" class="top-controls pull-right data-view">
               <li><a href="javascript:;" class="btn active btn-success daily" data-time="daily">Daily</a></li>
               <li><a href="javascript:;" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
-            </ul>
-
-            <ul id="graph-view" class="top-controls pull-right hidden">
-              <li><label>View:</label></li>
-              <li><a href="#" class="btn btn-default daily" data-time="daily">Daily</a></li>
-              <li><a href="#" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
               <!-- <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li> -->
             </ul>
           </div>
@@ -76,8 +48,8 @@
 
         <div id="top-controls-menu">
           <ul class="nav nav-tabs clients-list">
-              <li class="active"><a data-toggle="tab" href="#tab-data-table" data-top-controls="#pagination-limit, #table-view"><i class="fa fa-table"></i> Table</a></li>
-              <li class=""><a data-toggle="tab" href="#tab-charts" data-top-controls="#graph-view"><i class="fa fa-line-chart"></i> Charts</a></li>
+              <li class="active"><a data-toggle="tab" href="#tab-data-table" data-top-controls="#data-view"><i class="fa fa-table"></i> Table</a></li>
+              <li class=""><a data-toggle="tab" href="#tab-charts" data-top-controls="#data-view"><i class="fa fa-line-chart"></i> Charts</a></li>
               <li class=""><a data-toggle="tab" href="#tab-details" data-top-controls="#details-view"><i class="fa fa-line-chart"></i> Details</a></li>
           </ul>
           <div class="tab-content">
@@ -112,6 +84,7 @@
 {% block extrajs %}
   <script type="text/javascript">
     var config = {
+      initialDate: '{{ initial_date }}',
       facebook: {
         {% if user_facebook_permission %}
         appId: "{% app_setting 'FACEBOOK_APP_ID' %}"
@@ -128,7 +101,12 @@
       currencyFormat: "{{ store.currency_format|default:'' }}"
     };
 
-    var profitsData = {{ profits_json|safe }};
+    var profits = {
+      data: {{ profits_json|safe }},
+      totalCosts: {{ totals.outcome|default:"0"|floatformat:2 }},
+      otherCosts: {{ totals.other_costs|default:"0"|floatformat:2 }},
+      totalProfits: {{ totals.profit|default:'0'|floatformat:2 }}
+    };
   </script>
 
   <script src="//js.pusher.com/3.2/pusher.min.js"></script>

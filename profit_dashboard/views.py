@@ -16,6 +16,7 @@ from leadgalaxy import utils
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.utils import is_store_synced
 from .utils import (
+    INITIAL_DATE,
     get_profits,
     calculate_profits,
     get_facebook_api,
@@ -46,7 +47,7 @@ def index(request):
         return HttpResponseRedirect('/')
 
     start, end = get_date_range(request)
-    limit = utils.safeInt(request.GET.get('limit'), 30)
+    limit = utils.safeInt(request.GET.get('limit'), 31)
     current_page = utils.safeInt(request.GET.get('page'), 1)
 
     profits, totals, details = get_profits(request.user.pk, store, start, end, request.session['django_timezone'])
@@ -78,7 +79,8 @@ def index(request):
         'profits_json': profits_json,
         'profit_details': profit_details,
         'details_paginator': details_paginator,
-        'user_facebook_permission': settings.FACEBOOK_APP_ID
+        'user_facebook_permission': settings.FACEBOOK_APP_ID,
+        'initial_date': INITIAL_DATE.format('MM/DD/YYYY'),
     })
 
 
@@ -148,14 +150,14 @@ def facebook_campaign(request):
         facebook_access.save()
         facebook_access.refresh_from_db()
 
-    # Create with las_sync < 31 days so first sync starts at that date
+    # Create with facebook sync starting at profit dashboard's INITIAL_DATE
     facebook_account, created = FacebookAccount.objects.update_or_create(
         store=store,
         access=facebook_access,
         account_id=account_id,
         defaults={
             'account_name': account_name,
-            'last_sync': arrow.get().replace(days=-31).date()
+            'last_sync': INITIAL_DATE.date()
         }
     )
 
@@ -203,7 +205,10 @@ def save_other_costs(request):
             'error': 'Please add at least one store before using the Profits Dashboard.'
         }, status=500)
 
-    OtherCost.objects.update_or_create(store=store, date=date, defaults={'amount': amount})
+    other_costs, created = OtherCost.objects.get_or_create(store=store, date=date, defaults={'amount': amount})
+    if not created:
+        other_costs.amount = amount
+        other_costs.save()
 
     return JsonResponse({'status': 'ok'})
 
@@ -212,7 +217,12 @@ def save_other_costs(request):
 def facebook_remove_account(request):
     if request.method == 'POST':
         store = utils.get_store_from_request(request)
+
         access = get_object_or_404(FacebookAccess, user=request.user, store=store)
+        # Remove account_id from FacebookAccess.account_ids
+        acount_ids = access.account_ids.split(',')
+        acount_ids = filter(lambda account_id: account_id != account.account_id, acount_ids)
+        access.account_ids = acount_ids.join(',')
 
         account = access.accounts.filter(pk=request.POST.get('id'))
         account.delete()

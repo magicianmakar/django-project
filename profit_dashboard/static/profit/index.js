@@ -89,16 +89,22 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
 // Profit JS
 (function() {
     var ProfitDashboard = {
-        profitsData: profitsData,
+        profitsData: profits.data,
         start: null,
         count: 0,
-        totalsProfitAmount: parseFloat($('#totals-profit').attr('data-original-amount')),
-        totalsOtherCostsAmount: parseFloat($('#totals-other-costs').attr('data-original-amount')),
-        totalsTotalCostsAmount: parseFloat($('#totals-total-costs').attr('data-original-amount')),
+        totals: {
+            totalCosts: profits.totalCosts,
+            otherCosts: profits.otherCosts,
+            totalProfits: profits.totalProfits
+        },
         otherCostsAjaxTimeout: {},
         chartsData: {},
         chartsLabels: [],
-        miniCharts: {amounts: {data: {}, labels: {}}, counts: {data: {}, labels: {}}, averages: {data: {}, labels: {}}},
+        miniCharts: {
+            amounts: {chart: null, data: {}, labels: {}},
+            counts: {chart: null, data: {}, labels: {}},
+            averages: {chart: null, data: {}, labels: {}}
+        },
         miniChartsLabels: [],
         profitChart: null,
         profitChartData: null,
@@ -118,8 +124,7 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
             this.onClickOpenDates();
             this.onClickCloseDates();
             this.onOtherCostsChange();
-            this.onGraphViewClick();
-            this.onTableViewClick();
+            this.onDataViewClick();
             this.onTabsChange();
             this.onChartToggleDataClick();
             this.onDetailsPaginationClick();
@@ -137,7 +142,7 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                 keyboardNavigation: false,
                 forceParse: false,
                 autoclose: false,
-                startDate: '06/01/2018'
+                startDate: config.initialDate
             });
         },
         initExpandable: function() {
@@ -287,12 +292,11 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                 totalCosts.attr('data-original-amount', updatedTotalCosts.toFixed(2));
                 profitAmount.attr('data-original-amount', updatedProfitValue.toFixed(2));
 
-                ProfitDashboard.totalsProfitAmount -= value;
-                ProfitDashboard.totalsOtherCostsAmount += value;
-                ProfitDashboard.totalsTotalCostsAmount += value;
-                $('#totals-profit').text(Currency.format(ProfitDashboard.totalsProfitAmount, true));
-                $('#totals-other-costs').text(Currency.format(ProfitDashboard.totalsOtherCostsAmount, true));
-                $('#totals-total-costs').text(Currency.format(ProfitDashboard.totalsTotalCostsAmount, true));
+                ProfitDashboard.totals.totalProfits -= value;
+                ProfitDashboard.totals.otherCosts += value;
+                ProfitDashboard.totals.totalCosts += value;
+                $('.totals-profit').text(Currency.format(ProfitDashboard.totals.totalProfits, true));
+                $('#totals-other-costs').text(Currency.format(ProfitDashboard.totals.otherCosts, true));
 
                 $(this).off('blur');
 
@@ -342,6 +346,20 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                     success: function (data) {
                         if (data.status != 'ok') {
                             displayAjaxError('Other Costs save', data);
+                        } else {
+                            var dateId = trId.replace(/.+(\d{2})(\d{2})(\d{4})$/, '$1\/$2\/$3'),
+                                update = {other_costs: amount};
+                            for (var i = 0, iLength = ProfitDashboard.profitsData.length; i < iLength; i++) {
+                                var profitData = ProfitDashboard.profitsData[i];
+                                if (dateId == profitData.date_as_string) {
+                                    var originalProfit = profitData.profit + profitData.other_costs,
+                                        originalCosts = profitData.outcome - profitData.other_costs;
+                                    update.profit = originalProfit - update.other_costs;
+                                    update.outcome = originalCosts + update.other_costs;
+                                    ProfitDashboard.profitsData[i] = $.extend({}, profitData, update);
+                                }
+                            }
+                            ProfitDashboard.reloadCharts();
                         }
                     },
                     error: function (data) {
@@ -452,6 +470,12 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                     results.orders_count[position] = +(results.orders_count[position] + profit.orders_count).toFixed(2);
                     results.total_costs[position] = +(results.total_costs[position] + total_costs).toFixed(2);
                 }
+
+                var averages = this.calculateAverages(results.profit[position], results.revenue[position], results.orders_count[position]),
+                    average_profit = averages[0],
+                    average_revenue = averages[1];
+                results.average_profit[position] = +average_profit.toFixed(2);
+                results.average_revenue[position] = +average_revenue.toFixed(2);
             } else if (this.chartTime == 'monthly') {
                 var lastDate = '',
                     position = -1;
@@ -494,9 +518,14 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                         results.total_costs[position] = +(results.total_costs[position] + total_costs).toFixed(2);
                     }
                 }
+                var averages = this.calculateAverages(results.profit[position], results.revenue[position], results.orders_count[position]),
+                    average_profit = averages[0],
+                    average_revenue = averages[1];
+                results.average_profit[position] = +average_profit.toFixed(2);
+                results.average_revenue[position] = +average_revenue.toFixed(2);
             }
 
-            this.activateGraphView($('#graph-view ' + activeGraphViewCssClass));
+            this.activateDataView($('#data-view ' + activeGraphViewCssClass));
 
             this.chartsData = results;
         },
@@ -597,12 +626,14 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                         fill: 1,
                         backgroundColor: 'rgba(125, 171, 196, 0.5)',
                         borderColor: "rgba(125, 171, 196, 0.7)",
+                        dataKey: 'revenue',
                         data: this.chartsData.revenue
                     }, {
                         label: "Total Costs",
                         fill: false,
                         backgroundColor: 'rgba(236, 71, 88, 0.5)',
                         borderColor: "rgba(236, 71, 88, 0.7)",
+                        dataKey: 'total_costs',
                         data: this.chartsData.total_costs
                     }
                 ]
@@ -616,12 +647,14 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                         fill: false,
                         backgroundColor: 'rgba(125, 171, 196, 0.5)',
                         borderColor: "rgba(125, 171, 196, 0.7)",
+                        dataKey: 'orders_count',
                         data: this.chartsData.orders_count
                     }, {
                         label: "Fulfillments",
                         fill: false,
                         backgroundColor: 'rgba(236, 71, 88, 0.5)',
                         borderColor: "rgba(236, 71, 88, 0.7)",
+                        dataKey: 'fulfillments_count',
                         data: this.chartsData.fulfillments_count
                     }
                 ]
@@ -635,12 +668,14 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                         fill: 1,
                         backgroundColor: 'rgba(125, 171, 196, 0.5)',
                         borderColor: "rgba(125, 171, 196, 0.7)",
+                        dataKey: 'average_revenue',
                         data: this.chartsData.average_revenue
                     }, {
                         label: "Average Profit",
                         fill: false,
                         backgroundColor: 'rgba(236, 71, 88, 0.5)',
                         borderColor: "rgba(236, 71, 88, 0.7)",
+                        dataKey: 'average_profit',
                         data: this.chartsData.average_profit
                     }
                 ]
@@ -709,21 +744,21 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                 }
             };
             ctx = $("#amounts-chart-mini").get(0).getContext("2d");
-            new Chart(ctx, {
+            this.miniCharts.amounts.chart = new Chart(ctx, {
                 type: 'line',
                 data: this.miniCharts.amounts.data,
                 options: miniChartOptions
             });
 
             ctx = $("#counts-chart-mini").get(0).getContext("2d");
-            new Chart(ctx, {
+            this.miniCharts.counts.chart = new Chart(ctx, {
                 type: 'line',
                 data: this.miniCharts.counts.data,
                 options: miniChartOptions
             });
 
             ctx = $("#averages-chart-mini").get(0).getContext("2d");
-            new Chart(ctx, {
+            this.miniCharts.averages.chart = new Chart(ctx, {
                 type: 'line',
                 data: this.miniCharts.averages.data,
                 options: miniChartOptions
@@ -740,32 +775,37 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
             this.profitChartData.datasets.forEach(function(dataset) {
                 dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
             });
-
             this.profitChart.update();
-        },
-        activateGraphView: function(btn) {
-            $('#graph-view .btn.btn-success').removeClass('active btn-success').addClass('btn-default');
-            btn.removeClass('btn-default').addClass('active btn-success');
-        },
-        onGraphViewClick: function() {
-            $('#graph-view .btn').on('click', function(e) {
-                e.preventDefault();
 
-                ProfitDashboard.activateGraphView($(this));
-                ProfitDashboard.chartTime = $(this).attr('data-time');
-                ProfitDashboard.reloadCharts();
+            // Mini charts
+            this.miniCharts.amounts.data.labels = this.miniChartsLabels;
+            this.miniCharts.amounts.data.datasets.forEach(function (dataset) {
+                dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
             });
+            this.miniCharts.amounts.chart.update();
+
+            this.miniCharts.counts.data.labels = this.miniChartsLabels;
+            this.miniCharts.counts.data.datasets.forEach(function (dataset) {
+                dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
+            });
+            this.miniCharts.counts.chart.update();
+
+            this.miniCharts.averages.data.labels = this.miniChartsLabels;
+            this.miniCharts.averages.data.datasets.forEach(function (dataset) {
+                dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
+            });
+            this.miniCharts.averages.chart.update();
         },
-        activateTableView: function(btn) {
-            $('#table-view .btn.btn-success').removeClass('active btn-success').addClass('btn-default');
+        activateDataView: function(btn) {
+            $('#data-view .btn.btn-success').removeClass('active btn-success').addClass('btn-default');
             btn.removeClass('btn-default').addClass('active btn-success');
         },
-        onTableViewClick: function() {
-            $('#table-view').on('click', '.btn:not(.active)', function(e) {
+        onDataViewClick: function() {
+            $('#data-view').on('click', '.btn:not(.active)', function(e) {
                 e.preventDefault();
 
                 var timeType = $(this).attr('data-time');
-                ProfitDashboard.activateTableView($(this));
+                ProfitDashboard.activateDataView($(this));
 
                 if (timeType == 'weekly') {
                     $('#profits').addClass('weekly').removeClass('daily');
@@ -775,6 +815,9 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
                     $('#profits').addClass('daily').removeClass('weekly');
                     ProfitDashboard.profitsDaily();
                 }
+
+                ProfitDashboard.chartTime = timeType;
+                ProfitDashboard.reloadCharts();
             });
         },
         onTabsChange: function() {
@@ -876,12 +919,12 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
             var countDays = -1,
                 lastProfit = null,
                 firstWeekDayRow = null,
-                weeklyAmounts = ProfitDashboard.refreshWeeklyData(profitsData[0]);
+                weeklyAmounts = ProfitDashboard.refreshWeeklyData(this.profitsData[0]);
 
             $('#profits .profit.closed').removeClass('closed');
             $('.open-dates, .close-dates', '#profits .profit .actions').remove();
-            for (var i = 0, iLength = profitsData.length; i < iLength; i++) {
-                var profitData = profitsData[i],
+            for (var i = 0, iLength = this.profitsData.length; i < iLength; i++) {
+                var profitData = this.profitsData[i],
                     profitRow = $('#date-' + profitData.date_as_string.replace(/\//g, '')),
                     isFirstDay = countDays % 7 == 0;
 
@@ -917,8 +960,8 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
         },
         profitsDaily: function() {
             $('#profits .closed').removeClass('closed');
-            for (var i = 0, iLength = profitsData.length; i < iLength; i++) {
-                var profitData = profitsData[i],
+            for (var i = 0, iLength = this.profitsData.length; i < iLength; i++) {
+                var profitData = this.profitsData[i],
                     profitRow = $('#date-' + profitData.date_as_string.replace(/\//g, ''));
 
                 if (!profitRow.is(':visible')) {
@@ -1190,7 +1233,7 @@ $(function () {
 
         var selectedAccount = $('#fb-account-select-modal [name="account"]:checked'),
             accountId = selectedAccount.val(),
-            accountName = selectedAccount.parent('li').attr('data-name');
+            accountName = selectedAccount.parents('li').attr('data-name');
 
         $.ajax({
             url: '/profit-dashboard/facebook/campaign',

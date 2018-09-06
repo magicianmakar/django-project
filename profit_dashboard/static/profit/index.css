@@ -36,22 +36,19 @@
   transition: background-color 0.2s;
 }
 
-#graph-view,
-#table-view,
+#data-view,
 #pagination-limit {
   list-style-type: none;
 }
 
-#graph-view li,
-#table-view li,
+#data-view li,
 #pagination-limit li {
   float: left;
   display: inline-block;
   margin: 2px 2px 0;
 }
 
-#graph-view li label,
-#table-view li label,
+#data-view li label,
 #pagination-limit li label {
   display: inline-block;
   padding: 7px 7px 3px;
@@ -141,8 +138,15 @@
   display: inline-block;
 }
 
+#fb-account-select-modal .list-group .list-group-item,
 #fb-campaign-select-modal .list-group .list-group-item {
   padding: 0;
+}
+#fb-account-select-modal .list-group .list-group-item label {
+  cursor: pointer;
+  padding: 10px 15px;
+  margin-bottom: 0;
+  width: 100%;
 }
 #fb-campaign-select-modal .list-group .list-group-item label {
   display: flex;
@@ -234,5 +238,5 @@
 }
 
 .expandable .well .totals-detail {
-  height: 140px;
+  height: 160px;
 }
