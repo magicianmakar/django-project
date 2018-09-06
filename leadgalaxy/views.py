@@ -1001,8 +1001,9 @@ def webhook(request, provider, option):
 
             for store in ShopifyStore.objects.filter(shop=shop, is_active=True):
                 for charge in store.shopify.RecurringApplicationCharge.find():
-                    found.append(store.shop)
-                    charge.delete()
+                    if charge.status == 'active':
+                        found.append(store.shop)
+                        charge.destroy()
 
             if found:
                 return HttpResponse('Charge canceled for *{}*'.format(', '.join(list(set(found)))))
