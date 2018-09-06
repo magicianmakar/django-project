@@ -992,22 +992,22 @@ def webhook(request, provider, option):
             if not request_from:
                 return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
 
-            try:
-                shop = re.findall('[^/]+.myshopify.com', request.POST['text'])[0]
-                found = []
-
-                for store in ShopifyStore.objects.filter(shop=shop, is_active=True):
-                    for charge in store.shopify.RecurringApplicationCharge.find():
-                        found.append(store.shop)
-                        charge.delete()
-
-                if found:
-                    return HttpResponse('Charge canceled for *{}*'.format(', '.join(list(set(found)))))
-                else:
-                    return HttpResponse('No Recurring Charges found on *{}*'.format(shop))
-
-            except:
+            shop = re.findall('[^/]+.myshopify.com', request.POST['text'])
+            if not shop:
                 return HttpResponse(':x: Could not find shop in {}'.format(request.POST['text']))
+
+            shop = shop[0]
+            found = []
+
+            for store in ShopifyStore.objects.filter(shop=shop, is_active=True):
+                for charge in store.shopify.RecurringApplicationCharge.find():
+                    found.append(store.shop)
+                    charge.delete()
+
+            if found:
+                return HttpResponse('Charge canceled for *{}*'.format(', '.join(list(set(found)))))
+            else:
+                return HttpResponse('No Recurring Charges found on *{}*'.format(shop))
 
         else:
             return HttpResponse(':x: Unknown Command')
