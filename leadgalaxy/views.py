@@ -974,7 +974,7 @@ def webhook(request, provider, option):
                 return HttpResponse(':x: Store {} is not found on {} account'.format(shop, from_user.email))
 
             if not ShopifyStore.objects.filter(shop=shop, user=to_user).count():
-                HttpResponse(':x: Store {} is not install on {} account'.format(shop, to_user.email))
+                return HttpResponse(':x: Store {} is not install on {} account'.format(shop, to_user.email))
 
             AdminEvent.objects.create(
                 user=request_from,
@@ -987,6 +987,27 @@ def webhook(request, provider, option):
 
             tasks.store_transfer.delay(options)
             return HttpResponse(':hourglass_flowing_sand: Transferring {shop} from {from} to {to} is in progress...'.format(**options))
+
+        if request.POST['command'] == '/cancel-shopify':
+            if not request_from:
+                return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
+
+            try:
+                shop = re.findall('[^/]+.myshopify.com', request.POST['text'])[0]
+                found = []
+
+                for store in ShopifyStore.objects.filter(shop=shop, is_active=True):
+                    for charge in store.shopify.RecurringApplicationCharge.find():
+                        found.append(store.shop)
+                        charge.delete()
+
+                if found:
+                    return HttpResponse('Charge canceled for *{}*'.format(', '.join(list(set(found)))))
+                else:
+                    return HttpResponse('No Recurring Charges found on *{}*'.format(shop))
+
+            except:
+                return HttpResponse(':x: Could not find shop in {}'.format(request.POST['text']))
 
         else:
             return HttpResponse(':x: Unknown Command')
