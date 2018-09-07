@@ -52,9 +52,7 @@
                 parent_plan: '',
                 {% endif %}
 
-                {% if not user.is_recurring_customer %}
                 bundles: '{{user.profile.bundles_list|join:","}}',
-                {% endif %}
 
                 widget: {
                 activator: '.navbar-default a[href="#support"]',
