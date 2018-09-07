@@ -104,13 +104,11 @@
                 tags: ["dropified"],
             });
 
-            // To set unique user id in your system when it is available
             window.fcWidget.setExternalId(window.intercomSettings.user_id);
 
-            // To set user name
             window.fcWidget.user.setFirstName("{{user.first_name}}");
             window.fcWidget.user.setLastName("{{user.last_name}}");
-
+            window.fcWidget.user.setEmail(window.intercomSettings.email);
 
             // To set user properties
             window.fcWidget.user.setProperties({
