@@ -82,17 +82,58 @@
     '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-TPLKSQ');
 
-    //Intercom
-    if(typeof(window.intercomSettings)!=="undefined"){(function(){var c=window;
-    var a=c.Intercom;if(typeof a==="function"){a("reattach_activator");
-    a("update",intercomSettings)}else{var f=document;var e=function(){e.c(arguments)
-    };e.q=[];e.c=function(d){e.q.push(d)};c.Intercom=e;
-    function b(){var g=f.createElement("script");g.type="text/javascript";
-    g.async=true;g.src="https://widget.intercom.io/widget/k9cb5frr";
-    var d=f.getElementsByTagName("script")[0];d.parentNode.insertBefore(g,d)
-    }if(c.attachEvent){c.attachEvent("onload",b)}else{c.addEventListener("load",b,false)
-    }}})()};
+    {% if not request.GET.fresh %}
+        //Intercom
+        if(typeof(window.intercomSettings)!=="undefined"){(function(){var c=window;
+        var a=c.Intercom;if(typeof a==="function"){a("reattach_activator");
+        a("update",intercomSettings)}else{var f=document;var e=function(){e.c(arguments)
+        };e.q=[];e.c=function(d){e.q.push(d)};c.Intercom=e;
+        function b(){var g=f.createElement("script");g.type="text/javascript";
+        g.async=true;g.src="https://widget.intercom.io/widget/k9cb5frr";
+        var d=f.getElementsByTagName("script")[0];d.parentNode.insertBefore(g,d)
+        }if(c.attachEvent){c.attachEvent("onload",b)}else{c.addEventListener("load",b,false)
+        }}})()};
 
+    {% else %}
+        function initFreshChat() {
+            // Make sure fcWidget.init is included before setting these values
+            window.fcWidget.init({
+                token: "ed353603-a8c9-4c5f-9a48-f6c9bd905b01",
+                host: "https://wchat.freshchat.com",
+                siteId: "dropified",
+                tags: ["dropified"],
+            });
+
+            // To set unique user id in your system when it is available
+            window.fcWidget.setExternalId('d'+window.intercomSettings.user_id);
+
+            // To set user name
+            window.fcWidget.user.setFirstName("{{user.first_name}}");
+            window.fcWidget.user.setLastName("{{user.last_name}}");
+
+
+            // To set user properties
+            window.fcWidget.user.setProperties({
+              register_date: '{% date_humanize user.date_joined html=False relative=True %}',
+              plan: window.intercomSettings.plan,
+              extension_version: window.intercomSettings.extension_version,
+              stores_count: window.intercomSettings.stores_count,
+              chq_count: window.intercomSettings.chq_count,
+              total_orders: window.intercomSettings.total_orders,
+              parent_plan: window.intercomSettings.parent_plan,
+              bundles: window.intercomSettings.bundles,
+            });
+        }
+
+        if (window.intercomSettings) {
+            var freshScript = document.createElement('script');
+            freshScript.src = '//wchat.freshchat.com/js/widget.js';
+            freshScript.async = true;
+            freshScript.addEventListener('load', initFreshChat);
+
+            document.head.appendChild(freshScript);
+        }
+    {% endif%}
 
     {% if not disable_appcuse %}
     // AppCuse
