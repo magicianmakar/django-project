@@ -18,7 +18,6 @@ from shopified_core import utils
 
 from gearbubble_core.models import GearBubbleStore, GearBubbleProduct, GearBubbleSupplier
 from .utils import (
-    get_api_url,
     format_gear_errors,
     get_product_export_data,
     get_product_update_data,
@@ -147,7 +146,7 @@ def product_export(store_id, product_id, user_id, publish=None):
         permissions.user_can_edit(user, product)
         vendor_product = get_product_export_data(product)
         api_data = {'vendor_product': vendor_product}
-        r = store.request.post(get_api_url('private_products'), json=api_data)
+        r = store.request.post(store.get_api_url('private_products'), json=api_data)
         r.raise_for_status()
         product.store = store
         product_data = r.json()['product']
@@ -176,7 +175,7 @@ def product_update(product_id, data):
     store = product.store
     product.update_data({'type': data.get('type', '')})
     product.save()
-    api_url = get_api_url('private_products/{}'.format(product.source_id))
+    api_url = store.get_api_url('private_products/{}'.format(product.source_id))
     pusher_data = {'success': False, 'product': product.id, 'product_url': product_url}
 
     try:

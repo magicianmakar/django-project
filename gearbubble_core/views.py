@@ -41,7 +41,6 @@ from .utils import (
     order_id_from_name,
     get_tracking_orders,
     get_tracking_products,
-    get_api_url,
     add_details_from_product_data,
     OrderListQuery,
     OrderListPaginator,
@@ -333,7 +332,7 @@ class OrdersList(ListView):
 
         while page:
             params = {'page': page, 'ids': ','.join(product_ids), 'limit': 50}
-            r = store.request.get(get_api_url('private_products'), params=params)
+            r = store.request.get(store.get_api_url('private_products'), params=params)
 
             if r.ok:
                 products += r.json()['products']
@@ -363,7 +362,7 @@ class OrdersList(ListView):
         orders_cache = {}
         store = self.get_store()
         orders = context.get('orders', [])
-        gearbubble_site = settings.GEARBUBBLE_URL.rstrip('/')
+        gearbubble_site = store.get_store_url().rstrip('/')
         product_ids = [order['vendor_product_id'] for order in orders]
         products_by_source_id = self.get_products_by_source_id(product_ids)
         product_data_by_source_id = self.get_product_data_by_source_id(product_ids)
@@ -566,7 +565,7 @@ class OrdersTrackList(ListView):
         context = super(OrdersTrackList, self).get_context_data(**kwargs)
         context['store'] = store = self.get_store()
         context['shipping_carriers'] = store_shipping_carriers(store)
-        context['gearbubble_url'] = settings.GEARBUBBLE_URL
+        context['gearbubble_url'] = store.get_store_url()
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': reverse('gear:orders_list')},
             {'title': 'Tracking', 'url': reverse('gear:orders_track')},

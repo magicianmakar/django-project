@@ -52,6 +52,7 @@ $(document).ready(function() {
             $('#store-update-form input[name="id"]').val(data.id);
             $('#store-update-form input[name="title"]').val(data.title);
             $('#store-update-form input[name="api_token"]').val(data.api_token);
+            $('#store_mode option[value=' + data.mode + ']').prop('selected', true);
         });
     });
 

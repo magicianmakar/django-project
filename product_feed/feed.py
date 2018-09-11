@@ -29,8 +29,6 @@ from woocommerce_core.utils import (
     get_woo_products
 )
 
-from gearbubble_core.utils import get_api_url
-
 from .models import FeedStatus, CommerceHQFeedStatus, WooFeedStatus, GearBubbleFeedStatus
 
 
@@ -420,7 +418,7 @@ class WooProductFeed():
 
 class GearBubbleProductFeed(object):
     def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category=''):
-        domain = urlparse(get_api_url('')).netloc
+        domain = urlparse(store.get_api_url('')).netloc
         self.info = {'currency': self._get_store_currency(), 'domain': domain, 'name': store.title}
         self.store = store
         self.currency = self.info['currency']
@@ -478,7 +476,7 @@ class GearBubbleProductFeed(object):
     def _add_variant(self, product_data, variant):
         image = next(iter(product_data.get('images', [])), {}).get('src', '')
         variant_id = 0
-        permalink = '{}/private_products/{}'.format(settings.GEARBUBBLE_URL, product_data['slug'])
+        permalink = '{}/private_products/{}'.format(self.store.get_store_url(), product_data['slug'])
         body_html = product_data.get('body_html') or ''
         description = strip_tags(body_html)
 
