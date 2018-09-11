@@ -21,16 +21,16 @@
         </div>
         <p style="line-height: 30px;">Loading Ad Costs from facebook insights</p>
       </div>
-      <div class="col-md-12" id="facebook-logged-in" style="display: none;">
+      <div class="col-md-12" id="facebook-logged-in">
         <p class="pull-left" style="line-height: 35px;">You are logged in with facebook.</p>
         <form id="facebook-sync" method="post" action="{% url 'profit_dashboard.views.facebook_insights' %}" class="pull-left">
           <input type="hidden" name="fb_access_token" value="">
           <input type="hidden" name="fb_expires_in" value="">
-          {% if not need_setup %}
+          {% if need_setup %}
+          <a href="#" id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Ad Account</a>
+          {% else %}
           <button type="submit" class="btn btn-primary btn-xs">Sync Again</button>
           <a href="#" id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Another Ad Account</a>
-          {% else %}
-          <a href="#" id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Ad Account</a>
           {% endif %}
         </form>
       </div>

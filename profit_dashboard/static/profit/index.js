@@ -1059,7 +1059,7 @@ var FacebookProfitDashboard = {
     firstTime: true,
     init: function() {
         this.onFacebookSyncFormSubmit();
-        this.facebookStatus.connect();
+        this.facebookStatus.loggedIn();
         this.onClickRemoveAccount();
     },
     onClickRemoveAccount: function() {
@@ -1104,16 +1104,19 @@ var FacebookProfitDashboard = {
     },
     facebookStatus: {
         connect: function() {
+            console.log('connect');
             $('#connect-facebook').css('display', '');
             $('#loading-facebook').css('display', 'none');
             $('#facebook-logged-in').css('display', 'none');
         },
         loading: function() {
+            console.log('loading');
             $('#loading-facebook').css('display', '');
             $('#connect-facebook').css('display', 'none');
             $('#facebook-logged-in').css('display', 'none');
         },
         loggedIn: function() {
+            console.log('loggedin');
             $('#facebook-logged-in').css('display', '');
             $('#connect-facebook').css('display', 'none');
             $('#loading-facebook').css('display', 'none');
@@ -1145,13 +1148,21 @@ var FacebookProfitDashboard = {
         // app know the current login status of the person.
         // Full docs on the response object can be found in the documentation
         // for FB.getLoginStatus().
-        if (response.status === 'connected' && !FacebookProfitDashboard.firstTime) {
+        if (response.status === 'connected') {
             FacebookProfitDashboard.facebookStatus.loggedIn();
 
             $('input[name="fb_access_token"]').val(response.authResponse.accessToken);
             $('input[name="fb_expires_in"]').val(response.authResponse.expiresIn);
-            $('#fb-ad-setup').trigger('click');
+
+            if (!FacebookProfitDashboard.firstTime) {
+                $('#fb-ad-setup').trigger('click');
+            }
         } else {
+            /* Works for:
+                response.status === 'authorization_expired'
+                response.status === 'not_authorized'
+                or other responses
+            */
             if (response.authResponse) {
                 FacebookProfitDashboard.facebookStatus.loggedIn();
                 $('input[name="fb_access_token"]').val(response.authResponse.accessToken);
@@ -1186,8 +1197,6 @@ var FacebookProfitDashboard = {
         });
     }
 };
-
-FacebookProfitDashboard.init();
 
 window.fbAsyncInit = function() {
     if (!config.facebook.appId) {
@@ -1297,3 +1306,6 @@ $(function () {
         });
     });
 });
+
+FacebookProfitDashboard.init();
+
