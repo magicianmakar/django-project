@@ -14,6 +14,19 @@
                                 <label>API Token</label>
                                 <input type="password" id="store_api_token" name="api_token" class="form-control" required />
                             </div>
+                            {% if user.is_superuser %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="store_mode">Mode</label>
+                                        <select id="store_mode" name="mode" class="form-control">
+                                            <option value="live">Live</option>
+                                            <option value="staging">Staging</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
                             <div>
                                 <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
                                     <strong>Add store</strong>

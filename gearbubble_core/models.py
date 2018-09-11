@@ -41,6 +41,10 @@ class GearBubbleStore(models.Model):
     class Meta:
         verbose_name = 'GearBubble Store'
 
+    STAGING = 'staging'
+    LIVE = 'live'
+    MODE_CHOICES = [(STAGING, 'Staging'), (LIVE, 'Live')]
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     title = models.CharField(max_length=300, blank=True, default='')
     api_token = models.CharField(max_length=300)
@@ -48,13 +52,7 @@ class GearBubbleStore(models.Model):
     store_hash = models.CharField(default='', max_length=50, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
-    @staticmethod
-    def get_api_url(path):
-        domain = settings.GEARBUBBLE_URL
-        path = path.rstrip('/')
-
-        return '{}/api/v1/{}'.format(domain, path)
+    mode = models.CharField(max_length=7, choices=MODE_CHOICES, default=LIVE)
 
     def __unicode__(self):
         return self.title
@@ -72,11 +70,14 @@ class GearBubbleStore(models.Model):
 
         return session
 
+    def get_api_url(self, path):
+        return '{}/api/v1/{}'.format(self.get_store_url(), path.rstrip('/'))
+
     def get_store_url(self):
-        return settings.GEARBUBBLE_URL
+        return settings.GEARBUBBLE_STAGING_URL if self.mode == 'staging' else settings.GEARBUBBLE_LIVE_URL
 
     def get_admin_url(self):
-        return '{}/{}'.format(settings.GEARBUBBLE_URL, 'pro_dashboard')
+        return '{}/{}'.format(self.get_store_url(), 'pro_dashboard')
 
     def get_short_hash(self):
         return self.store_hash[:8] if self.store_hash else ''
@@ -106,7 +107,7 @@ class GearBubbleStore(models.Model):
         params = {'page': 1, 'limit': 50}
 
         while params['page']:
-            api_url = GearBubbleStore.get_api_url('private_products')
+            api_url = self.get_api_url('private_products')
             r = self.request.get(api_url, params=params)
 
             if r.ok:
@@ -199,7 +200,7 @@ class GearBubbleProduct(models.Model):
     def gearbubble_url(self):
         if self.is_connected:
             path = 'private_products/{}/edit'.format(self.source_id)
-            return '{}/{}'.format(settings.GEARBUBBLE_URL, path)
+            return '{}/{}'.format(self.get_store_url(), path)
 
         return None
 
@@ -266,7 +267,7 @@ class GearBubbleProduct(models.Model):
         if not self.source_id:
             raise ValueError('The product is not connected to a store.')
 
-        url = GearBubbleStore.get_api_url('private_products/{}'.format(self.source_id))
+        url = self.store.get_api_url('private_products/{}'.format(self.source_id))
         r = self.store.request.get(url)
         r.raise_for_status()
 

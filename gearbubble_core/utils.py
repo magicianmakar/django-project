@@ -33,10 +33,6 @@ from shopified_core.shipping_helper import (
 from .models import GearBubbleStore, GearBubbleProduct, GearBubbleBoard
 
 
-def get_api_url(path):
-    return GearBubbleStore.get_api_url(path)
-
-
 def filter_products(res, fdata):
     if fdata.get('title'):
         title = decode_params(fdata.get('title'))
@@ -333,7 +329,7 @@ def get_orders_from_store(store):
     orders = []
     page = 1
     while page:
-        r = store.request.get(get_api_url('private_orders'), params={'page': page})
+        r = store.request.get(store.get_api_url('private_orders'), params={'page': page})
 
         if r.ok:
             orders += r.json()['data']['orders']
@@ -447,7 +443,7 @@ def get_tracking_orders(store, tracker_orders):
 
     while page:
         params = {'page': page, 'limit': 50, 'ids': ','.join(ids)}
-        r = store.request.get(get_api_url('private_orders'), params=params)
+        r = store.request.get(store.get_api_url('private_orders'), params=params)
 
         if r.ok:
             for order in r.json()['orders']:
@@ -505,7 +501,7 @@ def get_tracking_products(store, tracker_orders):
 
     while page:
         params = {'page': page, 'limit': 50, 'ids': ','.join(ids)}
-        r = store.request.get(get_api_url('private_products'), params=params)
+        r = store.request.get(store.get_api_url('private_products'), params=params)
 
         if r.ok:
             for product in r.json()['products']:
@@ -529,7 +525,7 @@ def get_tracking_products(store, tracker_orders):
 
 
 def get_fulfillment(store, order_id):
-    api_url = get_api_url('orders/{}/private_fulfillments'.format(order_id))
+    api_url = store.get_api_url('orders/{}/private_fulfillments'.format(order_id))
     r = store.request.get(api_url)
     r.raise_for_status()
     fulfillment = next(iter(r.json()['fulfillments']), None)
@@ -558,7 +554,7 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
 
         while page:
             params = {'page': page, 'limit': 50, 'ids': include}
-            r = store.request.get(get_api_url('private_orders'), params=params)
+            r = store.request.get(store.get_api_url('private_orders'), params=params)
 
             if not r.ok:
                 if r.status_code == 404:
@@ -721,7 +717,7 @@ class OrderListQuery(object):
         self._params = {} if params is None else params
 
     def items(self):
-        url = get_api_url(self._endpoint)
+        url = self._store.get_api_url(self._endpoint)
         r = self._store.request.get(url, params=self._params)
 
         if r.ok:
@@ -732,7 +728,7 @@ class OrderListQuery(object):
             r.raise_for_status()
 
     def count(self):
-        url = get_api_url('{}/{}'.format(self._endpoint.rstrip('/'), 'count'))
+        url = self._store.get_api_url('{}/{}'.format(self._endpoint.rstrip('/'), 'count'))
         r = self._store.request.get(url, params=self._params)
         r.raise_for_status()
 

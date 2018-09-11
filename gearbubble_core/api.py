@@ -93,6 +93,7 @@ class GearBubbleApi(ApiResponseMixin, View):
     def validate_store_data(self, data):
         title = data.get('title', '')
         api_token = data.get('api_token', '')
+        mode = data.get('mode')
 
         error_messages = []
 
@@ -100,6 +101,10 @@ class GearBubbleApi(ApiResponseMixin, View):
             error_messages.append('Title is too long.')
         if len(api_token) > GearBubbleStore._meta.get_field('api_token').max_length:
             error_messages.append('Consumer secret is too long')
+
+        mode_choices = [choice for choice, readable in GearBubbleStore.MODE_CHOICES]
+        if mode and mode not in mode_choices:
+            error_messages.append('Mode option not valid')
 
         return error_messages
 
@@ -144,6 +149,8 @@ class GearBubbleApi(ApiResponseMixin, View):
         store.user = user.models_user
         store.title = data.get('title', '').strip()
         store.api_token = data.get('api_token', '').strip()
+        store.mode = data['mode'] if data.get('mode') and user.is_superuser else store.mode
+
         permissions.user_can_add(user, store)
         store.save()
 
@@ -169,6 +176,7 @@ class GearBubbleApi(ApiResponseMixin, View):
 
         store.title = data.get('title', '').strip()
         store.api_token = data.get('api_token', '').strip()
+        store.mode = data['mode'] if data.get('mode') and user.is_superuser else store.mode
         store.save()
 
         return self.api_success()
@@ -185,7 +193,13 @@ class GearBubbleApi(ApiResponseMixin, View):
             return self.api_error('Store not found', status=404)
 
         permissions.user_can_view(user, store)
-        data = {'id': store.id, 'title': store.title, 'api_token': store.api_token}
+
+        data = {
+            'id': store.id,
+            'title': store.title,
+            'api_token': store.api_token,
+            'mode': store.mode,
+        }
 
         return self.api_success(data)
 
@@ -737,7 +751,7 @@ class GearBubbleApi(ApiResponseMixin, View):
             return self.api_error('Invalid shipping provider')
 
         fulfillment = {'tracking_number': tracking_number, 'tracking_company': provider_name}
-        api_url = utils.get_api_url('orders/{}/private_fulfillments'.format(order_id))
+        api_url = store.get_api_url('orders/{}/private_fulfillments'.format(order_id))
 
         try:
             r = store.request.post(api_url, json={'fulfillment': fulfillment})
@@ -979,7 +993,7 @@ class GearBubbleApi(ApiResponseMixin, View):
                 # Note: It takes 2 to 3 hours for a newly added product to be searchable
                 params['search'] = data['query']
 
-            r = store.request.get(utils.get_api_url('private_products'), params=params)
+            r = store.request.get(store.get_api_url('private_products'), params=params)
 
             if r.ok:
                 gearbubble_products = r.json()['products']
@@ -1051,7 +1065,7 @@ class GearBubbleApi(ApiResponseMixin, View):
 
         permissions.user_can_edit(user, product)
 
-        path = utils.get_api_url('private_products/{}'.format(product_id))
+        path = store.get_api_url('private_products/{}'.format(product_id))
         data = {'id': product_id, 'variants': [{'id': variant_id, 'image': image_src}]}
         r = store.request.put(path, json={'product': data})
         r.raise_for_status()
@@ -1193,7 +1207,7 @@ class GearBubbleApi(ApiResponseMixin, View):
         if note is None:
             return self.api_error('Note required')
 
-        api_url = utils.get_api_url('private_orders/{}'.format(order_id))
+        api_url = store.get_api_url('private_orders/{}'.format(order_id))
         r = store.request.put(api_url, json={'order': {'id': order_id, 'note': note}})
 
         if not r.ok:
