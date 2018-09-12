@@ -124,7 +124,7 @@ class Command(DropifiedBaseCommand):
                         api_data = None
                         continue
 
-                    elif 'warehouse id' in e.response.text.lower():
+                    elif 'warehouse id' in e.response.text.lower() or 'Either fulfilment_id or array' in e.response.text:
                         order_track.hidden = True
                         order_track.save()
 
