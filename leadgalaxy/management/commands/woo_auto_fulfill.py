@@ -1,5 +1,6 @@
 from shopified_core.management import DropifiedBaseCommand
 from django.utils import timezone
+from django.core.cache import cache
 
 import arrow
 import requests
@@ -70,6 +71,23 @@ class Command(DropifiedBaseCommand):
                     counter['fulfilled'] += 1
                     if counter['fulfilled'] % 50 == 0:
                         self.write('Fulfill Progress: %d' % counter['fulfilled'])
+                else:
+                    cache_key = 'woo_track_error_{}'.format(order.id)
+                    error_count = cache.get(cache_key, 0)
+
+                    if error_count > 10:
+                        order.hidden = True
+                        order.save()
+
+                        raven_client.captureMessage('Ignore Order Track', level='warning', extra={
+                            'type': 'woo',
+                            'id': order.id,
+                            'errors': 'woo'
+                        }, tags={
+                            'type': 'woo'
+                        })
+                    else:
+                        cache.set(cache_key, error_count + 1, timeout=3600)
 
                 if (timezone.now() - self.start_at) > timezone.timedelta(seconds=uptime * 60):
                     extra = {'delta': (timezone.now() - self.start_at).total_seconds()}

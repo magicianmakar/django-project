@@ -1,5 +1,5 @@
 from django.utils import timezone
-from django.core.cache import caches
+from django.core.cache import cache, caches
 
 import arrow
 import requests
@@ -9,7 +9,6 @@ from simplejson import JSONDecodeError
 from shopified_core.management import DropifiedBaseCommand
 from commercehq_core.models import CommerceHQOrderTrack
 from commercehq_core import utils
-
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 
@@ -66,6 +65,23 @@ class Command(DropifiedBaseCommand):
                     counter['fulfilled'] += 1
                     if counter['fulfilled'] % 50 == 0:
                         self.write('Fulfill Progress: %d' % counter['fulfilled'])
+                else:
+                    cache_key = 'chq_track_error_{}'.format(order.id)
+                    error_count = cache.get(cache_key, 0)
+
+                    if error_count > 10:
+                        order.hidden = True
+                        order.save()
+
+                        raven_client.captureMessage('Ignore Order Track', level='warning', extra={
+                            'type': 'chq',
+                            'id': order.id,
+                            'errors': 'chq'
+                        }, tags={
+                            'type': 'chq'
+                        })
+                    else:
+                        cache.set(cache_key, error_count + 1, timeout=3600)
 
                 if (timezone.now() - self.start_at) > timezone.timedelta(seconds=uptime * 60):
                     extra = {'delta': (timezone.now() - self.start_at).total_seconds()}
