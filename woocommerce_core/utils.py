@@ -158,6 +158,7 @@ def get_image_id_by_hash(product_data):
 
 def create_variants_api_data(data, image_id_by_hash):
     variants = data.get('variants', [])
+    variants_info = data.get('variants_info', {})
     variants_images = data.get('variants_images', {}).items()
     variant_list = []
 
@@ -170,7 +171,9 @@ def create_variants_api_data(data, image_id_by_hash):
     for product in itertools.product(*values):
         api_data = {'attributes': []}
         descriptions = []
+        options = []
         for name, option in itertools.izip(titles, product):
+            options.append(option)
             descriptions.append(u'{}: {}'.format(name, option))
             api_data['attributes'].append({'name': name, 'option': option})
             if 'image' not in api_data:
@@ -185,6 +188,14 @@ def create_variants_api_data(data, image_id_by_hash):
             api_data['sale_price'] = str(data['price'])
         else:
             api_data['regular_price'] = str(data['price'])
+
+        variant_name = ' / '.join(options)
+        variant = variants_info.get(variant_name, {})
+        if variant.get('compare_at'):
+            api_data['regular_price'] = str(variant['compare_at'])
+            api_data['sale_price'] = str(variant['price'])
+        elif variant.get('price'):
+            api_data['regular_price'] = str(variant['price'])
 
         variant_list.append(api_data)
 
