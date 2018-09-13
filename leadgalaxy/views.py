@@ -1184,7 +1184,7 @@ def products_list(request, tpl='grid'):
     args = {
         'request': request,
         'filter_products': (request.GET.get('f') == '1'),
-        'post_per_page': utils.safeInt(request.GET.get('ppp'), 24),
+        'post_per_page': settings.ITEMS_PER_PAGE,
         'sort': request.GET.get('sort'),
         'store': store,
         'load_boards': (tpl is None or tpl == 'grid'),
@@ -1248,7 +1248,7 @@ def shopify_migration(request):
         messages.warning(request, 'Please add at least one store before using the Migration page.')
         return HttpResponseRedirect('/')
 
-    ppp = request.GET.get('ppp', '50')
+    ppp = min(utils.safeInt(request.GET.get('ppp'), 50), 100)
     page = request.GET.get('page', '1')
 
     if request.GET.get('reset') == '1':
@@ -1683,7 +1683,7 @@ def bulk_edit(request, what):
         args = {
             'request': request,
             'filter_products': (request.GET.get('f') == '1'),
-            'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
+            'post_per_page': settings.ITEMS_PER_PAGE,
             'sort': request.GET.get('sort'),
             'store': 'n'
         }
@@ -1765,7 +1765,7 @@ def boards(request, board_id):
     args = {
         'request': request,
         'filter_products': (request.GET.get('f') == '1'),
-        'post_per_page': utils.safeInt(request.GET.get('ppp'), 25),
+        'post_per_page': settings.ITEMS_PER_PAGE,
         'sort': request.GET.get('sort'),
         'store': request.GET.get('store'),
         'board': board.id
@@ -4068,7 +4068,7 @@ def product_alerts(request):
         product = get_object_or_404(ShopifyProduct, id=product)
         permissions.user_can_view(request.user, product)
 
-    post_per_page = utils.safeInt(request.GET.get('ppp'), 20)
+    post_per_page = settings.ITEMS_PER_PAGE
     page = utils.safeInt(request.GET.get('page'), 1)
 
     store = utils.get_store_from_request(request)
@@ -4187,7 +4187,7 @@ def bundles_bonus(request, bundle_id):
 
 @login_required
 def products_collections(request, collection):
-    post_per_page = request.GET.get('ppp', 25)
+    post_per_page = settings.ITEMS_PER_PAGE
     page = request.GET.get('page', 1)
     page = max(1, page)
 

@@ -2384,7 +2384,7 @@ class ProductsCollectionPaginator(Paginator):
     order = None
     query = None
     extra_filter = None
-    ppp = 25
+    ppp = settings.ITEMS_PER_PAGE
 
     def set_product_per_page(self, ppp):
         self.ppp = ppp

@@ -6,6 +6,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.urls import reverse
+from django.conf import settings
 
 from leadgalaxy import utils
 from shopified_core.paginators import SimplePaginator
@@ -46,7 +47,7 @@ def marketplace(request):
                 raven_client.captureException()
 
         categories = get_dropwow_categories().get('results', [])
-        post_per_page = request.GET.get('ppp', 25)
+        post_per_page = settings.ITEMS_PER_PAGE
         feed = get_dropwow_products(page, post_per_page, title, category_id, min_price, max_price, brand, vendor, order_by)
         total_items = feed.get('count', 0)
         all_products = [[] for i in range(1, total_items)]

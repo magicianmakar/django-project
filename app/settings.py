@@ -232,6 +232,7 @@ EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "support@dropified.com"
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
+ITEMS_PER_PAGE = 24
 
 # Shopify App
 SHOPIFY_API_KEY = os.environ['SHOPIFY_API_KEY']
