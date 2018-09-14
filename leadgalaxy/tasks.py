@@ -19,7 +19,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from raven.contrib.django.raven_compat.models import client as raven_client
-from app.celery import celery_app, CaptureFailure, retry_countdown
+from app.celery import celery_app, CaptureFailure, retry_countdown, api_exceed_limits_countdown
 from shopified_core import permissions
 from shopified_core.utils import (
     app_link,
@@ -311,7 +311,13 @@ def export_product(req_data, target, user_id):
 
                     product.save()
 
-                    sync_shopify_product_quantities.apply_async(args=[product.id])
+                    # Add countdown to not exceed Shopify API limits
+                    countdown_quantities = 0
+                    if req_data.get('b'):  # If is bulk export
+                        countdown_key = 'sync_shopify_product_quantities_countdown_{}'.format(store.id)
+                        countdown_quantities = api_exceed_limits_countdown(countdown_key)
+
+                    sync_shopify_product_quantities.apply_async(args=[product.id], countdown=countdown_quantities)
 
                 except ShopifyProduct.DoesNotExist:
                     raven_client.captureException()
