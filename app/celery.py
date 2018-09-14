@@ -40,3 +40,14 @@ def retry_countdown(key, retries):
     cache.set(key, countdown + random.randint(5, 30), timeout=countdown + 60)
 
     return countdown
+
+
+def api_exceed_limits_countdown(key):
+    """
+    Returns exponentially increased countdown
+    """
+    call_count = cache.get(key, 0) + 1
+    cache.set(key, call_count, timeout=20)
+    countdown = sum(range(call_count)) * random.randint(10, 30)
+
+    return countdown if countdown < 3000 else 3000

@@ -1249,6 +1249,20 @@ $('#save-variant-change').click(function (e) {
     });
 });
 
+$('#orders-audit').on('click', function(e) {
+    e.preventDefault();
+
+    window.extensionSendMessage({
+        subject: 'GetPageUrl',
+        page: 'audit.html',
+    }, function(rep) {
+        $('#orders-audit-modal .modal-body iframe').remove();
+        $('#orders-audit-modal .modal-body').append($('<iframe>'));
+        $('#orders-audit-modal').modal('show');
+        $('#orders-audit-modal .modal-body iframe').attr('src', rep.url);
+    });
+});
+
 $(function () {
     if (Cookies.get('orders_filter') == 'true') {
         $('.filter-form').show();
@@ -1263,6 +1277,12 @@ $(function () {
 
     if (window.location.hash.match(/hide-non-connected/)) {
         $('.hide-non-connected-btn').trigger('click');
+    }
+
+    if (window.location.hash.match(/audit/)) {
+        window.onExtensionSendMessageReady = function() {
+            $('#orders-audit').trigger('click');
+        };
     }
 
     if (window.location.hash.length) {
@@ -1447,5 +1467,6 @@ $(function () {
     setTimeout(function() {
         window.location.reload();
     }, 3500 * 1000);
+
 });
 })(user_filter, sub_conf, product_variants);
