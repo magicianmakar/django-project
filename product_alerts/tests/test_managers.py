@@ -104,8 +104,8 @@ class ProductChangeManagerTestCase(TransactionTestCase):
         updated_compare_price = round(float(updated_variant['compare_at_price']), 2)
 
         # check if price was updated back and preserved the margin
-        self.assertEqual(updated_price, (old_price * new_value) / old_value)
-        self.assertEqual(updated_compare_price, (old_compare_price * new_value) / old_value)
+        self.assertEqual(updated_price, round((old_price * new_value) / old_value, 2))
+        self.assertEqual(updated_compare_price, round((old_compare_price * new_value) / old_value, 2))
 
         # check if price history was added
         history = ProductVariantPriceHistory.objects.filter(shopify_product=product, variant_id=shopify_product['variants'][0]['id']).first()
