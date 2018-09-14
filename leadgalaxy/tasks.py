@@ -473,29 +473,27 @@ def sync_shopify_product_quantities(self, product_id):
     try:
         product = ShopifyProduct.objects.get(pk=product_id)
         product_data = utils.get_shopify_product(product.store, product.shopify_id)
-        assert product_data
 
         if not product.default_supplier.is_aliexpress:
             return
 
         variant_quantities = aliexpress_variants(product.default_supplier.get_source_id())
-        assert variant_quantities
 
-        for variant in variant_quantities:
-            sku = variant.get('sku')
-            if not sku:
-                continue
+        if product_data and variant_quantities:
+            for variant in variant_quantities:
+                sku = variant.get('sku')
+                if not sku:
+                    continue
 
-            idx = variant_index(product, sku, product_data['variants'])
-            if not idx:
-                continue
+                idx = variant_index(product, sku, product_data['variants'])
+                if not idx:
+                    continue
 
-            product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
-            time.sleep(0.5)
+                product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
+                time.sleep(0.5)
 
     except Exception as e:
-        if type(e) is not AssertionError:
-            raven_client.captureException()
+        raven_client.captureException()
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_sync_shopify_{}'.format(product_id), self.request.retries)
