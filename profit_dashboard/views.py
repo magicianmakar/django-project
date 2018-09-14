@@ -217,14 +217,16 @@ def save_other_costs(request):
 def facebook_remove_account(request):
     if request.method == 'POST':
         store = utils.get_store_from_request(request)
-
         access = get_object_or_404(FacebookAccess, user=request.user, store=store)
-        # Remove account_id from FacebookAccess.account_ids
-        acount_ids = access.account_ids.split(',')
-        acount_ids = filter(lambda account_id: account_id != account.account_id, acount_ids)
-        access.account_ids = acount_ids.join(',')
-
         account = access.accounts.filter(pk=request.POST.get('id'))
+
+        # Remove account_id from FacebookAccess.account_ids
+        account_ids = access.account_ids.split(',')
+        current_account_id = account.first().account_id
+        account_ids = filter(lambda account_id: account_id != current_account_id, account_ids)
+        access.account_ids = ','.join(account_ids)
+        access.save()
+
         account.delete()
 
         return JsonResponse({'success': True})
