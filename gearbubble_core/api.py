@@ -149,7 +149,7 @@ class GearBubbleApi(ApiResponseMixin, View):
         store.user = user.models_user
         store.title = data.get('title', '').strip()
         store.api_token = data.get('api_token', '').strip()
-        store.mode = data['mode'] if data.get('mode') and user.is_superuser else store.mode
+        store.mode = data['mode'] if data.get('mode') else store.mode
 
         permissions.user_can_add(user, store)
         store.save()
