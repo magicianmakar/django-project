@@ -15,7 +15,6 @@
                                 <label>API Token</label>
                                 <input type="password" id="store_api_token" name="api_token" class="form-control" required />
                             </div>
-                            {% if user.is_superuser %}
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -27,7 +26,6 @@
                                     </div>
                                 </div>
                             </div>
-                            {% endif %}
                             <div>
                                 <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
                                     <strong>Update store</strong>
