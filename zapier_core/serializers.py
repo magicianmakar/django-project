@@ -15,12 +15,11 @@ class HookSerializer(serializers.ModelSerializer):
         model = Hook
         fields = ('id', 'event', 'target')
 
-    def validate_event(self, attrs, source):
-        event = attrs[source]
+    def validate_event(self, event):
         if event not in settings.HOOK_EVENTS:
             err_msg = "Unexpected event {}".format(event)
             raise serializers.ValidationError(message=err_msg, code=400)
-        return attrs
+        return event
 
     def validate(self, attrs):
         event = attrs.get('event', self.object.event if self.object else None)
