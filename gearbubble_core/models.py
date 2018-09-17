@@ -200,7 +200,7 @@ class GearBubbleProduct(models.Model):
     def gearbubble_url(self):
         if self.is_connected:
             path = 'private_products/{}/edit'.format(self.source_id)
-            return '{}/{}'.format(self.get_store_url(), path)
+            return '{}/{}'.format(self.store.get_store_url(), path)
 
         return None
 
