@@ -4,11 +4,13 @@ import itertools
 import urllib
 import arrow
 import requests
+import copy
 
 from math import ceil
 from measurement.measures import Weight
 from decimal import Decimal, ROUND_HALF_UP
 from unidecode import unidecode
+from collections import Counter
 
 from django.db.models import Q
 from django.db import transaction
@@ -267,19 +269,78 @@ def update_variants_api_data(data):
     return variants
 
 
+def get_top_most_commons(most_commons):
+    option, highest_count = most_commons[0]
+    top_most_commons = []
+
+    for most_common in most_commons:
+        option, count = most_common
+        if count == highest_count:
+            top_most_commons.append(most_common)
+            continue
+        break
+
+    return top_most_commons
+
+
+def get_first_valid_option(most_commons, valid_options):
+    for option, count in most_commons:
+        if option in valid_options:
+            return option
+
+
+def map_images(product, product_data):
+    variants_images = {}
+    image_options_map = {}
+    images = product_data.get('images', [])[:]
+    images = [img['src'] for img in images]
+    variants = product_data.get('variants', [])
+    variants = [variant for variant in variants if variant['image']['id']]
+
+    for variant in variants:
+        src = variant['image']['src']
+        hash_src = hash_url_filename(src)
+        variant_options = variant['variant']
+        image_options_map.setdefault(hash_src, variant_options).extend(variant_options)
+        options = image_options_map.get(hash_src, [])
+        most_commons = Counter(options).most_common()
+        if most_commons:
+            top_most_commons = get_top_most_commons(most_commons)
+            if len(top_most_commons) == 1:
+                # Sets the image to its most popular option
+                option, count = top_most_commons[0]
+                variants_images[hash_src] = option
+            else:
+                # In case of a tie, assigns the first valid option
+                valid_options = product_data['attributes'][0]['options']
+                variants_images[hash_src] = get_first_valid_option(top_most_commons, valid_options)
+
+        if src not in images:
+            images.append(src)
+
+    product.update_data({'images': images})
+    product.update_data({'variants_images': variants_images})
+
+
+def map_variants(product, product_data):
+    variants = []
+
+    for attribute in product_data.pop('attributes', []):
+        title, values = attribute['name'], attribute['options']
+        variants.append({'title': title, 'values': values})
+
+    product.update_data({'variants': variants})
+
+
 def disconnect_data(product):
+    product_data = product.retrieve()
+    map_images(product, product_data)
+    map_variants(product, product_data)
     data = product.parsed
     data.pop('id')
     data.pop('published')
     data.pop('product_type')
     data['status'] = 'draft'
-    data['variants'] = []
-    data['images'] = data.pop('original_images', data['images'])
-
-    for attribute in data.pop('attributes', []):
-        title, values = attribute['name'], attribute['options']
-        data['variants'].append({'title': title, 'values': values})
-
     product.data = json.dumps(data)
 
     return product
@@ -288,11 +349,13 @@ def disconnect_data(product):
 @transaction.atomic
 def duplicate_product(product, store=None):
     parent_product = WooProduct.objects.get(id=product.id)
-    product.pk = None
+    product = copy.deepcopy(parent_product)
     product.parent_product = parent_product
-    product.source_id = 0
-    product.store = store
     product = disconnect_data(product) if product.parsed.get('id') else product
+    product.pk = None
+    product.source_id = 0
+    product.source_slug = ''
+    product.store = store
     product.save()
 
     for supplier in parent_product.woosupplier_set.all():
@@ -345,7 +408,7 @@ def split_product(product, split_factor, store=None):
     new_products = []
     options = get_variant_options(product, split_factor)
     parent_data = product.parsed
-    original_images = parent_data.get('original_images', parent_data.get('images', []))
+    images = parent_data.get('images', [])
     variant_images = parent_data.get('variants_images', [])
     title = parent_data.get('title', '')
 
@@ -358,7 +421,7 @@ def split_product(product, split_factor, store=None):
         new_data['variants'] = [v for v in variants if not v['title'] == split_factor]
 
         hashes = [h for h, variant in variant_images.items() if variant == option]
-        new_data['images'] = [i for i in original_images if hash_url_filename(i) in hashes]
+        new_data['images'] = [i for i in images if hash_url_filename(i) in hashes]
 
         new_product.update_data(new_data)
         new_product.save()
