@@ -1675,7 +1675,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             'order_id': data.get('fulfill-order-id'),
             'source_tracking': data.get('fulfill-traking-number'),
             'use_usps': data.get('fulfill-tarcking-link') == 'usps',
-            'location_id': store.get_primary_location(),
+            'location_id': data.get('fulfill-location-id', store.get_primary_location()),
             'user_config': {
                 'send_shipping_confirmation': data.get('fulfill-notify-customer'),
                 'validate_tracking_number': False,
