@@ -18,18 +18,18 @@ class HookSerializer(serializers.ModelSerializer):
     def validate_event(self, event):
         if event not in settings.HOOK_EVENTS:
             err_msg = "Unexpected event {}".format(event)
-            raise serializers.ValidationError(message=err_msg, code=400)
+            raise serializers.ValidationError(err_msg)
         return event
 
-    def validate(self, attrs):
-        event = attrs.get('event', self.object.event if self.object else None)
-        target = attrs.get('target', self.object.target if self.object else None)
+    def validate(self, data):
+        event = data.get('event', self.instance.event if self.instance else None)
+        target = data.get('target', self.instance.target if self.instance else None)
         try:
             obj = Hook.objects.get(event=event, target=target)
         except Hook.DoesNotExist:
-            return attrs
-        if self.object and obj.id == self.object.id:
-            return attrs
+            return data
+        if self.instance and obj.id == self.instance.id:
+            return data
         else:
             raise serializers.ValidationError("target {} exists for event {}".format(target, event))
 

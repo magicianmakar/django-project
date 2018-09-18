@@ -2484,7 +2484,7 @@ def autocomplete(request, target):
     elif target == 'collections':
         results = []
         store = ShopifyStore.objects.get(pk=request.GET.get('store', 0))
-        collections = utils.ProductCollections().get_collections(store)
+        collections = utils.ProductCollections().get_collections(store, q)
 
         for collection in collections:
             data = {'text': collection.get('title'), 'id': collection.get('id')}

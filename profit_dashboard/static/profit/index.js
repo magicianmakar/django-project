@@ -86,6 +86,20 @@ Handlebars.registerHelper("currencyFormat", function(amount, noSign) {
     return Currency.format(amount, noSign);
 });
 
+var Utils = {
+    postUserConfig: function(name, value) {
+        $.ajax({
+            url: '/api/user-config',
+            type: 'POST',
+            data: {
+                single: true,
+                name: name,
+                value: value,
+            }
+        });
+    }
+};
+
 // Profit JS
 (function() {
     var ProfitDashboard = {
@@ -1061,6 +1075,7 @@ var FacebookProfitDashboard = {
         this.onFacebookSyncFormSubmit();
         this.facebookStatus.loggedIn();
         this.onClickRemoveAccount();
+        this.onCollapseFacebookConnection();
     },
     onClickRemoveAccount: function() {
         $('.fb-ad-remove').on('click', function(e) {
@@ -1104,19 +1119,16 @@ var FacebookProfitDashboard = {
     },
     facebookStatus: {
         connect: function() {
-            console.log('connect');
             $('#connect-facebook').css('display', '');
             $('#loading-facebook').css('display', 'none');
             $('#facebook-logged-in').css('display', 'none');
         },
         loading: function() {
-            console.log('loading');
             $('#loading-facebook').css('display', '');
             $('#connect-facebook').css('display', 'none');
             $('#facebook-logged-in').css('display', 'none');
         },
         loggedIn: function() {
-            console.log('loggedin');
             $('#facebook-logged-in').css('display', '');
             $('#connect-facebook').css('display', 'none');
             $('#loading-facebook').css('display', 'none');
@@ -1126,7 +1138,6 @@ var FacebookProfitDashboard = {
         $('#facebook-sync').on('submit', function(e) {
             e.preventDefault();
 
-            // FacebookProfitDashboard.facebookStatus.loading();
             $.ajax({
                 type: $(this).attr('method'),
                 url: $(this).attr('action'),
@@ -1172,7 +1183,7 @@ var FacebookProfitDashboard = {
             }
         }
         FacebookProfitDashboard.firstTime = false;
-        // $('#facebook-insights').css('display', '');
+        // $('#facebook-connections').css('display', '');
     },
     checkLoginState: function() {
         FB.getLoginStatus(function(response) {
@@ -1194,6 +1205,17 @@ var FacebookProfitDashboard = {
                 FacebookProfitDashboard.facebookStatus.loggedIn();
                 $('#last-synced').text('Error');
             }
+        });
+    },
+    onCollapseFacebookConnection: function() {
+        $('#collapse-facebook-connections').on('show.bs.collapse', function () {
+            Utils.postUserConfig('_show_facebook_connection', true);
+            $('.collapse-link .fa-chevron-down').removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        });
+
+        $('#collapse-facebook-connections').on('hide.bs.collapse', function () {
+            Utils.postUserConfig('_show_facebook_connection', false);
+            $('.collapse-link .fa-chevron-up').removeClass('fa-chevron-up').addClass('fa-chevron-down');
         });
     }
 };

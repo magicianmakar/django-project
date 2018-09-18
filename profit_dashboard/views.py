@@ -9,6 +9,8 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.adaccount import AdAccount
 
@@ -50,7 +52,7 @@ def index(request):
     limit = utils.safeInt(request.GET.get('limit'), 31)
     current_page = utils.safeInt(request.GET.get('page'), 1)
 
-    profits, totals, details = get_profits(request.user.pk, store, start, end, request.session['django_timezone'])
+    profits, totals, details = get_profits(request.user.models_user.pk, store, start, end, request.session['django_timezone'])
     profit_details, details_paginator = details
 
     profits_json = json.dumps(profits[::-1])
@@ -60,8 +62,8 @@ def index(request):
     page = paginator.page(page)
     profits = calculate_profits(page.object_list)
 
-    accounts = FacebookAccount.objects.filter(access__store=store, access__user=request.user)
-    need_setup = not FacebookAccess.objects.filter(user=request.user, store=store).exists()
+    accounts = FacebookAccount.objects.filter(access__store=store)
+    need_setup = not FacebookAccess.objects.filter(store=store).exists()
 
     return render(request, 'profit_dashboard/index.html', {
         'page': 'profit_dashboard',
@@ -81,6 +83,7 @@ def index(request):
         'details_paginator': details_paginator,
         'user_facebook_permission': settings.FACEBOOK_APP_ID,
         'initial_date': INITIAL_DATE.format('MM/DD/YYYY'),
+        'show_facebook_connection': request.user.get_config('_show_facebook_connection', 'true') == 'true',
     })
 
 
@@ -98,7 +101,6 @@ def facebook_insights(request):
         campaigns = request.POST.get('campaigns')
         config = request.POST.get('config')
         FacebookAccount.objects.filter(
-            access__user=request.user,
             access__store=store,
             account_id=account_id
         ).update(campaigns=campaigns, config=config)
@@ -117,11 +119,19 @@ def facebook_accounts(request):
     access_token = request.GET.get('fb_access_token')
     expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
     store = utils.get_store_from_request(request)
-    facebook_access, created = FacebookAccess.objects.get_or_create(user=request.user, store=store, defaults={
-        'access_token': access_token,
-        'expires_in': arrow.get().replace(seconds=expires_in).datetime
-    })
-    access_token = facebook_access.get_or_update_token(access_token, expires_in)
+    facebook_access, created = FacebookAccess.objects.get_or_create(
+        user=request.user.models_user.pk,
+        store=store,
+        defaults={
+            'access_token': access_token,
+            'expires_in': arrow.get().replace(seconds=expires_in).datetime
+        }
+    )
+    try:
+        access_token = facebook_access.get_or_update_token(access_token, expires_in)
+    except:
+        raven_client.captureException()
+        return JsonResponse({'error': 'User token error'})
 
     api = get_facebook_api(access_token)
     user = FBUser(fbid='me', api=api)
@@ -138,7 +148,12 @@ def facebook_campaign(request):
     """
     store = utils.get_store_from_request(request)
     facebook_access = FacebookAccess.objects.get(user=request.user, store=store)
-    access_token = facebook_access.get_or_update_token()
+    try:
+        access_token = facebook_access.get_or_update_token()
+    except:
+        raven_client.captureException()
+        return JsonResponse({'error': 'User token error'})
+
     account_id = request.GET.get('account_id')
     account_name = request.GET.get('account_name')
 

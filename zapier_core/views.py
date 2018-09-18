@@ -32,8 +32,9 @@ class HookViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Hook.objects.filter(user=self.request.user)
 
-    def pre_save(self, obj):
-        obj.user = self.request.user
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+        super(HookViewSet, self).perform_create(serializer)
 
 
 class ShopifyOrderList(generics.ListAPIView):
