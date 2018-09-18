@@ -8,8 +8,6 @@
 
 {% block main-container %}
 
-{% include 'profit_dashboard/partial/facebook.html' %}
-
 <div class="tabs-container">
   <ul class="nav nav-tabs">
     {% for item in user.profile.get_shopify_stores %}
@@ -24,6 +22,9 @@
   <div class="tab-content">
     <div id="tab-1" class="tab-pane active">
       <div class="panel-body">
+        {% include 'profit_dashboard/partial/facebook.html' %}
+        <br>
+
         <form class="form-inline" method="get">
           <input type="hidden" name="store" value="{{ store.id }}">
           <input type="hidden" class="form-control" name="start" value="{{ start }}"/>
@@ -87,10 +88,11 @@
       initialDate: '{{ initial_date }}',
       facebook: {
         {% if user_facebook_permission %}
-        appId: "{% app_setting 'FACEBOOK_APP_ID' %}"
+        appId: "{% app_setting 'FACEBOOK_APP_ID' %}",
         {% else %}
-        appId: null
+        appId: null,
         {% endif %}
+        showPanel: {{ show_facebook_connection|yesno:"true,false" }}
       },
       sub_conf: {
         key: "{% app_setting 'PUSHER_KEY' %}",

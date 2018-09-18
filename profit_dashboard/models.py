@@ -54,10 +54,12 @@ class FacebookAccess(models.Model):
         token = json.loads(response.content)
 
         # Default expire should be within the next hour
-        expires_in = arrow.now().replace(hours=1, minute=0)
+        expires_in = arrow.now().replace(hours=1, minute=0).datetime
         if 'expires_in' in token:
             expires_in_days = token['expires_in'] / 60 / 60 / 24  # Value is in seconds
             expires_in = arrow.now().replace(days=expires_in_days, hour=0).datetime
+        elif 'error' in token:
+            raise Exception(token)
 
         self.access_token = token.get('access_token')
         self.expires_in = expires_in

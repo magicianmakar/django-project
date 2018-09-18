@@ -57,6 +57,17 @@ def get_facebook_ads(user, store, access_token=None, expires_in=None):
 
     api = get_facebook_api(access_token)
     user = FBUser(fbid='me', api=api)
+
+    # for facebook_access in FacebookAccess.objects.all():
+    #     access_token = facebook_access.get_or_update_token()
+    #     try:
+    #         api = get_facebook_api(access_token)
+    #         user = FBUser(fbid='me', api=api).api_get()
+    #         facebook_access.facebook_user_id = user.get('id')
+    #         facebook_access.save()
+    #     except:
+    #         continue
+
     params = {'time_increment': 1}
 
     account_ids = access.account_ids.split(',')
