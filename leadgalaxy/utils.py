@@ -2650,9 +2650,13 @@ class ProductCollections(object):
         'unlink_collection': '/admin/collects/{}.json',
     }
 
-    def get_collections(self, store):
+    def get_collections(self, store, title=''):
+        params = {'limit': 100}
+        if title:
+            params['title'] = title
+
         try:
-            response = requests.get(url=store.get_link(self.shopify_api_urls.get('custom_collections'), api=True), params={'limit': 100}).json()
+            response = requests.get(url=store.get_link(self.shopify_api_urls.get('custom_collections'), api=True), params=params).json()
             collections = [{'title': collection.get('title'), 'id': collection.get('id')} for collection in
                            response.get('custom_collections', [])]
         except:
