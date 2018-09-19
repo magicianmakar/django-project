@@ -498,6 +498,8 @@ def sync_shopify_product_quantities(self, product_id):
                 product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
                 time.sleep(0.5)
 
+    except ShopifyProduct.DoesNotExist:
+        pass
     except Exception as e:
         raven_client.captureException()
 
@@ -619,15 +621,16 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
         if http_excption_status_code(e) in [401, 402, 403, 404]:
             return
 
-        raven_client.captureException(level='warning', extra={
-            'Store': store_id,
-            'Order': order_id,
-            'from_webhook': from_webhook,
-            'Retries': self.request.retries
-        }, tags={
-            'store': store.shop if store else 'N/A',
-            'webhook': from_webhook,
-        })
+        if http_excption_status_code(e) != 429:
+            raven_client.captureException(level='warning', extra={
+                'Store': store_id,
+                'Order': order_id,
+                'from_webhook': from_webhook,
+                'Retries': self.request.retries
+            }, tags={
+                'store': store.shop if store else 'N/A',
+                'webhook': from_webhook,
+            })
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_order_{}'.format(order_id), self.request.retries)
