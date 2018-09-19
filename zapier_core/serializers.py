@@ -42,8 +42,8 @@ class ProductAlertSerializer(serializers.ModelSerializer):
         model = ProductChange
         fields = ('store_type',)
 
-    def to_native(self, obj):
-        ret = super(ProductAlertSerializer, self).to_native(obj)
+    def to_representation(self, obj):
+        ret = super(ProductAlertSerializer, self).to_representation(obj)
 
         category = self.context.get('category')
         ret.update(obj.to_alert(category))
@@ -58,8 +58,8 @@ class ProductChangeSerializer(serializers.ModelSerializer):
         model = ProductChange
         fields = ('store_type',)
 
-    def to_native(self, obj):
-        ret = super(ProductChangeSerializer, self).to_native(obj)
+    def to_representation(self, obj):
+        ret = super(ProductChangeSerializer, self).to_representation(obj)
 
         category = self.context.get('category')
         change_index = self.context.get('change_index')
@@ -68,8 +68,8 @@ class ProductChangeSerializer(serializers.ModelSerializer):
 
 
 class ShopifyProductSerializer(serializers.ModelSerializer):
-    store_type = serializers.SerializerMethodField('get_store_type')
-    store_id = serializers.SerializerMethodField('get_store_id')
+    store_type = serializers.SerializerMethodField()
+    store_id = serializers.SerializerMethodField()
 
     class Meta:
         model = ShopifyProduct
@@ -90,8 +90,8 @@ class ShopifyProductSerializer(serializers.ModelSerializer):
 
 
 class CommerceHQProductSerializer(serializers.ModelSerializer):
-    store_type = serializers.SerializerMethodField('get_store_type')
-    store_id = serializers.SerializerMethodField('get_store_id')
+    store_type = serializers.SerializerMethodField()
+    store_id = serializers.SerializerMethodField()
 
     class Meta:
         model = CommerceHQProduct
@@ -128,20 +128,20 @@ class ShopifyOrderSerializer(serializers.ModelSerializer):
         model = ShopifyOrder
         fields = ('total_price',)
 
-    def to_native(self, obj):
-        ret = super(ShopifyOrderSerializer, self).to_native(obj)
+    def to_representation(self, obj):
+        ret = super(ShopifyOrderSerializer, self).to_representation(obj)
         data = self.context.get('data').get(str(obj.order_id), {})
         ret.update(get_shopify_order_data(obj.store, data))
         return ret
 
 
 class ShopifyOrderTrackSerializer(serializers.ModelSerializer):
-    store_type = serializers.SerializerMethodField('get_store_type')
-    store_id = serializers.SerializerMethodField('get_store_id')
-    store_title = serializers.SerializerMethodField('get_store_title')
-    order_no = serializers.SerializerMethodField('get_order_no')
-    source_status_label = serializers.SerializerMethodField('get_source_status_label')
-    source_url = serializers.SerializerMethodField('get_source_url')
+    store_type = serializers.SerializerMethodField()
+    store_id = serializers.SerializerMethodField()
+    store_title = serializers.SerializerMethodField()
+    order_no = serializers.SerializerMethodField()
+    source_status_label = serializers.SerializerMethodField()
+    source_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ShopifyOrderTrack
@@ -179,12 +179,12 @@ class ShopifyOrderTrackSerializer(serializers.ModelSerializer):
 
 
 class CommerceHQOrderTrackSerializer(serializers.ModelSerializer):
-    store_type = serializers.SerializerMethodField('get_store_type')
-    store_id = serializers.SerializerMethodField('get_store_id')
-    store_title = serializers.SerializerMethodField('get_store_title')
-    order_no = serializers.SerializerMethodField('get_order_no')
-    source_status_label = serializers.SerializerMethodField('get_source_status_label')
-    source_url = serializers.SerializerMethodField('get_source_url')
+    store_type = serializers.SerializerMethodField()
+    store_id = serializers.SerializerMethodField()
+    store_title = serializers.SerializerMethodField()
+    order_no = serializers.SerializerMethodField()
+    source_status_label = serializers.SerializerMethodField()
+    source_url = serializers.SerializerMethodField()
 
     class Meta:
         model = CommerceHQOrderTrack

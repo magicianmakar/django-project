@@ -1,4 +1,5 @@
 from django.core.paginator import Paginator
+from rest_framework.pagination import PageNumberPagination
 
 
 class SimplePaginator(Paginator):
@@ -48,3 +49,9 @@ class FakePaginator(SimplePaginator):
 
     def set_orders(self, orders):
         self.orders = orders
+
+
+class RESTResultsPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 50

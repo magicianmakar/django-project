@@ -49,10 +49,11 @@ class ShopifyOrderList(generics.ListAPIView):
         return queryset
 
     def get_serializer_context(self):
+        queryset = self.filter_queryset(self.get_queryset())
         rep = requests.get(
             url=self.store.get_link('/admin/orders.json', api=True),
             params={
-                'ids': ','.join([str(o.order_id) for o in self.object_list]),
+                'ids': ','.join([str(o.order_id) for o in queryset]),
                 'status': 'any',
                 'fulfillment_status': 'any',
                 'financial_status': 'any',
@@ -65,15 +66,14 @@ class ShopifyOrderList(generics.ListAPIView):
         }
 
     def list(self, request, *args, **kwargs):
-        self.object_list = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset())
 
-        page = self.paginate_queryset(self.object_list)
+        page = self.paginate_queryset(queryset)
         if page is not None:
-            self.object_list = page
-            serializer = self.get_pagination_serializer(page)
-        else:
-            serializer = self.get_serializer(self.object_list, many=True)
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 
@@ -129,14 +129,14 @@ class ProductAlertList(generics.ListAPIView):
         }
 
     def list(self, request, *args, **kwargs):
-        self.object_list = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset())
 
-        page = self.paginate_queryset(self.object_list)
+        page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_pagination_serializer(page)
-        else:
-            serializer = self.get_serializer(self.object_list, many=True)
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 
@@ -173,14 +173,14 @@ class ProductChangesList(generics.ListAPIView):
         }
 
     def list(self, request, *args, **kwargs):
-        self.object_list = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_queryset(self.get_queryset())
 
-        page = self.paginate_queryset(self.object_list)
+        page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_pagination_serializer(page)
-        else:
-            serializer = self.get_serializer(self.object_list, many=True)
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
 
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 
@@ -247,7 +247,7 @@ class CommerceHQStoreViewSet(mixins.RetrieveModelMixin,
 class ProductVisibilityUpdate(APIView):
     def post(self, request, pk, store_type):
         user = request.user
-        visibility = True if request.DATA.get('visibility', False) else False
+        visibility = True if request.data.get('visibility', False) else False
         if store_type == 'shopify':
             product = ShopifyProduct.objects.get(id=pk)
             permissions.user_can_edit(user, product)
@@ -268,7 +268,7 @@ class ProductVisibilityUpdate(APIView):
 class ProductNotesUpdate(APIView):
     def post(self, request, pk, store_type):
         user = request.user
-        notes = request.DATA.get('notes')
+        notes = request.data.get('notes')
         if store_type == 'shopify':
             product = ShopifyProduct.objects.get(id=pk)
             permissions.user_can_edit(user, product)
@@ -317,8 +317,8 @@ class ProductVariantList(APIView):
 class ProductVariantUpdate(APIView):
     def post(self, request, pk, store_type):
         user = request.user
-        variant_id = safeInt(request.DATA.get('variant_id'))
-        price = safeFloat(request.DATA.get('price'))
+        variant_id = safeInt(request.data.get('variant_id'))
+        price = safeFloat(request.data.get('price'))
         if store_type == 'shopify':
             product = ShopifyProduct.objects.get(id=pk)
             permissions.user_can_edit(user, product)
@@ -373,8 +373,8 @@ class OrderDetail(APIView):
 class OrderNotesUpdate(APIView):
     def post(self, request, pk, store_type):
         user = request.user
-        store_id = request.DATA.get('store_id')
-        notes = request.DATA.get('notes')
+        store_id = request.data.get('store_id')
+        notes = request.data.get('notes')
         if store_id and notes:
             updater = None
             if store_type == 'shopify':

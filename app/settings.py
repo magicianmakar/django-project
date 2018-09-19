@@ -346,9 +346,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
-    'PAGINATE_BY': 10,
-    'PAGINATE_BY_PARAM': 'page_size',
-    'MAX_PAGINATE_BY': 100,
+    'DEFAULT_PAGINATION_CLASS': 'shopified_core.paginators.RESTResultsPagination',
+    'PAGE_SIZE': 20,
 }
 
 if not DEBUG:
