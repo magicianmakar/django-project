@@ -129,14 +129,14 @@ var Utils = {
         init: function() {
             this.initTooltip();
             this.initDatepicker();
-            this.initExpandable();
+            // this.initExpandable();
 
             this.fixStripes();
             this.initializeChartsData();
             this.loadCharts();
 
-            this.onClickOpenDates();
-            this.onClickCloseDates();
+            // this.onClickOpenDates();
+            // this.onClickCloseDates();
             this.onOtherCostsChange();
             this.onDataViewClick();
             this.onTabsChange();
@@ -332,8 +332,8 @@ var Utils = {
         },
         attachReloadExpandanble: function(totalCostsInput) {
             totalCostsInput.one('blur', function() {
-                ProfitDashboard.reloadExpandable();
-                ProfitDashboard.fixStripes();
+                // ProfitDashboard.reloadExpandable();
+                // ProfitDashboard.fixStripes();
             });
         },
         saveOtherCost: function(otherCostsInput, amount) {
@@ -987,7 +987,7 @@ var Utils = {
                     ProfitDashboard.outputToRow(profitRow, profitData);
                 }
             }
-            ProfitDashboard.initExpandable();
+            // ProfitDashboard.initExpandable();
             ProfitDashboard.fixStripes();
         },
         onDetailsPaginationClick: function() {

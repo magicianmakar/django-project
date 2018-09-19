@@ -20,8 +20,7 @@
     </thead>
     <tbody>
       {% for profit in profits %}
-      <tr id="date-{{ profit.date_as_string|slugify }}" class="profit{% if profit.empty %} empty{% endif %}"{% if profit.week_day %} data-toggle="profit-tooltip" data-placement="right" title="{{ profit.week_day }}"{% endif %}
-      {% ifchanged profit.empty %}{% else %}{% if profit.empty %} style="display: none;"{% endif %}{% endifchanged %}>
+      <tr id="date-{{ profit.date_as_string|slugify }}" class="profit{% if profit.empty %} empty{% endif %}"{% if profit.week_day %} data-toggle="profit-tooltip" data-placement="right" title="{{ profit.week_day }}"{% endif %}>
         <td>{{ profit.date_as_string }}</td>
         <td class="revenue" data-original-amount="{{ profit.revenue|default:"0"|floatformat:2 }}">
           {% money_format profit.revenue store True %}
