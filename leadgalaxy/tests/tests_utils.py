@@ -303,10 +303,10 @@ class FulfillmentTestCase(TransactionTestCase):
     def test_muti_tracking_numbers_with_custom_urls(self):
         # User have a custom tracking, it should be used even for ePacket-US instead of USPS
         track = self.create_track('5415135175', '1654811', 'MA7565915257226HK,MA7565915257227HK', 'US')
-        data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"2": 'uncommonnow'}})
+        data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"1": 'uncommonnow'}})
         self.assertEqual(data['fulfillment']['tracking_numbers'], ["MA7565915257226HK", "MA7565915257227HK"])
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
-        self.assertEqual(data['fulfillment']['tracking_urls'], ['http://track.aftership.com/MA7565915257226HK', 'http://track.aftership.com/MA7565915257227HK'])
+        self.assertEqual(data['fulfillment']['tracking_urls'], ['http://uncommonnow.aftership.com/MA7565915257226HK', 'http://uncommonnow.aftership.com/MA7565915257227HK'])
 
         self.assertNotIn('tracking_url', data['fulfillment'])
         self.assertNotIn('tracking_number', data['fulfillment'])
