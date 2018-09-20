@@ -1631,7 +1631,9 @@ def order_track_fulfillment(**kwargs):
             data['fulfillment']['tracking_number'] = source_tracking
 
         user_aftership_domain = user_config.get('aftership_domain')
-        have_custom_domain = store_id and user_aftership_domain and type(user_aftership_domain) is dict
+        have_custom_domain = store_id and user_aftership_domain \
+            and type(user_aftership_domain) is dict \
+            and user_aftership_domain.get(str(store_id))
 
         if (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
             data['fulfillment']['tracking_company'] = user_config.get('_default_shipping_carrier', 'USPS')

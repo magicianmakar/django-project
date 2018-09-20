@@ -283,6 +283,13 @@ class FulfillmentTestCase(TransactionTestCase):
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
         self.assertEqual(data['fulfillment']['tracking_url'], "http://uncommonnow.aftership.com/{}".format(track.source_tracking))
 
+    def test_other_store_have_custom_aftership_domain_with_us_epacket(self):
+        # User have a custom tracking, it should be used even for ePacket-US instead of USPS
+        track = self.create_track('5415135175', '1654811', 'MA7565915257226HK', 'US')
+        data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"2": 'uncommonnow'}})
+        self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
+        self.assertIsNone(data['fulfillment'].get('tracking_url'))
+
     def test_multi_tracking_numbers(self):
         # User have a custom tracking, it should be used even for ePacket-US instead of USPS
         track = self.create_track('5415135175', '1654811', 'MA7565915257226HK,MA7565915257227HK', 'US')
