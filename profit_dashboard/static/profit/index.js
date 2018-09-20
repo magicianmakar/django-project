@@ -403,7 +403,7 @@ var Utils = {
                 other_costs: [],
                 total_costs: [],
                 fulfillments_count: [],
-                profit: [],
+               profit: [],
                 orders_count: [],
                 average_profit: [],
                 average_revenue: []
@@ -1164,6 +1164,7 @@ var FacebookProfitDashboard = {
 
             $('input[name="fb_access_token"]').val(response.authResponse.accessToken);
             $('input[name="fb_expires_in"]').val(response.authResponse.expiresIn);
+            $('input[name="fb_user_id"]').val(response.authResponse.userID);
 
             if (!FacebookProfitDashboard.firstTime) {
                 $('#fb-ad-setup').trigger('click');
@@ -1247,7 +1248,8 @@ $(function () {
             url: '/profit-dashboard/facebook/accounts',
             data: {
                 fb_access_token: $('input[name="fb_access_token"]').val(),
-                fb_expires_in: $('input[name="fb_expires_in"]').val()
+                fb_expires_in: $('input[name="fb_expires_in"]').val(),
+                fb_user_id: $('input[name="fb_user_id"]').val()
             },
         }).done(function(data) {
             var template = Handlebars.compile($("#fb-account-list").html());
@@ -1264,13 +1266,15 @@ $(function () {
 
         var selectedAccount = $('#fb-account-select-modal [name="account"]:checked'),
             accountId = selectedAccount.val(),
-            accountName = selectedAccount.parents('li').attr('data-name');
+            accountName = selectedAccount.parents('li').attr('data-name'),
+            facebooUserId = $('input[name="fb_user_id"]').val();
 
         $.ajax({
             url: '/profit-dashboard/facebook/campaign',
             data: {
                 account_id: accountId,
-                account_name: accountName
+                account_name: accountName,
+                fb_user_id: facebooUserId
             },
         }).done(function(data) {
             $('#fb-account-select-modal').modal('hide');
@@ -1311,10 +1315,10 @@ $(function () {
             type: 'post',
             url: '/profit-dashboard/facebook/insights',
             data: {
-                'fb_access_token': $('input[name="fb_access_token"]').val(),
                 'account_id': $('#fb-account-select-modal [name="account"]:checked').val(),
                 'campaigns': campaigns.join(','),
-                'config': $('#fb-campaign-select-modal [name="config"]').val()
+                'config': $('#fb-campaign-select-modal [name="config"]').val(),
+                'fb_user_id': $('input[name="fb_user_id"]').val()
             },
             dataType: 'json',
             success: function(result) {

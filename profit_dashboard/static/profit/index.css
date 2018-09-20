@@ -89,8 +89,30 @@
   border: none;
 }
 
-#facebook-connections .row p {
+#facebook-connections .row .facebook-account {
   margin: 0 15px 0 0;
+  display: inline-block;
+  width: 100%;
+}
+#facebook-connections .row .facebook-account p {
+  display: inline-block;
+  margin: 0;
+  float: left;
+  line-height: 22px;
+}
+#facebook-connections .row .facebook-account a {
+  float: left;
+}
+#facebook-connections .panel-heading {
+  padding: 0;
+}
+#facebook-connections .panel-heading h5 a {
+  display: inline-block;
+  width: 100%;
+  padding: 10px 15px;
+}
+#facebook-sync button {
+  margin-left: 15px;
 }
 #facebook-connections .panel-heading {
   padding: 0;

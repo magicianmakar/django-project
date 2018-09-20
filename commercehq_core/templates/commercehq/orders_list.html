@@ -452,7 +452,7 @@
                                                     </div>
 
                                                     <div>
-                                                        <a href="/product/{{bundle.product.id}}" target="_blank" title="{{bundle.product.title}}">
+                                                        <a href="{% url 'chq:product_detail' bundle.product.id %}" target="_blank" title="{{bundle.product.title}}">
                                                             {{bundle.product.title|truncatewords:9}}
                                                         </a>
                                                     </div>
