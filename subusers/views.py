@@ -135,7 +135,7 @@ def subuser_store_permissions(request, user_id, store_id):
             subuser.profile.subuser_permissions.remove(*subuser_permissions)
             subuser.profile.subuser_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('{}subusers.views.subuser_store_permissions'.format(get_namespace(request)), user_id, store_id)  # TODO: give a 404 error
+            return redirect('{}subuser_store_permissions'.format(get_namespace(request)), user_id, store_id)
     else:
         form = SubuserPermissionsForm(initial=initial)
 
@@ -179,7 +179,7 @@ def subuser_chq_store_permissions(request, user_id, store_id):
             subuser.profile.subuser_chq_permissions.remove(*subuser_chq_permissions)
             subuser.profile.subuser_chq_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully {}updated')
-            return redirect('{}subusers.views.subuser_chq_store_permissions'.format(get_namespace(request)), user_id, store_id)
+            return redirect('{}subuser_chq_store_permissions'.format(get_namespace(request)), user_id, store_id)
     else:
         form = SubuserCHQPermissionsForm(initial=initial)
 
@@ -223,7 +223,7 @@ def subuser_woo_store_permissions(request, user_id, store_id):
             subuser.profile.subuser_woo_permissions.remove(*subuser_woo_permissions)
             subuser.profile.subuser_woo_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('{}subusers.views.subuser_woo_store_permissions'.format(get_namespace(request)), user_id, store_id)
+            return redirect('{}subuser_woo_store_permissions'.format(get_namespace(request)), user_id, store_id)
     else:
         form = SubuserWooPermissionsForm(initial=initial)
 
@@ -267,7 +267,7 @@ def subuser_gear_store_permissions(request, user_id, store_id):
             subuser.profile.subuser_gear_permissions.remove(*subuser_gear_permissions)
             subuser.profile.subuser_gear_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('{}subusers.views.subuser_gear_store_permissions'.format(get_namespace(request)), user_id, store_id)
+            return redirect('{}subuser_gear_store_permissions'.format(get_namespace(request)), user_id, store_id)
     else:
         form = SubuserGearPermissionsForm(initial=initial)
 
