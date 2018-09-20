@@ -51,22 +51,12 @@ def get_facebook_api(access_token):
     )
 
 
-def get_facebook_ads(user, store, access_token=None, expires_in=None):
-    access = FacebookAccess.objects.get(user=user, store=store)
-    access_token = access.get_or_update_token(access_token, expires_in)
+def get_facebook_ads(facebook_user_id, store):
+    access = FacebookAccess.objects.get(facebook_user_id=facebook_user_id, store=store)
+    access_token = access.get_or_update_token()
 
     api = get_facebook_api(access_token)
     user = FBUser(fbid='me', api=api)
-
-    # for facebook_access in FacebookAccess.objects.all():
-    #     access_token = facebook_access.get_or_update_token()
-    #     try:
-    #         api = get_facebook_api(access_token)
-    #         user = FBUser(fbid='me', api=api).api_get()
-    #         facebook_access.facebook_user_id = user.get('id')
-    #         facebook_access.save()
-    #     except:
-    #         continue
 
     params = {'time_increment': 1}
 
@@ -150,7 +140,7 @@ def calculate_profits(profits):
     return profits
 
 
-def get_profits(user_id, store, start, end, store_timezone=''):
+def get_profits(store, start, end, store_timezone=''):
     store_id = store.id
     days = arrow.Arrow.range('day', start, end) + [arrow.get(end)]
     profits_data = OrderedDict()
@@ -179,7 +169,10 @@ def get_profits(user_id, store, start, end, store_timezone=''):
     orders_map = {}
     for order in orders.values('created_at', 'total_price', 'order_id'):
         # Date: YYYY-MM-DD
-        created_at = arrow.get(order['created_at']).to(store_timezone)
+        try:
+            created_at = arrow.get(order['created_at']).to(store_timezone)
+        except:
+            pass
         date_key = created_at.format('YYYY-MM-DD')
         orders_map[order['order_id']] = {
             'date': created_at.datetime,
@@ -236,7 +229,6 @@ def get_profits(user_id, store, start, end, store_timezone=''):
 
     # Facebook Insights
     ad_costs = FacebookAdCost.objects.filter(account__access__store_id=store_id,
-                                             account__access__user_id=user_id,
                                              created_at__range=(start, end)) \
                                      .extra({'date_key': 'date(created_at)'}) \
                                      .values('date_key') \
@@ -296,8 +288,11 @@ def get_profits(user_id, store, start, end, store_timezone=''):
         totals['average_revenue'] = totals['revenue'] / totals['orders_count']
 
     # Details
-    date_range = (arrow.get(start).to(store_timezone).datetime,
-                  arrow.get(end).to(store_timezone).datetime)
+    try:
+        date_range = (arrow.get(start).to(store_timezone).datetime,
+                      arrow.get(end).to(store_timezone).datetime)
+    except:
+        date_range = (start, end)
     details = get_profit_details(store,
                                  date_range,
                                  limit=20,
@@ -399,10 +394,16 @@ def get_costs_from_track(track, commit=False):
 
 
 def order_refunds(store, start, end, store_timezone=''):
-    params = {
-        'updated_at_min': arrow.get(start).to(store_timezone).isoformat(),
-        'updated_at_max': arrow.get(end).to(store_timezone).isoformat(),
-    }
+    try:
+        params = {
+            'updated_at_min': arrow.get(start).to(store_timezone).isoformat(),
+            'updated_at_max': arrow.get(end).to(store_timezone).isoformat(),
+        }
+    except:
+        params = {
+            'updated_at_min': start.isoformat(),
+            'updated_at_max': end.isoformat(),
+        }
 
     def retrieve_refunds(params):
         orders_count = 250
@@ -460,7 +461,12 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
             created_at__range=date_range
         ).values('created_at', 'total_price', 'order_id')
         for order in orders:
-            created_at = arrow.get(order['created_at']).to(store_timezone)
+            created_at = arrow.get(order['created_at'])
+            try:
+                created_at = created_at.to(store_timezone)
+            except:
+                pass
+
             orders_map[order['order_id']] = {
                 'date': created_at.datetime,
                 'date_as_string': created_at.format('MM/DD/YYYY'),
@@ -589,7 +595,11 @@ def get_date_range(request):
     else:
         start = arrow.get(start + tz, r'MM/DD/YYYY Z')
 
-    end = end.to(request.session['django_timezone']).datetime
-    start = start.to(request.session['django_timezone']).datetime
+    try:
+        end = end.to(request.session['django_timezone']).datetime
+        start = start.to(request.session['django_timezone']).datetime
+    except:
+        end = end.datetime
+        start = start.datetime
 
     return start, end

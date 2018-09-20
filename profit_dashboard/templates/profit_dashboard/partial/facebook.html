@@ -53,6 +53,7 @@
             <form id="facebook-sync" method="post" action="{% url 'profit_dashboard.views.facebook_insights' %}" class="pull-left">
               <input type="hidden" name="fb_access_token" value="">
               <input type="hidden" name="fb_expires_in" value="">
+              <input type="hidden" name="fb_user_id" value="">
               {% if need_setup %}
               <a href="#" id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Ad Account</a>
               {% else %}
@@ -66,12 +67,14 @@
             {% if accounts %}
             <h4>Accounts Synced</h4>
             {% for account in accounts %}
-            <p class="facebook-account">
-              {{ account.account_name }}
-              <i> - last time synced at:</i>
-              {{ account.last_sync|date:"m/d/Y" }}
+            <div class="facebook-account">
+              <p>
+                {{ account.account_name }}
+                <i> - last time synced at:</i>
+                {{ account.last_sync|date:"m/d/Y" }}
+              </p>
               <a href="#" class="btn btn-danger btn-xs m-l fb-ad-remove" data-id="{{ account.pk }}">× Remove</a>
-            </p>
+            </div>
             {% endfor %}
             {% endif %}
           </div>

@@ -21,6 +21,7 @@ class FacebookAccess(models.Model):
 
     access_token = models.CharField(max_length=255)
     expires_in = models.DateTimeField(default=None, null=True, blank=True)
+    facebook_user_id = models.CharField(max_length=100, default='')
     account_ids = models.CharField(max_length=255, default='', blank=True)
 
     def get_or_update_token(self, new_access_token=None, new_expires_in=0):
@@ -36,7 +37,7 @@ class FacebookAccess(models.Model):
         # Check if new token is expired
         new_expires_in = arrow.get().replace(seconds=new_expires_in).datetime
         delta_expires_in = new_expires_in - arrow.now().datetime
-        if delta_expires_in.seconds < 60:
+        if delta_expires_in.seconds < 30:
             raise Exception('Facebook token has expired')
 
         if new_access_token is not None:

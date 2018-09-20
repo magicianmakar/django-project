@@ -52,7 +52,7 @@ def index(request):
     limit = utils.safeInt(request.GET.get('limit'), 31)
     current_page = utils.safeInt(request.GET.get('page'), 1)
 
-    profits, totals, details = get_profits(request.user.models_user.pk, store, start, end, request.session['django_timezone'])
+    profits, totals, details = get_profits(store, start, end, request.session.get('django_timezone', ''))
     profit_details, details_paginator = details
 
     profits_json = json.dumps(profits[::-1])
@@ -92,8 +92,7 @@ def facebook_insights(request):
     """ Save campaigns to account(if selected) and fetch insights
     """
     if request.method == 'POST':
-        access_token = request.POST.get('fb_access_token')
-        expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
+        facebook_user_id = request.GET.get('fb_user_id')
         store = utils.get_store_from_request(request)
 
         # Update facebook account sync meta data
@@ -102,10 +101,15 @@ def facebook_insights(request):
         config = request.POST.get('config')
         FacebookAccount.objects.filter(
             access__store=store,
+            access__facebook_user_id=facebook_user_id,
             account_id=account_id
         ).update(campaigns=campaigns, config=config)
 
-        fetch_facebook_insights.delay(request.user.pk, store.id, access_token, expires_in)
+        fetch_facebook_insights.delay(
+            request.user.pk,
+            facebook_user_id,
+            store.id
+        )
 
         return JsonResponse({'success': True})
 
@@ -118,10 +122,12 @@ def facebook_accounts(request):
     """
     access_token = request.GET.get('fb_access_token')
     expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
+    facebook_user_id = request.GET.get('fb_user_id')
     store = utils.get_store_from_request(request)
     facebook_access, created = FacebookAccess.objects.get_or_create(
-        user=request.user.models_user.pk,
+        user_id=request.user.models_user.pk,
         store=store,
+        facebook_user_id=facebook_user_id,
         defaults={
             'access_token': access_token,
             'expires_in': arrow.get().replace(seconds=expires_in).datetime
@@ -147,7 +153,12 @@ def facebook_campaign(request):
     """ Save account and return campaigns
     """
     store = utils.get_store_from_request(request)
-    facebook_access = FacebookAccess.objects.get(user=request.user, store=store)
+    facebook_user_id = request.GET.get('fb_user_id')
+    facebook_access = FacebookAccess.objects.get(
+        user=request.user,
+        store=store,
+        facebook_user_id=facebook_user_id
+    )
     try:
         access_token = facebook_access.get_or_update_token()
     except:
@@ -163,12 +174,11 @@ def facebook_campaign(request):
         account_ids.append(account_id)
         facebook_access.account_ids = ','.join(account_ids)
         facebook_access.save()
-        facebook_access.refresh_from_db()
 
     # Create with facebook sync starting at profit dashboard's INITIAL_DATE
     facebook_account, created = FacebookAccount.objects.update_or_create(
         store=store,
-        access=facebook_access,
+        access_id=facebook_access.pk,
         account_id=account_id,
         defaults={
             'account_name': account_name,
@@ -265,7 +275,7 @@ def profit_details(request):
                                             (start, end),
                                             limit=limit,
                                             page=current_page,
-                                            store_timezone=request.session['django_timezone'])
+                                            store_timezone=request.session.get('django_timezone', ''))
 
     pagination = render_to_string('partial/paginator.html', {
         'request': request,
