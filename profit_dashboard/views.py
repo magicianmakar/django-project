@@ -48,11 +48,22 @@ def index(request):
         messages.warning(request, 'Your orders are not synced yet')
         return HttpResponseRedirect('/')
 
+    # Get correct timezone to properly sum order amounts
+    user_timezone = request.session.get('django_timezone', '')
+    if not user_timezone:
+        user_timezone = store.get_info['iana_timezone']
+        request.session['django_timezone'] = user_timezone
+
+        # Save timezone to profile
+        profile = request.user.profile
+        profile.timezone = user_timezone
+        profile.save()
+
     start, end = get_date_range(request)
     limit = utils.safeInt(request.GET.get('limit'), 31)
     current_page = utils.safeInt(request.GET.get('page'), 1)
 
-    profits, totals, details = get_profits(store, start, end, request.session.get('django_timezone', ''))
+    profits, totals, details = get_profits(store, start, end, user_timezone)
     profit_details, details_paginator = details
 
     profits_json = json.dumps(profits[::-1])
