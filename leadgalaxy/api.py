@@ -2521,6 +2521,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                                                                            german_umlauts=german_umlauts)[1],
                         'shopify_summary': "<br>".join(shopify_summary),
                     })
+                else:
+                    info.update({
+                        'shopify_number': 'ID: {}'.format(track.order_id),
+                        'shopify_summary': 'Shopify information not availble'
+                    })
 
                 if str(track.source_id) in orders:
                     orders[str(track.source_id)].append(info)
