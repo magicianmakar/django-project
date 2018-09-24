@@ -7,95 +7,206 @@
                 Manage Subscription
             </div>
             <div class="panel-body" style="padding:0">
-                <table class="plan-table table plans-monthly" style="display: table;">
-                    <thead>
-                        <tr>
-                            {% for item in stripe_plans %}
-                            <th class="subsciption-plan {{item.slug}} {% if current_plan == item %}selected{% endif %}"
-                                data-plan-title="{{item.title}}" data-plan="{{item.id}}"
-                                data-trial-days="{{item.stripe_plan.trial_period_days}}"
-                                style="width: {% widthratio 100 stripe_plans|length 1 %}%"
-                                >
 
-                                <h3>{{item.description}}</h3>
-                                <p class="price">${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
-                                {% if item.stripe_plan.retail_amount %}
-                                    <p class="retail-price" title="Retail Price">
-                                        <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
-                                    </p>
-                                {% else %}
-                                    <p class="retail-price"></p>
-                                {% endif %}
+                <div class="row">
+                    <div class="col-md-8 col-md-offset-2">
+                        <div class="m-t m-b">
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs centered" role="tablist">
+                                <li role="presentation" class="active"><a href="#Monthly" role="tab" data-toggle="tab">Monthly</a></li>
+                                <li role="presentation"><a href="#Yearly" role="tab" data-toggle="tab">Yearly</a></li>
+                            </ul>
 
-                                <p class="cta">
-                                    {% if current_plan == item %}
-                                        <button class="btn btn-primary">Selected</button>
-                                    {% elif not user.is_recurring_customer and user.can_trial and item.stripe_plan.trial_period_days %}
-                                        <button class="btn btn-primary start-plan-trial" >
-                                            Try for {{item.stripe_plan.trial_period_days}} days</button>
-                                    {% elif not user.can_trial and not user.stripe_customer.source and not item.is_free %}
-                                        <button class="btn btn-default" data-toggle="tab" href="#tab-4" data-auto-hash="billing">
-                                            Enter Your Billing Info
-                                        </button>
-                                    {% else %}
-                                        <button class="btn btn-success choose-plan">Choose Plan</button>
-                                    {% endif %}
-                                </p>
-                            </th>
-                            {% endfor %}
-                        </tr>
-                    </thead>
-                    <tbody class="features">
-                        <tr>
-                        {% for item in stripe_plans %}
-                            <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}"
-                                class="plan-feature {% if current_plan == item %}selected{% endif %}">
-                                <p class="plan-feature">
-                                    {% plan_limit item 'stores' %}
+                            <!-- Tab panes -->
+                            <div class="tab-content">
+                                <div role="tabpanel" class="tab-pane active" id="Monthly">
+                                    <table class="plan-table table plans-monthly m-t" style="display: table;">
+                                        <thead>
+                                            <tr>
+                                                {% for item in stripe_plans %}
+                                                <th class="subsciption-plan {{item.slug}} {% if current_plan == item %}selected{% endif %}"
+                                                    data-plan-title="{{item.title}}" data-plan="{{item.id}}"
+                                                    data-trial-days="{{item.stripe_plan.trial_period_days}}"
+                                                    style="width: {% widthratio 100 stripe_plans|length 1 %}%"
+                                                    >
 
-                                    {% if 'elite' in item.slug %}
-                                    <p style="padding: 0 !important; margin: 0 !important; ">
-                                        $27/month per additional store
-                                    </p>
-                                    {% endif %}
+                                                    <h3>{{item.description}}</h3>
+                                                    <p class="price">${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
+                                                    {% if item.stripe_plan.retail_amount %}
+                                                        <p class="retail-price" title="Retail Price">
+                                                            <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
+                                                        </p>
+                                                    {% else %}
+                                                        <p class="retail-price"></p>
+                                                    {% endif %}
 
-                                </p>
+                                                    <p class="cta">
+                                                        {% if current_plan == item %}
+                                                            <button class="btn btn-primary">Selected</button>
+                                                        {% elif not user.is_recurring_customer and user.can_trial and item.stripe_plan.trial_period_days %}
+                                                            <button class="btn btn-primary start-plan-trial" >
+                                                                Try for {{item.stripe_plan.trial_period_days}} days</button>
+                                                        {% elif not user.can_trial and not user.stripe_customer.source and not item.is_free %}
+                                                            <button class="btn btn-default" data-toggle="tab" href="#tab-4" data-auto-hash="billing">
+                                                                Enter Your Billing Info
+                                                            </button>
+                                                        {% else %}
+                                                            <button class="btn btn-success choose-plan">Choose Plan</button>
+                                                        {% endif %}
+                                                    </p>
+                                                </th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody class="features">
+                                            <tr>
+                                            {% for item in stripe_plans %}
+                                                <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}"
+                                                    class="plan-feature {% if current_plan == item %}selected{% endif %}">
+                                                    <p class="plan-feature">
+                                                        {% plan_limit item 'stores' %}
 
-                                <p class="plan-feature">
-                                {% if item|plan_have_feature:'orders.use' %}
-                                    {% plan_limit item 'orders' 'auto_fulfill_limit' %}
-                                {% else %}
-                                    <i>Auto Fulfill Unavailable</i>
-                                {% endif %}
-                                </p>
+                                                        {% if 'elite' in item.slug %}
+                                                        <p style="padding: 0 !important; margin: 0 !important; ">
+                                                            $27/month per additional store
+                                                        </p>
+                                                        {% endif %}
 
-                                <p class="plan-feature">
-                                    {% plan_limit item 'products' %}
-                                </p>
+                                                    </p>
 
-                                <p class="plan-feature">
-                                    {% plan_limit item 'boards' %}
-                                </p>
+                                                    <p class="plan-feature">
+                                                    {% if item|plan_have_feature:'orders.use' %}
+                                                        {% plan_limit item 'orders' 'auto_fulfill_limit' %}
+                                                    {% else %}
+                                                        <i>Auto Fulfill Unavailable</i>
+                                                    {% endif %}
+                                                    </p>
 
-                                <p class="plan-feature">
-                                    1-Click import from <b>{{ item.import_stores|length }} Stores</b>
-                                    <i class="fa fa-fw fa-question-circle"
-                                        qtip-tooltip="You can import products from:<br><b>{{item.import_stores|join:', '}}</b>"
-                                        qtip-my="bottom center"
-                                        qtip-at="top center"
-                                        style="font-size:16px;color:#BBB"
-                                    ></i>
-                                </p>
-                                <div class="plan-more-features" style="">
-                                    <a class="btn btn-default btn-outline" href="http://www.dropified.com/pricing/" target="_blank">
-                                        <i class="fa fa-plus"></i> More Features
-                                    </a>
+                                                    <p class="plan-feature">
+                                                        {% plan_limit item 'products' %}
+                                                    </p>
+
+                                                    <p class="plan-feature">
+                                                        {% plan_limit item 'boards' %}
+                                                    </p>
+
+                                                    <p class="plan-feature">
+                                                        1-Click import from <b>{{ item.import_stores|length }} Stores</b>
+                                                        <i class="fa fa-fw fa-question-circle"
+                                                            qtip-tooltip="You can import products from:<br><b>{{item.import_stores|join:', '}}</b>"
+                                                            qtip-my="bottom center"
+                                                            qtip-at="top center"
+                                                            style="font-size:16px;color:#BBB"
+                                                        ></i>
+                                                    </p>
+                                                    <div class="plan-more-features" style="">
+                                                        <a class="btn btn-default btn-outline" href="http://www.dropified.com/pricing/" target="_blank">
+                                                            <i class="fa fa-plus"></i> More Features
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            {% endfor %}
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
-                            </td>
-                        {% endfor %}
-                        </tr>
-                    </tbody>
-                </table>
+                                <div role="tabpanel" class="tab-pane" id="Yearly">
+                                    <table class="plan-table table plans-monthly m-t" style="display: table;">
+                                        <thead>
+                                            <tr>
+                                                {% for item in stripe_plans_yearly %}
+                                                <th class="subsciption-plan {{item.slug}} {% if current_plan == item %}selected{% endif %}"
+                                                    data-plan-title="{{item.title}}" data-plan="{{item.id}}"
+                                                    data-trial-days="{{item.stripe_plan.trial_period_days}}"
+                                                    style="width: {% widthratio 100 stripe_plans_yearly|length 1 %}%"
+                                                    >
+
+                                                    <h3>{{item.description}}</h3>
+                                                    <p class="price">${{item.stripe_plan.amount|stringformat:"i"}}<span>Per Mo / Billed Annually</span></p>
+                                                    <p class="price">Billed Annually</p>
+                                                    {% if item.stripe_plan.retail_amount %}
+                                                        <p class="retail-price" title="Retail Price">
+                                                            <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
+                                                        </p>
+                                                    {% else %}
+                                                        <p class="retail-price"></p>
+                                                    {% endif %}
+
+                                                    <p class="cta">
+                                                        {% if current_plan == item %}
+                                                            <button class="btn btn-primary">Selected</button>
+                                                        {% elif not user.is_recurring_customer and user.can_trial and item.stripe_plan.trial_period_days %}
+                                                            <button class="btn btn-primary start-plan-trial" >
+                                                                Try for {{item.stripe_plan.trial_period_days}} days</button>
+                                                        {% elif not user.can_trial and not user.stripe_customer.source and not item.is_free %}
+                                                            <button class="btn btn-default" data-toggle="tab" href="#tab-4" data-auto-hash="billing">
+                                                                Enter Your Billing Info
+                                                            </button>
+                                                        {% else %}
+                                                            <button class="btn btn-success choose-plan">Choose Plan</button>
+                                                        {% endif %}
+                                                    </p>
+                                                </th>
+                                                {% endfor %}
+                                            </tr>
+                                        </thead>
+                                        <tbody class="features">
+                                            <tr>
+                                            {% for item in stripe_plans_yearly %}
+                                                <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}"
+                                                    class="plan-feature {% if current_plan == item %}selected{% endif %}">
+                                                    <p class="plan-feature">
+                                                        {% plan_limit item 'stores' %}
+
+                                                        {% if 'elite' in item.slug %}
+                                                        <p style="padding: 0 !important; margin: 0 !important; ">
+                                                            $27/month per additional store
+                                                        </p>
+                                                        {% endif %}
+
+                                                    </p>
+
+                                                    <p class="plan-feature">
+                                                    {% if item|plan_have_feature:'orders.use' %}
+                                                        {% plan_limit item 'orders' 'auto_fulfill_limit' %}
+                                                    {% else %}
+                                                        <i>Auto Fulfill Unavailable</i>
+                                                    {% endif %}
+                                                    </p>
+
+                                                    <p class="plan-feature">
+                                                        {% plan_limit item 'products' %}
+                                                    </p>
+
+                                                    <p class="plan-feature">
+                                                        {% plan_limit item 'boards' %}
+                                                    </p>
+
+                                                    <p class="plan-feature">
+                                                        1-Click import from <b>{{ item.import_stores|length }} Stores</b>
+                                                        <i class="fa fa-fw fa-question-circle"
+                                                            qtip-tooltip="You can import products from:<br><b>{{item.import_stores|join:', '}}</b>"
+                                                            qtip-my="bottom center"
+                                                            qtip-at="top center"
+                                                            style="font-size:16px;color:#BBB"
+                                                        ></i>
+                                                    </p>
+                                                    <div class="plan-more-features" style="">
+                                                        <a class="btn btn-default btn-outline" href="http://www.dropified.com/pricing/" target="_blank">
+                                                            <i class="fa fa-plus"></i> More Features
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            {% endfor %}
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -2631,8 +2631,14 @@ def user_profile(request):
 
     bundles = profile.bundles.filter(hidden_from_user=False)
     stripe_plans = GroupPlan.objects.exclude(Q(stripe_plan=None) | Q(hidden=True)) \
+                                    .exclude(payment_interval='yearly') \
                                     .annotate(num_permissions=Count('permissions')) \
                                     .order_by('num_permissions')
+
+    stripe_plans_yearly = GroupPlan.objects.exclude(Q(stripe_plan=None) | Q(hidden=True)) \
+                                   .filter(payment_interval='yearly') \
+                                   .annotate(num_permissions=Count('permissions')) \
+                                   .order_by('num_permissions')
 
     shopify_plans = GroupPlan.objects.filter(payment_gateway='shopify', hidden=False) \
                                      .annotate(num_permissions=Count('permissions')) \
@@ -2673,6 +2679,7 @@ def user_profile(request):
         'extra_bundles': extra_bundles,
         'bundles': bundles,
         'stripe_plans': stripe_plans,
+        'stripe_plans_yearly': stripe_plans_yearly,
         'shopify_plans': shopify_plans,
         'stripe_customer': stripe_customer,
         'shopify_apps_customer': shopify_apps_customer,

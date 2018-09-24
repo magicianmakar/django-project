@@ -493,6 +493,30 @@
         #affiliate-form .col-md-6:last-child {
             padding-left: 7px;
         }
+
+        .nav-tabs.centered > li, .nav-pills.centered > li {
+            float:none;
+            display:inline-block;
+        }
+
+        .nav-tabs.centered, .nav-pills.centered {
+            text-align:center;
+        }
+        .nav-tabs.centered .nav-tabs {
+            border-bottom: inherit;
+        }
+        .nav-tabs.centered {
+            border-bottom: inherit;
+        }
+        .tabs-container .nav-tabs.centered > li.active > a,
+        .tabs-container .nav-tabs.centered > li.active > a:hover,
+        .tabs-container .nav-tabs.centered > li.active > a:focus {
+            border-bottom-color: #e7eaec;
+
+        }
+        .nav-tabs.centered > li > a {
+            border-radius: 4px 4px 4px 4px;
+        }
     </style>
 {% endcompress %}
 {% endblock %}

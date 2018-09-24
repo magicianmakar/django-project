@@ -41,6 +41,12 @@ PLAN_PAYMENT_GATEWAY = (
     ('shopify', 'Shopify'),
 )
 
+PLAN_PAYMENT_TYPE = (
+    ('monthly', 'Monthly'),
+    ('yearly', 'Yearly'),
+    ('lifetime', 'Lifetime'),
+)
+
 SUBUSER_PERMISSIONS = (
     ('edit_settings', 'Edit settings'),
     ('view_product_boards', 'View product boards'),
@@ -2008,6 +2014,7 @@ class GroupPlan(models.Model):
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     payment_gateway = models.CharField(max_length=25, choices=PLAN_PAYMENT_GATEWAY, default=PLAN_PAYMENT_GATEWAY[0][0])
+    payment_interval = models.CharField(max_length=25, choices=PLAN_PAYMENT_TYPE, default='')
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     locked = models.BooleanField(default=False, verbose_name='Disable Direct Subscription')
 

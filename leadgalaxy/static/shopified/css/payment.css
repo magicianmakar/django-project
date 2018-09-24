@@ -100,6 +100,7 @@ table.plan-table thead + tbody tr:first-child td {
   overflow: hidden !important;
   border-left: 1px solid #e0e9ee !important;
   border-right: 1px solid #e0e9ee !important;
+  border-top: 1px solid #e7eaec !important;
 }
 
 .plan-table thead th input {
@@ -134,7 +135,6 @@ table.plan-table thead + tbody tr:first-child td {
 
 .plan-table thead tr th:last-child.selected,
 .plan-table tbody tr td:last-child.selected {
-  border-right: 0 !important;
 }
 
 .plan-table thead h3 {
