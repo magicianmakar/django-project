@@ -122,8 +122,7 @@
                                                     >
 
                                                     <h3>{{item.description}}</h3>
-                                                    <p class="price">${{item.stripe_plan.amount|stringformat:"i"}}<span>Per Mo / Billed Annually</span></p>
-                                                    <p class="price">Billed Annually</p>
+                                                    <p class="price">${{item.monthly_price|stringformat:"i"}}<span>/mo - Billed Annually</span></p>
                                                     {% if item.stripe_plan.retail_amount %}
                                                         <p class="retail-price" title="Retail Price">
                                                             <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
