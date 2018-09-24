@@ -50,12 +50,12 @@
     <h3><span>Average Order</span></h3>
     <div class="totals-detail">
       <dl class="dl-horizontal">
+        <dt>Revenue</dt>
+        <dd id="average-total-revenue">{% money_format totals.average_revenue store True %}</dd>
         <dt>Profit</dt>
         <dd id="average-totals-profit" data-original-amount="{{ totals.profit|default:'0'|floatformat:2 }}">
           {% money_format totals.average_profit store True %}
         </dd>
-        <dt>Revenue</dt>
-        <dd id="average-total-revenue">{% money_format totals.average_revenue store True %}</dd>
       </dl>
     </div>
     <canvas id="averages-chart-mini" height="100"></canvas>

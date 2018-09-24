@@ -236,6 +236,7 @@
 
 .expandable .well {
   /*padding-bottom: 0;*/
+  background-color: #fbfbfb;
 }
 
 .expandable .well hr {
@@ -244,13 +245,12 @@
 }
 
 .expandable .well h3 span {
-  border-bottom: 2px dotted #c4cdd5;
   color: #000;
 }
 
 .expandable .well .main-value {
   color: #000;
-  font-size: 15px;
+  font-size: 30px;
   margin-bottom: 15px;
   display: inline-block;
 }
@@ -261,12 +261,14 @@
 
 .expandable .well dl dt {
   text-align: left !important;
+  font-size: 14px;
 }
 
 .expandable .well dl dd {
   text-align: right !important;
+  font-size: 14px;
 }
 
 .expandable .well .totals-detail {
-  height: 160px;
+  height: 195px;
 }

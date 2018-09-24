@@ -740,6 +740,7 @@ var Utils = {
                     xAxes: [{
                         gridLines: {display: false},
                         ticks: {
+                            display: false,
                             beginAtZero: true,
                             callback: function(value, index, values) {
                                 return '';
@@ -749,6 +750,7 @@ var Utils = {
                     yAxes: [{
                         gridLines: {display: false},
                         ticks: {
+                            display: false,
                             beginAtZero: true,
                             callback: function(value, index, values) {
                                 return '';
