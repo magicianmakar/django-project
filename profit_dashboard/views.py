@@ -166,7 +166,7 @@ def facebook_campaign(request):
     store = utils.get_store_from_request(request)
     facebook_user_id = request.GET.get('fb_user_id')
     facebook_access = FacebookAccess.objects.get(
-        user=request.user,
+        user=request.user.models_user,
         store=store,
         facebook_user_id=facebook_user_id
     )
@@ -253,7 +253,10 @@ def save_other_costs(request):
 def facebook_remove_account(request):
     if request.method == 'POST':
         store = utils.get_store_from_request(request)
-        access = get_object_or_404(FacebookAccess, user=request.user, store=store)
+        access = get_object_or_404(FacebookAccess,
+                                   user=request.user.models_user,
+                                   store=store,
+                                   facebook_user_id=request.POST.get('facebook_user_id'))
         account = access.accounts.filter(pk=request.POST.get('id'))
 
         # Remove account_id from FacebookAccess.account_ids
