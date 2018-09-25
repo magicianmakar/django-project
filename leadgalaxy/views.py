@@ -1036,7 +1036,7 @@ def webhook(request, provider, option):
                     remaining_credits=credits
                 )
 
-            return HttpResponse('{} Captcha Credits add to *{}*'.format(credits, email))
+            return HttpResponse('{} Captcha Credits added to *{}*'.format(credits, email))
 
         else:
             return HttpResponse(':x: Unknown Command')
@@ -2669,8 +2669,14 @@ def user_profile(request):
                                    .order_by('num_permissions')
 
     shopify_plans = GroupPlan.objects.filter(payment_gateway='shopify', hidden=False) \
+                                     .exclude(payment_interval='yearly') \
                                      .annotate(num_permissions=Count('permissions')) \
                                      .order_by('num_permissions')
+
+    shopify_plans_yearly = GroupPlan.objects.filter(payment_gateway='shopify', hidden=False) \
+                                            .filter(payment_interval='yearly') \
+                                            .annotate(num_permissions=Count('permissions')) \
+                                            .order_by('num_permissions')
 
     clippingmagic_plans = ClippingMagicPlan.objects.all()
     clippingmagic = None
@@ -2709,6 +2715,7 @@ def user_profile(request):
         'stripe_plans': stripe_plans,
         'stripe_plans_yearly': stripe_plans_yearly,
         'shopify_plans': shopify_plans,
+        'shopify_plans_yearly': shopify_plans_yearly,
         'stripe_customer': stripe_customer,
         'shopify_apps_customer': shopify_apps_customer,
         'clippingmagic_plans': clippingmagic_plans,
