@@ -11,6 +11,7 @@ SHOPIFY_CHARGE_TYPE = (
     ('single', 'Single Charge'),
 )
 
+
 class ShopifySubscription(models.Model):
     class Meta:
         verbose_name = "Subscription"
