@@ -1010,6 +1010,34 @@ def webhook(request, provider, option):
             else:
                 return HttpResponse('No Recurring Charges found on *{}*'.format(shop))
 
+        if request.POST['command'] == '/captcha-credit':
+            if not request_from:
+                return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
+
+            args = request.POST['text'].split(' ')
+            if len(args) == 2:
+                email = args[0]
+                credits = args[1]
+            elif len(args) == 1:
+                email = args[0]
+                credits = 1000
+            else:
+                return HttpResponse(':x: Number of arguments is not correct'.format(request.POST['text']))
+
+            user = User.objects.get(email=email)
+            try:
+                captchacredit = CaptchaCredit.objects.get(user=user)
+                captchacredit.remaining_credits += credits
+                captchacredit.save()
+
+            except CaptchaCredit.DoesNotExist:
+                captchacredit.objects.create(
+                    user=user,
+                    remaining_credits=credits
+                )
+
+            return HttpResponse('{} Captcha Credits add to *{}*'.format(credits, email))
+
         else:
             return HttpResponse(':x: Unknown Command')
 
