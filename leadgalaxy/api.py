@@ -1594,6 +1594,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except:
             credits = 0
 
+        if user.can('unlimited_catpcha.use'):
+            credits = 1000
+
         return self.api_success({
             'credits': credits,
             'user': user.models_user.username
@@ -1603,14 +1606,20 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if not user.can('aliexpress_captcha.use'):
             raise PermissionDenied()
 
-        if user.models_user.captchacredit and user.models_user.captchacredit.remaining_credits > 0:
-            user.models_user.captchacredit.remaining_credits -= 1
-            user.models_user.captchacredit.save()
+        remaining_credits = 0
+        if not user.can('unlimited_catpcha.use'):
+            if user.models_user.captchacredit and user.models_user.captchacredit.remaining_credits > 0:
+                user.models_user.captchacredit.remaining_credits -= 1
+                user.models_user.captchacredit.save()
+
+                remaining_credits = user.models_user.captchacredit.remaining_credits
+            else:
+                return self.api_error('Insufficient Credits', status=402)
         else:
-            return self.api_error('Insufficient Credits', status=402)
+            remaining_credits = 1000
 
         return self.api_success({
-            'remaining_credits': user.models_user.captchacredit.remaining_credits
+            'remaining_credits': remaining_credits
         })
 
     def get_product_config(self, request, user, data):

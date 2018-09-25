@@ -1,4 +1,5 @@
 {% load template_helper %}
+{% load perms_helper %}
 
 <div class="panel panel-default">
     <div class="panel-heading">
@@ -13,13 +14,18 @@
             </div>
 
             <div class="col-md-3" >
+                {% if user|can:'unlimited_catpcha.use' %}
+                    <span>Unlimited Captcha Solver</span>
+                {% else %}
                 <span>
                     <b>{{ captchacredit.remaining_credits|default:"0" }}</b>
                     Credit{{ captchacredit.remaining_credits|pluralize }}
                 </span>
+                {% endif %}
             </div>
         </div>
 
+        {% if not user|can:'unlimited_catpcha.use' %}
         <div class="row m-t flex-group">
             <div class="col-md-3 ">
                 <label for="captchacredit_plan">Purchase Credits:</label>
@@ -48,5 +54,7 @@
                 1 credit equals 1 attempt to solve AliExpress Captcha.
             </div>
         </div>
+        {% endif %}
+
     </div>
 </div>
