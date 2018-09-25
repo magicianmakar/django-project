@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_protect
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 from shopified_core import permissions
 from shopified_core.utils import app_link
 from leadgalaxy.models import GroupPlan, ShopifyStore, ClippingMagic, CaptchaCredit
@@ -40,14 +42,36 @@ def subscription_plan(request):
     else:
         request.session['current_plan'] = user.profile.plan.id
 
-        charge = store.shopify.RecurringApplicationCharge.create({
-            "name": 'Dropified {}'.format(plan.title),
-            "price": plan.monthly_price,
-            "trial_days": plan.trial_days,
-            "capped_amount": 100,
-            "terms": "Dropified Monthly Subscription",
-            "return_url": app_link(reverse(subscription_activated))
-        })
+        try:
+            if plan.payment_interval != 'yearly':
+                charge_type = 'recurring'
+                charge = store.shopify.RecurringApplicationCharge.create({
+                    "name": 'Dropified {}'.format(plan.title),
+                    "price": plan.monthly_price,
+                    "trial_days": plan.trial_days,
+                    "capped_amount": plan.monthly_price,
+                    "terms": "Dropified Monthly Subscription",
+                    "return_url": app_link(reverse(subscription_activated))
+                })
+            else:
+                charge_type = 'single'
+                charge = store.shopify.ApplicationCharge.create({
+                    "name": 'Dropified {}'.format(plan.title),
+                    "price": plan.monthly_price * 12,
+                    "trial_days": plan.trial_days,
+                    "capped_amount": plan.monthly_price * 12,
+                    "terms": "Dropified Yearly Subscription",
+                    "return_url": app_link(reverse(subscription_activated))
+                })
+        except Exception as e:
+            if hasattr(e, 'response') and e.response.code == 401:
+                return JsonResponse({
+                    'status': 'redirect',
+                    'location': app_link('/shopify/install', store.shop.split('.')[0], reinstall=store.id)
+                })
+            else:
+                raven_client.captureException()
+                return JsonResponse({'error': 'Shopify API Error'}, status=403)
 
         sub, created = ShopifySubscription.objects.update_or_create(
             subscription_id=charge.id,
@@ -56,6 +80,7 @@ def subscription_plan(request):
                 'plan': plan,
                 'store': store,
                 'status': charge.status,
+                'charge_type': charge_type
             }
         )
 

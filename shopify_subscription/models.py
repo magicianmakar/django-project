@@ -6,6 +6,10 @@ import simplejson as json
 
 from leadgalaxy.models import GroupPlan, ShopifyStore
 
+SHOPIFY_CHARGE_TYPE = (
+    ('recurring', 'Recurring'),
+    ('single', 'Single Charge'),
+)
 
 class ShopifySubscription(models.Model):
     class Meta:
@@ -16,6 +20,8 @@ class ShopifySubscription(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
     plan = models.ForeignKey(GroupPlan, null=True, on_delete=models.CASCADE)
+
+    charge_type = models.CharField(max_length=25, choices=SHOPIFY_CHARGE_TYPE, default='recurring')
 
     subscription_id = models.CharField(max_length=255, unique=True, verbose_name='Shopify Charge ID')
     status = models.CharField(null=True, blank=True, max_length=64, verbose_name='Shopify Charge Status')
@@ -29,7 +35,10 @@ class ShopifySubscription(models.Model):
         return u"{} {}".format(self.user.username, self.plan.title if self.plan else 'None')
 
     def retrieve(self, commit=True):
-        return self.store.shopify.RecurringApplicationCharge.find(self.subscription_id)
+        if self.charge_type == 'recurring':
+            return self.store.shopify.RecurringApplicationCharge.find(self.subscription_id)
+        else:
+            return self.store.shopify.ApplicationCharge.find(self.subscription_id)
 
     def refresh(self, sub=None, commit=True):
         if sub is None:
@@ -38,7 +47,10 @@ class ShopifySubscription(models.Model):
         self.data = json.dumps(sub.to_dict())
 
         self.status = sub.status
-        self.activated_on = sub.activated_on
+        try:
+            self.activated_on = sub.activated_on
+        except:
+            pass
 
         self.save()
 
