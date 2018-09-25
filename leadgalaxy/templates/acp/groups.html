@@ -240,6 +240,19 @@
                 });
             });
         });
+
+        $('.dataTables').dataTable({
+            responsive: true,
+            autoWidth: false,
+            dom: 'T<"clear">lfrtip',
+            bLengthChange: false,
+            iDisplayLength: 50,
+            order: [],
+            tableTools: {
+                sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
+            }
+        });
+
     </script>
 {% endblock %}
 
