@@ -287,7 +287,7 @@
             type: 'POST',
             data: {
                 subscription: $('#modal-subscription-cancel').data('subscription'),
-                when: $('#modal-subscription-cancel input[name="when"]:checked').val()
+                when: 'period_end'
             },
             success: function(data) {
                 toastr.success("Your Subscription has been canceled.", "Cancel Subscription");
