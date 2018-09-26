@@ -241,10 +241,20 @@ def save_other_costs(request):
             'error': 'Please add at least one store before using the Profits Dashboard.'
         }, status=500)
 
-    other_costs, created = OtherCost.objects.get_or_create(store=store, date=date, defaults={'amount': amount})
-    if not created:
-        other_costs.amount = amount
-        other_costs.save()
+    while True:
+        try:
+            OtherCost.objects.update_or_create(
+                store=store,
+                date=date,
+                defaults={
+                    'amount': amount
+                }
+            )
+
+            break
+
+        except OtherCost.MultipleObjectsReturned:
+            OtherCost.objects.filter(store=store, date=date).delete()
 
     return JsonResponse({'status': 'ok'})
 
