@@ -42,10 +42,13 @@
                         <tr>
                             <th>Plan</th>
                             <th>Payment Gateway</th>
+                            <th>Monthly Price</th>
+                            <th>Payement Interval</th>
+                            <th>Description</th>
                             <th>Stores</th>
                             <th>Products</th>
                             <th>Boards</th>
-                            <th>Users Count</th>
+                            <th>Active Users</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -54,6 +57,9 @@
                         <tr plans-id="{{item.id}}">
                             <td><b><a target="_blank" href="/admin/leadgalaxy/groupplan/{{item.id}}/">{{item.title}}</a></b></td>
                             <td>{{item.payment_gateway}}</td>
+                            <td>{{item.monthly_price|default:''}}</td>
+                            <td>{{item.payment_interval|default:''}}</td>
+                            <td>{{item.get_description}}</td>
                             <td>{% if item.stores == -1 %}Unlimited{% else %}{{item.stores}}{% endif %}</td>
                             <td>{% if item.products == -1 %}Unlimited{% else %}{{item.products}}{% endif %}</td>
                             <td>{% if item.boards == -1 %}Unlimited{% else %}{{item.boards}}{% endif %}</td>

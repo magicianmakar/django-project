@@ -15,7 +15,7 @@ class GroupPlanAdmin(admin.ModelAdmin):
     exclude = ('default_plan',)
     filter_horizontal = ('permissions',)
     prepopulated_fields = {'slug': ('title',)}
-    list_filter = ('payment_gateway', 'monthly_price', 'trial_days', 'hidden', 'locked')
+    list_filter = ('payment_gateway', 'payment_interval', 'monthly_price', 'trial_days', 'hidden', 'locked')
     readonly_fields = ('register_hash',)
     search_fields = ('title', 'slug', 'description', 'register_hash')
 
