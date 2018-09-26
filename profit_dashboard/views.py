@@ -103,7 +103,7 @@ def facebook_insights(request):
     """ Save campaigns to account(if selected) and fetch insights
     """
     if request.method == 'POST':
-        facebook_user_id = request.GET.get('fb_user_id')
+        facebook_user_id = request.POST.get('fb_user_id')
         store = utils.get_store_from_request(request)
 
         # Update facebook account sync meta data

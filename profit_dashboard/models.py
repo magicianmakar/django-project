@@ -24,12 +24,12 @@ class FacebookAccess(models.Model):
     facebook_user_id = models.CharField(max_length=100, default='')
     account_ids = models.CharField(max_length=255, default='', blank=True)
 
-    def get_or_update_token(self, new_access_token=None, new_expires_in=0):
+    def get_or_update_token(self, new_access_token='', new_expires_in=0):
         """
         Exchange current access token for long lived one with +59 days expiration
         """
         # Renew only if old token expires in less than 2 weeks
-        if self.expires_in is not None:
+        if self.expires_in:
             delta_expires_in = self.expires_in - arrow.now().datetime
             if delta_expires_in.days > 7:
                 return self.access_token
@@ -40,18 +40,19 @@ class FacebookAccess(models.Model):
         if delta_expires_in.seconds < 30:
             raise Exception('Facebook token has expired')
 
-        if new_access_token is not None:
+        if new_access_token:
             self.access_token = new_access_token
 
         # Token exchange must be done manually for now
         url = 'https://graph.facebook.com/oauth/access_token'
         session = requests.Session()
-        response = session.get(url, params={
+        params = {
             'client_id': settings.FACEBOOK_APP_ID,
             'client_secret': settings.FACEBOOK_APP_SECRET,
             'fb_exchange_token': self.access_token,
             'grant_type': 'fb_exchange_token'
-        })
+        }
+        response = session.get(url, params=params)
         token = json.loads(response.content)
 
         # Default expire should be within the next hour
@@ -60,7 +61,8 @@ class FacebookAccess(models.Model):
             expires_in_days = token['expires_in'] / 60 / 60 / 24  # Value is in seconds
             expires_in = arrow.now().replace(days=expires_in_days, hour=0).datetime
         elif 'error' in token:
-            raise Exception(token)
+            params.update({'response': token})
+            raise Exception(params)
 
         self.access_token = token.get('access_token')
         self.expires_in = expires_in
