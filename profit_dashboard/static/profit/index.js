@@ -355,6 +355,7 @@ var Utils = {
                         form: form
                     },
                     beforeSend: function() {
+                        otherCostsInput.prop('disabled', true);
                         form.find('.loading').removeClass('hidden');
                     },
                     success: function (data) {
@@ -380,6 +381,7 @@ var Utils = {
                         displayAjaxError('Other Costs save', data);
                     },
                     complete: function() {
+                        otherCostsInput.prop('disabled', false);
                         form.find('.loading').addClass('hidden');
                     }
                 });
