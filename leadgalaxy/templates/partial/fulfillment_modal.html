@@ -17,7 +17,7 @@
                                 </label>
                                 <select class="form-control" name="fulfill-location-id" id="fulfill-location-id" style="width:60%">
                                     {% for location in store.get_locations %}
-                                        <option value="{{location.id}}">{{location.name}}</option>
+                                        <option value="{{location.id}}" {% if location.id == store.get_primary_location %}selected{% endif %}>{{location.name}}</option>
                                     {% endfor %}
                                 </select>
                             </div>
