@@ -948,7 +948,8 @@ def get_shopify_order(store, order_id):
 
 
 def get_shopify_orders(store, page=1, limit=50, all_orders=False,
-                       order_ids=None, fields=None, extra_params={}, session=requests):
+                       order_ids=None, fields=None, extra_params={},
+                       session=requests, raise_for_status=False):
 
     if not all_orders:
         params = {
@@ -969,7 +970,7 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
             ids_count = len(params['ids'].split(','))
             if ids_count > 250:
                 for chunk_ids in list_chunks(params['ids'].split(','), 250):
-                    for order in get_shopify_orders(store=store, order_ids=chunk_ids, fields=fields):
+                    for order in get_shopify_orders(store=store, order_ids=chunk_ids, fields=fields, raise_for_status=raise_for_status):
                         yield order
 
                 return
@@ -987,6 +988,9 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
             params=params
         )
 
+        if raise_for_status:
+            rep.raise_for_status()
+
         rep = rep.json()
 
         for p in rep['orders']:
@@ -1002,7 +1006,8 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
         for page in xrange(1, pages + 1):
             rep = get_shopify_orders(store=store, page=page, limit=limit,
                                      fields=fields, all_orders=False,
-                                     extra_params=extra_params, session=requests.session())
+                                     extra_params=extra_params, session=requests.session(),
+                                     raise_for_status=raise_for_status)
             for p in rep:
                 yield p
 

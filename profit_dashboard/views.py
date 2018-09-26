@@ -1,4 +1,5 @@
 import arrow
+import requests
 import simplejson as json
 
 from django.conf import settings
@@ -44,9 +45,17 @@ def index(request):
         messages.warning(request, 'Please add at least one store before using the Profits Dashboard')
         return HttpResponseRedirect('/')
 
+    context = {
+        'page': 'profit_dashboard',
+        'store': store,
+        'user_facebook_permission': settings.FACEBOOK_APP_ID,
+        'initial_date': INITIAL_DATE.format('MM/DD/YYYY'),
+        'show_facebook_connection': request.user.get_config('_show_facebook_connection', 'true') == 'true',
+    }
+
     if not is_store_synced(store):
-        messages.warning(request, 'Your orders are not synced yet')
-        return HttpResponseRedirect('/')
+        context['api_error'] = 'Your orders are not synced yet'
+        return render(request, 'profit_dashboard/index.html', context)
 
     # Get correct timezone to properly sum order amounts
     user_timezone = request.session.get('django_timezone', '')
@@ -55,47 +64,68 @@ def index(request):
         request.session['django_timezone'] = user_timezone
 
         # Save timezone to profile
-        profile = request.user.profile
-        profile.timezone = user_timezone
-        profile.save()
+        if not request.user.profile.timezone:
+            request.user.profile.timezone = user_timezone
+            request.user.profile.save()
 
-    start, end = get_date_range(request)
-    limit = utils.safeInt(request.GET.get('limit'), 31)
-    current_page = utils.safeInt(request.GET.get('page'), 1)
+    try:
+        start, end = get_date_range(request)
+        limit = utils.safeInt(request.GET.get('limit'), 31)
+        current_page = utils.safeInt(request.GET.get('page'), 1)
 
-    profits, totals, details = get_profits(store, start, end, user_timezone)
-    profit_details, details_paginator = details
+        profits, totals, details = get_profits(store, start, end, user_timezone)
+        profit_details, details_paginator = details
 
-    profits_json = json.dumps(profits[::-1])
-    profits_per_page = len(profits) + 1 if limit == 0 else limit
-    paginator = SimplePaginator(profits, profits_per_page)
-    page = min(max(1, current_page), paginator.num_pages)
-    page = paginator.page(page)
-    profits = calculate_profits(page.object_list)
+        profits_json = json.dumps(profits[::-1])
+        profits_per_page = len(profits) + 1 if limit == 0 else limit
+        paginator = SimplePaginator(profits, profits_per_page)
+        page = min(max(1, current_page), paginator.num_pages)
+        page = paginator.page(page)
+        profits = calculate_profits(page.object_list)
 
-    accounts = FacebookAccount.objects.filter(access__store=store)
-    need_setup = not FacebookAccess.objects.filter(store=store).exists()
+        accounts = FacebookAccount.objects.filter(access__store=store)
+        need_setup = not FacebookAccess.objects.filter(store=store).exists()
 
-    return render(request, 'profit_dashboard/index.html', {
-        'page': 'profit_dashboard',
-        'profits': profits,
-        'store': store,
-        'start': start.strftime('%m/%d/%Y'),
-        'end': end.strftime('%m/%d/%Y'),
-        'current_page': page,
-        'paginator': paginator,
-        'limit': limit,
-        'totals': totals,
-        'user': request.user,
-        'accounts': accounts,
-        'need_setup': need_setup,
-        'profits_json': profits_json,
-        'profit_details': profit_details,
-        'details_paginator': details_paginator,
-        'user_facebook_permission': settings.FACEBOOK_APP_ID,
-        'initial_date': INITIAL_DATE.format('MM/DD/YYYY'),
-        'show_facebook_connection': request.user.get_config('_show_facebook_connection', 'true') == 'true',
-    })
+        context.update({
+            'profits': profits,
+            'start': start.strftime('%m/%d/%Y'),
+            'end': end.strftime('%m/%d/%Y'),
+            'current_page': page,
+            'paginator': paginator,
+            'limit': limit,
+            'totals': totals,
+            'accounts': accounts,
+            'need_setup': need_setup,
+            'profits_json': profits_json,
+            'profit_details': profit_details,
+            'details_paginator': details_paginator,
+        })
+
+    except json.JSONDecodeError:
+        context['api_error'] = 'Unexpected response content'
+        raven_client.captureException()
+
+    except requests.exceptions.ConnectTimeout:
+        context['api_error'] = 'Connection Timeout'
+        raven_client.captureException()
+
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 429:
+            context['api_error'] = 'API Rate Limit'
+        elif e.response.status_code == 404:
+            context['api_error'] = 'Store Not Found'
+        elif e.response.status_code == 402:
+            context['api_error'] = 'Your Shopify Store is not on a paid plan'
+        elif e.response.status_code == 401:
+            context['api_error'] = 'Access Token Error'
+        else:
+            context['api_error'] = 'Unknown Error {}'.format(e.response.status_code)
+            raven_client.captureException()
+    except:
+        context['api_error'] = 'Shopify API Error'
+        raven_client.captureException()
+
+    return render(request, 'profit_dashboard/index.html', context)
 
 
 @login_required

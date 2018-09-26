@@ -22,6 +22,10 @@
   <div class="tab-content">
     <div id="tab-1" class="tab-pane active">
       <div class="panel-body">
+        {% if api_error %}
+            <p class="text-center">Error: {{api_error}}</p>
+            <p class="text-center">Please Try again in a few seconds by reloading the page.</p>
+        {% else %}
         {% include 'profit_dashboard/partial/facebook.html' %}
         <br>
 
@@ -68,6 +72,7 @@
               </div>
           </div>
         </div>
+        {% endif %}
       </div>
     </div>
   </div>

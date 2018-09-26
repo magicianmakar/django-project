@@ -410,11 +410,7 @@ def order_refunds(store, start, end, store_timezone=''):
         limit = 250
         page = 1
         while orders_count >= limit:
-            shopify_orders = get_shopify_orders(store,
-                                                page=page,
-                                                limit=limit,
-                                                fields='refunds',
-                                                extra_params=params)
+            shopify_orders = get_shopify_orders(store, page=page, limit=limit, fields='refunds', extra_params=params, raise_for_status=True)
             orders_count = 0
             for order in shopify_orders:
                 orders_count += 1
@@ -549,7 +545,7 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
     def sum_costs(x, y):
         return x + float(y['costs']['total_cost'])
 
-    shopify_orders = get_shopify_orders(store, page=1, limit=limit, fields='name,id,line_items', order_ids=order_ids)
+    shopify_orders = get_shopify_orders(store, page=1, limit=limit, fields='name,id,line_items', order_ids=order_ids, raise_for_status=True)
     shopify_orders = {
         i['id']: {
             'name': i['name'],
