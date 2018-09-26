@@ -7,9 +7,10 @@
             </div>
             <div class="modal-body">
                 <div class="row">
-                    {% with pos_my='top center' pos_at='bottom center' %}
+                    {% with pos_my='top center' pos_at='bottom center' locations=store.get_locations %}
                     <div class="col-sm-12">
                         <form role="form">
+                            {% if locations|length > 1 %}
                             <div class="form-group">
                                 <label for="fulfill-location-id">
                                     Location
@@ -20,6 +21,7 @@
                                     {% endfor %}
                                 </select>
                             </div>
+                            {% endif %}
 
                             <div class="form-group">
                                 <label for="fulfill-traking-number">Tracking Number
