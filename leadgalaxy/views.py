@@ -1014,10 +1014,14 @@ def webhook(request, provider, option):
             if not request_from:
                 return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
 
+            is_review_bonus = False
             args = request.POST['text'].split(' ')
             if len(args) == 2:
                 email = args[0]
                 credits = args[1]
+                if credits == 'review':
+                    credits = 1000
+                    is_review_bonus = True
             elif len(args) == 1:
                 email = args[0]
                 credits = 1000
@@ -1025,6 +1029,11 @@ def webhook(request, provider, option):
                 return HttpResponse(':x: Number of arguments is not correct'.format(request.POST['text']))
 
             user = User.objects.get(email=email)
+
+            if is_review_bonus and user.can('unlimited_catpcha.use'):
+                user.set_config('_double_orders_limit', arrow.utcnow().timestamp)
+                return HttpResponse('{} Double Orders Limit for *{}*'.format(credits, email))
+
             try:
                 captchacredit = CaptchaCredit.objects.get(user=user)
                 captchacredit.remaining_credits += credits
@@ -3999,8 +4008,12 @@ def orders_place(request):
         orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start.datetime)
         orders_count = orders_count.distinct('order_id').order_by('order_id').count()
 
-        if not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
-            messages.error(request, "You have reached your plan auto fulfill limit")
+        auto_fulfill_limit = plan.auto_fulfill_limit
+        if user.get_config('_double_orders_limit'):
+            auto_fulfill_limit *= 2
+
+        if not auto_fulfill_limit or orders_count + 1 > auto_fulfill_limit:
+            messages.error(request, "You have reached your plan auto fulfill limit ({} orders/month)".format(auto_fulfill_limit))
             return HttpResponseRedirect('/')
 
     # Save Auto fulfill event
