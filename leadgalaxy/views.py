@@ -4009,7 +4009,7 @@ def orders_place(request):
         orders_count = orders_count.distinct('order_id').order_by('order_id').count()
 
         auto_fulfill_limit = plan.auto_fulfill_limit
-        if user.get_config('_double_orders_limit'):
+        if parent_user.get_config('_double_orders_limit'):
             auto_fulfill_limit *= 2
 
         if not auto_fulfill_limit or orders_count + 1 > auto_fulfill_limit:
