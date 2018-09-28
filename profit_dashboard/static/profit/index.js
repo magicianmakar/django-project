@@ -1102,7 +1102,10 @@ var FacebookProfitDashboard = {
                         $.ajax({
                             type: 'POST',
                             url: '/profit-dashboard/facebook/accounts/remove',
-                            data: {id: btn.attr('data-id')},
+                            data: {
+                                id: btn.attr('data-id'),
+                                facebook_user_id: btn.attr('data-facebook-user')
+                            },
                             success: function(data) {
                                 btn.parents('.facebook-account').remove();
 

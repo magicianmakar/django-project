@@ -73,7 +73,7 @@
                 <i> - last time synced at:</i>
                 {{ account.last_sync|date:"m/d/Y" }}
               </p>
-              <a href="#" class="btn btn-danger btn-xs m-l fb-ad-remove" data-id="{{ account.pk }}">× Remove</a>
+              <a href="#" class="btn btn-danger btn-xs m-l fb-ad-remove" data-id="{{ account.pk }}" data-facebook-user="{{ account.access.facebook_user_id }}">× Remove</a>
             </div>
             {% endfor %}
             {% endif %}
