@@ -6,7 +6,10 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
 
+from facebookads.adobjects.user import User as FBUser
+
 from leadgalaxy.models import ShopifyStore
+
 
 CONFIG_CHOICES = (
     ('include', 'Include Selected Campaign Only'),
@@ -22,7 +25,16 @@ class FacebookAccess(models.Model):
     access_token = models.CharField(max_length=255)
     expires_in = models.DateTimeField(default=None, null=True, blank=True)
     facebook_user_id = models.CharField(max_length=100, default='')
-    account_ids = models.CharField(max_length=255, default='', blank=True)
+    account_ids = models.TextField(default='', blank=True)
+
+    def save(self, *args, **kwargs):
+        from profit_dashboard.utils import get_facebook_api
+        if not self.facebook_user_id:
+            api = get_facebook_api(self.access_token)
+            user = FBUser(fbid='me', api=api).api_get()
+            self.facebook_user_id = user.get('id')
+
+        super(FacebookAccess, self).save(*args, **kwargs)
 
     def get_or_update_token(self, new_access_token='', new_expires_in=0):
         """

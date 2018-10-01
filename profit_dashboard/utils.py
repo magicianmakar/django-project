@@ -51,8 +51,8 @@ def get_facebook_api(access_token):
     )
 
 
-def get_facebook_ads(facebook_user_id, store):
-    access = FacebookAccess.objects.filter(facebook_user_id=facebook_user_id, store=store).first()
+def get_facebook_ads(facebook_access_id, store):
+    access = FacebookAccess.objects.get(id=facebook_access_id, store=store)
     access_token = access.get_or_update_token()
 
     api = get_facebook_api(access_token)

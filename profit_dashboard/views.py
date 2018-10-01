@@ -133,7 +133,7 @@ def facebook_insights(request):
     """ Save campaigns to account(if selected) and fetch insights
     """
     if request.method == 'POST':
-        facebook_user_id = request.POST.get('fb_user_id')
+        facebook_access_id = request.POST.get('facebook_access_id')
         store = utils.get_store_from_request(request)
 
         # Update facebook account sync meta data
@@ -141,18 +141,31 @@ def facebook_insights(request):
         campaigns = request.POST.get('campaigns')
         config = request.POST.get('config')
         FacebookAccount.objects.filter(
+            access_id=facebook_access_id,
             access__store=store,
-            access__facebook_user_id=facebook_user_id,
             account_id=account_id
         ).update(campaigns=campaigns, config=config)
 
+        # Sync specific user or all users
+        facebook_access_list = FacebookAccess.objects.filter(store=store)
+        if facebook_access_id:
+            # FacebookAccess queryset might return empty
+            facebook_access_list = facebook_access_list.filter(id=facebook_access_id)
+
+            # Force renewal of FacebookAccess.access_token in case its expired or empty
+            access_token = request.POST.get('fb_access_token')
+            expires_in = utils.safeInt(request.POST.get('fb_expires_in'))
+            facebook_access = facebook_access_list.first()
+            if access_token and facebook_access:
+                facebook_access.get_or_update_token(access_token, expires_in)
+
+        # Sync insights with found FacebookAccess
         fetch_facebook_insights.delay(
-            request.user.pk,
-            facebook_user_id,
-            store.id
+            store.id,
+            [f.pk for f in facebook_access_list]
         )
 
-        return JsonResponse({'success': True})
+        return JsonResponse({'status': 'ok'})
 
     return JsonResponse({'error': 'Non-handled endpoint'}, status=405)
 
@@ -162,11 +175,15 @@ def facebook_accounts(request):
     """ Save access token and return accounts
     """
     access_token = request.GET.get('fb_access_token')
+    # Sometimes facebook doesn't reload the access_token and it comes empty
+    if not access_token:
+        return JsonResponse({'error': 'Facebook token reload error'})
+
     expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
     facebook_user_id = request.GET.get('fb_user_id')
     store = utils.get_store_from_request(request)
     facebook_access, created = FacebookAccess.objects.get_or_create(
-        user_id=request.user.models_user.pk,
+        user_id=request.user.models_user.id,
         store=store,
         facebook_user_id=facebook_user_id,
         defaults={
@@ -185,7 +202,8 @@ def facebook_accounts(request):
     accounts = user.get_ad_accounts(fields=[AdAccount.Field.name])
 
     return JsonResponse({
-        'accounts': [{'name': i['name'], 'id': i['id']} for i in accounts]
+        'accounts': [{'name': i['name'], 'id': i['id']} for i in accounts],
+        'facebook_access_id': facebook_access.pk
     })
 
 
@@ -194,24 +212,28 @@ def facebook_campaign(request):
     """ Save account and return campaigns
     """
     store = utils.get_store_from_request(request)
-    facebook_user_id = request.GET.get('fb_user_id')
-    facebook_access = FacebookAccess.objects.get(
-        user=request.user.models_user,
-        store=store,
-        facebook_user_id=facebook_user_id
-    )
+    facebook_access_id = request.GET.get('facebook_access_id')
+    try:
+        facebook_access = FacebookAccess.objects.get(
+            id=facebook_access_id,
+            store_id=store.id,
+            user_id=request.user.models_user.id
+        )
+    except:
+        return JsonResponse({'error': 'Facebook Access permission denied'}, status=403)
+
     try:
         access_token = facebook_access.get_or_update_token()
     except:
         raven_client.captureException()
-        return JsonResponse({'error': 'User token error'})
+        return JsonResponse({'error': 'Facebook Token error, please reload the page and try again'})
 
     account_id = request.GET.get('account_id')
     account_name = request.GET.get('account_name')
 
     # Save selected account_id
     account_ids = facebook_access.account_ids and facebook_access.account_ids.split(',') or []
-    if account_id not in account_ids:
+    if account_id and account_id not in account_ids:
         account_ids.append(account_id)
         facebook_access.account_ids = ','.join(account_ids)
         facebook_access.save()
@@ -227,7 +249,7 @@ def facebook_campaign(request):
         }
     )
 
-    # Get config options minding previous synced accounts
+    # Get config options remembering previously synced accounts
     config_options = []
     for option in CONFIG_CHOICES:
         selected = ''
@@ -240,7 +262,7 @@ def facebook_campaign(request):
             'selected': selected
         })
 
-    # Returns campaigns minding previous synced accounts
+    # Returns campaigns remembering previously synced accounts
     saved_campaigns = facebook_account.campaigns.split(',')
     api = get_facebook_api(access_token)
     user = FBUser(fbid='me', api=api)

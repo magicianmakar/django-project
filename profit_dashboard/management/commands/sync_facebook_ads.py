@@ -6,7 +6,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from facebookads.exceptions import FacebookRequestError
 
 from shopified_core.management import DropifiedBaseCommand
-from profit_dashboard.models import FacebookAccount
+from profit_dashboard.models import FacebookAccess
 from profit_dashboard.utils import get_facebook_ads
 
 
@@ -19,17 +19,17 @@ class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
         progress = options['progress']
 
-        facebook_accounts_list = FacebookAccount.objects.filter(access__expires_in__gt=timezone.now())
-        count = facebook_accounts_list.count()
+        facebook_access_list = FacebookAccess.objects.filter(expires_in__gt=timezone.now())
+        count = facebook_access_list.count()
         if progress:
             obar = tqdm(total=count)
 
         start = 0
 
-        for account in facebook_accounts_list:
+        for access in facebook_access_list:
             kwargs = {
-                'facebook_user_id': account.access.facebook_user_id,
-                'store': account.store,
+                'facebook_access_id': access.access.id,
+                'store': access.store,
             }
 
             try:

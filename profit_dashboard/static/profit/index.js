@@ -1237,6 +1237,7 @@ window.fbAsyncInit = function() {
         appId      : config.facebook.appId,
         cookie     : true,  // enable cookies to allow the server to access the session
         xfbml      : true,  // parse social plugins on this page
+        status     : true,  // force status refresh on init
         version    : 'v2.8' // use graph api version 2.8
     });
 
@@ -1248,6 +1249,8 @@ window.fbAsyncInit = function() {
 };
 
 $(function () {
+    var currentFacebookAccessId = null;
+
     $('#fb-ad-setup').click(function(e) {
         e.preventDefault();
 
@@ -1261,9 +1264,12 @@ $(function () {
         }).done(function(data) {
             var template = Handlebars.compile($("#fb-account-list").html());
 
+            currentFacebookAccessId = data.facebook_access_id;
             $('#fb-account-select-modal .modal-body').html(template(data));
             $('#fb-account-select-modal').modal('show');
         }).fail(function(data) {
+            currentFacebookAccessId = null;
+            $('.facebook-modal').modal('hide');
             displayAjaxError('Ad Account Selection', data);
         });
     });
@@ -1281,7 +1287,7 @@ $(function () {
             data: {
                 account_id: accountId,
                 account_name: accountName,
-                fb_user_id: facebooUserId
+                facebook_access_id: currentFacebookAccessId
             },
         }).done(function(data) {
             $('#fb-account-select-modal').modal('hide');
@@ -1299,11 +1305,12 @@ $(function () {
 
                 $(this).parents('.modal-body').find('input[type=checkbox]').prop('checked', status);
 
-
                 $(this).text(status ? 'Select None' : 'Select All');
                 $(this).prop('status', !status);
             });
         }).fail(function(data) {
+            currentFacebookAccessId = null;
+            $('.facebook-modal').modal('hide');
             displayAjaxError('Campaign Selection', data);
         });
     });
@@ -1325,17 +1332,15 @@ $(function () {
                 'account_id': $('#fb-account-select-modal [name="account"]:checked').val(),
                 'campaigns': campaigns.join(','),
                 'config': $('#fb-campaign-select-modal [name="config"]').val(),
-                'fb_user_id': $('input[name="fb_user_id"]').val()
+                'facebook_access_id': currentFacebookAccessId
             },
-            dataType: 'json',
-            success: function(result) {
-                if (result.success) {
-                    FacebookProfitDashboard.facebookInsightsPusherNotification();
-                }
-            },
-            error: function (data) {
-                displayAjaxError('Facebook Ad Sync', data);
-            }
+            dataType: 'json'
+        }).done(function(result) {
+            FacebookProfitDashboard.facebookInsightsPusherNotification();
+        }).fail(function (data) {
+            currentFacebookAccessId = null;
+            $('.facebook-modal').modal('hide');
+            displayAjaxError('Facebook Ad Sync', data);
         });
     });
 });
