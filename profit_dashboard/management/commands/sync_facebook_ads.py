@@ -28,7 +28,7 @@ class Command(DropifiedBaseCommand):
 
         for access in facebook_access_list:
             kwargs = {
-                'facebook_access_id': access.access.id,
+                'facebook_access_id': access.id,
                 'store': access.store,
             }
 
