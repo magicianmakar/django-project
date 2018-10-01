@@ -43,6 +43,7 @@ from shopify_orders.tasks import fulfill_shopify_order_line
 from commercehq_core.models import CommerceHQProduct
 from dropwow_core.models import DropwowOrderStatus
 from product_alerts.models import ProductChange
+from stripe_subscription.stripe_api import stripe
 
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
@@ -61,7 +62,6 @@ from shopify_orders.models import (
     ShopifyOrderShippingLine,
     ShopifyOrderVariant,
 )
-
 from stripe_subscription.utils import (
     process_webhook_event,
     sync_subscription,
@@ -1935,8 +1935,6 @@ def acp_users_list(request):
     if not request.user.is_superuser and not request.user.is_staff:
         raise PermissionDenied()
 
-    from stripe_subscription.stripe_api import stripe
-
     random_cache = 0
     q = request.GET.get('q') or request.GET.get('user') or request.GET.get('store')
 
@@ -2012,6 +2010,7 @@ def acp_users_list(request):
     user_last_seen = None
     customer_ids = []
     customer_id = request.GET.get('customer_id')
+    stripe_customer = None
 
     if len(users) == 1:
         rep = requests.get('https://dashboard.stripe.com/v1/search', params={
@@ -2063,6 +2062,9 @@ def acp_users_list(request):
             for i in stripe.Subscription.list(customer=customer_id).data:
                 subscribtions.append(i)
 
+            stripe_customer = stripe.Customer.retrieve(customer_id)
+            stripe_customer.account_balance = stripe_customer.account_balance / 100.0
+
         registrations_email = users[0].email
 
         try:
@@ -2093,6 +2095,7 @@ def acp_users_list(request):
         'users_count': len(users),
         'customer_id': customer_id,
         'customer_ids': customer_ids,
+        'stripe_customer': stripe_customer,
         'last_charges': charges,
         'subscribtions': subscribtions,
         'registrations': registrations,

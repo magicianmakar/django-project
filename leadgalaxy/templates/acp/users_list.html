@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load cache %}
+{% load template_helper %}
 
 {% block main-container %}
 
@@ -232,6 +233,14 @@
                             </select>
                         </div>
 
+                        <div class="col-md-3">
+                            {% if stripe_customer %}
+                            Balance: <b>{% money_format stripe_customer.account_balance %}</b>
+                            {% include 'partial/help_tooltip.html' with help="This balance will be applied to any future invoice.<br><br><b>Negative balance</b> will appear as creadit (or can be refunded upon user request)<br><br><b>Positive balance</b> will appear as additional charge (not used by Dropified)" %}
+                            <br>
+                            Have CC: <b>{{stripe_customer.sources|yesno:'Yes,No'}}</b>
+                            {% endif %}
+                        </div>
                         <div class="col-md-4">
                             <button type="submit" class="btn btn-success btn-sm" style="margin-top:2px">View</button>
                             {% if users.0.is_stripe_customer %}
