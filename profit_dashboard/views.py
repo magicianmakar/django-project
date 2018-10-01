@@ -177,7 +177,7 @@ def facebook_accounts(request):
     access_token = request.GET.get('fb_access_token')
     # Sometimes facebook doesn't reload the access_token and it comes empty
     if not access_token:
-        return JsonResponse({'error': 'Facebook token reload error'})
+        return JsonResponse({'error': 'Facebook token not received, please refresh your page and try again'}, status=404)
 
     expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
     facebook_user_id = request.GET.get('fb_user_id')
@@ -195,7 +195,7 @@ def facebook_accounts(request):
         access_token = facebook_access.get_or_update_token(access_token, expires_in)
     except:
         raven_client.captureException()
-        return JsonResponse({'error': 'User token error'})
+        return JsonResponse({'error': 'User token error'}, status=404)
 
     api = get_facebook_api(access_token)
     user = FBUser(fbid='me', api=api)
@@ -226,7 +226,7 @@ def facebook_campaign(request):
         access_token = facebook_access.get_or_update_token()
     except:
         raven_client.captureException()
-        return JsonResponse({'error': 'Facebook Token error, please reload the page and try again'})
+        return JsonResponse({'error': 'Facebook Token error, please reload the page and try again'}, status=404)
 
     account_id = request.GET.get('account_id')
     account_name = request.GET.get('account_name')
@@ -279,7 +279,7 @@ def facebook_campaign(request):
                 'config_options': config_options
             })
 
-    return JsonResponse({'error': 'Ad Account Not found'})
+    return JsonResponse({'error': 'Ad Account Not found'}, status=404)
 
 
 @login_required
