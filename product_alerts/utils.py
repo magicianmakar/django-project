@@ -117,12 +117,13 @@ def monitor_product(product, stdout=None):
 
 def parse_sku(sku):
     options = []
-    for s in sku.split(';'):
-        m = re.match(r"(?P<option_group>\w+):(?P<option_id>\w+)#?(?P<option_title>.+)?", s)
-        option = m.groupdict()
-        if not option.get('option_title'):
-            option['option_title'] = ''
-        options.append(option)
+    if sku:
+        for s in sku.split(';'):
+            m = re.match(r"(?P<option_group>\w+):(?P<option_id>\w+)#?(?P<option_title>.+)?", s)
+            option = m.groupdict()
+            if not option.get('option_title'):
+                option['option_title'] = ''
+            options.append(option)
     return options
 
 
