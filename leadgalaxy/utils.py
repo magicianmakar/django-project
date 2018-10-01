@@ -869,6 +869,40 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
                 time.sleep(sleep)
 
 
+def get_shopify_inventories(store, inventory_item_ids, sleep=None):
+    if len(inventory_item_ids) <= 50:
+        primary_location = store.get_primary_location()
+        params = {
+            'inventory_item_ids': ','.join(str(x) for x in inventory_item_ids),
+            'location_ids': primary_location,
+        }
+
+        rep = requests.get(
+            url=store.get_link('/admin/inventory_levels.json', api=True),
+            params=params
+        )
+
+        rep = rep.json()
+
+        for p in rep['inventory_levels']:
+            yield p
+    else:
+        limit = 50
+        count = len(inventory_item_ids)
+
+        pages = int(ceil(count / float(limit)))
+        for page in xrange(1, pages + 1):
+            start = limit * (page - 1)
+            end = limit * page
+            rep = get_shopify_inventories(store=store, inventory_item_ids=inventory_item_ids[start:end])
+
+            for p in rep:
+                yield p
+
+            if sleep:
+                time.sleep(sleep)
+
+
 def get_shopify_product(store, product_id, raise_for_status=False):
     if store:
         rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(product_id), api=True))

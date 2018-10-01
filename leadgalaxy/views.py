@@ -69,6 +69,8 @@ from stripe_subscription.utils import (
     get_stripe_invoice_list,
 )
 
+from product_alerts.utils import variant_index
+
 import tasks
 import utils
 from .forms import *
@@ -4169,6 +4171,37 @@ def product_alerts(request):
     page = paginator.page(page)
     changes = page.object_list
 
+    products = []
+    product_variants = {}
+    for i in changes:
+        shopify_id = i.product.get_shopify_id()
+        if shopify_id and str(shopify_id) not in products:
+            products.append(str(shopify_id))
+    try:
+        if len(products):
+            products = utils.get_shopify_products(store=store, product_ids=products, fields='id,title,variants')
+            for p in products:
+                product_variants[str(p['id'])] = p['variants']
+    except:
+        raven_client.captureException()
+
+    inventory_item_ids = []
+    for i in changes:
+        changes_map = i.get_changes_map(category)
+        variants = product_variants.get(str(i.product.get_shopify_id()), None)
+        if variants is not None:
+            for c in changes_map['variants']['quantity']:
+                index = variant_index(i.product, c['sku'], variants)
+                if index is not None:
+                    inventory_item_id = variants[index]['inventory_item_id']
+                    if variants[index]['inventory_management'] == 'shopify' and inventory_item_id not in inventory_item_ids:
+                        inventory_item_ids.append(inventory_item_id)
+
+    variant_quantities = {}
+    inventories = utils.get_shopify_inventories(store, inventory_item_ids)
+    for inventory in inventories:
+        variant_quantities[str(inventory['inventory_item_id'])] = inventory['available']
+
     product_changes = []
     for i in changes:
         change = {'qelem': i}
@@ -4178,6 +4211,29 @@ def product_alerts(request):
         change['product'] = i.product
         change['shopify_link'] = i.product.shopify_link()
         change['original_link'] = i.product.get_original_info().get('url')
+        variants = product_variants.get(str(i.product.get_shopify_id()), None)
+        for c in change['changes']['variants']['quantity']:
+            if variants is not None:
+                index = variant_index(i.product, c['sku'], variants)
+                if index is not None:
+                    if variants[index]['inventory_management'] == 'shopify':
+                        quantity = variant_quantities.get(str(variants[index]['inventory_item_id']), None)
+                        c['shopify_value'] = quantity
+                    else:
+                        c['shopify_value'] = "Unmanaged"
+                else:
+                    c['shopify_value'] = "Not Found"
+            else:
+                c['shopify_value'] = "Not Found"
+        for c in change['changes']['variants']['price']:
+            if variants is not None:
+                index = variant_index(i.product, c['sku'], variants)
+                if index is not None:
+                    c['shopify_value'] = variants[index]['price']
+                else:
+                    c['shopify_value'] = "Not Found"
+            else:
+                c['shopify_value'] = "Not Found"
 
         product_changes.append(change)
 
