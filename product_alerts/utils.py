@@ -138,8 +138,13 @@ def variant_index(product, sku, variants=None):
     for variant_id, variant in variants_map.iteritems():
         found = True
         for variant_option in variant:
-            mapped_title = variant_option.get('title')
-            mapped_sku = variant_option.get('sku')
+            if type(variant_option) is dict:
+                mapped_title = variant_option.get('title')
+                mapped_sku = variant_option.get('sku')
+            else:
+                mapped_title = variant_option
+                mapped_sku = ''
+
             exists = False
             for option in options:
                 option_id = option['option_id']
