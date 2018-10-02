@@ -170,6 +170,6 @@ def variant_index(product, sku, variants=None):
                         found = False
                 if found:
                     return idx
-            elif variant.get('sku') in sku or variant.get('sku') in original_sku:
+            elif variant.get('sku') and (variant['sku'] in sku or variant['sku'] in original_sku):
                 return idx
     return None
