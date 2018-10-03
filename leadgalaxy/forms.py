@@ -196,15 +196,6 @@ class UserProfileEmailForm(forms.Form):
         return password2
 
 
-class DropwowIntegrationForm(forms.Form):
-    dropwow_account_email = forms.EmailField(max_length=254)
-    dropwow_account_api_key = forms.CharField(max_length=254)
-
-    def __init__(self, user, data=None):
-        self.user = user
-        super(DropwowIntegrationForm, self).__init__(data=data)
-
-
 class EmailAuthenticationForm(AuthenticationForm):
     def clean_username(self):
 

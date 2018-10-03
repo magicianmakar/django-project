@@ -208,15 +208,6 @@
             </li>
             {% endif %}
 
-            {% if request.user|can:'dropwow.use' %}
-            <li {% if page == 'marketplace' %}class="active"{% endif %}>
-                <a href="{% url 'marketplace:index' %}">
-                    <i class="fa fa-pie-chart"></i>
-                    <span class="nav-label">Marketplace</span>
-                </a>
-            </li>
-            {% endif %}
-
             <li>
                 <a id="product-update-fx" href="#">
                     <i class="fa fa-lightbulb-o"></i>

@@ -82,7 +82,6 @@ INSTALLED_APPS = (
     'tapfiliate',
 
     'commercehq_core',
-    'dropwow_core',
     'woocommerce_core',
     'gearbubble_core',
     'zapier_core',
@@ -336,7 +335,6 @@ CELERY_ROUTES = {
     "leadgalaxy.tasks.calculate_user_statistics": {"queue": "priority_high"},
     "commercehq_core.tasks.product_export": {"queue": "priority_high"},
     "commercehq_core.tasks.product_update": {"queue": "priority_high"},
-    "dropwow_core.tasks.fulfill_dropwow_items": {"queue": "priority_high"},
 }
 
 REST_FRAMEWORK = {
@@ -418,11 +416,6 @@ WICKED_REPORTS_API = os.environ.get('WICKED_REPORTS_API')
 GEARBUBBLE_STAGING_URL = 'http://staging-gearbubble.com'
 GEARBUBBLE_LIVE_URL = 'https://www.gearbubble.com'
 GEARBUBBLE_DEFAULT_QTY = 100
-
-# Dropwow
-DROPWOW_API_HOSTNAME = os.environ.get('DROPWOW_API_HOSTNAME')
-DROPWOW_API_USERNAME = os.environ.get('DROPWOW_API_USERNAME')
-DROPWOW_API_PASSWORD = os.environ.get('DROPWOW_API_PASSWORD')
 
 # price-monitor
 PRICE_MONITOR_HOSTNAME = os.environ.get('PRICE_MONITOR_HOSTNAME')

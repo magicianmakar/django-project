@@ -20,7 +20,6 @@ urlpatterns = [
     url(r'^hijack/', include('hijack.urls')),
     url(r'^order/exports/', include('order_exports.urls')),
     url(r'^order/imports/', include('order_imports.urls')),
-    url(r'^marketplace/', include(('dropwow_core.urls', 'marketplace'))),
     url(r'^profit-dashboard/', include('profit_dashboard.urls')),
     url(r'^subusers/', include('subusers.urls')),
     url(r'^zapier/', include('zapier_core.urls')),

@@ -405,8 +405,6 @@
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% if item.is_bundle %}
                                                                 <span class="badge badge-primary">Bundle</span>
-                                                            {% elif item.dropwow_status and item.dropwow_status.error_message %}
-                                                                <a class="place-order btn btn-warning btn-xs" href="#" store="{{store.id}}" order-id="{{order.id}}" line-id="{{item.id}}">Retry Auto Order</a>
                                                             {% else %}
                                                                 {% include 'commercehq/partial/place_order_btn.html' %}
                                                             {% endif %}

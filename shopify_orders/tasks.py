@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 
-import json
 import requests
 
 from django.conf import settings
@@ -9,9 +8,7 @@ from app.celery import celery_app, CaptureFailure
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from dropwow_core.utils import fulfill_dropwow_order
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
-from dropwow_core.models import DropwowOrderStatus
 from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_order
 from shopify_orders.models import ShopifyOrder
 
@@ -21,7 +18,7 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
     """ Try to Auto fulfill a Shopify Order if an item within this product support it
 
     This function look at each item in the order and try to detect lines that need to be
-    auto fulfilled (Currently using Dropwow)
+    auto fulfilled
 
     Args:
         store_id: Shopify Store ID
@@ -61,18 +58,6 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
         if not product.have_supplier() or not supplier:
             continue
 
-        if supplier.is_dropwow:
-            order_status, created = DropwowOrderStatus.objects.update_or_create(
-                store=store,
-                shopify_order_id=order['id'],
-                shopify_line_id=el['id'],
-                defaults={
-                    'product': product,
-                    'customer_address': json.dumps(customer_address)
-                }
-            )
-
-            return fulfill_dropwow_order(order_status)
         elif supplier.is_aliexpress:
             have_aliexpress = True
 

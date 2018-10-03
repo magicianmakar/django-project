@@ -26,9 +26,6 @@ function renderSupplierInfo(product_url, parent) {
                 $('.product-supplier-link', parent).val(rep.url);
             }
         });
-    } else if ((/app.dropified.com\/marketplace\/product\/[0-9]+/i).test(product_url)) {
-        $('.product-supplier-name', parent).val('Dropwow');
-        $('.product-supplier-link', parent).val('https://app.dropified.com/marketplace');
     }
 }
 

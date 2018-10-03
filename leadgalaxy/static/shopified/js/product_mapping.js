@@ -87,35 +87,12 @@
 
     function fetchSupplierOptions(callback) {
         var supplier_url = getSupplierUrl();
-        if (/marketplace\/product\/[0-9]+/.test(supplier_url)) {
-            if (product_options[supplier_url]) {
-                callback(product_options[supplier_url]);
-            } else {
-                var supplier = parseInt($('.supplier-select').val(), 10);
-                $.ajax({
-                    url: '/api/marketplace-product-options',
-                    type: 'POST',
-                    data: {
-                        product: product_id,
-                        supplier: supplier
-                    },
-                    success: function(data) {
-                        product_options[supplier_url] = data;
-                        callback(data);
-                    },
-                    error: function(data) {
-                        displayAjaxError('Variants Mapping', data);
-                    }
-                });
-            }
-        } else {
-            window.extensionSendMessage({
-                subject: 'getVariants',
-                from: 'webapp',
-                url: supplier_url,
-                cache: true,
-            }, callback);
-        }
+        window.extensionSendMessage({
+            subject: 'getVariants',
+            from: 'webapp',
+            url: supplier_url,
+            cache: true,
+        }, callback);
     }
 
     $('#save-mapping').click(function(e) {

@@ -1551,8 +1551,6 @@ class ProductSupplier(models.Model):
         try:
             if self.is_aliexpress:
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
-            elif self.is_dropwow:
-                return int(re.findall('[/_]([0-9]+)', self.product_url)[0])
         except:
             return None
 
@@ -1597,10 +1595,6 @@ class ProductSupplier(models.Model):
     @property
     def is_aliexpress(self):
         return 'aliexpress.com' in self.product_url.lower()
-
-    @property
-    def is_dropwow(self):
-        return 'dropified.com/marketplace/' in self.product_url.lower()
 
     def save(self, *args, **kwargs):
         if self.source_id != self.get_source_id():
@@ -1747,16 +1741,6 @@ class ShopifyOrderTrack(models.Model):
             "RISK_CONTROL": "Payment being verified",
             "IN_PRESELL_PROMOTION": "Promotion is on",
             "FUND_PROCESSING": "Fund Processing",
-
-            # Dropwow Status
-            'P': "In Process",
-            'C': "Complete",
-            'O': "Open",
-            'F': "Failed",
-            'D': "Declined",
-            'B': "Backordered",
-            'I': "Cancelled",
-            'Y': "Awaiting Call",
         }
 
         if self.source_status and ',' in self.source_status:

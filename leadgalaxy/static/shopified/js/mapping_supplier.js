@@ -203,32 +203,12 @@
         };
 
         var supplier_url = getSelectedSupplierUrl($(this));
-        if (/marketplace\/product\/[0-9]+/.test(supplier_url)) {
-            if (product_options[supplier_url]) {
-                render_options(product_options[supplier_url]);
-            } else {
-                var supplier = getSelectedSupplier($(this));
-                $.ajax({
-                    url: '/api/marketplace-product-options',
-                    type: 'POST',
-                    data: {product: product_id, supplier: supplier},
-                    success: function(data) {
-                        product_options[supplier_url] = data;
-                        render_options(data);
-                    },
-                    error: function(data) {
-                        displayAjaxError('Variants Mapping', data);
-                    }
-                });
-            }
-        } else {
-            window.extensionSendMessage({
-                subject: 'getVariants',
-                from: 'webapp',
-                url: supplier_url,
-                cache: true,
-            }, render_options);
-        }
+        window.extensionSendMessage({
+            subject: 'getVariants',
+            from: 'webapp',
+            url: supplier_url,
+            cache: true,
+        }, render_options);
     });
 
     $('.var-data-display, .shipping-rules-display').click(function (e) {

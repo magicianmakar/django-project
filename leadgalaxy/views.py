@@ -39,9 +39,7 @@ from shopified_core.shipping_helper import get_counrties_list, country_from_code
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.exceptions import ApiLoginException
 from shopify_orders import utils as shopify_orders_utils
-from shopify_orders.tasks import fulfill_shopify_order_line
 from commercehq_core.models import CommerceHQProduct
-from dropwow_core.models import DropwowOrderStatus
 from product_alerts.models import ProductChange
 from stripe_subscription.stripe_api import stripe
 
@@ -703,10 +701,11 @@ def webhook(request, provider, option):
                     queue=queue,
                     countdown=countdown)
 
-                if store.user.can('dropwow.use'):
-                    _order, customer_address = utils.shopify_customer_address(shopify_order)
-                    if topic == 'orders/create' and shopify_order['financial_status'] == 'paid':
-                        fulfill_shopify_order_line.delay(store.id, shopify_order, customer_address)
+                # if store.user.can('fulfillbox.use'):
+                #     from shopify_orders.tasks import fulfill_shopify_order_line
+                #     _order, customer_address = utils.shopify_customer_address(shopify_order)
+                #     if topic == 'orders/create' and shopify_order['financial_status'] == 'paid':
+                #         fulfill_shopify_order_line.delay(store.id, shopify_order, customer_address)
 
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
 
@@ -3469,10 +3468,6 @@ def orders_view(request):
     for i in ShopifyOrderVariant.objects.filter(store=store, order_id__in=orders_ids):
         changed_variants['{}-{}'.format(i.order_id, i.line_id)] = i
 
-    dropwow_status = {}
-    for i in DropwowOrderStatus.objects.filter(store=store, shopify_order_id__in=orders_ids):
-        dropwow_status['{}-{}'.format(i.shopify_order_id, i.shopify_line_id)] = i
-
     images_list = {}
     res = ShopifyProductImage.objects.filter(store=store, product__in=products_ids)
     for i in res:
@@ -3527,11 +3522,9 @@ def orders_view(request):
             order['line_items'][i]['image_src'] = images_list.get('{}-{}'.format(el['product_id'], el['variant_id']))
 
             shopify_order = orders_track.get('{}-{}'.format(order['id'], el['id']))
-            dropwow_order = dropwow_status.get('{}-{}'.format(order['id'], el['id']))
             changed_variant = changed_variants.get('{}-{}'.format(order['id'], el['id']))
 
             order['line_items'][i]['shopify_order'] = shopify_order
-            order['line_items'][i]['dropwow_status'] = dropwow_order
             order['line_items'][i]['changed_variant'] = changed_variant
 
             variant_id = changed_variant.variant_id if changed_variant else el['variant_id']
@@ -3580,11 +3573,6 @@ def orders_view(request):
                 order['line_items'][i]['product'] = product
                 order['line_items'][i]['supplier'] = supplier
                 order['line_items'][i]['shipping_method'] = shipping_method
-
-                if supplier and supplier.is_dropwow:
-                    order['line_items'][i]['dropwow_retry'] = (not dropwow_order and not shopify_order) \
-                        or (dropwow_order and dropwow_order.error_message) \
-                        or (not shopify_order or shopify_order.source_status in ['F', 'D', 'I'])
 
                 if fix_order_variants:
                     mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)

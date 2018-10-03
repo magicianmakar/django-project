@@ -843,16 +843,6 @@ class CommerceHQOrderTrack(models.Model):
             "RISK_CONTROL": "Payment being verified",
             "IN_PRESELL_PROMOTION": "Promotion is on",
             "FUND_PROCESSING": "Fund Processing",
-
-            # Dropwow Status
-            'P': "In Process",
-            'C': "Complete",
-            'O': "Open",
-            'F': "Failed",
-            'D': "Declined",
-            'B': "Backordered",
-            'I': "Cancelled",
-            'Y': "Awaiting Call",
         }
 
         if self.source_status and ',' in self.source_status:

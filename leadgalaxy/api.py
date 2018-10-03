@@ -45,8 +45,6 @@ from shopify_orders.models import (
     ShopifyOrderVariant,
     ShopifyOrderLog,
 )
-from dropwow_core.models import DropwowAccount
-from dropwow_core.utils import get_dropwow_product_options
 from product_alerts.models import ProductChange
 from product_alerts.utils import monitor_product, unmonitor_store
 from zapier_core.utils import send_order_track_change
@@ -2748,25 +2746,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             return self.api_error('\n\n'.join(errors), status=422)
 
-    def post_dropwow_integration(self, request, user, data):
-        form = DropwowIntegrationForm(data=data, user=user)
-        if form.is_valid():
-            dropwow_account_email = form.cleaned_data['dropwow_account_email']
-            dropwow_account_api_key = form.cleaned_data['dropwow_account_api_key']
-
-            dropwow_account, created = DropwowAccount.objects.get_or_create(user=user)
-            dropwow_account.email = dropwow_account_email
-            dropwow_account.api_key = dropwow_account_api_key
-            dropwow_account.save()
-
-            return self.api_success()
-        else:
-            errors = []
-            for key, val in form.errors.items():
-                errors.append(u'{} Field error:\n   {}'.format(key.title(), ' - '.join([k for k in val])))
-
-            return self.api_error('\n\n'.join(errors), status=422)
-
     def post_youzign_integration(self, request, user, data):
         if not user.can('edit_settings.sub'):
             raise PermissionDenied()
@@ -2787,12 +2766,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         user.models_user.set_config('ali_pw', data.get('ali_pass') or '')
 
         return self.api_success()
-
-    def post_marketplace_product_options(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-        supplier = product.productsupplier_set.get(id=data.get('supplier'))
-        return JsonResponse(get_dropwow_product_options(supplier.get_source_id()), safe=False)
 
     def get_shipping_aliexpress(self, request, user, data):
         aliexpress_id = data.get('id')
