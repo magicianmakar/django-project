@@ -303,6 +303,9 @@
                                             {% if order.shipping.address_2 %}<br>{% endif %}
 
                                             {{order.shipping.city}}
+                                            {% if order.shipping.state %}
+                                            , {{order.shipping.state}}
+                                            {% endif %}
                                             {% if order.shipping.postcode %}
                                             , {{order.shipping.postcode}}
                                             {% endif %}
@@ -315,6 +318,9 @@
                                             {% if order.billing.address_2 %}<br>{% endif %}
 
                                             {{order.billing.city}}
+                                            {% if order.billing.state %}
+                                            , {{order.billing.state}}
+                                            {% endif %}
                                             {% if order.billing.postcode %}
                                             , {{order.billing.postcode}}
                                             {% endif %}
@@ -435,13 +441,19 @@
                                                          </td>
                                                         <td>
                                                             {% if item.product %}
-                                                            <a href="{% url 'woo:product_detail' item.product.id %}" target="_blank" title="{{item.title}}">
-                                                                {{item.name|truncatewords:9}}
-                                                            </a>
+                                                                <a href="{% url 'woo:product_detail' item.product.id %}" target="_blank" title="{{item.name}}">
+                                                                    {{item.name|truncatewords:7}}
+                                                                {% if item.attributes %}
+                                                                    - {{item.attributes}}
+                                                                {% endif %}
+                                                                </a>
                                                             {% else %}
-                                                            <span title="{{item.name}}">
-                                                                {{item.name|truncatewords:9}}
-                                                            </span>
+                                                                <span title="{{item.name}}">
+                                                                    {{item.name|truncatewords:7}}
+                                                                </span>
+                                                                {% if item.attributes %}
+                                                                    - {{item.attributes}}
+                                                                {% endif %}
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%"></td>

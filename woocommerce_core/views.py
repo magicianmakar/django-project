@@ -563,6 +563,8 @@ class OrdersList(ListView):
                     order_data['variant'] = self.get_order_data_variant(product, item)
                     order_data_id = order_data['id']
                     orders_cache['woo_order_{}'.format(order_data_id)] = order_data
+                    attributes = [variant['title'] for variant in order_data['variant']]
+                    item['attributes'] = ', '.join(attributes)
                     item['order_data_id'] = order_data_id
                     item['order_data'] = order_data
                     item['supplier'] = supplier
