@@ -295,7 +295,7 @@ def map_images(product, product_data):
     images = product_data.get('images', [])[:]
     images = [img['src'] for img in images]
     variants = product_data.get('variants', [])
-    variants = [variant for variant in variants if variant['image']['id']]
+    variants = [variant for variant in variants if variant.get('image', {}).get('id')]
 
     for variant in variants:
         src = variant['image']['src']
