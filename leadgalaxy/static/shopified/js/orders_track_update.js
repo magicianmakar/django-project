@@ -372,7 +372,7 @@
     function setupDateRangePicker(elment_id, input_id) {
         $(elment_id).daterangepicker({
             format: 'MM/DD/YYYY',
-            minDate: moment().subtract(30 * 6, 'days'),
+            minDate: moment().subtract(30 * 24, 'days'),
             showDropdowns: true,
             showWeekNumbers: true,
             timePicker: false,
