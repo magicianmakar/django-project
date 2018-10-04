@@ -208,7 +208,7 @@ class ShopifyOrderLog(models.Model):
     store = models.ForeignKey(ShopifyStore)
     order_id = models.BigIntegerField()
     logs = models.TextField(blank=True, null=True)
-    seen = models.IntegerField(default=0)
+    seen = models.IntegerField(default=0, null=True, blank=True,)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
