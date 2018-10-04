@@ -2117,6 +2117,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         source_id = data.get('aliexpress_order_id', '')
         from_oberlo = 'oberlo.com' in request.META.get('HTTP_REFERER', '')
         using_dropified_extension = request.META.get('HTTP_X_EXTENSION_VERSION')
+        using_fulfillbox = request.META.get('HTTP_X_FULFILLBOX_VERSION')
         item_fulfillment_status = None
 
         try:
@@ -2244,10 +2245,17 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     )
 
                     if not from_oberlo:
+                        if using_dropified_extension:
+                            log = 'Order Placed In Aliexpress using Dropified Extension'
+                        elif using_fulfillbox:
+                            log = 'Order Placed In Aliexpress using Dropifed FulfilBox'
+                        else:
+                            log = 'Manually link to Aliexpress Order'
+
                         ShopifyOrderLog.objects.update_order_log(
                             store=store,
                             user=user,
-                            log='Order Placed In Aliexpress' if using_dropified_extension else 'Manually link to Aliexpress Order',
+                            log=log,
                             level='info',
                             icon='tag',
                             order_id=order_id,
@@ -3309,6 +3317,15 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         logs = track_log.get_logs(pretty=True, include_webhooks=True)
 
+        if track_log.seen:
+            track_log.seen = 0
+            track_log.save()
+
+        store.pusher_trigger('track-log-update', {
+            'order_id': track_log.order_id,
+            'seen': track_log.seen,
+        })
+
         return render(request, 'partial/tracking_details_modal_content.html', {
             'store': store,
             'logs': logs,
@@ -3332,6 +3349,11 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             icon=data.get('icon'),
             line_id=data.get('line_id')
         )
+
+        store.pusher_trigger('track-log-update', {
+            'order_id': log.order_id,
+            'seen': log.seen,
+        })
 
         return self.api_success({
             'log': log.get_logs()

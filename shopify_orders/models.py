@@ -208,6 +208,7 @@ class ShopifyOrderLog(models.Model):
     store = models.ForeignKey(ShopifyStore)
     order_id = models.BigIntegerField()
     logs = models.TextField(blank=True, null=True)
+    seen = models.IntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -239,6 +240,11 @@ class ShopifyOrderLog(models.Model):
         logs.append(log)
 
         self.logs = json.dumps(logs)
+
+        if level and level in ['danger', 'warning']:
+            self.seen = 2
+        else:
+            self.seen = max(self.seen, 1)
 
         if commit:
             self.save()

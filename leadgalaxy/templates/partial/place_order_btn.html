@@ -1,6 +1,13 @@
 {% load template_helper %}
 
 {% if original %}
+
+    {% if use_fulfillbox %}
+    <a class="place-order btn btn-info btn-xs pull-right m-r-xs" href="#"
+       store="{{store.id}}" order-id="{{order.id}}" line-id="{{item.id}}"
+       style="margin:4px 2px;">Auto Order</a>
+    {% endif %}
+
     <div class="btn-group dropup order-line-group"
         order-id="{{order.id}}"
         line-id="{{item.id}}"
@@ -8,15 +15,13 @@
         order-number="{{order.name}}"
         line-title="{{item.title}}"
 
-        {% if item.shipping_method %}
-            style="display:flex"
-        {% endif %}
+        style="margin: 4px 0;"
     >
     {% if item.shipping_method and not order.pending_payment %}
         <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
             data-href="{% app_link 'orders/place' product=item.supplier.get_source_id SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
-            style="border-right:1px solid #66a8cc;max-width: 100px;white-space: nowrap;text-overflow: ellipsis;overflow: hidden;" href="#"
+            style="border-right:1px solid #66a8cc;max-width: 100px;white-space: nowrap;text-overflow: ellipsis;overflow: hidden" href="#"
             >
             {{item.shipping_method.method_name}}
         </a>

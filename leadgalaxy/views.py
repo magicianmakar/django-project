@@ -59,6 +59,7 @@ from shopify_orders.models import (
     ShopifySyncStatus,
     ShopifyOrderShippingLine,
     ShopifyOrderVariant,
+    ShopifyOrderLog,
 )
 from stripe_subscription.utils import (
     process_webhook_event,
@@ -3464,6 +3465,10 @@ def orders_view(request):
     for i in ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids).defer('data'):
         orders_track['{}-{}'.format(i.order_id, i.line_id)] = i
 
+    orders_log = {}
+    for i in ShopifyOrderLog.objects.filter(store=store, order_id__in=orders_ids):
+        orders_log[i.order_id] = i
+
     changed_variants = {}
     for i in ShopifyOrderVariant.objects.filter(store=store, order_id__in=orders_ids):
         changed_variants['{}-{}'.format(i.order_id, i.line_id)] = i
@@ -3502,6 +3507,7 @@ def orders_view(request):
         order['connected_lines'] = 0
         order['lines_count'] = len(order['line_items'])
         order['refunded_lines'] = []
+        order['order_log'] = orders_log.get(order['id'])
         order['pending_payment'] = (order['financial_status'] == 'pending' and
                                     (order['gateway'] == 'paypal' or 'amazon' in order['gateway'].lower()))
 
@@ -3511,6 +3517,10 @@ def orders_view(request):
                     order['refunded_lines'].append(refund_line['line_item_id'])
 
         for i, el in enumerate((order['line_items'])):
+            if request.GET.get('line_id'):
+                if utils.safeInt(request.GET['line_id']) != el['id']:
+                    continue
+
             order['line_items'][i]['refunded'] = el['id'] in order['refunded_lines']
 
             order['line_items'][i]['image'] = {

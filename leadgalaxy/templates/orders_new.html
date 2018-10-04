@@ -382,9 +382,29 @@
                                             Order Complete
                                         {% endif %}
                                     </div>
-                                    <div class="col-xs-2" {% if use_fulfillbox %}style="padding:0"{% endif %}>
+                                    <div class="col-xs-2 text-right" style="padding:0">
+                                        <button store="{{store.id}}" order-id="{{order.id}}"
+                                                {% if not order.order_log %}
+                                                    style="display:none"
+                                                {% endif %}
+
+                                                class="btn btn-xs btn-outline track-details itooltip
+                                                {% if order.order_log.seen == 2 %}
+                                                    btn-warning
+                                                {% elif order.order_log.seen == 1 %}
+                                                    btn-info
+                                                {% else %}
+                                                    btn-white
+                                                {% endif %}
+                                                "
+                                                title="Order History Logs"
+                                                >
+                                            Logs
+                                        </button>
+
+
                                         {% if order.lines_count and not order.have_bundle %}
-                                            <div class="btn-group pull-right" style="display:flex">
+                                            <div class="btn-group pull">
                                                 <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
                                                         type="button" style="border-right:1px solid #66a8cc">
                                                     Order Items
@@ -399,11 +419,6 @@
                                                     <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
                                                 </ul>
                                             </div>
-
-                                            {% if use_fulfillbox %}
-                                            <a class="place-order btn btn-info btn-xs pull-right m-r-xs" href="#"
-                                               store="{{store.id}}" order-id="{{order.id}}" style="max-width:150px;overflow:hidden;">Auto Order</a>
-                                            {% endif %}
 
                                         {% endif %}
                                     </div>
@@ -643,7 +658,7 @@
                                                                 <a href="#" target="_blank"><i class="fa fa-lg"></i></a>
                                                             </span>
                                                         </td>
-                                                        <td class="text-center no-wrap" style="width:10%">
+                                                        <td class="text-right" style="width:14%">
                                                             {% if item.is_bundle %}
                                                                 <span class="badge badge-primary">Bundle</span>
                                                             {% else %}
@@ -832,6 +847,13 @@
                     data-store="{{store.id}}" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Stopping...">
                     <i class="fa fa-stop-circle"></i> Stop</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-tracking-details" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
         </div>
     </div>
 </div>

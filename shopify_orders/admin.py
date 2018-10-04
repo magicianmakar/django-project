@@ -43,6 +43,7 @@ class ShopifyOrderRiskeAdmin(admin.ModelAdmin):
 
 @admin.register(ShopifyOrderLog)
 class ShopifyOrderLogAdmin(admin.ModelAdmin):
-    list_display = ('store', 'order_id', 'created_at', 'updated_at')
+    list_display = ('store', 'order_id', 'seen', 'created_at', 'updated_at')
     raw_id_fields = ('store',)
+    list_filter = ('seen',)
     search_fields = ('store__id', 'store__shop', 'order_id')

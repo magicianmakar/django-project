@@ -59,7 +59,10 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
             continue
 
         elif supplier.is_aliexpress:
-            have_aliexpress = True
+            if line_id:
+                return fulfill_aliexpress_order(store, order['id'], line_id)
+            else:
+                have_aliexpress = True
 
     if have_aliexpress:
         return fulfill_aliexpress_order(store, order)
@@ -67,7 +70,7 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
         return False
 
 
-def fulfill_aliexpress_order(store, order):
+def fulfill_aliexpress_order(store, order_id, line_id=None):
     if not settings.FULFILLBOX_API_URL:
         return 'Service API is not set'
 
@@ -80,7 +83,8 @@ def fulfill_aliexpress_order(store, order):
         url=url,
         json={
             'shop': str(store.shop),
-            'order': str(order['id']),
+            'order': str(order_id),
+            'line_id': str(line_id if line_id else ''),
             'user': str(store.user.id),
             'store': {
                 'id': str(store.id),

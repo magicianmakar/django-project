@@ -1101,20 +1101,39 @@ function pusherSub() {
     });
 
     channel.bind('order-status-update', function(data) {
-        $.each(data.orders, function (i, order) {
+        $.each(data.orders, function(i, order) {
             var orderEl = $('.order[order-id="' + order.order_id + '"]');
             if (!orderEl.length) {
                 return;
             }
 
-            if (!orderEl.hasClass('disabled')) {
-                orderEl.find('.place-order').button('loading');
-            }
+            orderEl.find('.order-line-group').hide();
+            // orderEl.find('.order-all').parent().hide();
+            // orderEl.find('.track-details').show();
 
-            setTimeout(function () {
-                orderEl.find('.place-order').text(order.status);
-            }, 100);
+            orderEl.find('.place-order' + (order.line_id ? '[line-id=' + order.line_id + ']' : '')).attr('disabled', 'disabled')
+                .text(order.status);
         });
+    });
+
+    channel.bind('track-log-update', function(order) {
+        var orderEl = $('.order[order-id="' + order.order_id + '"]');
+        if (!orderEl.length) {
+            return;
+        }
+
+        orderEl.find('.track-details').removeClass('btn-warning btn-info btn-white');
+
+        if (order.seen == 2) {
+            orderEl.find('.track-details').addClass('btn-warning');
+        } else if (order.seen == 1) {
+            orderEl.find('.track-details').addClass('btn-info');
+        } else {
+            orderEl.find('.track-details').addClass('btn-white');
+        }
+
+        orderEl.find('.place-order' + (order.line_id ? '[line-id=' + order.line_id + ']' : '')).attr('disabled', 'disabled')
+            .text(order.status);
     });
 
     channel.bind('pusher:subscription_succeeded', function() {
@@ -1260,6 +1279,27 @@ $('#orders-audit').on('click', function(e) {
         $('#orders-audit-modal .modal-body').append($('<iframe>'));
         $('#orders-audit-modal').modal('show');
         $('#orders-audit-modal .modal-body iframe').attr('src', rep.url);
+    });
+});
+
+$(".track-details").click(function(e) {
+    var btn = $(e.target);
+    var detailsUrl = api_url('track-log') + '?' + $.param({
+        'store': btn.attr('store'),
+        'order_id': btn.attr('order-id'),
+        'line_id': btn.attr('order-id'),
+    });
+
+    $('#modal-tracking-details .modal-content').load(detailsUrl, function(response, status) {
+        if (status != 'error') {
+            $('#modal-tracking-details').modal('show');
+        } else {
+            try {
+                response = JSON.parse(response);
+            } catch (e) {}
+
+            toastr.error(getAjaxError(response));
+        }
     });
 });
 
