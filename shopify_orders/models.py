@@ -205,6 +205,10 @@ class ShopifyOrderLogManager(models.Manager):
 
 
 class ShopifyOrderLog(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+        index_together = ['store', 'order_id', 'created_at']
+
     store = models.ForeignKey(ShopifyStore)
     order_id = models.BigIntegerField()
     logs = models.TextField(blank=True, null=True)
