@@ -1133,7 +1133,8 @@ function pusherSub() {
         }
 
         orderEl.find('.place-order' + (order.line_id ? '[line-id=' + order.line_id + ']' : '')).attr('disabled', 'disabled')
-            .text(order.status);
+            .text(order.status)
+            .show();
     });
 
     channel.bind('pusher:subscription_succeeded', function() {
