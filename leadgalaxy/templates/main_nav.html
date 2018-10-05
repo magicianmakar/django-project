@@ -175,17 +175,14 @@
                 </a>
                 <ul class="nav nav-second-level collapse">
                     <li {% if page == 'acp_users_list' %}class="active"{% endif %}>
-                        <a href="{% url 'acp_users_list' %}">Users
-                        <span class="label label-info pull-right"
-                              onclick="javascript:setTimeout(
+                        <a href="#" onclick="javascript:setTimeout(
                                 function(){
                                     var q=prompt('Query Dropified Users');
                                     if(q.length) {
-                                        window.location.href='/acp/users/list?q=' + encodeURIComponent(q.trim());
+                                        window.location.href='{% url 'acp_users_list' %}?q=' + encodeURIComponent(q.trim());
                                     }
                                 }, 10);
-                                return false;">Search</span>
-                        </a>
+                                return false;">Users</a>
                     </li>
 
                     {% if request.user.is_superuser %}

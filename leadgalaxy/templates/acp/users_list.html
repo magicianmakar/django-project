@@ -233,7 +233,7 @@
                             </select>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-1" style="padding:0">
                             {% if stripe_customer %}
                             Balance: <b>{% money_format stripe_customer.account_balance %}</b>
                             {% include 'partial/help_tooltip.html' with help="This balance will be applied to any future invoice.<br><br><b>Negative balance</b> will appear as creadit (or can be refunded upon user request)<br><br><b>Positive balance</b> will appear as additional charge (not used by Dropified)" %}
@@ -243,8 +243,14 @@
                         </div>
                         <div class="col-md-4">
                             <button type="submit" class="btn btn-success btn-sm" style="margin-top:2px">View</button>
+
+                            {% if stripe_customer and stripe_customer.account_balance %}
+                            <a href="#" class="btn btn-info btn-sm reset-customer-balance-btn" style="margin-top:2px"
+                               customer-id="{{customer_id}}" user-id="{{users.0.id}}">Reset Balance</a>
+                            {% endif %}
+
                             {% if users.0.is_stripe_customer %}
-                                <a href="#" class="btn btn-warning btn-sm m-l change-customer-id-btn" style="margin-top:2px"
+                                <a href="#" class="btn btn-warning btn-sm change-customer-id-btn" style="margin-top:2px"
                                    customer-id="{{customer_id}}" user-id="{{users.0.id}}">Change Customer ID</a>
                             {% else %}
                             <i class="text-danger m-l">This user is not linked to any Stripe Customer</i>
@@ -814,6 +820,37 @@
                         swal.close();
                     }).fail(function(data) {
                         displayAjaxError('Customer ID Change', data);
+                    });
+                });
+            });
+
+            $('.reset-customer-balance-btn').click(function (e) {
+                e.preventDefault();
+
+                swal({
+                    title: "Reset Customer Balance",
+                    text: "Are you sure you want to reset this Customer balance in Stripe?",
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    animation: "slide-from-top",
+                    showLoaderOnConfirm: true
+                }, function(inputValue) {
+                    if (inputValue === false || !inputValue) return false;
+
+                    $.ajax({
+                        url: '/api/reset-customer-balance',
+                        type: 'POST',
+                        data: {
+                            'customer-id': $(e.target).attr('customer-id'),
+                            'user': $(e.target).attr('user-id'),
+                        },
+                    }).done(function (data) {
+                        toastr.success('Reseted!', 'Customer Balance');
+                        window.location.reload()
+                        swal.close();
+                    }).fail(function(data) {
+                        displayAjaxError('Customer Balance', data);
                     });
                 });
             });

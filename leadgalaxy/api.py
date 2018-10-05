@@ -975,6 +975,23 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_reset_customer_balance(self, request, user, data):
+        if not user.is_superuser and not user.is_staff:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        if not target_user.is_stripe_customer():
+            return self.api_error('User is not a Stripe Customer')
+
+        cus = stripe.Customer.retrieve(data.get('customer-id'))
+        if not cus.account_balance:
+            return self.api_error('User balance is already empty')
+
+        cus.account_balance = 0
+        cus.save()
+
+        return self.api_success()
+
     def post_product_notes(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
