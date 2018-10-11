@@ -3958,17 +3958,22 @@ def orders_place(request):
     except:
         raven_client.captureException()
 
-    try:
-        assert request.GET['product']
+    product = None
 
+    if request.GET.get('supplier'):
+        supplier = ProductSupplier.objects.get(id=request.GET['supplier'])
+        permissions.user_can_view(request.user, supplier)
+
+        product = supplier.short_product_url()
+
+    elif request.GET.get('product'):
         product = request.GET['product']
 
         if utils.safeInt(product):
             product = 'https://www.aliexpress.com/item//{}.html'.format(product)
 
-    except:
-        raven_client.captureException()
-        raise Http404("Product or Order not set")
+    if not product:
+        return Http404("Product or Order not set")
 
     ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(request.user.models_user)
     admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user.models_user)
