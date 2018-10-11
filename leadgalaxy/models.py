@@ -21,7 +21,7 @@ from pusher import Pusher
 
 from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
-from shopified_core.utils import safeInt, safeStr, OrderErrors
+from shopified_core.utils import safeInt, safeStr, get_domain, OrderErrors
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -1551,6 +1551,8 @@ class ProductSupplier(models.Model):
         try:
             if self.is_aliexpress:
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+            elif self.is_ebay:
+                return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
         except:
             return None
 
@@ -1564,8 +1566,10 @@ class ProductSupplier(models.Model):
     def short_product_url(self):
         source_id = self.get_source_id()
         if source_id:
-            if 'aliexpress.com' in self.product_url.lower():
+            if self.is_aliexpress:
                 return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
+            if self.is_ebay:
+                return u'https://www.ebay.com/itm/{}'.format(source_id)
 
         return self.product_url
 
@@ -1575,7 +1579,7 @@ class ProductSupplier(models.Model):
         Currently only Aliexpress support that
         """
 
-        return 'aliexpress.com/' in self.product_url.lower()
+        return self.is_aliexpress or self.is_ebay
 
     def get_name(self):
         if self.supplier_name and self.supplier_name.strip():
@@ -1594,7 +1598,11 @@ class ProductSupplier(models.Model):
 
     @property
     def is_aliexpress(self):
-        return 'aliexpress.com' in self.product_url.lower()
+        return get_domain(self.product_url) == 'aliexpress'
+
+    @property
+    def is_ebay(self):
+        return get_domain(self.product_url) == 'ebay'
 
     def save(self, *args, **kwargs):
         if self.source_id != self.get_source_id():

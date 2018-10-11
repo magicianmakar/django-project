@@ -128,3 +128,67 @@ class MappingTestCase(TransactionTestCase):
 
         self.assertIsNotNone(supplier2.variants_map)
         self.assertIsNone(supplier1.variants_map)
+
+
+class ProductSupplierTestCase(TransactionTestCase):
+
+    def setUp(self):
+        self.user = User.objects.create(username='me', email='me@localhost.com')
+
+        self.store = ShopifyStore.objects.create(
+            user=self.user, title="test1")
+
+        self.product = ShopifyProduct.objects.create(
+            user=self.user,
+            data='{}',
+            variants_map=json.dumps({
+                '1234567': 'Red'
+            }))
+
+    def test_supplier_is_aliexpress(self):
+        supplier = ProductSupplier.objects.create(
+            store=self.store,
+            product=self.product,
+            product_url="http://www.aliexpress.com/item/Best-prices-UNO-R3-MEGA328P-for-Arduino-Compatible/32213964945.html"
+        )
+
+        self.assertTrue(supplier.is_aliexpress)
+
+    def test_supplier_aliexpress_id(self):
+        supplier = ProductSupplier.objects.create(
+            store=self.store,
+            product=self.product,
+            product_url="http://www.aliexpress.com/item/Best-prices-UNO-R3-MEGA328P-for-Arduino-Compatible/32213964945.html"
+        )
+
+        self.assertEqual(supplier.get_source_id(), 32213964945)
+
+    def test_supplier_is_ebay(self):
+        supplier = ProductSupplier.objects.create(
+            store=self.store,
+            product=self.product,
+            product_url="https://www.ebay.com/itm/SanDisk-1GB-SD-Memory-Card-Secure-Digital/401613226743?epid=1480667342&hash=item5d820382f7:rk:1:pf:0"
+        )
+
+        self.assertTrue(supplier.is_ebay)
+
+    def test_supplier_ebay_id(self):
+        supplier = ProductSupplier.objects.create(
+            store=self.store,
+            product=self.product,
+            product_url="https://www.ebay.com/itm/SanDisk-1GB-SD-Memory-Card-Secure-Digital/401613226743?epid=1480667342&hash=item5d820382f7:rk:1:pf:0"
+        )
+
+        self.assertEqual(supplier.get_source_id(), 401613226743)
+
+        short_url = supplier.short_product_url()
+        self.assertEqual(short_url, "https://www.ebay.com/itm/401613226743")
+
+    def test_supplier_ebay_id_short(self):
+        supplier = ProductSupplier.objects.create(
+            store=self.store,
+            product=self.product,
+            product_url="https://www.ebay.com/itm/401613226743"
+        )
+
+        self.assertEqual(supplier.get_source_id(), 401613226743)
