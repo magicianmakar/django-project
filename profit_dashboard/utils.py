@@ -197,6 +197,7 @@ def get_profits(store, start, end, store_timezone=''):
 
     # Account for refunds processed within date range
     refunds = []
+    total_refunds = 0.0
     for refund in order_refunds(store, start, end, store_timezone):
         refunds.append(refund)
 
@@ -206,6 +207,7 @@ def get_profits(store, start, end, store_timezone=''):
 
         refund_amount = get_refund_amount(refund.get('transactions'))
         if refund_amount:
+            total_refunds += refund_amount
             profits_data[date_key]['profit'] -= refund_amount
             profits_data[date_key]['revenue'] -= refund_amount
             profits_data[date_key]['empty'] = False
@@ -276,9 +278,10 @@ def get_profits(store, start, end, store_timezone=''):
         'other_costs': other_costs.aggregate(total=Sum('amount__sum'))['total'] or 0.0,
         'average_profit': 0.0,
         'average_revenue': 0.0,
+        'refunds': total_refunds,
     }
     totals['outcome'] = safeFloat(totals['fulfillment_cost']) + safeFloat(totals['ads_spend']) + safeFloat(totals['other_costs'])
-    totals['profit'] = safeFloat(totals['revenue']) - safeFloat(totals['outcome'])
+    totals['profit'] = safeFloat(totals['revenue']) - safeFloat(totals['outcome']) - safeFloat(total_refunds)
     totals['orders_count'] = ShopifyOrder.objects.filter(store_id=store_id, created_at__range=(start, end)).count()
     totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)
