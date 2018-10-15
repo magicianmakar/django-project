@@ -130,7 +130,9 @@ class RevenueTestCase(TransactionTestCase):
         )
         self.time = timezone.now()
         for i in range(10):
-            ShopifyOrderFactory(store=self.store, created_at=self.time + timedelta(days=i))
+            o = ShopifyOrderFactory(store=self.store, created_at=self.time + timedelta(days=i))
+            o.financial_status='paid'
+            o.save()
 
         end = self.time + timedelta(9)
         self.profits, self.totals, details = get_profits(self.store, self.time, end)

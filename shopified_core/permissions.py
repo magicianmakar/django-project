@@ -222,6 +222,7 @@ def can_add_product(user, ignore_daily_limit=False):
         user_count = profile.user.shopifyproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
         user_count += profile.user.commercehqproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
         user_count += profile.user.wooproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+        user_count += profile.user.gearbubbleproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
 
         cache.set(products_count_key, user_count, timeout=600)
 
@@ -242,6 +243,7 @@ def can_add_product(user, ignore_daily_limit=False):
             day_count = profile.user.shopifyproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
             day_count += profile.user.commercehqproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
             day_count += profile.user.wooproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
+            day_count += profile.user.gearbubbleproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
 
         if day_count + 1 > profile.get_config_value('_daily_products_limit', 2000):
             from raven.contrib.django.raven_compat.models import client as raven_client
@@ -273,6 +275,7 @@ def can_add_board(user):
     user_count = profile.user.shopifyboard_set.count()
     user_count += profile.user.commercehqboard_set.count()
     user_count += profile.user.wooboard_set.count()
+    user_count += profile.user.gearbubbleboard_set.count()
     can_add = True
 
     if (total_allowed > -1) and (user_count + 1 > total_allowed):
