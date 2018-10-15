@@ -1960,20 +1960,23 @@ def acp_users_list(request):
                 Q(shopifystore__title__icontains=q)
             )
         elif request.GET.get('user') and utils.safeInt(request.GET.get('user')):
-            users = users.filter(
-                Q(id=request.GET.get('user'))
-            )
+            users = users.filter(id=request.GET['user'])
         else:
-            users = users.filter(
-                Q(username__icontains=q) |
-                Q(email__icontains=q) |
-                Q(profile__emails__icontains=q) |
-                Q(profile__ips__icontains=q) |
-                Q(shopifystore__shop__iexact=q) |
-                Q(commercehqstore__api_url__icontains=q) |
-                Q(woostore__api_url__icontains=q) |
-                Q(shopifystore__title__icontains=q)
-            )
+            if '@' in q:
+                users = users.filter(Q(email__icontains=q) | Q(profile__emails__icontains=q))
+            elif '.myshopify.com' in q:
+                users = users.filter(Q(username__icontains=q) | Q(shopifystore__shop__iexact=q))
+            else:
+                users = users.filter(
+                    Q(username__icontains=q) |
+                    Q(email__icontains=q) |
+                    Q(profile__emails__icontains=q) |
+                    Q(profile__ips__icontains=q) |
+                    Q(shopifystore__shop__iexact=q) |
+                    Q(commercehqstore__api_url__icontains=q) |
+                    Q(woostore__api_url__icontains=q) |
+                    Q(shopifystore__title__icontains=q)
+                )
 
         users = users.distinct()
 
