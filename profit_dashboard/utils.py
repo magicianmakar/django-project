@@ -164,7 +164,8 @@ def get_profits(store, start, end, store_timezone=''):
 
     # Shopify Orders
     orders = ShopifyOrder.objects.filter(store_id=store_id,
-                                         created_at__range=(start, end))
+                                         created_at__range=(start, end),
+                                         financial_status__in=['authorized', 'partially_paid', 'paid', 'partially_refunded', 'refunded'])
 
     orders_map = {}
     for order in orders.values('created_at', 'total_price', 'order_id'):
@@ -454,7 +455,8 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
         orders_map = {}
         orders = ShopifyOrder.objects.filter(
             store_id=store.id,
-            created_at__range=date_range
+            created_at__range=date_range,
+            financial_status__in=['authorized', 'partially_paid', 'paid', 'partially_refunded', 'refunded']
         ).values('created_at', 'total_price', 'order_id')
         for order in orders:
             created_at = arrow.get(order['created_at'])
