@@ -1271,7 +1271,7 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
                     customer_address['city'] = u'{}, {}'.format(customer_address['city'], customer_province)
 
             elif fix_aliexpress_city:
-                city = customer_address['city'].strip().strip(',')
+                city = safeStr(customer_address['city']).strip().strip(',')
                 customer_address['city'] = 'Other'
 
                 if not safeStr(customer_address['address2']).strip():
