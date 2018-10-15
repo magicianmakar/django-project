@@ -892,6 +892,45 @@ $('.tos-update .close-btn').click(function (e) {
     });
 });
 
+
+$('.dropified-challenge .close-btn').click(function (e) {
+    $.ajax({
+        url: '/api/user-config',
+        type: 'POST',
+        data: {
+            'single': true,
+            'name': '_dropified-challenge',
+            'value': Math.floor(Date.now() / 1000),
+        },
+        success: function (data) {
+            $('.dropified-challenge').remove();
+        },
+        error: function (data) {
+            displayAjaxError('Error', data);
+        }
+    });
+});
+
+$('.dropified-challenge, .dropified-challenge-open').click(function (e) {
+    e.preventDefault();
+
+    $.ajax({
+        url: '/api/user-config',
+        type: 'POST',
+        data: {
+            'single': true,
+            'name': '_dropified-challenge',
+            'value': Math.floor(Date.now() / 1000),
+        },
+        success: function (data) {
+            window.location.href = 'https://challenge.dropified.com';
+        },
+        error: function (data) {
+            displayAjaxError('Error', data);
+        }
+    });
+});
+
 function versionCompare(left, right) {
     if (typeof left + typeof right != 'stringstring')
         return false;

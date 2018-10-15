@@ -81,6 +81,15 @@
         </div>
     {% endif %}
 
+    {% if dropified_challenge and not user.is_subuser %}
+        <div class="dropified-challenge">
+            Sign up now for the FREE Dropified 60 Day Challenge.
+            <a href="https://challenge.dropified.com" target="_blank" class="btn btn-white btn-xs dropified-challenge-open">Learn More</a>
+
+            <a href="#" type="button" class="close-btn itooltip" data-placement="left" data-dismiss="alert" title="Close">×</a>
+        </div>
+    {% endif %}
+
     {% block main-nav %}
         {% include 'main_nav.html' %}
     {% endblock %}
