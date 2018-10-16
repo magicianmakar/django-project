@@ -1475,11 +1475,21 @@ class ShopifyProduct(models.Model):
             product_data = {}
         return product_data
 
-    def get_inventory_item_by_variant(self, variant_id, variant=None):
+    def get_inventory_item_by_variant(self, variant_id, variant=None, ensure_tracking=True):
         if variant is None:
             url = self.store.get_link('/admin/variants/{}.json'.format(variant_id), api=True)
             response = requests.get(url)
             variant = response.json()['variant']
+
+        if ensure_tracking and variant['inventory_management'] != 'shopify':
+            requests.put(
+                url=self.store.get_link('/admin/inventory_items/{}.json'.format(variant['inventory_item_id']), api=True),
+                json={
+                    "inventory_item": {
+                        "id": variant['inventory_item_id'],
+                        "tracked": True
+                    }
+                })
 
         return variant.get('inventory_item_id')
 
@@ -1504,7 +1514,7 @@ class ShopifyProduct(models.Model):
             if variant_id is None:
                 variant_id = variant['id']
 
-            inventory_item_id = self.get_inventory_item_by_variant(variant_id, variant=variant)
+            inventory_item_id = self.get_inventory_item_by_variant(variant_id, variant=variant, ensure_tracking=False)
 
         primary_location = self.store.get_primary_location()
         response = requests.get(
