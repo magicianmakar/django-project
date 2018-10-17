@@ -25,9 +25,12 @@ def extra_bundles(request):
         not request.path.startswith('/pages/') and \
         arrow.get('2017-08-27').datetime < request.user.date_joined
 
+    dropified_challenge = not request.user.get_config('_dropified-challenge')
+
     return {
         'tos_update': tos_update,
         'tos_accept': tos_accept,
+        'dropified_challenge': dropified_challenge
     }
 
 

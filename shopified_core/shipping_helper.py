@@ -106,6 +106,12 @@ def normalize_country_code(country):
     elif country in ['ru', 'russia']:
         country_code = 'ru'
 
+    elif country in ['id', 'indonesia']:
+        country_code = 'id'
+
+    elif country in ['th', 'thailand']:
+        country_code = 'th'
+
     return country_code
 
 

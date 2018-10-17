@@ -492,7 +492,7 @@ def sync_shopify_product_quantities(self, product_id):
                     continue
 
                 idx = variant_index(product, sku, product_data['variants'])
-                if not idx:
+                if idx is None:
                     continue
 
                 product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])

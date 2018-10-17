@@ -270,5 +270,5 @@
 }
 
 .expandable .well .totals-detail {
-  height: 195px;
+  min-height: 215px;
 }

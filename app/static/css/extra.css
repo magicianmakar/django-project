@@ -238,6 +238,37 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     opacity: .2;
 }
 
+.dropified-challenge {
+    z-index: 1000000;
+    font-weight: 600;
+    text-align: center;
+    position: static;
+    top: 0px;
+    left: 0;
+    right: 0;
+    width: 100%;
+    padding: 5px 7px;
+    background-color: #93c47d;
+    color: #000;
+    border-bottom: 1px solid #92b085;
+    line-height: 41px;
+    font-size: 1.2em;
+    cursor: pointer;
+}
+
+.dropified-challenge .close-btn {
+    float: right;
+    font-size: 21px;
+    line-height: 1;
+    margin: 7px;
+}
+
+.dropified-challenge a {
+    color: #5c7b4e !important;
+    padding: 3px 6px !important;
+    font-weight: bold !important;
+}
+
 .appcues-widget-icon {
     font-size: 18px !important;
     color: #999c9e !important;

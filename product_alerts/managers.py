@@ -274,9 +274,6 @@ class ShopifyProductChangeManager(ProductChangeManager):
                 if variant.get('id'):
                     self.product.set_variant_quantity(quantity=0, variant_id=variant['id'], variant=variant)
 
-                product_data['variants'][idx]['inventory_management'] = 'shopify'
-                product_data['variants'][idx]['inventory_policy'] = 'deny'
-
         return product_data
 
     def handle_product_appear(self, product_data):
@@ -300,9 +297,6 @@ class ShopifyProductChangeManager(ProductChangeManager):
                     variant_id=product_data['variants'][idx]['id'],
                     variant=product_data['variants'][idx],
                 )
-
-                product_data['variants'][idx]['inventory_management'] = 'shopify'
-                product_data['variants'][idx]['inventory_policy'] = 'deny'
 
         return product_data
 
@@ -340,9 +334,6 @@ class ShopifyProductChangeManager(ProductChangeManager):
                     variant_id=product_data['variants'][idx]['id'],
                     variant=product_data['variants'][idx]
                 )
-
-                product_data['variants'][idx]['inventory_management'] = 'shopify'
-                product_data['variants'][idx]['inventory_policy'] = 'deny'
 
         return product_data
 
