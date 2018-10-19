@@ -1310,6 +1310,16 @@ class ShopifyProduct(models.Model):
 
         return variant_id
 
+    def set_real_variant(self, deleted_id, real_id):
+        config = self.get_config()
+        mapping = config.get('real_variant_map', {})
+        mapping[str(deleted_id)] = int(real_id)
+
+        config['real_variant_map'] = mapping
+
+        self.config = json.dumps(config, indent=4)
+        self.save()
+
     def get_suppliers(self):
         return self.productsupplier_set.all().order_by('-is_default')
 
