@@ -1836,17 +1836,19 @@ def get_shipping_info(request):
     if request.GET.get('gear'):
         from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier
 
-    aliexpress_id = request.GET.get('id')
+    item_id = request.GET.get('id')
     product = request.GET.get('product')
     supplier = request.GET.get('supplier')
+    supplier_type = request.GET.get('type')
 
     country = request.GET.get('country', request.user.get_config('_shipping_country', 'US'))
     country_code = aliexpress_country_code_map(country)
+    country_name = country_from_code(country)
 
     if request.GET.get('selected'):
         request.user.set_config('_shipping_country', country)
 
-    if not aliexpress_id and supplier:
+    if not item_id and supplier:
         if request.GET.get('chq'):
 
             if int(supplier) == 0:
@@ -1883,10 +1885,14 @@ def get_shipping_info(request):
             else:
                 supplier = ProductSupplier.objects.get(id=supplier)
 
-        aliexpress_id = supplier.get_source_id()
+        item_id = supplier.get_source_id()
+        supplier_type = 'ebay' if supplier.is_ebay else 'aliexpress'
 
     try:
-        shippement_data = utils.aliexpress_shipping_info(aliexpress_id, country_code)
+        if supplier_type == 'ebay':
+            shippement_data = utils.ebay_shipping_info(item_id, country_name)
+        else:
+            shippement_data = utils.aliexpress_shipping_info(item_id, country_code)
     except requests.Timeout:
         raven_client.captureException()
 

@@ -595,6 +595,43 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
     return shippement_data
 
 
+def ebay_shipping_info(item_id, country_name):
+    from shopified_core.shipping_helper import ebay_country_code
+
+    country_code = ebay_country_code(country_name)
+    if not country_code:
+        return {}
+
+    shippement_key = 'ebay_shipping_info_{}_{}'.format(item_id, country_code)
+    shippement_data = cache.get(shippement_key)
+
+    # if shippement_data is not None:
+        # return shippement_data
+
+    r = requests.get(
+        url="https://shopified-helper-app.herokuapp.com/ebay/shipping/info",
+        timeout=10,
+        params={
+            'product': item_id,
+            'country': country_code,
+        })
+
+    try:
+        shippement_data = {
+            "freight": r.json()
+        }
+
+        cache.set(shippement_key, shippement_data, timeout=43200)
+    except requests.exceptions.ConnectTimeout:
+        raven_client.captureException(level='warning')
+        cache.set(shippement_key, shippement_data, timeout=120)
+        shippement_data = {}
+    except:
+        shippement_data = {}
+
+    return shippement_data
+
+
 def get_store_from_request(request):
     """
     Return ShopifyStore from based on `store` value or last saved store

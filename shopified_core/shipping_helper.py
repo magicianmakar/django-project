@@ -14,6 +14,7 @@ from shopified_core.utils import hash_list
 
 uk_provinces = None
 aliexpress_countries = None
+ebay_countries = None
 countries_code = None
 provinces_code = {}
 
@@ -145,6 +146,18 @@ def load_aliexpress_countries():
     aliexpress_countries = json.loads(open(data_file).read().lower())
 
     return aliexpress_countries
+
+
+def load_ebay_countries():
+    global ebay_countries
+
+    if ebay_countries:
+        return ebay_countries
+
+    data_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'shipping', 'ebay_countries.json')
+    ebay_countries = json.loads(open(data_file).read().lower())
+
+    return ebay_countries
 
 
 def get_uk_province(city, default=''):
@@ -336,3 +349,7 @@ def province_from_code(country_code, province_code):
     province = provinces_code.get(country_code, {}).get(province_code)
 
     return province if province else province_code
+
+
+def ebay_country_code(country_name):
+    return load_ebay_countries().get(country_name.lower())
