@@ -96,7 +96,7 @@ def subuser_perms_edit(request, user_id):
             subuser.profile.subuser_permissions.remove(*global_permissions)
             subuser.profile.subuser_permissions.add(*new_permissions)
             messages.success(request, 'Subuser permissions successfully updated')
-            return redirect('{}subusers.views.subuser_perms_edit'.format(get_namespace(request)), user_id)
+            return redirect('{}subuser_perms_edit'.format(get_namespace(request)), user_id)
     else:
         form = SubuserPermissionsForm(initial=initial)
 

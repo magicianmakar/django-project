@@ -142,7 +142,7 @@ def calculate_profits(profits):
 
 def get_profits(store, start, end, store_timezone=''):
     store_id = store.id
-    days = arrow.Arrow.range('day', start, end) + [arrow.get(end)]
+    days = arrow.Arrow.range('day', start, end)
     profits_data = OrderedDict()
     for day in reversed(days):
         date_key = day.format('YYYY-MM-DD')
@@ -583,18 +583,26 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
 
 
 def get_date_range(request):
-    start = request.GET.get('start')
-    end = request.GET.get('end')
-    tz = timezone.localtime(timezone.now()).strftime(' %z')
-    if end is None:
-        end = arrow.now()
-    else:
-        end = arrow.get(end + tz, r'MM/DD/YYYY Z')
+    date_range = request.GET.get('date_range', '{}-'.format(arrow.now().replace(days=-30).format('MM/DD/YYYY')))
+    end = arrow.now()
+    start = arrow.now().replace(days=-30)
 
-    if start is None:
-        start = arrow.now().replace(days=-30)
-    else:
-        start = arrow.get(start + tz, r'MM/DD/YYYY Z')
+    if date_range:
+        try:
+            daterange_list = date_range.split('-')
+
+            tz = timezone.localtime(timezone.now()).strftime(' %z')
+
+            start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z')
+
+            if len(daterange_list) > 1 and daterange_list[1]:
+                end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                end = end.span('day')[1]
+            else:
+                end = arrow.now()
+
+        except:
+            pass
 
     try:
         end = end.to(request.session['django_timezone']).datetime

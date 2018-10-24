@@ -53,6 +53,7 @@ SUBUSER_PERMISSIONS = (
     ('edit_product_boards', 'Edit product boards'),
     ('view_help_and_support', 'View help and support'),
     ('view_bonus_training', 'View bonus training'),
+    ('view_profit_dashboard', 'View profit dashboard')
 )
 
 SUBUSER_STORE_PERMISSIONS = (
@@ -515,7 +516,10 @@ class SubuserPermission(models.Model):
         unique_together = 'codename', 'store'
 
     def __unicode__(self):
-        return '{} - {}'.format(self.store.title, self.codename)
+        if self.store:
+            return u'{} - {}'.format(self.store.title, self.codename)
+        else:
+            return self.codename
 
 
 class SubuserCHQPermission(models.Model):
@@ -1309,6 +1313,16 @@ class ShopifyProduct(models.Model):
             return config.get('real_variant_map').get(str(variant_id), variant_id)
 
         return variant_id
+
+    def set_real_variant(self, deleted_id, real_id):
+        config = self.get_config()
+        mapping = config.get('real_variant_map', {})
+        mapping[str(deleted_id)] = int(real_id)
+
+        config['real_variant_map'] = mapping
+
+        self.config = json.dumps(config, indent=4)
+        self.save()
 
     def get_suppliers(self):
         return self.productsupplier_set.all().order_by('-is_default')

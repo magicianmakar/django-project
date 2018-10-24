@@ -1888,6 +1888,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             order_updater.add_note(u"Variant changed to '{}' for line #{} by {}".format(
                 data.get('title'), data.get('line'), user.first_name or user.username))
 
+        if data.get('remember_variant') == 'true':
+            product = ShopifyProduct.objects.get(id=data.get('product'), store=store)
+            product.set_real_variant(data.get('current_variant'), data.get('variant'))
+
         order_updater.save_changes()
 
         return self.api_success()

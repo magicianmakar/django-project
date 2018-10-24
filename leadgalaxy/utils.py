@@ -1186,16 +1186,6 @@ def fix_order_variants(store, order, product):
 
         return None
 
-    def set_real_variant(product, deleted_id, real_id):
-        config = product.get_config()
-        mapping = config.get('real_variant_map', {})
-        mapping[str(deleted_id)] = int(real_id)
-
-        config['real_variant_map'] = mapping
-
-        product.config = json.dumps(config, indent=4)
-        product.save()
-
     for line in order['line_items']:
         if line['product_id'] != product.get_shopify_id():
             continue
@@ -1205,7 +1195,7 @@ def fix_order_variants(store, order, product):
             match = get_variant(shopify_product, variant_title=line['variant_title'])
             if match:
                 if real_id != match['id']:
-                    set_real_variant(product, line['variant_id'], match['id'])
+                    product.set_real_variant(line['variant_id'], match['id'])
 
 
 def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_aliexpress_city=False):

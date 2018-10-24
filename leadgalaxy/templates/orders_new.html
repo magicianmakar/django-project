@@ -644,7 +644,7 @@
                                                             <a href="#" class="btn changed-variant itooltip m-l-xs" title="Change Variant"
                                                                 data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>" data-store="{{store.id}}"
                                                                 data-order="{{order.id}}" data-line="{{item.id}}" data-product="{{item.product.id}}"
-                                                                data-changed="{{item.changed_variant|yesno:'true,false'}}">
+                                                                data-changed="{{item.changed_variant|yesno:'true,false'}}" data-current-variant="{{item.variant_id}}">
                                                                 <i class="fa fa-edit"></i></a>
                                                             {% endif %}
                                                         </td>
@@ -815,6 +815,11 @@
 
             <div class="modal-body">
                 <div class="variants-list"></div>
+
+                <label class="m-t" for="remember-variant">
+                    <input type="checkbox" name="remember-variant" id="remember-variant" value="">
+                    Remeber for all orders
+                </label>
             </div>
 
             <div class="modal-footer">

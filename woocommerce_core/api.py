@@ -278,7 +278,7 @@ class WooStoreApi(ApiResponseMixin, View):
         except IndexError:
             return self.api_error('Your Store link is not correct:\n{}'.format(store.api_url))
         except:
-            return self.api_error('API credetnails is not correct\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
+            return self.api_error('API credentials are not correct\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
 
     def post_product_save(self, request, user, data):
         store_id = safeInt(data.get('store'))

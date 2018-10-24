@@ -1201,6 +1201,8 @@ $('.changed-variant').click(function (e) {
     $('#save-variant-change').data('store', $(this).data('store'));
     $('#save-variant-change').data('order', $(this).data('order'));
     $('#save-variant-change').data('line', $(this).data('line'));
+    $('#save-variant-change').data('product', $(this).data('product'));
+    $('#save-variant-change').data('current-variant', $(this).data('current-variant'));
 
     $.ajax({
         url: api_url('shopify-variants'),
@@ -1248,6 +1250,9 @@ $('#save-variant-change').click(function (e) {
             store: $('#save-variant-change').data('store'),
             order: $('#save-variant-change').data('order'),
             line: $('#save-variant-change').data('line'),
+            product: $('#save-variant-change').data('product'),
+            current_variant: $('#save-variant-change').data('current-variant'),
+            remember_variant: $('input[name="remember-variant"]').is(':checked'),
             variant: variant.val(),
             title: variant.attr('title'),
         },

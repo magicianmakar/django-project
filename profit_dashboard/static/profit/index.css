@@ -272,3 +272,11 @@
 .expandable .well .totals-detail {
   min-height: 215px;
 }
+
+.fb-login-button {
+  margin-left: 10px;
+}
+
+#profit-range + .btn-success {
+  margin-left: 5px;
+}

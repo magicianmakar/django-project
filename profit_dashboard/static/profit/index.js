@@ -152,12 +152,88 @@ var Utils = {
             $('[data-toggle="profit-tooltip"]').tooltip();
         },
         initDatepicker: function() {
-            $('#profit-range .input-daterange').datepicker({
-                keyboardNavigation: false,
-                forceParse: false,
-                autoclose: false,
-                startDate: config.initialDate
-            });
+            function setupDateRangePicker(elment_id, input_id) {
+                $(elment_id).daterangepicker({
+                    format: 'MM/DD/YYYY',
+                    minDate: moment(config.initialDate).add('days', 1),
+                    showDropdowns: true,
+                    showWeekNumbers: true,
+                    timePicker: false,
+                    autoUpdateInput: false,
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Last 7 Days': [moment().subtract(7, 'days'), moment()],
+                        'Last 30 Days': [moment().subtract(30, 'days'), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                    },
+                    opens: 'right',
+                    drops: 'down',
+                    buttonClasses: ['btn', 'btn-sm'],
+                    applyClass: 'btn-primary',
+                    cancelClass: 'btn-default',
+                    separator: ' to ',
+                    locale: {
+                        applyLabel: 'Submit',
+                        cancelLabel: 'Clear',
+                        fromLabel: 'From',
+                        toLabel: 'To',
+                        customRangeLabel: 'Custom Range',
+                        daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr','Sa'],
+                        monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                        firstDay: 1
+                    }
+                }, function(start, end, label) {  // Callback
+                    if (start.isValid() && end.isValid()) {
+                        $(elment_id).find('span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                        $(input_id).val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
+                    }
+                });
+
+                $(elment_id).on('apply.daterangepicker', function(ev, picker) {
+                    var start = picker.startDate,
+                        end = picker.endDate;
+
+                    if (start.isValid && !end.isValid()) {
+                        end = moment();
+                    }
+
+                    if (start.isValid() && end.isValid()) {
+                        $(elment_id).find('span').html(
+                            start.format(start.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY') + ' - ' +
+                             end.format(end.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
+                        $(input_id).val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
+                    } else {
+                        $(elment_id).find('span').html('');
+                        $(input_id).val('');
+                    }
+
+                    $(input_id).trigger('change');
+                });
+
+                $(elment_id).on('cancel.daterangepicker', function(ev, picker) {
+                    $(elment_id).find('span').html('');
+                    $(input_id).val('');
+                    $(input_id).trigger('change');
+                });
+
+                var createdAtDaterangeValue = $(input_id).val();
+                if (createdAtDaterangeValue && createdAtDaterangeValue.indexOf('-') !== -1) {
+                    var dates = createdAtDaterangeValue.split('-'),
+                        createdAtStart = moment(dates[0], 'MM/DD/YYYY'),
+                        createdAtEnd = moment(dates[1], 'MM/DD/YYYY');
+
+                    if (createdAtStart.isValid && !createdAtEnd.isValid()) {
+                        createdAtEnd = moment();
+                    }
+
+                    $(elment_id).find('span').html(
+                        createdAtStart.format(createdAtStart.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY') + ' - ' +
+                        createdAtEnd.format(createdAtEnd.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
+                }
+            }
+
+            setupDateRangePicker('#date', 'input[name="date_range"]');
         },
         initExpandable: function() {
             var previousIndex = null,
@@ -606,8 +682,9 @@ var Utils = {
             }
         },
         initializeChartsData: function() {
-            var end = moment($('input[name="end"]').val().replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2')),
-                start = moment($('input[name="start"]').val().replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
+            var dateRange = $('[name="date_range"]').val().split('-'),
+                end = moment(dateRange[1].replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2')),
+                start = moment(dateRange[0].replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
 
             this.setChartViewByDate(start, end);
             this.loadChartsData();
@@ -783,8 +860,9 @@ var Utils = {
             });
         },
         reloadCharts: function() {
-            var end = moment($('input[name="end"]').val().replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2')),
-                start = moment($('input[name="start"]').val().replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
+            var dateRange = $('[name="date_range"]').val().split('-'),
+                end = moment(dateRange[1].replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2')),
+                start = moment(dateRange[0].replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
 
             this.loadChartsData();
             this.loadChartLabels(start, end);
@@ -968,10 +1046,12 @@ var Utils = {
                 countDays += 1;
             }
 
-            var nextWeekDay = moment(lastProfit.date_as_string.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2')).add(1, 'weeks');
-            weeklyAmounts.date_as_string += ' - ' + nextWeekDay.format('MM/DD/YYYY');
-            ProfitDashboard.outputToRow(firstWeekDayRow, weeklyAmounts);
-            firstWeekDayRow.tooltip('destroy');
+            if (lastProfit) {
+                var nextWeekDay = moment(lastProfit.date_as_string.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2')).add(1, 'weeks');
+                weeklyAmounts.date_as_string += ' - ' + nextWeekDay.format('MM/DD/YYYY');
+                ProfitDashboard.outputToRow(firstWeekDayRow, weeklyAmounts);
+                firstWeekDayRow.tooltip('destroy');
+            }
 
             $('#profits .profit.closed').css('display', '');
             ProfitDashboard.fixStripes();
@@ -1025,8 +1105,9 @@ var Utils = {
 
             if (singleDate) {
                 var start = moment(singleDate.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
-                data['start'] = start.format('MM/DD/YYYY');
-                data['end'] = start.add(1, 'days').format('MM/DD/YYYY');
+                data['date_range'] = start.format('MM/DD/YYYY') + '-' + start.add(1, 'days').format('MM/DD/YYYY');
+            } else {
+                data['date_range'] = $('[name="date_range"]').val();
             }
 
             $.ajax({
@@ -1079,6 +1160,7 @@ var FacebookProfitDashboard = {
         this.onFacebookSyncFormSubmit();
         this.facebookStatus.loggedIn();
         this.onClickRemoveAccount();
+        this.onClickRemoveFacebook();
         this.onCollapseFacebookConnection();
     },
     onClickRemoveAccount: function() {
@@ -1117,6 +1199,44 @@ var FacebookProfitDashboard = {
                             },
                             error: function(data) {
                                 displayAjaxError('Delete Facebook Account Data', data);
+                            }
+                        });
+                    }
+                }
+            );
+        });
+    },
+    onClickRemoveFacebook: function() {
+        $('#facebook-user-logout').on('click', function(e) {
+            e.preventDefault();
+            var btn = $(this);
+
+            swal({
+                    title: "Disconnect Your Facebook Account",
+                    text: "This will disconnect your Facebook account from Dropified and your data will no longer automatically sync. This will not delete any previously synced data.",
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    showLoaderOnConfirm: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "Disconnect",
+                    cancelButtonText: "Cancel"
+                },
+                function(isConfirmed) {
+                    if (isConfirmed) {
+                        $.ajax({
+                            type: 'POST',
+                            url: '/profit-dashboard/facebook/remove',
+                            data: {
+                                facebook_user_id: $('input[name="fb_user_id"]').val()
+                            },
+                            success: function(data) {
+                                swal.close();
+                                toastr.success("Your account have been disconnected.", "Facebook");
+                                FB.logout();
+                            },
+                            error: function(data) {
+                                displayAjaxError('Disconnect Your Facebook Account', data);
                             }
                         });
                     }

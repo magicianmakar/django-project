@@ -37,7 +37,7 @@ from .tasks import fetch_facebook_insights
 
 @login_required
 def index(request):
-    if not request.user.can('profit_dashboard.use'):
+    if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
         raise PermissionDenied()
 
     store = utils.get_store_from_request(request)
@@ -49,7 +49,7 @@ def index(request):
         'page': 'profit_dashboard',
         'store': store,
         'user_facebook_permission': settings.FACEBOOK_APP_ID,
-        'initial_date': INITIAL_DATE.format('MM/DD/YYYY'),
+        'initial_date': INITIAL_DATE.isoformat(),
         'show_facebook_connection': request.user.get_config('_show_facebook_connection', 'true') == 'true',
     }
 
@@ -364,3 +364,21 @@ def profit_details(request):
         'details': details.object_list,
         'pagination': pagination
     })
+
+
+@login_required
+def facebook_remove(request):
+    if request.method == 'POST':
+        store = utils.get_store_from_request(request)
+        access = get_object_or_404(FacebookAccess,
+                                   user=request.user.models_user,
+                                   store=store,
+                                   facebook_user_id=request.POST.get('facebook_user_id'))
+
+        access.access_token = ''
+        access.expires_in = None
+        access.save()
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'error': 'Non-handled endpoint'}, status=405)
