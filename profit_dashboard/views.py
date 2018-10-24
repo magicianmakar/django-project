@@ -37,7 +37,7 @@ from .tasks import fetch_facebook_insights
 
 @login_required
 def index(request):
-    if not request.user.can('profit_dashboard.use'):
+    if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
         raise PermissionDenied()
 
     store = utils.get_store_from_request(request)

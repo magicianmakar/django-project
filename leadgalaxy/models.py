@@ -53,6 +53,7 @@ SUBUSER_PERMISSIONS = (
     ('edit_product_boards', 'Edit product boards'),
     ('view_help_and_support', 'View help and support'),
     ('view_bonus_training', 'View bonus training'),
+    ('view_profit_dashboard', 'View profit dashboard')
 )
 
 SUBUSER_STORE_PERMISSIONS = (
@@ -515,7 +516,10 @@ class SubuserPermission(models.Model):
         unique_together = 'codename', 'store'
 
     def __unicode__(self):
-        return '{} - {}'.format(self.store.title, self.codename)
+        if self.store:
+            return u'{} - {}'.format(self.store.title, self.codename)
+        else:
+            return self.codename
 
 
 class SubuserCHQPermission(models.Model):
