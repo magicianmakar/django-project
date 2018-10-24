@@ -31,14 +31,14 @@
 
         <form class="form-inline" method="get">
           <input type="hidden" name="store" value="{{ store.id }}">
-          <input type="hidden" class="form-control" name="start" value="{{ start }}"/>
-          <input type="hidden" class="form-control" name="end" value="{{ end }}" />
           <div class="form-group" id="profit-range">
-            <div class="input-daterange input-group" id="datepicker" style="width: auto;">
-              <input type="text" class="form-control" name="start" value="{{ start }}"/>
-              <span class="input-group-addon">to</span>
-              <input type="text" class="form-control" name="end" value="{{ end }}" />
+
+            <div id="date" class="form-control">
+                <i class="fa fa-calendar m-r-xs"></i>
+                <span></span>
+                <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
             </div>
+            <input type="hidden" type="text" name="date_range" value="{{ start }}-{{ end }}" />
           </div>
           <button type="submit" class="btn btn-success">Filter</button>
 
@@ -81,7 +81,9 @@
 
 {% block extracss %}
 {% compress css %}
-  <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css' %}" rel="stylesheet">
+  <!-- Font awesome loaded just before bootstrap-daterangepicker to load correct icons -->
+  <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+  <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
   <link href="{% static 'profit/index.css' %}" rel="stylesheet">
 {% endcompress %}
 {% endblock %}
@@ -120,7 +122,7 @@
 {% compress js %}
   <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
   <script src="{% static 'libs/bower_components/chart.js/dist/Chart.bundle.js' %}"></script>
-  <script src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+  <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
   <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
   <script src="{% static 'profit/index.js' %}"></script>
 {% endcompress %}

@@ -49,7 +49,7 @@ def index(request):
         'page': 'profit_dashboard',
         'store': store,
         'user_facebook_permission': settings.FACEBOOK_APP_ID,
-        'initial_date': INITIAL_DATE.format('MM/DD/YYYY'),
+        'initial_date': INITIAL_DATE.isoformat(),
         'show_facebook_connection': request.user.get_config('_show_facebook_connection', 'true') == 'true',
     }
 
