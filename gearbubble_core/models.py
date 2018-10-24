@@ -169,7 +169,7 @@ class GearBubbleProduct(models.Model):
 
         while True:
             option = variant.get('option{}'.format(option_number))
-            if option:
+            if option is not None:
                 options.append(option)
                 option_number += 1
                 continue
