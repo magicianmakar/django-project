@@ -142,7 +142,7 @@
             </li>
             {% endif %}
 
-            {% if request.user|can:'profit_dashboard.view' %}
+            {% if request.user|can:'profit_dashboard.view' and request.user|can:'view_profit_dashboard.sub' %}
             <li {% if page == 'profit_dashboard' %}class="active"{% endif %}>
                 <a href="{% url 'profit_dashboard.views.index' %}" class="">
                     <i class="fa fa-calculator"></i>
