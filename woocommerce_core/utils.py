@@ -751,8 +751,10 @@ def woo_customer_address(order):
     customer_address['province_code'] = customer_address.get('state')
     customer_address['zip'] = customer_address.get('postcode')
 
-    customer_address['country'] = country_from_code(customer_address['country_code'], '')
-    customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
+    country = country_from_code(customer_address['country_code'], '')
+    customer_address['country'] = unidecode(country) if type(country) is unicode else country
+    province = province_from_code(customer_address['country_code'], customer_address['province_code'])
+    customer_address['province'] = unidecode(province) if type(province) is unicode else province
 
     if not customer_address.get('province'):
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:
