@@ -1079,6 +1079,7 @@ var FacebookProfitDashboard = {
         this.onFacebookSyncFormSubmit();
         this.facebookStatus.loggedIn();
         this.onClickRemoveAccount();
+        this.onClickRemoveFacebook();
         this.onCollapseFacebookConnection();
     },
     onClickRemoveAccount: function() {
@@ -1117,6 +1118,44 @@ var FacebookProfitDashboard = {
                             },
                             error: function(data) {
                                 displayAjaxError('Delete Facebook Account Data', data);
+                            }
+                        });
+                    }
+                }
+            );
+        });
+    },
+    onClickRemoveFacebook: function() {
+        $('#facebook-user-logout').on('click', function(e) {
+            e.preventDefault();
+            var btn = $(this);
+
+            swal({
+                    title: "Disconnect Your Facebook Account",
+                    text: "This will disconnect your Facebook account from Dropified and your data will no longer automatically sync. This will not delete any previously synced data.",
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    showLoaderOnConfirm: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "Disconnect",
+                    cancelButtonText: "Cancel"
+                },
+                function(isConfirmed) {
+                    if (isConfirmed) {
+                        $.ajax({
+                            type: 'POST',
+                            url: '/profit-dashboard/facebook/remove',
+                            data: {
+                                facebook_user_id: $('input[name="fb_user_id"]').val()
+                            },
+                            success: function(data) {
+                                swal.close();
+                                toastr.success("Your account have been disconnected.", "Facebook");
+                                FB.logout();
+                            },
+                            error: function(data) {
+                                displayAjaxError('Disconnect Your Facebook Account', data);
                             }
                         });
                     }

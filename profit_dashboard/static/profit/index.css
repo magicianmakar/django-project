@@ -272,3 +272,7 @@
 .expandable .well .totals-detail {
   min-height: 215px;
 }
+
+.fb-login-button {
+  margin-left: 10px;
+}

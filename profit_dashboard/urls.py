@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^facebook/accounts/remove$', profit_dashboard.views.facebook_remove_account, name='profit_dashboard.views.facebook_remove_account'),
     url(r'^facebook/accounts$', profit_dashboard.views.facebook_accounts, name='profit_dashboard.views.facebook_accounts'),
     url(r'^facebook/campaign$', profit_dashboard.views.facebook_campaign, name='profit_dashboard.views.facebook_campaign'),
+    url(r'^facebook/remove$', profit_dashboard.views.facebook_remove, name='profit_dashboard.views.facebook_remove'),
     url(r'^other-costs/save$', profit_dashboard.views.save_other_costs, name='profit_dashboard.views.save_other_costs'),
     url(r'^details$', profit_dashboard.views.profit_details, name='profit_dashboard.views.profit_details'),
 ]

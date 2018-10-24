@@ -364,3 +364,21 @@ def profit_details(request):
         'details': details.object_list,
         'pagination': pagination
     })
+
+
+@login_required
+def facebook_remove(request):
+    if request.method == 'POST':
+        store = utils.get_store_from_request(request)
+        access = get_object_or_404(FacebookAccess,
+                                   user=request.user.models_user,
+                                   store=store,
+                                   facebook_user_id=request.POST.get('facebook_user_id'))
+
+        access.access_token = ''
+        access.expires_in = None
+        access.save()
+
+        return JsonResponse({'success': True})
+
+    return JsonResponse({'error': 'Non-handled endpoint'}, status=405)

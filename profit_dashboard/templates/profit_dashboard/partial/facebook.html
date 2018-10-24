@@ -49,7 +49,7 @@
             <p style="line-height: 30px;">Loading Ad Costs from facebook insights</p>
           </div>
           <div class="col-md-12" id="facebook-logged-in">
-            <p class="pull-left" style="line-height: 35px;">You are logged in with facebook.</p>
+            <p class="pull-left" style="line-height: 35px;">You are connected to facebook.</p>
             <form id="facebook-sync" method="post" action="{% url 'profit_dashboard.views.facebook_insights' %}" class="pull-left">
               <input type="hidden" name="fb_access_token" value="">
               <input type="hidden" name="fb_expires_in" value="">
@@ -60,6 +60,7 @@
               <button type="submit" class="btn btn-primary btn-xs">Sync Again</button>
               <a href="#" id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Another Ad Account</a>
               {% endif %}
+              <a href="#" id="facebook-user-logout" class="btn btn-danger btn-xs m-l" title="Log out from Profit Dashboard APP">Disconnect</a>
             </form>
           </div>
           <br>
