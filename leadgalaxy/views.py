@@ -3969,11 +3969,16 @@ def orders_place(request):
 
     product = None
 
+    disable_affiliate = request.user.get_config('_disable_affiliate', False)
+
     if request.GET.get('supplier'):
         supplier = ProductSupplier.objects.get(id=request.GET['supplier'])
         permissions.user_can_view(request.user, supplier)
 
         product = supplier.short_product_url()
+
+        if supplier.is_ebay:
+            disable_affiliate = False
 
     elif request.GET.get('product'):
         product = request.GET['product']
@@ -3986,8 +3991,6 @@ def orders_place(request):
 
     ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(request.user.models_user)
     admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user.models_user)
-
-    disable_affiliate = request.user.get_config('_disable_affiliate', False)
 
     redirect_url = False
     if not disable_affiliate:
