@@ -508,11 +508,17 @@ def sync_shopify_product_quantities(self, product_id):
             for variant in variant_quantities:
                 sku = variant.get('sku')
                 if not sku:
-                    continue
-
-                idx = variant_index(product, sku, product_data['variants'])
-                if idx is None:
-                    continue
+                    if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
+                        idx = 0
+                    else:
+                        continue
+                else:
+                    idx = variant_index(product, sku, product_data['variants'])
+                    if idx is None:
+                        if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
+                            idx = 0
+                        else:
+                            continue
 
                 product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
                 time.sleep(0.5)
