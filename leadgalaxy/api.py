@@ -2136,6 +2136,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         order_lines = data.get('line_id', '')
         order_line_sku = data.get('line_sku')
         source_id = data.get('aliexpress_order_id', '')
+        source_type = data.get('source_type')
         from_oberlo = 'oberlo.com' in request.META.get('HTTP_REFERER', '')
         using_dropified_extension = request.META.get('HTTP_X_EXTENSION_VERSION')
         using_fulfillbox = request.META.get('HTTP_X_FULFILLBOX_VERSION')
@@ -2255,8 +2256,12 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                         'updated_at': timezone.now(),
                         'status_updated_at': timezone.now()
                     }
+
                     if item_fulfillment_status is not None:
                         track_defaults['shopify_status'] = item_fulfillment_status
+
+                    if source_type:
+                        track_defaults['source_type'] = source_type
 
                     track, created = ShopifyOrderTrack.objects.update_or_create(
                         store=store,

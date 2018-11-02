@@ -1891,6 +1891,11 @@ def set_url_query(url, param_name, param_value):
 
 
 def affiliate_link_set_query(url, name, value):
+    url = url.encode('utf-8')
+
+    if isinstance(value, basestring):
+        value = value.encode('utf-8')
+
     if '/deep_link.htm' in url:
         dl_target_url = urlparse.parse_qs(urlparse.urlparse(url).query)['dl_target_url'].pop()
         dl_target_url = set_url_query(dl_target_url, name, value)

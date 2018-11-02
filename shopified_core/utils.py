@@ -88,6 +88,8 @@ def app_link(*args, **kwargs):
         for k, v in kwargs.items():
             if type(v) is bool:
                 kwargs[k] = str(v).lower()
+            elif isinstance(v, basestring):
+                kwargs[k] = v.encode('utf-8')
 
         path = u'{}?{}'.format(path, urlencode(kwargs))
 
