@@ -201,7 +201,12 @@
                             {% for i in subscribtions %}
                             <tr>
                                 <td>{{ i.plan.name }}</td>
-                                <td>{{ i.status }}</td>
+                                <td>
+                                    {{ i.status }}
+                                    {% if i.cancel_at_period_end %}
+                                        (Cancel at period end)
+                                    {% endif %}
+                                </td>
                                 <td>
                                     <a href="text-danger" class="btn btn-xs btn-danger cancel-subscription-btn"
                                         user-id="{{users.0.id}}" charge-id="{{i.id}}">Cancel Subscription</a>
