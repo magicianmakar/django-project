@@ -427,6 +427,12 @@ def export_product(req_data, target, user_id):
             'error': 'Unknown target {}'.format(target)
         }
 
+    if target == 'shopify':
+        try:
+            record_import_metric(time.time() - start)
+        except:
+            raven_client.captureException(level='warning')
+
     if product and target in ['shopify', 'save-for-later']:
         try:
             if settings.ALIEXTRACTOR_LOGGER_URL and product.default_supplier.is_aliexpress:
@@ -435,20 +441,10 @@ def export_product(req_data, target, user_id):
                     data={
                         'source': 'Dropified:Export' if target == 'shopify' else 'Dropified:Save',
                         'aliexpress_product_id': product.default_supplier.get_source_id(),
-                        'aliexpress_product_url': product.default_supplier.product_url,
                     },
                     headers={
                         'DropifiedApiKey': settings.ALIEXTRACTOR_LOGGER_KEY
-                    },
-                    timeout=10)
-
-                rep.raise_for_status()
-        except:
-            raven_client.captureException(level='warning')
-
-    if target == 'shopify':
-        try:
-            record_import_metric(time.time() - start)
+                    })
         except:
             raven_client.captureException(level='warning')
 
