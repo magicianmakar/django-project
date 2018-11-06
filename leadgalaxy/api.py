@@ -3336,6 +3336,20 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except ShopifyOrderTrack.DoesNotExist:
             return self.api_error('Order not found', status=404)
 
+        except ShopifyOrderTrack.MultipleObjectsReturned:
+            logs = []
+            track_log = None
+
+            for track in ShopifyOrderLog.objects.filter(store=store, order_id=data['order_id']):
+                for i in track.get_logs(sort=False):
+                    logs.append(i)
+
+                if track_log is None:
+                    track_log = track
+
+                track_log.logs = json.dumps(logs)
+                track_log.save()
+
         logs = track_log.get_logs(pretty=True, include_webhooks=True)
 
         if track_log.seen:
