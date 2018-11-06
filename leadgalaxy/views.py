@@ -70,6 +70,8 @@ from stripe_subscription.utils import (
 
 from product_alerts.utils import variant_index
 
+from profit_dashboard.models import FacebookAccess
+
 import tasks
 import utils
 from .forms import *
@@ -990,7 +992,7 @@ def webhook(request, provider, option):
             tasks.store_transfer.delay(options)
             return HttpResponse(':hourglass_flowing_sand: Transferring {shop} from {from} to {to} is in progress...'.format(**options))
 
-        if request.POST['command'] == '/cancel-shopify':
+        elif request.POST['command'] == '/cancel-shopify':
             if not request_from:
                 return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
 
@@ -1012,7 +1014,7 @@ def webhook(request, provider, option):
             else:
                 return HttpResponse('No Recurring Charges found on *{}*'.format(shop))
 
-        if request.POST['command'] == '/captcha-credit':
+        elif request.POST['command'] == '/captcha-credit':
             if not request_from:
                 return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
 
@@ -1028,7 +1030,7 @@ def webhook(request, provider, option):
                 email = args[0]
                 credits = 1000
             else:
-                return HttpResponse(':x: Number of arguments is not correct'.format(request.POST['text']))
+                return HttpResponse(':x: Number of arguments is not correct {}'.format(request.POST['text']))
 
             user = User.objects.get(email=email)
 
@@ -1048,6 +1050,48 @@ def webhook(request, provider, option):
                 )
 
             return HttpResponse('{} Captcha Credits added to *{}*'.format(credits, email))
+
+        elif request.POST['command'] == '/dash-facebook-reset':
+            if not request_from:
+                return HttpResponse(':octagonal_sign: _Dropified Support Staff Only_')
+
+            args = request.POST['text'].split(' ')
+            access = FacebookAccess.objects
+
+            if len(args) >= 2:
+                shop = re.findall('[^/@\.]+\.myshopify\.com', args[1])
+                if not shop:
+                    return HttpResponse(':x: Store link is invalid')
+                else:
+                    shop = shop.pop()
+
+            if len(args) == 1:
+                access = access.filter(user__email__iexact=args[0])
+            elif len(args) == 2:
+                access = access.filter(user__email__iexact=args[0], store__shop=shop)
+            elif len(args) == 3:
+                access = access.filter(user__email__iexact=args[0], store__shop__iexact=shop, facebook_user_id=args[2])
+            else:
+                return HttpResponse(':x: Number of arguments is not correct: {}'.format(request.POST['text']))
+
+            count, models = access.delete()
+            return HttpResponse("Deleted {} Facebook Synced Accounts".format(count))
+
+        elif request.POST['command'] == '/dash-facebook-list':
+            if not request_from:
+                return HttpResponse(':octagonal_sign: _Dropified Support Staff Only_')
+
+            access_list = FacebookAccess.objects.select_related('store').filter(user__email=request.POST['text'])
+            result = []
+            for access in access_list:
+                accounts = u', '.join([a.account_name for a in access.accounts.all()])
+                result.append(u'Store: {} | Facebook: {} | Accounts: {}'.format(
+                    access.store.shop,
+                    access.facebook_user_id,
+                    accounts
+                ))
+
+            return HttpResponse(u'\n'.join(result))
 
         else:
             return HttpResponse(':x: Unknown Command')
