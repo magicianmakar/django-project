@@ -194,8 +194,14 @@ class Command(DropifiedBaseCommand):
                         continue
 
                 elif e.response.status_code == 404:
+                    raven_client.captureException(extra={
+                        'order_track': order.id,
+                        'response': rep.text
+                    })
+
                     self.write(u'Not found #{} in [{}]'.format(order.order_id, order.store.title))
-                    order.delete()
+                    order.hidden = True
+                    order.save()
 
                     return False
 
