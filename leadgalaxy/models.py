@@ -882,7 +882,7 @@ class ShopifyStore(models.Model):
 
         return primary_location
 
-    def get_locations(self, fulfillments_only=False):
+    def get_locations(self, fulfillments_only=False, active_only=True):
         locations_key = 'stoe_locations_{}'.format(self.id)
         locations = cache.get(locations_key)
         if locations is None:
@@ -896,6 +896,9 @@ class ShopifyStore(models.Model):
 
         if fulfillments_only:
             locations = [i for i in locations if i['legacy']]
+
+        if active_only:
+            locations = [i for i in locations if i['active']]
 
         return locations
 
