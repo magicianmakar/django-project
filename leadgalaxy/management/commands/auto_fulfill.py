@@ -252,7 +252,7 @@ class Command(DropifiedBaseCommand):
             msg = u'Shopify API Error: {}'.format(msg)
 
         ShopifyOrderLog.objects.update_order_log(
-            store=store,
+            store=order.store,
             user=None,
             log=msg,
             level='error',
