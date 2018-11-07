@@ -135,12 +135,18 @@ class Command(DropifiedBaseCommand):
                         self.write(u'Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
                         order.shopify_status = 'fulfilled'
                         order.save()
+
+                        self.log_fulfill_error(order, 'Order is already fulfilled')
+
                         return False
 
                     elif 'This order has been canceled' in rep.text:
                         self.write(u'Order has been canceled #{} in [{}]'.format(order.order_id, order.store.title))
                         order.hidden = True
                         order.save()
+
+                        self.log_fulfill_error(order, 'This order has been canceled')
+
                         return False
 
                     elif 'invalid for this fulfillment service' in rep.text:
@@ -148,6 +154,9 @@ class Command(DropifiedBaseCommand):
                         self.write(u'Invalid for this fulfillment service #{} in [{}]'.format(order.order_id, order.store.title))
                         order.shopify_status = 'fulfilled'
                         order.save()
+
+                        self.log_fulfill_error(order, 'Invalid for this fulfillment service')
+
                         return False
 
                     elif 'must be stocked at the same location' in rep.text:
@@ -167,26 +176,12 @@ class Command(DropifiedBaseCommand):
                             self.store_locations[order.store.id] = location['id']
                             self.write(u'Change location to {} in #{} [{}]'.format(location['name'], order.order_id, order.store.shop))
 
-                            ShopifyOrderLog.objects.update_order_log(
-                                store=store,
-                                user=None,
-                                log=u'Fulfill in location: {}'.format(location['name']),
-                                level='info',
-                                order_id=order.order_id,
-                                line_id=order.line_id
-                            )
+                            self.log_fulfill_error(order, u'Fulfill in location: {}'.format(location['name']), shopify_api=False)
+
                         else:
                             raven_client.captureMessage(u'No location found', extra={'track': order.id, 'store': order.store.shop})
 
-                            ShopifyOrderLog.objects.update_order_log(
-                                store=store,
-                                user=None,
-                                log=u'No location found',
-                                level='error',
-                                icon='times',
-                                order_id=order.order_id,
-                                line_id=order.line_id
-                            )
+                            self.log_fulfill_error(order, 'No location found', shopify_api=False)
 
                             order.hidden = True
                             order.save()
@@ -199,13 +194,17 @@ class Command(DropifiedBaseCommand):
                         'response': rep.text
                     })
 
+                    self.log_fulfill_error(order, 'Order Not Found')
+
                     self.write(u'Not found #{} in [{}]'.format(order.order_id, order.store.title))
                     order.hidden = True
                     order.save()
 
                     return False
 
-                elif e.response.status_code == 402:
+                elif e.response.status_code in [401, 402, 403]:
+                    self.log_fulfill_error(order, 'API Authorization ({})'.format(e.response.status_code))
+
                     order.hidden = True
                     order.save()
 
@@ -247,3 +246,17 @@ class Command(DropifiedBaseCommand):
             )
 
         return fulfilled
+
+    def log_fulfill_error(self, order, msg, shopify_api=True):
+        if shopify_api:
+            msg = u'Shopify API Error: {}'.format(msg)
+
+        ShopifyOrderLog.objects.update_order_log(
+            store=store,
+            user=None,
+            log=msg,
+            level='error',
+            icon='times',
+            order_id=order.order_id,
+            line_id=order.line_id
+        )
