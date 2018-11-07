@@ -13,7 +13,7 @@ The following apps are required for Dropified:
 
 ### 1. Clone repository
 ```
-git clone git@github.com:ShopifiedApp/webapp.git
+git clone git@github.com:TheDevelopmentMachine/dropified-webapp.git
 ```
 
 ### 2. Virtual environment
@@ -25,13 +25,22 @@ sudo pip install autoenv
 
 Then install the required modules:
 ```
-cd shopified-webapp
+cd dropified-webapp
 virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
 ### 3. Database migration
+Note: If you are running the app with PostgreSQL, you will probably need to
+create the databases as well:
+
+```
+createdb --host=localhost -U postgres -O postgres -E utf8 -T template0 shopified
+createdb --host=localhost -U postgres -O postgres -E utf8 -T template0 shopified-store
+```
+
+Run the migrations:
 ```
 source .env
 dj-migrate
@@ -51,7 +60,7 @@ dj-run
 ```
 
 App will be available at:
-http://127.0.0.1:8000
+http://dev.dropified.com:8000
 
 To register a new user account:
 ```
@@ -59,7 +68,7 @@ python manage.py createsuperuser
 ```
 
 ### Autoenv
-Each time we enter shopified-webapp folder, `autoenv` will run the `.env` file, that will give us access to the following aliases:
+Each time we enter dropified-webapp folder, `autoenv` will run the `.env` file, that will give us access to the following aliases:
 ```
 dj-run: Run web application server
 dj-migrate: Run django Migrations on both databases
