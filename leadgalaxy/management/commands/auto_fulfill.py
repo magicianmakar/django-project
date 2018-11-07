@@ -103,6 +103,7 @@ class Command(DropifiedBaseCommand):
             location_id=self.store_locations.get(order.store.id))
 
         locations = []
+        trying_locations = False
         fulfilled = False
         tries = 3
 
@@ -160,14 +161,24 @@ class Command(DropifiedBaseCommand):
                         return False
 
                     elif 'must be stocked at the same location' in rep.text:
+                        location = None
+
                         if locations:
                             # We are trying locations one by one
                             location = locations.pop()
                             self.write(u'Re-trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
-                        else:
+
+                            if not locations:
+                                # Make sure we don't escape the last location is len(locations) > 3
+                                tries += 1
+
+                        elif not trying_locations:
                             # Try locations one by one
                             locations = store.get_locations()
                             location = locations.pop()
+
+                            trying_locations = True
+
                             self.write(u'Trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
 
                         if location:
