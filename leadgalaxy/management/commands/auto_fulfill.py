@@ -137,6 +137,12 @@ class Command(DropifiedBaseCommand):
                         order.save()
                         return False
 
+                    elif 'This order has been canceled' in rep.text:
+                        self.write(u'Order has been canceled #{} in [{}]'.format(order.order_id, order.store.title))
+                        order.hidden = True
+                        order.save()
+                        return False
+
                     elif 'invalid for this fulfillment service' in rep.text:
                         # Using a different fulfillment_service (i.e: amazon_marketplace_web)
                         self.write(u'Invalid for this fulfillment service #{} in [{}]'.format(order.order_id, order.store.title))
