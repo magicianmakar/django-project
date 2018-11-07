@@ -1091,7 +1091,7 @@ def webhook(request, provider, option):
                     accounts
                 ))
 
-            return HttpResponse(u'\n'.join(result))
+            return HttpResponse('Results:\n{}'.format(u'\n'.join(result if result else ['Not found'])))
 
         else:
             return HttpResponse(':x: Unknown Command')
