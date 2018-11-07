@@ -427,25 +427,6 @@ def export_product(req_data, target, user_id):
             'error': 'Unknown target {}'.format(target)
         }
 
-    if product and target in ['shopify', 'save-for-later']:
-        try:
-            if settings.ALIEXTRACTOR_LOGGER_URL and product.default_supplier.is_aliexpress:
-                rep = requests.post(
-                    url=settings.ALIEXTRACTOR_LOGGER_URL,
-                    data={
-                        'source': 'Dropified:Export' if target == 'shopify' else 'Dropified:Save',
-                        'aliexpress_product_id': product.default_supplier.get_source_id(),
-                        'aliexpress_product_url': product.default_supplier.product_url,
-                    },
-                    headers={
-                        'DropifiedApiKey': settings.ALIEXTRACTOR_LOGGER_KEY
-                    },
-                    timeout=10)
-
-                rep.raise_for_status()
-        except:
-            raven_client.captureException(level='warning')
-
     if target == 'shopify':
         try:
             record_import_metric(time.time() - start)
@@ -508,11 +489,17 @@ def sync_shopify_product_quantities(self, product_id):
             for variant in variant_quantities:
                 sku = variant.get('sku')
                 if not sku:
-                    continue
-
-                idx = variant_index(product, sku, product_data['variants'])
-                if idx is None:
-                    continue
+                    if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
+                        idx = 0
+                    else:
+                        continue
+                else:
+                    idx = variant_index(product, sku, product_data['variants'])
+                    if idx is None:
+                        if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
+                            idx = 0
+                        else:
+                            continue
 
                 product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
                 time.sleep(0.5)

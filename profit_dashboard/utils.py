@@ -238,15 +238,18 @@ def get_profits(store, start, end, store_timezone=''):
                                      .annotate(Sum('spend')) \
                                      .order_by('date_key')
 
+    total_ad_costs = 0.0
     for ad_cost in ad_costs:
         date_key = arrow.get(ad_cost['date_key']).format('YYYY-MM-DD')
         if date_key not in profits_data:
             continue
 
+        ad_cost_amount = safeFloat(ad_cost['spend__sum'])
         profits_data[date_key]['profit'] -= safeFloat(ad_cost['spend__sum'])
-        profits_data[date_key]['ad_spend'] = safeFloat(ad_cost['spend__sum'])
+        profits_data[date_key]['ad_spend'] = ad_cost_amount
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
+        total_ad_costs += ad_cost_amount
 
     # Other Costs
     other_costs = OtherCost.objects.filter(store_id=store_id,
@@ -274,7 +277,7 @@ def get_profits(store, start, end, store_timezone=''):
     totals = {
         'revenue': orders.aggregate(total=Sum('total_price'))['total'] or 0.0,
         'fulfillment_cost': shippings.aggregate(total=Sum('total_cost'))['total'] or 0.0,
-        'ads_spend': ad_costs.aggregate(total=Sum('spend__sum'))['total'] or 0.0,
+        'ads_spend': total_ad_costs,
         'other_costs': other_costs.aggregate(total=Sum('amount__sum'))['total'] or 0.0,
         'average_profit': 0.0,
         'average_revenue': 0.0,
