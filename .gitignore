@@ -11,3 +11,4 @@ venv
 docs
 node_modules
 app/static/libs/bower_components
+*.swp
