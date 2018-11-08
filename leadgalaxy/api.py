@@ -3340,6 +3340,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             logs = []
             track_log = None
 
+            # Merge duplicate logs
             for track in ShopifyOrderLog.objects.filter(store=store, order_id=data['order_id']):
                 for i in track.get_logs(sort=False):
                     logs.append(i)
@@ -3349,6 +3350,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
                 track_log.logs = json.dumps(logs)
                 track_log.save()
+
+            # Delete duplicate entries
+            ShopifyOrderLog.objects.filter(store=store, order_id=data['order_id']).exclude(id=track_log.id).delete()
 
         logs = track_log.get_logs(pretty=True, include_webhooks=True)
 
