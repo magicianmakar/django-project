@@ -1528,6 +1528,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'aliexpress_as_custom_note',
                 'order_custom_line_attr',
                 'fix_aliexpress_address',
+                'initial_inventory_sync',
                 'update_product_vendor',
                 'order_risk_levels_enabled',
                 'send_alerts_to_subusers',
