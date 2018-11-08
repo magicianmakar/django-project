@@ -312,7 +312,7 @@ def export_product(req_data, target, user_id):
                     product.save()
 
                     # Initial Products Inventory Sync
-                    if user.get_config('update_product_vendor', True):
+                    if user.get_config('initial_inventory_sync', True):
 
                         # Add countdown to not exceed Shopify API limits if this export is started by Bulk Export
                         if req_data.get('b'):
