@@ -2043,14 +2043,14 @@ class GroupPlan(models.Model):
         desc = self.description if self.description else self.title
 
         if self.is_stripe():
-            desc = '{} (${:.02f}/{})'.format(desc, self.stripe_plan.amount, interval)
+            desc = '{} (${}/{})'.format(desc, self.stripe_plan.amount, interval)
 
         elif (not self.monthly_price and self.monthly_price is not None) or self.is_free:
             desc = '{} (Free)'.format(desc)
 
         elif self.monthly_price:
-            pricing = self.monthly_price * 12.0 if self.payment_interval == 'yearly' else self.monthly_price
-            desc = '{} (${:.02f}/{})'.format(desc, pricing, interval)
+            pricing = float(self.monthly_price) * 12.0 if self.payment_interval == 'yearly' else self.monthly_price
+            desc = '{} (${}/{})'.format(desc, pricing, interval)
 
         elif self.payment_interval == 'lifetime' and 'lifetime' not in desc.lower():
             desc = '{} (Lifetime)'.format(desc)
