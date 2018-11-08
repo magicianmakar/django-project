@@ -1528,6 +1528,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'aliexpress_as_custom_note',
                 'order_custom_line_attr',
                 'fix_aliexpress_address',
+                'initial_inventory_sync',
                 'update_product_vendor',
                 'order_risk_levels_enabled',
                 'send_alerts_to_subusers',
@@ -3345,6 +3346,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             logs = []
             track_log = None
 
+            # Merge duplicate logs
             for track in ShopifyOrderLog.objects.filter(store=store, order_id=data['order_id']):
                 for i in track.get_logs(sort=False):
                     logs.append(i)
@@ -3354,6 +3356,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
                 track_log.logs = json.dumps(logs)
                 track_log.save()
+
+            # Delete duplicate entries
+            ShopifyOrderLog.objects.filter(store=store, order_id=data['order_id']).exclude(id=track_log.id).delete()
 
         logs = track_log.get_logs(pretty=True, include_webhooks=True)
 

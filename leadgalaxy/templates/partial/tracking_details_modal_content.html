@@ -12,7 +12,8 @@
                 {% for log in logs %}
                 <div class="stream">
                     <div class="stream-badge">
-                        <i class="fa fa-{{log.icon|default:'circle'}} bg-{{log.level}}"></i>
+                        <i class="fa fa-{{log.icon|default:'circle'}}
+                                  {% if log.level == 'error' %}bg-danger{% else %}bg-{{log.level}}{% endif %}"></i>
                     </div>
                     <div class="stream-panel">
                         <div class="stream-info">

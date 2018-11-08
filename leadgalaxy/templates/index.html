@@ -306,6 +306,20 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
+                                    <label for="initial_inventory_sync" class="col-sm-4 col-xs-8 control-label">
+                                        Sync Product Inventory when importing products
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="initial_inventory_sync"
+                                               name="initial_inventory_sync"{% if config.initial_inventory_sync or config.initial_inventory_sync is None %}checked="checked"{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
                                     <label for="update_product_vendor" class="col-sm-4 col-xs-8 control-label">
                                         Update Product Vendor when Default Supplier is changed
                                     </label>

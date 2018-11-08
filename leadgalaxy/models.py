@@ -882,7 +882,7 @@ class ShopifyStore(models.Model):
 
         return primary_location
 
-    def get_locations(self, fulfillments_only=False):
+    def get_locations(self, fulfillments_only=False, active_only=True):
         locations_key = 'stoe_locations_{}'.format(self.id)
         locations = cache.get(locations_key)
         if locations is None:
@@ -896,6 +896,9 @@ class ShopifyStore(models.Model):
 
         if fulfillments_only:
             locations = [i for i in locations if i['legacy']]
+
+        if active_only:
+            locations = [i for i in locations if i['active']]
 
         return locations
 
@@ -2046,12 +2049,17 @@ class GroupPlan(models.Model):
     def get_description(self):
         interval = 'year' if self.payment_interval == 'yearly' else 'month'
         desc = self.description if self.description else self.title
+
         if self.is_stripe():
             desc = '{} (${}/{})'.format(desc, self.stripe_plan.amount, interval)
+
         elif (not self.monthly_price and self.monthly_price is not None) or self.is_free:
             desc = '{} (Free)'.format(desc)
+
         elif self.monthly_price:
-            desc = '{} (${}/{})'.format(desc, self.monthly_price, interval)
+            pricing = float(self.monthly_price) * 12.0 if self.payment_interval == 'yearly' else self.monthly_price
+            desc = '{} (${}/{})'.format(desc, pricing, interval)
+
         elif self.payment_interval == 'lifetime' and 'lifetime' not in desc.lower():
             desc = '{} (Lifetime)'.format(desc)
 

@@ -311,13 +311,17 @@ def export_product(req_data, target, user_id):
 
                     product.save()
 
-                    # Add countdown to not exceed Shopify API limits
-                    countdown_quantities = 0
-                    if req_data.get('b'):  # If is bulk export
-                        countdown_key = 'sync_shopify_product_quantities_countdown_{}'.format(store.id)
-                        countdown_quantities = api_exceed_limits_countdown(countdown_key)
+                    # Initial Products Inventory Sync
+                    if user.get_config('initial_inventory_sync', True):
 
-                    sync_shopify_product_quantities.apply_async(args=[product.id], countdown=countdown_quantities)
+                        # Add countdown to not exceed Shopify API limits if this export is started by Bulk Export
+                        if req_data.get('b'):
+                            countdown_key = 'sync_shopify_product_quantities_countdown_{}'.format(store.id)
+                            countdown_quantities = api_exceed_limits_countdown(countdown_key)
+                        else:
+                            countdown_quantities = 0
+
+                        sync_shopify_product_quantities.apply_async(args=[product.id], countdown=countdown_quantities)
 
                 except ShopifyProduct.DoesNotExist:
                     raven_client.captureException()
