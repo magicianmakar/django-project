@@ -616,6 +616,7 @@ class WooOrderTrack(models.Model):
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Tracking Number")
     source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
+    source_type = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Type")
 
     hidden = models.BooleanField(default=False)
     seen = models.BooleanField(default=False, verbose_name='User viewed the changes')

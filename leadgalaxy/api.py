@@ -3,10 +3,8 @@
 import traceback
 import urlparse
 import urllib2
-import copy
 
 from django.contrib.auth import authenticate, login
-from django.core import serializers
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
@@ -34,6 +32,7 @@ from shopified_core.utils import (
     hash_url_filename,
     add_http_schema,
     order_phone_number,
+    serializers_orders_track,
     CancelledOrderAlert
 )
 
@@ -2066,26 +2065,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if data.get('count_only') == 'true':
             return self.api_success({'pending': order_tracks.count()})
 
-        order_tracks = serializers.serialize('python', order_tracks,
-                                             fields=('id', 'order_id', 'line_id',
-                                                     'source_id', 'source_status',
-                                                     'source_tracking', 'created_at'))
-
-        for i in order_tracks:
-            fields = i['fields']
-            fields['id'] = i['pk']
-
-            if all_orders:
-                fields['created_at'] = arrow.get(fields['created_at']).humanize()
-
-            if fields['source_id'] and ',' in fields['source_id']:
-                for j in fields['source_id'].split(','):
-                    order_fields = copy.deepcopy(fields)
-                    order_fields['source_id'] = j
-                    order_fields['bundle'] = True
-                    orders.append(order_fields)
-            else:
-                orders.append(fields)
+        orders.extend(serializers_orders_track(order_tracks, 'shopify', humanize=all_orders))
 
         if not data.get('order_id') and not data.get('line_id'):
             ShopifyOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \

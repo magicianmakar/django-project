@@ -1,4 +1,3 @@
-import copy
 import traceback
 
 from django.conf import settings
@@ -6,7 +5,6 @@ from django.contrib.auth import login as user_login
 from django.contrib.auth import logout as user_logout
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from django.core import serializers
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.validators import validate_email, ValidationError
@@ -250,8 +248,6 @@ class ShopifiedApi(ApiResponseMixin, View):
             since = arrow.now().replace(days=-30).datetime
             cache.set(since_key, arrow.utcnow().timestamp, timeout=86400)
 
-        fields = ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_tracking', 'created_at', 'updated_at']
-
         # Shopify
         store_ids = list(user.profile.get_shopify_stores(flat=True))
         if store_ids:
@@ -261,25 +257,13 @@ class ShopifiedApi(ApiResponseMixin, View):
                                                     .filter(shopify_status='') \
                                                     .exclude(source_status='FINISH') \
                                                     .filter(hidden=False) \
-                                                    .only(*fields) \
+                                                    .only(*core_utils.serializers_orders_fields()) \
                                                     .order_by('created_at')
 
             if data.get('store'):
                 order_tracks = order_tracks.filter(store=data.get('store'))
 
-            for i in serializers.serialize('python', order_tracks, fields=fields):
-                fields = i['fields']
-                fields['id'] = i['pk']
-                fields['store_type'] = 'shopify'
-
-                if fields['source_id'] and ',' in fields['source_id']:
-                    for j in fields['source_id'].split(','):
-                        order_fields = copy.deepcopy(fields)
-                        order_fields['source_id'] = j
-                        order_fields['bundle'] = True
-                        orders.append(order_fields)
-                else:
-                    orders.append(fields)
+            orders.extend(core_utils.serializers_orders_track(order_tracks, 'shopify'))
 
         # CommerceHQ
         store_ids = list(user.profile.get_chq_stores(flat=True))
@@ -295,19 +279,7 @@ class ShopifiedApi(ApiResponseMixin, View):
             if data.get('store'):
                 order_tracks = order_tracks.filter(store=data.get('store'))
 
-            for i in serializers.serialize('python', order_tracks, fields=fields):
-                fields = i['fields']
-                fields['id'] = i['pk']
-                fields['store_type'] = 'chq'
-
-                if fields['source_id'] and ',' in fields['source_id']:
-                    for j in fields['source_id'].split(','):
-                        order_fields = copy.deepcopy(fields)
-                        order_fields['source_id'] = j
-                        order_fields['bundle'] = True
-                        orders.append(order_fields)
-                else:
-                    orders.append(fields)
+            orders.extend(core_utils.serializers_orders_track(order_tracks, 'chq'))
 
         # WooCommerce
         store_ids = list(user.profile.get_woo_stores(flat=True))
@@ -323,19 +295,7 @@ class ShopifiedApi(ApiResponseMixin, View):
             if data.get('store'):
                 order_tracks = order_tracks.filter(store=data.get('store'))
 
-            for i in serializers.serialize('python', order_tracks, fields=fields):
-                fields = i['fields']
-                fields['id'] = i['pk']
-                fields['store_type'] = 'woo'
-
-                if fields['source_id'] and ',' in fields['source_id']:
-                    for j in fields['source_id'].split(','):
-                        order_fields = copy.deepcopy(fields)
-                        order_fields['source_id'] = j
-                        order_fields['bundle'] = True
-                        orders.append(order_fields)
-                else:
-                    orders.append(fields)
+            orders.extend(core_utils.serializers_orders_track(order_tracks, 'woo'))
 
         # GearBubble
         store_ids = list(user.profile.get_gear_stores(flat=True))
@@ -351,19 +311,7 @@ class ShopifiedApi(ApiResponseMixin, View):
             if data.get('store'):
                 order_tracks = order_tracks.filter(store=data.get('store'))
 
-            for i in serializers.serialize('python', order_tracks, fields=fields):
-                fields = i['fields']
-                fields['id'] = i['pk']
-                fields['store_type'] = 'gear'
-
-                if fields['source_id'] and ',' in fields['source_id']:
-                    for j in fields['source_id'].split(','):
-                        order_fields = copy.deepcopy(fields)
-                        order_fields['source_id'] = j
-                        order_fields['bundle'] = True
-                        orders.append(order_fields)
-                else:
-                    orders.append(fields)
+            orders.extend(core_utils.serializers_orders_track(order_tracks, 'gear'))
 
         return self.api_success({
             'orders': orders,

@@ -10,7 +10,6 @@ from requests.exceptions import HTTPError
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.views.generic import View
-from django.core import serializers
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.urls import reverse
@@ -32,6 +31,7 @@ from shopified_core.utils import (
     version_compare,
     order_phone_number,
     encoded_dict,
+    serializers_orders_track,
     CancelledOrderAlert
 )
 from zapier_core.utils import send_order_track_change
@@ -777,19 +777,7 @@ class WooStoreApi(ApiResponseMixin, View):
         if data.get('count_only') == 'true':
             return self.api_success({'pending': woocommerce_orders.count()})
 
-        woocommerce_orders = serializers.serialize('python', woocommerce_orders,
-                                                   fields=('id', 'order_id', 'line_id',
-                                                           'source_id', 'source_status',
-                                                           'source_tracking', 'created_at'))
-
-        for i in woocommerce_orders:
-            fields = i['fields']
-            fields['id'] = i['pk']
-
-            if all_orders:
-                fields['created_at'] = arrow.get(fields['created_at']).humanize()
-
-            orders.append(fields)
+        orders.extend(serializers_orders_track(woocommerce_orders, 'woo', humanize=all_orders))
 
         if not data.get('order_id') and not data.get('line_id'):
             WooOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \

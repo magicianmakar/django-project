@@ -10,8 +10,10 @@ import ctypes
 import simplejson as json
 from urllib import urlencode
 from functools import wraps
+from copy import deepcopy
 
 from django.conf import settings
+from django.core import serializers
 from django.core.mail import send_mail
 from django.core.cache import cache, caches
 from django.contrib.auth.models import User
@@ -605,6 +607,35 @@ def encoded_dict(in_dict):
             v.decode('utf8')
         out_dict[k] = v
     return out_dict
+
+
+def serializers_orders_fields():
+    return ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_type', 'source_tracking', 'created_at', 'updated_at']
+
+
+def serializers_orders_track(tracks, store_type, humanize=False):
+    orders = []
+    for i in serializers.serialize('python', tracks, fields=serializers_orders_fields()):
+        fields = i['fields']
+        fields['id'] = i['pk']
+        fields['store_type'] = store_type
+
+        if humanize:
+            fields['created_at'] = arrow.get(fields['created_at']).humanize()
+
+        if not fields['source_type']:
+            fields['source_type'] = 'aliexpress'
+
+        if fields['source_id'] and ',' in fields['source_id']:
+            for j in fields['source_id'].split(','):
+                order_fields = deepcopy(fields)
+                order_fields['source_id'] = j
+                order_fields['bundle'] = True
+                orders.append(order_fields)
+        else:
+            orders.append(fields)
+
+    return orders
 
 
 class CancelledOrderAlert():

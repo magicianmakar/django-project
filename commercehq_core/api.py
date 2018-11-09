@@ -2,10 +2,8 @@ import re
 import arrow
 import urlparse
 import simplejson as json
-import copy
 
 from django.conf import settings
-from django.core import serializers
 from django.core.cache import cache, caches
 from django.urls import reverse
 from django.db import transaction
@@ -28,6 +26,7 @@ from shopified_core.utils import (
     order_data_cache,
     orders_update_limit,
     order_phone_number,
+    serializers_orders_track,
     CancelledOrderAlert
 )
 from product_alerts.utils import unmonitor_store
@@ -432,26 +431,7 @@ class CHQStoreApi(ApiResponseMixin, View):
         if data.get('count_only') == 'true':
             return self.api_success({'pending': order_tracks.count()})
 
-        order_tracks = serializers.serialize('python', order_tracks,
-                                             fields=('id', 'order_id', 'line_id',
-                                                     'source_id', 'source_status',
-                                                     'source_tracking', 'created_at'))
-
-        for i in order_tracks:
-            fields = i['fields']
-            fields['id'] = i['pk']
-
-            if all_orders:
-                fields['created_at'] = arrow.get(fields['created_at']).humanize()
-
-            if fields['source_id'] and ',' in fields['source_id']:
-                for j in fields['source_id'].split(','):
-                    order_fields = copy.deepcopy(fields)
-                    order_fields['source_id'] = j
-                    order_fields['bundle'] = True
-                    orders.append(order_fields)
-            else:
-                orders.append(fields)
+        orders.extend(serializers_orders_track(order_tracks, 'chq', humanize=all_orders))
 
         if not data.get('order_id') and not data.get('line_id'):
             CommerceHQOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \

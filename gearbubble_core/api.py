@@ -14,7 +14,6 @@ from django.conf import settings
 from django.utils import timezone
 from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
-from django.core import serializers
 from django.db.models import F
 from django.core.cache import cache
 from django.db import transaction
@@ -30,6 +29,7 @@ from shopified_core.utils import (
     version_compare,
     order_phone_number,
     orders_update_limit,
+    serializers_orders_track,
     get_domain,
 )
 from zapier_core.utils import send_order_track_change
@@ -876,28 +876,7 @@ class GearBubbleApi(ApiResponseMixin, View):
         if data.get('count_only') == 'true':
             return self.api_success({'pending': gearbubble_tracks.count()})
 
-        gearbubble_tracks = serializers.serialize(
-            'python',
-            gearbubble_tracks,
-            fields=(
-                'id',
-                'order_id',
-                'line_id',
-                'source_id',
-                'source_status',
-                'source_tracking',
-                'created_at',
-            )
-        )
-
-        for i in gearbubble_tracks:
-            fields = i['fields']
-            fields['id'] = i['pk']
-
-            if all_orders:
-                fields['created_at'] = arrow.get(fields['created_at']).humanize()
-
-            orders.append(fields)
+        orders.extend(serializers_orders_track(gearbubble_tracks, 'gear', humanize=all_orders))
 
         if not data.get('order_id') and not data.get('line_id'):
             ids = [i['id'] for i in orders]
