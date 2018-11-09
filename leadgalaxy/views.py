@@ -3637,7 +3637,7 @@ def orders_view(request):
                 order['line_items'][i]['supplier'] = supplier
                 order['line_items'][i]['shipping_method'] = shipping_method
 
-                if fix_order_variants:
+                if fix_order_variants and supplier.is_aliexpress:
                     mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
                     if not mapped:
                         utils.fix_order_variants(store, order, product)
@@ -3695,7 +3695,10 @@ def orders_view(request):
             products_cache[el['product_id']] = product
 
             order, customer_address = utils.shopify_customer_address(
-                order, aliexpress_fix=fix_aliexpress_address, fix_aliexpress_city=fix_aliexpress_city, german_umlauts=german_umlauts)
+                order=order,
+                aliexpress_fix=fix_aliexpress_address and supplier.is_aliexpress,
+                fix_aliexpress_city=fix_aliexpress_city,
+                german_umlauts=german_umlauts)
 
             if auto_orders and customer_address and not order['pending_payment']:
                 try:
