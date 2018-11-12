@@ -725,6 +725,10 @@ def webhook(request, provider, option):
                     store.refresh_info(info=shop_data, commit=False)
                     store.save()
 
+                    if store.user.profile.from_shopify_app_store() and shop_data.get('email'):
+                        store.user.email = shop_data.get('email')
+                        store.user.save()
+
                     return JsonResponse({'status': 'ok'})
 
             elif topic == 'app/uninstalled':
