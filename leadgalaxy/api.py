@@ -737,7 +737,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                             'target = "_blank">ClippingMagic</a>')
 
             else:
-                response = 'ClippingMagic API Error'
+                if error.get('message'):
+                    response = 'ClippingMagic API Error:\n {}'.format(error['message'])
+                else:
+                    response = 'ClippingMagic API Error'
 
             raven_client.captureMessage('ClippingMagic API Error', level='warning', extra=res)
 
