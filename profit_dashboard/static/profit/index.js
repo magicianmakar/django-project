@@ -1270,11 +1270,10 @@ var FacebookProfitDashboard = {
                 url: $(this).attr('action'),
                 data: $(this).serialize(),
                 dataType: 'json',
-                beforeSend: function() {
-                    FacebookProfitDashboard.facebookStatus.loading();
-                },
                 success: function(result) {
-                    FacebookProfitDashboard.facebookInsightsPusherNotification();
+                    if (result.success) {
+                        FacebookProfitDashboard.facebookInsightsPusherNotification();
+                    }
                 },
                 error: function (data) {
                     displayAjaxError('Facebook Ad Sync', data);

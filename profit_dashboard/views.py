@@ -12,6 +12,9 @@ from django.template.loader import render_to_string
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from facebookads.adobjects.user import User as FBUser
+from facebookads.adobjects.adaccount import AdAccount
+
 from leadgalaxy import utils
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.utils import is_store_synced
@@ -19,6 +22,7 @@ from .utils import (
     INITIAL_DATE,
     get_profits,
     calculate_profits,
+    get_facebook_api,
     get_profit_details,
     get_date_range,
 )
@@ -132,7 +136,7 @@ def facebook_insights(request):
         facebook_access_id = request.POST.get('facebook_access_id')
         store = utils.get_store_from_request(request)
 
-        # Update (if found) facebook account sync meta data
+        # Update facebook account sync meta data
         account_id = request.POST.get('account_id')
         campaigns = request.POST.get('campaigns')
         config = request.POST.get('config')
@@ -170,22 +174,14 @@ def facebook_insights(request):
 def facebook_accounts(request):
     """ Save access token and return accounts
     """
-    store = utils.get_store_from_request(request)
     access_token = request.GET.get('fb_access_token')
-    expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
-    facebook_user_id = request.GET.get('fb_user_id')
-
     # Sometimes facebook doesn't reload the access_token and it comes empty
     if not access_token:
-        # Only use previous access if current user created and there is only one
-        facebook_access = FacebookAccess.objects.filter(user_id=request.user, store=store)
-        if facebook_access.count() == 1:
-            facebook_access = facebook_access.first()
-            access_token = facebook_access.access_token
-            facebook_user_id = facebook_access.facebook_user_id
-        else:
-            return JsonResponse({'error': 'Facebook token not received, please refresh your page and try again'}, status=404)
+        return JsonResponse({'error': 'Facebook token not received, please refresh your page and try again'}, status=404)
 
+    expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
+    facebook_user_id = request.GET.get('fb_user_id')
+    store = utils.get_store_from_request(request)
     facebook_access, created = FacebookAccess.objects.get_or_create(
         user_id=request.user.models_user.id,
         store=store,
@@ -196,12 +192,14 @@ def facebook_accounts(request):
         }
     )
     try:
-        facebook_access.get_or_update_token(access_token, expires_in)
+        access_token = facebook_access.get_or_update_token(access_token, expires_in)
     except:
         raven_client.captureException()
         return JsonResponse({'error': 'User token error'}, status=404)
 
-    accounts = facebook_access.get_api_accounts()
+    api = get_facebook_api(access_token)
+    user = FBUser(fbid='me', api=api)
+    accounts = user.get_ad_accounts(fields=[AdAccount.Field.name])
 
     return JsonResponse({
         'accounts': [{'name': i['name'], 'id': i['id']} for i in accounts],
@@ -223,6 +221,12 @@ def facebook_campaign(request):
         )
     except:
         return JsonResponse({'error': 'Facebook Access permission denied'}, status=403)
+
+    try:
+        access_token = facebook_access.get_or_update_token()
+    except:
+        raven_client.captureException()
+        return JsonResponse({'error': 'Facebook Token error, please reload the page and try again'}, status=404)
 
     account_id = request.GET.get('account_id')
     account_name = request.GET.get('account_name')
@@ -260,20 +264,22 @@ def facebook_campaign(request):
 
     # Returns campaigns remembering previously synced accounts
     saved_campaigns = facebook_account.campaigns.split(',')
-    try:
-        return JsonResponse({
-            'campaigns': [{
-                'id': i['id'],
-                'name': i['name'],
-                'status': i['status'].title(),
-                'created_time': arrow.get(i['created_time']).humanize(),
-                'checked': 'checked' if i['id'] in saved_campaigns else ''
-            } for i in facebook_account.get_api_campaigns()],
-            'config_options': config_options
-        })
-    except:
-        raven_client.captureException()
-        return JsonResponse({'error': 'Ad Account Not found'}, status=404)
+    api = get_facebook_api(access_token)
+    user = FBUser(fbid='me', api=api)
+    for account in user.get_ad_accounts(fields=[AdAccount.Field.name]):
+        if account['id'] == account_id:
+            return JsonResponse({
+                'campaigns': [{
+                    'id': i['id'],
+                    'name': i['name'],
+                    'status': i['status'].title(),
+                    'created_time': arrow.get(i['created_time']).humanize(),
+                    'checked': 'checked' if i['id'] in saved_campaigns else ''
+                } for i in account.get_campaigns(fields=['name', 'status', 'created_time'])],
+                'config_options': config_options
+            })
+
+    return JsonResponse({'error': 'Ad Account Not found'}, status=404)
 
 
 @login_required

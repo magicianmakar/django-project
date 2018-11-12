@@ -7,11 +7,14 @@ from random import randint
 import factory
 import factory.fuzzy
 
+from django.conf import settings
 from django.test import TransactionTestCase
+from django.test.utils import override_settings
 from django.utils import timezone
 from django.db.models import Sum
 from mock import patch, Mock
 
+from facebookads.api import FacebookAdsApi
 from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.campaign import Campaign
 from facebookads.exceptions import FacebookRequestError
@@ -20,8 +23,8 @@ from leadgalaxy.tests import factories as f
 from shopify_orders.models import ShopifyOrder
 from shopify_orders.tests.factories import ShopifyOrderFactory
 
-from .models import AliexpressFulfillmentCost
-from .utils import get_facebook_ads, get_profits
+from .models import FacebookAdCost, AliexpressFulfillmentCost
+from .utils import get_facebook_api, get_facebook_ads, get_profits
 
 
 NOW = timezone.now()
@@ -74,7 +77,7 @@ class FacebookAdCostsTestCase(TransactionTestCase):
         access = FacebookAccessFactory(store=self.store, user=self.user, access_token=self.access_token, expires_in=timezone.now() + timedelta(days=59))
 
         try:
-            self.api = access.api
+            self.api = get_facebook_api(self.access_token)
 
             user = FBUser(fbid='me', api=self.api)
             account = list(user.get_ad_accounts())[0]
@@ -100,7 +103,7 @@ class FacebookAdCostsTestCase(TransactionTestCase):
                 campaigns = account.get_campaigns(fields=[Campaign.Field.created_time])
                 selected_campaigns = [c[Campaign.Field.id] for c in campaigns]
 
-            get_facebook_ads(access.pk, self.store)
+            get_facebook_ads(self.user, self.store, self.access_token, [account['id']], selected_campaigns)
         except FacebookRequestError, e:
             if e.api_error_code() == 17:  # (#17) User request limit reached
                 account = FacebookAccountFactory(access=access, store=self.store)
