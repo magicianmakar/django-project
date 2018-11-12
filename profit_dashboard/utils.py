@@ -5,13 +5,8 @@ import simplejson as json
 from datetime import date
 from collections import OrderedDict
 
-from django.conf import settings
 from django.db.models import Sum
 from django.utils import timezone
-
-from facebookads.api import FacebookAdsApi
-from facebookads.adobjects.user import User as FBUser
-from facebookads.adobjects.adaccount import AdAccount
 
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.models import ShopifyOrder
@@ -20,7 +15,6 @@ from leadgalaxy.models import ShopifyOrderTrack
 
 from .models import (
     FacebookAccess,
-    FacebookAccount,
     FacebookAdCost,
     AliexpressFulfillmentCost,
     OtherCost
@@ -42,85 +36,32 @@ ALIEXPRESS_CANCELLED_STATUS = [
 ]
 
 
-def get_facebook_api(access_token):
-    return FacebookAdsApi.init(
-        settings.FACEBOOK_APP_ID,
-        settings.FACEBOOK_APP_SECRET,
-        access_token,
-        api_version='v3.0'
+def create_facebook_ads(facebook_account, campaign_insight):
+    # Using update_or_create for updating insights returned on the same day of last_sync
+    FacebookAdCost.objects.update_or_create(
+        account=facebook_account,
+        created_at=campaign_insight['created_at'],
+        campaign_id=campaign_insight['campaign_id'],
+        defaults={
+            'impressions': campaign_insight['impressions'],
+            'spend': campaign_insight['spend'],
+        }
     )
 
 
 def get_facebook_ads(facebook_access_id, store):
-    access = FacebookAccess.objects.get(id=facebook_access_id, store=store)
-    access_token = access.get_or_update_token()
+    """ Get Insights from all accounts/campaigns selected from the facebook_access_id
+    """
+    facebook_access = FacebookAccess.objects.get(id=facebook_access_id, store=store)
 
-    api = get_facebook_api(access_token)
-    user = FBUser(fbid='me', api=api)
+    # Only selected accounts have a corresponding FacebookAccount model
+    for account in facebook_access.accounts.all():
+        # Return already formatted insights
+        for insight in account.get_api_insights():
+            create_facebook_ads(account, insight)
 
-    params = {'time_increment': 1}
-
-    account_ids = access.account_ids.split(',')
-    accounts = user.get_ad_accounts(fields=[AdAccount.Field.name])
-    for account in accounts:
-        if account['id'] not in account_ids:
-            continue
-
-        try:
-            account_model = FacebookAccount.objects.get(
-                account_id=account.get(account.Field.id),
-                access=access,
-                store=store
-            )
-        except FacebookAccount.DoesNotExist:
-            continue
-
-        if account_model.last_sync:
-            params['time_range'] = {
-                'since': arrow.get(account_model.last_sync).replace(days=-1).format('YYYY-MM-DD'),
-                'until': date.today().strftime('%Y-%m-%d')
-            }
-
-        campaigns = account_model.campaigns.split(',')
-        campaign_insights = {}
-        for campaign in account.get_campaigns(fields=['name', 'status', 'created_time']):
-            if 'include' in account_model.config and campaign['id'] not in campaigns:
-                campaign_date = arrow.get(campaign['created_time']).datetime
-                if 'new' in account_model.config and campaign_date > account_model.updated_at:
-                    campaigns.append(campaign['id'])
-                else:
-                    continue
-            if 'exclude' in account_model.config and campaign['id'] in campaigns:
-                continue
-
-            for insight in campaign.get_insights(params=params):
-                insight_date = arrow.get(insight[insight.Field.date_start]).format('YYYY-MM-DD')
-                insight_key = '{}-{}'.format(insight_date, campaign['id'])
-                if insight_key not in campaign_insights:
-                    campaign_insights[insight_key] = {
-                        'impressions': int(insight[insight.Field.impressions]),
-                        'spend': float(insight[insight.Field.spend]),
-                        'created_at': arrow.get(insight[insight.Field.date_start]).date(),
-                        'campaign_id': campaign['id'],
-                    }
-                else:
-                    campaign_insights[insight_key]['impressions'] += int(insight[insight.Field.impressions])
-                    campaign_insights[insight_key]['spend'] += float(insight[insight.Field.spend])
-
-        for key, value in campaign_insights.items():
-            FacebookAdCost.objects.update_or_create(
-                account=account_model,
-                created_at=value['created_at'],
-                campaign_id=value['campaign_id'],
-                defaults={
-                    'impressions': value['impressions'],
-                    'spend': value['spend'],
-                }
-            )
-
-        account_model.campaigns = ','.join(campaigns)
-        account_model.last_sync = date.today()
-        account_model.save()
+        account.last_sync = date.today()
+        account.save()
 
 
 def calculate_profit_margin(revenue, profit):
