@@ -2,14 +2,14 @@ import json
 
 from mock import patch
 
-from django.test import TestCase
+from lib.test import BaseTestCase
 from django.http import JsonResponse
 
 from leadgalaxy.tests.factories import UserFactory
 from gearbubble_core.tests.factories import GearBubbleStoreFactory, GearBubbleOrderTrackFactory
 
 
-class GetAllStoresTest(TestCase):
+class GetAllStoresTest(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -31,7 +31,7 @@ class GetAllStoresTest(TestCase):
         self.assertEqual(store_data['url'], store.get_admin_url())
 
 
-class PostQuickSaveTest(TestCase):
+class PostQuickSaveTest(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -52,7 +52,7 @@ class PostQuickSaveTest(TestCase):
         self.assertTrue(post_save_for_later.called)
 
 
-class GetAllOrdersSyncTest(TestCase):
+class GetAllOrdersSyncTest(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'

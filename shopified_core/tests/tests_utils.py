@@ -2,7 +2,7 @@
 import os
 
 from django.conf import settings
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 from mock import patch, Mock
 import requests_mock
 
@@ -30,7 +30,7 @@ from shopified_core.shipping_helper import (
 )
 
 
-class UtilsTestCase(TransactionTestCase):
+class UtilsTestCase(BaseTestCase):
     def setUp(self):
         self.request = Mock(META={'HTTP_X_EXTENSION_VERSION': '1.70.0'})
 
@@ -331,7 +331,7 @@ class UtilsTestCase(TransactionTestCase):
         self.assertEqual(decode_params(encode_params(h)), h)
 
 
-class ShippingHelperFunctionsTestCase(TransactionTestCase):
+class ShippingHelperFunctionsTestCase(BaseTestCase):
 
     def test_get_country_from_code(self):
         counrties = {
@@ -361,7 +361,7 @@ class ShippingHelperFunctionsTestCase(TransactionTestCase):
         self.assertEqual(aliexpress_country_code_map('US'), 'US')
 
 
-class FranceAddressFixTestCase(TransactionTestCase):
+class FranceAddressFixTestCase(BaseTestCase):
     def setUp(self):
         cache.delete_pattern('fr_city_*')
 
