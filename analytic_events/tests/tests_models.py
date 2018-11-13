@@ -1,8 +1,9 @@
-from django.test import TransactionTestCase
 from django.contrib.sessions.backends.db import SessionStore
 from django.contrib.sessions.models import Session
 
 from leadgalaxy.tests.factories import UserFactory
+
+from lib.test import BaseTestCase
 
 from ..models import (
     Event,
@@ -13,13 +14,13 @@ from ..models import (
 )
 
 
-class EventTestCase(TransactionTestCase):
+class EventTestCase(BaseTestCase):
     def test_must_be_polymorphic(self):
         RegistrationEvent.objects.create(user=UserFactory())
         self.assertEquals(Event.objects.count(), 1)
 
 
-class RegistrationEventTestCase(TransactionTestCase):
+class RegistrationEventTestCase(BaseTestCase):
     def setUp(self):
         self.registration_event = RegistrationEvent.objects.create(user=UserFactory())
 
@@ -33,7 +34,7 @@ class RegistrationEventTestCase(TransactionTestCase):
         self.assertIn(self.registration_event.mixpanel_script, self.registration_event.fire())
 
 
-class PlanSelectionEventTestCase(TransactionTestCase):
+class PlanSelectionEventTestCase(BaseTestCase):
     def setUp(self):
         self.plan_selection_event = PlanSelectionEvent.objects.create(user=UserFactory())
 
@@ -47,7 +48,7 @@ class PlanSelectionEventTestCase(TransactionTestCase):
         self.assertIn(self.plan_selection_event.mixpanel_script, self.plan_selection_event.fire())
 
 
-class BillingInformationEntryEventTestCase(TransactionTestCase):
+class BillingInformationEntryEventTestCase(BaseTestCase):
     def setUp(self):
         source = '{}'
         self.billing_event = BillingInformationEntryEvent.objects.create(user=UserFactory(), source=source)
@@ -62,7 +63,7 @@ class BillingInformationEntryEventTestCase(TransactionTestCase):
         self.assertIn(self.billing_event.mixpanel_script, self.billing_event.fire())
 
 
-class SuccessfulPaymentEventTestCase(TransactionTestCase):
+class SuccessfulPaymentEventTestCase(BaseTestCase):
     def setUp(self):
         charge = '{}'
         self.payment_event = SuccessfulPaymentEvent.objects.create(user=UserFactory(), charge=charge)
