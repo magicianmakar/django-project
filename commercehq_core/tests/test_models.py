@@ -1,4 +1,4 @@
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 
 from .factories import CommerceHQStoreFactory
 
@@ -6,7 +6,7 @@ from leadgalaxy.models import SUBUSER_CHQ_STORE_PERMISSIONS
 from leadgalaxy.tests.factories import UserFactory
 
 
-class CommerceHQStoreFactoryTestCase(TransactionTestCase):
+class CommerceHQStoreFactoryTestCase(BaseTestCase):
     def test_must_have_subuser_permissions(self):
         store = CommerceHQStoreFactory()
         self.assertEqual(store.subuser_chq_permissions.count(), len(SUBUSER_CHQ_STORE_PERMISSIONS))
@@ -18,7 +18,7 @@ class CommerceHQStoreFactoryTestCase(TransactionTestCase):
         self.assertEqual(store.subuser_chq_permissions.count(), len(SUBUSER_CHQ_STORE_PERMISSIONS))
 
 
-class UserProfileTestCase(TransactionTestCase):
+class UserProfileTestCase(BaseTestCase):
     def test_subusers_must_have_all_store_permissions_when_assigned_a_store(self):
         parent_user = UserFactory()
         store = CommerceHQStoreFactory(user=parent_user)
