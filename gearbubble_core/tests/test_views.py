@@ -2,9 +2,9 @@ import json
 
 from mock import patch, Mock
 
-from django.test import TestCase
 from django.core.urlresolvers import reverse
 
+from lib.test import BaseTestCase
 from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, AppPermissionFactory
 
 from ..models import GearBubbleStore
@@ -12,7 +12,7 @@ from ..models import GearBubbleStore
 from .factories import GearBubbleStoreFactory
 
 
-class StoreListTestCase(TestCase):
+class StoreListTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -57,7 +57,7 @@ class StoreListTestCase(TestCase):
         self.assertEqual(r.context['breadcrumbs'], ['Stores'])
 
 
-class StoreCreateTestCase(TestCase):
+class StoreCreateTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -96,7 +96,7 @@ class StoreCreateTestCase(TestCase):
         self.assertIn(r.status_code, [401, 403])
 
 
-class StoreReadTestCase(TestCase):
+class StoreReadTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -145,7 +145,7 @@ class StoreReadTestCase(TestCase):
         self.assertEqual(data['id'], store.id)
 
 
-class StoreUpdateTestCase(TestCase):
+class StoreUpdateTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -194,7 +194,7 @@ class StoreUpdateTestCase(TestCase):
         self.assertIn(r.status_code, [401, 403])
 
 
-class StoreDeleteTestCase(TestCase):
+class StoreDeleteTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
