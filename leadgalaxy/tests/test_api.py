@@ -2,16 +2,17 @@ import json
 import uuid
 from datetime import timedelta
 
-from django.test import TransactionTestCase, override_settings
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from mock import patch, Mock
 
 import factories as f
+from lib.test import BaseTestCase
 
 
-class ProductsApiTestCase(TransactionTestCase):
+class ProductsApiTestCase(BaseTestCase):
     def setUp(self):
         self.parent_user = f.UserFactory()
         self.user = f.UserFactory()
@@ -50,7 +51,7 @@ class ProductsApiTestCase(TransactionTestCase):
 
 # Fix for last_seen cache
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
-class SyncAliexpressTestCase(TransactionTestCase):
+class SyncAliexpressTestCase(BaseTestCase):
     def setUp(self):
         self.password = 'test'
         self.parent_user = f.UserFactory()

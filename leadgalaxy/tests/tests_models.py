@@ -1,16 +1,16 @@
 from mock import Mock
 
-from django.test import TransactionTestCase
 from django import db
 
 from factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 
+from lib.test import BaseTestCase
 from leadgalaxy.models import *
 from leadgalaxy.utils import create_user_without_signals
 from factories import ShopifyProductFactory
 
 
-class UserTestCase(TransactionTestCase):
+class UserTestCase(BaseTestCase):
     def setUp(self):
         pass
 
@@ -64,7 +64,7 @@ class UserTestCase(TransactionTestCase):
         self.assertEqual(user.func_test(), 'Email: {}'.format(user.email))
 
 
-class ShopifyStoreTestCase(TransactionTestCase):
+class ShopifyStoreTestCase(BaseTestCase):
     def test_must_have_subuser_permissions(self):
         store = ShopifyStoreFactory()
         self.assertEqual(store.subuser_permissions.count(), len(SUBUSER_STORE_PERMISSIONS))
@@ -76,7 +76,7 @@ class ShopifyStoreTestCase(TransactionTestCase):
         self.assertEqual(store.subuser_permissions.count(), len(SUBUSER_STORE_PERMISSIONS))
 
 
-class UserProfileTestCase(TransactionTestCase):
+class UserProfileTestCase(BaseTestCase):
     def test_subusers_must_have_all_store_permissions_when_assigned_a_store(self):
         parent_user = UserFactory()
         store = ShopifyStoreFactory(user=parent_user)
@@ -102,7 +102,7 @@ class UserProfileTestCase(TransactionTestCase):
             self.assertEqual(permissions_count, len(SUBUSER_PERMISSIONS))
 
 
-class ShopifyProductTestCase(TransactionTestCase):
+class ShopifyProductTestCase(BaseTestCase):
     def tearDown(self):
         DataStore.objects.all().delete()
 
