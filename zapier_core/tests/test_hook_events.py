@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 
 from rest_hooks.models import Hook
 
+from lib.test import BaseTestCase
 from leadgalaxy.models import ShopifyProduct
 from leadgalaxy.views import webhook
 from leadgalaxy.tasks import manage_product_change
@@ -24,7 +25,7 @@ def manage_product_change_callback(*args, **kwargs):
     manage_product_change(*kwargs['args'])
 
 
-class HookEventsTestCase(TestCase):
+class HookEventsTestCase(BaseTestCase):
     fixtures = ['product_changes.json']
 
     def setUp(self):
