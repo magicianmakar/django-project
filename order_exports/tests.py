@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.urls import reverse
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 from django.utils import timezone
 
 import factory
@@ -65,7 +65,7 @@ class OrderExportFactory(factory.django.DjangoModelFactory):
         model = OrderExport
 
 
-class OrderExportTestCase(TransactionTestCase):
+class OrderExportTestCase(BaseTestCase):
 
     def setUp(self):
         order_export_done.disconnect(generate_reports, sender=OrderExport)
