@@ -2,7 +2,7 @@ import json
 
 from mock import patch, Mock
 
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 from django.urls import reverse
 from django.core.exceptions import PermissionDenied
 
@@ -16,7 +16,7 @@ from .factories import (
 )
 
 
-class StoreListTestCase(TransactionTestCase):
+class StoreListTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -61,7 +61,7 @@ class StoreListTestCase(TransactionTestCase):
         self.assertEqual(r.context['breadcrumbs'], ['Stores'])
 
 
-class StoreCreateTestCase(TransactionTestCase):
+class StoreCreateTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -105,7 +105,7 @@ class StoreCreateTestCase(TransactionTestCase):
         self.assertIn(r.status_code, [401, 403])
 
 
-class StoreReadTestCase(TransactionTestCase):
+class StoreReadTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -154,7 +154,7 @@ class StoreReadTestCase(TransactionTestCase):
         self.assertEqual(data['id'], store.id)
 
 
-class StoreUpdateTestCase(TransactionTestCase):
+class StoreUpdateTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -220,7 +220,7 @@ class StoreUpdateTestCase(TransactionTestCase):
         self.assertIn(r.status_code, [401, 403])
 
 
-class StoreDeleteTestCase(TransactionTestCase):
+class StoreDeleteTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -260,7 +260,7 @@ class StoreDeleteTestCase(TransactionTestCase):
         self.assertEqual(r.status_code, 403)
 
 
-class ProductsListTestCase(TransactionTestCase):
+class ProductsListTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -293,7 +293,7 @@ class ProductsListTestCase(TransactionTestCase):
         self.assertTemplateUsed(r, 'woocommerce/products_grid.html')
 
 
-class ProductSaveTestCase(TransactionTestCase):
+class ProductSaveTestCase(BaseTestCase):
     def setUp(self):
         self.path = '/api/woo/product-save'
 
@@ -431,7 +431,7 @@ class ProductSaveTestCase(TransactionTestCase):
         self.assertEqual(product.price, new_price)
 
 
-class CallbackEndpointTestCase(TransactionTestCase):
+class CallbackEndpointTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory()
         self.store = WooStoreFactory(user=self.user, api_key='', api_password='')
