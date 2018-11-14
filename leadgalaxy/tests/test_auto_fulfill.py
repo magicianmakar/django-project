@@ -1,10 +1,10 @@
 import os
 from StringIO import StringIO
 
-from django.test import TransactionTestCase
 from django.utils import timezone
 from django.core.management import call_command
 
+from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine, ShopifyOrderLog
 from leadgalaxy import utils
 from leadgalaxy.models import (
@@ -91,7 +91,7 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     order = factory.SubFactory(ShopifyOrderFactory)
 
 
-class AutoFulfillTestCase(TransactionTestCase):
+class AutoFulfillTestCase(BaseTestCase):
 
     def setUp(self):
         self.parent_user = f.UserFactory()
@@ -136,7 +136,7 @@ class AutoFulfillTestCase(TransactionTestCase):
         fulfill_order.assert_not_called()
 
 
-class AutoFulfillCombinedTestCase(TransactionTestCase):
+class AutoFulfillCombinedTestCase(BaseTestCase):
 
     def setUp(self):
         self.parent_user = f.UserFactory()
@@ -242,7 +242,7 @@ class AutoFulfillCombinedTestCase(TransactionTestCase):
         get_fulfillment_data.assert_called_with(track, data)
 
 
-class FulfillApiTestCase(TransactionTestCase):
+class FulfillApiTestCase(BaseTestCase):
     def setUp(self):
         self.parent_user = f.UserFactory()
         self.user = f.UserFactory()

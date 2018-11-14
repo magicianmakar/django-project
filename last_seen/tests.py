@@ -1,17 +1,17 @@
 import datetime
 import mock
 import time
-from django.test import TransactionTestCase
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.utils import timezone
 
+from lib.test import BaseTestCase
 from last_seen.models import LastSeen, user_seen, clear_interval
 from last_seen import settings
 from last_seen import middleware
 
 
-class TestLastSeenModel(TransactionTestCase):
+class TestLastSeenModel(BaseTestCase):
 
     def test_unicode(self):
         user = User(username='testuser')
@@ -21,7 +21,7 @@ class TestLastSeenModel(TransactionTestCase):
         self.assertIn('2013-01-01 02:03:04', unicode(seen))
 
 
-class TestLastSeenManager(TransactionTestCase):
+class TestLastSeenManager(BaseTestCase):
 
     @mock.patch('last_seen.models.LastSeen.objects.get_or_create',
                 autospec=True)
@@ -137,7 +137,7 @@ class TestLastSeenManager(TransactionTestCase):
         filter.assert_called_with(user=user)
 
 
-class TestUserSeen(TransactionTestCase):
+class TestUserSeen(BaseTestCase):
 
     def setUp(self):
         cache.delete_pattern('last_seen:*')
@@ -173,7 +173,7 @@ class TestUserSeen(TransactionTestCase):
         seen.assert_called_with(user, module=module, interval=settings.LAST_SEEN_INTERVAL)
 
 
-class TestClearInterval(TransactionTestCase):
+class TestClearInterval(BaseTestCase):
     def setUp(self):
         cache.delete_pattern('last_seen:*')
 
@@ -214,7 +214,7 @@ class TestClearInterval(TransactionTestCase):
         self.assertNotEqual(when1, when2)
 
 
-class TestMiddleware(TransactionTestCase):
+class TestMiddleware(BaseTestCase):
 
     middleware = middleware.LastSeenMiddleware()
 

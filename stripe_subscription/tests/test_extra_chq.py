@@ -1,4 +1,4 @@
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 
 from mock import MagicMock
 from mock import patch
@@ -36,7 +36,7 @@ class InvoiceItemMock():
         pass
 
 
-class ExtraCHQStoreTestCase(TransactionTestCase):
+class ExtraCHQStoreTestCase(BaseTestCase):
     def setUp(self):
         self.user = User.objects.create(username='me', email='me@localhost.com')
 

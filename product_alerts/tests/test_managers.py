@@ -2,9 +2,10 @@ import simplejson as json
 import mock
 import requests
 
-from django.test import TransactionTestCase, RequestFactory
+from django.test import RequestFactory
 from django.contrib.auth.models import User
 
+from lib.test import BaseTestCase
 from leadgalaxy.models import ShopifyProduct
 from leadgalaxy.views import webhook
 from leadgalaxy.tasks import manage_product_change
@@ -18,7 +19,7 @@ def manage_product_change_callback(*args, **kwargs):
     manage_product_change(*kwargs['args'])
 
 
-class ProductChangeManagerTestCase(TransactionTestCase):
+class ProductChangeManagerTestCase(BaseTestCase):
     fixtures = ['product_changes.json']
 
     def setUp(self):

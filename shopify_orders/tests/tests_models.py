@@ -1,4 +1,4 @@
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 from django.utils import timezone
 from django.db.models import Max
 
@@ -37,7 +37,7 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     product = factory.SubFactory('leadgalaxy.tests.factories.ShopifyProductFactory')
 
 
-class UtilsTestCase(TransactionTestCase):
+class UtilsTestCase(BaseTestCase):
     def setUp(self):
         pass
 

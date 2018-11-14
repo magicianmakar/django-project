@@ -1,11 +1,11 @@
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 
 import json
 
 from leadgalaxy.models import User, ShopifyStore, ShopifyProduct, ProductSupplier
 
 
-class MappingTestCase(TransactionTestCase):
+class MappingTestCase(BaseTestCase):
 
     def setUp(self):
         self.user = User.objects.create(username='me', email='me@localhost.com')

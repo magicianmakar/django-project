@@ -1,4 +1,4 @@
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 from leadgalaxy.models import User, ShopifyStore
 
 MYSHOPIFY_DOMAIN = 'shopified-app-ci.myshopify.com'
@@ -6,7 +6,7 @@ PRIVATE_APP_URL = '6bace8a67988e75c29279ac08f7b31bc:41973440f95ee4529b8c739df75a
 SHOPIFY_APP_URL = ':88937df17024aa5126203507e2147f47@%s' % MYSHOPIFY_DOMAIN
 
 
-class StoreTestCase(TransactionTestCase):
+class StoreTestCase(BaseTestCase):
     def setUp(self):
         user = User.objects.create(username='me', email='me@localhost.com')
         ShopifyStore.objects.create(user=user,
