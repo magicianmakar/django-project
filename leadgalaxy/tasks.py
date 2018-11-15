@@ -581,6 +581,8 @@ def sync_shopify_orders(self, store_id, elastic=False):
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webhook=True):
+    return
+
     store = None
 
     try:
