@@ -1029,7 +1029,6 @@ function renderImages() {
             'class': 'var-image',
             'image-url': el,
             'image-id': i,
-            'style': 'cursor: default'
         });
 
         d.append(img);
@@ -1145,6 +1144,25 @@ function renderImages() {
 
     $('#var-images .itooltip').bootstrapTooltip({
         container: 'body'
+    });
+
+    $('#var-images .var-image-block img').click(function (e) {
+        e.preventDefault();
+
+        var imgs = [];
+        var idx = 0;
+
+        $('#var-images .var-image-block img').each(function (i, el) {
+            imgs.push({
+                href: $(el).prop('src'),
+            });
+
+            if (el == e.target) {
+                idx = i;
+            }
+        });
+
+        blueimp.Gallery(imgs, {index: idx});
     });
 }
 

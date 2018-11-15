@@ -901,11 +901,22 @@
 
 {% include 'partial/shopify_image_randomize_modal.html' %}
 
+<div id="blueimp-gallery" class="blueimp-gallery">
+    <div class="slides"></div>
+    <h3 class="title"></h3>
+    <a class="prev">‹</a>
+    <a class="next">›</a>
+    <a class="close">×</a>
+    <a class="play-pause"></a>
+    <ol class="indicator"></ol>
+</div>
+
 {% endblock %}
 
 {% block extracss %}
 <link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/blueimp-gallery/2.33.0/css/blueimp-gallery.min.css" rel="stylesheet" />
 
 {% compress css %}
 <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
@@ -954,6 +965,8 @@
 {% else %}
 <script type="text/javascript" src="http://feather.aviary.com/imaging/v2/editor.js"></script>
 {% endif %}
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/blueimp-gallery/2.33.0/js/blueimp-gallery.min.js"></script>
 
 <script type="text/javascript">
 
