@@ -4,6 +4,7 @@ from StringIO import StringIO
 import requests_mock
 from django.conf import settings
 from django.urls import reverse
+from django.test import tag
 from lib.test import BaseTestCase
 
 import factory
@@ -120,6 +121,7 @@ class OrderImportFetchOrdersTestCase(BaseTestCase):
         headers = self.api.parse_headers(csv_file, raw_headers)
         self.orders = self.api.read_csv_file(csv_file, headers)
 
+    @tag('slow')
     def test_found_shopify_filled_for_items(self):
         with requests_mock.mock(real_http=True) as mock:
             mock.register_uri('GET', 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com/admin/orders.json?name=1089', json={
@@ -181,8 +183,10 @@ class OrderImportSyncShopifyTestCase(BaseTestCase):
 
             self.incomplete_tracking_response = self.api.send_tracking_number(tracking_items)
 
+    @tag('slow')
     def test_tracking_number_success_response(self):
         self.assertTrue(self.tracking_response)
 
+    @tag('slow')
     def test_tracking_number_incomplete_response(self):
         self.assertFalse(self.incomplete_tracking_response)

@@ -4,6 +4,7 @@ from mock import patch, Mock
 
 from lib.test import BaseTestCase
 from django.urls import reverse
+from django.test import tag
 
 from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, AppPermissionFactory
 from leadgalaxy.models import SubuserPermission
@@ -87,12 +88,14 @@ class StoreCreateTestCase(BaseTestCase):
     def login(self):
         self.client.login(username=self.user.username, password=self.password)
 
+    @tag('slow')
     @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
     def test_must_create_new_store(self):
         self.login()
         r = self.client.post(self.path, self.data, **self.headers)
         self.assertEqual(r.reason_phrase, 'OK')
 
+    @tag('slow')
     @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
     def test_must_add_store_to_user(self):
         self.login()
@@ -115,6 +118,7 @@ class StoreCreateTestCase(BaseTestCase):
         self.assertIn('stores URL is not correct', rep.get('error'))
         self.assertNotEqual(r.reason_phrase, 'OK')
 
+    @tag('slow')
     @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
     def test_add_store_wrong_api_keys(self):
         self.login()

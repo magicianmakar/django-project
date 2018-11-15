@@ -52,6 +52,24 @@ Automated tests will ensure the app is properly installed with all the required 
 python manage.py test
 ```
 
+We also have an alias for running tests
+```
+dj-test
+```
+
+This alias is equivalent to the following command:
+```
+dj-activate; python manage.py test -v 2 -k
+```
+
+We alss tag tests that are slow to run. This allows us to exclude the slow
+tests like this:
+```
+dj-test --exclude-tag=slow
+```
+
+Slow tests are generally those that try to access external resources over HTTP.
+
 ### 5. Start the app
 If the tests pass, start the application:
 

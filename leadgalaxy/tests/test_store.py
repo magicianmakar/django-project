@@ -1,3 +1,4 @@
+from django.test import tag
 from lib.test import BaseTestCase
 from leadgalaxy.models import User, ShopifyStore
 
@@ -23,6 +24,7 @@ class StoreTestCase(BaseTestCase):
                                     version=2,
                                     shop=MYSHOPIFY_DOMAIN)
 
+    @tag('slow')
     def test_store_api_urls(self):
 
         for i in ['test1', 'test2', 'test3']:

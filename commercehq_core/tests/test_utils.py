@@ -4,6 +4,7 @@ from mock import patch, Mock
 from requests.exceptions import HTTPError
 
 from django.core.cache import cache, caches
+from django.test import tag
 
 from lib.test import BaseTestCase
 from leadgalaxy.models import User
@@ -285,6 +286,7 @@ class OrdersTestCase(BaseTestCase):
             user=self.user, title="test1", api_url=CHQ_API_URL,
             api_key=CHQ_API_KEY, api_password=CHQ_API_PASSWORD)
 
+    @tag('slow')
     def test_order_notes(self):
         order_id = 1016
         line_id = 9309669834
@@ -298,6 +300,7 @@ class OrdersTestCase(BaseTestCase):
 
         self.assertEqual(note1, utils.get_chq_order_note(store, order_id))
 
+    @tag('slow')
     def test_order_updater_note(self):
         store = self.store
         order_id = 1015

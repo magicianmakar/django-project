@@ -2,7 +2,7 @@ import simplejson as json
 import mock
 import requests
 
-from django.test import RequestFactory
+from django.test import RequestFactory, tag
 from django.contrib.auth.models import User
 
 from lib.test import BaseTestCase
@@ -26,6 +26,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.factory = RequestFactory()
         self.user = User.objects.get(pk=1)
 
+    @tag('slow')
     def test_shopify_product_disappears(self):
         self.user.profile.config = json.dumps({"alert_product_disappears": "unpublish"})
         self.user.profile.save()
@@ -34,6 +35,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         result = manager.apply_changes()
         self.assertEqual(result['published'], False)
 
+    @tag('slow')
     def test_chq_product_disappears(self):
         self.user.profile.config = json.dumps({"alert_product_disappears": "unpublish"})
         self.user.profile.save()
@@ -48,6 +50,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         changes_map = manager.changes_map()
         self.assertEqual(len(changes_map['availability']), 1)
 
+    @tag('slow')
     def test_get_shopify_variant(self):
         product_change = ProductChange.objects.get(pk=2)
         manager = ProductChangeManager.initialize(product_change)
@@ -55,6 +58,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         result = manager.get_variant(product_data, manager.variant_changes[0])
         self.assertEqual(result, 0)
 
+    @tag('slow')
     def test_get_chq_variant(self):
         product_change = ProductChange.objects.get(pk=4)
         manager = ProductChangeManager.initialize(product_change)
@@ -62,6 +66,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         result = manager.get_variant(product_data, manager.variant_changes[0])
         self.assertEqual(result, 0)
 
+    @tag('slow')
     @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_price_change(self, manage):
         self.user.profile.config = json.dumps({"alert_price_change": "update"})
@@ -114,6 +119,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(history.old_price, old_value)
         self.assertEqual(history.new_price, new_value)
 
+    @tag('slow')
     @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_quantity_change(self, manage):
         self.user.profile.config = json.dumps({"alert_quantity_change": "update"})
@@ -151,6 +157,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         # check if quantity was updated back
         self.assertEqual(updated_quantity, quantity)
 
+    @tag('slow')
     @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_chq_price_change(self, manage):
         self.user.profile.config = json.dumps({"alert_price_change": "update"})

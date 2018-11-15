@@ -3,7 +3,7 @@ import mock
 import requests
 from mock import patch, ANY
 
-from django.test import TestCase, RequestFactory
+from django.test import TestCase, RequestFactory, tag
 from django.contrib.auth.models import User
 
 from rest_hooks.models import Hook
@@ -32,6 +32,7 @@ class HookEventsTestCase(BaseTestCase):
         self.factory = RequestFactory()
         self.user = User.objects.get(pk=1)
 
+    @tag('slow')
     @mock.patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
     @patch('requests.post')
     def test_deliver_hook(self, requests_post, deliver):
@@ -67,6 +68,7 @@ class HookEventsTestCase(BaseTestCase):
         )
 
 
+    @tag('slow')
     @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     @patch('zapier_core.tasks.deliver_hook.apply_async')
     def test_variant_price_changed(self, deliver_hook, manage):

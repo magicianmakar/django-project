@@ -8,6 +8,7 @@ import factory
 import factory.fuzzy
 
 from django.conf import settings
+from django.test import tag
 from lib.test import BaseTestCase
 from django.test.utils import override_settings
 from django.utils import timezone
@@ -112,6 +113,7 @@ class FacebookAdCostsTestCase(BaseTestCase):
     # def test_more_than_one_ad_cost_exists_for_user(self):
     #     self.assertGreater(FacebookAdCost.objects.count(), 0)
 
+    @tag('slow')
     def test_ad_costs_dict_has_right_keys(self):
         profits, totals, details = get_profits(self.store, timezone.now() - timedelta(days=30), timezone.now())
 
@@ -137,12 +139,14 @@ class RevenueTestCase(BaseTestCase):
         end = self.time + timedelta(9)
         self.profits, self.totals, details = get_profits(self.store, self.time, end)
 
+    @tag('slow')
     def test_revenue_by_day_is_correct(self):
         i = 0
         for order in ShopifyOrder.objects.all().order_by('-created_at'):
             self.assertAlmostEqual(self.profits[i]['revenue'], float(order.total_price))
             i += 1
 
+    @tag('slow')
     def test_total_revenue_is_correct(self):
         total_revenue = ShopifyOrder.objects.all().aggregate(total=Sum('total_price'))['total']
         self.assertAlmostEqual(self.totals['revenue'], total_revenue)
@@ -173,12 +177,14 @@ class FulfillmentCostTestCase(BaseTestCase):
         end = self.now + timedelta(9)
         self.profits, self.totals, details = get_profits(self.store, self.now, end)
 
+    @tag('slow')
     def test_fulfillment_cost_by_day_is_correct(self):
         i = 0
         for fulfillment_cost in AliexpressFulfillmentCost.objects.all().order_by('-created_at'):
             self.assertAlmostEqual(self.profits[i]['fulfillment_cost'], float(fulfillment_cost.total_cost))
             i += 1
 
+    @tag('slow')
     def test_total_fulfillment_cost_is_correct(self):
         # total_fulfillment_cost = AliexpressFulfillmentCost.objects.all().aggregate(total=Sum('total_cost'))['total']
         # self.assertAlmostEqual(self.totals['fulfillment_cost'], total_fulfillment_cost)

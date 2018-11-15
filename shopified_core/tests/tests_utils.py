@@ -2,6 +2,7 @@
 import os
 
 from django.conf import settings
+from django.test import tag
 from lib.test import BaseTestCase
 from mock import patch, Mock
 import requests_mock
@@ -391,6 +392,7 @@ class FranceAddressFixTestCase(BaseTestCase):
         return open(os.path.join(settings.BASE_DIR, 'shopified_core/tests/data', name)).read().decode('utf8')
 
     # @requests_mock.Mocker()
+    @tag('slow')
     def test_fix_fr_address(self):
         # m.get('https://geo.api.gouv.fr/communes', text=self.get_file_content('data1.json'))
 
@@ -406,6 +408,7 @@ class FranceAddressFixTestCase(BaseTestCase):
         self.assertEqual(fixed_address['city'], 'Paris')
         self.assertEqual(fixed_address['address2'], '')
 
+    @tag('slow')
     def test_fix_fr_address_zip_match(self):
 
         shipping_address = self.get_address(
@@ -420,6 +423,7 @@ class FranceAddressFixTestCase(BaseTestCase):
         self.assertEqual(fixed_address['city'], 'Alpes-Maritimes')
         self.assertEqual(fixed_address['address2'], 'Nice')
 
+    @tag('slow')
     def test_fix_fr_address_paris_arrondissement(self):
         shipping_address = self.get_address(
             province="Paris",
@@ -433,6 +437,7 @@ class FranceAddressFixTestCase(BaseTestCase):
         self.assertEqual(fixed_address['city'], 'Paris')
         self.assertEqual(fixed_address['address2'], '')
 
+    @tag('slow')
     def test_fix_fr_address_zip_code_in_city_name(self):
 
         shipping_address = self.get_address(
@@ -448,6 +453,7 @@ class FranceAddressFixTestCase(BaseTestCase):
         self.assertEqual(fixed_address['address2'], 'Cambrai')
 
     # @requests_mock.Mocker()
+    @tag('slow')
     def test_fix_fr_address_multi_occurence(self):
         # m.get('https://geo.api.gouv.fr/communes', text=self.get_file_content('data2.json'))
         shipping_address = self.get_address(
@@ -463,6 +469,7 @@ class FranceAddressFixTestCase(BaseTestCase):
         self.assertEqual(fixed_address['address2'], 'Courtomer')
 
     # @requests_mock.Mocker()
+    @tag('slow')
     def test_fix_fr_address_short_common_names(self):
         # m.get('https://geo.api.gouv.fr/communes', text=self.get_file_content('data3.json'))
 
@@ -481,6 +488,7 @@ class FranceAddressFixTestCase(BaseTestCase):
         self.assertEqual(fixed_address['address1'], 'Allee Anne-de-Beaujeu N365')
         self.assertEqual(fixed_address['address2'], '5eme Etage N55, Fontaines')
 
+    @tag('slow')
     def test_fix_fr_address_same_zip_and_region(self):
 
         shipping_address = self.get_address(
@@ -498,6 +506,7 @@ class FranceAddressFixTestCase(BaseTestCase):
         self.assertEqual(fixed_address['address1'], '40 rue de Fontenelle')
         self.assertEqual(fixed_address['address2'], 'Res les 4 platanes Bat E 54, Villeneuve d\'Ornon')
 
+    @tag('slow')
     def test_fix_fr_address_same_zip_and_region2(self):
 
         shipping_address = self.get_address(
