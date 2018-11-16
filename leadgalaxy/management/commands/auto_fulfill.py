@@ -160,6 +160,26 @@ class Command(DropifiedBaseCommand):
 
                         return False
 
+                    elif 'your shop does not have the \'oberlo\' fulfillment service enabled' in rep.text.lower():
+                        r = requests.post(
+                            url=store.get_link('/admin/fulfillment_services.json', api=True),
+                            json={
+                                "fulfillment_service": {
+                                    "name": "Oberlo",
+                                    "inventory_management": false,
+                                    "tracking_support": false,
+                                    "requires_shipping_method": false,
+                                    "format": "json"
+                                }
+                            }
+                        )
+
+                        if r.ok:
+                            continue
+                        else:
+                            raven_client.captureException()
+                            return False
+
                     elif 'must be stocked at the same location' in rep.text:
                         location = None
 
