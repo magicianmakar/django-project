@@ -10,7 +10,7 @@ import keen
 from simplejson import JSONDecodeError
 from datetime import timedelta
 
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache, caches
@@ -607,7 +607,10 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
                                          .update(shopify_status=fulfillment_status)
 
         with cache.lock('order_lock_{}_{}'.format(store_id, order_id), timeout=10):
-            order_utils.update_shopify_order(store, shopify_order)
+            try:
+                order_utils.update_shopify_order(store, shopify_order)
+            except IntegrityError as e:
+                raise self.retry(exc=e, countdown=30, max_retries=3)
 
         active_order_key = 'active_order_{}'.format(shopify_order['id'])
         if caches['orders'].get(active_order_key):

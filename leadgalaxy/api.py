@@ -2281,7 +2281,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 for line in order.shopifyorderline_set.all():
                     if line.line_id == utils.safeInt(line_id):
                         line.track = track
-                        line.save()
+                        try:
+                            line.save()
+                        except:
+                            pass
 
                         need_fulfillment -= 1
 
@@ -3318,10 +3321,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except ShopifyOrderLog.DoesNotExist:
             return self.api_error('No log found', status=404)
 
-        except ShopifyOrderTrack.DoesNotExist:
+        except ShopifyOrderLog.DoesNotExist:
             return self.api_error('Order not found', status=404)
 
-        except ShopifyOrderTrack.MultipleObjectsReturned:
+        except ShopifyOrderLog.MultipleObjectsReturned:
             logs = []
             track_log = None
 
