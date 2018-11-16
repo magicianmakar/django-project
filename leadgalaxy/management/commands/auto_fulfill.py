@@ -96,6 +96,8 @@ class Command(DropifiedBaseCommand):
         store = order.store
         user = store.user
 
+        self.raven_context_from_store(raven_client, store)
+
         api_data, line = utils.order_track_fulfillment(
             order_track=order,
             user_config=user.get_config(),
