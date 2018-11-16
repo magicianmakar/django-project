@@ -2739,16 +2739,17 @@ class ProductCollections(object):
         return collections
 
     def link_product_collection(self, product, collections):
+        collections = map(int, collections)
         response = requests.get(
             url=product.store.get_link(self.shopify_api_urls.get('product_collections').format(product.shopify_id), api=True)
         ).json()
 
         self.unlink_product_collection(product=product, collections=[
-            {'id': collection.get('id'), 'collection_id': collection.get('collection_id')} for collection in
+            {'id': collect.get('id'), 'collection_id': collect.get('collection_id')} for collect in
             response.get('collects', [])], selected=collections)
 
         for collection in collections:
-            if collection not in [collection.get('collection_id') for collection in response.get('collects', [])]:
+            if collection not in [collect.get('collection_id') for collect in response.get('collects', [])]:
                 requests.post(
                     product.store.get_link(self.shopify_api_urls.get('link_collection'), api=True),
                     json={
@@ -2762,8 +2763,9 @@ class ProductCollections(object):
         self.update_product_collects_shopify_id(product)
 
     def unlink_product_collection(self, product, collections, selected):
+        selected = map(int, selected)
         for collection in collections:
-            if str(collection['collection_id']) not in selected:
+            if collection['collection_id'] not in selected:
                 requests.delete(product.store.get_link(
                     self.shopify_api_urls.get('unlink_collection').format(collection['id']),
                     api=True))

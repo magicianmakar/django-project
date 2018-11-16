@@ -4,13 +4,13 @@ from decimal import Decimal
 import stripe.error
 from mock import Mock, patch
 
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 
 from stripe_subscription import utils
 from stripe_subscription.tests import factories as f
 
 
-class StripeCustomerTestCase(TransactionTestCase):
+class StripeCustomerTestCase(BaseTestCase):
     def setUp(self):
         attributes = {
             'date': '1473471324',

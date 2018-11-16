@@ -52,6 +52,24 @@ Automated tests will ensure the app is properly installed with all the required 
 python manage.py test
 ```
 
+We also have an alias for running tests
+```
+dj-test
+```
+
+This alias is equivalent to the following command:
+```
+dj-activate; python manage.py test -v 2 -k
+```
+
+We alss tag tests that are slow to run. This allows us to exclude the slow
+tests like this:
+```
+dj-test --exclude-tag=slow
+```
+
+Slow tests are generally those that try to access external resources over HTTP.
+
 ### 5. Start the app
 If the tests pass, start the application:
 
@@ -78,3 +96,52 @@ dj-celery: Run Celery worker
 dj-push: Run flake8 and push changes if flake8 doesn't raise any warnings
 ```
 
+### Docker based dev environment
+You will need to install the following dependencies for this:
+- Docker
+- Docker Compose
+
+Once the dependencies are installed, build applicaton image:
+```
+docker-compose build
+```
+
+Add the following lines to `.env.dev`:
+```
+export DATABASE_URL=postgres://postgres:@db:5432/shopified
+export DATA_STORE_DATABASE_URL=postgres://postgres:@db:5432/shopified-store
+export REDISCLOUD_URL="redis://redis:6379"
+export REDISCLOUD_CACHE="redis://redis:6379"
+export REDISCLOUD_ORDERS="redis://redis:6379"
+alias dj-run='dj-activate; python manage.py runserver 0.0.0.0:8000'
+```
+
+Log into the docker image:
+```
+docker-compose run -p 8000:8000 web
+```
+
+Create databases if you are logging in for the first time:
+```
+createdb --host=db -U postgres -O postgres -E utf8 -T template0 shopified
+createdb --host=db -U postgres -O postgres -E utf8 -T template0 shopified-store
+```
+
+Run the application:
+```
+dj-migrate
+dj-run
+```
+
+You should be able to access the webapp at http://dev.dropified.com:8000/.
+
+To run the celery workers, start a new terminal session of webapp:
+```
+docker-compose run web
+```
+
+Start the worker:
+```
+export C_FORCE_ROOT=1
+dj-celery
+```

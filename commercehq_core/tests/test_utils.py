@@ -3,9 +3,10 @@ import json
 from mock import patch, Mock
 from requests.exceptions import HTTPError
 
-from django.test import TransactionTestCase
 from django.core.cache import cache, caches
+from django.test import tag
 
+from lib.test import BaseTestCase
 from leadgalaxy.models import User
 from commercehq_core import utils
 from commercehq_core.models import CommerceHQStore
@@ -32,7 +33,7 @@ CHQ_API_KEY = 'gsycAdWxbv56CAQFNWVkN53sLxnzcSEF'
 CHQ_API_PASSWORD = 'euld-IWsmA1SkT5dved51decAcrXoz6n'
 
 
-class GetShippingCarrierTestCase(TransactionTestCase):
+class GetShippingCarrierTestCase(BaseTestCase):
     def setUp(self):
         self.store = CommerceHQStoreFactory()
         self.store_shipping_carriers = [{
@@ -69,7 +70,7 @@ class GetShippingCarrierTestCase(TransactionTestCase):
         self.assertEqual(shipping_carrier.get('title'), "AfterShip")
 
 
-class CheckNotifyCustomerTestCase(TransactionTestCase):
+class CheckNotifyCustomerTestCase(BaseTestCase):
     def setUp(self):
         self.invalid_tracking_number = '65141515'
 
@@ -109,7 +110,7 @@ class CheckNotifyCustomerTestCase(TransactionTestCase):
         self.assertFalse(notify)
 
 
-class AddAftershipToStoreCarriers(TransactionTestCase):
+class AddAftershipToStoreCarriers(BaseTestCase):
     def setUp(self):
         self.store = CommerceHQStoreFactory()
         self.aftership = {
@@ -128,7 +129,7 @@ class AddAftershipToStoreCarriers(TransactionTestCase):
         self.assertEqual(shipping_carrier.get('title'), 'AfterShip')
 
 
-class CacheFulfillmentData(TransactionTestCase):
+class CacheFulfillmentData(BaseTestCase):
     def setUp(self):
         self.store = CommerceHQStoreFactory()
         self.orders = {
@@ -278,13 +279,14 @@ class CacheFulfillmentData(TransactionTestCase):
         caches['orders'].delete_many(cache_keys)
 
 
-class OrdersTestCase(TransactionTestCase):
+class OrdersTestCase(BaseTestCase):
     def setUp(self):
         self.user = User.objects.create(username='me', email='me@localhost.com')
         self.store = CommerceHQStore.objects.create(
             user=self.user, title="test1", api_url=CHQ_API_URL,
             api_key=CHQ_API_KEY, api_password=CHQ_API_PASSWORD)
 
+    @tag('slow')
     def test_order_notes(self):
         order_id = 1016
         line_id = 9309669834
@@ -298,6 +300,7 @@ class OrdersTestCase(TransactionTestCase):
 
         self.assertEqual(note1, utils.get_chq_order_note(store, order_id))
 
+    @tag('slow')
     def test_order_updater_note(self):
         store = self.store
         order_id = 1015
@@ -311,7 +314,7 @@ class OrdersTestCase(TransactionTestCase):
         self.assertEqual(note, utils.get_chq_order_note(store, order_id))
 
 
-class UpdateProductDataImageVariantsTestCase(TransactionTestCase):
+class UpdateProductDataImageVariantsTestCase(BaseTestCase):
     def setUp(self):
         self.old_url = 'https://example.com/example.png'
         self.new_url = 'https://example.com/new-image.png'

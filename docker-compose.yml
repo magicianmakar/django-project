@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:9.5.12
+    environment:
+      POSTGRES_USER: postgres
+  redis:
+    image: redis:3.0
+
+  web:
+    build: .
+    container_name: dropified_web
+    command: bash
+    volumes:
+      - .:/opt/dropified
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis

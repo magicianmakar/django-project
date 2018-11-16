@@ -725,6 +725,10 @@ def webhook(request, provider, option):
                     store.refresh_info(info=shop_data, commit=False)
                     store.save()
 
+                    if store.user.profile.from_shopify_app_store() and shop_data.get('email'):
+                        store.user.email = shop_data.get('email')
+                        store.user.save()
+
                     return JsonResponse({'status': 'ok'})
 
             elif topic == 'app/uninstalled':
@@ -1153,9 +1157,9 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     if request.GET.get('product_board') in ['added', 'not_added']:
         board_list = request.user.models_user.shopifyboard_set.all()
         if request.GET.get('product_board') == "added":
-            res = res.filter(shopifyboard=board_list)
+            res = res.filter(shopifyboard__in=board_list)
         elif request.GET.get('product_board') == "not_added":
-            res = res.exclude(shopifyboard=board_list)
+            res = res.exclude(shopifyboard__in=board_list)
 
     paginator = SimplePaginator(res, post_per_page)
 

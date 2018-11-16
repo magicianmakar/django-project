@@ -96,6 +96,8 @@ class Command(DropifiedBaseCommand):
         store = order.store
         user = store.user
 
+        self.raven_context_from_store(raven_client, store)
+
         api_data, line = utils.order_track_fulfillment(
             order_track=order,
             user_config=user.get_config(),
@@ -159,6 +161,26 @@ class Command(DropifiedBaseCommand):
                         self.log_fulfill_error(order, 'Invalid for this fulfillment service')
 
                         return False
+
+                    elif 'your shop does not have the \'oberlo\' fulfillment service enabled' in rep.text.lower():
+                        r = requests.post(
+                            url=store.get_link('/admin/fulfillment_services.json', api=True),
+                            json={
+                                "fulfillment_service": {
+                                    "name": "Oberlo",
+                                    "inventory_management": false,
+                                    "tracking_support": false,
+                                    "requires_shipping_method": false,
+                                    "format": "json"
+                                }
+                            }
+                        )
+
+                        if r.ok:
+                            continue
+                        else:
+                            raven_client.captureException()
+                            return False
 
                     elif 'must be stocked at the same location' in rep.text:
                         location = None

@@ -736,7 +736,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                             'target = "_blank">ClippingMagic</a>')
 
             else:
-                response = 'ClippingMagic API Error'
+                if error.get('message'):
+                    response = 'ClippingMagic API Error:\n {}'.format(error['message'])
+                else:
+                    response = 'ClippingMagic API Error'
 
             raven_client.captureMessage('ClippingMagic API Error', level='warning', extra=res)
 
@@ -2199,17 +2202,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     return self.api_success()
 
                 if saved_track.source_id and source_id != saved_track.source_id and not from_oberlo:
-                    raven_client.captureMessage('Possible Double Order', level='warning', extra={
-                        'store': store.title,
-                        'order_id': order_id,
-                        'line_id': line_id,
-                        'old': {
-                            'id': saved_track.source_id,
-                            'date': arrow.get(saved_track.created_at).humanize(),
-                        },
-                        'new': source_id,
-                    })
-
                     return self.api_error('This Order already have an Aliexpress Order ID', status=422)
 
             seem_source_orders = ShopifyOrderTrack.objects.filter(
@@ -2218,14 +2210,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             ).values_list('order_id', flat=True)
 
             if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced') and not from_oberlo:
-                raven_client.captureMessage('Linked to an other Order', level='warning', extra={
-                    'store': store.title,
-                    'order_id': order_id,
-                    'line_id': line_id,
-                    'source_id': source_id,
-                    'seem_source_orders': list(seem_source_orders),
-                })
-
                 return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
 
             while True:
@@ -2282,7 +2266,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 for line in order.shopifyorderline_set.all():
                     if line.line_id == utils.safeInt(line_id):
                         line.track = track
-                        line.save()
+                        try:
+                            line.save()
+                        except:
+                            pass
 
                         need_fulfillment -= 1
 
@@ -3319,10 +3306,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         except ShopifyOrderLog.DoesNotExist:
             return self.api_error('No log found', status=404)
 
-        except ShopifyOrderTrack.DoesNotExist:
+        except ShopifyOrderLog.DoesNotExist:
             return self.api_error('Order not found', status=404)
 
-        except ShopifyOrderTrack.MultipleObjectsReturned:
+        except ShopifyOrderLog.MultipleObjectsReturned:
             logs = []
             track_log = None
 

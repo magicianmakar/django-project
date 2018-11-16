@@ -1,6 +1,6 @@
 from mock import patch, Mock
 
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 from django.urls import reverse
 
 from leadgalaxy.tests.factories import (
@@ -23,7 +23,7 @@ from .factories import (
 )
 
 
-class ProductFeeds(TransactionTestCase):
+class ProductFeeds(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -296,7 +296,7 @@ class ProductFeeds(TransactionTestCase):
         self.assertTemplateUsed('gearbubble/upgrade.html')
 
 
-class GetProductFeed(TransactionTestCase):
+class GetProductFeed(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'

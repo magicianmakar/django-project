@@ -1,10 +1,11 @@
 import os
 from StringIO import StringIO
 
-from django.test import TransactionTestCase
 from django.utils import timezone
+from django.test import tag
 from django.core.management import call_command
 
+from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine, ShopifyOrderLog
 from leadgalaxy import utils
 from leadgalaxy.models import (
@@ -91,7 +92,7 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     order = factory.SubFactory(ShopifyOrderFactory)
 
 
-class AutoFulfillTestCase(TransactionTestCase):
+class AutoFulfillTestCase(BaseTestCase):
 
     def setUp(self):
         self.parent_user = f.UserFactory()
@@ -102,6 +103,7 @@ class AutoFulfillTestCase(TransactionTestCase):
 
         self.store = ShopifyStoreFactory()
 
+    @tag('slow')
     @patch('leadgalaxy.management.commands.auto_fulfill.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill.Command.fulfill_order')
     def test_fulfill_tracked_order(self, fulfill_order):
@@ -118,6 +120,7 @@ class AutoFulfillTestCase(TransactionTestCase):
 
         fulfill_order.assert_called_with(track)
 
+    @tag('slow')
     @patch('leadgalaxy.management.commands.auto_fulfill.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill.Command.fulfill_order')
     def test_fulfill_ignore_no_tracking_number(self, fulfill_order):
@@ -136,7 +139,7 @@ class AutoFulfillTestCase(TransactionTestCase):
         fulfill_order.assert_not_called()
 
 
-class AutoFulfillCombinedTestCase(TransactionTestCase):
+class AutoFulfillCombinedTestCase(BaseTestCase):
 
     def setUp(self):
         self.parent_user = f.UserFactory()
@@ -149,6 +152,7 @@ class AutoFulfillCombinedTestCase(TransactionTestCase):
         self.store = ShopifyStoreFactory(user_id=self.user.pk)
         self.store.save()
 
+    @tag('slow')
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.fulfill_order')
     def test_fulfill_tracked_order(self, fulfill_order):
@@ -194,6 +198,7 @@ class AutoFulfillCombinedTestCase(TransactionTestCase):
 
         fulfill_order.assert_called_with(data)
 
+    @tag('slow')
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.requests.post')
     def test_fulfill_tracked_line(self, request_post):
@@ -219,6 +224,7 @@ class AutoFulfillCombinedTestCase(TransactionTestCase):
         line.refresh_from_db()
         self.assertEqual(line.fulfillment_status, 'fulfilled')
 
+    @tag('slow')
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.get_fulfillment_data')
     def test_prepare_fulfillment_data(self, get_fulfillment_data):
@@ -242,7 +248,7 @@ class AutoFulfillCombinedTestCase(TransactionTestCase):
         get_fulfillment_data.assert_called_with(track, data)
 
 
-class FulfillApiTestCase(TransactionTestCase):
+class FulfillApiTestCase(BaseTestCase):
     def setUp(self):
         self.parent_user = f.UserFactory()
         self.user = f.UserFactory()
@@ -253,6 +259,7 @@ class FulfillApiTestCase(TransactionTestCase):
         self.store = f.ShopifyStoreFactory(user=self.user)
         self.client.login(username=self.user.username, password=self.password)
 
+    @tag('slow')
     def test_add_source_id(self):
         data = {
             'store': self.store.id,
@@ -276,6 +283,7 @@ class FulfillApiTestCase(TransactionTestCase):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(ShopifyOrderTrack.objects.count(), 2)
 
+    @tag('slow')
     def test_add_duplicate_source_id(self):
         data = {
             'store': self.store.id,
@@ -300,6 +308,7 @@ class FulfillApiTestCase(TransactionTestCase):
         self.assertEqual(r.status_code, 422)
         self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
 
+    @tag('slow')
     def test_overwrite_source_id(self):
         data = {
             'store': self.store.id,

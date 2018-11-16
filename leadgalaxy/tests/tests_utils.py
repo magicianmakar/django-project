@@ -2,10 +2,11 @@
 
 import re
 import random
-from django.test import TransactionTestCase
 from django.conf import settings
+from django.test import tag
 from redis.exceptions import LockError
 
+from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 from leadgalaxy import utils
 from leadgalaxy.models import (
@@ -77,7 +78,7 @@ class ShopifyOrderLineFactory(factory.django.DjangoModelFactory):
     order = factory.SubFactory(ShopifyOrderFactory)
 
 
-class FulfillmentTestCase(TransactionTestCase):
+class FulfillmentTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.password = 'test'
@@ -444,10 +445,11 @@ class FulfillmentTestCase(TransactionTestCase):
         self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
 
 
-class OrdersTestCase(TransactionTestCase):
+class OrdersTestCase(BaseTestCase):
     def setUp(self):
         pass
 
+    @tag('slow')
     def test_order_notes(self):
         order_id = 4905209738
         line_id = 9309669834
@@ -486,6 +488,7 @@ class OrdersTestCase(TransactionTestCase):
 
         utils.set_shopify_order_note(store, order_id, '')
 
+    @tag('slow')
     def test_order_updater_note(self):
         store = ShopifyStoreFactory()
         order_id = 579111223384
@@ -503,6 +506,7 @@ class OrdersTestCase(TransactionTestCase):
         except LockError:
             pass
 
+    @tag('slow')
     def test_order_updater_note_unicode(self):
         store = ShopifyStoreFactory()
         order_id = 579111518296
@@ -531,6 +535,7 @@ class OrdersTestCase(TransactionTestCase):
 
         updater.reset('notes')
 
+    @tag('slow')
     def test_order_updater_tags(self):
         store = ShopifyStoreFactory()
         order_id = 579111714904
@@ -549,6 +554,7 @@ class OrdersTestCase(TransactionTestCase):
 
         self.assertEqual(tag, utils.get_shopify_order(store, order_id)['tags'])
 
+    @tag('slow')
     def test_order_updater_attributes(self):
         store = ShopifyStoreFactory()
         order_id = 579111845976
@@ -599,7 +605,7 @@ class OrdersTestCase(TransactionTestCase):
         self.assertTrue(updater.have_changes())
 
 
-class UtilsTestCase(TransactionTestCase):
+class UtilsTestCase(BaseTestCase):
     def setUp(self):
         pass
 
@@ -737,7 +743,7 @@ class UtilsTestCase(TransactionTestCase):
         self.assertEqual(utils.ensure_title(u'vari\xe9t\xe9'), u'vari\xe9t\xe9')
 
 
-class CustomerAddressTestCase(TransactionTestCase):
+class CustomerAddressTestCase(BaseTestCase):
     def test_german_umlauts(self):
         order = {
             'shipping_address': {
@@ -777,7 +783,7 @@ class CustomerAddressTestCase(TransactionTestCase):
             self.assertEqual(addr['address1'], v)
 
 
-class ShippingHelperTestCase(TransactionTestCase):
+class ShippingHelperTestCase(BaseTestCase):
     def get_order(self, **kwargs):
         shipping_address = {
             "country_code": "US",

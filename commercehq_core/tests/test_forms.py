@@ -1,13 +1,13 @@
 from urlparse import urlparse
 
-from django.test import TransactionTestCase
+from lib.test import BaseTestCase
 
 from leadgalaxy.tests.factories import UserFactory
 
 from ..forms import CommerceHQStoreForm
 
 
-class CommerceHQStoreFormTestCase(TransactionTestCase):
+class CommerceHQStoreFormTestCase(BaseTestCase):
     def setUp(self):
         self.user = UserFactory(username='test')
         self.data = {
