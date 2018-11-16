@@ -407,7 +407,6 @@ def process_webhook_event(request, event_id, raven_client):
             stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
             stripe_sub.refresh(sub=sub)
         except StripeSubscription.DoesNotExist:
-            raven_client.captureException(level='warning')
             return HttpResponse('Subscription Not Found')
 
         trial_delta = arrow.get(sub.trial_end) - arrow.utcnow()

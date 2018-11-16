@@ -843,31 +843,12 @@ class WooStoreApi(ApiResponseMixin, View):
             saved_track = tracks.first()
 
             if saved_track.source_id and source_id != saved_track.source_id:
-                extra = {
-                    'store': store.title,
-                    'order_id': order_id,
-                    'line_id': line_id,
-                    'old': {
-                        'id': saved_track.source_id,
-                        'date': arrow.get(saved_track.created_at).humanize(),
-                    },
-                    'new': source_id,
-                }
-                raven_client.captureMessage('Possible Double Order', level='warning', extra=extra)
                 return self.api_error('This Order already have an Aliexpress Order ID', status=422)
 
         seen_source_orders = WooOrderTrack.objects.filter(store=store, source_id=source_id)
         seen_source_orders = seen_source_orders.values_list('order_id', flat=True)
 
         if len(seen_source_orders) and int(order_id) not in seen_source_orders and not data.get('forced'):
-            extra = {
-                'store': store.title,
-                'order_id': order_id,
-                'line_id': line_id,
-                'source_id': source_id,
-                'seen_source_orders': list(seen_source_orders)}
-
-            raven_client.captureMessage('Linked to an other Order', level='warning', extra=extra)
             return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
 
         track, created = WooOrderTrack.objects.update_or_create(

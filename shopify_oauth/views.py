@@ -169,19 +169,7 @@ def install(request, store):
         if not can_add and not reinstall_store:
             if user.profile.plan.is_free and user.can_trial() and not user.profile.from_shopify_app_store():
                 subscribe_user_to_default_plan(user)
-
             else:
-                raven_client.captureMessage(
-                    'Add Extra Store',
-                    level='warning',
-                    extra={
-                        'user': user.email,
-                        'store': store,
-                        'plan': user.profile.plan.title,
-                        'stores': user.profile.get_shopify_stores().count()
-                    }
-                )
-
                 plans_url = request.build_absolute_uri('/user/profile#plan')
                 if user.profile.plan.is_free and not user_count:
                     messages.error(

@@ -2221,17 +2221,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     return self.api_success()
 
                 if saved_track.source_id and source_id != saved_track.source_id and not from_oberlo:
-                    raven_client.captureMessage('Possible Double Order', level='warning', extra={
-                        'store': store.title,
-                        'order_id': order_id,
-                        'line_id': line_id,
-                        'old': {
-                            'id': saved_track.source_id,
-                            'date': arrow.get(saved_track.created_at).humanize(),
-                        },
-                        'new': source_id,
-                    })
-
                     return self.api_error('This Order already have an Aliexpress Order ID', status=422)
 
             seem_source_orders = ShopifyOrderTrack.objects.filter(
@@ -2240,14 +2229,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             ).values_list('order_id', flat=True)
 
             if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced') and not from_oberlo:
-                raven_client.captureMessage('Linked to an other Order', level='warning', extra={
-                    'store': store.title,
-                    'order_id': order_id,
-                    'line_id': line_id,
-                    'source_id': source_id,
-                    'seem_source_orders': list(seem_source_orders),
-                })
-
                 return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
 
             while True:
