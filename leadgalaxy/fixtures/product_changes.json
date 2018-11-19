@@ -264,6 +264,31 @@
 },
 {
   "fields": {
+    "shipping_map": "",
+    "shopify_export": 1,
+    "product_type": "",
+    "default_supplier": 7,
+    "title": "COPOZZ Ski Helmet  Integrally-molded Snowboard helmet Men Women Skating Skateboard Skiing Helmet",
+    "shopify_id": 2132867350576,
+    "user": [
+      "admin"
+    ],
+    "is_active": true,
+    "updated_at": "2018-11-13T22:44:07.939Z",
+    "price": 35.02,
+    "parent_product": null,
+    "tag": "",
+    "created_at": "2018-11-13T18:01:26.806Z",
+    "data": "{\"vendor\": \"copozz Official Store\", \"description\": \"\", \"weight\": 598.74, \"tags\": \"\", \"price\": 35.02, \"compare_at_price\": 44.9, \"images\": [\"https://ae01.alicdn.com/kf/HTB1uT0YXLfsK1RjSszgq6yXzpXaA/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg\", \"https://ae01.alicdn.com/kf/HTB1fbYoLpXXXXamXVXXq6xXFXXX6/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg\", \"https://ae01.alicdn.com/kf/HTB1y8onOpXXXXaaapXXq6xXFXXXh/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg\", \"https://ae01.alicdn.com/kf/HTB158AlOpXXXXbyapXXq6xXFXXXt/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg\", \"https://ae01.alicdn.com/kf/HTB1VuksfJbJ8KJjy1zjq6yqapXaR/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg\", \"https://ae01.alicdn.com/kf/HTB1LXIVfIbI8KJjy1zdq6ze1VXa7/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg\", \"https://ae01.alicdn.com/kf/HTB1aFaAOVXXXXXrXFXXq6xXFXXXR/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg_640x640.jpg\", \"https://ae01.alicdn.com/kf/HTB1MPGsOVXXXXXpXVXXq6xXFXXXu/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg_640x640.jpg\", \"https://ae01.alicdn.com/kf/HTB1.ygQOpXXXXcaXpXXq6xXFXXXc/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg_640x640.jpg\"], \"variants\": [{\"values\": [\"White\", \"Black\", \"Sky Blue\"], \"title\": \"Color\"}, {\"values\": [\"L\", \"M\"], \"title\": \"Size\"}], \"variants_sku\": {\"M\": \"5:361386\", \"L\": \"5:361385\", \"China\": \"200007763:201336100\", \"Black\": \"14:193\", \"Russian Federation\": \"200007763:201336103\", \"Sky Blue\": \"14:1254\", \"White\": \"14:29\"}, \"original_url\": \"https://www.aliexpress.com/item/COPOZZ-New-brand-Ski-helmet-Integrally-molded-professional-Snowboard-helmet-Men-Women-Skating-Skateboard-Warm-Skiing/32599436245.html\", \"type\": \"Ski Helmets\", \"title\": \"COPOZZ Ski Helmet  Integrally-molded Snowboard helmet Men Women Skating Skateboard Skiing Helmet\", \"weight_unit\": \"g\", \"published\": false, \"variants_images\": {\"1286104768.jpg\": \"Sky Blue\", \"-1929646201.jpg\": \"White\", \"-1600738446.jpg\": \"Black\"}, \"store\": {\"url\": \"//www.aliexpress.com/store/134518\", \"contact\": \"//message.aliexpress.com/message/new.htm?productId=32599436245&messageType=product&memberType=seller&refer=https://www.aliexpress.com/item/COPOZZ-New-brand-Ski-helmet-Integrally-molded-professional-Snowboard-helmet-Men-Women-Skating-Skateboard-Warm-Skiing/32599436245.html\", \"id\": \"134518\", \"name\": \"copozz Official Store\"}}",
+    "notes": "",
+    "store": 1,
+    "supplier_map": ""
+  },
+  "model": "leadgalaxy.shopifyproduct",
+  "pk": 6
+},
+{
+  "fields": {
     "is_default": true,
     "product": 5,
     "shipping_method": null,
@@ -277,6 +302,38 @@
   },
   "model": "leadgalaxy.productsupplier",
   "pk": 6
+},
+{
+  "fields": {
+    "is_default": true,
+    "product": 6,
+    "shipping_method": null,
+    "created_at": "2018-11-13T22:31:05.967Z",
+    "updated_at": "2018-11-13T22:44:07.920Z",
+    "supplier_url": "//www.aliexpress.com/store/134518",
+    "product_url": "https://www.aliexpress.com/item/COPOZZ-New-brand-Ski-helmet-Integrally-molded-professional-Snowboard-helmet-Men-Women-Skating-Skateboard-Warm-Skiing/32599436245.html",
+    "variants_map": "{\"21443349643312\": [{\"title\": \"Sky Blue\"}, {\"title\": \"M\"}], \"21443349512240\": [{\"title\": \"Black\"}, {\"title\": \"L\"}], \"21443349479472\": [{\"title\": \"White\"}, {\"title\": \"L\"}], \"21443349610544\": [{\"title\": \"Black\"}, {\"title\": \"M\"}], \"21443349545008\": [{\"title\": \"Sky Blue\"}, {\"title\": \"L\"}], \"21443349577776\": [{\"title\": \"White\"}, {\"title\": \"M\"}]}",
+    "supplier_name": "copozz Official Store",
+    "store": 1
+  },
+  "model": "leadgalaxy.productsupplier",
+  "pk": 7
+},
+{
+  "fields": {
+    "is_default": false,
+    "product": 6,
+    "shipping_method": null,
+    "created_at": "2018-11-13T22:31:05.967Z",
+    "updated_at": "2018-11-13T22:44:07.920Z",
+    "supplier_url": "//www.aliexpress.com/store/134518",
+    "product_url": "https://www.aliexpress.com/item/COPOZZ-New-brand-Ski-helmet-Integrally-molded-professional-Snowboard-helmet-Men-Women-Skating-Skateboard-Warm-Skiing/32599436245.html",
+    "variants_map": "{\"21443349643312\": [{\"title\": \"Sky Blue\"}, {\"title\": \"M\"}], \"21443349512240\": [{\"title\": \"Black\"}, {\"title\": \"L\"}], \"21443349479472\": [{\"title\": \"White\"}, {\"title\": \"L\"}], \"21443349610544\": [{\"title\": \"Black\"}, {\"title\": \"M\"}], \"21443349545008\": [{\"title\": \"Sky Blue\",\"image\":\"https://ae01.alicdn.com/kf/HTB1.ygQOpXXXXcaXpXXq6xXFXXXc/COPOZZ-Ski-Helmet-Integrally-molded-Snowboard-helmet-Men-Women-Skating-Skateboard-Skiing-Helmet.jpg_50x50.jpg\",\"sku\":\"sku-1-1254\"}, {\"title\": \"L\",\"sku\":\"sku-2-361385\"},{\"title\":\"Russian Federation\",\"sku\":\"sku-3-201336103\"}], \"21443349577776\": [{\"title\": \"White\"}, {\"title\": \"M\"}]}",
+    "supplier_name": "copozz Official Store",
+    "store": 1
+  },
+  "model": "leadgalaxy.productsupplier",
+  "pk": 8
 },
 {
   "fields": {
