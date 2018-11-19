@@ -127,7 +127,7 @@ def parse_sku(sku):
     return options
 
 
-def variant_index(product, sku, variants=None):
+def variant_index(product, sku, variants=None, ships_from_id=None, ships_from_title=None):
     original_sku = sku or ''
     found_variant_id = None
     variants_map = product.get_variant_mapping(for_extension=True)
@@ -137,10 +137,13 @@ def variant_index(product, sku, variants=None):
 
     for variant_id, variant in variants_map.iteritems():
         found = True
+        ships_from_mapped = True if ships_from_id is None else False
         for variant_option in variant:
             if type(variant_option) is dict:
                 mapped_title = variant_option.get('title')
                 mapped_sku = variant_option.get('sku')
+                if variant_option.get('extra', False):
+                    continue
             else:
                 mapped_title = variant_option
                 mapped_sku = ''
@@ -153,14 +156,22 @@ def variant_index(product, sku, variants=None):
                     exists = True
                 if mapped_title and mapped_title == option_title:
                     exists = True
+                if exists:
+                    if ships_from_id == option_id:
+                        ships_from_mapped = True
+                    break
             if not exists:
                 found = False
                 break
         if found:
-            found_variant_id = variant_id
+            if ships_from_mapped:
+                found_variant_id = variant_id
+            elif ships_from_title == 'China':
+                found_variant_id = variant_id
             break
     if variants is None:
         return found_variant_id
+
     if found_variant_id is not None:
         for idx, variant in enumerate(variants):
             if variant.get('id') == int(found_variant_id):
@@ -176,5 +187,6 @@ def variant_index(product, sku, variants=None):
                 if found:
                     return idx
             elif variant.get('sku') and (variant['sku'] in sku or variant['sku'] in original_sku):
-                return idx
+                if ships_from_id is None or ships_from_title == 'China':
+                    return idx
     return None

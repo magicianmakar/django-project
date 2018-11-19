@@ -492,13 +492,15 @@ def sync_shopify_product_quantities(self, product_id):
         if product_data and variant_quantities:
             for variant in variant_quantities:
                 sku = variant.get('sku')
+                ships_from_id = variant.get('ships_from_id')
+                ships_from_title = variant.get('ships_from_title')
                 if not sku:
                     if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
                         idx = 0
                     else:
                         continue
                 else:
-                    idx = variant_index(product, sku, product_data['variants'])
+                    idx = variant_index(product, sku, product_data['variants'], ships_from_id, ships_from_title)
                     if idx is None:
                         if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
                             idx = 0
