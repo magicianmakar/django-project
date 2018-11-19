@@ -3700,7 +3700,7 @@ def orders_view(request):
 
             order, customer_address = utils.shopify_customer_address(
                 order=order,
-                aliexpress_fix=fix_aliexpress_address and supplier.is_aliexpress,
+                aliexpress_fix=fix_aliexpress_address and supplier and supplier.is_aliexpress,
                 fix_aliexpress_city=fix_aliexpress_city,
                 german_umlauts=german_umlauts)
 
