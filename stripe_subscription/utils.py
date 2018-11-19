@@ -462,7 +462,6 @@ def process_webhook_event(request, event_id, raven_client):
             customer = StripeCustomer.objects.get(customer_id=cus.id)
             customer.refresh()
         except StripeCustomer.DoesNotExist:
-            raven_client.captureException(level='warning')
             return HttpResponse('Customer Not Found')
 
         return HttpResponse('Customer Refreshed')
