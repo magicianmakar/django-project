@@ -43,17 +43,15 @@ class DropifiedBaseCommand(BaseCommand):
     def write_success(self, message):
         self.stdout.write(self.style.SUCCESS(message))
 
-    def raven_context_from_store(self, client, store):
+    def raven_context_from_store(self, client, store, tags={}):
         client.user_context({
             'id': store.user.id,
             'username': store.user.username,
             'email': store.user.email
         })
 
-        ctx = {}
-
         if hasattr(store, 'shop'):
-            ctx['store'] = store.shop
+            tags['store'] = store.shop
 
-        if ctx:
-            client.extra_context(ctx)
+        if tags:
+            client.tags_context(tags)
