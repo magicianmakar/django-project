@@ -113,15 +113,12 @@ def subscription_end_trial(user, raven_client, delete_on_error=False):
             try:
                 sub.save()
             except stripe.CardError as e:
-                raven_client.captureException(level='warning')
-
                 if delete_on_error:
                     sub.delete()
 
                 raise SubscriptionException('Subscription Error: {}'.format(e.message))
 
             except stripe.InvalidRequestError as e:
-                raven_client.captureException(level='warning')
                 if delete_on_error:
                     sub.delete()
 
@@ -277,7 +274,6 @@ def process_webhook_event(request, event_id, raven_client):
         try:
             customer = StripeCustomer.objects.get(customer_id=invoice.customer)
         except StripeCustomer.DoesNotExist:
-            raven_client.captureException(level='warning')
             return HttpResponse('Customer Not Found')
 
         if customer.have_source() and invoice.attempted:
@@ -375,7 +371,6 @@ def process_webhook_event(request, event_id, raven_client):
                         raven_client.captureException()
                         return HttpResponse('Cloud Not Register User')
             else:
-                raven_client.captureException(level='warning')
                 return HttpResponse('Customer Not Found')
 
         try:
@@ -431,21 +426,12 @@ def process_webhook_event(request, event_id, raven_client):
             try:
                 profile = UserProfile.objects.get(user=sub.metadata.user_id)
             except (UserProfile.DoesNotExist, AttributeError):
-                raven_client.captureException(level='warning')
                 return HttpResponse('Customer Not Found')
 
         current_plan = profile.plan
         if not profile.plan.is_free and profile.plan.is_stripe():
             profile.plan = GroupPlan.objects.get(default_plan=True)
             profile.save()
-        elif not profile.plan.is_stripe():
-            raven_client.captureMessage(
-                'Plan was not changed to Free plan',
-                extra={
-                    'email': profile.user.email,
-                    'plan': profile.plan.title,
-                },
-                level='warning')
 
         StripeSubscription.objects.filter(subscription_id=sub.id).delete()
 
@@ -486,7 +472,6 @@ def process_webhook_event(request, event_id, raven_client):
             customer = StripeCustomer.objects.get(customer_id=event.data.object.id)
             customer.delete()
         except StripeCustomer.DoesNotExist:
-            raven_client.captureException(level='warning')
             return HttpResponse('Customer Not Found')
 
         return HttpResponse('Customer Deleted')
@@ -496,7 +481,6 @@ def process_webhook_event(request, event_id, raven_client):
         try:
             stripe_customer = StripeCustomer.objects.get(customer_id=customer)
         except StripeCustomer.DoesNotExist:
-            raven_client.captureException(level='warning')
             return HttpResponse('Customer Not Found')
 
         clear_invoice_cache(stripe_customer)
