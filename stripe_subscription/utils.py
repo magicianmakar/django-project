@@ -326,6 +326,9 @@ def process_webhook_event(request, event_id, raven_client):
             customer.save()
 
             reg_coupon = customer.user.get_config('registration_discount')
+            if not reg_coupon:
+                if sub.plan.id == 'SA_77d970ae':
+                    reg_coupon = 'BLACKFRIDAY2018'
             try:
                 if reg_coupon and not reg_coupon.startswith(':'):
                     cus = stripe.Customer.retrieve(sub.customer)

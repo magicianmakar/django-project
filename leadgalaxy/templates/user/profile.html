@@ -20,12 +20,7 @@
                 {% if not user.is_subuser %}
                 <li class="plan-tab">
                     <a data-toggle="tab" href="#tab-3" data-auto-hash="plan" data-auto-click="true" aria-expanded="false">
-                        Plan &amp;
-                        {% if stripe_customer %}
-                            Subscriptions
-                        {% else %}
-                            Bundles
-                        {% endif %}
+                        Plan &amp; Subscriptions
                     </a>
                 </li>
                 {% endif %}
