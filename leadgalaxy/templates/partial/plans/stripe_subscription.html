@@ -3,6 +3,26 @@
 <div class="row">
     <div class="col-md-12">
         <div class="panel panel-default">
+          <div class="panel-body" style="background-image: url('//go.dropified.com/hosted/images/b6/6865a0ed0311e8a0ad2334fe5c5e4f/snowflakes-bkgd.png'); color: white;text-align: center;">
+              <div style="margin: -20px -20px 0; background: black;">
+                <img src="https://go.dropified.com/hosted/images/c9/3fb770ecfc11e88e8cf58d850fca1f/DROPIFIED-black-friday.png" style="max-width: 100%" alt="Super Sale - Black Friday - 50% OFF - Dropified Premier Plan">
+              </div>
+              <h1 style="
+          display: block; background: #79aa63;  text-transform: uppercase; margin: 0 -20px; padding: .5em 0; font-weight: bold; font-size: 3.5em;text-shadow: 1px 1px 3px rgba(0,0,0,0.5);">Dropified Black Friday SALE</h1>
+              <div style="margin: 0 -20px -20px; background: rgba(45, 62, 97, 0.78); padding: 20px;">
+                <h2 style="font-weight: bold; font-size: 2.5em;">Premier Annual Plan:<br><span style="text-decoration:line-through;">$127/month</span> $63.50/month...</h2>
+                <p style="font-size: 1.5em;">This deal locks in your savings for next year and beyond!</p>
+                <p style="text-transform: uppercase; font-size: 2.5em;">Limited Time - Ends Friday</p>
+                <p style="text-transform: uppercase; font-size: 2.5em;">Upgrade Now!</p>
+              </div>
+          </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
             <div class="panel-heading">
                 Manage Subscription
             </div>
@@ -13,13 +33,13 @@
                         <div class="m-t m-b">
                             <!-- Nav tabs -->
                             <ul class="nav nav-tabs centered" role="tablist">
-                                <li role="presentation"><a href="#Monthly" role="tab" data-toggle="tab">Monthly</a></li>
-                                <li role="presentation" class="active"><a href="#Yearly" role="tab" data-toggle="tab">Yearly</a></li>
+                                <li role="presentation" class="active"><a href="#Monthly" role="tab" data-toggle="tab">Monthly</a></li>
+                                <li role="presentation"><a href="#Yearly" role="tab" data-toggle="tab">Yearly</a></li>
                             </ul>
 
                             <!-- Tab panes -->
                             <div class="tab-content">
-                                <div role="tabpanel" class="tab-pane" id="Monthly">
+                                <div role="tabpanel" class="tab-pane active" id="Monthly">
                                     <table class="plan-table table plans-monthly m-t" style="display: table;">
                                         <thead>
                                             <tr>
@@ -31,10 +51,19 @@
                                                     >
 
                                                     <h3>{{item.description}}</h3>
-                                                    <p class="price">${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
-                                                    {% if item.stripe_plan.retail_amount %}
+                                                    <p class="price">
+                                                        {% if item.price_info %}
+                                                            {{item.price_info|safe}}
+                                                        {% else %}
+                                                            ${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
+                                                        {% endif %}
+                                                    {% if item.stripe_plan.retail_amount or item.retail_price_info %}
+                                                        {% if item.retail_price_info %}
+                                                            {{item.retail_price_info|safe}}
+                                                        {% else %}
                                                         <p class="retail-price" title="Retail Price">
                                                             <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
+                                                        {% endif %}
                                                         </p>
                                                     {% else %}
                                                         <p class="retail-price"></p>
@@ -110,7 +139,7 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div role="tabpanel" class="tab-pane active" id="Yearly">
+                                <div role="tabpanel" class="tab-pane" id="Yearly">
                                     <table class="plan-table table plans-monthly m-t" style="display: table;">
                                         <thead>
                                             <tr>
@@ -122,11 +151,20 @@
                                                     >
 
                                                     <h3>{{item.description}}</h3>
-                                                    <p class="price">${{item.monthly_price|stringformat:"i"}}<span>/mo - Billed Annually</span></p>
-                                                    {% if item.stripe_plan.retail_amount %}
-                                                        <p class="retail-price" title="Retail Price">
-                                                            <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
-                                                        </p>
+                                                    <p class="price">
+                                                        {% if item.price_info %}
+                                                            {{item.price_info|safe}}
+                                                        {% else %}
+                                                            ${{item.monthly_price|stringformat:"i"}}<span>/mo - Billed Annually</span></p>
+                                                        {% endif %}
+                                                    {% if item.stripe_plan.retail_amount or item.retail_price_info %}
+                                                        {% if item.retail_price_info %}
+                                                            {{item.retail_price_info|safe}}
+                                                        {% else %}
+                                                            <p class="retail-price" title="Retail Price">
+                                                                <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
+                                                            </p>
+                                                        {% endif %}
                                                     {% else %}
                                                         <p class="retail-price"></p>
                                                     {% endif %}
