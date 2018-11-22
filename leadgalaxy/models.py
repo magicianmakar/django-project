@@ -1762,6 +1762,7 @@ class ShopifyOrderTrack(models.Model):
 
     def get_source_status(self):
         status_map = {
+            # Aliexpress
             "PLACE_ORDER_SUCCESS": "Awaiting Payment",
             "IN_CANCEL": "Awaiting Cancellation",
             "WAIT_SELLER_SEND_GOODS": "Awaiting Shipment",
@@ -1775,6 +1776,25 @@ class ShopifyOrderTrack(models.Model):
             "RISK_CONTROL": "Payment being verified",
             "IN_PRESELL_PROMOTION": "Promotion is on",
             "FUND_PROCESSING": "Fund Processing",
+
+            # eBay
+            "BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+            "BUYER_REJECTED": "Pickup cancelled buyer rejected",
+            "DELIVERED": "Delivered",
+            "DIRECT_DEBIT": "Direct Debit",
+            "EXTERNAL_WALLET": "Processed by PayPal",
+            "IN_TRANSIT": "In transit",
+            "MANIFEST": "Shipping Info Received",
+            "NO_PICKUP_INSTRUCTIONS_AVAILABLE": "No pickup instruction available",
+            "NOT_PAID": "Not Paid",
+            "OUT_OF_STOCK": "Out of stock",
+            "PENDING_MERCHANT_CONFIRMATION": "Order is being prepared",
+            "PICKED_UP": "Picked up",
+            "PICKUP_CANCELLED_BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+            "PICKUP_CANCELLED_BUYER_REJECTED": "Pickup cancelled buyer rejected",
+            "PICKUP_CANCELLED_OUT_OF_STOCK": "Out of stock",
+            "READY_FOR_PICKUP": "Ready for pickup",
+            "SHIPPING_INFO_RECEIVED": "Shipping info received"
         }
 
         if self.source_status and ',' in self.source_status:
