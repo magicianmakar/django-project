@@ -265,6 +265,7 @@
                                 {% endif %}
 
                                 <option value="paid" {% if financial == 'paid' %}selected="selected"{% endif %}>Show only paid orders</option>
+                                <option value="partially_paid" {% if financial == 'partially_paid' %}selected="selected"{% endif %}>Show only partially paid orders</option>
                                 <option value="partially_refunded" {% if financial == 'partially_refunded' %}selected="selected"{% endif %}>Show only Partially Refunded orders</option>
                                 <option value="refunded" {% if financial == 'refunded' %}selected="selected"{% endif %}>Show only Refunded orders</option>
                                 <option value="authorized" {% if financial == 'authorized' %}selected="selected"{% endif %}>Show only Authorized orders</option>
