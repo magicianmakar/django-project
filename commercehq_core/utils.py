@@ -1068,9 +1068,9 @@ class CHQOrderUpdater:
                 order = get_chq_order(self.store, self.order_id)
                 current_note = order.get('notes', '') or ''
             if current_note:
-                new_note = '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:500]
+                new_note = '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:5000]
             else:
-                new_note = '{}'.format(new_note.encode('utf-8')).strip()[:500]
+                new_note = '{}'.format(new_note.encode('utf-8')).strip()[:5000]
             set_chq_order_note(self.store, self.order_id, new_note)
 
     def delay_save(self, countdown=None):
