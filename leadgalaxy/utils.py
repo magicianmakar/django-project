@@ -2600,12 +2600,12 @@ class ShopifyOrderUpdater:
 
         if self.notes:
             current_note = order.get('note', '') or ''
-            new_note = '\n'.join(self.notes)
+            new_note = '\n'.join([i for i in self.notes if i not in current_note])
 
             order_data = {
                 'order': {
                     'id': int(self.order_id),
-                    'note': '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:500]
+                    'note': '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:5000]
                 }
             }
 

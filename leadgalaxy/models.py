@@ -327,10 +327,7 @@ class UserProfile(models.Model):
         ])
 
     def get_new_alerts(self):
-        return self.user.models_user.productchange_set \
-                                    .filter(seen=False) \
-                                    .filter(hidden=False) \
-                                    .count()
+        return None
 
     @cached_property
     def get_perms(self):
@@ -2047,6 +2044,10 @@ class GroupPlan(models.Model):
     monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True, verbose_name='Monthly Price(in USD)')
     trial_days = models.IntegerField(default=0)
 
+    plan_description = models.CharField(max_length=512, blank=True, null=True, verbose_name='Plan description in in Plans Page')
+    price_info = models.CharField(max_length=512, blank=True, null=True, verbose_name='Price info in Plans Page')
+    retail_price_info = models.CharField(max_length=512, blank=True, null=True, verbose_name='Retail Price info in Plans Page')
+
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
@@ -2066,6 +2067,9 @@ class GroupPlan(models.Model):
         return self.permissions.count()
 
     def get_description(self):
+        if self.plan_description:
+            return self.plan_description
+
         interval = 'year' if self.payment_interval == 'yearly' else 'month'
         desc = self.description if self.description else self.title
 

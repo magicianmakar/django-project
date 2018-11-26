@@ -1,5 +1,6 @@
 {% load template_helper %}
 {% load perms_helper %}
+
 <div class="row">
     <div class="col-md-12">
         <div class="panel panel-default">
@@ -13,13 +14,13 @@
                         <div class="m-t m-b">
                             <!-- Nav tabs -->
                             <ul class="nav nav-tabs centered" role="tablist">
-                                <li role="presentation"><a href="#Monthly" role="tab" data-toggle="tab">Monthly</a></li>
-                                <li role="presentation" class="active"><a href="#Yearly" role="tab" data-toggle="tab">Yearly</a></li>
+                                <li role="presentation" class="active"><a href="#Monthly" role="tab" data-toggle="tab">Monthly</a></li>
+                                <li role="presentation"><a href="#Yearly" role="tab" data-toggle="tab">Yearly</a></li>
                             </ul>
 
                             <!-- Tab panes -->
                             <div class="tab-content">
-                                <div role="tabpanel" class="tab-pane" id="Monthly">
+                                <div role="tabpanel" class="tab-pane active" id="Monthly">
                                     <table class="plan-table table plans-monthly m-t" style="display: table;">
                                         <thead>
                                             <tr>
@@ -31,10 +32,19 @@
                                                     >
 
                                                     <h3>{{item.description}}</h3>
-                                                    <p class="price">${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
-                                                    {% if item.stripe_plan.retail_amount %}
+                                                    <p class="price">
+                                                        {% if item.price_info %}
+                                                            {{item.price_info|safe}}
+                                                        {% else %}
+                                                            ${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
+                                                        {% endif %}
+                                                    {% if item.stripe_plan.retail_amount or item.retail_price_info %}
+                                                        {% if item.retail_price_info %}
+                                                            {{item.retail_price_info|safe}}
+                                                        {% else %}
                                                         <p class="retail-price" title="Retail Price">
                                                             <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
+                                                        {% endif %}
                                                         </p>
                                                     {% else %}
                                                         <p class="retail-price"></p>
@@ -110,7 +120,7 @@
                                         </tbody>
                                     </table>
                                 </div>
-                                <div role="tabpanel" class="tab-pane active" id="Yearly">
+                                <div role="tabpanel" class="tab-pane" id="Yearly">
                                     <table class="plan-table table plans-monthly m-t" style="display: table;">
                                         <thead>
                                             <tr>
@@ -122,11 +132,20 @@
                                                     >
 
                                                     <h3>{{item.description}}</h3>
-                                                    <p class="price">${{item.monthly_price|stringformat:"i"}}<span>/mo - Billed Annually</span></p>
-                                                    {% if item.stripe_plan.retail_amount %}
-                                                        <p class="retail-price" title="Retail Price">
-                                                            <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
-                                                        </p>
+                                                    <p class="price">
+                                                        {% if item.price_info %}
+                                                            {{item.price_info|safe}}
+                                                        {% else %}
+                                                            ${{item.monthly_price|stringformat:"i"}}<span>/mo - Billed Annually</span></p>
+                                                        {% endif %}
+                                                    {% if item.stripe_plan.retail_amount or item.retail_price_info %}
+                                                        {% if item.retail_price_info %}
+                                                            {{item.retail_price_info|safe}}
+                                                        {% else %}
+                                                            <p class="retail-price" title="Retail Price">
+                                                                <span class="pricing">${{item.stripe_plan.retail_amount|stringformat:"i"}}<span class="mo">/mo</span></span>
+                                                            </p>
+                                                        {% endif %}
                                                     {% else %}
                                                         <p class="retail-price"></p>
                                                     {% endif %}

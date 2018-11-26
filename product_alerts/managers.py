@@ -126,7 +126,9 @@ class ProductChangeManager():
     def get_variant(self, product_data, variant_change):
         # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
         sku = variant_change.get('sku')
-        return variant_index(self.product, sku, product_data.get('variants', []))
+        ships_from_id = variant_change.get('ships_from_id')
+        ships_from_title = variant_change.get('ships_from_title')
+        return variant_index(self.product, sku, product_data.get('variants', []), ships_from_id, ships_from_title)
 
     def handle_variant_price_change(self, product_data, variant_change):
         idx = self.get_variant(product_data, variant_change)

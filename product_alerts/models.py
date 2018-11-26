@@ -274,7 +274,9 @@ class ProductChange(models.Model):
             change = changes[change_index]
             if product_data is not None and change.get('sku'):
                 variants = product_data.get('variants', None)
-                idx = variant_index(self.product, change.get('sku'), variants)
+                ships_from_id = change.get('ships_from_id')
+                ships_from_title = change.get('ships_from_title')
+                idx = variant_index(self.product, change.get('sku'), variants, ships_from_id, ships_from_title)
                 if variants is not None and idx is not None:
                     change['variant_id'] = product_data['variants'][idx]['id']
                     title = product_data['variants'][idx].get('title')

@@ -1,7 +1,5 @@
-Dropified
+[Dropified](https://app.dropified.com)  [![CircleCI](https://circleci.com/gh/TheDevelopmentMachine/dropified-webapp.svg?style=svg&circle-token=c324db3902d470903436fe6f8628bae274a6aeaf)](https://circleci.com/gh/TheDevelopmentMachine/dropified-webapp)
 ===================
-
-[app.dropified.com](https://app.dropified.com)
 
 # Setup development environment
 
