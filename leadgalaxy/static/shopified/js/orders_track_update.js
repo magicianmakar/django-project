@@ -19,6 +19,25 @@
         "WAIT_SELLER_EXAMINE_MONEY": "Payment not yet confirmed",
         "RISK_CONTROL": "Payment being verified",
         "IN_PRESELL_PROMOTION": "Promotion is on",
+        "FUND_PROCESSING": "Fund Processing",
+
+        "BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+        "BUYER_REJECTED": "Pickup cancelled buyer rejected",
+        "DELIVERED": "Delivered",
+        "DIRECT_DEBIT": "Direct Debit",
+        "EXTERNAL_WALLET": "Processed by PayPal",
+        "IN_TRANSIT": "In transit",
+        "MANIFEST": "Shipping Info Received",
+        "NO_PICKUP_INSTRUCTIONS_AVAILABLE": "No pickup instruction available",
+        "NOT_PAID": "Not Paid",
+        "OUT_OF_STOCK": "Out of stock",
+        "PENDING_MERCHANT_CONFIRMATION": "Order is being prepared",
+        "PICKED_UP": "Picked up",
+        "PICKUP_CANCELLED_BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+        "PICKUP_CANCELLED_BUYER_REJECTED": "Pickup cancelled buyer rejected",
+        "PICKUP_CANCELLED_OUT_OF_STOCK": "Out of stock",
+        "READY_FOR_PICKUP": "Ready for pickup",
+        "SHIPPING_INFO_RECEIVED": "Shipping info received"
     };
 
     P.config({
@@ -267,6 +286,7 @@
         return new P(function(resolve, reject) {
             window.extensionSendMessage({
                 subject: 'getOrderStatus',
+                order_details: order,
                 order: order.source_id,
             }, function(rep) {
                 setTimeout(function() {
