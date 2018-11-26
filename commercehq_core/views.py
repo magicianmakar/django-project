@@ -574,7 +574,7 @@ class OrdersList(ListView):
             try:
                 created_at = created_at.to(self.request.session['django_timezone'])
             except:
-                raven_client.captureException(level='warning')
+                pass
 
             order['date'] = created_at
             order['date_str'] = created_at.format('MM/DD/YYYY')

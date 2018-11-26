@@ -3546,7 +3546,7 @@ def orders_view(request):
         try:
             created_at = created_at.to(request.session['django_timezone'])
         except:
-            raven_client.captureException(level='warning')
+            pass
 
         order['date'] = created_at
         order['date_str'] = created_at.format('MM/DD/YYYY')
