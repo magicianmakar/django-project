@@ -510,6 +510,7 @@
                                         order-data-id="{{ item.order_data_id }}"
                                         order-number="{{order.name}}"
                                         line-title="{{item.title}}"
+                                        supplier-type="{{item.supplier_type}}"
                                         {% if not excluded_product %}line-data="{{item.order_data_id|default:''}}"{% endif %}
                                         line-track="{{item.shopify_order.id|default:''}}"
                                         fulfillment-status="{{item.fulfillment_status}}"

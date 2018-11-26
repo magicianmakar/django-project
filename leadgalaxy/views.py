@@ -3640,6 +3640,7 @@ def orders_view(request):
                 order['line_items'][i]['product'] = product
                 order['line_items'][i]['supplier'] = supplier
                 order['line_items'][i]['shipping_method'] = shipping_method
+                order['line_items'][i]['supplier_type'] = supplier.supplier_type()
 
                 if fix_order_variants and supplier.is_aliexpress:
                     mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)

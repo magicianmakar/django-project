@@ -1616,17 +1616,20 @@ class ProductSupplier(models.Model):
                 else:
                     supplier_idx += 1
 
-            name = u'Supplier #{}'.format(supplier_idx)
+            name = u'Supplier {}#{}'.format(self.supplier_type(), supplier_idx)
 
         return name
 
+    def supplier_type(self):
+        return get_domain(self.product_url)
+
     @property
     def is_aliexpress(self):
-        return get_domain(self.product_url) == 'aliexpress'
+        return self.supplier_type() == 'aliexpress'
 
     @property
     def is_ebay(self):
-        return get_domain(self.product_url) == 'ebay'
+        return self.supplier_type() == 'ebay'
 
     def save(self, *args, **kwargs):
         if self.source_id != self.get_source_id():

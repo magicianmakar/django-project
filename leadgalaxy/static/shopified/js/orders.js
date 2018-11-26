@@ -672,6 +672,7 @@ $('.queue-order-btn').click(function(e) {
         order_id: group.attr('order-id'),
         line_id: group.attr('line-id'),
         line_title: group.attr('line-title'),
+        supplier_type: group.attr('supplier-type'),
     });
 });
 
