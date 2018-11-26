@@ -938,6 +938,10 @@ class OrderPlaceRedirectView(RedirectView):
 
             if service == 'ali' and ali_api_key and ali_tracking_id:
                 redirect_url = get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
+                if not redirect_url:
+                    messages.error(self.request, "Could not generate Aliexpress Affiliate link using your API Keys")
+                    return '/'
+
             elif service == 'admitad':
                 redirect_url = get_admitad_affiliate_url(admitad_site_id, product)
 
