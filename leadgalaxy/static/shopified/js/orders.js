@@ -1175,7 +1175,6 @@ function pusherSub() {
                     sub_conf.product_price_trends_task = data.task;
                 },
                 error: function(data) {
-                    displayAjaxError('Failed to Get Product Price Trends', data);
                 }
             });
         }
