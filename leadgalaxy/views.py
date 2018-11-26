@@ -4054,6 +4054,10 @@ def orders_place(request):
 
         if service == 'ali' and ali_api_key and ali_tracking_id:
             redirect_url = utils.get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
+            if not redirect_url:
+                messages.error(request, "Could not generate Aliexpress Affiliate link using your API Keys")
+                return HttpResponseRedirect('/')
+
         elif service == 'admitad':
             redirect_url = utils.get_admitad_affiliate_url(admitad_site_id, product)
 
