@@ -94,7 +94,6 @@
   							<th class="product">Product</th>
   							<th class="from">From</th>
   							<th class="to">To</th>
-  							<th class="orders">Open Orders</th>
   						</tr>
   					</thead>
   					<tbody>
@@ -112,7 +111,6 @@
     							<td {% if product.to == 'Offline' %}class="to red"{% else %}class="to green"{% endif %}>
                     {{ product.to }}
                   </td>
-    							<td class="orders">{{ product.open_orders|default:"No" }} Orders</td>
     						</tr>
               {% endfor %}
   					</tbody>
@@ -129,7 +127,6 @@
                 <th class="product">Product</th>
                 <th class="from">From</th>
                 <th class="to">To</th>
-                <th class="orders">Open Orders</th>
               </tr>
             </thead>
             <tbody>
@@ -143,7 +140,6 @@
                   </td>
                   <td {% if product.increase %}class="from red"{% else %}class="from green"{% endif %}>{{product.from}}</td>
                   <td {% if product.increase %}class="to red"{% else %}class="to green"{% endif %}>{{product.to}}</td>
-                  <td class="orders">{{ product.open_orders|default:"No" }} Orders</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -160,7 +156,6 @@
                 <th class="product">Product</th>
                 <th class="from">From</th>
                 <th class="to">To</th>
-                <th class="orders">Open Orders</th>
               </tr>
             </thead>
             <tbody>
@@ -174,7 +169,6 @@
                   </td>
                   <td {% if product.increase %}class="from red"{% else %}class="from green"{% endif %}>{{product.from}}</td>
                   <td {% if product.increase %}class="to red"{% else %}class="to green"{% endif %}>{{product.to}}</td>
-                  <td class="orders">{{ product.open_orders|default:"No" }} Orders</td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -190,7 +184,6 @@
                 <th class="image"></th>
                 <th class="product">Product</th>
                 <th class="variants">Variants</th>
-                <th class="orders">Open Orders</th>
               </tr>
             </thead>
             <tbody>
@@ -207,7 +200,6 @@
                         {{ product.variants|join:"<br>"|safe }}
                     </p>
                   </td>
-                  <td class="orders">{{ product.open_orders|default:"No" }} Orders</td>
                 </tr>
               {% endfor %}
             </tbody>
