@@ -407,17 +407,26 @@
                                         {% if order.lines_count and not order.have_bundle %}
                                             <div class="btn-group pull">
                                                 <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
-                                                        type="button" style="border-right:1px solid #66a8cc">
+                                                        type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
                                                     Order Items
                                                 </button>
 
                                                 <button type="button" class="btn btn-success btn-xs dropdown-toggle"
                                                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    {% if order.mixed_supplier_types %}
+                                                    Order Items From
+                                                    {% endif %}
                                                     <span class="caret"></span>
                                                 </button>
 
                                                 <ul class="dropdown-menu pull-right">
-                                                    <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
+                                                    {% if order.mixed_supplier_types %}
+                                                        {% for type in order.supplier_types %}
+                                                            <li><a class="order-seleted-suppliers" supplier-type="{{type}}" href="#">{{type|supplier_type}} Suppliers</a></li>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
+                                                    {% endif %}
                                                 </ul>
                                             </div>
 
@@ -522,7 +531,7 @@
                                                     <a class="badge badge-info" target="_blank" href="/api/shopify/order-data?order={{item.order_data_id}}">data</a>
                                                 {% endif %}
 
-                                                <span>Supplier:</span>
+                                                <span>{{item.supplier.supplier_type|supplier_type}}</span>
                                                 {% if item.supplier %}
                                                     <a {% if item.supplier.supplier_url %}
                                                         href="{{item.supplier.supplier_url|default:'#'}}" target="_blank"

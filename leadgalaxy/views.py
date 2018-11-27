@@ -3565,6 +3565,7 @@ def orders_view(request):
         order['lines_count'] = len(order['line_items'])
         order['refunded_lines'] = []
         order['order_log'] = orders_log.get(order['id'])
+        order['supplier_types'] = set()
         order['pending_payment'] = (order['financial_status'] == 'pending' and
                                     (order['gateway'] == 'paypal' or 'amazon' in order['gateway'].lower()))
 
@@ -3641,6 +3642,8 @@ def orders_view(request):
                 order['line_items'][i]['supplier'] = supplier
                 order['line_items'][i]['shipping_method'] = shipping_method
                 order['line_items'][i]['supplier_type'] = supplier.supplier_type()
+
+                order['supplier_types'].add(supplier.supplier_type())
 
                 if fix_order_variants and supplier.is_aliexpress:
                     mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
@@ -3764,6 +3767,8 @@ def orders_view(request):
                         traceback.print_exc()
 
                     raven_client.captureException()
+
+        order['mixed_supplier_types'] = len(order['supplier_types']) > 1
 
         all_orders.append(order)
 

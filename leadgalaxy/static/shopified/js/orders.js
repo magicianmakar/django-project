@@ -828,6 +828,34 @@ $('.order-seleted-lines').click(function (e) {
     order.find('.order-all').trigger('click');
 });
 
+$('.order-seleted-suppliers').click(function(e) {
+    e.preventDefault();
+
+    var order = $(this).parents('.order');
+    var supplier_type = $(this).attr('supplier-type');
+    var delete_lines = [];
+    var selected = 0;
+
+    order.find('.line').each(function(i, el) {
+        if ($(el).attr('supplier-type') !== supplier_type) {
+            delete_lines.push(el);
+        } else {
+            selected += 1;
+        }
+    });
+
+    if (!selected) {
+        swal('Order From Supplier', 'This order doesn\'t have item from the selected supplier\n' +
+            'Please reload the page and try again', 'warning');
+    } else {
+        $.each(delete_lines, function(i, el) {
+            $(el).remove();
+        });
+
+        order.find('.order-all').trigger('click');
+    }
+});
+
 $('.help-select').each(function (i, el) {
     $('option', el).each(function (index, option) {
         $(option).attr('title', $(option).text());
