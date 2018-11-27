@@ -130,7 +130,7 @@ class MappingTestCase(BaseTestCase):
         self.assertIsNone(supplier1.variants_map)
 
 
-class ProductSupplierTestCase(TransactionTestCase):
+class ProductSupplierTestCase(BaseTestCase):
 
     def setUp(self):
         self.user = User.objects.create(username='me', email='me@localhost.com')
