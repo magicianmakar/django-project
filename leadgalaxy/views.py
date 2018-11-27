@@ -1237,7 +1237,7 @@ def link_product_board(products, boards):
 def accept_product(res, fdata):
     if fdata.get('title'):
         title = decode_params(fdata.get('title'))
-        res = res.filter(title__icontains=title)
+        res = res.filter(title=title)
 
     if fdata.get('price_min') or fdata.get('price_max'):
         min_price = utils.safeFloat(fdata.get('price_min'), -1)
@@ -1256,7 +1256,7 @@ def accept_product(res, fdata):
         res = res.filter(product_type__icontains=fdata.get('type'))
 
     if fdata.get('tag'):
-        res = res.filter(tag__icontains=fdata.get('tag'))
+        res = res.filter(tag=fdata.get('tag'))
 
     if fdata.get('vendor'):
         res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
@@ -2538,7 +2538,7 @@ def autocomplete(request, target):
 
     elif target == 'title':
         results = []
-        products = request.user.models_user.shopifyproduct_set.only('id', 'title', 'data').filter(title__icontains=q, shopify_id__gt=0)
+        products = request.user.models_user.shopifyproduct_set.only('id', 'title', 'data').filter(title=q, shopify_id__gt=0)
         store = request.GET.get('store')
         if store:
             products = products.filter(store=store)
@@ -2603,7 +2603,7 @@ def autocomplete(request, target):
 
         shipping_methods = ShopifyOrderShippingLine.objects.only('title') \
                                                            .distinct('title') \
-                                                           .filter(title__icontains=q) \
+                                                           .filter(title=q) \
                                                            .filter(store=store)
 
         results = []
