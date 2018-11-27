@@ -1256,7 +1256,7 @@ def accept_product(res, fdata):
         res = res.filter(product_type__icontains=fdata.get('type'))
 
     if fdata.get('tag'):
-        res = res.filter(tag__icontains=fdata.get('tag'))
+        res = res.filter(tag=fdata.get('tag'))
 
     if fdata.get('vendor'):
         res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
@@ -2514,7 +2514,7 @@ def autocomplete(request, target):
 
     if target == 'types':
         types = []
-        for product in request.user.models_user.shopifyproduct_set.only('product_type').filter(product_type__icontains=q)[:10]:
+        for product in request.user.models_user.shopifyproduct_set.only('product_type').filter(product_type__icontains=q).order_by()[:10]:
             if product.product_type not in types:
                 types.append(product.product_type)
 
@@ -2530,7 +2530,7 @@ def autocomplete(request, target):
 
     elif target == 'tags':
         tags = []
-        for product in request.user.models_user.shopifyproduct_set.only('tag').filter(tag__icontains=q)[:10]:
+        for product in request.user.models_user.shopifyproduct_set.only('tag').filter(tag=q).order_by()[:10]:
             for i in product.tag.split(','):
                 i = i.strip()
                 if i and i not in tags:

@@ -187,7 +187,6 @@ class ProductChangeManager():
                 'title': self.product.title,
                 'url': app_link('product', self.product.id),
                 'target_url': self.product.store.get_link('/admin/products/{}'.format(self.product.get_shopify_id())),
-                'open_orders': self.product_change.orders_count()
             }
         if self.product_change.store_type == 'chq':
             common_data = {
@@ -195,7 +194,6 @@ class ProductChangeManager():
                 'title': self.product.title,
                 'url': app_link('chq/product', self.product.id),
                 'target_url': self.product.commercehq_url,
-                'open_orders': self.product_change.orders_count()
             }
         if self.product_changes:
             for product_change in self.product_changes:
