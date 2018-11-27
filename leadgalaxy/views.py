@@ -2524,7 +2524,7 @@ def autocomplete(request, target):
 
     elif target == 'tags':
         tags = []
-        for product in request.user.models_user.shopifyproduct_set.only('tag').filter(tag__icontains=q)[:10]:
+        for product in request.user.models_user.shopifyproduct_set.only('tag').filter(tag=q)[:10]:
             for i in product.tag.split(','):
                 i = i.strip()
                 if i and i not in tags:
