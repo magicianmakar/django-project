@@ -386,7 +386,7 @@ class GetProductFeed(BaseTestCase):
         path = '/marketing/feeds/{}'.format(store.store_hash[:8])
         r = self.client.get(path + '/9')
         store.feedstatus.refresh_from_db()
-        self.assertEqual(store.feedstatus.revision, 9)
+        self.assertEqual(store.feedstatus.revision, 2)
 
     @patch('product_feed.views.generate_chq_product_feed')
     def test_must_change_revision_for_chq_product_feed(self, generate_chq_product_feed):
@@ -471,7 +471,7 @@ class GetProductFeed(BaseTestCase):
         store = ShopifyStoreFactory(user=self.user)
         path = '/marketing/feeds/{}'.format(store.store_hash[:8]) + '?nocache=1'
         r = self.client.get(path)
-        generate_product_feed.assert_called_with(store.feedstatus, nocache=True)
+        generate_product_feed.assert_called_with(store.feedstatus, nocache=True, revision=1)
 
     @patch('product_feed.views.generate_chq_product_feed')
     def test_must_able_to_generate_feed_nocache_for_chq_product_feed(self, generate_chq_product_feed):

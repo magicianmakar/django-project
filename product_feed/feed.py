@@ -151,10 +151,10 @@ class ProductFeed():
         self._add_element('g:condition', 'new')
 
         if self.revision == 3:
-            self._add_element('g:age_group', self.google_settings.get('age_group') or 'adult')
-            self._add_element('g:gender', self.google_settings.get('gender') or 'unisex')
+            self._add_element('g:age_group', self.google_settings.get('age_group') or 'Adult')
+            self._add_element('g:gender', self.google_settings.get('gender') or 'Unisex')
             self._add_element('g:brand', self.google_settings.get('brand_name', self.store.title))
-
+            self._add_element('g:mpn', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
         else:
             self._add_element('g:brand', product.get('vendor'))
 
