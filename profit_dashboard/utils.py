@@ -214,8 +214,7 @@ def get_profits(store, start, end, store_timezone=''):
             profits_data[date_key]['css_empty'] = ''
 
     # Aliexpress costs
-    shippings = AliexpressFulfillmentCost.objects.filter(store_id=store_id,
-                                                         order_id__in=orders_map.keys())
+    shippings = AliexpressFulfillmentCost.objects.filter(store_id=store_id, order_id__in=orders.values('order_id'))
 
     total_fulfillments_count = 0
     for shipping in shippings:
