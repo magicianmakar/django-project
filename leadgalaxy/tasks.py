@@ -721,7 +721,13 @@ def invite_user_to_slack(slack_teams, data):
 def generate_feed(self, feed_id, nocache=False, by_fb=False):
     try:
         feed = FeedStatus.objects.get(id=feed_id)
+        # Generate Facebook feed
         generate_product_feed(feed, nocache=nocache)
+
+        if feed.store.user.can('google_product_feed.use'):
+            # Generate Google feed if the user set it's settings
+            if feed.get_google_settings():
+                generate_product_feed(feed, nocache=nocache, revision=3)
 
     except:
         feed.status = 0
