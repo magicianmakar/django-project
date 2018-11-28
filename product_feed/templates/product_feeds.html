@@ -3,6 +3,7 @@
 {% load static %}
 {% load url_tools %}
 {% load template_helper %}
+{% load perms_helper %}
 {% load compress %}
 
 {% block main-container %}
@@ -46,7 +47,7 @@
                                 Last Update
                                 {% include 'partial/help_tooltip.html' with help="This shows the date & time when the product feed was last updated." %}
                             </th>
-                            <th style="width:15%">
+                            <th style="width:10%">
                                 FB Access Date
                                 {% include 'partial/help_tooltip.html' with help="This shows the date when the product feed was last accessed by Facebook." %}
                             </th>
@@ -59,14 +60,19 @@
                         <tr data-store="{{item.store.id}}" data-feed="{{item.id}}">
                             <td>{{item.store.title}}</td>
                             <td>
-                                <div class="input-group">
-                                    <input type="text" class="form-control"
-                                           value="">
+                                <a class="btn btn-sm"
+                                    href="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash %}/2"
+                                    target="_blank">
+                                    <i class="fa fa-external-link itooltip"></i> Facebook Feed
+                                </a>
 
-                                    <span class="input-group-addon copy-feed-url" style="cursor:pointer" data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash %}/2">
-                                        <i class="fa fa-files-o itooltip" title="Copy link"></i>
-                                    </span>
-                                </div>
+                                {% if user|can:"google_product_feed.use" %}
+                                <a class="btn btn-sm"
+                                    href="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash %}/3"
+                                    target="_blank">
+                                    <i class="fa fa-external-link itooltip"></i> Google Product Feed
+                                </a>
+                                {% endif%}
                             </td>
                             <td><input type="checkbox" class="js-switch all-variants-switch" {% if item.all_variants %}checked{% endif %} /></td>
                             <td><input type="checkbox" class="js-switch include-variants-id" {% if item.include_variants_id %}checked{% endif %} /></td>
@@ -90,6 +96,12 @@
                                 {% endif %}
                             </td>
                             <td>
+                                {% if user|can:"google_product_feed.use" %}
+                                <button title="Update this store feed" class="btn btn-outline btn-sm btn-default itooltip google-feed-btn">
+                                    <i class="fa fa-cog"></i> Google Feed
+                                </button>
+                                {% endif %}
+
                                 <button title="Update this store feed" class="btn btn-outline btn-sm btn-default itooltip update-feed-btn" data-loading-text="<i class='fa fa-refresh fa-spin'></i>">
                                     <i class="fa fa-refresh"></i>
                                 </button>
@@ -107,6 +119,56 @@
         </div>
     </div>
 </div>
+
+<div id="modal-google-feed-settings" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                <h4 class="modal-title">Google Product Feed</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label class="m-r-sm" style="width: 95px">Brand Name</label>
+                            <input id="g-brand-name" class="form-control" value="" placeholder="Default: Your Store Title">
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 m-t-xs">
+                        <div class="form-group" style="width: 100%">
+                            <label class="m-r-sm" style="width: 95px">Gender</label>
+                            <select id="g-gender" class="form-control">
+                                <option value="Unisex">Unisex</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-12 m-t-xs">
+                        <div class="form-group" style="width: 100%">
+                            <label class="m-r-sm" style="width: 95px">Age Group</label>
+                            <select id="g-age-group" class="form-control">
+                                <option value="Adult">Adult</option>
+                                <option value="Newborn">Newborn</option>
+                                <option value="Infant">Infant</option>
+                                <option value="Toddler">Toddler</option>
+                                <option value="Kids">Kids</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5 col-md-offset-8 m-t-md">
+                        <button id="save-google-feed-settings-btn" class="btn btn-primary">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extracss %}
@@ -240,6 +302,50 @@
             });
         });
 
+        $('.google-feed-btn').on('click', function (e) {
+            var feed = $(this).parents('tr').data('feed');
+            $.ajax({
+                type: 'GET',
+                data: {feed: feed, type: 'google-feed-settings'},
+                context: {el: $(this), feed: feed},
+                success: function (data) {
+                    $('#g-brand-name').val(data.brand_name);
+                    $('#g-gender').val(data.gender);
+                    $('#g-age-group').val(data.age_group);
+
+                    $('#save-google-feed-settings-btn').attr('feed', this.feed);
+
+                    $('#modal-google-feed-settings').modal('show');
+                },
+                error: function (data) {
+                    displayAjaxError('Google Feed Settings', data);
+                }
+            });
+        });
+
+        $('#save-google-feed-settings-btn').on('click', function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                type: 'POST',
+                data: {
+                    feed: $(this).attr('feed'),
+                    type: 'google-feed-settings',
+                    settings: JSON.stringify({
+                        'brand_name': $('#g-brand-name').val(),
+                        'gender': $('#g-gender').val(),
+                        'age_group': $('#g-age-group').val(),
+                    })},
+                context: {el: $(this)},
+                success: function (data) {
+                    $('#modal-google-feed-settings').modal('hide');
+                },
+                error: function (data) {
+                    displayAjaxError('Google Feed Settings', data);
+                }
+            });
+
+        });
     });
 </script>
 {% endcompress %}

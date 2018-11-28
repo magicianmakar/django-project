@@ -40,17 +40,23 @@ def safeInt(v, default=0):
 
 
 class ProductFeed():
-    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category=''):
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category='', feed=None):
         self.store = store
         self.info = store.get_info
 
         self.currency = self.info['currency']
         self.domain = self.info['domain']
 
-        self.revision = safeInt(revision, 1)
+        self.revision = safeInt(revision, 1)  # 1,2: For FaceBook - 3: For Google
         self.all_variants = all_variants
-        self.include_variants = include_variants
+        self.include_variants = include_variants or self.revision == 3
         self.default_product_category = default_product_category
+
+        self.feed = feed
+        if feed:
+            self.google_settings = self.feed.get_google_settings()
+        else:
+            self.google_settings = {}
 
     def _add_element(self, tag, text):
         self.writer.startTag(tag)
@@ -140,10 +146,17 @@ class ProductFeed():
         self._add_element('g:image_link', image)
         self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
         self._add_element('g:shipping_weight', '{variant[weight]} {variant[weight_unit]}'.format(variant=variant))
-        self._add_element('g:brand', product.get('vendor'))
         self._add_element('g:google_product_category', safeStr(product.get('product_type') or self.default_product_category))
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
+
+        if self.revision == 3:
+            self._add_element('g:age_group', self.google_settings.get('age_group') or 'adult')
+            self._add_element('g:gender', self.google_settings.get('gender') or 'unisex')
+            self._add_element('g:brand', self.google_settings.get('brand_name', self.store.title))
+
+        else:
+            self._add_element('g:brand', product.get('vendor'))
 
         self.writer.endTag()
 
@@ -521,6 +534,7 @@ def get_store_feed(store):
     except FeedStatus.DoesNotExist:
         return FeedStatus.objects.create(
             store=store,
+            revision=2,
             updated_at=None
         )
 
@@ -550,7 +564,7 @@ def get_gear_store_feed(store):
         return GearBubbleFeedStatus.objects.create(store=store, updated_at=None)
 
 
-def generate_product_feed(feed_status, nocache=False):
+def generate_product_feed(feed_status, nocache=False, revision=None):
     store = feed_status.store
 
     if not store.user.can('product_feeds.use'):
@@ -558,12 +572,16 @@ def generate_product_feed(feed_status, nocache=False):
 
     feed_start = time.time()
 
-    if not feed_status.feed_exists() or nocache:
+    if not feed_status.feed_exists(revision=revision) or nocache:
+        if revision is None:
+            revision = feed_status.revision
+
         feed = ProductFeed(store,
-                           feed_status.revision,
+                           revision,
                            feed_status.all_variants,
                            feed_status.include_variants_id,
-                           feed_status.default_product_category)
+                           feed_status.default_product_category,
+                           feed=feed_status)
 
         feed.init()
 
@@ -577,7 +595,7 @@ def generate_product_feed(feed_status, nocache=False):
         feed_status.updated_at = timezone.now()
 
         feed_s3_url, upload_time = aws_s3_upload(
-            filename=feed_status.get_filename(),
+            filename=feed_status.get_filename(revision=revision),
             input_filename=feed.out_filename(),
             mimetype='application/xml',
             upload_time=True,
@@ -588,7 +606,7 @@ def generate_product_feed(feed_status, nocache=False):
         feed.delete_out()
 
     else:
-        feed_s3_url = feed_status.get_url()
+        feed_s3_url = feed_status.get_url(revision=revision)
 
     feed_status.status = 1
     feed_status.save()

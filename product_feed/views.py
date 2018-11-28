@@ -1,9 +1,10 @@
+import json
+
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, Http404
 from django.utils import timezone
 from django.http import JsonResponse
-
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
@@ -60,6 +61,30 @@ def get_product_feed(request, *args, **kwargs):
 def shopify_product_feeds(request):
     if not request.user.can('product_feeds.use'):
         return render(request, 'upgrade.html')
+
+    if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
+        if request.method == 'GET':
+            try:
+                feed = FeedStatus.objects.get(id=request.GET['feed'])
+                permissions.user_can_view(request.user, feed.store)
+
+            except FeedStatus.DoesNotExist:
+                return JsonResponse({'error': 'Feed Not Found'}, status=500)
+
+            return JsonResponse(feed.get_google_settings())
+
+        elif request.method == 'POST':
+            try:
+                feed = FeedStatus.objects.get(id=request.POST['feed'])
+                permissions.user_can_view(request.user, feed.store)
+
+            except FeedStatus.DoesNotExist:
+                return JsonResponse({'error': 'Feed Not Found'}, status=500)
+
+            settings = json.loads(request.POST['settings'])
+            feed.set_google_settings(settings)
+
+            return JsonResponse(feed.get_google_settings())
 
     if request.method == 'POST':
         if request.POST.get('feed'):
@@ -127,18 +152,19 @@ def get_shopify_product_feed(request, store_id, revision=None):
 
     nocache = request.GET.get('nocache') == '1'
 
-    if revision is None:
+    try:
+        revision = int(revision)
+    except:
         revision = 1
 
     feed = get_store_feed(store)  # Get feed or create it if doesn't exists
-    feed.revision = revision
 
     if 'facebookexternalhit' in request.META.get('HTTP_USER_AGENT', '') or request.GET.get('f') == '1':
         feed.fb_access_at = timezone.now()
 
     feed.save()
 
-    feed_s3_url = generate_product_feed(feed, nocache=nocache)
+    feed_s3_url = generate_product_feed(feed, nocache=nocache, revision=revision)
 
     if feed_s3_url:
         return HttpResponseRedirect(feed_s3_url)
