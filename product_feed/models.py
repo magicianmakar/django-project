@@ -87,7 +87,7 @@ class CommerceHQFeedStatus(FeedStatusAbstract):
         verbose_name = 'Commerce HQ Feed Status'
         verbose_name_plural = 'Commerce HQ Feed Statuses'
 
-    def get_filename(self):
+    def get_filename(self, revision=None):
         feed_hash = hashlib.md5('u{}/{}/{}'.format('chq', self.store.user.id, self.store.id)).hexdigest()
         return 'feeds/{}.xml'.format(feed_hash)
 
@@ -99,7 +99,7 @@ class WooFeedStatus(FeedStatusAbstract):
         verbose_name = 'WooCommerce Feed Status'
         verbose_name_plural = 'WooCommerce Feed Statuses'
 
-    def get_filename(self):
+    def get_filename(self, revision=None):
         feed_hash = hashlib.md5('u{}/{}/{}'.format('woo', self.store.user.id, self.store.id)).hexdigest()
         return 'feeds/{}.xml'.format(feed_hash)
 
@@ -111,7 +111,7 @@ class GearBubbleFeedStatus(FeedStatusAbstract):
         verbose_name = 'GearBubble Feed Status'
         verbose_name_plural = 'GearBubble Feed Statuses'
 
-    def get_filename(self):
+    def get_filename(self, revision=None):
         import hashlib
 
         feed_hash = hashlib.md5('u{}/{}/{}'.format('gear', self.store.user.id, self.store.id)).hexdigest()
