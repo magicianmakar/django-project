@@ -1934,7 +1934,11 @@ def get_shipping_info(request):
                 supplier = ProductSupplier.objects.get(id=supplier)
 
         item_id = supplier.get_source_id()
-        supplier_type = 'ebay' if supplier.is_ebay else 'aliexpress'
+
+        if hasattr(supplier, 'is_ebay') and supplier.is_ebay:
+            supplier_type = 'ebay'
+        else:
+            supplier_type = 'aliexpress'
 
     try:
         if supplier_type == 'ebay':
