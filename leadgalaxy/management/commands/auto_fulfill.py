@@ -171,9 +171,9 @@ class Command(DropifiedBaseCommand):
                             json={
                                 "fulfillment_service": {
                                     "name": "Oberlo",
-                                    "inventory_management": false,
-                                    "tracking_support": false,
-                                    "requires_shipping_method": false,
+                                    "inventory_management": False,
+                                    "tracking_support": False,
+                                    "requires_shipping_method": False,
                                     "format": "json"
                                 }
                             }
