@@ -2,6 +2,7 @@ import simplejson as json
 
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
@@ -13,6 +14,7 @@ from .tasks import import_orders, approve_imported_orders
 from .api import ShopifyOrderImportAPI
 
 
+@login_required
 def index(request):
     if not request.user.can('order_imports.use'):
         raise PermissionDenied()
