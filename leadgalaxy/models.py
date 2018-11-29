@@ -1621,7 +1621,10 @@ class ProductSupplier(models.Model):
         return name
 
     def supplier_type(self):
-        return get_domain(self.product_url)
+        try:
+            return get_domain(self.product_url)
+        except:
+            return ''
 
     @property
     def is_aliexpress(self):
