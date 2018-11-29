@@ -1044,7 +1044,7 @@ def webhook(request, provider, option):
 
             try:
                 captchacredit = CaptchaCredit.objects.get(user=user)
-                captchacredit.remaining_credits += credits
+                captchacredit.remaining_credits += utils.safeInt(credits, 0)
                 captchacredit.save()
 
             except CaptchaCredit.DoesNotExist:
