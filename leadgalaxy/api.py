@@ -964,7 +964,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success()
 
     def post_change_customer_id(self, request, user, data):
-        if not user.is_superuser:
+        from stripe_subscription.models import StripeSubscription
+        from stripe_subscription.utils import update_subscription
+
+        if not user.is_superuser and not user.is_staff:
             raise PermissionDenied()
 
         target_user = User.objects.get(id=data.get('user'))
@@ -974,6 +977,28 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         target_user.stripe_customer.customer_id = data.get('customer-id')
         target_user.stripe_customer.save()
         target_user.stripe_customer.refresh()
+
+        subscribtions = []
+        for i in stripe.Subscription.list(customer=data.get('customer-id')).data:
+            subscribtions.append(i)
+
+        if subscribtions:
+            sub = subscribtions[0]
+
+            try:
+                stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
+                stripe_sub.refresh(sub=sub)
+            except StripeSubscription.DoesNotExist:
+                plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) | Q(stripe_plan__stripe_id=sub.plan.id))
+
+                if plan.is_stripe():
+                    target_user.profile.change_plan(plan)
+
+                update_subscription(target_user, plan, sub)
+        else:
+            target_user.profile.change_plan(utils.get_plan(
+                payment_gateway='shopify',
+                plan_slug='shopify-free-plan'))
 
         return self.api_success()
 
