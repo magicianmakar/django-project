@@ -185,6 +185,19 @@ class Command(DropifiedBaseCommand):
                             raven_client.captureException()
                             return False
 
+                    elif "Your shop does not have the 'Manual' fulfillment service enabled" in rep.text:
+                        order.hidden = True
+                        order.save()
+
+                        self.log_fulfill_error(order, 'Shopify Manual Fulfillement bug')
+
+                        raven_client.captureException(extra={
+                            'order_track': order.id,
+                            'response': rep.text
+                        })
+
+                        return False
+
                     elif 'must be stocked at the same location' in rep.text:
                         location = None
 
