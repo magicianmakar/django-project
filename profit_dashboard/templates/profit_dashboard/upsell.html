@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+    <div class="ibox">
+        <div class="ibox-content">
+            <div class="jumbotron">
+                <h1>Profit Dashboard</h1>
+                <p>Automatically calculate your profits and see how your business is performing.</p>
+                <p>See your Sales data minus the cost of product acquisition (including Facebook Ads and AliExpress expenses, shipping and taxes).</p>
+                <p>Are you selling your products for the right price?  Are you promoting products that are essentially loss leaders?  Get all that data and more by monitoring your profit statistics in one easy and new dashboard for Premier Members of Dropified.</p>
+                <p>
+                    <a href="https://app.dropified.com/user/profile#plan" role="button" class="btn btn-success btn-lg">Upgrade to Premier</a>
+                </p>
+            </div>
+
+            <div class="embed-responsive embed-responsive-16by9">
+                <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/FZMu_mq7B9w" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+
+            <!-- <div class="videoWrapper">
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/FZMu_mq7B9w" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div> -->
+
+
+            <br>
+            <h2 id="whats-included">What's included?</h2>
+            <dl>
+                <dt>Revenue from your Store</dt>
+                <dd>Profit is broken down for each store you have connected and each order in your store</dd>
+
+                <dt>Automatically record your AliExpress costs</dt>
+                <dd>Costs from AliExpress are included and assigned to each order. This includes any taxes and shipping costs too!</dd>
+
+                <dt>Automatically include your FB Costs</dt>
+                <dd>Costs from FB Ads are included and deducted from your revenue to give an accurate profit. Select which campaigns you want to import, or import them all.</dd>
+
+                <dt>Add additional costs</dt>
+                <dd>Additional expenses can be manually added if needed.</dd>
+
+
+                <dt>Visualize your data!</dt>
+                <dd>
+                    Graph your Fulfilment costs, number of fulfilments, ads spend and other costs against your revenue to see what your true profit is.
+                    <br>Filter by day, month or a custom period.
+                </dd>
+            </dl>
+
+            <img src="{% static '/img/profit-dashboard-graph.png' %}" class="img-responsive" alt="Profit Dashboard Graph">
+        </div>
+    </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+        .videoWrapper {
+            position: relative;
+            padding-bottom: 23%;
+            padding-top: 25px;
+            height: 0;
+        }
+        .videoWrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 25%;
+            width: 50%;
+        }
+
+        #whats-included {
+            margin-top: 20px;
+            font-size: 36px;
+        }
+        dl dt {
+            font-size: 20px;
+            color: #5b9bd5;
+            margin-top: 20px;
+            font-weight: normal;
+        }
+
+        dl dd {
+            font-size: 18px;
+        }
+    </style>
+{% endblock %}
