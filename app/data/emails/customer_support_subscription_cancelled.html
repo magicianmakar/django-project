@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    {% include "partial/email/css.html" %}
+</head>
+<body>
+    <p>Hi Dropified CS,</p>
+
+    <p>The following customer has cancelled their subscription:</p>
+
+    {% for item in profile_items.items %}
+    <p>
+        <b>{{ item.0 }}:</b> {{ item.1 }}
+    </p>
+    {% endfor %}
+    <p>
+        The Dropified Team
+        <br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a>
+    </p>
+</body>
+</html>

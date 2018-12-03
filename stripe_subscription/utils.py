@@ -16,7 +16,7 @@ import arrow
 from .models import StripeCustomer, StripeSubscription, ExtraStore, ExtraCHQStore
 from .stripe_api import stripe
 
-from shopified_core.utils import safeStr
+from shopified_core.utils import safeStr, get_all_store_names
 from leadgalaxy.models import GroupPlan, UserProfile
 from leadgalaxy.utils import register_new_user
 from analytic_events.models import SuccessfulPaymentEvent
@@ -427,6 +427,28 @@ def process_webhook_event(request, event_id, raven_client):
                 profile = UserProfile.objects.get(user=sub.metadata.user_id)
             except (UserProfile.DoesNotExist, AttributeError):
                 return HttpResponse('Customer Not Found')
+
+        from shopified_core.utils import send_email_from_template
+        total_orders = 0
+        first_shopify_store = profile.get_shopify_stores().first()
+        if first_shopify_store:
+            total_orders = first_shopify_store.get_orders_count()
+
+        send_email_from_template(
+            tpl='customer_support_subscription_cancelled.html',
+            subject='Subscription Cancelled',
+            recipient='support+cancellation@dropified.com',
+            data={
+                'profile_items': {
+                    'Customer Name': profile.user.get_full_name(),
+                    'Store Name': get_all_store_names(profile),
+                    'Customer Email': profile.user.email,
+                    'Sign up Date': profile.user.date_joined.strftime('%m/%d/%Y'),
+                    'Plan Version': profile.plan.title,
+                    'Total Orders (Only Shopify)': total_orders
+                }
+            },
+        )
 
         current_plan = profile.plan
         if not profile.plan.is_free and profile.plan.is_stripe():
