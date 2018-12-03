@@ -38,6 +38,8 @@ from .tasks import fetch_facebook_insights
 @login_required
 def index(request):
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
+        if not request.user.profile.is_subuser:
+            return render(request, 'profit_dashboard/upsell.html')
         raise PermissionDenied()
 
     store = utils.get_store_from_request(request)
