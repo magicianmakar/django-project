@@ -138,16 +138,27 @@ class Command(DropifiedBaseCommand):
                 ))
 
             req_start = time.time()
-            rep = requests.get(
-                url=store.get_link('/admin/orders.json', api=True),
-                params={
-                    'page': page,
-                    'limit': limit,
-                    'status': 'any',
-                    'fulfillment': 'any',
-                    'financial': 'any'
-                }
-            )
+
+            rep = None
+            tries = 3
+            while tries:
+                rep = requests.get(
+                    url=store.get_link('/admin/orders.json', api=True),
+                    params={
+                        'page': page,
+                        'limit': limit,
+                        'status': 'any',
+                        'fulfillment': 'any',
+                        'financial': 'any'
+                    }
+                )
+
+                if rep.ok:
+                    break
+                else:
+                    print 'Order Fetch Retry', tries, 'Page', page
+                    tries -= 1
+                    continue
 
             self.rate_limit = rep.headers.get('X-Shopify-Shop-Api-Call-Limit')
             self.req_time = time.time() - req_start
