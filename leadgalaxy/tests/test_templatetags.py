@@ -120,3 +120,24 @@ class TagsTestCase(BaseTestCase):
 
         self.assertEqual(template_helper.money_format(12.34, store), '$12')
         self.assertEqual(template_helper.money_format(12.64, store), '$13')
+
+    def test_force_https_http(self):
+        url = 'http://cdn.aliexpress.com/simple.png'
+        should_be = '//cdn.aliexpress.com/simple.png'
+        self.assertEqual(template_helper.force_https(url), should_be)
+
+    def test_force_https_https(self):
+        url = 'https://cdn.aliexpress.com/simple.png'
+        should_be = '//cdn.aliexpress.com/simple.png'
+        self.assertEqual(template_helper.force_https(url), should_be)
+
+    def test_force_https_no_scheme(self):
+        url = '//cdn.aliexpress.com/simple.png'
+        should_be = '//cdn.aliexpress.com/simple.png'
+        self.assertEqual(template_helper.force_https(url), should_be)
+
+    def test_force_https_no_scheme_error(self):
+        # TODO: Add // for url without a scheme? might be problem for relative paths
+        url = 'cdn.aliexpress.com/simple.png'
+        should_be = 'cdn.aliexpress.com/simple.png'
+        self.assertEqual(template_helper.force_https(url), should_be)

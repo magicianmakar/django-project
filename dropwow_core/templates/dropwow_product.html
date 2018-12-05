@@ -22,7 +22,7 @@
                     <div class="col-md-3">
                         <div id='product-image' class='slider'>
                         {% for item in product.images %}
-                            <img class="media-object" src="https://drrak0mvje5ie.cloudfront.net?url={{item.path|urlencode}}" alt="">
+                            <img class="media-object" src="{{item.path|force_https}}" alt="">
                         {% endfor %}
                         </div>
                     </div>

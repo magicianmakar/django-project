@@ -294,3 +294,11 @@ def order_track_status(context, track, html=True):
         return mark_safe('<b class="{}">{}</b>'.format(color, track.get_source_status()))
     else:
         return mark_safe('<i>Awaiting Sync with Aliexpress</i>')
+
+
+@register.filter
+def force_https(url):
+    if not url:
+        url = ''
+    else:
+        return re.sub(r'https?://', '//', url)
