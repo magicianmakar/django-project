@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static %}
+{% block main-container %}
+<div class="ibox float-e-margins">
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+                <p class="text-center">
+                    Copy and paste the below text into your ads
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+                <textarea class="form-control" id="video-urls-textarea" rows="10" readonly=""></textarea>
+            </div>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-md-12">
+                <p>
+                    <button type="button" class="btn btn-danger btn-lg delete-selected">Remove Selected From List</button>
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <table id="video-list-table" data-video-list-id="{{video_list.id}}" class="table table-hover table-condensed ">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all"> <label for="select-all"></label></th>
+                            <th style="cursor:pointer">Title</th>
+                            <th style="cursor:pointer" class="text-center">Ads enabled?</th>
+                            <th style="cursor:pointer">Views</th>
+                            <th style="cursor:pointer">Likes</th>
+                            <th style="cursor:pointer">Dislikes</th>
+                            <th style="cursor:pointer">Comments</th>
+                            <th style="cursor:pointer"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in videos %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" id="{{item.id}}" />
+                                <label for="{{item.id}}"></label>
+                            </td>
+                            <td>
+                                <div class="media">
+                                    <div class="media-left">
+                                        <a class="yt-video" href="{{item.url}}">
+                                      <img class="media-object" src="{{item.thumbnail}}" alt="{{item.title}}" style="width: 64px;" />
+                                    </a>
+                                    </div>
+                                    <div class="media-right">
+                                        <h4 class="media-heading"><a class="" href="{{item.url}}" target="_blank">{{item.title}}</a></h4>
+                                        <p>
+                                            <a href="https://www.youtube.com/channel/{{item.snippet.channelId}}" title="Visit {{item.snippet.channelTitle}} Channel" target="_blank"><span class="label label-default">{{item.snippet.channelTitle}}</span></a>
+                                            <a href="{% url 'youtube_ads.views.index' %}?r={{item.id}}"><span class="label label-info">Related Videos</span></a>
+                                            <a href="{% url 'youtube_ads.views.index' %}?r=channel:{{item.snippet.channelId}}"><span class="label label-info">Find Videos</span></a>
+                                            <a href="{{item.url}}"><span class="label label-info">View on YouTube</span></a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                {% if item.monitized %}
+                                    <i class="fa fa-dollar" style="color: green"></i>
+                                {% else %}
+                                    <span class="fa-stack fa-1x">
+                                      <i class="fa fa-dollar fa-stack-1x"></i>
+                                      <i class="fa fa-ban fa-stack-2x" style="color:red"></i>
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{item.statistics.viewCount}}</td>
+                            <td>{{item.statistics.likeCount}}</td>
+                            <td>{{item.statistics.dislikeCount}}</td>
+                            <td>{{item.statistics.commentCount}}</td>
+                            <td><a class="del-video" href="#" list-id="{{video_list.id}}" video-id="{{item.id}}"><span class="glyphicon glyphicon-remove" title="Delete" aria-hidden="true"></span></a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="container-fluid info">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <ul class="pager">
+                                {% if page.has_previous %}
+                                <li class="previous">
+                                    <a href="{% url 'youtube_ads.views.list_detail' video_list.id %}?page_number={{ page.previous_page_number }}">← Back </a>
+                                </li>
+                                {% endif %}
+                                {% if page.has_next %}
+                                <li class="next">
+                                    <a href="{% url 'youtube_ads.views.list_detail' video_list.id %}?page_number={{ page.next_page_number }}">Next →</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <p>
+                    <button type="button" class="btn btn-danger btn-lg delete-selected">Remove Selected From List</button>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+<link href="{% static 'youtube/index.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extrajs %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.22.1/js/jquery.tablesorter.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js"></script>
+<script src="//labs.abeautifulsite.net/jquery-dropdown/jquery.dropdown.min.js"></script>
+<script src="{% static 'youtube/list_detail.js' %}"></script>
+{% endblock %}

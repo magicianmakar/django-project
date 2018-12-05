@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+    {% if not channels %}
+        <div class="row">
+            <div class="col-md-offset-3 col-md-6">
+                <div class="ibox float-e-margins">
+                    <div class="ibox-title">
+                        <h5>Channel Search</h5>
+                        <div class="ibox-tools">
+                            {% if user.is_superuser %}
+                            <a href="{% url 'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
+                            {% endif %}
+                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                            <!--<a class="close-link"><i class="fa fa-times"></i></a>-->
+                        </div>
+                    </div>
+                    <div class="ibox-content">
+                        {% if error %}
+                        <div id="loginErrorMsg" class="alert alert-danger" role="alert">{{error}}</div>
+                        {% endif %}
+
+                        <form class="form-horizontal" method="GET">
+                            <!-- {% csrf_token %} -->
+                          <div class="form-group">
+                            <label for="q" class="col-sm-2 control-label">
+                                Search
+                            </label>
+                            <div class="col-sm-8">
+                              <input  name="{% if related %}r{% else %}q{% endif %}" id="{% if related %}r{% else %}q{% endif %}" type="text" class="form-control" placeholder="" value="">
+                            </div>
+                          </div>
+
+                          <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                              <button id="userLogin" type="submit" class="btn btn-primary">Search</button>
+                            </div>
+                          </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form class="form-horizontal" method="GET">
+                            <div class="col-md-12">
+                                <!-- {% csrf_token %} -->
+                              <div class="form-group">
+                                <label for="q" class="col-sm-2 control-label">
+                                Channel:
+                                </label>
+                                <div class="col-sm-8">
+                                  <input  name="{% if related %}r{% else %}q{% endif %}" id="{% if related %}r{% else %}q{% endif %}" type="text" class="form-control" placeholder="" value="{{query}}">
+                                </div>
+                                <div class="col-sm-2">
+                                  <button id="userLogin" type="submit" class="btn btn-primary">Search</button>
+                                </div>
+                              </div>
+                            </div>
+                        </form>
+
+                        <table id="invoices-table" class="table table-hover table-condensed ">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox" id="select-all"> <label for="select-all"></label></th>
+                                    <th style="cursor:pointer">Title</th>
+                                    <th style="cursor:pointer">Subscribers</th>
+                                    <th style="cursor:pointer">Videos</th>
+                                    <th style="cursor:pointer">Views</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in channels %}
+                                <tr>
+                                    <td>
+                                        <input type="checkbox" id="{{item.id}}">
+                                        <label for="{{item.id}}"></label>
+                                    </td>
+                                    <td>
+                                        <div class="media">
+                                          <div class="media-left">
+                                            <a class="" href="{{item.url}}">
+                                              <img class="media-object" src="{{item.thumbnail}}" alt="{{item.title}}" style="width: 64px;">
+                                            </a>
+                                          </div>
+                                          <div class="media-body">
+                                            <h4 class="media-heading"><a class="" href="{{item.url}}" target="_blank">{{item.title}}</a></h4>
+                                            <p>
+                                                <a href="{% url 'youtube_ads.views.index' %}?r=channel:{{item.id}}" title="View all videos from {{item.title}} Channel"><span class="label label-primary">Channel videos</span></a>
+                                            </p>
+
+                                          </div>
+                                        </div>
+                                    </td>
+                                    <td class="number">{{item.statistics.subscriberCount}}</td>
+                                    <td class="number">{{item.statistics.videoCount}}</td>
+                                    <td class="number">{{item.statistics.viewCount}}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    <textarea id="copy-videos" style="position: absolute; left: -9999px;" readonly></textarea>
+{% endblock %}
+
+{% block extracss %}
+<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+<link href="{% static 'youtube/index.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extrajs %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.22.1/js/jquery.tablesorter.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js"></script>
+<script src="//labs.abeautifulsite.net/jquery-dropdown/jquery.dropdown.min.js"></script>
+<script src="{% static 'youtube/channels.js' %}"></script>
+{% endblock %}

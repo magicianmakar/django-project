@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+    <div class="row" id="loginSetup">
+        <div class="well col-md-offset-2 col-md-8">
+            <p class="text-center">
+                <h1 class="text-center">Superuser login with YouTube account</h1>
+                <p class="text-center"></p>
+                <div id="loginErrorMsg" style="display:none" class="alert alert-danger" role="alert"></div>
+            </p>
+            <div class="form-group">
+                <div class="col-sm-offset-5 col-sm-10">
+                    <a id="userLogin" href="{{ oauth_link }}" class="btn btn-primary btn-lg">Login</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

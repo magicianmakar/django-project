@@ -80,6 +80,7 @@ INSTALLED_APPS = (
     'affiliations',
     'subusers',
     'tapfiliate',
+    'youtube_ads',
 
     'commercehq_core',
     'woocommerce_core',
@@ -432,3 +433,7 @@ ELASTICSEARCH_AUTH = (os.environ.get('FOUNDELASTICSEARCH_USER'), os.environ.get(
 LEAD_DYNO_API_KEY = os.environ.get('LEAD_DYNO_API_KEY')
 
 TAPFILIATE_API_KEY = os.environ.get('TAPFILIATE_API_KEY')
+
+# Youtube Ads App
+YOUTUBE_CLIENT_SECRET = os.environ.get('YOUTUBE_CLIENT_SECRET')
+YOUTUBE_CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
