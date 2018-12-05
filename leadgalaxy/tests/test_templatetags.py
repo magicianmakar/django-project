@@ -126,6 +126,11 @@ class TagsTestCase(BaseTestCase):
         should_be = '//cdn.aliexpress.com/simple.png'
         self.assertEqual(template_helper.force_https(url), should_be)
 
+    def test_force_https_http_list(self):
+        url = ['http://cdn.aliexpress.com/simple.png']
+        should_be = '//cdn.aliexpress.com/simple.png'
+        self.assertEqual(template_helper.force_https(url), should_be)
+
     def test_force_https_https(self):
         url = 'https://cdn.aliexpress.com/simple.png'
         should_be = '//cdn.aliexpress.com/simple.png'

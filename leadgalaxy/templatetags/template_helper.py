@@ -300,5 +300,8 @@ def order_track_status(context, track, html=True):
 def force_https(url):
     if not url:
         url = ''
-    else:
-        return re.sub(r'https?://', '//', url)
+
+    if type(url) is list:
+        url = url[0]
+
+    return re.sub(r'https?://', '//', url)
