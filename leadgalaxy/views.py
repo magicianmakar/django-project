@@ -4034,9 +4034,6 @@ def orders_place(request):
 
     if request.GET.get('supplier'):
         supplier = ProductSupplier.objects.get(id=request.GET['supplier'])
-        if request.user.models_user != supplier.store.user:
-            permissions.user_can_view(request.user, supplier)
-
         product = supplier.short_product_url()
 
         if supplier.is_ebay:
