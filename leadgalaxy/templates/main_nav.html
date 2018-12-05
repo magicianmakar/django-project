@@ -152,7 +152,7 @@
             {% endif %}
 
             {% if user|can:'product_feeds.use' %}
-            <li {% if page == 'product_feeds' %}class="active"{% endif %}>
+            <li {% if page == 'product_feeds' or 'youtube' in page %}class="active"{% endif %}>
                 <a href="#">
                     <i class="fa fa-bar-chart"></i>
                     <span class="nav-label">Marketing</span>
@@ -162,6 +162,45 @@
                     <li><a  {% if page == 'product_feeds' %}class="active"{% endif %}
                             href="{% url 'product_feeds' %}"
                         >Product Feeds</a></li>
+                    {% if request.user|can:'youtube_ads.use' %}
+                    <li {% if 'youtube' in page %}class="active"{% endif %}>
+                        <a href="{% url 'youtube_ads.views.index' %}">
+                            <i class="fa fa-shopping-cart"></i>
+                            <span class="nav-label">TubeHunt</span>
+                            <span class="fa arrow"></span>
+                        </a>
+
+                        <ul class="nav nav-third-level {% if 'youtube' not in page %}collapse{% endif %}">
+                            <li {% if page == 'youtube_search' %}class="active"{% endif %}>
+                                <a href="{% url 'youtube_ads.views.index' %}">
+                                    <i class="fa fa-search"></i>
+                                    <span class="nav-label">Search</span>
+                                </a>
+                            </li>
+
+                            <li {% if page == 'youtube_related' %}class="active"{% endif %}>
+                                <a href="{% url 'youtube_ads.views.index' %}?r">
+                                    <i class="fa fa-link"></i>
+                                    <span class="nav-label">Related</span>
+                                </a>
+                            </li>
+
+                            <li {% if page == 'youtube_channels' %}class="active"{% endif %}>
+                                <a href="{% url 'youtube_ads.views.channels' %}?r">
+                                    <i class="fa fa-users"></i>
+                                    <span class="nav-label">Channels</span>
+                                </a>
+                            </li>
+
+                            <li {% if page == 'youtube_lists' %}class="active"{% endif %}>
+                                <a href="{% url 'youtube_ads.views.lists' %}?r">
+                                    <i class="fa fa-list"></i>
+                                    <span class="nav-label">Lists</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                    {% endif %}
                 </ul>
             </li>
             {% endif %}

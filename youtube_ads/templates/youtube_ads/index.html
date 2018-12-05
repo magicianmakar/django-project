@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+{% load static %}
+{% block main-container %}
+{% if not videos %}
+<div class="row">
+    <div class="col-md-offset-3 col-md-6">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>
+                    {% if related %}
+                    Related Videos
+                    {% else %}
+                    YouTube Video Search
+                    {% endif %}
+                </h5>
+                <div class="ibox-tools">
+                    {% if user.is_superuser %}
+                    <a href="{% url 'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
+                    {% endif %}
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                    <!--<a class="close-link"><i class="fa fa-times"></i></a>-->
+                </div>
+            </div>
+            <div class="ibox-content">
+                {% if error %}
+                <div id="loginErrorMsg" class="alert alert-danger" role="alert">{{error}}</div>
+                {% endif %}
+                <form class="form-horizontal" method="GET">
+                    <!-- {% csrf_token %} -->
+                    <div class="form-group">
+                        <label for="q" class="col-sm-3 control-label">
+                            {% if related %}
+                            Video URL:
+                            {% else %}
+                            Query:
+                            {% endif %}
+                        </label>
+                        <div class="col-sm-6">
+                            <input name="{% if related %}r{% else %}q{% endif %}" id="{% if related %}r{% else %}q{% endif %}" type="text" class="form-control" placeholder="" value="" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" for="type">Search For:</label>
+                        <div class="col-sm-4">
+                            <select name="type" class="form-control">
+                                <option value="ads">Videos with Ads</option>
+                                <option value="all">All videos</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-10">
+                            <button id="userLogin" type="submit" class="btn btn-primary">Search</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="ibox float-e-margins">
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-md-12">
+                <p>
+                    <button id="copy-selected" type="button" class="btn btn-primary btn-lg">Copy Selected</button>
+                    <button type="button" class="btn btn-primary btn-lg save-to-list">Save to List</button>
+                </p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                {% if page != 'lists' %}
+                <form class="form-horizontal" method="GET">
+                    <!-- {% csrf_token %} -->
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="q" class="col-sm-2 control-label">
+                                {% if related %}
+                                Video URL:
+                                {% else %}
+                                Query:
+                                {% endif %}
+                            </label>
+                            <div class="col-sm-6">
+                                <input name="{% if related %}r{% else %}q{% endif %}" id="{% if related %}r{% else %}q{% endif %}" type="text" class="form-control" placeholder="" value="{{query}}" />
+                            </div>
+                            <div class="col-sm-2">
+                                <select name="type" class="form-control">
+                                    <option {% if request.GET.type == 'ads' %}selected="selected" {% endif %} value="ads">Videos with Ads</option>
+                                    <option {% if request.GET.type == 'all' %}selected="selected" {% endif %} value="all">All videos</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <button id="userLogin" type="submit" class="btn btn-primary">Search</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                {% endif %}
+                <table id="invoices-table" class="table table-hover table-condensed ">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all"> <label for="select-all"></label></th>
+                            <th style="cursor:pointer">Title</th>
+                            <th style="cursor:pointer" class="text-center">Ads enabled?</th>
+                            <th style="cursor:pointer">Views</th>
+                            <th style="cursor:pointer">Likes</th>
+                            <th style="cursor:pointer">Dislikes</th>
+                            <th style="cursor:pointer">Comments</th>
+                            <th style="cursor:pointer"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in videos %}
+                        <tr>
+                            <td>
+                                <input type="checkbox" id="{{item.id}}">
+                                <label for="{{item.id}}"></label>
+                            </td>
+                            <td>
+                                <div class="media">
+                                    <div class="media-left">
+                                        <a class="yt-video" href="{{item.url}}">
+                                      <img class="media-object" src="{{item.thumbnail}}" alt="{{item.title}}" style="width: 64px;">
+                                    </a>
+                                    </div>
+                                    <div class="media-right">
+                                        <h4 class="media-heading"><a class="" href="{{item.url}}" target="_blank">{{item.title}}</a></h4>
+                                        <p>
+                                            Channel:&nbsp;
+                                            <a href="https://www.youtube.com/channel/{{item.snippet.channelId}}" title="Visit {{item.snippet.channelTitle}} Channel" target="_blank">{{item.snippet.channelTitle}}</a>&nbsp;
+                                            <a href="{% url 'youtube_ads.views.index' %}?r=channel:{{item.snippet.channelId}}"><span class="label label-info">Find Videos</span></a>&nbsp;
+                                            <a href="{{item.url}}"><span class="label label-info">View on YouTube</span></a>
+                                        </p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                {% if item.monitized %}
+                                    <i class="fa fa-dollar" style="color: green"></i>
+                                {% else %}
+                                    <span class="fa-stack fa-1x">
+                                      <i class="fa fa-dollar fa-stack-1x"></i>
+                                      <i class="fa fa-ban fa-stack-2x" style="color:red"></i>
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>{{item.statistics.viewCount}}</td>
+                            <td>{{item.statistics.likeCount}}</td>
+                            <td>{{item.statistics.dislikeCount}}</td>
+                            <td>{{item.statistics.commentCount}}</td>
+                            <td>
+                                <a href="{% url 'youtube_ads.views.index' %}?r={{item.id}}"><span class="label label-info">Related Videos</span></a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="container-fluid info">
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <ul class="pager">
+                                {% if search_prev %}
+                                <li class="previous">
+                                    <a href="{% url 'youtube_ads.views.index' %}?{% if request.GET.r %}&r={{request.GET.r}}{% endif %}{% if request.GET.q %}&q={{request.GET.q}}{% endif %}{% if request.GET.type %}&type={{request.GET.ads}}{% endif %}&page={{ search_prev }}&offset={{ offset_prev }}&op={{ offset_prev }}">← Back </a>
+                                </li>
+                                {% endif %}
+                                {% if search_next %}
+                                <li class="next">
+                                    <a href="{% url 'youtube_ads.views.index' %}?{% if request.GET.r %}&r={{request.GET.r}}{% endif %}{% if request.GET.q %}&q={{request.GET.q}}{% endif %}{% if request.GET.type %}&type={{request.GET.ads}}{% endif %}&page={{ search_next }}&offset={{ offset_next }}&op={{ offset_prev }}">Next →</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <p>
+                    <button id="copy-selected" type="button" class="btn btn-primary btn-lg">Copy Selected</button>
+                    <button type="button" class="btn btn-primary btn-lg save-to-list">Save to List</button>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+    <div class="modal-dialog modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Add Selection to List</h4>
+            </div>
+            <div class="modal-body">
+                {% if request.user.videoslist_set.all %}
+                <div class="form-group">
+                    <label style="line-height: 35px;" for="user-list" class="col-sm-3 control-label">Choose a list:</label>
+                    <div class="col-sm-9">
+                        <select name="user-list" id="user-list" class="form-control"></select>
+                    </div>
+                </div>
+                <p>OR</p>
+                {% endif %}
+                <div class="form-group clearfix">
+                    <label style="line-height: 35px;" for="new-list" class="col-sm-3 control-label">Create new list:</label>
+                    <div class="col-sm-9">
+                        <input id="new-list" name="new-list" type="text" class="form-control" placeholder="List name">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Cancel</button>
+                <button id="save-list" type="button" class="btn btn-primary">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<textarea id="copy-videos" style="position: absolute; left: -9999px;" readonly></textarea>
+{% endblock %}
+
+{% block extracss %}
+<link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
+<link href="{% static 'youtube/index.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block extrajs %}
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.22.1/js/jquery.tablesorter.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.pack.js"></script>
+<script src="//labs.abeautifulsite.net/jquery-dropdown/jquery.dropdown.min.js"></script>
+<script src="{% static 'youtube/video_list.js' %}"></script>
+<script src="{% static 'youtube/video_search.js' %}"></script>
+{% endblock %}
