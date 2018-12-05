@@ -174,7 +174,6 @@ def channels(request):
     })
 
 
-@user_passes_test(lambda u: u.is_superuser)
 def auth(request):
     youtube = Youtube(request)
     return render(request, 'youtube_ads/auth.html', {
