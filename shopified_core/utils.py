@@ -638,15 +638,6 @@ def serializers_orders_track(tracks, store_type, humanize=False):
     return orders
 
 
-def get_all_store_names(profile):
-    shopify_stores = [u'{} (SHOPIFY)'.format(i) for i in profile.get_shopify_stores().values_list('title', flat=True)]
-    chq_stores = [u'{} (CHQ)'.format(i) for i in profile.get_chq_stores().values_list('title', flat=True)]
-    woo_stores = [u'{} (WOO)'.format(i) for i in profile.get_woo_stores().values_list('title', flat=True)]
-    gear_stores = [u'{} (GEAR)'.format(i) for i in profile.get_gear_stores().values_list('title', flat=True)]
-    store_names = shopify_stores + chq_stores + woo_stores + gear_stores
-    return u', '.join(store_names)
-
-
 class CancelledOrderAlert():
 
     def __init__(self, user, source_id, new_status, current_status, order_track, store_type=''):
