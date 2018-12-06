@@ -1901,6 +1901,7 @@ def affiliate_link_set_query(url, name, value):
         dl_target_url = set_url_query(dl_target_url, name, value)
 
         return set_url_query(url, 'dl_target_url', dl_target_url)
+
     elif 'alitems.com' in url:
         if name != 'ulp':
             ulp = urlparse.parse_qs(urlparse.urlparse(url).query)['ulp'].pop()
@@ -1909,6 +1910,16 @@ def affiliate_link_set_query(url, name, value):
             return set_url_query(url, 'ulp', ulp)
         else:
             return set_url_query(url, name, value)
+
+    elif 'rover.ebay.com' in url:
+        if name != 'mpre':
+            ulp = urlparse.parse_qs(urlparse.urlparse(url).query)['mpre'].pop()
+            ulp = set_url_query(ulp, name, value)
+
+            return set_url_query(url, 'mpre', ulp)
+        else:
+            return set_url_query(url, name, value)
+
     else:
         return set_url_query(url, name, value)
 
@@ -2002,6 +2013,12 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
         raven_client.captureException(level='warning', extra={'response': rep})
 
     return None
+
+
+def get_ebay_affiliate_url(url):
+    aff_url = 'http://rover.ebay.com/rover/1/711-53200-19255-0/1?ff3=4&pub=5575259625&toolid=10001&campid=5338443484&customid='
+
+    return affiliate_link_set_query(aff_url, 'mpre', url)
 
 
 def get_timezones(country=None):

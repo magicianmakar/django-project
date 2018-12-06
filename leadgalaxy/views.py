@@ -4034,10 +4034,9 @@ def orders_place(request):
 
     if request.GET.get('supplier'):
         supplier = ProductSupplier.objects.get(id=request.GET['supplier'])
-        product = supplier.short_product_url()
+        permissions.user_can_view(request.user, supplier.product)
 
-        if supplier.is_ebay:
-            disable_affiliate = True
+        product = supplier.short_product_url()
 
     elif request.GET.get('product'):
         product = request.GET['product']
@@ -4053,21 +4052,24 @@ def orders_place(request):
 
     redirect_url = False
     if not disable_affiliate:
-        if user_admitad_credentials:
-            service = 'admitad'
-        elif user_ali_credentials:
-            service = 'ali'
+        if supplier.is_ebay:
+            redirect_url = utils.get_ebay_affiliate_url(product)
         else:
-            service = 'admitad'
+            if user_admitad_credentials:
+                service = 'admitad'
+            elif user_ali_credentials:
+                service = 'ali'
+            else:
+                service = 'admitad'
 
-        if service == 'ali' and ali_api_key and ali_tracking_id:
-            redirect_url = utils.get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
-            if not redirect_url:
-                messages.error(request, "Could not generate Aliexpress Affiliate link using your API Keys")
-                return HttpResponseRedirect('/')
+            if service == 'ali' and ali_api_key and ali_tracking_id:
+                redirect_url = utils.get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
+                if not redirect_url:
+                    messages.error(request, "Could not generate Aliexpress Affiliate link using your API Keys")
+                    return HttpResponseRedirect('/')
 
-        elif service == 'admitad':
-            redirect_url = utils.get_admitad_affiliate_url(admitad_site_id, product)
+            elif service == 'admitad':
+                redirect_url = utils.get_admitad_affiliate_url(admitad_site_id, product)
 
     if not redirect_url:
         redirect_url = product
