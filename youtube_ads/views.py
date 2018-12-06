@@ -3,7 +3,7 @@ import re
 import json
 import requests
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.core.paginator import Paginator
@@ -174,6 +174,7 @@ def channels(request):
     })
 
 
+@user_passes_test(lambda u: u.is_superuser)
 def auth(request):
     youtube = Youtube(request)
     return render(request, 'youtube_ads/auth.html', {

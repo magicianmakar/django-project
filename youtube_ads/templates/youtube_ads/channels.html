@@ -10,7 +10,9 @@
                     <div class="ibox-title">
                         <h5>Channel Search</h5>
                         <div class="ibox-tools">
+                            {% if user.is_superuser %}
                             <a href="{% url 'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
+                            {% endif %}
                             <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             <!--<a class="close-link"><i class="fa fa-times"></i></a>-->
                         </div>
