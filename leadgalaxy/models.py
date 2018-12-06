@@ -1600,10 +1600,10 @@ class ProductSupplier(models.Model):
     def support_auto_fulfill(self):
         """
         Return True if this supplier support auto fulfill using the extension
-        Currently only Aliexpress support that
+        Currently Aliexpress and eBay (US) support that
         """
 
-        return self.is_aliexpress or self.is_ebay
+        return self.is_aliexpress or self.is_ebay_us
 
     def get_name(self):
         if self.supplier_name and self.supplier_name.strip():
@@ -1633,6 +1633,13 @@ class ProductSupplier(models.Model):
     @property
     def is_ebay(self):
         return self.supplier_type() == 'ebay'
+
+    @property
+    def is_ebay_us(self):
+        try:
+            return 'ebay.com' in get_domain(self.product_url, full=True)
+        except:
+            return False
 
     def save(self, *args, **kwargs):
         if self.source_id != self.get_source_id():
