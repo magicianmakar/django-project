@@ -2113,14 +2113,14 @@ def set_orders_filter(user, filters, default=None):
             user.set_config(key, val)
 
 
-def aws_s3_get_key(filename, bucket_name=None):
+def aws_s3_get_key(filename, bucket_name=None, validate=True):
     if bucket_name is None:
         bucket_name = settings.AWS_STORAGE_BUCKET_NAME
 
     conn = boto.connect_s3(settings.AWS_ACCESS_KEY_ID, settings.AWS_SECRET_ACCESS_KEY)
     bucket = conn.get_bucket(bucket_name)
 
-    return bucket.get_key(filename)
+    return bucket.get_key(filename, validate=validate)
 
 
 def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype=None,

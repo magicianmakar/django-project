@@ -1,5 +1,5 @@
-import os
 import re
+import json
 from httplib2 import Http
 from urlparse import parse_qs, urlparse
 
@@ -7,14 +7,14 @@ from django.conf import settings
 from django.shortcuts import reverse
 
 from apiclient.discovery import build
-from oauth2client.file import Storage
 from oauth2client import client
+
+from leadgalaxy.utils import hash_text, aws_s3_get_key
+
 
 YOUTUBE_READ_WRITE_SCOPE = "https://www.googleapis.com/auth/youtube"
 YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
-
-YOUTUBE_OAUTH_FILE = 'user-oauth2.json'
 
 
 class ClientSecretCache(object):
@@ -42,26 +42,26 @@ class Youtube(object):
 
     def __init__(self, request):
         self.request = request
-        self.base = os.path.join(os.path.dirname(__file__), 'auth/')
-
-    @property
-    def storage(self):
-        if not hasattr(self, '_storage'):
-            self._storage = Storage(os.path.join(self.base, YOUTUBE_OAUTH_FILE))
-        return self._storage
+        self.key = aws_s3_get_key(hash_text('tubehunt-user-oauth-credentails.json'), validate=False)
 
     @property
     def credentials(self):
         if not hasattr(self, '_credentials'):
-            self._credentials = self.storage.get()
+
+            try:
+                content = self.key.get_contents_as_string()
+                content = json.loads(content)
+            except:
+                return None
+
+            self._credentials = client.Credentials.new_from_json(content)
 
         return self._credentials
 
     @credentials.setter
     def credentials(self, value):
         self._credentials = value
-        self.storage.put(self._credentials)
-        self._credentials.set_store(self.storage)
+        self.key.set_contents_from_string(json.dumps(value.to_json()))
 
     @property
     def flow(self):
