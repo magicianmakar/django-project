@@ -4029,6 +4029,7 @@ def orders_place(request):
         raven_client.captureException()
 
     product = None
+    supplier = None
 
     disable_affiliate = request.user.get_config('_disable_affiliate', False)
 
@@ -4052,7 +4053,7 @@ def orders_place(request):
 
     redirect_url = False
     if not disable_affiliate:
-        if supplier.is_ebay:
+        if supplier and supplier.is_ebay:
             redirect_url = utils.get_ebay_affiliate_url(product)
         else:
             if user_admitad_credentials:
