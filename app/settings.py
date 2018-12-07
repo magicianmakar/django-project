@@ -29,10 +29,13 @@ SECRET_KEY = 'i+acxn5(akgsn!sr4^qgf(^m&*@+g1@u^t@=8s@axc41ml*f=s'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = (os.environ.get('DEBUG_APP') == 'TRUE')
 
-ALLOWED_HOSTS = [
-    '.shopifiedapp.com',
-    '.dropified.com',
-]
+if DEBUG:
+    ALLOWED_HOSTS = ['*']
+else:
+    ALLOWED_HOSTS = [
+        '.shopifiedapp.com',
+        '.dropified.com',
+    ]
 
 APP_DOMAIN = os.environ.get('APP_DOMAIN', 'app.dropified.com')
 APP_URL = os.environ.get('APP_URL', 'https://{}'.format(APP_DOMAIN))
@@ -86,6 +89,7 @@ INSTALLED_APPS = (
     'woocommerce_core',
     'gearbubble_core',
     'zapier_core',
+    'phone_automation'
 )
 
 MIDDLEWARE_CLASSES = (
@@ -437,3 +441,8 @@ TAPFILIATE_API_KEY = os.environ.get('TAPFILIATE_API_KEY')
 # Youtube Ads App
 YOUTUBE_CLIENT_SECRET = os.environ.get('YOUTUBE_CLIENT_SECRET')
 YOUTUBE_CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
+
+# CallFlex
+PHONE_AUTOMATION_MONTH_LIMIT = os.environ.get('PHONE_AUTOMATION_MONTH_LIMIT', '3600')  # in seconds.  1 hr per month for user
+TWILIO_SID = os.environ.get('TWILIO_SID')
+TWILIO_TOKEN = os.environ.get('TWILIO_TOKEN')

@@ -1,0 +1,131 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+{% load perms_helper %}
+{% load widget_tweaks %}
+{% load template_helper %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <h1>Select Your Toll-Free CallFlex Number:</h1>
+            <div class="row" >
+                <div class="col-md-12 sol-sm-12 col-xs-12">
+                    <div class="text-right"><a data-toggle="collapse" class="btn btn-white " href="#collapseFilter">Show Search Options</a></div>
+
+                    <div class="collapse {% if show_filter %}show{% endif %}" id="collapseFilter" >
+
+                      <div class="well ">
+                         <form class="row form-inline "
+                                id="search-form"
+                                method="GET"
+                                action="{% url template_config.url.namespace|add:'phone_automation_provision'  %}">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="auto_margin" class=" control-label">
+                                            Area Code:
+                                            <i class="fa fa-fw fa-question-circle" qtip-tooltip="Enter a 3-digit area code" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
+                                        </label>
+                                        <span class="">
+                                            <input type="text" value="{{ request.GET.areacode }}" placeholder="Area Code (212)" name="areacode" id="areacode" title="Areacode (212)" maxlength="3" minlength="3" class="form-control" autocomplete="off" >
+                                        </span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="auto_margin" class=" control-label">
+                                            Search Pattern:
+                                            <i class="fa fa-fw fa-question-circle" qtip-tooltip="Enter a pattern of numbers to search for ( Use * for any digit) " style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
+                                        </label>
+                                        <span class="">
+                                            <input type="text" value="{{ request.GET.mask }}" placeholder="Search Pattern (*123)" name="mask" id="mask" title="Search Pattern" maxlength="10"  class="form-control" autocomplete="off" >
+                                        </span>
+                                    </div>
+
+                                    <button type="submit" value="Search" class="btn btn-primary" style="margin-bottom:0;">Apply</button>&nbsp;
+                                    <button type="submit" value="Reset" class="btn btn-white" style="margin-bottom:0;" id="form-reset">Clear</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                {% for number in twilio_phone_numbers_pool %}
+                    <div class="col-xs-6 col-sm-4 col-md-3">
+                        <a type="button"  title="Use {{ number.phone_number }} as my incoming phone number"  class="btn btn-lg btn-default provision-phone-number" data-phone-number="{{ number.phone_number }}">{{ number.friendly_name }}</a>
+                    </div>
+
+                {% endfor %}
+
+                {% if twilio_phone_numbers_pool|length == 0 %}
+                    <div class="col-md-12 sol-sm-62 col-xs-12">
+                        <div class="alert alert-danger">
+                            There are no phone numbers matching your search criteria. Please adjust options repeat the search.
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+                <form
+                    id="provision-form"
+                    method="POST"
+                    role="form"
+                    action="{% url template_config.url.namespace|add:'phone_automation_provision'  %}">
+                    <input type="hidden" name="phone_number" id="phone_number" value=""/>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+    <style>
+        #search-form label {margin-left:10px;}
+        #search-form button {margin-left:10px;}
+
+        .provision-phone-number {margin-bottom:15px;}
+    </style>
+
+{% endblock %}
+
+{% block extrajs %}
+     <script type="text/javascript">
+
+     $(document).ready(function() {
+
+         $('#form-reset').click( function (e) {
+             $('#areacode').val('');
+             $('#mask').val('');
+         });
+
+         $('.provision-phone-number').click(function(e) {
+            e.preventDefault();
+
+            $('#provision-form #phone_number').val($(this).data('phone-number'));
+
+            swal({
+                title: "Select This Number?",
+                text: "This will set "+ $(this).data('phone-number') +" as your incoming phone number.\n\nYou will not be able to change your number for 30 days.",
+                type: "info",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: false,
+                confirmButtonColor: "#79aa63",
+                confirmButtonText: "Yes, Use This Number",
+                cancelButtonText: "No, Select Another Number"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    $('#provision-form').submit();
+                }
+            });
+        });
+    });
+    </script>
+{% endblock %}

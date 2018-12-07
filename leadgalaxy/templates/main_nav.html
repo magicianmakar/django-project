@@ -152,16 +152,29 @@
             {% endif %}
 
             {% if user|can:'product_feeds.use' %}
-            <li {% if page == 'product_feeds' or 'youtube' in page %}class="active"{% endif %}>
+            <li {% if page == 'product_feeds' or 'youtube' in page or page == 'phone_automation' %}class="active"{% endif %}>
                 <a href="#">
                     <i class="fa fa-bar-chart"></i>
                     <span class="nav-label">Marketing</span>
                     <span class="fa arrow"></span>
                 </a>
                 <ul class="nav nav-second-level collapse">
-                    <li><a  {% if page == 'product_feeds' %}class="active"{% endif %}
-                            href="{% url 'product_feeds' %}"
-                        >Product Feeds</a></li>
+                    <li {% if page == 'product_feeds' %}class="active"{% endif %}>
+                        <a href="{% url 'product_feeds' %}">
+                            <i class="fa fa-gift"></i>
+                            <span class="nav-label">Product Feeds</span>
+                        </a>
+                    </li>
+
+                    {% if user|can:'phone_automation.use'  %}
+                        <li {% if page == 'phone_automation' %}class="active"{% endif %}>
+                            <a href="{% url 'phone_automation_index' %}">
+                                <i class="fa fa-phone"></i>
+                                <span class="nav-label">CallFlex</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
                     {% if request.user|can:'youtube_ads.use' %}
                     <li {% if 'youtube' in page %}class="active"{% endif %}>
                         <a href="{% url 'youtube_ads.views.index' %}">
@@ -243,6 +256,9 @@
                 </a>
             </li>
             {% endif %}
+
+
+
 
             <li>
                 <a id="product-update-fx" href="#">

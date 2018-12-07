@@ -1,0 +1,195 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+{% load perms_helper %}
+{% load widget_tweaks %}
+{% load template_helper %}
+{% load phone_numbers %}
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>CallFlex<small></small></h5>
+            </div>
+
+            <div class="ibox-content">
+                {% if twilio_phone_number %}
+                    <div class="row phone-nummber-cont">
+                        <div class="col-md-6">
+                            <h1>Your CallFlex Number:
+                                <b class="p-xs bg-muted " style="white-space: nowrap"> {{ twilio_phone_number.incoming_number|phone_number }}</b>
+                            </h1>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <a id="config-flow" type="button" href="{% url 'phone_automation_automate' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-default setup-automation" >Setup Call Flow</a>
+                            <a id="remove-provision" type="button" _href="{% url template_config.url.namespace|add:'phone_automation_provision_release' %}" class="btn btn-danger remove-provision" >Delete Number</a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="">
+                        <h2>You do not have an active CallFlex number.</h2>
+                        <div>
+                            <br />
+                            <a class="btn btn-primary  invite-subuser" href="{% url template_config.url.namespace|add:'phone_automation_provision' %}">
+                            <i class="fa fa-phone"></i> &nbsp; Select a new number</a>
+                            <br />&nbsp;
+                        </div>
+                    </div>
+                {% endif %}
+
+            {% if twilio_stats %}
+                <div class="row">
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="widget style1 lazur-bg">
+
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <i class="fa fa-calendar fa-3x"></i>
+                                </div>
+                                <div class="col-md-9 text-right">
+                                    <span> Today's Calls </span>
+                                    <h2 class="font-bold">{{ twilio_stats.twilio_logs_today_count }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="widget style1 yellow-bg">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <i class="fa fa-user fa-3x"></i>
+                                </div>
+                                <div class="col-md-9 text-right">
+                                    <span>Unique Callers Today</span>
+                                    <h2 class="font-bold">{{  twilio_stats.today_uniq_callers_count }}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="widget style1 navy-bg">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <i class="fa fa-phone fa-3x"></i>
+                                </div>
+                                <div class="col-md-9 text-right">
+                                    <span> Total incoming calls </span>
+                                    <h2 class="font-bold">{{ twilio_stats.twilio_logs_total_count }}</h2>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-xs-6">
+                        <div class="widget style1 yellow-bg">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <i class="fa fa-clock-o fa-3x"></i>
+                                </div>
+                                <div class="col-md-9 text-right">
+                                    <span>Time Used This Month</span>
+                                    <h2 class="font-bold">{{ twilio_stats.total_duration.call_duration__sum|formatSeconds }} of
+                                        {% if twilio_stats.total_duration_month_limit != False %} {{twilio_stats.total_duration_month_limit|formatSeconds }} {%  else %} &infin; {%  endif %}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="ibox ">
+                            <div class="ibox-title row">
+                                <div class="col-md-10"><h3>Recent Calls</h3></div>
+                                <div class="col-md-2 text-right">
+                                    <a id="call-logs" type="button" href="{% url 'phone_automation_call_logs' %}" class="btn btn-default remove-provision" >View all Calls</a>
+                                </div>
+                            </div>
+                            <div class="ibox-content">
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>Caller</th>
+                                        <th>Duration</th>
+                                        <th>Date</th>
+                                        <th>Saved Recordings</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+
+                                    {% for twilio_log in twilio_logs %}
+                                        <tr>
+                                            <td>{{ twilio_log.from_number|phone_number  }}</td>
+                                            <td>{{ twilio_log.call_duration  }} sec</td>
+                                            <td>{{ twilio_log.created_at  }}</td>
+                                            <td>
+                                                {% for recording in twilio_log.twilio_recordings.all %}
+                                                    <div>
+                                                        <audio controls height="32" style="vertical-align: middle;">
+                                                          <source src="{{ recording.recording_url }}" type="audio/mpeg">
+                                                        Your browser does not support the audio element.
+                                                        </audio>
+                                                        &nbsp; <a class="btn btn-default btn-sm" href="{{ recording.recording_url }}" download="{{ recording.recording_sid }}.mp3" target="_blank">Download</a>
+                                                    </div>
+                                                {% endfor %}
+
+                                            </td>
+                                        </tr>
+                                        <div> </div>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {%  endif %}
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block extracss %}
+    <style>
+        .widget {padding: 10px 15px;}
+        .widget h2 {font-size: 20px !important; margin-top: 0;}
+        .setup-automation {margin-right:10px;}
+        .phone-nummber-cont {margin-bottom:20px;}
+    </style>
+
+{% endblock %}
+
+{% block extrajs %}
+     <script type="text/javascript">
+
+     $(document).ready(function() {
+
+        $('#remove-provision').click(function (e) {
+
+            swal({
+                title: "Delete Phone Number?",
+                text: "This will delete your incoming phone number. \n\nYou will not be able to use this number again. \n\nAre you sure you want to continue?",
+                type: "warning",
+                showCancelButton: true,
+                closeOnCancel: true,
+                closeOnConfirm: false,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Yes, delete my number",
+                cancelButtonText: "No, keep my number"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    window.location = "{% url template_config.url.namespace|add:'phone_automation_provision_release' %}";
+                }
+            });
+        });
+    });
+    </script>
+{% endblock %}

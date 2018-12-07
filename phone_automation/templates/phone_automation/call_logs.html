@@ -1,0 +1,135 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+{% load perms_helper %}
+{% load widget_tweaks %}
+{% load template_helper %}
+{% load phone_numbers %}
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>CallFlex Logs<small></small></h5>
+            </div>
+
+            <div class="ibox-content">
+                {% if twilio_logs %}
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="ibox ">
+                                <div class="ibox-title">
+                                    <h5>Incoming Calls</h5>
+
+                                </div>
+                                <div class="ibox-content">
+
+                                    <table class="table table-bordered dataTables">
+                                        <thead>
+                                        <tr>
+                                            <th>Caller</th>
+                                            <th>Duration</th>
+                                            <th>Date</th>
+                                            <th>Saved Recordings</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+
+                                        {% for twilio_log in twilio_logs %}
+                                            <tr>
+                                                <td>{{ twilio_log.from_number|phone_number  }}</td>
+                                                <td>{{ twilio_log.call_duration  }} sec</td>
+                                                <td>{{ twilio_log.created_at  }}</td>
+                                                <td>
+                                                    {% for recording in twilio_log.twilio_recordings.all %}
+                                                        <div>
+                                                            <audio controls height="32" style="vertical-align: middle;">
+                                                              <source src="{{ recording.recording_url }}" type="audio/mpeg">
+                                                            Your browser does not support the audio element.
+                                                            </audio>
+                                                            &nbsp; <a class="btn btn-default btn-sm" href="{{ recording.recording_url }}" download="{{ recording.recording_sid }}.mp3" target="_blank">Download</a>
+                                                        </div>
+                                                    {% endfor %}
+
+                                                </td>
+                                            </tr>
+
+                                            <div> </div>
+                                        {% endfor %}
+
+
+                                        </tbody>
+                                    </table>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {%  else %}
+                     <div class="alert alert-warning">
+                       You have no logs yet.
+                    </div>
+                {%  endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
+
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+
+            var table = $('.dataTables').dataTable({
+                responsive: true,
+                dom: 'T<"clear">lfrtip',
+                buttons: [
+                    {extend: 'copy'},
+                    {extend: 'csv'},
+                    {extend: 'excel', title: 'CallLogs'},
+                    {extend: 'pdf', title: 'CallLogs'},
+                    {extend: 'print',
+                     customize: function (win) {
+                            $(win.document.body).addClass('white-bg');
+                            $(win.document.body).css('font-size', '10px');
+
+                            $(win.document.body).find('table')
+                                    .addClass('compact')
+                                    .css('font-size', 'inherit');
+                        }
+                    }
+                ],
+
+                bLengthChange: false,
+                iDisplayLength: 50,
+                order: [],
+
+            });
+        });
+    </script>
+{% endblock %}

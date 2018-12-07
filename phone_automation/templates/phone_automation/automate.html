@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load compress %}
+
+{% block main-container %}
+<div id="call-flow" class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>Call Flow<small></small></h5>
+    </div>
+    <div class="ibox-content" id="call-flow">
+        <ul class="dd-list">
+            <li class="dd-item">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <i class="fa fa-play"></i>
+                        Begin Call: When an incoming call is received, follow these steps:
+                    </div>
+                </div>
+                <ul class="dd-list">
+                    <add-new-block v-bind:position="0" v-bind:parent="0" :bus="bus"></add-new-block>
+                    <template v-for="(data, key) in getAvailableChildren">
+                        <item class="item" v-bind:model="data" :bus="bus" :key="data.step"></item>
+                        <add-new-block v-if="data.config.have_next" v-bind:position="key + 1" v-bind:parent="0" :bus="bus"></add-new-block>
+                    </template>
+                </ul>
+            </li>
+            <li class="dd-item">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <i class="fa fa-stop"></i>
+                        End the Call
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <a href="#" class="btn btn-primary" @click="save">Save Call Flow</a>
+    </div>
+</div>
+
+{% include 'phone_automation/partial/automate_vue_base.html' %}
+{% include 'phone_automation/partial/automate_vue_blocks.html' %}
+{% endblock %}
+
+{% block extracss %}
+{% compress css %}
+  <link href="{% static 'phone_automation/css/automate.css' %}" rel="stylesheet">
+{% endcompress %}
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        var nodeCount = {{ automation.last_step|default:0 }};
+        var data = {{ automation.json_data|default:"[]"|safe }};
+        var save = {
+            url: "{% url 'phone_automation_save_automation' twilio_phone_number_id=twilio_phone_number.pk %}",
+            redirect: "{% url 'phone_automation_index' %}"
+        };
+        var uploadUrl = "{% url 'phone_automation_upload' twilio_phone_number_id=twilio_phone_number.pk %}";
+    </script>
+
+    {% compress js %}
+    <script src="{% static 'libs/bower_components/vue/dist/vue.min.js' %}"></script>
+    <script src="{% static 'phone_automation/js/automate.js' %}"></script>
+    {% endcompress %}
+
+{% endblock %}

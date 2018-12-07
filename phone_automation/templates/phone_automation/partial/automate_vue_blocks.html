@@ -1,0 +1,179 @@
+{% verbatim %}
+<script type="text/x-template" id="flow-block-basic-message-tpl">
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-pills">
+                <li v-bind:class="{'active': active == 'say'}">
+                    <a href="#" @click="activateNav($event, 'say')">Use Text-to-Speech</a>
+                </li>
+                <li v-bind:class="{'active': active == 'mp3'}">
+                    <a href="#" @click="activateNav($event, 'mp3')">Upload a Recording</a>
+                </li>
+                <li v-if="enableNoMessage" v-bind:class="{'active': active == 'no_message'}">
+                    <a href="#" @click="activateNav($event, 'no_message')">No Message</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="nav-content">
+            <div v-if="active == 'say'">
+                <div class="col-md-9">
+                    <div class="form-group">
+                        <label>&nbsp;</label>
+                        <textarea class="form-control" rows=3 v-model="model.config.say" placeholder="Type your message..." ></textarea>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Voice</label>
+                        <select class="form-control" v-model="model.config.voice">
+                            <option value="alice">Alice (More Natural)</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div v-if="active == 'mp3'" class="col-md-12">
+                <div class="form-group">
+                    <label>&nbsp;</label>
+                    <mp3-upload v-bind:model.sync="model" :bus="bus"></mp3-upload>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+<script type="text/x-template" id="flow-block-greeting-tpl">
+    <div>
+        <flow-block-basic-message v-bind:model.sync="model"
+                                  :bus="bus">
+        </flow-block-basic-message>
+    </div>
+</script>
+
+<script type="text/x-template" id="flow-block-record-tpl">
+    <div>
+        <h3>Message:</h3>
+        <flow-block-basic-message v-bind:model.sync="model"
+                                  :bus="bus"
+                                  :enableNoMessage="true">
+        </flow-block-basic-message>
+
+        <hr>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="checkbox" @click="toggleBeep">
+                    <div v-bind:class="{'checked': model.config.play_beep}" class="icheckbox_square-blue">
+                        <input type="checkbox">
+                        <ins class="iCheck-helper"></ins>
+                    </div>
+                    <label>
+                        Play a beep sound before recording?
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="text/x-template" id="flow-block-menu-tpl">
+    <div>
+        <h3>Message:</h3>
+        <flow-block-basic-message v-bind:model.sync="model"
+                                  :bus="bus"
+                                  :enableNoMessage="true">
+        </flow-block-basic-message>
+
+        <div v-if="!model.config.no_message" class="row">
+            <div class="col-md-12">
+                <div class="checkbox" @click="toggleRepeat">
+                    <div v-bind:class="{'checked': model.config.repeat}" class="icheckbox_square-blue">
+                        <input type="checkbox">
+                        <ins class="iCheck-helper"></ins>
+                    </div>
+                    <label>
+                        Repeat message if caller does not respond?
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+        <div class="row">
+            <div class="tabs-container col-md-12">
+                <h3>Menu Options:</h3>
+                <ul class="nav nav-tabs nav-justified">
+                    <li v-for="menuBlockType in menuBlockTypes" v-bind:class="{'active': menuBlockType == selectedDigit}">
+                        <a href="#" @click="selectDigit($event, menuBlockType)">
+                            <span v-bind:class="{'badge badge-success': childrenBlockTypes.indexOf(menuBlockType) == -1}">{{ allBlockTypes[menuBlockType].title }}</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <template v-for="modelChildren in model.children">
+                        <div v-if="modelChildren.children[0]" v-bind:class="{'active': modelChildren.block_type == selectedDigit}" class="tab-pane">
+                            <div class="panel-body">
+                                <span class="delete-link" @click="deleteDigit($event, modelChildren.block_type)"><i class="fa fa-times"></i></span>
+                                <component v-bind:is="modelChildren.block_type"
+                                           v-bind:model.sync="modelChildren"
+                                           :bus="bus"
+                                           :class="modelChildren.block_type"
+                                           class="block-type">
+                                </component>
+                            </div>
+                        </div>
+                    </template>
+
+                    <div v-for="childrenBlockType in childrenBlockTypes" v-bind:class="{'active': childrenBlockType == selectedDigit}" class="tab-pane">
+                        <div class="panel-body">
+                            <div class="block-type block-selection">
+                                <div class="btn-group-vertical">
+                                    <button v-for="blockType in defaultBlockTypes"
+                                            v-if="blockType != 'flow-block-menu'"
+                                            @click="createBlockType($event, childrenBlockType, blockType)"
+                                            type="button"
+                                            class="btn btn-default btn-lg">
+                                        <i v-if="allBlockTypes[blockType].icon" :class="allBlockTypes[blockType].icon"></i> {{ allBlockTypes[blockType].title }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+<script type="text/x-template" id="flow-block-menu-number-tpl">
+    <component v-bind:is="model.children[0].block_type"
+               v-bind:model.sync="model.children[0]"
+               :bus="bus"
+               :class="model.children[0].block_type"
+               class="block-type">
+    </component>
+</script>
+
+<script type="text/x-template" id="flow-block-dial-tpl">
+    <div>
+        <h3>Message:</h3>
+        <flow-block-basic-message v-bind:model.sync="model"
+                                  :bus="bus"
+                                  :enableNoMessage="true">
+        </flow-block-basic-message>
+
+        <hr>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="text" class="form-control" v-model="model.config.phone" placeholder="Phone number with country and area code (1-212-555-1234)">
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+{% endverbatim %}

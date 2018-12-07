@@ -1,0 +1,94 @@
+{% verbatim %}
+<script type="text/x-template" id="block-type-selection-tpl">
+    <div class="btn-group-vertical">
+        <button v-for="blockType in blockTypes"
+                @click="changeBlockType(blockType)"
+                type="button"
+                class="btn btn-default btn-lg">
+            <i v-if="allBlockTypes[blockType].icon" :class="allBlockTypes[blockType].icon"></i> {{ allBlockTypes[blockType].title }}
+        </button>
+    </div>
+</script>
+
+<script type="text/x-template" id="block-type-selection-menu-tpl">
+    <div class="digits">
+        <button v-for="blockType in blockTypes"
+                @click="changeBlockType(blockType)"
+                type="button"
+                class="btn btn-success">
+            {{ allBlockTypes[blockType].title }}
+        </button>
+    </div>
+</script>
+
+
+<script type="text/x-template" id="mp3-upload-tpl">
+    <div :data-audio="model.config.mp3">
+        <form enctype="multipart/form-data" novalidate>
+            <div v-if="!isSaving">
+                <input v-if="!model.config.mp3"
+                       :disabled="isSaving"
+                       @change="fileChange"
+                       type="file"
+                       class="form-control"
+                       accept="audio/mp3">
+
+                <div v-if="model.config.mp3" class="alert alert-info">
+                      <button @click="removeUploadedFile" type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                      <audio controls>
+                        <source :src="model.config.mp3" type="audio/mp3">
+                      </audio>
+                </div>
+            </div>
+
+            <div v-if="isSaving">
+                Uploading audio file...
+            </div>
+        </form>
+    </div>
+</script>
+
+<script type="text/x-template" id="add-new-block-tpl">
+    <li class="add" @click="addChild" style="cursor: pointer;">
+        <button type="button" class="btn btn-white">
+            <i class="fa fa-plus"></i> Add a Step
+        </button>
+    </li>
+</script>
+
+<script type="text/x-template" id="action-tpl">
+  <li class="dd-item" :data-step="model.step" :data-have-next="model.config.have_next">
+    <span class="delete-link" @click="deleteBlock"><i class="fa fa-times"></i></span>
+
+    <div class="panel panel-default">
+        <div v-if="model.block_type" class="panel-heading" @click="changeBlock('', '')">
+            <i v-if="selectedBlockData.icon" :class="selectedBlockData.icon"></i> {{ selectedBlockData.title }}
+        </div>
+        <div v-if="model.config.without_options != true" class="panel-body">
+            <div v-if="!model.block_type" class="block-type block-selection">
+                <component v-bind:is="blockSelectionComponent"
+                           v-bind:model.sync="model"
+                           :blockTypes="blockTypes"
+                           :bus="bus">
+                </component>
+            </div>
+
+            <component v-bind:is="model.block_type"
+                       v-bind:model.sync="model"
+                       :bus="bus"
+                       :class="model.block_type"
+                       class="block-type">
+            </component>
+        </div>
+    </div>
+
+    <ul class="dd-list" v-if="hasChildren && false" :data-has-children="hasChildren" :data-can-add-child="model.config.can_add_children">
+        <add-new-block v-if="model.config.can_add_children" v-bind:position="0" v-bind:parent="model.step" :bus="bus"></add-new-block>
+        <template v-for="(childrenModel, index) in getAvailableChildren">
+            <item class="item" :key="childrenModel.step" :bus="bus" v-bind:model="childrenModel" v-bind:blockTypes.sync="model.config.children_block_types" v-bind:blockSelectionComponent.sync="model.config.block_selection"></item>
+            <add-new-block v-if="model.config.can_add_children && childrenModel.config.have_next" v-bind:position="index + 1" v-bind:parent="model.step" :bus="bus"></add-new-block>
+        </template>
+    </ul>
+  </li>
+</script>
+{% endverbatim %}
