@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from django.contrib import admin
 
 from .models import (
+    TwilioAutomation,
     TwilioPhoneNumber,
     TwilioStep,
     TwilioUpload,
@@ -11,6 +12,7 @@ from .models import (
     TwilioRecording
 )
 
+admin.site.register(TwilioAutomation)
 admin.site.register(TwilioPhoneNumber)
 admin.site.register(TwilioStep)
 admin.site.register(TwilioUpload)
