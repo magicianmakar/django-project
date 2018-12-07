@@ -56,6 +56,10 @@ class Youtube(object):
 
             self._credentials = client.Credentials.new_from_json(content)
 
+            if self._credentials.access_token_expired:
+                self._credentials.refresh(Http())
+                self.key.set_contents_from_string(json.dumps(self._credentials.to_json()))
+
         return self._credentials
 
     @credentials.setter
