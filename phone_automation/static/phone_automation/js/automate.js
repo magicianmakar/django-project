@@ -545,7 +545,9 @@ var demo = new Vue({
                     foundNode.next_step = nodeCount;
                 }
             } else {
-                foundNode.children[position - 1].next_step = newNode.step;
+                if (foundNode.config.can_add_children) {
+                    foundNode.children[position - 1].next_step = newNode.step;
+                }
             }
 
             if (newNode.config.have_next) {
