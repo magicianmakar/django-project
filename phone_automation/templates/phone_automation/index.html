@@ -91,7 +91,7 @@
                                 </div>
                                 <div class="col-md-9 text-right">
                                     <span>Time Used This Month</span>
-                                    <h2 class="font-bold">{{ twilio_stats.total_duration.call_duration__sum|formatSeconds }} of
+                                    <h2 class="font-bold">{{ twilio_stats.total_duration|formatSeconds }} of
                                         {% if twilio_stats.total_duration_month_limit != False %} {{twilio_stats.total_duration_month_limit|formatSeconds }} {%  else %} &infin; {%  endif %}</h2>
                                 </div>
                             </div>

@@ -15,7 +15,7 @@ def get_month_totals(user):
         created_at__gte=date_start
     ).aggregate(Sum('call_duration'))
 
-    return month_total_duration
+    return month_total_duration['call_duration__sum']
 
 
 def get_month_limit(user):
