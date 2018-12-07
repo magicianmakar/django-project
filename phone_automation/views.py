@@ -337,7 +337,8 @@ def call_flow_menu_options(request):
     for children_step in current_step.children.all():
         children_config = children_step.get_config()
         if children_config.get('number') == choice:
-            response.redirect(children_step.redirect)
+            next_step_children = children_step.children.first()
+            response.redirect(next_step_children.url)
             break
     else:
         repeat = config.get('repeat', False)

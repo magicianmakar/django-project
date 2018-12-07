@@ -73,7 +73,7 @@ class TwilioStep(models.Model):
             'flow-block-dial': reverse('phone_automation_call_flow_dial'),
         }.get(self.block_type, reverse('phone_automation_call_flow_empty'))
 
-        raw_url += '?step={}'.format(self.step)
+        raw_url += u'?step={}'.format(self.step)
         return raw_url
 
     @cached_property
