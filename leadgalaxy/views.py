@@ -4055,7 +4055,7 @@ def orders_place(request):
     redirect_url = False
     if not disable_affiliate:
         if supplier and supplier.is_ebay:
-            if not models_user.can('ebay_auto_fulfill.use'):
+            if not request.user.models_user.can('ebay_auto_fulfill.use'):
                 messages.error(request, "eBay 1-Click fulfillment is not available on your current plan. "
                                         "Please upgrade to Premier Plan to use this feature")
 
