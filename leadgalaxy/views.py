@@ -3647,7 +3647,8 @@ def orders_view(request):
                 order['line_items'][i]['shipping_method'] = shipping_method
                 order['line_items'][i]['supplier_type'] = supplier.supplier_type()
 
-                order['supplier_types'].add(supplier.supplier_type())
+                if supplier:
+                    order['supplier_types'].add(supplier.supplier_type())
 
                 if fix_order_variants and supplier.is_aliexpress:
                     mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
@@ -4054,6 +4055,12 @@ def orders_place(request):
     redirect_url = False
     if not disable_affiliate:
         if supplier and supplier.is_ebay:
+            if not request.user.models_user.can('ebay_auto_fulfill.use'):
+                messages.error(request, "eBay 1-Click fulfillment is not available on your current plan. "
+                                        "Please upgrade to Premier Plan to use this feature")
+
+                return HttpResponseRedirect('/')
+
             redirect_url = utils.get_ebay_affiliate_url(product)
         else:
             if user_admitad_credentials:
