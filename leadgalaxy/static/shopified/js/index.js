@@ -520,42 +520,7 @@ $('#product-template-modal').on('hide.bs.modal', function (e) {
     document.editor.setData('');
 });
 
-$('#add-template-form').on('submit', function(e) {
-    e.preventDefault();
-
-    $('#add-template-form textarea[name="description"]').val(document.editor.getData());
-
-    $.ajax({
-        url: '/api/description-templates',
-        type: 'POST',
-        data: $(this).serialize(),
-        dataType: 'json',
-        success: function (result) {
-            $('#product-template-modal').modal('hide');
-
-            var template = result.template;
-            var tr = $('#description-template-table tr[data-template-id="'+template.id+'"]');
-            if (tr.length === 0) {
-                tr = $('#description-template-table tbody .clone').clone();
-                tr.removeClass('hidden clone');
-                $('#description-template-table tbody').append(tr);
-            }
-
-            tr.attr('data-template-id', template.id);
-            tr.find('.template-title').text(template.title);
-            tr.find('.template-text').text(template.description);
-            tr.find('.edit-template').attr('data-id', template.id);
-            tr.find('.delete-template').attr('data-id', template.id);
-            tr.find('.delete-template').attr('href', template.delete_url);
-        },
-        error: function (data) {
-            displayAjaxError('Custom Description', data);
-        }
-    });
-
-});
-
-$('#description-template-table .delete-template').click(function(e) {
+var delete_template = function(e) {
     e.preventDefault();
     var btn = $(this);
 
@@ -590,7 +555,45 @@ $('#description-template-table .delete-template').click(function(e) {
             }
         }
     );
+};
+
+$('#add-template-form').on('submit', function(e) {
+    e.preventDefault();
+
+    $('#add-template-form textarea[name="description"]').val(document.editor.getData());
+
+    $.ajax({
+        url: '/api/description-templates',
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function (result) {
+            $('#product-template-modal').modal('hide');
+
+            var template = result.template;
+            var tr = $('#description-template-table tr[data-template-id="'+template.id+'"]');
+            if (tr.length === 0) {
+                tr = $('#description-template-table tbody .clone').clone();
+                tr.removeClass('hidden clone');
+                $('#description-template-table tbody').append(tr);
+            }
+
+            tr.attr('data-template-id', template.id);
+            tr.find('.template-title').text(template.title);
+            tr.find('.template-text').text(template.description);
+            tr.find('.edit-template').attr('data-id', template.id);
+            tr.find('.delete-template').attr('data-id', template.id);
+            tr.find('.delete-template').attr('href', template.delete_url);
+            tr.find('.delete-template').click(delete_template);
+        },
+        error: function (data) {
+            displayAjaxError('Custom Description', data);
+        }
+    });
+
 });
+
+$('#description-template-table .delete-template').click(delete_template);
 
 $('.edit-markup-rules-btn').click(function (e) {
     e.preventDefault();
