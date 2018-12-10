@@ -1,13 +1,47 @@
-from time import sleep
+from datetime import date
 
 from django.utils import timezone
+from django.db.models import Q
 from tqdm import tqdm
 from raven.contrib.django.raven_compat.models import client as raven_client
 from facebookads.exceptions import FacebookRequestError
 
 from shopified_core.management import DropifiedBaseCommand
 from profit_dashboard.models import FacebookAccess
-from profit_dashboard.utils import get_facebook_ads
+from profit_dashboard.utils import create_facebook_ads
+
+
+def attach_account(account, stdout=None):
+    try:
+        # Return already formatted insights
+        for insight in account.get_api_insights():
+            create_facebook_ads(account, insight)
+
+        account.last_sync = date.today()
+        account.save()
+
+    except FacebookRequestError, e:
+        if e.api_error_code() == 17:  # (#17) User request limit reached
+            raven_client.captureException(level='warning')
+            stdout.write('Facebook API limit')
+
+        elif e.api_error_code() == 190:  # (#190) Error validating access token
+            facebook_access = account.access
+            facebook_access.access_token = ''
+            facebook_access.expires_in = None
+            facebook_access.save()
+
+            raven_client.captureException(level='warning')
+            stdout.write('Facebook Invalid Token')
+
+        else:
+            raven_client.captureException()
+
+        stdout.write(' * API Call error: {}'.format(repr(e)))
+
+    except Exception:
+        raven_client.captureException()
+        stdout.write(' * Error: {}'.format(repr(e)))
 
 
 class Command(DropifiedBaseCommand):
@@ -18,36 +52,25 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         progress = options['progress']
+        verbosity = options['verbosity']
 
-        facebook_access_list = FacebookAccess.objects.filter(expires_in__gt=timezone.now())
-        count = facebook_access_list.count()
+        facebook_access_list = FacebookAccess.objects.filter(~Q(access_token=''), expires_in__gt=timezone.now())
+        count = len(facebook_access_list)
+        self.write('Syncing {} Facebook Accounts'.format(count))
+
         if progress:
             obar = tqdm(total=count)
 
-        start = 0
-
         for access in facebook_access_list:
-            kwargs = {
-                'facebook_access_id': access.id,
-                'store': access.store,
-            }
+            for account in access.accounts.all():
+                attach_account(
+                    account=account,
+                    stdout=self.stdout,
+                    verbosity=verbosity
+                )
 
-            try:
-                get_facebook_ads(**kwargs)
-
-                start += 1
-                if progress:
-                    obar.update(1)
-
-            except FacebookRequestError, e:
-                if e.api_error_code() == 17:  # (#17) User request limit reached
-                    sleep(30)
-                    # Another API error at this point means sleep should be increased
-                    get_facebook_ads(**kwargs)  # Retry last one
-
-            except Exception, e:
-                raven_client.captureException()
-                break
+            if progress:
+                obar.update(1)
 
         if progress:
             obar.close()

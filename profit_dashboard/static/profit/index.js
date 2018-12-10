@@ -1270,10 +1270,11 @@ var FacebookProfitDashboard = {
                 url: $(this).attr('action'),
                 data: $(this).serialize(),
                 dataType: 'json',
+                beforeSend: function() {
+                    FacebookProfitDashboard.facebookStatus.loading();
+                },
                 success: function(result) {
-                    if (result.success) {
-                        FacebookProfitDashboard.facebookInsightsPusherNotification();
-                    }
+                    FacebookProfitDashboard.facebookInsightsPusherNotification();
                 },
                 error: function (data) {
                     displayAjaxError('Facebook Ad Sync', data);
@@ -1402,6 +1403,7 @@ $(function () {
             accountName = selectedAccount.parents('li').attr('data-name'),
             facebooUserId = $('input[name="fb_user_id"]').val();
 
+        $('#fb-account-selected').button('loading');
         $.ajax({
             url: '/profit-dashboard/facebook/campaign',
             data: {
@@ -1432,6 +1434,8 @@ $(function () {
             currentFacebookAccessId = null;
             $('.facebook-modal').modal('hide');
             displayAjaxError('Campaign Selection', data);
+        }).always(function() {
+            $('#fb-account-selected').button('reset');
         });
     });
 
