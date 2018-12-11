@@ -126,6 +126,13 @@ var Utils = {
         min_months_for_weekly_chart: 4,
         min_months_for_daily_chart: 2,
         currentYear: new Date().getFullYear(),
+        colorDataLabels: {
+            orders_count: { backgroundColor: "rgba(54, 179, 126, 0.5)", borderColor: "rgba(54, 179, 126, 0.7)" },
+            fulfillments_count: { backgroundColor: "rgba(147, 198, 126, 0.5)", backgroundColor: "rgba(147, 198, 126, 0.7)" },
+            fulfillment_cost: { backgroundColor: 'rgba(248, 172, 89, 0.5)', borderColor: "rgba(248, 172, 89, 0.7)" },
+            ads_spend: { backgroundColor: "rgba(0, 101, 255, 0.5)", borderColor: "rgba(0, 101, 255, 0.7)" },
+            other_costs: { backgroundColor: "rgba(184, 42, 201, 0.5)", borderColor: "rgba(184, 42, 201, 0.7)" }
+        },
         init: function() {
             this.initTooltip();
             this.initDatepicker();
@@ -936,11 +943,12 @@ var Utils = {
                 if (addDataset) {
                     $(this).addClass('active');
 
+                    var colorLabels = ProfitDashboard.colorDataLabels[dataKey];
                     var dataset = {
                         label: label,
                         fill: false,
-                        backgroundColor: 'rgba(248, 172, 89, 0.5)',
-                        borderColor: "rgba(248, 172, 89, 0.7)",
+                        backgroundColor: colorLabels.backgroundColor || 'rgba(248, 172, 89, 0.5)',
+                        borderColor: colorLabels.borderColor || "rgba(248, 172, 89, 0.7)",
                         dataKey: dataKey,
                         data: ProfitDashboard.chartsData[dataKey]
                     };
