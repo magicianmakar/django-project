@@ -1079,7 +1079,7 @@ def webhook(request, provider, option):
                 return HttpResponse(':x: Number of arguments is not correct: {}'.format(request.POST['text']))
 
             count, models = access.delete()
-            return HttpResponse("Deleted {} Facebook Synced Accounts".format(count))
+            return HttpResponse("Deleted {} Facebook Synced Accounts".format(models.get(u'profit_dashboard.FacebookAccess', 0)))
 
         elif request.POST['command'] == '/dash-facebook-list':
             if not request_from:
