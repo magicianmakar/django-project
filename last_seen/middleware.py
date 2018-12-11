@@ -1,4 +1,6 @@
 from models import user_seen
+from django.http import Http404
+
 from . import settings
 
 
@@ -7,9 +9,11 @@ class LastSeenMiddleware(object):
         Middlewate to set timestampe when a user
         has been last seen
     """
+
     def process_request(self, request):
-        if request.path.startswith('/admin/') and not request.user.is_superuser and not request.session.get('is_hijacked_user'):
-            from django.http import Http404
+        if request.path.startswith('/admin/') and not request.user.is_superuser \
+                and not request.user.is_staff \
+                and not request.session.get('is_hijacked_user'):
             raise Http404
 
         if request.user.is_authenticated and not request.session.get('is_hijacked_user'):
