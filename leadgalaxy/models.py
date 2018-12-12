@@ -1811,7 +1811,8 @@ class ShopifyOrderTrack(models.Model):
         if self.source_status and ',' in self.source_status:
             source_status = []
             for i in self.source_status.split(','):
-                source_status.append(status_map.get(i, ''))
+                if status_map.get(i, ''):
+                    source_status.append(status_map.get(i, ''))
 
                 if i not in status_map:
                     print 'MISSING_STATUS:', i
