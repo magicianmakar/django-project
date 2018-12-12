@@ -189,15 +189,29 @@ def facebook_accounts(request):
         else:
             return JsonResponse({'error': 'Facebook token not received, please refresh your page and try again'}, status=404)
 
-    facebook_access, created = FacebookAccess.objects.get_or_create(
-        user_id=request.user.models_user.id,
-        store=store,
-        facebook_user_id=facebook_user_id,
-        defaults={
-            'access_token': access_token,
-            'expires_in': arrow.get().replace(seconds=expires_in).datetime
-        }
-    )
+    try:
+        facebook_access = FacebookAccess.objects.get(
+            user_id=request.user.models_user.id,
+            store=store,
+            facebook_user_id=facebook_user_id
+        )
+
+    except FacebookAccess.DoesNotExist:
+        facebook_access = FacebookAccess.objects.create(
+            user_id=request.user.models_user.id,
+            store=store,
+            facebook_user_id=facebook_user_id,
+            access_token=access_token,
+            expires_in=arrow.get().replace(seconds=expires_in).datetime
+        )
+
+    except FacebookAccess.MultipleObjectsReturned:
+        facebook_access = FacebookAccess.objects.filter(
+            user_id=request.user.models_user.id,
+            store=store,
+            facebook_user_id=facebook_user_id
+        ).first()
+
     try:
         facebook_access.get_or_update_token(access_token, expires_in)
     except:
