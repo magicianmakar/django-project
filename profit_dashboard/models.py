@@ -61,14 +61,10 @@ class FacebookAccess(models.Model):
         super(FacebookAccess, self).save(*args, **kwargs)
 
     def _reload_api(self):
-        access_token = self.access_token
-        if not access_token:
-            access_token = self.get_or_update_token()
-
         self._api = FacebookAdsApi.init(
             settings.FACEBOOK_APP_ID,
             settings.FACEBOOK_APP_SECRET,
-            access_token,
+            self.access_token,
             api_version='v3.0'
         )
 
@@ -99,14 +95,13 @@ class FacebookAccess(models.Model):
 
         # Token exchange must be done manually for now
         url = 'https://graph.facebook.com/oauth/access_token'
-        session = requests.Session()
         params = {
             'client_id': settings.FACEBOOK_APP_ID,
             'client_secret': settings.FACEBOOK_APP_SECRET,
             'fb_exchange_token': self.access_token,
             'grant_type': 'fb_exchange_token'
         }
-        response = session.get(url, params=params)
+        response = requests.get(url, params=params)
         token = json.loads(response.content)
 
         # Default expire should be within the next hour
@@ -212,6 +207,7 @@ class FacebookAccount(models.Model):
         seconds = 0
 
         # Takes ~100 seconds to prepare ~4000 insights
+        job = insights_async_job.remote_read()
         while FACEBOOK_INSIGHTS_TIMEOUT < seconds or self.is_first_sync:
             seconds += 1
             job = insights_async_job.remote_read()
