@@ -22,10 +22,9 @@ from twilio.twiml.voice_response import VoiceResponse, Gather
 
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.utils import safeInt, app_link
+from .forms import TwilioAutomationForm
 from .models import (
     TwilioPhoneNumber,
-    TwilioAutomation,
-    TwilioStep,
     TwilioUpload,
     TwilioLog,
     TwilioRecording
@@ -194,38 +193,12 @@ def provision_release(request):
 def save_automation(request, twilio_phone_number_id):
     twilio_phone_number = get_object_or_404(TwilioPhoneNumber, pk=twilio_phone_number_id, user=request.user)
 
-    twilio_automation = TwilioAutomation()
-    twilio_automation.user = request.user
-    twilio_automation.first_step = request.POST.get('first_step')
-    twilio_automation.last_step = request.POST.get('last_step')
-    twilio_automation.save()
-
-    def save_all_steps(node, parent=None):
-        if node.get('step', 0) != 0:
-            parent = TwilioStep.objects.create(
-                automation=twilio_automation,
-                parent=parent,
-                block_type=node.get('block_type'),
-                step=node.get('step'),
-                next_step=node.get('next_step'),
-                config=json.dumps(node.get('config')),
-            )
-
-        if len(node.get('children')):
-            for node in node.get('children'):
-                save_all_steps(node, parent)
-
-    nodes = json.loads(request.POST.get('children'))
-    save_all_steps({'children': nodes})
-
-    # Replace old automation
-    old_automation = twilio_phone_number.automation
-
-    twilio_phone_number.automation = twilio_automation
-    twilio_phone_number.save()
-
-    if old_automation:
-        old_automation.delete()
+    # Form will save nodes in correct order after saving the automation object
+    form = TwilioAutomationForm(request.POST)
+    if form.is_valid():
+        twilio_automation = form.save()
+        twilio_phone_number.automation = twilio_automation
+        twilio_phone_number.save()
 
     return JsonResponse({'status': 'ok'})
 
