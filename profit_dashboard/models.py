@@ -61,7 +61,10 @@ class FacebookAccess(models.Model):
         super(FacebookAccess, self).save(*args, **kwargs)
 
     def _reload_api(self):
-        access_token = self.get_or_update_token()
+        access_token = self.access_token
+        if not access_token:
+            access_token = self.get_or_update_token()
+
         self._api = FacebookAdsApi.init(
             settings.FACEBOOK_APP_ID,
             settings.FACEBOOK_APP_SECRET,
