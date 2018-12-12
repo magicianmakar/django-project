@@ -52,7 +52,6 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         progress = options['progress']
-        verbosity = options['verbosity']
 
         facebook_access_list = FacebookAccess.objects.filter(~Q(access_token=''), expires_in__gt=timezone.now())
         count = len(facebook_access_list)
@@ -65,8 +64,7 @@ class Command(DropifiedBaseCommand):
             for account in access.accounts.all():
                 attach_account(
                     account=account,
-                    stdout=self.stdout,
-                    verbosity=verbosity
+                    stdout=self.stdout
                 )
 
             if progress:
