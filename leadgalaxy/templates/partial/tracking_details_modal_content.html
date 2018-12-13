@@ -30,7 +30,7 @@
                                 <span class="date">{% date_humanize log.time %}</span>
                             </a>
                         </div>
-                        {{log.log}}
+                        {{log.log | safe}}
                     </div>
                 </div>
                 {% endfor %}
