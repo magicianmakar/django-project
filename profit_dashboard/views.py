@@ -68,7 +68,7 @@ def index(request):
             request.user.profile.save()
 
     try:
-        start, end = get_date_range(request)
+        start, end = get_date_range(request, user_timezone)
         limit = utils.safeInt(request.GET.get('limit'), 31)
         current_page = utils.safeInt(request.GET.get('page'), 1)
 
