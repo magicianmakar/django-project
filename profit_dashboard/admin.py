@@ -19,14 +19,14 @@ class FacebookAccessAdmin(admin.ModelAdmin):
 class FacebookAccountAdmin(admin.ModelAdmin):
     list_display = ('account_name', 'account_id', 'config', 'last_sync')
     raw_id_fields = ('store', 'access')
-    search_fields = ('access__store__shop', 'account_id', 'account_name')
+    search_fields = ('access__store__shop', 'access__user__email', 'account_id', 'account_name')
 
 
 @admin.register(FacebookAdCost)
 class FacebookAdCostAdmin(admin.ModelAdmin):
     list_display = ('campaign_id', 'created_at', 'impressions', 'spend')
     raw_id_fields = ('account',)
-    search_fields = ('account__access__store__shop', 'account__account_id', 'campaign_id')
+    search_fields = ('account__access__store__shop', 'account__access__user__email', 'account__account_id', 'campaign_id')
 
 
 @admin.register(AliexpressFulfillmentCost)

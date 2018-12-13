@@ -186,7 +186,7 @@ class FacebookAccount(models.Model):
 
         return campaign_ids
 
-    def get_api_insights(self, verbosity):
+    def get_api_insights(self, verbosity=1):
         params = {
             'time_increment': 1,
             'level': 'campaign',

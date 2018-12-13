@@ -20,7 +20,7 @@ def attach_account(account, stdout=None):
         account.last_sync = date.today()
         account.save()
 
-    except FacebookRequestError, e:
+    except FacebookRequestError as e:
         if e.api_error_code() == 17:  # (#17) User request limit reached
             raven_client.captureException(level='warning')
             stdout.write('Facebook API limit')
@@ -39,7 +39,7 @@ def attach_account(account, stdout=None):
 
         stdout.write(' * API Call error: {}'.format(repr(e)))
 
-    except Exception:
+    except Exception as e:
         raven_client.captureException()
         stdout.write(' * Error: {}'.format(repr(e)))
 

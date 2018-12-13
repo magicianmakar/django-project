@@ -2353,7 +2353,7 @@ def acp_graph(request):
 
 @login_required
 def acp_groups(request):
-    if not request.user.is_superuser and not request.user.has_perm('leadgalaxy.add_planregistration'):
+    if not request.user.is_superuser and not request.user.is_staff:
         raise PermissionDenied()
 
     if request.user.is_superuser:
@@ -2435,14 +2435,9 @@ def acp_groups(request):
 
             return JsonResponse(data, safe=False)
 
-    if request.user.is_superuser:
-        plans = GroupPlan.objects.all().order_by('-payment_gateway', 'id')
-        tpl = 'acp/groups.html'
-    else:
-        plans = GroupPlan.objects.filter(id=8)
-        tpl = 'acp/groups_limited.html'
+    plans = GroupPlan.objects.all().order_by('-payment_gateway', 'id')
 
-    return render(request, tpl, {
+    return render(request, 'acp/groups.html', {
         'plans': plans,
         'page': 'acp_groups',
         'breadcrumbs': ['ACP', 'Plans &amp; Groups']

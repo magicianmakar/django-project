@@ -1,4 +1,5 @@
 import arrow
+import pytz
 import re
 import simplejson as json
 
@@ -108,26 +109,25 @@ def get_profits(store, start, end, store_timezone=''):
             'profit': 0.0,
         }
 
-    try:
-        start_tz = arrow.get(start).to(store_timezone).datetime
-        end_tz = arrow.get(end).to(store_timezone).datetime
-    except:
-        start_tz = start
-        end_tz = end
-
     # Shopify Orders
     orders = ShopifyOrder.objects.filter(store_id=store_id,
-                                         created_at__range=(start_tz, end_tz),
+                                         created_at__range=(start, end),
                                          financial_status__in=['authorized', 'partially_paid', 'paid', 'partially_refunded', 'refunded'])
 
     orders_map = {}
+    totals_orders_count = 0
     for order in orders.values('created_at', 'total_price', 'order_id'):
         # Date: YYYY-MM-DD
         try:
+            # Correct our database date to show these at the correct day
             created_at = arrow.get(order['created_at']).to(store_timezone)
         except:
             pass
         date_key = created_at.format('YYYY-MM-DD')
+        if date_key not in profits_data:
+            continue
+
+        totals_orders_count += 1
         orders_map[order['order_id']] = {
             'date': created_at.datetime,
             'date_as_string': created_at.format('MM/DD/YYYY'),
@@ -139,8 +139,6 @@ def get_profits(store, start, end, store_timezone=''):
             'refunded_products': [],
             'aliexpress_track': []
         }
-        if date_key not in profits_data:
-            continue
 
         profits_data[date_key]['profit'] += order['total_price']
         profits_data[date_key]['revenue'] += order['total_price']
@@ -237,7 +235,7 @@ def get_profits(store, start, end, store_timezone=''):
     }
     totals['outcome'] = safeFloat(totals['fulfillment_cost']) + safeFloat(totals['ads_spend']) + safeFloat(totals['other_costs'])
     totals['profit'] = safeFloat(totals['revenue']) - safeFloat(totals['outcome']) - safeFloat(total_refunds)
-    totals['orders_count'] = ShopifyOrder.objects.filter(store_id=store_id, created_at__range=(start_tz, end_tz)).count()
+    totals['orders_count'] = totals_orders_count
     totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)
     totals['fulfillments_per_day'] = total_fulfillments_count / len(days)
@@ -347,16 +345,10 @@ def get_costs_from_track(track, commit=False):
 
 
 def order_refunds(store, start, end, store_timezone=''):
-    try:
-        params = {
-            'updated_at_min': arrow.get(start).to(store_timezone).isoformat(),
-            'updated_at_max': arrow.get(end).to(store_timezone).isoformat(),
-        }
-    except:
-        params = {
-            'updated_at_min': start.isoformat(),
-            'updated_at_max': end.isoformat(),
-        }
+    params = {
+        'updated_at_min': arrow.get(start).isoformat(),
+        'updated_at_max': arrow.get(end).isoformat(),
+    }
 
     def retrieve_refunds(params):
         orders_count = 250
@@ -368,8 +360,9 @@ def order_refunds(store, start, end, store_timezone=''):
             for order in shopify_orders:
                 orders_count += 1
                 for refund in order.get('refunds'):
+                    # Correct our database date to show these at the correct day
+                    processed_at = arrow.get(refund.get('processed_at')).to(store_timezone)
                     # Only yield refunds processed within date range
-                    processed_at = arrow.get(refund.get('processed_at'))
                     if start < processed_at < end:
                         refund['processed_at_datetime'] = processed_at
                         yield refund
@@ -403,21 +396,13 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
     """
     Returns each refund, order and aliexpress fulfillment sorted by date
     """
-    # assert False, date_range
     start, end = date_range
-    try:
-        start_tz = arrow.get(start).to(store_timezone).datetime
-        end_tz = arrow.get(end).to(store_timezone).datetime
-    except:
-        start_tz = start
-        end_tz = end
-    date_range_tz = (start_tz, end_tz)
 
     if not orders_map:
         orders_map = {}
         orders = ShopifyOrder.objects.filter(
             store_id=store.id,
-            created_at__range=date_range_tz,
+            created_at__range=date_range,
             financial_status__in=['authorized', 'partially_paid', 'paid', 'partially_refunded', 'refunded']
         ).values('created_at', 'total_price', 'order_id')
         for order in orders:
@@ -541,16 +526,16 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
     return profit_details, paginator
 
 
-def get_date_range(request):
-    date_range = request.GET.get('date_range', '{}-'.format(arrow.now().replace(days=-30).format('MM/DD/YYYY')))
+def get_date_range(request, store_timezone):
     end = arrow.now()
     start = arrow.now().replace(days=-30)
+    date_range = request.GET.get('date_range', '{}-{}'.format(start.format('MM/DD/YYYY'), end.format('MM/DD/YYYY')))
 
     if date_range:
         try:
             daterange_list = date_range.split('-')
-
-            tz = timezone.localtime(timezone.now()).strftime(' %z')
+            # Get timezone from user store, if it doesn't exist, we save it the first time they access PD
+            tz = timezone.now().astimezone(pytz.timezone(store_timezone)).strftime(' %z')
 
             start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z')
 

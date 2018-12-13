@@ -237,8 +237,8 @@
                                 return false;">Users</a>
                     </li>
 
-                    {% if request.user.is_superuser %}
                     <li {% if page == 'acp_groups' %}class="active"{% endif %}><a href="{% url 'acp_groups' %}">Plans</a></li>
+                    {% if request.user.is_superuser %}
                     <li {% if page == 'acp_graph' %}class="active"{% endif %}><a href="{% url 'acp_graph' %}">Analytics</a></li>
                     <li {% if page == 'acp_pages' %}class="active"{% endif %}><a href="/pages/">Pages</a></li>
                     <li><a href="/admin/article/sidebarlink/">Sidebar Links</a></li>
