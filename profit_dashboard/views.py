@@ -214,11 +214,10 @@ def facebook_accounts(request):
 
     try:
         facebook_access.get_or_update_token(access_token, expires_in)
+        accounts = facebook_access.get_api_accounts()
     except:
         raven_client.captureException()
         return JsonResponse({'error': 'User token error'}, status=404)
-
-    accounts = facebook_access.get_api_accounts()
 
     return JsonResponse({
         'accounts': [{'name': i['name'], 'id': i['id']} for i in accounts],
