@@ -258,10 +258,8 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.assertEquals(json_response['error'], self.error_message)
 
     @patch('leadgalaxy.models.ShopifyStore.pusher_trigger', Mock(return_value=None))
-    @patch('leadgalaxy.tasks.mark_as_ordered_note')
     @patch('leadgalaxy.utils.ShopifyOrderUpdater.delay_save', Mock(return_value=None))
-    def test_subuser_can_order_fulfill_with_permission(self, mark_as_ordered_note):
-        mark_as_ordered_note.delay = Mock(return_value=None)
+    def test_subuser_can_order_fulfill_with_permission(self):
         self.user.profile.subuser_stores.add(self.store)
         data = {'store': self.store.id, 'order_id': '1', 'line_id': '1', 'aliexpress_order_id': '01234566789'}
         r = self.client.post('/api/order-fulfill', data)

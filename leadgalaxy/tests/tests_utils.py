@@ -444,6 +444,21 @@ class FulfillmentTestCase(BaseTestCase):
         data = utils.order_track_fulfillment(**self.fulfillment_data)
         self.assertEqual(data['fulfillment']['tracking_company'], "USPS")
 
+    def test_order_track_urls_single(self):
+        track = self.create_track('4567893477', '78945611', '7565915257226', 'MA')
+        r = track.get_tracking_link()
+
+        self.assertEqual(type(r), str)
+        self.assertEqual(r, 'http://track.aftership.com/7565915257226')
+
+    def test_order_track_urls_multi(self):
+        track = self.create_track('4567893477', '78945611', '7565915257226,7565915257227', 'MA')
+        r = track.get_tracking_link()
+
+        self.assertEqual(type(r), list)
+        self.assertEqual(r, [['7565915257226', 'http://track.aftership.com/7565915257226'],
+                             ['7565915257227', 'http://track.aftership.com/7565915257227']])
+
 
 class OrdersTestCase(BaseTestCase):
     def setUp(self):

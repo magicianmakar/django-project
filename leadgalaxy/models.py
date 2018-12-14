@@ -1768,7 +1768,15 @@ class ShopifyOrderTrack(models.Model):
             elif not aftership_domain.startswith('http'):
                 aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
 
-        return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
+        if self.source_tracking:
+            if ',' in self.source_tracking:
+                urls = []
+                for tracking in self.source_tracking.split(','):
+                    urls.append([tracking, aftership_domain.replace('{{tracking_number}}', tracking)])
+
+                return urls
+            else:
+                return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
 
     def get_source_status(self):
         status_map = {
@@ -1860,7 +1868,10 @@ class ShopifyOrderTrack(models.Model):
 
     def get_source_url(self):
         if self.source_id:
-            return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
+            if self.source_type == 'ebay':
+                return 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={}'.format(self.source_id)
+            else:
+                return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
         else:
             return None
 
