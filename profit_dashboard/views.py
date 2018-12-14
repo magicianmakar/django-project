@@ -353,7 +353,8 @@ def profit_details(request):
             'error': 'Please add at least one store before using the Profits Dashboard.'
         }, status=500)
 
-    start, end = get_date_range(request)
+    store_timezone = request.session.get('django_timezone', '')
+    start, end = get_date_range(request, store_timezone)
     limit = utils.safeInt(request.GET.get('limit'), 20)
     current_page = utils.safeInt(request.GET.get('page'), 1)
 
@@ -361,7 +362,7 @@ def profit_details(request):
                                             (start, end),
                                             limit=limit,
                                             page=current_page,
-                                            store_timezone=request.session.get('django_timezone', ''))
+                                            store_timezone=store_timezone)
 
     pagination = render_to_string('partial/paginator.html', {
         'request': request,
