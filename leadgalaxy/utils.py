@@ -2589,18 +2589,35 @@ class ShopifyOrderUpdater:
         for i in a:
             self.attributes.append(i)
 
-    def mark_as_ordered_note(self, line_id, source_id):
-        note = 'Aliexpress Order ID: {0}\n' \
-               'http://trade.aliexpress.com/order_detail.htm?orderId={0}'.format(source_id)
+    def mark_as_ordered_note(self, line_id, source_id, track=None):
+        source = 'Aliexpress'
+
+        if track:
+            url = track.get_source_url()
+            if track.source_type == 'ebay':
+                source = 'eBay'
+        else:
+            url = 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(source_id)
+
+        note = '{} Order ID: {}\n{}'.format(source, source_id, url)
 
         if line_id:
             note = u'{}\nOrder Line: #{}'.format(note, line_id)
 
         self.add_note(note)
 
-    def mark_as_ordered_attribute(self, source_id):
-        name = u'Aliexpress Order #{}'.format(source_id)
-        url = u'http://trade.aliexpress.com/order_detail.htm?orderId={0}'.format(source_id)
+    def mark_as_ordered_attribute(self, source_id, track=None):
+        source = 'Aliexpress'
+
+        if track:
+            url = track.get_source_url()
+            if track.source_type == 'ebay':
+                source = 'eBay'
+        else:
+            url = 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(source_id)
+
+        name = u'{} Order #{}'.format(source, source_id)
+
         note_attribute = {'name': name, 'value': url}
 
         self.add_attribute(note_attribute)

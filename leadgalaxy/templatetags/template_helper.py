@@ -281,6 +281,8 @@ def user_orders_count(user):
 
 @register.simple_tag(takes_context=True)
 def order_track_status(context, track, html=True):
+    is_ebay = track.source_type == 'ebay'
+
     if track.source_status_details:
         if ',' in track.source_status_details:
             return mark_safe('<span class="itooltip" title="{}">{}</span>'.format(track.get_source_status_details(), track.get_source_status()))
@@ -293,7 +295,7 @@ def order_track_status(context, track, html=True):
 
         return mark_safe('<b class="{}">{}</b>'.format(color, track.get_source_status()))
     else:
-        return mark_safe('<i>Awaiting Sync with Aliexpress</i>')
+        return mark_safe('<i>Awaiting Sync with {}</i>'.format('eBay' if is_ebay else 'Aliexpress'))
 
 
 @register.simple_tag(takes_context=True)

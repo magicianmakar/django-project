@@ -2308,10 +2308,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
             # TODO: Handle multi values in source_id
             if profile.get_config_value('aliexpress_as_notes', True):
-                order_updater.mark_as_ordered_note(line_id, source_id)
+                order_updater.mark_as_ordered_note(line_id, source_id, track=track)
 
             if profile.get_config_value('aliexpress_as_custom_note'):
-                order_updater.mark_as_ordered_attribute(source_id)
+                order_updater.mark_as_ordered_attribute(source_id, track=track)
 
             if profile.get_config_value('aliexpress_as_order_tag'):
                 order_updater.mark_as_ordered_tag(source_id)
