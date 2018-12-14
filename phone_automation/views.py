@@ -194,9 +194,13 @@ def save_automation(request, twilio_phone_number_id):
     twilio_phone_number = get_object_or_404(TwilioPhoneNumber, pk=twilio_phone_number_id, user=request.user)
 
     # Form will save nodes in correct order after saving the automation object
-    form = TwilioAutomationForm(request.POST)
+    form = TwilioAutomationForm(request.POST, instance=twilio_phone_number.automation)
     if form.is_valid():
+        # First save must occur so steps are properly saved
         twilio_automation = form.save()
+        twilio_automation.user = request.user.models_user
+        twilio_automation.save()
+
         twilio_phone_number.automation = twilio_automation
         twilio_phone_number.save()
 

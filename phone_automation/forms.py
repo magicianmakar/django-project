@@ -37,4 +37,4 @@ class TwilioAutomationForm(forms.ModelForm):
 
     class Meta:
         model = TwilioAutomation
-        exclude = ('title',)
+        exclude = ('user', 'title')
