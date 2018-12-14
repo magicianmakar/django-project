@@ -1768,7 +1768,15 @@ class ShopifyOrderTrack(models.Model):
             elif not aftership_domain.startswith('http'):
                 aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
 
-        return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
+        if self.source_tracking:
+            if ',' in self.source_tracking:
+                urls = []
+                for tracking in self.source_tracking.split(','):
+                    urls.append([tracking, aftership_domain.replace('{{tracking_number}}', tracking)])
+
+                return urls
+            else:
+                return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
 
     def get_source_status(self):
         status_map = {

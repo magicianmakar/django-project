@@ -296,6 +296,20 @@ def order_track_status(context, track, html=True):
         return mark_safe('<i>Awaiting Sync with Aliexpress</i>')
 
 
+@register.simple_tag(takes_context=True)
+def order_track_tracking_urls(context, track, html=True):
+    tracking = track.get_tracking_link()
+    if tracking:
+        if type(tracking) is list:
+            urls = []
+            for i in tracking:
+                urls.append(u'<a href="{}" target="_blank">{}</a>'.format(i[1], i[0]))
+
+            return mark_safe('<br>'.join(urls))
+        else:
+            return mark_safe(u'<a href="{}" target="_blank">{}</a>'.format(tracking, track.source_tracking))
+
+
 @register.filter
 def force_https(url):
     if not url:
