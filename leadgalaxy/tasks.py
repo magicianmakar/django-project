@@ -676,28 +676,6 @@ def smartmemeber_webhook_call(subdomain, data):
         raven_client.captureException()
 
 
-@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def mark_as_ordered_note(self, store_id, order_id, line_id, source_id):
-    try:
-        store = ShopifyStore.objects.get(id=store_id)
-        order_line, current_note = utils.get_shopify_order_line(store, order_id, line_id, note=True)
-        if order_line:
-            note = u'Aliexpress Order ID: {0}\n' \
-                   'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n' \
-                   'Shopify Product: {1} / {2}'.format(source_id, order_line.get('name'),
-                                                       order_line.get('variant_title'))
-        else:
-            note = 'Aliexpress Order ID: {0}\n' \
-                   'http://trade.aliexpress.com/order_detail.htm?orderId={0}\n'.format(source_id)
-
-        utils.add_shopify_order_note(store, order_id, note, current_note=current_note)
-
-    except Exception as e:
-        if not self.request.called_directly:
-            countdown = retry_countdown('retry_mark_ordered_{}'.format(order_id), self.request.retries)
-            raise self.retry(exc=e, countdown=countdown, max_retries=3)
-
-
 @celery_app.task(base=CaptureFailure, bind=True)
 def add_ordered_note(self, store_id, order_id, note):
     try:
