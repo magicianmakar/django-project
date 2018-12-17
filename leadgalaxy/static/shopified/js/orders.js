@@ -801,31 +801,93 @@ $('.product-preview img').click(function (e) {
     checkbox.prop('checked', !checkbox.prop('checked'));
 });
 
+function orderItems(current_order, supplier_type, exclude_lines) {
+    supplier_type = typeof(supplier_type) !== 'undefined' ? supplier_type : null;
+    exclude_lines = typeof(exclude_lines) !== 'undefined' ? exclude_lines : false;
+
+    var order = {
+        cart: true,
+        items: []
+    };
+
+    $('.line', current_order).each(function(i, el) {
+        if (exclude_lines) {
+            // Check if we should exclude this line if "exclude" attribute is "true"
+            if ($(el).attr('exclude') === 'true') {
+                return;
+            }
+        }
+
+        if (supplier_type) {
+            // If Supplier type (Aliexpress/eBay) doesn't match exclude this item
+            if ($(el).attr('supplier-type') !== supplier_type) {
+                return;
+            }
+        }
+
+        if ($(el).attr('line-data') && !$(el).attr('line-track')) {
+            order.items.push({
+                url: $('.add-to-cart', el).data('href') || $('.add-to-cart', el).prop('href'),
+                order_data: $(el).attr('order-data-id'),
+                order_name: $(el).attr('order-number'),
+                order_id: $(el).attr('order-id'),
+                line_id: $(el).attr('line-id'),
+                line_title: $(el).attr('line-title'),
+                supplier_type: $(el).attr('supplier-type'),
+            });
+        }
+    });
+
+    if (order.items.length) {
+        order.order_data = order.items[0].order_data.replace(/_[^_]+$/, '');
+        order.order_name = order.items[0].order_name;
+        order.order_id = order.items[0].order_id;
+        order.supplier_type = order.items[0].supplier_type;
+
+        order.line_id = $.map(order.items, function(el) {
+            return el.line_id;
+        });
+
+        order.line_title = '<ul style="padding:0px;overflow-x:hidden;">';
+
+        order.line_title += $.map(order.items.slice(0, 3), function(el) {
+            return '<li>&bull; ' + el.line_title +'</li>';
+        }).join('');
+
+        if (order.items.length > 3) {
+            var extra_count = order.items.length - 3;
+            order.line_title += '<li>&bull; Plus ' + (extra_count) +' Product' + (extra_count > 1 ? 's' : '') + '...</li>';
+        }
+
+        order.line_title += '</ul>';
+
+        addOrderToQueue(order);
+    } else {
+        toastr.error('The items have been orderd or are not connected', 'No Items to orders');
+    }
+}
+
 $('.order-seleted-lines').click(function (e) {
     e.preventDefault();
 
     var order = $(this).parents('.order');
-    var delete_lines = [];
     var selected = 0;
 
     order.find('.line-checkbox').each(function (i, el) {
         if(!el.checked) {
-            delete_lines.push($(el).parents('.line'));
+            el.attr('exclude', 'true');
         } else {
             selected += 1;
+            el.attr('exclude', 'false');
         }
     });
 
     if(selected <= 1) {
         swal('Order Selected', 'Please Select at least 2 items to order', 'warning');
         return;
-    } else {
-        $.each(delete_lines, function (i, el) {
-            $(el).remove();
-        });
     }
 
-    order.find('.order-all').trigger('click');
+    orderItems(order, null, true);
 });
 
 $('.order-seleted-suppliers').click(function(e) {
@@ -833,13 +895,10 @@ $('.order-seleted-suppliers').click(function(e) {
 
     var order = $(this).parents('.order');
     var supplier_type = $(this).attr('supplier-type');
-    var delete_lines = [];
     var selected = 0;
 
     order.find('.line').each(function(i, el) {
-        if ($(el).attr('supplier-type') !== supplier_type) {
-            delete_lines.push(el);
-        } else {
+        if ($(el).attr('supplier-type') === supplier_type) {
             selected += 1;
         }
     });
@@ -847,13 +906,10 @@ $('.order-seleted-suppliers').click(function(e) {
     if (!selected) {
         swal('Order From Supplier', 'This order doesn\'t have item from the selected supplier\n' +
             'Please reload the page and try again', 'warning');
-    } else {
-        $.each(delete_lines, function(i, el) {
-            $(el).remove();
-        });
-
-        order.find('.order-all').trigger('click');
+        return;
     }
+
+    orderItems(order, supplier_type);
 });
 
 $('.help-select').each(function (i, el) {
