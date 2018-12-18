@@ -190,10 +190,11 @@ function confirmDeleteOrderID(e) {
     var tr_parent = btn.parents('tr').first();
     var order_id = btn.attr('order-id');
     var source_id = btn.attr('source-order-id');
+    var source_url = btn.attr('source-url');
     var line_id = btn.attr('line-id');
     var html = '<ul>';
     html += '<li style="list-style:none">Supplier Order ID: <a target="_blank" ' +
-        'href="#' + source_id + '">' + source_id + '</a></li>';
+        'href="' + source_url + '">' + source_id + '</a></li>';
     html += '<li style="list-style:none">Order date: ' + btn.attr('order-date') + '</li>';
     html += '</ul';
 
@@ -1118,6 +1119,7 @@ function pusherSub() {
             'order-id': data.order_id,
             'line-id': data.line_id,
             'source-order-id': data.source_id,
+            'source-url': data.source_url,
             'order-date': 'Few minutes ago'
         }).click(confirmDeleteOrderID));
 

@@ -556,6 +556,7 @@
                                                 {% if item.shopify_order %}
                                                     <a class="placed-order-details" href="#" order-id="{{order.id}}"
                                                         source-order-id="{{item.shopify_order.source_id}}"
+                                                        source-url="{{item.shopify_order.get_source_url}}"
                                                         order-date="{{item.shopify_order.created_at|date:'N j, Y, P'}}"
                                                         line-id="{{item.id}}"
                                                         title="View Order Details">{{item.shopify_order.get_source_ids}}</a>

@@ -2321,6 +2321,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'order_id': order_id,
                 'line_id': line_id,
                 'source_id': source_id,
+                'source_url': track.get_source_url(),
             })
 
             cache.set(note_delay_key, note_delay + 5, timeout=5)
