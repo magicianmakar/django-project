@@ -923,10 +923,10 @@ $('.order-seleted-lines').click(function (e) {
 
     order.find('.line-checkbox').each(function (i, el) {
         if(!el.checked) {
-            $(el).attr('exclude', 'true');
+            $(el).parents('.line').attr('exclude', 'true');
         } else {
             selected += 1;
-            $(el).attr('exclude', 'false');
+            $(el).parents('.line').attr('exclude', 'false');
         }
     });
 
