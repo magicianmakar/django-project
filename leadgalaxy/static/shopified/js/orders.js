@@ -736,6 +736,7 @@ $('.auto-shipping-btn').click(function (e) {
         'id': $(this).attr('original-id'),
         'product': $(this).attr('product-id'),
         'country': $(this).attr('country-code'),
+        'type': $(group).attr('supplier-type'),
         'for': 'order'
     }), function (response, status, xhr) {
         if (xhr.status != 200) {
