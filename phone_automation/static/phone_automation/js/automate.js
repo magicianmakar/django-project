@@ -517,6 +517,8 @@ var demo = new Vue({
                         foundParentNode.next_step = nodeStepReplacement;
                     } else if (i > 0) {
                         foundParentNode.children[i - 1].next_step = nodeStepReplacement;
+                    } else if (this.first_node == deletedBlock.step) {
+                        this.addFirstNode({step: nodeStepReplacement});
                     }
 
                     foundParentNode.children.splice(i, 1);

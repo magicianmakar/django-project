@@ -2,13 +2,21 @@
 from __future__ import unicode_literals
 
 import json
+from urlparse import urlsplit
 
+import boto.elastictranscoder
+
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.contrib.postgres.fields import JSONField
 from django.forms.models import model_to_dict
 from django.utils.functional import cached_property
 from django.urls import reverse
+
+from leadgalaxy.utils import aws_s3_get_key
 
 PHONE_NUMBER_STATUSES = (
     ('active', 'Incoming calls allowed'),
@@ -85,7 +93,7 @@ class TwilioStep(models.Model):
         return next_step.url
 
 
-class TwilioPhoneNumber (models.Model):
+class TwilioPhoneNumber(models.Model):
     user = models.OneToOneField(User, related_name='twilio_phone_number', on_delete=models.CASCADE)
     automation = models.ForeignKey(TwilioAutomation, related_name='phone', null=True)
 
@@ -118,7 +126,7 @@ class TwilioUpload(models.Model):
         return self.url.replace('%2F', '/').split('/')[-1]
 
 
-class TwilioLog (models.Model):
+class TwilioLog(models.Model):
     user = models.ForeignKey(User, related_name='twilio_logs', on_delete=models.CASCADE)
     direction = models.CharField(max_length=50, default='', blank=True)
     from_number = models.CharField(max_length=50, default='', blank=True)
@@ -144,3 +152,27 @@ class TwilioRecording(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+
+# Signals
+@receiver(post_save, sender=TwilioUpload)
+def convert_callflow_audio_file(sender, instance, created, **kwargs):
+    file_path = urlsplit(instance.url).path
+    file_path = file_path.lstrip('/')  # Removes initial slash(/) char
+    output_path = '{}.converted.mp3'.format(file_path)
+
+    key = aws_s3_get_key(output_path, bucket_name=settings.S3_UPLOADS_BUCKET)
+    if key:
+        key.delete()
+
+    client = boto.elastictranscoder.connect_to_region('us-east-1')
+    client.create_job(
+        pipeline_id=settings.AWS_AUDIO_TRANSCODE_PIPELINE_ID,
+        input_name={
+            'Key': file_path  # file path in S3
+        },
+        outputs=[{
+            'Key': output_path,
+            'PresetId': '1351620000001-300040',  # MP3 128K
+        }]
+    )

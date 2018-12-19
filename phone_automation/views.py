@@ -190,6 +190,43 @@ def provision_release(request):
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
 
+def status_callback(request):
+    # searching related phone number
+    twilio_phone_number = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+
+    if twilio_phone_number and request.POST.get('CallStatus') == 'completed':
+        twilio_log = TwilioLog()
+        twilio_log.user = twilio_phone_number.user
+        twilio_log.from_number = request.POST.get('From')
+        twilio_log.direction = request.POST.get('Direction')
+        twilio_log.call_duration = request.POST.get('CallDuration')
+        twilio_log.call_sid = request.POST.get('CallSid')
+        twilio_log.call_status = request.POST.get('CallStatus')
+        twilio_log.log_type = 'status-callback'
+        twilio_metadata = json.dumps(request.POST, default=JsonDatetimeConverter)
+        twilio_log.twilio_metadata = twilio_metadata
+        twilio_log.save()
+
+        # fetch recordings
+        try:
+            client = get_twilio_client()
+            recordings = client.recordings.list(call_sid=twilio_log.call_sid)
+            for recording in recordings:
+                twilio_recording = TwilioRecording()
+                twilio_recording.twilio_log = twilio_log
+                twilio_recording.recording_sid = recording.sid
+                twilio_recording.recording_url = u"https://api.twilio.com/{}.mp3".format(recording.uri.rsplit('.json', 1)[0])
+                twilio_metadata = json.dumps(recording._properties, default=JsonDatetimeConverter)
+                twilio_recording.twilio_metadata = twilio_metadata
+                twilio_recording.save()
+
+        except:
+            raven_client.captureException()
+
+    return HttpResponse(status=200)
+
+
+# Call Flow
 def save_automation(request, twilio_phone_number_id):
     twilio_phone_number = get_object_or_404(TwilioPhoneNumber, pk=twilio_phone_number_id, user=request.user)
 
@@ -224,7 +261,8 @@ def upload(request, twilio_phone_number_id):
     step = request.POST.get('step')
 
     # Randomize filename in order to not overwrite an existing file
-    audio_name = u'{}-{}.mp3'.format(twilio_phone_number_id, step)
+    ext = audio.name.split('.')[1:]
+    audio_name = u'{}-{}.{}'.format(twilio_phone_number_id, step, '.'.join(ext))
     audio_name = u'uploads/u{}/phone/{}'.format(request.user.id, audio_name)
     mimetype = mimetypes.guess_type(audio.name)[0]
 
@@ -275,7 +313,7 @@ def call_flow_speak(request):
 
     response = VoiceResponse()
     if config.get('mp3'):
-        response.play(config.get('mp3'))
+        response.play('{}.converted.mp3'.format(config.get('mp3')))
     elif config.get('say'):
         response.say(config.get('say'), voice=config.get('voice'))
 
@@ -295,7 +333,7 @@ def call_flow_menu(request):
     gather = Gather(num_digits=1, action=action)
 
     if config.get('mp3'):
-        gather.play(config.get('mp3'))
+        gather.play('{}.converted.mp3'.format(config.get('mp3')))
     elif config.get('say'):
         gather.say(config.get('say'), voice=config.get('voice'))
     response.append(gather)
@@ -336,11 +374,11 @@ def call_flow_record(request):
 
     response = VoiceResponse()
     if config.get('mp3'):
-        response.play(config.get('mp3'))
+        response.play('{}.converted.mp3'.format(config.get('mp3')))
     elif config.get('say'):
         response.say(config.get('say'), voice=config.get('voice'))
 
-    response.record(timeout=5, playBeep=config.get('play_beep', True), action=current_step.redirect)
+    response.record(timeout=5, playBeep=config.get('play_beep', True), action=reverse('phone_automation_call_flow_hangup'))
     return HttpResponse(str(response), content_type='application/xml')
 
 
@@ -351,7 +389,7 @@ def call_flow_dial(request):
 
     response = VoiceResponse()
     if config.get('mp3'):
-        response.play(config.get('mp3'))
+        response.play('{}.converted.mp3'.format(config.get('mp3')))
     elif config.get('say'):
         response.say(config.get('say'), voice=config.get('voice'))
 
@@ -374,39 +412,3 @@ def call_flow_empty(request):
     response.redirect(current_step.redirect)
 
     return HttpResponse(str(response), content_type='application/xml')
-
-
-def status_callback(request):
-    # searching related phone number
-    twilio_phone_number = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
-
-    if twilio_phone_number and request.POST.get('CallStatus') == 'completed':
-        twilio_log = TwilioLog()
-        twilio_log.user = twilio_phone_number.user
-        twilio_log.from_number = request.POST.get('From')
-        twilio_log.direction = request.POST.get('Direction')
-        twilio_log.call_duration = request.POST.get('CallDuration')
-        twilio_log.call_sid = request.POST.get('CallSid')
-        twilio_log.call_status = request.POST.get('CallStatus')
-        twilio_log.log_type = 'status-callback'
-        twilio_metadata = json.dumps(request.POST, default=JsonDatetimeConverter)
-        twilio_log.twilio_metadata = twilio_metadata
-        twilio_log.save()
-
-        # fetch recordings
-        try:
-            client = get_twilio_client()
-            recordings = client.recordings.list(call_sid=twilio_log.call_sid)
-            for recording in recordings:
-                twilio_recording = TwilioRecording()
-                twilio_recording.twilio_log = twilio_log
-                twilio_recording.recording_sid = recording.sid
-                twilio_recording.recording_url = u"https://api.twilio.com/{}.mp3".format(recording.uri.rsplit('.json', 1)[0])
-                twilio_metadata = json.dumps(recording._properties, default=JsonDatetimeConverter)
-                twilio_recording.twilio_metadata = twilio_metadata
-                twilio_recording.save()
-
-        except:
-            raven_client.captureException()
-
-    return HttpResponse(status=200)
