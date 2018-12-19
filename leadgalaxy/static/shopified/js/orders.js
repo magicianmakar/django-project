@@ -290,6 +290,19 @@ function placeOrder(e) {
     });
 }
 
+$('#modal-add-order-id .supplier-type').on('change', function (e) {
+    var supplierType = $(e.target).val();
+    var placeholder = '';
+    if (supplierType === 'ebay') {
+        placeholder = 'http://payments.ebay.com/ws/eBayISAPI.dll?ViewPaymentStatus&transId=XXXX&itemid=XXXX';
+    } else {
+        placeholder = 'http://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
+    }
+
+    $('#modal-add-order-id .order-id').attr('placeholder', placeholder);
+    $('#modal-add-order-id .order-id').focus();
+});
+
 $('#modal-add-order-id .save-order-id-btn').click(function (e) {
     e.preventDefault();
 
@@ -371,6 +384,7 @@ function addOrderSourceID(e) {
     $('#modal-add-order-id').data('order', orderData);
 
     $('#modal-add-order-id .supplier-type').val(orderData.supplier_type);
+    $('#modal-add-order-id .supplier-type').trigger('change');
     $('#modal-add-order-id .order-id').val('');
     $('#modal-add-order-id .save-order-id-btn').button('reset');
 

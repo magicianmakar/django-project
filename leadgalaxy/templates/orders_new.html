@@ -884,24 +884,25 @@
             </div>
 
             <div class="modal-body">
-                <p>Define the location to be used when automatically updating product inventories</p>
-                <div class="row">
-                    <div class="col-sm-12">
-                        <form role="form">
-                            <div class="form-group">
-                                <label forHtml="supplier-type">Supplier Type:</label>
-                                <select class="supplier-type form-control">
-                                    <option value="aliexpress">Aliexpress</option>
-                                    <option value="ebay">eBay</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label forHtml="order-id">Order ID:</label>
-                                <input type="text" class="order-id form-control">
-                            </div>
-                        </form>
+                <p>Link this Shopify item to a supplier order</p>
+                <ul class="m-b-lg">
+                    <li>For Aliexpress orders you can use the Order ID or Order Details url</li>
+                    <li>For eBay orders you have to use the Order Details url</li>
+                </ul>
+
+                <form role="form">
+                    <div class="form-group">
+                        <label forHtml="supplier-type">Supplier Type:</label>
+                        <select class="supplier-type form-control">
+                            <option value="aliexpress">Aliexpress</option>
+                            <option value="ebay">eBay</option>
+                        </select>
                     </div>
-                </div>
+                    <div class="form-group">
+                        <label forHtml="order-id">Order ID:</label>
+                        <input type="text" class="order-id form-control">
+                    </div>
+                </form>
             </div>
 
             <div class="modal-footer">
