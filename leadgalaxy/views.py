@@ -1281,6 +1281,11 @@ def products_list(request, tpl='grid'):
     if args['filter_products'] and not request.user.can('product_filters.use'):
         return render(request, 'upgrade.html')
 
+    try:
+        assert not request.is_ajax(), 'AJAX Request Detected - Products List'
+    except:
+        raven_client.captureException(level='warning')
+
     products, paginator, page = get_product(**args)
 
     if not tpl or tpl == 'grid':
@@ -1384,6 +1389,11 @@ def product_view(request, pid):
     if not product.store and (not request.user.is_subuser or request.user.models_user.id not in [14970]):  # Intercom 11917013063
         product.store = product.user.profile.get_shopify_stores().first()
         product.save()
+
+    try:
+        assert not request.is_ajax(), 'AJAX Request Detected - Product View'
+    except:
+        raven_client.captureException(level='warning')
 
     try:
         alert_config = json.loads(product.config)
@@ -3815,6 +3825,11 @@ def orders_view(request):
 def orders_track(request):
     if not request.user.can('orders.use'):
         return render(request, 'upgrade.html')
+
+    try:
+        assert not request.is_ajax(), 'AJAX Request Detected - Orders Track'
+    except:
+        raven_client.captureException(level='warning')
 
     visited_time = arrow.now().timestamp
     request.user.profile.set_config_value('orders_track_visited_at', visited_time)
