@@ -12,6 +12,8 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 
+from shopified_core.utils import get_domain
+
 
 def add_to_class(cls, name):
     def _decorator(*args, **kwargs):
@@ -556,14 +558,16 @@ class WooSupplier(models.Model):
 
     def get_source_id(self):
         try:
-            if 'aliexpress.com' in self.product_url.lower():
+            if self.is_aliexpress:
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+            elif self.is_ebay:
+                return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
         except:
             return None
 
     def get_store_id(self):
         try:
-            if 'aliexpress.com' in self.supplier_url.lower():
+            if self.is_aliexpress:
                 return int(re.findall('/([0-9]+)', self.supplier_url).pop())
         except:
             return None
@@ -571,18 +575,20 @@ class WooSupplier(models.Model):
     def short_product_url(self):
         source_id = self.get_source_id()
         if source_id:
-            if 'aliexpress.com' in self.product_url.lower():
+            if self.is_aliexpress:
                 return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
+            if self.is_ebay:
+                return u'https://www.ebay.com/itm/{}'.format(source_id)
 
         return self.product_url
 
     def support_auto_fulfill(self):
         """
         Return True if this supplier support auto fulfill using the extension
-        Currently only Aliexpress support that
+        Currently Aliexpress and eBay (US) support that
         """
 
-        return 'aliexpress.com/' in self.product_url.lower()
+        return self.is_aliexpress or self.is_ebay_us
 
     def get_name(self):
         if self.supplier_name and self.supplier_name.strip():
@@ -595,9 +601,30 @@ class WooSupplier(models.Model):
                 else:
                     supplier_idx += 1
 
-            name = u'Supplier #{}'.format(supplier_idx)
+            name = u'Supplier {}#{}'.format(self.supplier_type(), supplier_idx)
 
         return name
+
+    def supplier_type(self):
+        try:
+            return get_domain(self.product_url)
+        except:
+            return ''
+
+    @property
+    def is_aliexpress(self):
+        return self.supplier_type() == 'aliexpress'
+
+    @property
+    def is_ebay(self):
+        return self.supplier_type() == 'ebay'
+
+    @property
+    def is_ebay_us(self):
+        try:
+            return 'ebay.com' in get_domain(self.product_url, full=True)
+        except:
+            return False
 
 
 class WooOrderTrack(models.Model):
