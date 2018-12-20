@@ -50,6 +50,7 @@ from shopified_core.utils import (
     version_compare,
     order_data_cache,
     update_product_data_images,
+    aws_s3_context,
     encode_params,
     decode_params,
 )
@@ -1369,34 +1370,6 @@ def shopify_migration(request):
 
 @login_required
 def product_view(request, pid):
-    #  AWS
-
-    aws_available = (settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY and settings.AWS_STORAGE_BUCKET_NAME)
-
-    conditions = [
-        ["starts-with", "$utf8", ""],
-        # Change this path if you need, but adjust the javascript config
-        ["starts-with", "$key", "uploads"],
-        ["starts-with", "$name", ""],
-        ["starts-with", "$Content-Type", "image/"],
-        ["starts-with", "$filename", ""],
-        {"bucket": settings.AWS_STORAGE_BUCKET_NAME},
-        {"acl": "public-read"}
-    ]
-
-    policy = {
-        # Valid for 3 hours. Change according to your needs
-        "expiration": arrow.now().replace(hours=+3).format("YYYY-MM-DDTHH:mm:ss") + 'Z',
-        "conditions": conditions
-    }
-
-    policy_str = json.dumps(policy)
-    string_to_sign = base64.encodestring(policy_str).replace('\n', '')
-
-    signature = base64.encodestring(
-        hmac.new(settings.AWS_SECRET_ACCESS_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest()).strip()
-
-    #  /AWS
     if request.user.is_superuser:
         product = get_object_or_404(ShopifyProduct, id=pid)
         if product.user != request.user:
@@ -1493,15 +1466,17 @@ def product_view(request, pid):
 
     breadcrumbs.append(p['product']['title'])
 
+    aws = aws_s3_context()
+
     return render(request, 'product_view.html', {
         'product': p,
         'board': board,
         'original': original,
         'collections': collections,
         'shopify_product': shopify_product,
-        'aws_available': aws_available,
-        'aws_policy': string_to_sign,
-        'aws_signature': signature,
+        'aws_available': aws['aws_available'],
+        'aws_policy': aws['aws_policy'],
+        'aws_signature': aws['aws_signature'],
         'page': 'product',
         'breadcrumbs': breadcrumbs
     })
