@@ -901,7 +901,14 @@ function orderItems(current_order, supplier_type, exclude_lines) {
         }
     });
 
-    if (order.items.length) {
+    if (order.items.length === 1) {
+        // If it's a single item, add it as a single order
+        var item = order.items[0];
+        item.url = item.url.replace(/(SAStep|SACart)=[a-z]+/g, '').replace(/\?&&/, '?');
+
+        addOrderToQueue(item);
+
+    } else if (order.items.length > 1) {
         order.order_data = order.items[0].order_data.replace(/_[^_]+$/, '');
         order.order_name = order.items[0].order_name;
         order.order_id = order.items[0].order_id;
