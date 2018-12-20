@@ -4130,7 +4130,7 @@ def orders_place(request):
 
         for k in request.GET.keys():
             if k == 'SAPlaceOrder':
-                pass
+                event_data['data_id'] = request.GET[k]
 
             elif k == 'product':
                 event_data['product'] = request.GET[k]
@@ -4148,6 +4148,9 @@ def orders_place(request):
             affiliate = 'UserAdmitad'
         elif user_ali_credentials:
             affiliate = 'UserAliexpress'
+
+        if supplier and supplier.is_ebay:
+            event_data['supplier_type'] = 'ebay'
 
         event_data.update({
             'user': store.user.username,
