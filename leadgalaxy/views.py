@@ -3704,6 +3704,7 @@ def orders_view(request):
                         'product_id': product.id if product else None,
                         'source_id': supplier.get_source_id() if supplier else None,
                         'supplier_id': supplier.get_store_id() if supplier else None,
+                        'supplier_type': supplier.supplier_type() if supplier else None,
                         'total': utils.safeFloat(el['price'], 0.0),
                         'store': store.id,
                         'order': {
