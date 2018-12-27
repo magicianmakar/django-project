@@ -98,6 +98,14 @@ class AppPermissionFactory(factory.DjangoModelFactory):
         model = 'leadgalaxy.AppPermission'
 
 
+class ShopifyBoardFactory(factory.DjangoModelFactory):
+    title = factory.fuzzy.FuzzyText(length=50)
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+
+    class Meta:
+        model = 'leadgalaxy.ShopifyBoard'
+
+
 class ShopifyOrderFactory(factory.DjangoModelFactory):
     store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
