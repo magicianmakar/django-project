@@ -682,7 +682,10 @@ class WooOrderTrack(models.Model):
 
     def get_source_url(self):
         if self.source_id:
-            return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
+            if self.source_type == 'ebay':
+                return 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={}'.format(self.source_id)
+            else:
+                return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
         else:
             return None
 

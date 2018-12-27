@@ -183,10 +183,11 @@ function confirmDeleteOrderID(e) {
     var tr_parent = btn.parents('tr').first();
     var order_id = btn.attr('order-id');
     var source_id = btn.attr('source-order-id');
+    var source_url = btn.attr('source-url');
     var line_id = btn.attr('line-id');
     var html = '<ul>';
-    html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" ' +
-        'href="http://trade.aliexpress.com/order_detail.htm?orderId=' + source_id + '">' + source_id + '</a></li>';
+    html += '<li style="list-style:none">Supplier Order ID: <a target="_blank" ' +
+        'href="' + source_url + '">' + source_id + '</a></li>';
     html += '<li style="list-style:none">Order date: ' + btn.attr('order-date') + '</li>';
     html += '</ul';
 
@@ -247,6 +248,73 @@ function deleteOrderID(tr_parent, order_id, line_id) {
         }
     });
 }
+
+$('#modal-add-order-id .save-order-id-btn').click(function (e) {
+    e.preventDefault();
+
+    var btn = $(e.target);
+
+    var orderData = $('#modal-add-order-id').data('order');
+
+    var supplierType = $('#modal-add-order-id .supplier-type').val();
+    var orderId = $('#modal-add-order-id .order-id').val().trim();
+
+    if (!orderId) {
+        swal('Add Order ID', 'You need to enter a valid Order ID or Url', 'error');
+        return;
+    }
+
+    var callback = function(success) {
+        if (success) {
+            $('#modal-add-order-id').modal('hide');
+        }
+
+        btn.button('reset');
+    };
+
+    if (supplierType === 'aliexpress') {
+        var order_link = orderId.match(/orderId=([0-9]+)/);
+        if (order_link && order_link.length == 2) {
+            orderId = order_link[1];
+        }
+
+        btn.button('loading');
+
+        addOrderSourceRequest({
+            'store': orderData.store,
+            'order_id': orderData.order_id,
+            'line_id': orderData.line_id,
+            'source_type': orderData.supplier_type,
+            'aliexpress_order_id': orderId,
+        }, callback);
+
+    } else if (supplierType === 'ebay') {
+        if (!orderId.match('^https?://')) {
+            swal('Add Order ID', 'Please enter Order Url For eBay orders', 'error');
+            return;
+        }
+
+        btn.button('loading');
+
+        window.extensionSendMessage({
+            subject: 'getEbayOrderId',
+            url: orderId,
+        }, function (data) {
+            if (data && data.purchaseOrderId) {
+                addOrderSourceRequest({
+                    'store': orderData.store,
+                    'order_id': orderData.order_id,
+                    'line_id': orderData.line_id,
+                    'source_type': orderData.supplier_type,
+                    'aliexpress_order_id': data.purchaseOrderId,
+                }, callback);
+
+            } else {
+                swal('Could not get eBay Order ID');
+            }
+        });
+    }
+});
 
 function addOrderSourceID(e) {
     e.preventDefault();
@@ -657,6 +725,7 @@ $('.queue-order-btn').click(function(e) {
         order_id: group.attr('order-id'),
         line_id: group.attr('line-id'),
         line_title: group.attr('line-title'),
+        supplier_type: group.attr('supplier-type'),
     });
 });
 

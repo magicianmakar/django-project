@@ -953,9 +953,17 @@ class WooOrderUpdater:
     def add_note(self, n):
         self.notes.append(n)
 
-    def mark_as_ordered_note(self, line_id, source_id):
-        note = 'Aliexpress Order ID: {0}\n' \
-               'http://trade.aliexpress.com/order_detail.htm?orderId={0}'.format(source_id)
+    def mark_as_ordered_note(self, line_id, source_id, track):
+        source = 'Aliexpress'
+
+        if track:
+            url = track.get_source_url()
+            if track.source_type == 'ebay':
+                source = 'eBay'
+        else:
+            url = 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(source_id)
+
+        note = '{} Order ID: {}\n{}'.format(source, source_id, url)
 
         if line_id:
             note = u'{}\nOrder Line: #{}'.format(note, line_id)

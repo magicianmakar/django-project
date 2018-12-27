@@ -852,7 +852,7 @@ class WooStoreApi(ApiResponseMixin, View):
                 'status_updated_at': timezone.now()})
 
         if user.profile.get_config_value('aliexpress_as_notes', True):
-            order_updater.mark_as_ordered_note(line_id, source_id)
+            order_updater.mark_as_ordered_note(line_id, source_id, track)
 
         store.pusher_trigger('order-source-id-add', {
             'track': track.id,
@@ -1047,6 +1047,7 @@ class WooStoreApi(ApiResponseMixin, View):
             try:
                 product = WooProduct.objects.get(pk=pk)
             except WooProduct.DoesNotExist:
+
                 return self.api_error('Product not found')
             else:
                 permissions.user_can_view(user, product)
