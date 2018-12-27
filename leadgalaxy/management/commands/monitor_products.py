@@ -135,14 +135,19 @@ class Command(DropifiedBaseCommand):
         products_count = products.count()
 
         if products_count:
-            if products_count > 1000:
+            if products_count > 10000:
                 self.stdout.write(u'Too many products ({}) for user: {}'.format(products_count, user.username))
                 return
 
             self.stdout.write(u'Add {} products for user: {}'.format(products_count, user.username), self.style.HTTP_INFO)
 
-            for product in products:
-                self.handle_product(product)
+            start = 0
+            steps = 1000
+            while start <= products_count:
+                for product in products[start:start + steps]:
+                    self.handle_product(product)
+
+                start += steps
 
         self.q.join()
 
