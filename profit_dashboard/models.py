@@ -208,7 +208,7 @@ class FacebookAccount(models.Model):
 
         # Takes ~100 seconds to prepare ~4000 insights
         job = insights_async_job.remote_read()
-        while FACEBOOK_INSIGHTS_TIMEOUT < seconds or self.is_first_sync:
+        while FACEBOOK_INSIGHTS_TIMEOUT > seconds or self.is_first_sync:
             seconds += 1
             job = insights_async_job.remote_read()
             sleep(1)
