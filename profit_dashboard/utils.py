@@ -169,7 +169,11 @@ def get_profits(store, start, end, store_timezone=''):
 
     total_fulfillments_count = 0
     for shipping in shippings:
-        date_key = arrow.get(orders_map[shipping.order_id]['date']).format('YYYY-MM-DD')
+        if shipping.order_id not in orders_map:
+            continue
+
+        date_key = orders_map.get(shipping.order_id, {}).get('date')
+        date_key = arrow.get(date_key).format('YYYY-MM-DD')
         if date_key not in profits_data:
             continue
 
