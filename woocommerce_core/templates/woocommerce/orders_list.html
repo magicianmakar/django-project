@@ -394,7 +394,7 @@
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
-                                                <span>Supplier:</span>
+                                                <span>{{item.supplier.supplier_type|supplier_type}}</span>
                                                 {% if item.supplier %}
                                                     <a {% if supplier.url %}
                                                         href="{{item.supplier.supplier_url|default:'#'}}" target="_blank"
@@ -418,6 +418,7 @@
                                                 {% if item.order_track %}
                                                     <a class="placed-order-details" href="#" order-id="{{order.id}}"
                                                         source-order-id="{{item.order_track.source_id}}"
+                                                        source-url="{{item.order_track.get_source_url}}"
                                                         order-date="{{item.order_track.created_at|date:'N j, Y, P'}}"
                                                         line-id="{{item.id}}"
                                                         product-id="{{item.product_id}}
@@ -535,6 +536,42 @@
             </div>
             <div class="modal-body">
                 <div class="shipping-info"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-add-order-id" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Add Order ID</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>Define the location to be used when automatically updating product inventories</p>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form role="form">
+                            <div class="form-group">
+                                <label forHtml="supplier-type">Supplier Type:</label>
+                                <select class="supplier-type form-control">
+                                    <option value="aliexpress">Aliexpress</option>
+                                    <option value="ebay">eBay</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label forHtml="order-id">Order ID:</label>
+                                <input type="text" class="order-id form-control">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary save-order-id-btn" type="button"><i class="fa fa-save"></i> Save</button>
             </div>
         </div>
     </div>
