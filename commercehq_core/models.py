@@ -12,6 +12,7 @@ import requests
 from pusher import Pusher
 
 from shopified_core.utils import hash_url_filename
+from product_alerts.utils import monitor_product
 
 
 def add_to_class(cls, name):
@@ -717,6 +718,15 @@ class CommerceHQSupplier(models.Model):
             name = u'Supplier #{}'.format(supplier_idx)
 
         return name
+
+    @property
+    def is_aliexpress(self):
+        return 'aliexpress.com' in self.product_url.lower()
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            monitor_product(self.product)
+        super(CommerceHQSupplier, self).save(*args, **kwargs)
 
 
 class CommerceHQBoard(models.Model):

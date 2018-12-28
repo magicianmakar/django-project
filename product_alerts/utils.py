@@ -42,34 +42,79 @@ def unmonitor_store(store):
     reset_product_monitor(store)
 
 
-def monitor_product(product, stdout=None):
-    """
-    product_id: Source Product ID (ex. Aliexpress ID)
-    store_id: Source Store ID (ex. Aliexpress Store ID)
-    """
+def is_monitorable(product):
+    monitor_id = 0
     try:
         supplier = product.default_supplier
 
         if not supplier.is_aliexpress:
             #  Not connected or not an Aliexpress product
-            product.monitor_id = -1
-            product.save()
-            return
-
-        store_id = supplier.get_store_id()
-        if not store_id:
-            store_id = 0
+            monitor_id = -1
 
         product_id = supplier.get_source_id()
         if not product_id:
             # Product doesn't have Source Product ID
-            product.monitor_id = -3
-            product.save()
-            return
+            monitor_id = -3
     except:
-        product.monitor_id = -5
-        product.save()
+        monitor_id = -5
+
+    return monitor_id >= 0 and product.is_connected and product.store.is_active
+
+
+def update_product_monitor(monitor_id, supplier):
+    store_id = supplier.get_store_id()
+    if not store_id:
+        store_id = 0
+    product_id = supplier.get_source_id()
+
+    monitor_api_url = '{}/api/products/{}'.format(settings.PRICE_MONITOR_HOSTNAME, monitor_id)
+    post_data = {
+        'url': supplier.product_url,
+        'product_id': product_id,
+        'store_id': store_id,
+    }
+
+    rep = requests.patch(
+        url=monitor_api_url,
+        data=post_data,
+        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+    )
+    rep.raise_for_status()
+
+
+def delete_product_monitor(monitor_id):
+    monitor_api_url = '{}/products/{}'.format(PRICE_MONITOR_BASE, monitor_id)
+    rep = requests.delete(
+        url=monitor_api_url,
+        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+    )
+    rep.raise_for_status()
+
+
+def monitor_product(product, stdout=None):
+    """
+    product_id: Source Product ID (ex. Aliexpress ID)
+    store_id: Source Store ID (ex. Aliexpress Store ID)
+    """
+    original_monitor_id = product.monitor_id
+    if is_monitorable(product):
+        if original_monitor_id > 0:
+            # Update original monitor
+            update_product_monitor(original_monitor_id, product.default_supplier)
+            return
+    else:
+        if original_monitor_id > 0:
+            # Delete original monitor
+            delete_product_monitor(original_monitor_id)
+            product.monitor_id = 0
+            product.save()
         return
+
+    supplier = product.default_supplier
+    store_id = supplier.get_store_id()
+    if not store_id:
+        store_id = 0
+    product_id = supplier.get_source_id()
 
     if product.__class__.__name__ == 'ShopifyProduct':
         dropified_type = 'shopify'

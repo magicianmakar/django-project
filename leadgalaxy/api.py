@@ -46,7 +46,7 @@ from shopify_orders.models import (
     ShopifyOrderLog,
 )
 from product_alerts.models import ProductChange
-from product_alerts.utils import monitor_product, unmonitor_store
+from product_alerts.utils import unmonitor_store
 from zapier_core.utils import send_order_track_change
 
 import tasks
@@ -1265,7 +1265,6 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         product.save()
 
         try:
-            monitor_product(product)
             if product.is_connected:
                 tasks.sync_shopify_product_quantities.apply_async(args=[product.id])
 

@@ -22,6 +22,7 @@ from pusher import Pusher
 from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
 from shopified_core.utils import safeInt, safeStr, get_domain, OrderErrors
+from product_alerts.utils import monitor_product
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -1156,19 +1157,6 @@ class ShopifyProduct(models.Model):
         supplier.is_default = True
         supplier.save()
 
-    def monitor_product(self):
-        if self.monitor_id and self.have_supplier() and settings.PRICE_MONITOR_HOSTNAME:
-            monitor_api_url = '{}/api/products/{}'.format(settings.PRICE_MONITOR_HOSTNAME, self.monitor_id)
-            post_data = {
-                'url': self.default_supplier.product_url,
-            }
-
-            requests.patch(
-                url=monitor_api_url,
-                data=post_data,
-                auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
-            )
-
     def set_variant_mapping(self, mapping, supplier=None, update=False):
         if supplier is None:
             supplier = self.default_supplier
@@ -1644,6 +1632,8 @@ class ProductSupplier(models.Model):
     def save(self, *args, **kwargs):
         if self.source_id != self.get_source_id():
             self.source_id = self.get_source_id()
+        if self.is_default:
+            monitor_product(self.product)
         super(ProductSupplier, self).save(*args, **kwargs)
 
 

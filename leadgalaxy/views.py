@@ -69,7 +69,7 @@ from stripe_subscription.utils import (
     get_stripe_invoice_list,
 )
 
-from product_alerts.utils import variant_index
+from product_alerts.utils import variant_index, delete_product_monitor
 
 from profit_dashboard.models import FacebookAccess
 
@@ -668,7 +668,14 @@ def webhook(request, provider, option):
                 return JsonResponse({'status': 'ok'})
 
             elif topic == 'products/delete':
-                product.monitor_id = 0  # TODO: Remove from Price Monitor Service
+                # Remove from Price Monitor Service
+                if product.monitor_id > 0:
+                    try:
+                        delete_product_monitor(product.monitor_id)
+                    except:
+                        pass
+
+                product.monitor_id = 0
                 product.shopify_id = 0
 
                 try:
@@ -913,6 +920,10 @@ def webhook(request, provider, option):
                 return JsonResponse({'error': 'Product Not Found'}, status=404)
         else:
             return JsonResponse({'error': 'Unknown Product Type'}, status=500)
+
+        monitor_id = request.GET.get('monitor_id')
+        if monitor_id and product.monitor_id != utils.safeInt(monitor_id):
+            return JsonResponse({'error': 'Not Registered Monitor ID'}, status=404)
 
         if product.user.can('price_changes.use') and product.is_connected and product.store.is_active:
             product_change = ProductChange.objects.create(
