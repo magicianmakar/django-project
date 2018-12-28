@@ -1925,7 +1925,6 @@ def get_shipping_info(request):
         else:
             supplier_type = 'aliexpress'
 
-    print supplier_type
     try:
         if supplier_type == 'ebay':
             shippement_data = utils.ebay_shipping_info(item_id, country_name)

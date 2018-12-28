@@ -2,8 +2,6 @@ import json
 
 import arrow
 
-from raven.contrib.django.raven_compat.models import client as raven_client
-
 from django.contrib import messages
 from django.db.models import Q
 from django.views.generic import View, ListView
