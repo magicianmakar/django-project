@@ -7,6 +7,7 @@
         order-data-id="{{item.order_data_id}}"
         order-number="{{order.number}}"
         line-title="{{item.name}}"
+        supplier-type="{{item.supplier_type}}"
         {% if item.shipping_method %}
             style="display:flex"
         {% endif %}
@@ -14,7 +15,7 @@
     {% if item.shipping_method %}
         <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
-            data-href="{% app_link 'woo/orders/place' product=item.supplier.get_source_id SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
+            data-href="{% app_link 'woo/orders/place' supplier=item.supplier.id SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
             href="#" style="border-right:1px solid #66a8cc"
             >
             {{item.shipping_method.method_short}}
@@ -44,18 +45,18 @@
             {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
             <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
-                    data-href="{% app_link 'woo/orders/place' product=item.supplier.get_source_id SAPlaceOrder=item.order_data_id SAStep=True %}"
+                    data-href="{% app_link 'woo/orders/place' supplier=item.supplier.id SAPlaceOrder=item.order_data_id SAStep=True %}"
                    >Step By Step Order</a></li>
                <li><a class="place-order-btn queue-order-btn add-to-cart" href="#" order-id="{{order.id}}" line-id="{{item.id}}" style="display:none"
-                    data-href="{% app_link 'woo/orders/place' product=item.supplier.get_source_id SAPlaceOrder=item.order_data_id SAStep=True SACart=True SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
+                    data-href="{% app_link 'woo/orders/place' supplier=item.supplier.id SAPlaceOrder=item.order_data_id SAStep=True SACart=True SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
                    >Add To Cart</a></li>
             <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
-                    data-href="{% app_link 'woo/orders/place' product=item.supplier.get_source_id SAPlaceOrder=item.order_data_id %}"
+                    data-href="{% app_link 'woo/orders/place' supplier=item.supplier.id SAPlaceOrder=item.order_data_id %}"
                    >Auto Place Order</a></li>
             <li><a class="place-order-btn auto-shipping-btn" href="#"
                     order-id="{{order.id}}" line-id="{{item.id}}"
                     product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.shipping.country}}"
-                    data-href="{% app_link 'woo/orders/place' product=item.supplier.get_source_id %}"
+                    data-href="{% app_link 'woo/orders/place' supplier=item.supplier.id %}"
                     data-order="{{ item.order_data_id|urlencode }}"
                 >Auto - Choose Shipping</a></li>
             {% endif %}

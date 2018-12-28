@@ -183,10 +183,11 @@ function confirmDeleteOrderID(e) {
     var tr_parent = btn.parents('tr').first();
     var order_id = btn.attr('order-id');
     var source_id = btn.attr('source-order-id');
+    var source_url = btn.attr('source-url');
     var line_id = btn.attr('line-id');
     var html = '<ul>';
-    html += '<li style="list-style:none">Aliexpress Order ID: <a target="_blank" ' +
-        'href="http://trade.aliexpress.com/order_detail.htm?orderId=' + source_id + '">' + source_id + '</a></li>';
+    html += '<li style="list-style:none">Supplier Order ID: <a target="_blank" ' +
+        'href="' + source_url + '">' + source_id + '</a></li>';
     html += '<li style="list-style:none">Order date: ' + btn.attr('order-date') + '</li>';
     html += '</ul';
 
@@ -248,6 +249,77 @@ function deleteOrderID(tr_parent, order_id, line_id) {
     });
 }
 
+$('#modal-add-order-id form').submit(function(e) {
+    e.preventDefault();
+    $('#modal-add-order-id .save-order-id-btn').trigger('click');
+});
+
+$('#modal-add-order-id .save-order-id-btn').click(function (e) {
+    e.preventDefault();
+
+    var btn = $(e.target);
+
+    var orderData = $('#modal-add-order-id').data('order');
+
+    var supplierType = $('#modal-add-order-id .supplier-type').val();
+    var orderId = $('#modal-add-order-id .order-id').val().trim();
+
+    if (!orderId) {
+        swal('Add Order ID', 'You need to enter a valid Order ID or Url', 'error');
+        return;
+    }
+
+    var callback = function(success) {
+        console.log('callback!!!', success);
+        if (success) {
+            $('#modal-add-order-id').modal('hide');
+        }
+
+        btn.button('reset');
+    };
+
+    if (supplierType === 'aliexpress') {
+        var order_link = orderId.match(/orderId=([0-9]+)/);
+        if (order_link && order_link.length == 2) {
+            orderId = order_link[1];
+        }
+
+        btn.button('loading');
+
+        addOrderSourceRequest({
+            'store': orderData.store,
+            'order_id': orderData.order_id,
+            'line_id': orderData.line_id,
+            'source_type': orderData.supplier_type,
+            'aliexpress_order_id': orderId,
+        }, callback);
+
+    } else if (supplierType === 'ebay') {
+        if (!orderId.match('^https?://')) {
+            swal('Add Order ID', 'Please enter Order Url For eBay orders', 'error');
+            return;
+        }
+
+        btn.button('loading');
+        window.extensionSendMessage({
+            subject: 'getEbayOrderId',
+            url: orderId,
+        }, function (data) {
+            if (data && data.purchaseOrderId) {
+                addOrderSourceRequest({
+                    'store': orderData.store,
+                    'order_id': orderData.order_id,
+                    'line_id': orderData.line_id,
+                    'source_type': orderData.supplier_type,
+                    'aliexpress_order_id': data.purchaseOrderId,
+                }, callback);
+            } else {
+                swal('Could not get eBay Order ID');
+            }
+        });
+    }
+});
+
 function addOrderSourceID(e) {
     e.preventDefault();
     var btn = $(e.target);
@@ -255,50 +327,22 @@ function addOrderSourceID(e) {
     var orderData = {
         order_id: btn.attr('order-id'),
         line_id: btn.attr('line-id'),
-        product_id: btn.attr('product-id'),
         store: btn.attr('store'),
-        btn: btn
+        supplier_type: btn.parents('.line').attr('supplier-type'),
     };
 
-    swal({
-        title: "Order Placed",
-        text: "Aliexpress Order ID:",
-        type: "input",
-        showCancelButton: true,
-        closeOnConfirm: false,
-        animation: "slide-from-top",
-        inputPlaceholder: "Order ID",
-        showLoaderOnConfirm: true
-    }, function(inputValue) {
-        if (inputValue === false) return false;
-        inputValue = inputValue.trim();
+    $('#modal-add-order-id').data('order', orderData);
 
-        if (inputValue === "") {
-            swal.showInputError("You need to enter an Order ID.");
-            return false;
-        }
+    $('#modal-add-order-id .supplier-type').val(orderData.supplier_type);
+    $('#modal-add-order-id .order-id').val('');
+    $('#modal-add-order-id .save-order-id-btn').button('reset')
 
-        var order_link = inputValue.match(/orderId=([0-9]+)/);
-        if (order_link && order_link.length == 2) {
-            inputValue = order_link[1];
-        }
-
-        if (inputValue.match(/^[0-9]+$/) === null) {
-            swal.showInputError("The entered Order ID is not valid.");
-            return false;
-        }
-
-        addOrderSourceRequest({
-            'store': orderData.store,
-            'order_id': orderData.order_id,
-            'line_id': orderData.line_id,
-            'product_id': orderData.product_id,
-            'aliexpress_order_id': inputValue,
-        });
-    });
+    $('#modal-add-order-id').modal('show');
 }
 
-function addOrderSourceRequest(data_api) {
+function addOrderSourceRequest(data_api, callback) {
+    callback = typeof(callback) === 'undefined' ? function() {} : callback;
+
     $.ajax({
         url: api_url('order-fulfill', 'woo'),
         type: 'POST',
@@ -310,8 +354,12 @@ function addOrderSourceRequest(data_api) {
         if (data.status == 'ok') {
             swal.close();
             toastr.success('Item was marked as ordered in Dropified.', 'Marked as Ordered');
+
+            callback(true);
         } else {
             displayAjaxError('Mark as Ordered', data);
+
+            callback(false);
         }
     }).fail(function(data) {
         var error = getAjaxError(data);
@@ -333,11 +381,14 @@ function addOrderSourceRequest(data_api) {
                 },
                 function(isConfirm) {
                     if (isConfirm) {
-                        addOrderSourceRequest(api);
+                        addOrderSourceRequest(api, callback);
+                    } else {
+                        callback(false);
                     }
                 });
         } else {
             displayAjaxError('Mark as Ordered', data);
+            callback(false);
         }
     });
 }
@@ -657,6 +708,7 @@ $('.queue-order-btn').click(function(e) {
         order_id: group.attr('order-id'),
         line_id: group.attr('line-id'),
         line_title: group.attr('line-title'),
+        supplier_type: group.attr('supplier-type'),
     });
 });
 
@@ -673,6 +725,7 @@ $('.auto-shipping-btn').click(function (e) {
         'id': $(this).attr('original-id'),
         'product': $(this).attr('product-id'),
         'country': $(this).attr('country-code'),
+        'type': $(group).attr('supplier-type'),
         'for': 'order',
         'woo': 1,
     }), function (response, status, xhr) {
@@ -802,6 +855,34 @@ $('.order-seleted-lines').click(function (e) {
     order.find('.order-all').trigger('click');
 });
 
+$('.order-seleted-suppliers').click(function(e) {
+    e.preventDefault();
+
+    var order = $(this).parents('.order');
+    var supplier_type = $(this).attr('supplier-type');
+    var delete_lines = [];
+    var selected = 0;
+
+    order.find('.line').each(function(i, el) {
+        if ($(el).attr('supplier-type') !== supplier_type) {
+            delete_lines.push(el);
+        } else {
+            selected += 1;
+        }
+    });
+
+    if (!selected) {
+        swal('Order From Supplier', 'This order doesn\'t have item from the selected supplier\n' +
+            'Please reload the page and try again', 'warning');
+    } else {
+        $.each(delete_lines, function(i, el) {
+            $(el).remove();
+        });
+
+        order.find('.order-all').trigger('click');
+    }
+});
+
 $('#country-filter').chosen({
     search_contains: true,
     width: '100%'
@@ -833,6 +914,7 @@ function pusherSub() {
             'order-id': data.order_id,
             'line-id': data.line_id,
             'source-order-id': data.source_id,
+            'source-url': data.source_url,
             'order-date': 'Few minutes ago'
         }).click(confirmDeleteOrderID));
 

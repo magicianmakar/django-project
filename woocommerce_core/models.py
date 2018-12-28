@@ -12,6 +12,8 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 
+from shopified_core.utils import get_domain
+
 
 def add_to_class(cls, name):
     def _decorator(*args, **kwargs):
@@ -556,14 +558,16 @@ class WooSupplier(models.Model):
 
     def get_source_id(self):
         try:
-            if 'aliexpress.com' in self.product_url.lower():
+            if self.is_aliexpress:
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+            elif self.is_ebay:
+                return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
         except:
             return None
 
     def get_store_id(self):
         try:
-            if 'aliexpress.com' in self.supplier_url.lower():
+            if self.is_aliexpress:
                 return int(re.findall('/([0-9]+)', self.supplier_url).pop())
         except:
             return None
@@ -571,18 +575,20 @@ class WooSupplier(models.Model):
     def short_product_url(self):
         source_id = self.get_source_id()
         if source_id:
-            if 'aliexpress.com' in self.product_url.lower():
+            if self.is_aliexpress:
                 return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
+            if self.is_ebay:
+                return u'https://www.ebay.com/itm/{}'.format(source_id)
 
         return self.product_url
 
     def support_auto_fulfill(self):
         """
         Return True if this supplier support auto fulfill using the extension
-        Currently only Aliexpress support that
+        Currently Aliexpress and eBay (US) support that
         """
 
-        return 'aliexpress.com/' in self.product_url.lower()
+        return self.is_aliexpress or self.is_ebay_us
 
     def get_name(self):
         if self.supplier_name and self.supplier_name.strip():
@@ -595,9 +601,30 @@ class WooSupplier(models.Model):
                 else:
                     supplier_idx += 1
 
-            name = u'Supplier #{}'.format(supplier_idx)
+            name = u'Supplier {}#{}'.format(self.supplier_type(), supplier_idx)
 
         return name
+
+    def supplier_type(self):
+        try:
+            return get_domain(self.product_url)
+        except:
+            return ''
+
+    @property
+    def is_aliexpress(self):
+        return self.supplier_type() == 'aliexpress'
+
+    @property
+    def is_ebay(self):
+        return self.supplier_type() == 'ebay'
+
+    @property
+    def is_ebay_us(self):
+        try:
+            return 'ebay.com' in get_domain(self.product_url, full=True)
+        except:
+            return False
 
 
 class WooOrderTrack(models.Model):
@@ -655,12 +682,16 @@ class WooOrderTrack(models.Model):
 
     def get_source_url(self):
         if self.source_id:
-            return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
+            if self.source_type == 'ebay':
+                return 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={}'.format(self.source_id)
+            else:
+                return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
         else:
             return None
 
     def get_source_status(self):
         status_map = {
+            # Aliexpress
             "PLACE_ORDER_SUCCESS": "Awaiting Payment",
             "IN_CANCEL": "Awaiting Cancellation",
             "WAIT_SELLER_SEND_GOODS": "Awaiting Shipment",
@@ -674,6 +705,27 @@ class WooOrderTrack(models.Model):
             "RISK_CONTROL": "Payment being verified",
             "IN_PRESELL_PROMOTION": "Promotion is on",
             "FUND_PROCESSING": "Fund Processing",
+
+            # eBay
+            "BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+            "BUYER_REJECTED": "Pickup cancelled buyer rejected",
+            "DELIVERED": "Delivered",
+            "DIRECT_DEBIT": "Direct Debit",
+            "EXTERNAL_WALLET": "Processed by PayPal",
+            "IN_TRANSIT": "In transit",
+            "MANIFEST": "Shipping Info Received",
+            "NO_PICKUP_INSTRUCTIONS_AVAILABLE": "No pickup instruction available",
+            "NOT_PAID": "Not Paid",
+            "NOT_SHIPPED": "Item is not shipped",
+            "SHIPPED": "Shipped",
+            "OUT_OF_STOCK": "Out of stock",
+            "PENDING_MERCHANT_CONFIRMATION": "Order is being prepared",
+            "PICKED_UP": "Picked up",
+            "PICKUP_CANCELLED_BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+            "PICKUP_CANCELLED_BUYER_REJECTED": "Pickup cancelled buyer rejected",
+            "PICKUP_CANCELLED_OUT_OF_STOCK": "Out of stock",
+            "READY_FOR_PICKUP": "Ready for pickup",
+            "SHIPPING_INFO_RECEIVED": "Shipping info received"
         }
 
         return status_map.get(self.source_status)

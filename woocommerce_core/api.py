@@ -852,14 +852,16 @@ class WooStoreApi(ApiResponseMixin, View):
                 'status_updated_at': timezone.now()})
 
         if user.profile.get_config_value('aliexpress_as_notes', True):
-            order_updater.mark_as_ordered_note(line_id, source_id)
+            order_updater.mark_as_ordered_note(line_id, source_id, track)
 
         store.pusher_trigger('order-source-id-add', {
             'track': track.id,
             'order_id': order_id,
             'line_id': line_id,
             'product_id': product_id,
-            'source_id': source_id})
+            'source_id': source_id,
+            'source_url': track.get_source_url(),
+        })
 
         utils.update_order_status(store, order_id, 'processing')
 
@@ -1047,6 +1049,7 @@ class WooStoreApi(ApiResponseMixin, View):
             try:
                 product = WooProduct.objects.get(pk=pk)
             except WooProduct.DoesNotExist:
+
                 return self.api_error('Product not found')
             else:
                 permissions.user_can_view(user, product)
@@ -1246,7 +1249,7 @@ class WooStoreApi(ApiResponseMixin, View):
                 return self.api_error(
                     '\n'.join(
                         ['The selected Product is already connected to:\n'] +
-                        [request.build_absolute_uri('/chq/product/{}'.format(i))
+                        [request.build_absolute_uri('/woo/product/{}'.format(i))
                             for i in connected_to.values_list('id', flat=True)]),
                     status=500)
 
