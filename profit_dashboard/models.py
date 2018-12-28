@@ -8,6 +8,7 @@ from time import sleep
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -104,11 +105,11 @@ class FacebookAccess(models.Model):
         response = requests.get(url, params=params)
         token = json.loads(response.content)
 
-        # Default expire should be within the next hour
-        expires_in = arrow.now().replace(hours=1, minute=0).datetime
+        # https://tools.ietf.org/html/rfc6749#section-5.1
+        # expires_in default value is 60 days
+        expires_in = arrow.now().replace(days=60).datetime
         if 'expires_in' in token:
-            expires_in_days = token['expires_in'] / 60 / 60 / 24  # Value is in seconds
-            expires_in = arrow.now().replace(days=expires_in_days, hour=0).datetime
+            expires_in = timezone.now() + timezone.timedelta(seconds=token['expires_in'])
         elif 'error' in token:
             params.update({'response': token})
             raise Exception(params)

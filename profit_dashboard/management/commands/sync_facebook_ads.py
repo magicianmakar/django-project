@@ -27,7 +27,6 @@ def attach_account(account, stdout=None):
 
         elif e.api_error_code() == 190:  # (#190) Error validating access token
             facebook_access = account.access
-            facebook_access.access_token = ''
             facebook_access.expires_in = None
             facebook_access.save()
 
@@ -61,6 +60,12 @@ class Command(DropifiedBaseCommand):
             obar = tqdm(total=count)
 
         for access in facebook_access_list:
+            # Update token if its about to expire
+            try:
+                access.get_or_update_token()
+            except:
+                pass
+
             for account in access.accounts.all():
                 attach_account(
                     account=account,
