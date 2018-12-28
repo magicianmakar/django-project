@@ -50,6 +50,7 @@ from shopified_core.utils import (
     version_compare,
     order_data_cache,
     update_product_data_images,
+    aws_s3_context,
     encode_params,
     decode_params,
 )
@@ -1280,6 +1281,11 @@ def products_list(request, tpl='grid'):
     if args['filter_products'] and not request.user.can('product_filters.use'):
         return render(request, 'upgrade.html')
 
+    try:
+        assert not request.is_ajax(), 'AJAX Request Detected - Products List'
+    except:
+        raven_client.captureException(level='warning')
+
     products, paginator, page = get_product(**args)
 
     if not tpl or tpl == 'grid':
@@ -1369,34 +1375,6 @@ def shopify_migration(request):
 
 @login_required
 def product_view(request, pid):
-    #  AWS
-
-    aws_available = (settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY and settings.AWS_STORAGE_BUCKET_NAME)
-
-    conditions = [
-        ["starts-with", "$utf8", ""],
-        # Change this path if you need, but adjust the javascript config
-        ["starts-with", "$key", "uploads"],
-        ["starts-with", "$name", ""],
-        ["starts-with", "$Content-Type", "image/"],
-        ["starts-with", "$filename", ""],
-        {"bucket": settings.AWS_STORAGE_BUCKET_NAME},
-        {"acl": "public-read"}
-    ]
-
-    policy = {
-        # Valid for 3 hours. Change according to your needs
-        "expiration": arrow.now().replace(hours=+3).format("YYYY-MM-DDTHH:mm:ss") + 'Z',
-        "conditions": conditions
-    }
-
-    policy_str = json.dumps(policy)
-    string_to_sign = base64.encodestring(policy_str).replace('\n', '')
-
-    signature = base64.encodestring(
-        hmac.new(settings.AWS_SECRET_ACCESS_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest()).strip()
-
-    #  /AWS
     if request.user.is_superuser:
         product = get_object_or_404(ShopifyProduct, id=pid)
         if product.user != request.user:
@@ -1411,6 +1389,11 @@ def product_view(request, pid):
     if not product.store and (not request.user.is_subuser or request.user.models_user.id not in [14970]):  # Intercom 11917013063
         product.store = product.user.profile.get_shopify_stores().first()
         product.save()
+
+    try:
+        assert not request.is_ajax(), 'AJAX Request Detected - Product View'
+    except:
+        raven_client.captureException(level='warning')
 
     try:
         alert_config = json.loads(product.config)
@@ -1493,15 +1476,17 @@ def product_view(request, pid):
 
     breadcrumbs.append(p['product']['title'])
 
+    aws = aws_s3_context()
+
     return render(request, 'product_view.html', {
         'product': p,
         'board': board,
         'original': original,
         'collections': collections,
         'shopify_product': shopify_product,
-        'aws_available': aws_available,
-        'aws_policy': string_to_sign,
-        'aws_signature': signature,
+        'aws_available': aws['aws_available'],
+        'aws_policy': aws['aws_policy'],
+        'aws_signature': aws['aws_signature'],
         'page': 'product',
         'breadcrumbs': breadcrumbs
     })
@@ -3720,6 +3705,7 @@ def orders_view(request):
                         'product_id': product.id if product else None,
                         'source_id': supplier.get_source_id() if supplier else None,
                         'supplier_id': supplier.get_store_id() if supplier else None,
+                        'supplier_type': supplier.supplier_type() if supplier else None,
                         'total': utils.safeFloat(el['price'], 0.0),
                         'store': store.id,
                         'order': {
@@ -3841,6 +3827,11 @@ def orders_view(request):
 def orders_track(request):
     if not request.user.can('orders.use'):
         return render(request, 'upgrade.html')
+
+    try:
+        assert not request.is_ajax(), 'AJAX Request Detected - Orders Track'
+    except:
+        raven_client.captureException(level='warning')
 
     visited_time = arrow.now().timestamp
     request.user.profile.set_config_value('orders_track_visited_at', visited_time)
@@ -4131,7 +4122,7 @@ def orders_place(request):
 
         for k in request.GET.keys():
             if k == 'SAPlaceOrder':
-                pass
+                event_data['data_id'] = request.GET[k]
 
             elif k == 'product':
                 event_data['product'] = request.GET[k]
@@ -4149,6 +4140,9 @@ def orders_place(request):
             affiliate = 'UserAdmitad'
         elif user_ali_credentials:
             affiliate = 'UserAliexpress'
+
+        if supplier and supplier.is_ebay:
+            event_data['supplier_type'] = 'ebay'
 
         event_data.update({
             'user': store.user.username,

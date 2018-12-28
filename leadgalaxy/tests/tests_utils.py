@@ -2,6 +2,7 @@
 
 import re
 import random
+import json
 from django.conf import settings
 from django.test import tag
 from redis.exceptions import LockError
@@ -19,7 +20,7 @@ from shopified_core.shipping_helper import (
     support_other_in_province,
 )
 
-from leadgalaxy.tests.factories import UserFactory
+from leadgalaxy.tests.factories import UserFactory, ShopifyBoardFactory, ShopifyProductFactory
 
 import factory
 import requests
@@ -959,3 +960,75 @@ class ShippingHelperTestCase(BaseTestCase):
         order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
 
         self.assertEqual(customer_address['zip'], '1155967')
+
+
+class ShopifyBoardTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+        self.store = ShopifyStoreFactory(id=1)
+        self.board = ShopifyBoardFactory(user=self.user)
+        self.board.config = json.dumps({'type': 'Test Category'})
+        self.board.save()
+
+        self.saved_product = ShopifyProductFactory(store=self.store, user=self.user)
+        self.saved_product.shopify_id = 0
+        self.saved_product.save()
+
+        self.connected_product = ShopifyProductFactory(store=self.store, user=self.user)
+        self.connected_product.shopify_id = 1
+        self.connected_product.save()
+
+    def test_attach_saved_product_to_multiple_boards(self):
+        board2 = ShopifyBoardFactory(user=self.user)
+
+        utils.attach_boards_with_product(self.user, self.saved_product, [self.board.id, board2.id])
+        utils.attach_boards_with_product(self.user, self.connected_product, [self.board.id, board2.id])
+
+        self.assertEqual(self.board.saved_count(), 1)
+        self.assertEqual(board2.saved_count(), 1)
+
+    def test_attach_connected_product_to_multiple_boards(self):
+        board2 = ShopifyBoardFactory(user=self.user)
+
+        utils.attach_boards_with_product(self.user, self.saved_product, [self.board.id, board2.id])
+        utils.attach_boards_with_product(self.user, self.connected_product, [self.board.id, board2.id])
+
+        self.assertEqual(self.board.connected_count(), 1)
+        self.assertEqual(board2.connected_count(), 1)
+
+    def test_smart_board_by_connected_product(self):
+        self.connected_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
+        self.connected_product.save()
+
+        utils.smart_board_by_product(self.user, self.saved_product)
+        utils.smart_board_by_product(self.user, self.connected_product)
+        self.assertEqual(self.board.connected_count(), 1)
+
+    def test_smart_board_by_saved_product(self):
+        self.saved_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
+        self.saved_product.save()
+
+        utils.smart_board_by_product(self.user, self.connected_product)
+        utils.smart_board_by_product(self.user, self.saved_product)
+        self.assertEqual(self.board.saved_count(), 1)
+
+    def test_smart_board_by_connected_board(self):
+        self.saved_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
+        self.saved_product.save()
+        self.connected_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
+        self.connected_product.save()
+
+        utils.smart_board_by_board(self.user, self.board)
+        self.assertEqual(self.board.connected_count(), 1)
+
+    def test_smart_board_by_saved_board(self):
+        self.saved_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
+        self.saved_product.save()
+        self.connected_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
+        self.connected_product.save()
+
+        utils.smart_board_by_board(self.user, self.board)
+        self.assertEqual(self.board.saved_count(), 1)
