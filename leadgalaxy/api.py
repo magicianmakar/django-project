@@ -1563,7 +1563,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'sync_delay_notify_email',
                 'sync_delay_notify_push',
                 'sync_delay_notify_highlight',
-                'randomize_image_names'
+                'randomize_image_names',
+                'price_update_for_increase',
             ]
 
         for key in data:
@@ -1703,6 +1704,15 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if key == 'product':
                 continue
             config[key] = data[key]
+
+        bool_config = ['price_update_for_increase']
+        for key in bool_config:
+            config[key] = (key in data)
+
+        # remove values if update is not selected
+        if config['alert_price_change'] != 'update':
+            config['price_update_method'] = ''
+            config['price_update_for_increase'] = ''
 
         product.config = json.dumps(config)
         product.save()

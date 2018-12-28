@@ -9,6 +9,13 @@ function syncConfig() {
     }, function() {});
 }
 
+$("#alert_price_change").change(function() {
+    var alert_price_change = $(this).val();
+    $(".price-update-option").hide();
+    $(".price-update-option[data-value='" + alert_price_change + "']").show();
+});
+$("#alert_price_change").change();
+
 $('.add-store-btn').click(function (e) {
     e.preventDefault();
 

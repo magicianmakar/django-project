@@ -4,8 +4,9 @@ import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core.utils import app_link, safeFloat, http_exception_response, http_excption_status_code
+from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import get_shopify_product
-from product_alerts.utils import variant_index
+from product_alerts.utils import variant_index, calculate_price
 from product_alerts.models import ProductVariantPriceHistory
 
 
@@ -32,17 +33,25 @@ class ProductChangeManager():
 
         self.product = product_change.product
         self.user = product_change.user
+        self.markup_rules = PriceMarkupRule.objects.filter(user=self.user.models_user)
 
         self.config = {
             'product_disappears': self.get_config('alert_product_disappears'),
             'variant_disappears': self.get_config('alert_variant_disappears'),
             'quantity_change': self.get_config('alert_quantity_change'),
             'price_change': self.get_config('alert_price_change'),
+            'price_update_method': self.get_config('price_update_method', 'same_margin'),
+            'price_update_for_increase': self.get_config('price_update_for_increase', False),
         }
+
+        # Handle old config value
+        if self.config['price_change'] == 'update_for_increase':
+            self.config['price_change'] = 'update'
+            self.config['price_update_for_increase'] = True
 
     def get_config(self, name, default='notify'):
         value = self.product.get_config().get(name)
-        if value is None:
+        if not value:
             value = self.user.get_config(name, default)
 
         return value
@@ -138,26 +147,32 @@ class ProductChangeManager():
 
         new_value = variant_change.get('new_value')
         old_value = variant_change.get('old_value')
-        current_price = float(product_data['variants'][idx]['price'])
 
         if self.config['price_change'] == 'notify':
             return None
 
         elif self.config['price_change'] == 'update':
             if idx is not None:
-                product_data['variants'][idx]['price'] = round((current_price * new_value) / old_value, 2)
+                current_price = safeFloat(product_data['variants'][idx]['price'])
+                current_compare_at_price = safeFloat(product_data['variants'][idx].get('compare_at_price'))
 
-                compare_at_price = safeFloat(product_data['variants'][idx].get('compare_at_price'))
-                if compare_at_price:
-                    product_data['variants'][idx]['compare_at_price'] = round((compare_at_price * new_value) / old_value, 2)
-
-        elif self.config['price_change'] == 'update_for_increase':
-            if idx is not None and current_price < variant_change.get('new_value'):
-                product_data['variants'][idx]['price'] = round((current_price * new_value) / old_value, 2)
-
-                compare_at_price = safeFloat(product_data['variants'][idx].get('compare_at_price'))
-                if compare_at_price:
-                    product_data['variants'][idx]['compare_at_price'] = round((compare_at_price * new_value) / old_value, 2)
+                new_price, new_compare_at_price = calculate_price(
+                    self.user,
+                    old_value,
+                    new_value,
+                    current_price,
+                    current_compare_at_price,
+                    self.config['price_update_method'],
+                    self.markup_rules
+                )
+                if new_price:
+                    if self.config['price_update_for_increase']:
+                        if new_price >= current_price:
+                            product_data['variants'][idx]['price'] = new_price
+                            product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+                    else:
+                        product_data['variants'][idx]['price'] = new_price
+                        product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
 
         return product_data
 

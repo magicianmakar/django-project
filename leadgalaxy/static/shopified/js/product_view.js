@@ -74,6 +74,21 @@ $( '#collection-select' ).select2({
     minimumInputLength: 1,
 });
 
+var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
+elems.forEach(function(html) {
+    var switchery = new Switchery(html, {
+        color: '#93c47d',
+        size: 'small'
+    });
+});
+
+$("#alert_price_change").change(function() {
+    var alert_price_change = $(this).val();
+    $(".price-update-option").hide();
+    $(".price-update-option[data-value='" + alert_price_change + "']").show();
+});
+$("#alert_price_change").change();
+
 $("a.add-variant").click(function (e) {
     e.preventDefault();
 

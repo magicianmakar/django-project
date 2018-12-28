@@ -626,8 +626,7 @@
                                     <div class="col-sm-4">
                                         <select id="alert_price_change" name="alert_price_change" class="form-control">
                                             <option value="notify" {% if config.alert_price_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
-                                            <option value="update" {% if config.alert_price_change == 'update' %} selected="selected"{% endif %}>Update with the same margin</option>
-                                            <option value="update_for_increase" {% if config.alert_price_change == 'update_for_increase' %} selected="selected"{% endif %}>Update only when price goes up</option>
+                                            <option value="update" {% if config.alert_price_change == 'update' %} selected="selected"{% endif %}>Update Price in Shopify</option>
                                             <option value="none" {% if config.alert_price_change == 'none' %} selected="selected"{% endif %}>Do nothing</option>
                                         </select>
                                     </div>
@@ -699,6 +698,33 @@
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="send_alerts_to_subusers"
                                                name="send_alerts_to_subusers" {% if config.send_alerts_to_subusers %}checked="checked"{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row price-update-option" data-value="update">
+                            <div class="col-sm-offset-1 col-sm-5">
+                                <div class="form-group">
+                                    <label for="price_update_method" class="col-sm-6 control-label">Price Update Method</label>
+                                    <div class="col-sm-4">
+                                        <select id="price_update_method" name="price_update_method" class="form-control">
+                                            <option value="global_markup" {% if config.price_update_method == 'global_markup' %} selected="selected"{% endif %}>Update with Global "Price Markup"</option>
+                                            <option value="custom_markup" {% if config.price_update_method == 'custom_markup' %} selected="selected"{% endif %}>Update with Advanced Markup Rules</option>
+                                            <option value="same_margin" {% if not config.price_update_method or config.price_update_method == 'same_margin' %} selected="selected"{% endif %}>Update with same margins</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-5">
+                                <div class="form-group">
+                                    <label for="price_update_for_increase" class="col-sm-4 col-xs-8 control-label">
+                                        Update only when price goes up
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="price_update_for_increase"
+                                               name="price_update_for_increase" {% if config.price_update_for_increase %}checked="checked"{% endif %}>
                                     </div>
                                 </div>
                             </div>
