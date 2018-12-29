@@ -552,7 +552,7 @@
 
 <!-- Load Feather code -->
 {% if request.is_secure %}
-<script type="text/javascript" src="https://dme0ih8comzn4.cloudfront.net/js/feather.js"></script>
+<script type="text/javascript" src="https://dme0ih8comzn4.cloudfront.net/imaging/v3/editor.js"></script>
 {% else %}
 <script type="text/javascript" src="http://feather.aviary.com/imaging/v2/editor.js"></script>
 {% endif %}
@@ -677,9 +677,9 @@ $(function() {
 
     config.feather_editor = new Aviary.Feather({
         apiKey: '220489e3e16f4691bc88d1ef81e05a8b',
-        theme: 'dark', // Check out our new 'light' and 'dark' themes!
+        theme: 'dark',
         tools: 'all',
-        appendTo: '',
+        enableCORS: true,
         onSave: function(imageID, newURL) {
             var img = document.getElementById(imageID);
             var oldURL = img.src;
