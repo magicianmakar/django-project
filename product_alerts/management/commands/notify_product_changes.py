@@ -42,8 +42,6 @@ class Command(DropifiedBaseCommand):
             self.write('No user found to notify')
             return
 
-        self.write('Notfiy changes for {} users'.format(len(users)))
-
         ignored_users = set()
         for user in users:
             prodduct_changes = ProductChange.objects.filter(user=user, notified_at=None, seen=False)
@@ -58,8 +56,6 @@ class Command(DropifiedBaseCommand):
 
             if not changes:
                 continue
-
-            self.write('Notfiy {} about {} changes from {}'.format(user.email, len(changes_list), last_notified_id))
 
             notified_key = 'change_alert_{}'.format(user.id)
             if cache.get(notified_key):
