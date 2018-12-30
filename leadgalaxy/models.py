@@ -328,7 +328,10 @@ class UserProfile(models.Model):
         ])
 
     def get_new_alerts(self):
-        return None
+        return self.user.models_user.productchange_set \
+                                    .filter(seen=False) \
+                                    .filter(hidden=False) \
+                                    .count()
 
     @cached_property
     def get_perms(self):
