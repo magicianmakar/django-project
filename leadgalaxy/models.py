@@ -1636,7 +1636,12 @@ class ProductSupplier(models.Model):
         if self.source_id != self.get_source_id():
             self.source_id = self.get_source_id()
         if self.is_default:
-            monitor_product(self.product)
+            try:
+                if not settings.DEBUG:
+                    monitor_product(self.product)
+            except:
+                pass
+
         super(ProductSupplier, self).save(*args, **kwargs)
 
 

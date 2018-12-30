@@ -725,7 +725,12 @@ class CommerceHQSupplier(models.Model):
 
     def save(self, *args, **kwargs):
         if self.is_default:
-            monitor_product(self.product)
+            try:
+                if not settings.DEBUG:
+                    monitor_product(self.product)
+            except:
+                pass
+
         super(CommerceHQSupplier, self).save(*args, **kwargs)
 
 
