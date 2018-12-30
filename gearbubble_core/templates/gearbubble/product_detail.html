@@ -710,6 +710,7 @@ $(function() {
                     if (data.status == 'ok') {
                         this.img.src = data.url;
                         product.images[parseInt($('#'+this.imageID).attr('image-id'))] = data.url;
+                        config.feather_editor.close();
                     } else {
                         displayAjaxError('Image Editor', data);
                     }
