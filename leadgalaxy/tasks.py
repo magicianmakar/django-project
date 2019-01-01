@@ -23,6 +23,7 @@ from app.celery import celery_app, CaptureFailure, retry_countdown, api_exceed_l
 from shopified_core import permissions
 from shopified_core.utils import (
     app_link,
+    url_join,
     http_exception_response,
     http_excption_status_code,
     delete_model_from_db,
@@ -1115,7 +1116,7 @@ def keen_add_event(self, event_name, event_data):
                 product_price = cache.get(cache_key)
 
                 if product_price is None:
-                    url = '{}/api/products/price/{}'.format(settings.PRICE_MONITOR_HOSTNAME, event_data.get('product'))
+                    url = url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/price/', event_data.get('product'))
                     prices_response = requests.get(
                         url=url,
                         auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD),

@@ -6,13 +6,11 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 
 from shopified_core.management import DropifiedBaseCommand
+from shopified_core.utils import url_join
 from leadgalaxy.models import *
 from commercehq_core.models import CommerceHQProduct
 from product_alerts.utils import monitor_product
 from last_seen.models import LastSeen
-
-
-PRICE_MONITOR_BASE = '{}/api'.format(settings.PRICE_MONITOR_HOSTNAME)
 
 
 def worker(q):
@@ -103,7 +101,7 @@ class Command(DropifiedBaseCommand):
             self.stdout.write(u'Ignore inactive user: {}'.format(user.username))
             if options['remove-inactive']:
                 rep = requests.delete(
-                    url='{}/products'.format(PRICE_MONITOR_BASE),
+                    url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products'),
                     params={'user': user.id},
                     auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
                 )
