@@ -1033,6 +1033,11 @@ $(function() {
         }
     }, 5000);
 
+    $('#dropdownMenu1, #store-dropdown-menu li').hover(function() {
+        $('#store-dropdown-menu').stop(true, true).fadeIn(0);
+    }, function() {
+        $('#store-dropdown-menu').stop(true, true).delay(200).fadeOut(200);
+    });
 });
 
 var ravenOptions = {
