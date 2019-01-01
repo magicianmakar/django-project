@@ -3,17 +3,16 @@ import requests
 from django.conf import settings
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from shopified_core.utils import app_link, safeFloat, safeInt
-
-PRICE_MONITOR_BASE = '{}/api'.format(settings.PRICE_MONITOR_HOSTNAME)
+from shopified_core.utils import app_link, url_join, safeFloat, safeInt
 
 
 def aliexpress_variants(product_id):
-    variants_api_url = '{}/products/{}/variants'.format(PRICE_MONITOR_BASE, product_id)
+
     rep = requests.get(
-        url=variants_api_url,
+        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products', product_id, '/variants'),
         auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
     )
+
     rep.raise_for_status()
     return rep.json()
 
@@ -32,7 +31,7 @@ def unmonitor_store(store):
         dropified_type = 'chq'
 
     rep = requests.delete(
-        url='{}/products'.format(PRICE_MONITOR_BASE),
+        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products'),
         params={'dropified_type': dropified_type, 'store': store.id},
         auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
     )
@@ -67,7 +66,6 @@ def update_product_monitor(monitor_id, supplier):
         store_id = 0
     product_id = supplier.get_source_id()
 
-    monitor_api_url = '{}/api/products/{}'.format(settings.PRICE_MONITOR_HOSTNAME, monitor_id)
     post_data = {
         'url': supplier.product_url,
         'product_id': product_id,
@@ -75,7 +73,7 @@ def update_product_monitor(monitor_id, supplier):
     }
 
     rep = requests.patch(
-        url=monitor_api_url,
+        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/', monitor_id),
         data=post_data,
         auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
     )
@@ -83,11 +81,11 @@ def update_product_monitor(monitor_id, supplier):
 
 
 def delete_product_monitor(monitor_id):
-    monitor_api_url = '{}/products/{}'.format(PRICE_MONITOR_BASE, monitor_id)
     rep = requests.delete(
-        url=monitor_api_url,
+        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/', monitor_id),
         auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
     )
+
     rep.raise_for_status()
 
 
@@ -122,7 +120,6 @@ def monitor_product(product, stdout=None):
         dropified_type = 'chq'
 
     webhook_url = app_link('webhook/price-monitor/product', product=product.id, dropified_type=dropified_type)
-    monitor_api_url = '{}/products'.format(PRICE_MONITOR_BASE)
     rep = None
     try:
         post_data = {
@@ -137,7 +134,7 @@ def monitor_product(product, stdout=None):
         }
 
         rep = requests.post(
-            url=monitor_api_url,
+            url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products'),
             json=post_data,
             auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
         )

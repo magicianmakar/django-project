@@ -98,6 +98,16 @@ def app_link(*args, **kwargs):
     return u'{}/{}'.format(settings.APP_URL, path.lstrip('/')).rstrip('/')
 
 
+def remove_trailing_slash(t):
+    t = safeStr(t, str(t))
+    return t.strip('/')
+
+
+def url_join(*args):
+    url = [remove_trailing_slash(i) for i in args]
+    return '/'.join(url).rstrip('/')
+
+
 def hash_text(text):
     return hashlib.md5(text).hexdigest()
 

@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 
 from shopified_core.utils import (
     app_link,
+    url_join,
     random_hash,
     order_data_cache,
     order_phone_number,
@@ -328,6 +329,25 @@ class UtilsTestCase(BaseTestCase):
 
         h = random_hash()
         self.assertEqual(decode_params(encode_params(h)), h)
+
+    def test_url_join(self):
+        base_url = 'https://price-monitor-api.herokuapp.com'
+        self.assertEqual(url_join('/api/products/price', 12, '3/2/'), 'api/products/price/12/3/2')
+        self.assertEqual(url_join('api/products/price', 12, '3/2'), 'api/products/price/12/3/2')
+
+        self.assertEqual(url_join('http://app.dropified.com/', 'api/products/price', 12, '3/2'), 'http://app.dropified.com/api/products/price/12/3/2')
+
+        self.assertEqual(url_join(base_url), base_url)
+        self.assertEqual(url_join(base_url, '/'), base_url)
+
+        self.assertEqual(url_join(base_url, '/api/products'), base_url + '/api/products')
+        self.assertEqual(url_join(base_url, '/api/products/'), base_url + '/api/products')
+        self.assertEqual(url_join(base_url, '/api/products', 233330), base_url + '/api/products/233330')
+        self.assertEqual(url_join(base_url, '/api/products', 233330, '/'), base_url + '/api/products/233330')
+        self.assertEqual(url_join(base_url, '/api/products', 233330, '/variants'), base_url + '/api/products/233330/variants')
+        self.assertEqual(url_join(base_url, 'api/products', 233330, '/variants'), base_url + '/api/products/233330/variants')
+
+        self.assertEqual(url_join(base_url, 'api', 'products', 233330, '/variants'), base_url + '/api/products/233330/variants')
 
 
 class ShippingHelperFunctionsTestCase(BaseTestCase):
