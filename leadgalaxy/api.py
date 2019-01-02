@@ -24,6 +24,7 @@ from youtube_ads.models import VideosList
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
+from shopified_core.encryption import save_aliexpress_password, delete_aliexpress_password
 from shopified_core.shipping_helper import get_counrties_list, fix_fr_address
 from shopified_core.utils import (
     app_link,
@@ -2800,8 +2801,15 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if data.get('ali_pass') == 'password is set':
             return self.api_error('Please Enter your Aliexpress account password')
 
+        current_email = user.models_user.get_config('ali_email')
+        if current_email:
+            # Delete any saved email/password in case the user change his email, we won't have "stale" files
+            delete_aliexpress_password(user, current_email)
+
+        save_aliexpress_password(user, data.get('ali_email'), data.get('ali_pass'))
+
+        # Save Aliexpress email in the user config, maybe we should use a better method (ex: each store with unique Aliexpress account)
         user.models_user.set_config('ali_email', data.get('ali_email') or '')
-        user.models_user.set_config('ali_pw', data.get('ali_pass') or '')
 
         return self.api_success()
 

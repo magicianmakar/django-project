@@ -157,13 +157,15 @@ class ShopifiedApi(ApiResponseMixin, View):
         return self.api_error('Invalid Email or password')
 
     def get_me(self, request, **kwargs):
-        if not request.user.is_authenticated:
+        user = self.get_user(request, assert_login=True)
+
+        if not user.is_authenticated:
             return self.api_error('Logging is required', status=403)
         else:
             return JsonResponse({
-                'id': request.user.id,
-                'username': request.user.username,
-                'email': request.user.email
+                'id': user.id,
+                'username': user.username,
+                'email': user.email
             })
 
     def get_all_stores(self, request, target, store_type, version):
@@ -317,4 +319,21 @@ class ShopifiedApi(ApiResponseMixin, View):
             'orders': orders,
             'all_orders': all_orders,
             'date': arrow.utcnow().timestamp
+        })
+
+    def get_ali_login(self, request, **kwargs):
+        user = self.get_user(request, assert_login=True)
+
+        # Ensure the Dropified Secret key match with our app's setting key
+        if settings.API_SECRECT_KEY != request.META.get('HTTP_X_DROPIFIED_SECRET'):
+            return self.api_error('Wrong Dropified API Key')
+
+        aliexpress_email = user.get_config('ali_email')
+        if not aliexpress_email:
+            return self.api_error('Aliexpress email is not set')
+
+        from shopified_core.encryption import get_aliexpress_password
+
+        return self.api_success({
+            'password': get_aliexpress_password(user, aliexpress_email)
         })

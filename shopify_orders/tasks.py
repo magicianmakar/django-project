@@ -94,7 +94,6 @@ def fulfill_aliexpress_order(store, order_id, line_id=None):
             'token': store.user.get_access_token(),
             'aliexpress': {
                 'email': aliexpress_email,
-                'pass': aliexpress_pass,
             }
         })
 
