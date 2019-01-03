@@ -124,6 +124,7 @@ class UserProfile(models.Model):
     timezone = models.CharField(max_length=255, null=True, blank=True, default='')
     emails = models.TextField(null=True, blank=True, default='', verbose_name="Other Emails")
     ips = models.TextField(null=True, blank=True, verbose_name="User IPs")
+    tags = models.TextField(null=True, blank=True, verbose_name="User Tags")
 
     config = models.TextField(default='', blank=True)
     sync_delay_notify = models.IntegerField(default=0, null=True, db_index=True, verbose_name='Notify if no tracking number is found (days)')

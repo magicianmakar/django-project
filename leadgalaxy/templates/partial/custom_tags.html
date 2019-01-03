@@ -52,6 +52,10 @@
                 parent_plan: '',
                 {% endif %}
 
+                {% if user.profile.tags %}
+                user_tags: '{{user.profile.tags}}',
+                {% endif %}
+
                 bundles: '{{user.profile.bundles_list|join:","}}',
 
                 widget: {
