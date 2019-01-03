@@ -75,6 +75,13 @@ class FacebookAccess(models.Model):
             self._reload_api()
         return self._api
 
+    def is_token_valid(self):
+        try:
+            FBUser(fbid='me', api=self.api).api_get()
+            return True
+        except:
+            return False
+
     def get_or_update_token(self, new_access_token='', new_expires_in=0):
         """
         Exchange current access token for long lived one with +59 days expiration
@@ -82,7 +89,10 @@ class FacebookAccess(models.Model):
         # Renew only if old token expires in less than one week
         if self.expires_in:
             delta_expires_in = self.expires_in - arrow.now().datetime
-            if delta_expires_in.days > 7:
+            if delta_expires_in.days > 21 and not self.is_token_valid():
+                self.access_token = ''
+                self.expires_in = None
+            elif delta_expires_in.days > 7:
                 return self.access_token
 
         # Check if new token is expired

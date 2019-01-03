@@ -134,6 +134,8 @@
                                                         </audio>
                                                         &nbsp; <a class="btn btn-default btn-sm" href="{{ recording.recording_url }}" download="{{ recording.recording_sid }}.mp3" target="_blank">Download</a>
                                                     </div>
+                                                {% empty %}
+                                                    No messages left
                                                 {% endfor %}
 
                                             </td>
