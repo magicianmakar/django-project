@@ -22,6 +22,7 @@ from twilio.twiml.voice_response import VoiceResponse, Gather
 
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.utils import safeInt, app_link
+from shopified_core.decorators import no_subusers
 from .forms import TwilioAutomationForm
 from .models import (
     TwilioPhoneNumber,
@@ -42,18 +43,19 @@ def index(request):
     if not request.user.can('phone_automation.use'):
         return render(request, 'upgrade.html')
 
-    twilio_phone_number = getattr(request.user, 'twilio_phone_number', None)
+    user = request.user.models_user
+    twilio_phone_number = getattr(user, 'twilio_phone_number', None)
     try:
         twilio_stats = {}
-        twilio_logs = request.user.twilio_logs.filter(log_type='status-callback')
+        twilio_logs = user.twilio_logs.filter(log_type='status-callback')
         latest_twilio_logs = twilio_logs[:5]
         twilio_stats['twilio_logs_total_count'] = twilio_logs.count()
         # TODO: Use Arrow date with customer's timezone request.session.get('django_timezone')
         today_twilio_logs = twilio_logs.filter(created_at__gte=timezone.now().date())
         twilio_stats['twilio_logs_today_count'] = today_twilio_logs.count()
         twilio_stats['today_total_duration'] = today_twilio_logs.aggregate(Sum('call_duration'))
-        twilio_stats['total_duration'] = get_month_totals(request.user)
-        twilio_stats['total_duration_month_limit'] = get_month_limit(request.user)
+        twilio_stats['total_duration'] = get_month_totals(user)
+        twilio_stats['total_duration_month_limit'] = get_month_limit(user)
         twilio_stats['today_uniq_callers_count'] = today_twilio_logs.values('from_number').distinct().count()
 
     except:
@@ -78,10 +80,11 @@ def call_logs(request):
     if not request.user.can('phone_automation.use'):
         return render(request, 'upgrade.html')
 
+    user = request.user.models_user
     try:
         twilio_stats = {}
-        twilio_phone_number = getattr(request.user, 'twilio_phone_number', None)
-        twilio_logs = request.user.twilio_logs.filter(log_type='status-callback').order_by('-created_at')
+        twilio_phone_number = getattr(user, 'twilio_phone_number', None)
+        twilio_logs = user.twilio_logs.filter(log_type='status-callback').order_by('-created_at')
 
     except:
         raven_client.captureException()
@@ -98,12 +101,14 @@ def call_logs(request):
 
 
 @login_required
+@no_subusers
 @transaction.atomic
 def provision(request):
     if not request.user.can('phone_automation.use'):
         return render(request, 'upgrade.html')
 
-    if hasattr(request.user, 'twilio_phone_number'):
+    user = request.user.models_user
+    if hasattr(user, 'twilio_phone_number'):
         messages.error(request, 'You already have phone number set')
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
@@ -123,12 +128,12 @@ def provision(request):
 
             twilio_phone_number = TwilioPhoneNumber()
             twilio_phone_number.incoming_number = phone_number
-            twilio_phone_number.user_id = request.user.id
+            twilio_phone_number.user_id = user.id
             twilio_phone_number.twilio_metadata = twilio_metadata
             twilio_phone_number.twilio_sid = incoming_phone_number.sid
 
             # assigning automation if exists
-            automation = request.user.twilio_automations.first()
+            automation = user.twilio_automations.first()
             twilio_phone_number.automation = automation
             twilio_phone_number.save()
             messages.success(request, 'Phone Number has been successfully set')
@@ -160,6 +165,7 @@ def provision(request):
 
 
 @login_required
+@no_subusers
 @transaction.atomic
 def provision_release(request):
     if not request.user.can('phone_automation.use'):
@@ -169,7 +175,7 @@ def provision_release(request):
         messages.error(request, 'You do not have any phone number set')
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
-    twilio_phone_number = request.user.twilio_phone_number
+    twilio_phone_number = request.user.models_user.twilio_phone_number
     removal_avail_date = twilio_phone_number.created_at + dt.timedelta(days=30)
     if not request.user.can('phone_automation_unlimited_phone_numbers.use') and timezone.now() < removal_avail_date:
         messages.error(request, u'You can not remove this phone number until {}'.format(removal_avail_date.strftime("%b %d, %Y")))
@@ -228,14 +234,15 @@ def status_callback(request):
 
 # Call Flow
 def save_automation(request, twilio_phone_number_id):
-    twilio_phone_number = get_object_or_404(TwilioPhoneNumber, pk=twilio_phone_number_id, user=request.user)
+    user = request.user.models_user
+    twilio_phone_number = get_object_or_404(TwilioPhoneNumber, pk=twilio_phone_number_id, user=user)
 
     # Form will save nodes in correct order after saving the automation object
     form = TwilioAutomationForm(request.POST, instance=twilio_phone_number.automation)
     if form.is_valid():
         # First save must occur so steps are properly saved
         twilio_automation = form.save()
-        twilio_automation.user = request.user.models_user
+        twilio_automation.user = user
         twilio_automation.save()
 
         twilio_phone_number.automation = twilio_automation
@@ -245,7 +252,7 @@ def save_automation(request, twilio_phone_number_id):
 
 
 def automate(request, twilio_phone_number_id):
-    twilio_phone_number = get_object_or_404(TwilioPhoneNumber, pk=twilio_phone_number_id, user=request.user)
+    twilio_phone_number = get_object_or_404(TwilioPhoneNumber, pk=twilio_phone_number_id, user=request.user.models_user)
 
     return render(request, 'phone_automation/automate.html', {
         'twilio_phone_number': twilio_phone_number,
@@ -256,14 +263,15 @@ def automate(request, twilio_phone_number_id):
 
 
 def upload(request, twilio_phone_number_id):
-    twilio_phone_number = get_object_or_404(TwilioPhoneNumber, pk=twilio_phone_number_id, user=request.user)
+    user = request.user.models_user
+    twilio_phone_number = get_object_or_404(TwilioPhoneNumber, pk=twilio_phone_number_id, user=user)
     audio = request.FILES.get('mp3')
     step = request.POST.get('step')
 
     # Randomize filename in order to not overwrite an existing file
     ext = audio.name.split('.')[1:]
     audio_name = u'{}-{}.{}'.format(twilio_phone_number_id, step, '.'.join(ext))
-    audio_name = u'uploads/u{}/phone/{}'.format(request.user.id, audio_name)
+    audio_name = u'uploads/u{}/phone/{}'.format(user.id, audio_name)
     mimetype = mimetypes.guess_type(audio.name)[0]
 
     upload_url = aws_s3_upload(
@@ -274,7 +282,7 @@ def upload(request, twilio_phone_number_id):
     )
 
     TwilioUpload.objects.create(
-        user=request.user.models_user,
+        user=user,
         phone=twilio_phone_number,
         url=upload_url[:510]
     )
