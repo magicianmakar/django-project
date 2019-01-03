@@ -828,7 +828,6 @@ class ShippingHelperTestCase(BaseTestCase):
         self.assertTrue(valide_aliexpress_province('uk', 'england', 'Kent'))
         self.assertFalse(valide_aliexpress_province('uk', 'england', 'NotFound'))
         self.assertFalse(valide_aliexpress_province('uk', 'NotFound', 'Kent'))
-        self.assertFalse(valide_aliexpress_province('au', 'New South Wales', 'Teven'))
 
     def test_uk_fix_address(self):
         self.assertEqual(get_uk_province('Kent'), 'england')
@@ -842,7 +841,7 @@ class ShippingHelperTestCase(BaseTestCase):
 
         self.assertFalse(support_other_in_province('Spain'))
 
-        for country in ['gb', 'Russia', 'au', 'australia', 'nl', 'netherlands', 'cl', 'chile', 'ua', 'ukraine', 'nz', 'new zealand']:
+        for country in ['gb', 'Russia', 'nl', 'netherlands', 'cl', 'chile', 'ua', 'ukraine', 'nz', 'new zealand']:
             self.assertTrue(support_other_in_province(country))
 
     def test_shopify_customer_address(self):
