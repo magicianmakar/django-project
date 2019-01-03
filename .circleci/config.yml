@@ -101,7 +101,7 @@ jobs:
           command: |
             source venv/bin/activate
             ./scripts/common_issues.sh
-            python manage.py test --noinput --parallel 8
+            python manage.py test --noinput --parallel 4
 
       - run:
           name: Static Files
