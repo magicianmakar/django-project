@@ -1402,11 +1402,6 @@ def product_view(request, pid):
         product.save()
 
     try:
-        assert not request.is_ajax(), 'AJAX Request Detected - Product View'
-    except:
-        raven_client.captureException(level='warning')
-
-    try:
         alert_config = json.loads(product.config)
     except:
         alert_config = {}
