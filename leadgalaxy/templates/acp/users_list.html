@@ -273,8 +273,9 @@
                             <tr>
                                 <th>Date</th>
                                 <th>Amount</th>
-                                <th>Refunded</th>
+                                <th>Refunded / Dispute</th>
                                 <th>Status</th>
+                                <th>Invoice</th>
                                 <th>Options</th>
                             </tr>
                         </thead>
@@ -292,13 +293,23 @@
                             >
                                 <td><span class="itooltip" title="{{i.date}}">{{ i.date_str }}</span></td>
                                 <td>{{ i.amount }}</td>
-                                <td>{{ i.amount_refunded|default:'' }}</td>
+                                <td>
+                                    {{ i.amount_refunded|default:'' }}
+                                </td>
                                 <td>
                                     {{ i.status|title }}
 
                                     {% if i.failure_message %}
                                     - Reason: {{i.failure_message|title}}
                                     {% endif %}
+
+                                    {% if i.dispute %}
+                                    - Dispute: {{i.dispute.status}}
+                                    {% endif %}
+
+                                </td>
+                                <td>
+                                    <a href="{{i.invoice.url}}" target="_blank">{{i.invoice.id}}</a>
                                 </td>
                                 <td>
                                     <a href="#" class="btn btn-xs btn-warning refund-charge-btn" {% if i.amount == i.amount_refunded %}disabled{% endif %} user-id="{{users.0.id}}"

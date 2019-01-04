@@ -2101,17 +2101,33 @@ def acp_users_list(request):
             elif len(customer_ids):
                 customer_id = customer_ids[0]['id']
 
+        invoices = {}
         if customer_id:
             for i in stripe.Charge.list(limit=10, customer=customer_id).data:
-                charges.append({
+                charge = {
                     'id': i.id,
                     'date': arrow.get(i.created).format('MM/DD/YYYY HH:mm'),
                     'date_str': arrow.get(i.created).humanize(),
                     'status': i.status,
+                    'dispute': i.dispute,
                     'failure_message': i.failure_message,
                     'amount': u'${:0.2f}'.format(i.amount / 100.0),
                     'amount_refunded': u'${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
-                })
+                }
+
+                if i.invoice:
+                    if i.invoice in invoices:
+                        inv = invoices[i.invoice]
+                    else:
+                        inv = stripe.Invoice.retrieve(i.invoice)
+                        invoices[i.invoice] = inv
+
+                    charge['invoice'] = {
+                        'id': inv.id,
+                        'url': inv.hosted_invoice_url,
+                    }
+
+                charges.append(charge)
 
             for i in stripe.Subscription.list(customer=customer_id).data:
                 subscribtions.append(i)
