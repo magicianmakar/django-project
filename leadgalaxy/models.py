@@ -1822,15 +1822,9 @@ class ShopifyOrderTrack(models.Model):
                 if status_map.get(i, ''):
                     source_status.append(status_map.get(i, ''))
 
-                if i not in status_map:
-                    print 'MISSING_STATUS:', i
-
             return ', '.join(set(source_status))
 
         else:
-            if self.source_status not in status_map:
-                print 'MISSING_STATUS:', self.source_status
-
             return status_map.get(self.source_status, '')
 
     get_source_status.admin_order_field = 'source_status'
