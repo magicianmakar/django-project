@@ -74,8 +74,8 @@ def fulfill_aliexpress_order(store, order_id, line_id=None):
     if not settings.FULFILLBOX_API_URL:
         return 'Service API is not set'
 
-    aliexpress_email, aliexpress_pass = store.user.get_config(['ali_email', 'ali_pw'])
-    if not aliexpress_email or not aliexpress_pass:
+    aliexpress_email = store.user.get_config('ali_email')
+    if not aliexpress_email:
         return 'Aliexpress Account is not set'
 
     url = settings.FULFILLBOX_API_URL + '/api/aliexpress/order'
