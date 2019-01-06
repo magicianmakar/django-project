@@ -86,12 +86,14 @@ def fulfill_aliexpress_order(store, order_id, line_id=None):
             'order': str(order_id),
             'line_id': str(line_id if line_id else ''),
             'user': str(store.user.id),
+            'user_email': store.user.email,
+            'token': store.user.get_access_token(),
             'store': {
                 'id': str(store.id),
                 'type': 'shopify',
                 'title': store.title,
+                'shop': store.shop,
             },
-            'token': store.user.get_access_token(),
             'aliexpress': {
                 'email': aliexpress_email,
             }

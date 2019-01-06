@@ -712,11 +712,11 @@ def webhook(request, provider, option):
                     queue=queue,
                     countdown=countdown)
 
-                # if store.user.can('fulfillbox.use'):
-                #     from shopify_orders.tasks import fulfill_shopify_order_line
-                #     _order, customer_address = utils.shopify_customer_address(shopify_order)
-                #     if topic == 'orders/create' and shopify_order['financial_status'] == 'paid':
-                #         fulfill_shopify_order_line.delay(store.id, shopify_order, customer_address)
+                if store.user.can('fulfillbox.use') and store.user.can('auto_fulfillbox_order'):
+                    from shopify_orders.tasks import fulfill_shopify_order_line
+                    _order, customer_address = utils.shopify_customer_address(shopify_order)
+                    if topic == 'orders/create' and shopify_order['financial_status'] == 'paid':
+                        fulfill_shopify_order_line.delay(store.id, shopify_order, customer_address)
 
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
 
