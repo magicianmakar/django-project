@@ -282,7 +282,7 @@
                         <tbody>
                             {% for i in last_charges %}
                             <tr
-                                {% if i.status == 'succeeded' %}
+                                {% if i.status == 'succeeded' and not i.dispute %}
                                     {% if i.amount_refunded %}
                                         style="color: #172386"
                                     {% else %}

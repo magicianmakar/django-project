@@ -4,7 +4,9 @@ import arrow
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
+
 from rest_hooks.signals import raw_hook_event
+from rest_hooks.models import Hook
 
 from shopified_core.utils import app_link
 from leadgalaxy.models import ShopifyProduct
@@ -242,11 +244,19 @@ class ProductChange(models.Model):
         return ret
 
     def send_hook_event_alert(self):
-        # Events are filtered in zapier_core.tasks.deliver_hook_wrapper.
-        # Query params of hook's target url are used to filter events to be triggered.
-        # Following url is hook's target url to get specific event for one shopify product
-        # https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
-        user = self.user
+        """
+        Events are filtered in zapier_core.tasks.deliver_hook_wrapper.
+        Query params of hook's target url are used to filter events to be triggered.
+        Following url is hook's target url to get specific event for one shopify product
+        https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
+        """
+
+        # Check if the user have any registered Hook before triggering the raw hook signal
+        # This reduce the database call significantly because it check first if the user have (in general) any webhooks
+        # Otherwise rest_hook will make a database call for each variant change
+        if not Hook.objects.filter(user=self.user).exists():
+            return
+
         for category in settings.PRICE_MONITOR_EVENTS.keys():
             payload = self.to_alert(category)
             if payload is not None:
@@ -254,14 +264,20 @@ class ProductChange(models.Model):
                     sender=None,
                     event_name='alert_created',
                     payload=payload,
-                    user=user
+                    user=self.user
                 )
 
-    # send product change data to subscription hooks
-    # sent data should have same structure as response data from fallback api endpoints
-    # zapier_core.serializers.ProductChangeSerializer uses this method
-    # zapier_core.views.ZapierSampleList uses this method
     def to_dict(self, product_data, category, change_index):
+        """ Return Product Change formatted for Zapier Subscription Hooks
+
+        Because the Zapier hook data should have same structure as in response from fallback API endpoints
+
+        Used in:
+            zapier_core.serializers.ProductChangeSerializer
+            zapier_core.views.ZapierSampleList
+
+        """
+
         ret = {
             'product_id': self.product.id,
             'store_type': self.store_type,
@@ -269,6 +285,7 @@ class ProductChange(models.Model):
             'product_title': self.product.title,
             'store_title': self.product.store.title,
         }
+
         changes = self.get_data(category)
         if changes and len(changes):
             change = changes[change_index]
@@ -277,12 +294,14 @@ class ProductChange(models.Model):
                 ships_from_id = change.get('ships_from_id')
                 ships_from_title = change.get('ships_from_title')
                 idx = variant_index(self.product, change.get('sku'), variants, ships_from_id, ships_from_title)
+
                 if variants is not None and idx is not None:
                     change['variant_id'] = product_data['variants'][idx]['id']
                     title = product_data['variants'][idx].get('title')
                     if title is None:
                         title = ' / '.join(product_data['variants'][idx].get('variant', []))
                     change['variant_title'] = title
+
                 if variants is None and idx is not None:
                     change['variant_id'] = idx
                     variants_map = self.product.get_variant_mapping(for_extension=True)
@@ -296,11 +315,13 @@ class ProductChange(models.Model):
         return None
 
     def send_hook_event(self, product_data):
-        # Events are filtered in zapier_core.tasks.deliver_hook_wrapper.
-        # Query params of hook's target url are used to filter events to be triggered.
-        # Following url is hook's target url to get specific event for one shopify product
-        # https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
-        user = self.user
+
+        # Check if the user have any registered Hook before triggering the raw hook signal
+        # This reduce the database call significantly because it check first if the user have (in general) any webhooks
+        # Otherwise rest_hook will make a database call for each variant change
+        if not Hook.objects.filter(user=self.user).exists():
+            return
+
         for category in settings.PRICE_MONITOR_EVENTS.keys():
             changes = self.get_data(category)
             for i, change in enumerate(changes):
@@ -310,7 +331,7 @@ class ProductChange(models.Model):
                         sender=None,
                         event_name=category,
                         payload=payload,
-                        user=user
+                        user=self.user
                     )
 
 
