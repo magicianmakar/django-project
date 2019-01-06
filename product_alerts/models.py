@@ -6,13 +6,13 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from rest_hooks.signals import raw_hook_event
-from rest_hooks.models import Hook
 
 from shopified_core.utils import app_link
 from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
-from .utils import parse_sku, variant_index
 from leadgalaxy.templatetags.template_helper import price_diff, money_format
+
+from .utils import parse_sku, variant_index
 
 PRODUCT_CHANGE_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -251,12 +251,6 @@ class ProductChange(models.Model):
         https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
         """
 
-        # Check if the user have any registered Hook before triggering the raw hook signal
-        # This reduce the database call significantly because it check first if the user have (in general) any webhooks
-        # Otherwise rest_hook will make a database call for each variant change
-        if not Hook.objects.filter(user=self.user).exists():
-            return
-
         for category in settings.PRICE_MONITOR_EVENTS.keys():
             payload = self.to_alert(category)
             if payload is not None:
@@ -315,13 +309,6 @@ class ProductChange(models.Model):
         return None
 
     def send_hook_event(self, product_data):
-
-        # Check if the user have any registered Hook before triggering the raw hook signal
-        # This reduce the database call significantly because it check first if the user have (in general) any webhooks
-        # Otherwise rest_hook will make a database call for each variant change
-        if not Hook.objects.filter(user=self.user).exists():
-            return
-
         for category in settings.PRICE_MONITOR_EVENTS.keys():
             changes = self.get_data(category)
             for i, change in enumerate(changes):

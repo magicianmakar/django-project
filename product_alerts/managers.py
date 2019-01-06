@@ -8,6 +8,7 @@ from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index, calculate_price
 from product_alerts.models import ProductVariantPriceHistory
+from zapier_core.utils import user_have_hooks
 
 
 class ProductChangeManager():
@@ -69,8 +70,12 @@ class ProductChangeManager():
         try:
             product_data = self.get_product_data()
 
-            self.product_change.send_hook_event(product_data)
-            self.product_change.send_hook_event_alert()
+            # Check if the user have any registered Hook before triggering the raw hook signal
+            # This reduce the database call significantly because it check first if the user have (in general) any webhooks
+            # Otherwise rest_hook will make a database call for each variant change
+            if user_have_hooks(self.user):
+                self.product_change.send_hook_event(product_data)
+                self.product_change.send_hook_event_alert()
 
             if not self.need_update():
                 # No need to check for updates, the user doesn't have any setting that will require a product update

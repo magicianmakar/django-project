@@ -10,11 +10,10 @@ import simplejson as json
 
 from elasticsearch import Elasticsearch
 
-from rest_hooks.models import Hook
-
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 from shopified_core.utils import OrderErrors, delete_model_from_db
 from shopified_core.shipping_helper import country_from_code
+from zapier_core.utils import user_have_hooks
 
 from zapier_core.utils import send_shopify_order_event
 
@@ -193,7 +192,7 @@ def update_shopify_order(store, data, sync_check=True):
         }
     )
 
-    if Hook.objects.filter(user=store.user).exists():
+    if user_have_hooks(store.user):
         if created:
             send_shopify_order_event('shopify_order_created', store, data)
         else:
