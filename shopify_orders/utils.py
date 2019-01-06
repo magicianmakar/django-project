@@ -10,6 +10,8 @@ import simplejson as json
 
 from elasticsearch import Elasticsearch
 
+from rest_hooks.models import Hook
+
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 from shopified_core.utils import OrderErrors, delete_model_from_db
 from shopified_core.shipping_helper import country_from_code
@@ -190,13 +192,15 @@ def update_shopify_order(store, data, sync_check=True):
             'cancelled_at': get_datetime(data['cancelled_at']),
         }
     )
-    if created:
-        send_shopify_order_event('shopify_order_created', store, data)
-    else:
-        if not is_cancelled and order.is_cancelled:
-            send_shopify_order_event('shopify_order_cancelled', store, data)
-        if financial_status != order.financial_status or fulfillment_status != order.fulfillment_status:
-            send_shopify_order_event('shopify_order_status_changed', store, data)
+
+    if Hook.objects.filter(user=store.user).exists():
+        if created:
+            send_shopify_order_event('shopify_order_created', store, data)
+        else:
+            if not is_cancelled and order.is_cancelled:
+                send_shopify_order_event('shopify_order_cancelled', store, data)
+            if financial_status != order.financial_status or fulfillment_status != order.fulfillment_status:
+                send_shopify_order_event('shopify_order_status_changed', store, data)
 
     connected_items = 0
     need_fulfillment = len(data.get('line_items', []))
