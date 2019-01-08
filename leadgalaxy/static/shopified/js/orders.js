@@ -260,33 +260,25 @@ function placeOrder(e) {
     e.preventDefault();
 
     var btn = $(e.target);
+    btn.button('loading');
 
-    swal({
-        title: "Place Order",
-        text: "Do you want to order this item?",
-        type: "warning",
-        showCancelButton: true,
-        closeOnConfirm: false,
-        showLoaderOnConfirm: true,
-        confirmButtonText: "Place Order",
-        animation: "slide-from-top",
-    }, function() {
-        $.ajax({
-            url: '/api/order-place',
-            type: 'POST',
-            data: {
-                'store': btn.attr('store'),
-                'order_id': btn.attr('order-id'),
-                'line_id': btn.attr('line-id'),
-            },
-        }).done(function(data) {
-            swal.close();
-            toastr.success('Item was ordered.', 'Order Placed');
-            // btn.hide();
+    $.ajax({
+        url: '/api/order-place',
+        type: 'POST',
+        data: {
+            'store': btn.attr('store'),
+            'order_id': btn.attr('order-id'),
+            'line_id': btn.attr('line-id'),
+        },
+    }).done(function(data) {
+        swal.close();
+        toastr.success('Item added to orders queue', 'Order Placed');
+        // btn.hide();
 
-        }).fail(function(data) {
-            displayAjaxError('Place Order', data);
-        });
+    }).fail(function(data) {
+        displayAjaxError('Place Order', data);
+    }).always(function() {
+        btn.button('reset');
     });
 }
 
@@ -1259,16 +1251,16 @@ function pusherSub() {
     channel.bind('order-status-update', function(data) {
         $.each(data.orders, function(i, order) {
             var orderEl = $('.order[order-id="' + order.order_id + '"]');
-            if (!orderEl.length) {
-                return;
+            if (orderEl.length) {
+                if (order.line_id) {
+                    var lineEl = orderEl.find('.line[line-id=' + order.line_id + ']');
+                    // lineEl.find('.order-line-group').hide();
+                    // lineEl.find('.order-all').parent().hide();
+                    // lineEl.find('.track-details').show();
+
+                    lineEl.find('.place-order').addClass('btn-outline').text(order.status);
+                }
             }
-
-            orderEl.find('.order-line-group').hide();
-            // orderEl.find('.order-all').parent().hide();
-            // orderEl.find('.track-details').show();
-
-            orderEl.find('.place-order' + (order.line_id ? '[line-id=' + order.line_id + ']' : '')).attr('disabled', 'disabled')
-                .text(order.status);
         });
     });
 
