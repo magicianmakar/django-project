@@ -19,6 +19,7 @@ from django.utils import timezone
 from django.views.generic import View
 
 from raven.contrib.django.raven_compat.models import client as raven_client
+from app.celery import celery_app
 from last_seen.models import LastSeen
 from youtube_ads.models import VideosList
 
@@ -3296,6 +3297,42 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success({
             'email': user.email
         })
+
+    def post_products_supplier_sync(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        user_store_supplier_sync_key = 'user_store_supplier_sync_{}_{}'.format(user.id, store.id)
+        if cache.get(user_store_supplier_sync_key) is not None:
+            return self.api_error('Sync in progress', status=404)
+
+        sync_price = data.get('sync_price', False)
+        price_markup = utils.safeFloat(data['price_markup'])
+        compare_markup = utils.safeFloat(data['compare_markup'])
+        sync_inventory = data.get('sync_inventory', False)
+
+        task = tasks.products_supplier_sync.apply_async(
+            args=[store.id, sync_price, price_markup, compare_markup, sync_inventory, user_store_supplier_sync_key], expires=180)
+        cache.set(user_store_supplier_sync_key, task.id, timeout=3600 * 60)
+        return self.api_success({'task': task.id})
+
+    def post_products_supplier_sync_stop(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        user_store_supplier_sync_key = 'user_store_supplier_sync_{}_{}'.format(user.id, store.id)
+        task_id = cache.get(user_store_supplier_sync_key)
+        if task_id is not None:
+            celery_app.control.revoke(task_id, terminate=True)
+            cache.delete(user_store_supplier_sync_key)
+            return self.api_success()
+        return self.api_error('No Sync in progress', status=404)
 
     def post_auto_order_status(self, request, user, data):
         try:

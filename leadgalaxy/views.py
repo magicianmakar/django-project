@@ -69,7 +69,7 @@ from stripe_subscription.utils import (
     get_stripe_invoice_list,
 )
 
-from product_alerts.utils import variant_index, delete_product_monitor
+from product_alerts.utils import variant_index_from_supplier_sku, delete_product_monitor
 
 from profit_dashboard.models import FacebookAccess
 
@@ -4291,7 +4291,7 @@ def product_alerts(request):
         variants = product_variants.get(str(i.product.get_shopify_id()), None)
         if variants is not None:
             for c in changes_map['variants']['quantity']:
-                index = variant_index(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
                 if index is not None:
                     inventory_item_id = variants[index]['inventory_item_id']
                     if variants[index]['inventory_management'] == 'shopify' and inventory_item_id not in inventory_item_ids:
@@ -4314,7 +4314,7 @@ def product_alerts(request):
         variants = product_variants.get(str(i.product.get_shopify_id()), None)
         for c in change['changes']['variants']['quantity']:
             if variants is not None:
-                index = variant_index(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
                 if index is not None:
                     if variants[index]['inventory_management'] == 'shopify':
                         quantity = variant_quantities.get(str(variants[index]['inventory_item_id']), None)
@@ -4327,7 +4327,7 @@ def product_alerts(request):
                 c['shopify_value'] = "Not Found"
         for c in change['changes']['variants']['price']:
             if variants is not None:
-                index = variant_index(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
                 if index is not None:
                     c['shopify_value'] = variants[index]['price']
                 else:

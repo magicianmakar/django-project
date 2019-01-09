@@ -2,9 +2,9 @@ from lib.test import BaseTestCase
 from mock import patch
 
 from ..utils import (
-    aliexpress_variants,
+    get_supplier_variants,
     monitor_product,
-    variant_index
+    variant_index_from_supplier_sku
 )
 from leadgalaxy import utils
 from leadgalaxy.models import ShopifyProduct, ProductSupplier
@@ -18,9 +18,9 @@ class UtilTestCase(BaseTestCase):
         self.monitor_id = 1
 
     @patch('product_alerts.utils.requests.get')
-    def test_aliexpress_variants(self, mock_get):
+    def test_get_supplier_variants(self, mock_get):
         mock_get.return_value.json.return_value = ['test variant']
-        variants = aliexpress_variants(self.product_id)
+        variants = get_supplier_variants('aliexpress', self.product_id)
         self.assertEqual(len(variants), 1)
 
     @patch('product_alerts.utils.requests.post')
@@ -52,20 +52,20 @@ class UtilTestCase(BaseTestCase):
 
         # If a shopify variant was not mapped with a specific aliexpress variant,
         # "ships from" country for the shopify variant is China
-        index = variant_index(product, '14:1254#Sky Blue;5:361385#L;200007763:201336100#China', variants, '201336100', 'China')
+        index = variant_index_from_supplier_sku(product, '14:1254#Sky Blue;5:361385#L;200007763:201336100#China', variants, '201336100', 'China')
         self.assertIsNotNone(index)
         variant = variants[index]
         self.assertEqual(variants[index]['option1'], 'Sky Blue')
         self.assertEqual(variants[index]['option2'], 'L')
 
         # Couldn't find a variant mapped with Russian variants
-        index = variant_index(product, '14:1254#Sky Blue;5:361385#L;200007763:201336103#Russian Federation', variants, '201336103', 'Russian Federation')
+        index = variant_index_from_supplier_sku(product, '14:1254#Sky Blue;5:361385#L;200007763:201336103#Russian Federation', variants, '201336103', 'Russian Federation')
         self.assertIsNone(index)
 
         supplier = ProductSupplier.objects.get(pk=8)
         product.set_default_supplier(supplier)
         # Sky Blue/L variant was mapped to a variant shipped from Russia
-        index = variant_index(product, '14:1254#Sky Blue;5:361385#L;200007763:201336103#Russian Federation', variants, '201336103', 'Russian Federation')
+        index = variant_index_from_supplier_sku(product, '14:1254#Sky Blue;5:361385#L;200007763:201336103#Russian Federation', variants, '201336103', 'Russian Federation')
         self.assertIsNotNone(index)
         self.assertEqual(variants[index]['option1'], 'Sky Blue')
         self.assertEqual(variants[index]['option2'], 'L')

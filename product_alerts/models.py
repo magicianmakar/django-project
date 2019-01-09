@@ -10,9 +10,8 @@ from rest_hooks.signals import raw_hook_event
 from shopified_core.utils import app_link
 from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
+from .utils import parse_supplier_sku, variant_index_from_supplier_sku
 from leadgalaxy.templatetags.template_helper import price_diff, money_format
-
-from .utils import parse_sku, variant_index
 
 PRODUCT_CHANGE_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -82,7 +81,7 @@ class ProductChange(models.Model):
         for idx, change in enumerate(changes):
             sku = change.get('sku')
             if sku:
-                options = parse_sku(sku)
+                options = parse_supplier_sku(sku)
                 sku = ' / '.join(option.get('option_title', '') for option in options)
                 changes[idx]['sku_readable'] = sku
 
@@ -287,8 +286,7 @@ class ProductChange(models.Model):
                 variants = product_data.get('variants', None)
                 ships_from_id = change.get('ships_from_id')
                 ships_from_title = change.get('ships_from_title')
-                idx = variant_index(self.product, change.get('sku'), variants, ships_from_id, ships_from_title)
-
+                idx = variant_index_from_supplier_sku(self.product, change.get('sku'), variants, ships_from_id, ships_from_title)
                 if variants is not None and idx is not None:
                     change['variant_id'] = product_data['variants'][idx]['id']
                     title = product_data['variants'][idx].get('title')

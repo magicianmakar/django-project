@@ -43,7 +43,10 @@ from shopify_orders import utils as order_utils
 
 from product_alerts.models import ProductChange
 from product_alerts.managers import ProductChangeManager
-from product_alerts.utils import aliexpress_variants, variant_index
+from product_alerts.utils import (
+    get_supplier_variants,
+    variant_index_from_supplier_sku,
+)
 
 from product_feed.feed import (
     generate_product_feed,
@@ -488,7 +491,7 @@ def sync_shopify_product_quantities(self, product_id):
         if not product.default_supplier.is_aliexpress:
             return
 
-        variant_quantities = aliexpress_variants(product.default_supplier.get_source_id())
+        variant_quantities = get_supplier_variants(product.default_supplier.supplier_type(), product.default_supplier.get_source_id())
 
         if product_data and variant_quantities:
             for variant in variant_quantities:
@@ -501,7 +504,7 @@ def sync_shopify_product_quantities(self, product_id):
                     else:
                         continue
                 else:
-                    idx = variant_index(product, sku, product_data['variants'], ships_from_id, ships_from_title)
+                    idx = variant_index_from_supplier_sku(product, sku, product_data['variants'], ships_from_id, ships_from_title)
                     if idx is None:
                         if len(product_data['variants']) == 1 and len(variant_quantities) == 1:
                             idx = 0
@@ -1217,6 +1220,136 @@ def product_price_trends(self, store_id, product_variants):
             'task': self.request.id,
             'trends': trends,
         })
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def products_supplier_sync(self, store_id, sync_price, price_markup, compare_markup, sync_inventory, cache_key):
+    store = ShopifyStore.objects.get(id=store_id)
+
+    products = ShopifyProduct.objects.filter(user=store.user, store=store, shopify_id__gt=0)
+    total_count = 0
+    for product in products:
+        if product.have_supplier() and product.default_supplier.is_aliexpress:
+            total_count += 1
+
+    push_data = {
+        'task': self.request.id,
+        'count': total_count,
+        'success': 0,
+        'fail': 0,
+    }
+    store.pusher_trigger('products-supplier-sync', push_data)
+
+    for product in products:
+        if not product.have_supplier() or not product.default_supplier.is_aliexpress:
+            continue
+
+        supplier = product.default_supplier
+        push_data['id'] = product.id
+        push_data['title'] = product.title
+        push_data['shopify_link'] = product.shopify_link()
+        push_data['supplier_link'] = supplier.product_url
+        push_data['status'] = 'ok'
+        push_data['error'] = None
+
+        try:
+            # Fetch supplier variants
+            supplier_variants = get_supplier_variants(supplier.supplier_type(), supplier.get_source_id())
+
+            supplier_prices = [v['price'] for v in supplier_variants]
+            supplier_min_price = min(supplier_prices)
+            supplier_max_price = max(supplier_prices)
+        except Exception:
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to load supplier data'
+            push_data['fail'] += 1
+            store.pusher_trigger('products-supplier-sync', push_data)
+            continue
+
+        try:
+            # Fetch shopify variants
+            product_data = utils.get_shopify_product(store, product.shopify_id)
+        except Exception:
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to load shopify data'
+            push_data['fail'] += 1
+            store.pusher_trigger('products-supplier-sync', push_data)
+            continue
+
+        try:
+            # Check if there's only one price
+            seem_price = (len('variants') == 1 or
+                          len(set([v['price'] for v in product_data['variants']])) == 1 or
+                          len(supplier_variants) == 1 or
+                          supplier_min_price == supplier_max_price)
+
+            # New Data
+            api_variants_data = [{'id': v['id']} for v in product_data['variants']]
+            updated = False
+            mapped_variants = {}
+            unmapped_variants = []
+
+            if sync_price and seem_price:
+                # Use one price for all variants
+                for i, variant in enumerate(product_data['variants']):
+                    api_variants_data[i]['price'] = round(supplier_max_price * (100 + price_markup) / 100.0, 2)
+                    api_variants_data[i]['compare_at_price'] = round(api_variants_data[i]['price'] * (100 + compare_markup) / 100.0, 2)
+                    updated = True
+
+            if (sync_price and not seem_price) or sync_inventory:
+                for variant in supplier_variants:
+                    sku = variant.get('sku')
+                    ships_from_id = variant.get('ships_from_id')
+                    ships_from_title = variant.get('ships_from_title')
+                    if not sku:
+                        if len(product_data['variants']) == 1 and len(supplier_variants) == 1:
+                            idx = 0
+                        else:
+                            continue
+                    else:
+                        idx = variant_index_from_supplier_sku(product, sku, product_data['variants'], ships_from_id, ships_from_title)
+                        if idx is None:
+                            if len(product_data['variants']) == 1 and len(supplier_variants) == 1:
+                                idx = 0
+                            else:
+                                continue
+
+                    mapped_variants[str(product_data['variants'][idx]['id'])] = True
+                    # Sync price
+                    if sync_price and not seem_price:
+                        api_variants_data[i]['price'] = round(supplier_variants[idx]['price'] * (100 + price_markup) / 100.0, 2)
+                        api_variants_data[i]['compare_at_price'] = round(api_variants_data[idx]['price'] * (100 + compare_markup) / 100.0, 2)
+                        updated = True
+                    # Sync inventory
+                    if sync_inventory:
+                        product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
+                        time.sleep(0.5)
+
+                # check unmapped variants
+                for variant in product_data['variants']:
+                    if not mapped_variants.get(str(variant['id']), False):
+                        unmapped_variants.append(variant['title'])
+
+            if updated:
+                update_endpoint = product.store.get_link('/admin/products/{}.json'.format(product.shopify_id), api=True)
+                rep = requests.put(update_endpoint, json={
+                    "product": {
+                        "id": product_data['id'],
+                        "variants": api_variants_data,
+                    }
+                })
+                rep.raise_for_status()
+            if len(unmapped_variants) > 0:
+                push_data['error'] = 'Warning - Unmapped: {}'.format(','.join(unmapped_variants))
+            push_data['success'] += 1
+        except Exception:
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to update data'
+            push_data['fail'] += 1
+
+        store.pusher_trigger('products-supplier-sync', push_data)
+
+    cache.delete(cache_key)
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)

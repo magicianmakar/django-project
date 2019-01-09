@@ -6,7 +6,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from shopified_core.utils import app_link, safeFloat, http_exception_response, http_excption_status_code
 from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import get_shopify_product
-from product_alerts.utils import variant_index, calculate_price
+from product_alerts.utils import variant_index_from_supplier_sku, calculate_price
 from product_alerts.models import ProductVariantPriceHistory
 from zapier_core.utils import user_have_hooks
 
@@ -84,15 +84,12 @@ class ProductChangeManager():
                 return
 
             if product_data:
-                product_change_data = self.apply_product_changes(product_data)
-                if product_change_data:  # Do we have any change on the product level?
-                    product_data = product_change_data
-
-            if product_data:
+                self.product_data_changed = False
+                product_data = self.apply_product_changes(product_data)
                 product_data = self.apply_variant_changes(product_data)
 
-            if product_data:
-                self.update_product(product_data)
+                if self.product_data_changed:
+                    self.update_product(product_data)
 
             self.product_change.status = 1  # Applied
             self.product_change.save()
@@ -144,7 +141,7 @@ class ProductChangeManager():
         sku = variant_change.get('sku')
         ships_from_id = variant_change.get('ships_from_id')
         ships_from_title = variant_change.get('ships_from_title')
-        return variant_index(self.product, sku, product_data.get('variants', []), ships_from_id, ships_from_title)
+        return variant_index_from_supplier_sku(self.product, sku, product_data.get('variants', []), ships_from_id, ships_from_title)
 
     def handle_variant_price_change(self, product_data, variant_change):
         idx = self.get_variant(product_data, variant_change)
@@ -155,10 +152,7 @@ class ProductChangeManager():
         new_value = variant_change.get('new_value')
         old_value = variant_change.get('old_value')
 
-        if self.config['price_change'] == 'notify':
-            return None
-
-        elif self.config['price_change'] == 'update':
+        if self.config['price_change'] == 'update':
             if idx is not None:
                 current_price = safeFloat(product_data['variants'][idx]['price'])
                 current_compare_at_price = safeFloat(product_data['variants'][idx].get('compare_at_price'))
@@ -174,10 +168,12 @@ class ProductChangeManager():
                 )
                 if new_price:
                     if self.config['price_update_for_increase']:
-                        if new_price >= current_price:
+                        if new_price > current_price:
+                            self.product_data_changed = True
                             product_data['variants'][idx]['price'] = new_price
                             product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
                     else:
+                        self.product_data_changed = True
                         product_data['variants'][idx]['price'] = new_price
                         product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
 
@@ -203,6 +199,7 @@ class ProductChangeManager():
             'removed': [],
             'added': [],
         }
+
         if self.product_change.store_type == 'shopify':
             common_data = {
                 'images': self.product.get_images(),
@@ -210,13 +207,14 @@ class ProductChangeManager():
                 'url': app_link('product', self.product.id),
                 'target_url': self.product.store.get_link('/admin/products/{}'.format(self.product.get_shopify_id())),
             }
-        if self.product_change.store_type == 'chq':
+        elif self.product_change.store_type == 'chq':
             common_data = {
                 'images': [self.product.get_image()],
                 'title': self.product.title,
                 'url': app_link('chq/product', self.product.id),
                 'target_url': self.product.commercehq_url,
             }
+
         if self.product_changes:
             for product_change in self.product_changes:
                 if product_change.get('name') == 'offline' and self.config['product_disappears'] == 'notify':
@@ -232,28 +230,36 @@ class ProductChangeManager():
             old_quantities = []
             added_variants = []
             removed_variants = []
+
             for variant_change in self.variant_changes:
                 if variant_change.get('name') == 'price':
                     new_prices.append(variant_change['new_value'])
                     old_prices.append(variant_change['old_value'])
+
                 if variant_change.get('name') == 'quantity':
                     new_quantities.append(variant_change['new_value'])
                     old_quantities.append(variant_change['old_value'])
+
                 if variant_change.get('name') == 'var_added':
                     added_variants.append(variant_change['sku'])
+
                 if variant_change.get('name') == 'var_removed':
                     removed_variants.append(variant_change['sku'])
+
             if self.config['variant_disappears'] == 'notify' and len(removed_variants):
                 changes_map['removed'].append(dict({
                     'variants': removed_variants
                 }, **common_data))
+
             if self.config['variant_disappears'] == 'notify' and len(added_variants):
                 changes_map['added'].append(dict({
                     'variants': added_variants
                 }, **common_data))
+
             if self.config['price_change'] == 'notify':
                 new_prices = list(set(new_prices))
                 old_prices = list(set(old_prices))
+
                 if len(new_prices):
                     from_range = '${:.02f} - ${:.02f}'.format(min(old_prices), max(old_prices))
                     to_range = '${:.02f} - ${:.02f}'.format(min(new_prices), max(new_prices))
@@ -267,6 +273,7 @@ class ProductChangeManager():
             if self.config['quantity_change'] == 'notify':
                 new_quantities = list(set(new_quantities))
                 old_quantities = list(set(old_quantities))
+
                 if len(new_quantities):
                     changes_map['quantity'].append(dict({
                         'from': '{}'.format(old_quantities[0]) if len(old_quantities) == 1 else '{} - {}'.format(
@@ -279,6 +286,7 @@ class ProductChangeManager():
                         ),
                         'increase': max(new_quantities) > max(old_quantities)
                     }, **common_data))
+
         return changes_map
 
 
@@ -287,33 +295,31 @@ class ShopifyProductChangeManager(ProductChangeManager):
         return get_shopify_product(self.product.store, self.product.shopify_id)
 
     def handle_product_disappear(self, product_data):
-        if self.config['product_disappears'] == 'notify':
-            return None
-        elif self.config['product_disappears'] == 'unpublish':
+        if self.config['product_disappears'] == 'unpublish':
+            self.product_data_changed = True
             product_data['published'] = False
         elif self.config['product_disappears'] == 'zero_quantity':
             for idx, variant in enumerate(product_data.get('variants', [])):
                 if variant.get('id'):
+                    self.product_data_changed = True
                     self.product.set_variant_quantity(quantity=0, variant_id=variant['id'], variant=variant)
 
         return product_data
 
     def handle_product_appear(self, product_data):
-        if self.config['product_disappears'] == 'notify':
-            return None
-        elif self.config['product_disappears'] == 'unpublish':
+        if self.config['product_disappears'] == 'unpublish':
+            self.product_data_changed = True
             product_data['published'] = True
         elif self.config['product_disappears'] == 'zero_quantity':
-            return None
+            pass
 
         return product_data
 
     def handle_variant_quantity_change(self, product_data, variant_change):
-        if self.config['quantity_change'] == 'notify':
-            return None
-        elif self.config['quantity_change'] == 'update':
+        if self.config['quantity_change'] == 'update':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
+                self.product_data_changed = True
                 self.product.set_variant_quantity(
                     quantity=variant_change.get('new_value'),
                     variant_id=product_data['variants'][idx]['id'],
@@ -324,33 +330,19 @@ class ShopifyProductChangeManager(ProductChangeManager):
 
     def handle_variant_added(self, product_data, variant_change):
         # TODO: Handle this case (Add setting, update logic...)
-        return None  # This case is not covered with a setting
-
-        idx = self.get_variant(product_data, variant_change)
-        if idx is None:
-            variant = {}
-            variant['sku'] = variant_change.get('sku')
-            variant['price'] = variant_change.get('price')
-            # TODO: shopify location support
-            variant['inventory_quantity'] = variant_change.get('quantity')
-            variant['inventory_management'] = 'shopify'
-            variant['inventory_policy'] = 'deny'
-            if product_data.get('variants') is None:
-                product_data['variants'] = []
-            product_data['variants'].append(variant)
-
+        # This case is not covered with a setting
         return product_data
 
     def handle_variant_removed(self, product_data, variant_change):
-        if self.config['variant_disappears'] == 'notify':
-            return None
-        elif self.config['variant_disappears'] == 'remove':
+        if self.config['variant_disappears'] == 'remove':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
+                self.product_data_changed = True
                 del product_data['variants'][idx]
         elif self.config['variant_disappears'] == 'zero_quantity':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
+                self.product_data_changed = True
                 self.product.set_variant_quantity(
                     quantity=0,
                     variant_id=product_data['variants'][idx]['id'],
@@ -387,6 +379,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
             shopify_product=self.product,
             variant_id=variant_id
         )
+
         history.add_price(variant_change.get('new_value'), variant_change.get('old_value'))
 
 
@@ -395,64 +388,50 @@ class CommerceHQProductChangeManager(ProductChangeManager):
         return self.product.retrieve()
 
     def handle_product_disappear(self, product_data):
-        if self.config['product_disappears'] == 'notify':
-            return None
-        elif self.config['product_disappears'] == 'unpublish':
+        if self.config['product_disappears'] == 'unpublish':
+            self.product_data_changed = True
             product_data['is_draft'] = True
         elif self.config['product_disappears'] == 'zero_quantity':
             # TODO: set quantity to zero
-            return None
+            pass
 
         return product_data
 
     def handle_product_appear(self, product_data):
-        if self.config['product_disappears'] == 'notify':
-            return None
-        elif self.config['product_disappears'] == 'unpublish':
+        if self.config['product_disappears'] == 'unpublish':
+            self.product_data_changed = True
             product_data['is_draft'] = False
         elif self.config['product_disappears'] == 'zero_quantity':
-            return None
+            pass
 
         return product_data
 
     def handle_variant_quantity_change(self, product_data, variant_change):
-        if self.config['quantity_change'] == 'notify':
-            return None
-        elif self.config['quantity_change'] == 'update':
+        if self.config['quantity_change'] == 'update':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
                 # TODO: update quantity
-                return None
+                pass
 
         return product_data
 
     def handle_variant_added(self, product_data, variant_change):
-        return None  # This case is not covered with a setting
-
-        idx = self.get_variant(product_data, variant_change)
-        if idx is None:
-            variant = {}
-            variant['sku'] = variant_change.get('sku')
-            variant['price'] = variant_change.get('price')
-            # TODO: set quantity
-            if product_data.get('variants') is None:
-                product_data['variants'] = []
-            product_data['variants'].append(variant)
-
+        # TODO: Handle this case (Add setting, update logic...)
+        # This case is not covered with a setting
         return product_data
 
     def handle_variant_removed(self, product_data, variant_change):
-        if self.config['variant_disappears'] == 'notify':
-            return None
         if self.config['variant_disappears'] == 'remove':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
+                self.product_data_changed = True
                 del product_data['variants'][idx]
-        if self.config['variant_disappears'] == 'zero_quantity':
+
+        elif self.config['variant_disappears'] == 'zero_quantity':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
                 # TODO: set quantity to zero
-                return None
+                pass
 
         return product_data
 
@@ -489,4 +468,5 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             chq_product=self.product,
             variant_id=variant_id
         )
+
         history.add_price(variant_change.get('new_value'), variant_change.get('old_value'))

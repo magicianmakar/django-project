@@ -6,8 +6,9 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from shopified_core.utils import app_link, url_join, safeFloat, safeInt
 
 
-def aliexpress_variants(product_id):
-
+def get_supplier_variants(supplier_type, product_id):
+    if supplier_type != 'aliexpress':
+        return []
     rep = requests.get(
         url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products', product_id, '/variants'),
         auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
@@ -157,7 +158,7 @@ def monitor_product(product, stdout=None):
         return
 
 
-def parse_sku(sku):
+def parse_supplier_sku(sku):
     options = []
     if sku:
         for s in sku.split(';'):
@@ -169,12 +170,23 @@ def parse_sku(sku):
     return options
 
 
-def variant_index(product, sku, variants=None, ships_from_id=None, ships_from_title=None):
+def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=None, ships_from_title=None):
     original_sku = sku or ''
     found_variant_id = None
     variants_map = product.get_variant_mapping(for_extension=True)
 
-    options = parse_sku(sku)
+    if not sku:
+        if variants is None:
+            if len(variants_map) == 1:
+                return variants_map.keys()[0]
+            else:
+                return None
+        elif len(variants) == 1:
+            return 0
+        else:
+            return None
+
+    options = parse_supplier_sku(sku)
     sku = ';'.join('{}:{}'.format(option['option_group'], option['option_id']) for option in options)
 
     for variant_id, variant in variants_map.iteritems():

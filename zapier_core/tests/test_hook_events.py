@@ -1,10 +1,10 @@
 import simplejson as json
 import mock
-import requests
 from mock import patch, ANY
 
-from django.test import TestCase, RequestFactory, tag
+from django.test import RequestFactory, tag
 from django.contrib.auth.models import User
+from django.core.cache import cache
 
 from rest_hooks.models import Hook
 
@@ -31,6 +31,7 @@ class HookEventsTestCase(BaseTestCase):
     def setUp(self):
         self.factory = RequestFactory()
         self.user = User.objects.get(pk=1)
+        cache.delete_pattern('*')
 
     @tag('slow')
     @mock.patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
@@ -50,7 +51,6 @@ class HookEventsTestCase(BaseTestCase):
             headers=ANY,
         )
 
-
     @mock.patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
     @patch('requests.post')
     def test_deliver_hook_alert(self, requests_post, deliver):
@@ -67,7 +67,6 @@ class HookEventsTestCase(BaseTestCase):
             headers=ANY,
         )
 
-
     @tag('slow')
     @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     @patch('zapier_core.tasks.deliver_hook.apply_async')
@@ -83,7 +82,7 @@ class HookEventsTestCase(BaseTestCase):
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         variant = shopify_product['variants'][0]
         price = round(float(variant['price']), 2)
-        
+
         new_value = price + 5
         old_value = price
         product_changes.append({
@@ -100,5 +99,4 @@ class HookEventsTestCase(BaseTestCase):
         )
         response = webhook(request, 'price-monitor', None)
         self.assertEqual(response.status_code, 200)
-        product_change = ProductChange.objects.latest('id')
         deliver_hook.assert_called_once_with(args=[hook.target, ANY, None, hook.id])
