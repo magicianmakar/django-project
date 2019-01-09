@@ -1280,9 +1280,7 @@ function pusherSub() {
             orderEl.find('.track-details').addClass('btn-white');
         }
 
-        orderEl.find('.place-order' + (order.line_id ? '[line-id=' + order.line_id + ']' : '')).attr('disabled', 'disabled')
-            .text(order.status)
-            .show();
+        orderEl.find('.track-details').text(order.status).show();
     });
 
     channel.bind('pusher:subscription_succeeded', function() {
