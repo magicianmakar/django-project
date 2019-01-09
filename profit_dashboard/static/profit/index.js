@@ -350,10 +350,6 @@ var Utils = {
             $('#profit-data').css('display', '');
         },
         onOtherCostsChange: function() {
-            $('#profits').on('submit', 'tr .other-costs-form', function(e) {
-                e.preventDefault();
-            });
-
             $('#profits').on('keyup', 'tr [name="other_costs"]', function(e) {
                 if (isNaN(String.fromCharCode(e.which)) && !(e.which == 8 || e.which == 46)) {
                     return;
@@ -427,7 +423,7 @@ var Utils = {
             clearTimeout(ProfitDashboard.otherCostsAjaxTimeout[trId]);
             ProfitDashboard.otherCostsAjaxTimeout[trId] = setTimeout(function() {
                 $.ajax({
-                    url: form.attr('action'),
+                    url: form.attr('data-action'),
                     type: 'POST',
                     data: {
                         amount: amount,

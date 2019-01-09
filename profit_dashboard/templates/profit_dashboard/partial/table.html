@@ -31,7 +31,7 @@
         {% endif %}
         <td class="other-costs" data-original-amount="{{ profit.other_costs|default:'0'|floatformat:2 }}">
           <span class="other-costs-value"></span>
-          <form class="form-inline other-costs-form" action="{% url 'profit_dashboard.views.save_other_costs' %}?store={{ store.id }}">
+          <div class="form-inline other-costs-form" data-action="{% url 'profit_dashboard.views.save_other_costs' %}?store={{ store.id }}">
             <div class="form-group">
               <label class="sr-only" for="other_costs">Amount</label>
               <div class="input-group">
@@ -48,7 +48,7 @@
                   <div class="sk-rect5"></div>
               </div>
             </div>
-          </form>
+          </div>
         </td>
         <td class="total-costs">
           {% money_format None store %}<span data-original-amount="{{ profit.outcome|default:"0"|floatformat:2 }}">{{ profit.outcome|default:"0"|floatformat:2 }}</span>
