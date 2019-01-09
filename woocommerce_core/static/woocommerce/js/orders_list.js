@@ -571,9 +571,9 @@ function updateOrderedStatus(line) {
     if (ordered === 0) {
         order_status.html('<span class="badge badge-danger primary">&nbsp;</span> No Products Ordered');
     } else if (ordered != order_items) {
-        order_status.html('<span class="badge badge-warning primary">&nbsp;</span> Partially Ordered');
+        order_status.html('<span class="badge badge-warning primary">&nbsp;</span> Processing (Partially Ordered)');
     } else {
-        order_status.html('<span class="badge badge-primary completed-order">&nbsp;</span> Order Complete');
+        order_status.html('<span class="badge">&nbsp;</span> Processing');
     }
 }
 

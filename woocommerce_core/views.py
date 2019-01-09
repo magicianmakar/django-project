@@ -542,6 +542,7 @@ class OrdersList(ListView):
             order['store'] = store
             order['placed_orders'] = 0
             order['connected_lines'] = 0
+            order['tracked_lines'] = 0
             order['items'] = order.pop('line_items')
             order['lines_count'] = len(order['items'])
             order['has_shipping_address'] = any(order['shipping'].values())
@@ -572,6 +573,13 @@ class OrdersList(ListView):
 
                 key = '{}_{}_{}'.format(order['id'], item['id'], item['product_id'])
                 item['order_track'] = order_track_by_item.get(key)
+                if item['order_track']:
+                    order['tracked_lines'] += 1
+
+            if order['tracked_lines'] != 0 and \
+                    order['tracked_lines'] < order['lines_count'] and \
+                    order['placed_orders'] < order['lines_count']:
+                order['partially_ordered'] = True
 
         caches['orders'].set_many(orders_cache, timeout=21600)
 
