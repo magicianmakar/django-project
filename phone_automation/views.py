@@ -2,8 +2,8 @@
 # from __future__ import unicode_literals
 import json
 import mimetypes
-from datetime import datetime
-import datetime as dt
+from datetime import datetime, timedelta
+
 
 from django.conf import settings
 from django.contrib import messages
@@ -176,7 +176,7 @@ def provision_release(request):
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
     twilio_phone_number = request.user.models_user.twilio_phone_number
-    removal_avail_date = twilio_phone_number.created_at + dt.timedelta(days=30)
+    removal_avail_date = twilio_phone_number.created_at + timedelta(days=30)
     if not request.user.can('phone_automation_unlimited_phone_numbers.use') and timezone.now() < removal_avail_date:
         messages.error(request, u'You can not remove this phone number until {}'.format(removal_avail_date.strftime("%b %d, %Y")))
         return HttpResponseRedirect(reverse('phone_automation_index'))

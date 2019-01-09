@@ -1,4 +1,4 @@
-from datetime import datetime
+import arrow
 
 from django.db.models import Sum
 from django.conf import settings
@@ -7,7 +7,7 @@ from twilio.rest import Client
 
 
 def get_month_totals(user):
-    date_start = datetime.today().replace(day=1)
+    date_start = arrow.utcnow().replace(day=1).datetime
 
     month_total_duration = user.twilio_logs.filter(
         log_type='status-callback'
