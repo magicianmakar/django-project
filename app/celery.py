@@ -11,11 +11,24 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db import connection
 from raven.contrib.django.raven_compat.models import client as raven_client
 from raven.contrib.celery import register_signal
 
 
-celery_app = Celery('shopified')
+def setup_postgres_timeout(connection, **kwargs):
+    if settings.DATABASE_STATEMENT_TIMEOUT and connection.vendor == 'postgresql':
+        print 'Set Query timeout'
+        with connection.cursor() as cursor:
+            cursor.execute('SET statement_timeout TO {};'.format(settings.DATABASE_STATEMENT_TIMEOUT * 2))
+
+
+class CeleryBase(Celery):
+    def on_init(self):
+        setup_postgres_timeout(connection)
+
+
+celery_app = CeleryBase('shopified')
 
 # Using a string here means the worker will not have to
 # pickle the object when using Windows.
