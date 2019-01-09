@@ -253,9 +253,11 @@
 {% block extrajs %}
 <script type="text/javascript">
     var sub_conf = {
+        {% if store %}
         key: "{% app_setting 'PUSHER_KEY' %}",
         channel: "{{store.pusher_channel}}",
         store: {{store.id}},
+        {% endif %}
     };
     var boardsMenu = {
     {% for item in request.user.get_boards %}
@@ -275,7 +277,7 @@
 <script type="text/javascript" src="{% static 'shopified/js/products_grid.js' %}"></script>
 {% endcompress %}
 
-{% if user|can:'manual_suppliers_sync.use' %}
+{% if store and user|can:'manual_suppliers_sync.use' %}
 <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 <script src="{% static 'shopified/js/product_supplier_sync.js' %}"></script>
 {% endif %}
