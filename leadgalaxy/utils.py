@@ -2863,8 +2863,8 @@ def format_queueable_orders(request, orders, current_page):
                     SACart='true',
                 )
 
-            queue_order['items'].append(line_data)
-            queue_order['line_id'].append(line_data['line_id'])
+                queue_order['items'].append(line_data)
+                queue_order['line_id'].append(line_data['line_id'])
 
         if len(queue_order['items']) == 1:
             item = queue_order['items'][0]
@@ -2904,5 +2904,6 @@ def format_queueable_orders(request, orders, current_page):
 
     return JsonResponse({
         'orders': orders_result,
-        'next': next_page_url
+        'next': next_page_url,
+        'pages': current_page.paginator.num_pages,
     })

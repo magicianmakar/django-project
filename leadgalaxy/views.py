@@ -3069,7 +3069,10 @@ def orders_view(request):
             pass
 
     store_order_synced = shopify_orders_utils.is_store_synced(store)
-    store_sync_enabled = store_order_synced and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new'))
+    store_sync_enabled = store_order_synced \
+        and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new')) \
+        and not request.GET.get('live')
+
     support_product_filter = shopify_orders_utils.support_product_filter(store) and models_user.can('exclude_products.use')
 
     es = shopify_orders_utils.get_elastic()
@@ -3088,6 +3091,9 @@ def orders_view(request):
 
         if created_at_end:
             created_at_end = arrow.get(created_at_end).isoformat()
+
+        if query_order and not query:
+            query = query_order
 
         if query:
             order_id = shopify_orders_utils.order_id_from_name(store, query)
