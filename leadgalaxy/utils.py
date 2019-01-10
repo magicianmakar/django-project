@@ -2821,81 +2821,105 @@ class ProductCollections(object):
 def format_queueable_orders(request, orders, current_page):
     orders_result = []
     next_page_url = None
+    enable_supplier_grouping = False
+
+    def group_by_supplier(lines):
+        suppliers = {}
+        for line in lines:
+            if line.get('supplier') and line['supplier'].get_store_id():
+                if line['supplier'].get_store_id() not in suppliers:
+                    suppliers[line['supplier'].get_store_id()] = []
+
+                suppliers[line['supplier'].get_store_id()].append(line)
+
+        return suppliers
 
     for order in orders:
-        queue_order = {"cart": True, "items": [], "line_id": []}
         if order.get('pending_payment', False):
             continue
 
-        for line_item in order.get('line_items', []):
-            if not line_item.get('order_data_id'):
-                # Line item is not connected
-                continue
+        line_times = order.get('line_items', [])
 
-            if line_item.get('product') and line_item['product'].is_excluded:
-                # Product is excluded from Dropified auto fulfill feature
-                continue
+        if enable_supplier_grouping:
+            line_times = group_by_supplier(line_times)
+        else:
+            line_times = {'all': line_times}
 
-            if line_item.get('shopify_order') and line_item['shopify_order'].id:
-                # Order is already placed (linked to a ShopifyOrderTrack)
-                continue
+        for _supplier, group_lines in line_times.items():
+            queue_order = {"cart": True, "items": [], "line_id": []}
 
-            if line_item.get('is_bundle', False):
-                # Ignore Bundle items
-                continue
+            for line_item in group_lines:
+                if not line_item.get('order_data_id'):
+                    # Line item is not connected
+                    continue
 
-            line_data = {
-                'order_data': line_item.get('order_data_id'),
-                'order_name': order['name'],
-                'order_id': str(order['id']),
-                'line_id': str(line_item['id']),
-                'line_title': line_item['title']
-            }
+                if line_item.get('product') and line_item['product'].is_excluded:
+                    # Product is excluded from Dropified auto fulfill feature
+                    continue
 
-            if line_item.get('supplier') and line_item.get('supplier').support_auto_fulfill():
-                shipping_method = line_item.get('shipping_method') or {}
-                line_data['url'] = app_link(
-                    reverse('orders_place'),
-                    product=line_item['supplier'].get_source_id(),
-                    SAPlaceOrder=line_item.get('order_data_id'),
-                    SACompany=shipping_method.get('method', ''),
-                    SACountry=shipping_method.get('country', ''),
-                    SACart='true',
-                )
+                if line_item.get('shopify_order') and line_item['shopify_order'].id:
+                    # Order is already placed (linked to a ShopifyOrderTrack)
+                    continue
+
+                if line_item.get('is_bundle', False):
+                    # Ignore Bundle items
+                    continue
+
+                line_data = {
+                    'order_data': line_item.get('order_data_id'),
+                    'order_name': order['name'],
+                    'order_id': str(order['id']),
+                    'line_id': str(line_item['id']),
+                    'line_title': line_item['title']
+                }
+
+                if line_item.get('supplier') and line_item.get('supplier').support_auto_fulfill():
+                    shipping_method = line_item.get('shipping_method') or {}
+                    line_data['source_id'] = str(line_item['supplier'].get_source_id())
+                    line_data['url'] = app_link(
+                        reverse('orders_place'),
+                        supplier=line_item['supplier'].id,
+                        SAPlaceOrder=line_item.get('order_data_id'),
+                        SACompany=shipping_method.get('method', ''),
+                        SACountry=shipping_method.get('country', ''),
+                        SACart='true',
+                    )
+                else:
+                    continue  # Ignore items without a supplier
 
                 queue_order['items'].append(line_data)
                 queue_order['line_id'].append(line_data['line_id'])
 
-        if len(queue_order['items']) == 1:
-            item = queue_order['items'][0]
+            if len(queue_order['items']) == 1:
+                item = queue_order['items'][0]
 
-            del queue_order['cart']
-            del queue_order['items']
+                del queue_order['cart']
+                del queue_order['items']
 
-            queue_order.update(item)
+                queue_order.update(item)
 
-            queue_order['url'] = re.sub(r'SACart=true&?', r'', queue_order['url'])
+                queue_order['url'] = re.sub(r'SACart=true&?', r'', queue_order['url'])
 
-            orders_result.append(queue_order)
+                orders_result.append(queue_order)
 
-        elif len(queue_order['items']) > 1:
-            line_item = queue_order['items'][0]
-            queue_order['order_data'] = re.sub(r'_[^_]+$', '', line_item['order_data'])
-            queue_order['order_name'] = line_item['order_name']
-            queue_order['order_id'] = line_item['order_id']
+            elif len(queue_order['items']) > 1:
+                line_item = queue_order['items'][0]
+                queue_order['order_data'] = re.sub(r'_[^_]+$', '', line_item['order_data']) + '_' + str(group_lines[0]['id'])
+                queue_order['order_name'] = line_item['order_name']
+                queue_order['order_id'] = line_item['order_id']
 
-            queue_order['line_title'] = u'<ul style="padding:0px;overflow-x:hidden;">'
+                queue_order['line_title'] = u'<ul style="padding:0px;overflow-x:hidden;">'
 
-            for line_item in queue_order['items'][:3]:
-                queue_order['line_title'] += u'<li>&bull; {}</li>'.format(line_item['line_title'])
+                for line_item in queue_order['items'][:3]:
+                    queue_order['line_title'] += u'<li>&bull; {}</li>'.format(line_item['line_title'])
 
-            count = len(queue_order['items']) - 3
-            if count > 0:
-                queue_order['line_title'] += u'<li>&bull; Plus {} Product{}...</li>'.format(count, pluralize(count))
+                count = len(queue_order['items']) - 3
+                if count > 0:
+                    queue_order['line_title'] += u'<li>&bull; Plus {} Product{}...</li>'.format(count, pluralize(count))
 
-            queue_order['line_title'] += u'</ul>'
+                queue_order['line_title'] += u'</ul>'
 
-            orders_result.append(queue_order)
+                orders_result.append(queue_order)
 
     if current_page.has_next():
         params = request.GET.copy()

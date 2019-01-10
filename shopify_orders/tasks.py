@@ -65,7 +65,7 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
                 have_aliexpress = True
 
     if have_aliexpress:
-        return fulfill_aliexpress_order(store, order)
+        return fulfill_aliexpress_order(store, order['id'])
     else:
         return False
 

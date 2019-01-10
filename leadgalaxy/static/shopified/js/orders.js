@@ -1254,11 +1254,11 @@ function pusherSub() {
             if (orderEl.length) {
                 if (order.line_id) {
                     var lineEl = orderEl.find('.line[line-id=' + order.line_id + ']');
-                    // lineEl.find('.order-line-group').hide();
                     // lineEl.find('.order-all').parent().hide();
                     // lineEl.find('.track-details').show();
 
                     lineEl.find('.place-order').addClass('btn-outline').text(order.status);
+                    lineEl.find('.order-line-group').hide();
                 }
             }
         });

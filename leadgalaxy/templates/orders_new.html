@@ -389,7 +389,7 @@
                                                     style="display:none"
                                                 {% endif %}
 
-                                                class="btn btn-xs btn-outline track-details itooltip
+                                                class="btn btn-xs m-r-xs btn-outline track-details itooltip
                                                 {% if order.order_log.seen == 2 %}
                                                     btn-warning
                                                 {% elif order.order_log.seen == 1 %}
@@ -403,6 +403,10 @@
                                             Logs
                                         </button>
 
+                                        {% if use_fulfillbox %}
+                                        <a class="place-order btn btn-info btn-xs m-r-xs" href="#"
+                                           store="{{store.id}}" order-id="{{order.id}}"><i class="fa fa-bolt"></i> Quick Order</a>
+                                        {% endif %}
 
                                         {% if order.lines_count and not order.have_bundle %}
                                             <div class="btn-group pull">
