@@ -2873,7 +2873,7 @@ def format_queueable_orders(request, orders, current_page):
                     'line_title': line_item['title']
                 }
 
-                if line_item.get('supplier') and line_item.get('supplier').support_auto_fulfill():
+                if line_item.get('supplier') and line_item['supplier'].support_auto_fulfill() and line_item['supplier'].is_aliexpress:
                     shipping_method = line_item.get('shipping_method') or {}
                     line_data['source_id'] = str(line_item['supplier'].get_source_id())
                     line_data['url'] = app_link(
