@@ -16,7 +16,7 @@
                                   {% if log.level == 'error' %}bg-danger{% else %}bg-{{log.level}}{% endif %}"></i>
                     </div>
                     <div class="stream-panel">
-                        <div class="stream-info">
+                        <div class="stream-info no-text-overflow">
                             <a href="#">
                                 <span>
                                 {% if not log.user %}
@@ -28,8 +28,19 @@
                                 {% endif %}
                                 </span>
                                 <span class="date">{% date_humanize log.time %}</span>
+
                             </a>
                         </div>
+
+                        {% if log.line_info %}
+                        <div class="stream-info no-text-overflow">
+                                <a href="https://{{store.shop}}/admin/products/{{log.line_info.product_id}}/variants/{{log.line_info.variant_id}}" class="xno-text-overflow" target="_blank">
+                                    {{ log.line_info.variant_title|default:'Default' }}
+                                    -
+                                    {{ log.line_info.title|default:'?' }}
+                                </a>
+                        </div>
+                        {% endif %}
                         {{log.log | safe}}
                     </div>
                 </div>

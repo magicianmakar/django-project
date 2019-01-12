@@ -253,7 +253,7 @@ class ShopifyOrderLog(models.Model):
         if commit:
             self.save()
 
-    def get_logs(self, sort='desc', pretty=False, include_webhooks=False):
+    def get_logs(self, sort='desc', pretty=False, include_webhooks=False, order_data=None):
         try:
             logs = json.loads(self.logs)
         except:
@@ -273,8 +273,15 @@ class ShopifyOrderLog(models.Model):
             logs = sorted(logs, cmp=lambda a, b: cmp(a['time'], b['time']), reverse=bool(sort == 'desc'))
 
         if pretty:
+            from leadgalaxy.utils import get_shopify_order_line
+
             for idx, log in enumerate(logs):
                 if log['user']:
                     logs[idx]['user'] = User.objects.get(id=log['user'])
+
+                if order_data and log.get('line'):
+                    line = get_shopify_order_line(self.store, self.order_id, log['line'], shopify_data=order_data)
+                    if line:
+                        logs[idx]['line_info'] = line
 
         return logs

@@ -278,6 +278,12 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     white-space: nowrap;
 }
 
+.no-text-overflow {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
 .flex-center {
     display: flex;
     align-items: center;

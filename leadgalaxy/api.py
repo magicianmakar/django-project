@@ -3408,7 +3408,9 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             # Delete duplicate entries
             ShopifyOrderLog.objects.filter(store=store, order_id=data['order_id']).exclude(id=track_log.id).delete()
 
-        logs = track_log.get_logs(pretty=True, include_webhooks=True)
+        order_data = utils.get_shopify_order(store, data['order_id'])
+
+        logs = track_log.get_logs(pretty=True, include_webhooks=True, order_data=order_data)
 
         if track_log.seen:
             track_log.seen = 0
@@ -3420,6 +3422,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         })
 
         return render(request, 'partial/tracking_details_modal_content.html', {
+            'order_id': data['order_id'],
             'store': store,
             'logs': logs,
             'request': request,
