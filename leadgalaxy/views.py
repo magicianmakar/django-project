@@ -716,8 +716,7 @@ def webhook(request, provider, option):
                     from shopify_orders.tasks import fulfill_shopify_order_line
                     _order, customer_address = utils.shopify_customer_address(shopify_order)
                     if topic == 'orders/create' and shopify_order['financial_status'] == 'paid':
-                        for line in shopify_order['line_items']:
-                            fulfill_shopify_order_line.delay(store.id, shopify_order, customer_address, line_id=line['id'])
+                        fulfill_shopify_order_line.delay(store.id, shopify_order, customer_address)
 
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
 
