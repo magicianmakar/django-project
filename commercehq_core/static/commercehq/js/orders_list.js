@@ -211,8 +211,7 @@ function deleteOrderID(tr_parent, order_id, line_id) {
         confirmButtonText: 'Yes',
         confirmButtonColor: "#DD6B55",
         closeOnCancel: true,
-        closeOnConfirm: false,
-        showLoaderOnConfirm: true,
+        closeOnConfirm: true,
     },
     function(isConfirm) {
         if (isConfirm) {
