@@ -22,7 +22,7 @@ class GetAllStoresTest(BaseTestCase):
     def test_must_include_gearbubble_stores(self):
         store = GearBubbleStoreFactory(user=self.user, title='test store')
         self.login()
-        r = self.client.get('/api/all-stores')
+        r = self.client.get('/api/stores')
         data = json.loads(r.content)
         store_data = data.pop()
         self.assertEqual(store_data['id'], store.pk)
@@ -68,7 +68,7 @@ class GetAllOrdersSyncTest(BaseTestCase):
         self.user.is_superuser = True
         self.user.save()
         self.login()
-        r = self.client.get('/api/all-orders-sync')
+        r = self.client.get('/api/orders-sync')
         orders = json.loads(r.content)['orders']
         order = orders.pop()
         self.assertEqual(order['store_type'], 'gear')
