@@ -13,7 +13,7 @@ from leadgalaxy.utils import order_track_fulfillment
 logger = logging.getLogger(__name__)
 
 
-class ShopifyOrderImportAPI():
+class ShopifyOrderImport():
     MAX_ORDERS_PER_PAGE = 250
 
     def __init__(self, store=None):

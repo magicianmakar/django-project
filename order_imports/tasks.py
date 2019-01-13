@@ -9,14 +9,14 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery import celery_app, CaptureFailure
 
 from leadgalaxy.models import ShopifyStore
-from order_imports.api import ShopifyOrderImportAPI
+from order_imports.utils import ShopifyOrderImport
 
 
 @celery_app.task(bind=True, base=CaptureFailure)
 def import_orders(self, store_id, parsed_orders, file_index=0):
 
     store = ShopifyStore.objects.get(id=store_id)
-    api = ShopifyOrderImportAPI(store=store)
+    api = ShopifyOrderImport(store=store)
 
     try:
         data = api.find_orders(parsed_orders)
@@ -44,7 +44,7 @@ def import_orders(self, store_id, parsed_orders, file_index=0):
 
 @celery_app.task(bind=True, base=CaptureFailure)
 def approve_imported_orders(self, user_id, data, pusher_store_id):
-    from order_imports.api import ShopifyOrderImportAPI
+    from order_imports.utils import ShopifyOrderImport
     user = User.objects.get(pk=user_id)
     stores = user.profile.get_shopify_stores()
     pusher_store = stores.get(pk=pusher_store_id)
@@ -52,7 +52,7 @@ def approve_imported_orders(self, user_id, data, pusher_store_id):
     try:
         for store_id, items in data.items():
             store = stores.get(pk=store_id)
-            api = ShopifyOrderImportAPI(store=store)
+            api = ShopifyOrderImport(store=store)
             api.send_tracking_number(items)
 
         pusher_store.pusher_trigger('order-import-approve', {

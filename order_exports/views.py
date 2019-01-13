@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.utils import timezone
 
-from order_exports.api import ShopifyOrderExportAPI
+from order_exports.utils import ShopifyOrderExport
 from order_exports.forms import OrderExportForm
 from order_exports.models import *
 
@@ -352,7 +352,7 @@ def generated(request, order_export_id, code):
 
     page = int(request.GET.get('page') or '1')
     order_export = OrderExport.objects.get(pk=order_export_id)
-    api = ShopifyOrderExportAPI(order_export, code=code)
+    api = ShopifyOrderExport(order_export, code=code)
 
     info = api.get_query_info(limit=limit)
     data = api.get_data(page=page, limit=limit)
@@ -391,7 +391,7 @@ def fulfill_order(request, order_export_id, code, order_id, line_item_id):
         order_export = get_object_or_404(OrderExport, pk=order_export_id,
                                          store__user_id=request.user.id)
 
-    api = ShopifyOrderExportAPI(order_export, code=code)
+    api = ShopifyOrderExport(order_export, code=code)
     tracking_number = request.POST.get('tracking_number')
     fulfillment_id = request.POST.get('fulfillment_id')
     success = api.fulfill(order_id, tracking_number, line_item_id, fulfillment_id)

@@ -11,7 +11,7 @@ import factory
 from factory import fuzzy
 
 from leadgalaxy.models import ShopifyStore
-from order_imports.api import ShopifyOrderImportAPI
+from order_imports.utils import ShopifyOrderImport
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -50,7 +50,7 @@ class OrderImportReadOrdersTestCase(BaseTestCase):
         self.client.login(username=self.user.username, password=self.password)
 
         self.store = ShopifyStoreFactory(user=self.user)
-        self.api = ShopifyOrderImportAPI(store=self.store)
+        self.api = ShopifyOrderImport(store=self.store)
 
         csv_file = StringIO()
         csv_file.seek(0)
@@ -96,7 +96,7 @@ class OrderImportFetchOrdersTestCase(BaseTestCase):
         self.client.login(username=self.user.username, password=self.password)
 
         self.store = ShopifyStoreFactory(user=self.user)
-        self.api = ShopifyOrderImportAPI(store=self.store)
+        self.api = ShopifyOrderImport(store=self.store)
 
         csv_file = StringIO()
         csv_file.seek(0)
@@ -162,7 +162,7 @@ class OrderImportSyncShopifyTestCase(BaseTestCase):
         self.client.login(username=self.user.username, password=self.password)
 
         self.store = ShopifyStoreFactory(user=self.user)
-        self.api = ShopifyOrderImportAPI(store=self.store)
+        self.api = ShopifyOrderImport(store=self.store)
 
         tracking_items = [
             {'order_id': '4154418757', 'line_item_id': '7586832133', 'tracking_number': '123456'},

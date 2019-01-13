@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 GENERATED_PAGE_LIMIT = 10
 
 
-class ShopifyOrderExportAPI():
+class ShopifyOrderExport():
 
     def __init__(self, order_export, code=None):
         """Set order_export, store and base url for shopify endpoint URIs"""
