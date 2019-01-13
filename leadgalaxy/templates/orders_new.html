@@ -349,7 +349,7 @@
                                             <a class="badge badge-info" target="_blank" href="{{order.order_api_url}}">order</a>
                                         {% endif %}
                                     </div>
-                                    <div class="col-xs-2">
+                                    <div class="col-xs-1">
                                         <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">
                                         {% date_humanize order.date %}
                                         </span>
@@ -359,13 +359,13 @@
                                             {{order.financial_status|title}}
                                         </span>
                                     </div>
+                                    {% if order_risk_levels_enabled %}
                                     <div class="col-xs-1">
-                                        {% if order_risk_levels_enabled %}
                                         {% if order.gateway == 'shopify_payments' or order_risk_all_getaways %}
                                         <span class="order-risk-level itooltip" order-id="{{order.id}}" title="Order Risk Level"></span>
                                         {% endif %}
-                                        {% endif %}
                                     </div>
+                                    {% endif %}
                                     <div class="col-xs-2">
                                         <span class="badge badge-{% if not order.fulfillment_status %}warning{% else %}primary{% endif %}">
                                             {{order.fulfillment_status|default:"Unfulfilled"|title}}
@@ -383,7 +383,7 @@
                                             Order Complete
                                         {% endif %}
                                     </div>
-                                    <div class="col-xs-2 text-right" style="padding:0">
+                                    <div class="col-xs-{{ order_risk_levels_enabled | yesno:'3,4'}} text-right" style="padding:0">
                                         <button store="{{store.id}}" order-id="{{order.id}}"
                                                 {% if not order.order_log %}
                                                     style="display:none"
@@ -530,7 +530,7 @@
                                         {% if excluded_product %}excluded-product="true"{% endif %}>
                                         <div class="row source-order">
 
-                                            <div class="col-xs-3 no-wrap">
+                                            <div class="col-xs-3 no-text-overflow">
                                                 {% if order_debug and item.order_data_id %}
                                                     <a class="badge badge-info" target="_blank" href="/api/shopify/order-data?order={{item.order_data_id}}">data</a>
                                                 {% endif %}
@@ -607,7 +607,7 @@
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <td class="product-preview">
+                                                        <td class="product-preview" style="width:64px">
                                                             {% if not item.is_bundle %}
                                                             <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; ">
 
@@ -622,7 +622,7 @@
                                                                 {% endif %} />
                                                             {% endif %}
                                                          </td>
-                                                        <td>
+                                                        <td class="no-text-overflow" style="max-width: 140px;">
                                                             {% if item.product %}
                                                                 <a href="/product/{{item.product.id}}" target="_blank" title="{{item.title}}">
                                                                     {{item.title|truncatewords:9}}
@@ -674,14 +674,14 @@
                                                                 <a href="#" target="_blank"><i class="fa fa-lg"></i></a>
                                                             </span>
                                                         </td>
-                                                        <td class="text-right" style="width:14%">
+                                                        <td class="text-right" style="width:26%">
                                                             {% if item.is_bundle %}
                                                                 <span class="badge badge-primary">Bundle</span>
                                                             {% else %}
                                                                 {% include 'partial/place_order_btn.html' %}
                                                             {% endif %}
                                                         </td>
-                                                        <td class="text-center no-wrap" style="width:10%">
+                                                        <td class="text-center no-wrap" style="width:6%">
                                                             {% if not item.is_bundle and not item.fulfillment_status and not order.pending_payment %}
                                                                 <div class="btn-group dropup">
                                                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
@@ -696,7 +696,7 @@
                                                                 <span class="badge badge-info">{{item.fulfillment_status|default:'Unfulfilled'|title}}</span>
                                                             {% endif %}
                                                         </td>
-                                                        <td class="text-center no-wrap" style="width:10%">
+                                                        <td class="text-center no-text-overflow hidden-sm-down" style="width:8%;max-width: 115px;">
                                                             {% if item.shopify_order and item.shopify_order.source_tracking %}
                                                             <a href="{{item.shopify_order.get_tracking_link}}" target="_blank">
                                                                 {{item.shopify_order.source_tracking}}
