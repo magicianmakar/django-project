@@ -4,5 +4,5 @@ import shopified_core.views
 
 urlpatterns = [
     url(r'^api/(v(?P<version>[0-9])/)?((?P<store_type>[a-z]+)/)?(?P<target>[a-z-]+)$',
-        shopified_core.views.ShopifiedApi.as_view()),
+        shopified_core.views.ShopifiedApiBase.as_view()),
 ]
