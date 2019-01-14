@@ -120,6 +120,7 @@ var Utils = {
             averages: {chart: null, data: {}, labels: {}}
         },
         miniChartsLabels: [],
+        loadedCharts: {mini: {amounts: false, counts: false, averages: false}, big: false},
         profitChart: null,
         profitChartData: null,
         chartTime: 'daily',  // daily, weekly, monthly
@@ -128,7 +129,8 @@ var Utils = {
         currentYear: new Date().getFullYear(),
         colorDataLabels: {
             orders_count: { backgroundColor: "rgba(54, 179, 126, 0.5)", borderColor: "rgba(54, 179, 126, 0.7)" },
-            fulfillments_count: { backgroundColor: "rgba(147, 198, 126, 0.5)", backgroundColor: "rgba(147, 198, 126, 0.7)" },
+            profit: { backgroundColor: "rgba(147, 198, 126, 0.5)", borderColor: "rgba(147, 198, 126, 0.7)" },
+            fulfillments_count: { backgroundColor: 'rgba(208, 152, 79, 0.5)', borderColor: "rgba(208, 152, 79, 0.7)" },
             fulfillment_cost: { backgroundColor: 'rgba(248, 172, 89, 0.5)', borderColor: "rgba(248, 172, 89, 0.7)" },
             ads_spend: { backgroundColor: "rgba(0, 101, 255, 0.5)", borderColor: "rgba(0, 101, 255, 0.7)" },
             other_costs: { backgroundColor: "rgba(184, 42, 201, 0.5)", borderColor: "rgba(184, 42, 201, 0.7)" }
@@ -484,7 +486,7 @@ var Utils = {
                 other_costs: [],
                 total_costs: [],
                 fulfillments_count: [],
-               profit: [],
+                profit: [],
                 orders_count: [],
                 average_profit: [],
                 average_revenue: []
@@ -778,39 +780,45 @@ var Utils = {
             };
         },
         loadCharts: function() {
-            var ctx = $("#profits-chart").get(0).getContext("2d");
-            this.profitChart = new Chart(ctx, {
-                type: 'line',
-                data: this.profitChartData,
-                options: {
-                    responsive: true,
-                    tooltips: {mode: 'index', intersect: false},
-                    hover: {mode: 'nearest', intersect: true},
-                    scales: {
-                        yAxes: [{
-                            id: 'currency',
-                            ticks: {
-                                beginAtZero: true,
-                                callback: function(value, index, values) {
-                                    return Currency.format(value);
+            try {
+                var ctx = document.getElementById("profits-chart").getContext("2d");
+
+                this.profitChart = new Chart(ctx, {
+                    type: 'line',
+                    data: this.profitChartData,
+                    options: {
+                        responsive: true,
+                        tooltips: {mode: 'index', intersect: false},
+                        hover: {mode: 'nearest', intersect: true},
+                        scales: {
+                            yAxes: [{
+                                id: 'currency',
+                                ticks: {
+                                    beginAtZero: true,
+                                    callback: function(value, index, values) {
+                                        return Currency.format(value);
+                                    }
                                 }
-                            }
-                        }, {
-                            id: 'number',
-                            position: 'right',
-                            display: false,
-                            gridLines: {
-                                display: false
-                            },
-                            ticks: {
-                                min: 0,
-                                fontColor: "rgba(147, 198, 126, 0.5)",
-                                backgroundColor: "rgba(147, 198, 126, 0.7)"
-                            }
-                        }]
+                            }, {
+                                id: 'number',
+                                position: 'right',
+                                display: false,
+                                gridLines: {
+                                    display: false
+                                },
+                                ticks: {
+                                    fontColor: "rgba(147, 198, 126, 0.5)",
+                                    backgroundColor: "rgba(147, 198, 126, 0.7)"
+                                }
+                            }]
+                        }
                     }
-                }
-            });
+                });
+
+                this.loadedCharts.big = true;
+            } catch(err) {
+                console.error(err);
+            }
 
             var miniChartOptions = {
                 responsive: true,
@@ -841,26 +849,42 @@ var Utils = {
                     }]
                 }
             };
-            ctx = $("#amounts-chart-mini").get(0).getContext("2d");
-            this.miniCharts.amounts.chart = new Chart(ctx, {
-                type: 'line',
-                data: this.miniCharts.amounts.data,
-                options: miniChartOptions
-            });
 
-            ctx = $("#counts-chart-mini").get(0).getContext("2d");
-            this.miniCharts.counts.chart = new Chart(ctx, {
-                type: 'line',
-                data: this.miniCharts.counts.data,
-                options: miniChartOptions
-            });
+            try {
+                var ctx = document.getElementById("amounts-chart-mini").getContext("2d");
+                this.miniCharts.amounts.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: this.miniCharts.amounts.data,
+                    options: miniChartOptions
+                });
+                this.loadedCharts.mini.amounts = true;
+            } catch(err) {
+                console.error(err);
+            }
 
-            ctx = $("#averages-chart-mini").get(0).getContext("2d");
-            this.miniCharts.averages.chart = new Chart(ctx, {
-                type: 'line',
-                data: this.miniCharts.averages.data,
-                options: miniChartOptions
-            });
+            try {
+                var ctx = document.getElementById("counts-chart-mini").getContext("2d");
+                this.miniCharts.counts.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: this.miniCharts.counts.data,
+                    options: miniChartOptions
+                });
+                this.loadedCharts.mini.counts = true;
+            } catch(err) {
+                console.error(err);
+            }
+
+            try {
+                var ctx = document.getElementById("averages-chart-mini").getContext("2d");
+                this.miniCharts.averages.chart = new Chart(ctx, {
+                    type: 'line',
+                    data: this.miniCharts.averages.data,
+                    options: miniChartOptions
+                });
+                this.loadedCharts.mini.averages = true;
+            } catch(err) {
+                console.error(err);
+            }
         },
         reloadCharts: function() {
             var dateRange = $('[name="date_range"]').val().split('-'),
@@ -874,26 +898,34 @@ var Utils = {
             this.profitChartData.datasets.forEach(function(dataset) {
                 dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
             });
-            this.profitChart.update();
+            if (this.loadedCharts.big) {
+                this.profitChart.update();
+            }
 
             // Mini charts
             this.miniCharts.amounts.data.labels = this.miniChartsLabels;
             this.miniCharts.amounts.data.datasets.forEach(function (dataset) {
                 dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
             });
-            this.miniCharts.amounts.chart.update();
+            if (this.loadedCharts.mini.amounts) {
+                this.miniCharts.amounts.chart.update();
+            }
 
             this.miniCharts.counts.data.labels = this.miniChartsLabels;
             this.miniCharts.counts.data.datasets.forEach(function (dataset) {
                 dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
             });
-            this.miniCharts.counts.chart.update();
+            if (this.loadedCharts.mini.counts) {
+                this.miniCharts.counts.chart.update();
+            }
 
             this.miniCharts.averages.data.labels = this.miniChartsLabels;
             this.miniCharts.averages.data.datasets.forEach(function (dataset) {
                 dataset.data = ProfitDashboard.chartsData[dataset.dataKey];
             });
-            this.miniCharts.averages.chart.update();
+            if (this.loadedCharts.mini.averages) {
+                this.miniCharts.averages.chart.update();
+            }
         },
         activateDataView: function(btn) {
             $('#data-view .btn.btn-success').removeClass('active btn-success').addClass('btn-default');
@@ -953,8 +985,6 @@ var Utils = {
                         dataset['yAxisID'] = 'number';
                         ProfitDashboard.profitChart.options.scales.yAxes[1].display = true;
                         ProfitDashboard.profitChart.options.scales.yAxes[1].ticks.suggestedMax = Math.max.apply(null, dataset.data) + 1;
-                        dataset.borderColor = ProfitDashboard.profitChart.options.scales.yAxes[1].ticks.fontColor;
-                        dataset.backgroundColor = ProfitDashboard.profitChart.options.scales.yAxes[1].ticks.backgroundColor;
                     }
 
                     ProfitDashboard.profitChartData.datasets.push(dataset);
