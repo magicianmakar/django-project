@@ -883,15 +883,32 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         return self.api_success()
 
     def post_change_customer_id(self, request, user, data):
-        from stripe_subscription.models import StripeSubscription
+        from stripe_subscription.models import StripeSubscription, StripeCustomer
         from stripe_subscription.utils import update_subscription
 
         if not user.is_superuser and not user.is_staff:
             raise PermissionDenied()
 
         target_user = User.objects.get(id=data.get('user'))
-        if not target_user.is_stripe_customer():
-            return self.api_error('User is not a Stripe Customer')
+
+        if not data.get('convert'):
+            if not target_user.is_stripe_customer():
+                return self.api_error('User is not a Stripe Customer')
+        else:
+            if target_user.is_stripe_customer():
+                return self.api_error('User is already a Stripe Customer')
+
+            customer = stripe.Customer.retrieve(data.get('customer-id'))
+
+            StripeCustomer.objects.create(
+                customer_id=customer['id'],
+                user=target_user,
+                data=json.dumps(customer)
+            )
+
+            target_user.profile.shopify_app_store = False
+            target_user.profile.set_config_value('shopify_app_store', False)
+            target_user.profile.save()
 
         target_user.stripe_customer.customer_id = data.get('customer-id')
         target_user.stripe_customer.save()

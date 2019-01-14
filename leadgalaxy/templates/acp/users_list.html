@@ -258,7 +258,8 @@
                                 <a href="#" class="btn btn-warning btn-sm change-customer-id-btn" style="margin-top:2px"
                                    customer-id="{{customer_id}}" user-id="{{users.0.id}}">Change Customer ID</a>
                             {% else %}
-                            <i class="text-danger m-l">This user is not linked to any Stripe Customer</i>
+                                <a href="#" class="btn btn-warning btn-sm change-customer-id-btn" style="margin-top:2px"
+                                   customer-id="{{customer_id}}" user-id="{{users.0.id}}" data-convert="true">Convert To Stripe User</a>
                             {% endif %}
                         </div>
                     </form>
@@ -830,6 +831,7 @@
                         data: {
                             'customer-id': $(e.target).attr('customer-id'),
                             'user': $(e.target).attr('user-id'),
+                            'convert': $(e.target).data('convert'),
                         },
                     }).done(function (data) {
                         toastr.success('Changed!', 'Customer ID');
