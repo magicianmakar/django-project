@@ -624,9 +624,15 @@
                                                          </td>
                                                         <td class="no-text-overflow" style="max-width: 140px;">
                                                             {% if item.product %}
-                                                                <a href="/product/{{item.product.id}}" target="_blank" title="{{item.title}}">
-                                                                    {{item.title|truncatewords:9}}
-                                                                </a>
+                                                                <a class="open-product-in"
+                                                                    href="/product/{{item.product.id}}"
+                                                                    target="_blank"
+                                                                    title="{{item.title}}"
+                                                                    data-link-dropified="/product/{{item.product.id}}"
+                                                                    data-link-shopify="{{item.variant_link}}"
+                                                                    data-link-connections="/product/{{item.product.id}}#connections"
+                                                                    data-link-mapping="{% url 'product_mapping' item.product.id %}"
+                                                                >{{item.title|truncatewords:9}}</a>
 
                                                                 {% if item.item_note %}
                                                                 <div class="custom-properties m-t-xs">

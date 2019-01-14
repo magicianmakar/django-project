@@ -1654,6 +1654,45 @@ $(function () {
             createdAtEnd.format(createdAtEnd.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
     }
 
+    $.contextMenu({
+        selector: '.open-product-in',
+        trigger: 'left',
+        callback: function(key, options) {
+            var link = options.$trigger.data('link-' + key);
+            if (link) {
+                window.open(link, '_blank');
+            }
+        },
+        items: {
+            "mapping": {
+                name: 'Variants Mapping'
+            },
+            "connections": {
+                name: 'Product Suppliers'
+            },
+            "sep1": "---------",
+            "dropified": {
+                name: 'Open in Dropified'
+            },
+            "shopify": {
+                name: 'Open in Shopify'
+            },
+        },
+        events: {
+            show: function(opt) {
+                setTimeout(function() {
+                    opt.$menu.css({
+                        'z-index': '10000',
+                        'max-height': '300px',
+                        'overflow': 'auto',
+                    });
+                }, 100);
+
+                return true;
+            }
+        }
+    });
+
     setTimeout(function() {
         window.location.reload();
     }, 3500 * 1000);
