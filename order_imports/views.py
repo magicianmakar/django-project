@@ -11,7 +11,7 @@ from shopified_core.exceptions import ApiProcessException
 from leadgalaxy.utils import get_store_from_request, safeInt
 
 from .tasks import import_orders, approve_imported_orders
-from .api import ShopifyOrderImportAPI
+from .utils import ShopifyOrderImport
 
 
 @login_required
@@ -23,7 +23,7 @@ def index(request):
     breadcrumbs = [
         {'url': reverse('orders'), 'title': 'Orders'},
         {'url': reverse('orders_track'), 'title': 'Tracking'},
-        'Import Tracking #\'s'
+        'Import Tracking Numbers'
     ]
 
     return render(request, 'order_imports/index.html', {
@@ -40,7 +40,7 @@ def upload(request, store_id):
     if request.method == 'POST':
         stores = request.user.profile.get_shopify_stores()
         store = get_object_or_404(stores, id=safeInt(store_id))
-        api = ShopifyOrderImportAPI(store=store)
+        api = ShopifyOrderImport(store=store)
 
         raw_headers = {
             'order_id_position': request.GET.get('order_id_position'),

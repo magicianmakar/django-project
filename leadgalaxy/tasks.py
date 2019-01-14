@@ -62,7 +62,7 @@ from product_feed.models import (
 )
 
 from order_exports.models import OrderExport
-from order_exports.api import ShopifyOrderExportAPI, ShopifyTrackOrderExport
+from order_exports.utils import ShopifyOrderExport, ShopifyTrackOrderExport
 
 from shopify_orders.models import ShopifyOrder, ShopifyOrderRisk
 
@@ -840,7 +840,7 @@ def generate_order_export(self, order_export_id):
     try:
         order_export = OrderExport.objects.get(pk=order_export_id)
 
-        api = ShopifyOrderExportAPI(order_export)
+        api = ShopifyOrderExport(order_export)
         api.generate_export()
     except:
         raven_client.captureException()
@@ -861,7 +861,7 @@ def generate_order_export_query(self, order_export_id):
     try:
         order_export = OrderExport.objects.get(pk=order_export_id)
 
-        api = ShopifyOrderExportAPI(order_export)
+        api = ShopifyOrderExport(order_export)
         api.generate_query(send_email=False)
     except:
         raven_client.captureException()

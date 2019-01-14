@@ -148,6 +148,13 @@ STATICFILES_FINDERS = (
 
 WSGI_APPLICATION = 'app.wsgi.application'
 
+DROPIFIED_API = {
+    'all': 'shopified_core.api.ShopifiedApi',
+    'shopify': 'leadgalaxy.api.ShopifyStoreApi',
+    'chq': 'commercehq_core.api.CHQStoreApi',
+    'gear': 'gearbubble_core.api.GearBubbleApi',
+    'woo': 'woocommerce_core.api.WooStoreApi',
+}
 
 # Database
 # https://docs.djangoproject.com/en/1.8/ref/settings/#databases

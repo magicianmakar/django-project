@@ -59,94 +59,10 @@ from .templatetags.template_helper import shopify_image_thumb, money_format
 
 
 class ShopifyStoreApi(ApiResponseMixin, View):
-    http_method_names = ['get', 'post', 'delete']
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.method.lower() not in self.http_method_names:
-            raven_client.captureMessage('Unsupported Request Method', extra={'method': request.method})
-            return self.http_method_not_allowed(request, *args, **kwargs)
-
-        return self.proccess_api(request, **kwargs)
-
-    def proccess_api(self, request, target, store_type, version):
-        self.target = target
-        self.data = self.request_data(request)
-
-        # Methods that doesn't require login or perform login differently (from json data)
-        assert_login = target not in ['shipping-aliexpress']
-
-        user = self.get_user(request, assert_login=assert_login)
-        if user:
-            raven_client.user_context({
-                'id': user.id,
-                'username': user.username,
-                'email': user.email
-            })
-
-            extension_version = request.META.get('HTTP_X_EXTENSION_VERSION')
-            if extension_version:
-                user.set_config('extension_version', extension_version)
-
-        method_name = self.method_name(request.method, target)
-        handler = getattr(self, method_name, None)
-
-        if not handler:
-            if settings.DEBUG:
-                print 'Method Not Found:', method_name
-
-            raven_client.captureMessage('Non-handled endpoint', extra={'method': method_name})
-            return self.api_error('Non-handled endpoint', status=405)
-
-        res = handler(request, user, self.data)
-        if res is None:
-            res = self.response
-
-        if res is None:
-            raven_client.captureMessage('API Response is empty')
-            res = self.api_error('Internal Server Error', 500)
-
-        return res
 
     def post_register(self, request, user, data):
         return self.api_error('Please Visit Dropified Website to register a new account:\n\n'
                               '{}'.format(app_link('accounts/register')), status=501)
-
-    def get_stores(self, request, user, data):
-        stores = []
-        for i in user.profile.get_shopify_stores():
-            stores.append({
-                'id': i.id,
-                'name': i.title,
-                'type': 'shopify',
-                'url': i.get_link(api=False)
-            })
-
-        if data.get('all'):
-            for i in user.profile.get_chq_stores():
-                stores.append({
-                    'id': i.id,
-                    'name': i.title,
-                    'type': 'chq',
-                    'url': i.get_admin_url()
-                })
-
-            for i in user.profile.get_woo_stores():
-                stores.append({
-                    'id': i.id,
-                    'name': i.title,
-                    'type': 'woo',
-                    'url': i.get_admin_url()
-                })
-
-            for i in user.profile.get_gear_stores():
-                stores.append({
-                    'id': i.id,
-                    'name': i.title,
-                    'type': 'gear',
-                    'url': i.get_admin_url()
-                })
-
-        return JsonResponse(stores, safe=False)
 
     def post_delete_store(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)

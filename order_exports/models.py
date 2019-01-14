@@ -9,7 +9,7 @@ from django.dispatch import receiver, Signal
 from django.utils.functional import cached_property
 
 from leadgalaxy.models import ShopifyStore
-from order_exports.api import ShopifyOrderExportAPI
+from order_exports.utils import ShopifyOrderExport
 
 
 order_export_done = Signal(providing_args=["instance"])
@@ -362,7 +362,7 @@ def generate_reports(sender, order_export_pk, **kwargs):
     order_export.save()
 
     if order_export.previous_day:
-        api = ShopifyOrderExportAPI(order_export)
+        api = ShopifyOrderExport(order_export)
 
         # Generate Sample Export
         api.generate_sample_export()
