@@ -568,19 +568,38 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
     if shippement_data is not None:
         return shippement_data
 
-    r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm",
-                     timeout=10,
-                     params={
-                         'f': 'd',
-                         'productid': aliexpress_id,
-                         'userType': 'cnfm',
-                         'country': country_code,
-                         'province': '',
-                         'city': '',
-                         'count': '1',
-                         'currencyCode': 'USD',
-                         'sendGoodsCountry': ''
-                     })
+    cache_key = 'aliexpress_product_price_{}'.format(aliexpress_id)
+    product_price = cache.get(cache_key)
+
+    params = {
+        'f': 'd',
+        'productid': aliexpress_id,
+        'count': '1',
+        'currencyCode': 'USD',
+        'transactionCurrencyCode': 'USD',
+        'sendGoodsCountry': '',
+        'country': country_code,
+        'province': '',
+        'city': '',
+        'userType': 'cnfm',
+    }
+
+    if product_price is None:
+        prices_response = requests.get(
+            url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/price/', aliexpress_id),
+            auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD),
+            timeout=10)
+
+        if prices_response.ok:
+            product_price = prices_response.json()['price']
+
+            cache.set(cache_key, product_price, timeout=3600)
+
+    if product_price:
+        params['minPrice'] = product_price
+        params['maxPrice'] = product_price
+
+    r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm", timeout=10, params=params)
 
     try:
         shippement_data = json.loads(r.text[1:-1])
