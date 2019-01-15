@@ -430,6 +430,10 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     background-color: #93c47d !important;
 }
 
+#modal-photopea .modal-body {
+    padding: 3px;
+}
+
 #orders-audit-modal .modal-dialog {
     width: 98%;
     height: 94%;

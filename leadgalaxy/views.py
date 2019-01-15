@@ -2826,36 +2826,19 @@ def upgrade_required(request):
 
 
 @login_required
-def pixlr_close(request):
-    return render(request, 'partial/pixlr_close.html')
-
-
-@login_required
-def pixlr_serve_image(request):
-    if not request.user.can('pixlr_photo_editor.use'):
-        raise PermissionDenied()
-
-    img_url = request.GET.get('image')
-    if not img_url:
-        raise Http404
-
-    return HttpResponseRedirect(app_link('api/ali/get-image', url=img_url))
-
-
-@login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
 
-    if 'advanced' in request.GET:
-        # Pixlr
+    if 'advanced' in request.POST:
+        # PhotoPea
         if not request.user.can('pixlr_photo_editor.use'):
             return render(request, 'upgrade.html')
 
         # TODO: File size limit
         image = request.FILES.get('image')
-        product_id = request.GET.get('product')
+        product_id = request.POST.get('product')
         img_url = image.name
-        old_url = request.GET.get('old_url')
+        old_url = request.POST.get('old_url')
 
         fp = image
 
@@ -2930,15 +2913,6 @@ def save_image_s3(request):
         product = ShopifyProduct.objects.get(id=product_id)
         permissions.user_can_edit(request.user, product)
         UserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
-
-    # For Pixlr upload, trigger the close of the editor
-    if 'advanced' in request.GET:
-        product.store.pusher_trigger('pixlr-editor', {
-            'success': True,
-            'product': product_id,
-            'url': upload_url,
-            'image_id': request.GET.get('image_id'),
-        })
 
     return JsonResponse({
         'status': 'ok',
@@ -4642,9 +4616,9 @@ def user_invoices_download(request, invoice_id):
 def crossdomain(request):
     html = """
         <cross-domain-policy>
-            <allow-access-from domain="*.pixlr.com"/>
+            <allow-access-from domain="*.photopea.com"/>
             <site-control permitted-cross-domain-policies="master-only"/>
-            <allow-http-request-headers-from domain="*.pixlr.com" headers="*" secure="true"/>
+            <allow-http-request-headers-from domain="*.photopea.com" headers="*" secure="true"/>
         </cross-domain-policy>
     """
     return HttpResponse(html, content_type='application/xml')

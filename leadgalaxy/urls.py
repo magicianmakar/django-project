@@ -38,9 +38,6 @@ urlpatterns = [
     url(r'^upload/sign_s3$', leadgalaxy.views.upload_file_sign, name='upload_file_sign'),
     url(r'^upload/save_image_s3$', leadgalaxy.views.save_image_s3, name='save_image_s3'),
 
-    url(r'^pixlr/serve$', leadgalaxy.views.pixlr_serve_image, name='pixlr_serve_image'),
-    url(r'^pixlr/close$', leadgalaxy.views.pixlr_close, name='pixlr_close'),
-
     url(r'^user/profile$', leadgalaxy.views.user_profile, name='user_profile'),
     url(r'^user/unlock/(?P<token>[a-z0-9]+)$', leadgalaxy.views.user_unlock, name='user_unlock'),
     url(r'^user/invoices/(?P<invoice_id>[\w-]+)$', leadgalaxy.views.user_invoices, name='user_invoices'),

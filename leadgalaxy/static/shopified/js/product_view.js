@@ -1017,15 +1017,6 @@ function indexOfImages(images, link) {
 function renderImages() {
     $('#var-images').empty();
 
-    if (config.advanced_photo_editor) {
-        // Pixlr Doesn't redirect to this page
-        pixlr.settings.exit = window.location.origin + '/pixlr/close';
-        pixlr.settings.method = 'POST';
-        pixlr.settings.referrer = 'Dropified';
-        // setting to false saves the image but doesn't run the redirect script on pixlr.html
-        pixlr.settings.redirect = false;
-    }
-
     $.each(product.images, function (i, el) {
         if (i !== 0 && i % 4 === 0) {
             $('#var-images').append($('<div class="col-xs-12"></div>'));
@@ -1091,22 +1082,14 @@ function renderImages() {
             if (!imageUrl.match(/shopifiedapp.+?\.s3\.amazonaws\.com/)) {
                 imageUrl = app_link(['api/ali/get-image'], {url: btoa(imageUrl)});
             }
-
-            var pixlrUrl = pixlr.url({
-                image: imageUrl,
-                title: imageId,
-                target: window.location.origin + '/upload/save_image_s3?' + $.param({
-                    product: config.product_id,
-                    advanced: true,
-                    image_id: imageId
-                })
-            });
-
+            if (config.DEBUG) {
+                imageUrl = imageUrl.replace('http://dev.', 'https://app.');
+            }
             buttons.push($('<a>', {
                 'title': "Advanced Editor",
                 'class': "btn btn-warning btn-xs itooltip advanced-edit-photo",
                 'target': "_blank",
-                'href': pixlrUrl,
+                'href': imageUrl,
                 'data-hash': hash,
                 'html': '<i class="fa fa-picture-o"></i></a>'
             }));
@@ -1130,9 +1113,10 @@ function renderImages() {
         });
 
         d.find('.advanced-edit-photo').on('click', function (e) {
+            e.preventDefault();
             var imageId = $(this).parents('.var-image-block').find('img').attr('id');
 
-            PusherSubscription.pixlrEditor(imageId);
+            PhotoPeaEditor.doLoad($(this).attr('href'), imageId);
         });
 
         d.find('.remove-background-image-editor').click(function(e) {
@@ -1539,29 +1523,6 @@ var PusherSubscription = {
                     }, 500);
                 } else {
                     displayAjaxError('Images Download', data);
-                }
-            }
-        });
-    },
-    pixlrEditor: function(imageId) {
-        this.init();
-
-        window.channel.bind('pixlr-editor', function(data) {
-            if (data.product == config.product_id) {
-                $('#download-images').bootstrapBtn('reset');
-
-                if (data.success) {
-                    setTimeout(function() {
-                        var image = $('#' + data.image_id);
-                        image.attr('src', data.url);
-                        product.images[parseInt(image.attr('image-id'), 10)] = data.url;
-
-                        if (document.pixlrPopup) {
-                            document.pixlrPopup.close();
-                        }
-                    }, 500);
-                } else {
-                    displayAjaxError('Advanced Editor', data);
                 }
             }
         });
