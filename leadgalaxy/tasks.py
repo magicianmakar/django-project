@@ -531,7 +531,6 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def sync_shopify_orders(self, store_id, elastic=False):
-    return
     try:
         start_time = arrow.now()
 
