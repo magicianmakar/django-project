@@ -52,6 +52,12 @@
                     {% endif %}
                     ><i class="fa fa-cogs"></i> Connections</a></li>
                 {% endif %}
+                {% if product.qelem.is_connected %}
+                <li><a
+                    data-auto-click="#reviews"
+                    data-toggle="tab" href="#tab-6"
+                    ><i class="fa fa-file-o"></i> Reviews</a></li>
+                {% endif %}
                 {% if request.user|can:'price_changes.use' %}
                 <li>
                     <a data-toggle="tab" href="#tab-6"
@@ -72,7 +78,11 @@
         <div class=" row">
             <div class="form-group col-xs-12">
                 <label for="product-title">Title</label>
-                <textarea class="form-control" id="product-title" placeholder="Product Title"></textarea>
+                <textarea class="form-control" id="product-title" placeholder="Product Title"
+                          {% if shopify_product %}
+                          data-handle="{{shopify_product.handle}}"
+                          {% endif %}
+                ></textarea>
             </div>
         </div>
         <div class=" row" {% if shopify_product %}style="display:none"{% endif %}>
@@ -591,8 +601,75 @@
             </div>
         </div>
 
-        {% if request.user|can:'price_change_options.use' %}
         <div id="tab-6" class="tab-pane">
+            <div class="panel-body" style="min-height:300px">
+                <form id="review-form" method="get">
+                    <input type="hidden" id="reviews_product" value={{product.id}} />
+                    <input type="hidden" id="reviews_product_url" value={{product.original_url}} />
+                    <div class="row">
+                        <div class="form-group col-xs-6">
+                            <select id="reviews_star" class="form-control">
+                                <option value="all">All Stars</option>
+                                <option value="5">5 Stars</option>
+                                <option value="4">4 Stars</option>
+                                <option value="3">3 Stars</option>
+                                <option value="2">2 Stars</option>
+                                <option value="1">1 Star</option>
+                                <option value="positive">All Positive</option>
+                                <option value="critical">All Negative</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-xs-6">
+                            <select id="reviews_sort" class="form-control">
+                                <option value="default">Sort by default</option>
+                                <option value="latest">Sort by latest</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <div class="form-control" style="border:none;box-shadow:0 0;background-color:inherit;">
+                                <input type="checkbox" id="reviews_with_images" />
+                                <label for="reviews_with_images">With pictures</label>
+                            </div>
+
+                            <div class="form-control" style="border:none;box-shadow:0 0;background-color:inherit;">
+                                <input type="checkbox" id="reviews_personal_info" />
+                                <label for="reviews_personal_info">With personal information</label>
+                            </div>
+
+                            <div class="form-control" style="border:none;box-shadow:0 0;background-color:inherit;">
+                                <input type="checkbox" id="reviews_my_country" />
+                                <label for="reviews_my_country">Reviews from my country</label>
+                            </div>
+
+                            <div class="form-control" style="border:none;box-shadow:0 0;background-color:inherit;">
+                                <input type="checkbox" id="only_text_reviews" />
+                                <label for="only_text_reviews">Keep text only (reviews body without html tags and images)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-xs-12">
+                            <label for="reviews_pages">Pages:</label>
+                            <input type="number" id="reviews_pages" class="text-center" value="1" min="1" />
+                        </div>
+                    </div>
+                    <button id="import-reviews-btn" type="submit" class="btn btn-success">
+                        <i class="fa fa-plus"></i>
+                        Import
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {% if request.user|can:'price_change_options.use' %}
+        <div id="tab-7" class="tab-pane">
             <div class="panel-body"  style="min-height:300px">
                 <form id="product-config-form" role="form">
                     <input type="hidden" name="product" value="{{product.id}}" />
@@ -1178,6 +1255,7 @@ $(function() {
     <script type="text/javascript" src="{% static 'shopified/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
+    <script type="text/javascript" src="{% static 'shopified/js/reviews.js' %}"></script>
     {% endcompress %}
 
 {% if request.user|can:'image_uploader.use' %}
