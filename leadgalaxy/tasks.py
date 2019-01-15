@@ -763,6 +763,7 @@ def generate_gear_feed(self, feed_id, nocache=False, by_fb=False):
 
 @celery_app.task(base=CaptureFailure, ignore_result=True)
 def manage_product_change(change_id):
+    return
     try:
         product_change = ProductChange.objects.get(pk=change_id)
         manager = ProductChangeManager.initialize(product_change)
