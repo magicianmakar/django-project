@@ -4336,9 +4336,9 @@ def product_alerts(request):
                 if index is not None:
                     c['shopify_value'] = variants[index]['price']
                 else:
-                    c['shopify_value'] = "Not Found"
+                    c['shopify_value_label'] = "Not Found"
             else:
-                c['shopify_value'] = "Not Found"
+                c['shopify_value_label'] = "Not Found"
 
         product_changes.append(change)
 

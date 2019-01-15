@@ -192,10 +192,13 @@ def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=N
     for variant_id, variant in variants_map.iteritems():
         found = True
         ships_from_mapped = True if ships_from_id is None else False
+        no_variant = False
         for variant_option in variant:
             if type(variant_option) is dict:
                 mapped_title = variant_option.get('title')
                 mapped_sku = variant_option.get('sku')
+                if len(variant) == 1 and mapped_title == 'Default Title':
+                    no_variant = True
                 if variant_option.get('extra', False):
                     continue
             else:
@@ -206,7 +209,7 @@ def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=N
             for option in options:
                 option_id = option['option_id']
                 option_title = option['option_title']
-                if mapped_sku and option_id in mapped_sku:
+                if mapped_sku and re.search(r"\b{}\b".format(option_id), mapped_sku):
                     exists = True
                 if mapped_title and mapped_title == option_title:
                     exists = True
@@ -217,6 +220,11 @@ def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=N
             if not exists:
                 found = False
                 break
+        if no_variant and not found:
+            if len(options) == 0:  # no variant option
+                found = True
+            elif len(options) == 1 and ships_from_id is not None:  # ships from is the only option
+                found = True
         if found:
             if ships_from_mapped:
                 found_variant_id = variant_id

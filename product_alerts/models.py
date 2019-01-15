@@ -80,6 +80,7 @@ class ProductChange(models.Model):
             changes = []
         for idx, change in enumerate(changes):
             sku = change.get('sku')
+            changes[idx]['sku_readable'] = sku if sku else ''
             if sku:
                 options = parse_supplier_sku(sku)
                 sku = ' / '.join(option.get('option_title', '') for option in options)
