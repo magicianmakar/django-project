@@ -285,6 +285,8 @@
                                             <span class="badge badge-primary completed-order">&nbsp;</span>
                                         {% elif order.status == 'processing' and order.partially_ordered %}
                                             <span class="badge badge-warning primary">&nbsp;</span>
+                                        {% elif order.status == 'processing' and order.lines_count == order.tracked_lines %}
+                                            <span class="badge badge-warning primary completed-order">&nbsp;</span>
                                         {% else %}
                                             <span class="badge">&nbsp;</span>
                                         {% endif %}
