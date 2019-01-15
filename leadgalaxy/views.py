@@ -1268,7 +1268,7 @@ def accept_product(res, fdata):
         res = res.filter(product_type__icontains=fdata.get('type'))
 
     if fdata.get('tag'):
-        res = res.filter(tag=fdata.get('tag'))
+        res = res.filter(tag__icontains=fdata.get('tag'))
 
     if fdata.get('vendor'):
         res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
