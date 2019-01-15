@@ -445,6 +445,9 @@ function imageClicked(e) {
     product.images = new_images;
     $(this).parent().remove();
 
+    // Remove remaining "Delete" tooltip
+    $('.tooltip').remove();
+
     renderImages();
 }
 

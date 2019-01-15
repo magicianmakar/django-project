@@ -605,7 +605,11 @@ class CommerceHQProduct(models.Model):
                     else:
                         common_images.add(image['path'])
 
-            common_images.update(set(image_urls) - set(variant_primary_images))
+            if len(set(variant_primary_images)) == 1:
+                # variants are using one common image
+                common_images.update(set(image_urls) | set(variant_primary_images))
+            else:
+                common_images.update(set(image_urls) - set(variant_primary_images))
 
         return list(common_images)
 

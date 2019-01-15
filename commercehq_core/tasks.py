@@ -419,6 +419,17 @@ def product_update(product_id, data):
 
         have_variant_images = len(set(variant_images)) > len(product_images)
 
+        images_need_delete = []
+        if have_variant_images:
+            for j in p.get('variants', []):
+                for k in j['images']:
+                    if k['path'] not in data['images']:
+                        images_need_delete.append(k['id'])
+        else:
+            for j in p['images']:
+                if j['path'] not in data['images']:
+                    images_need_delete.append(j['id'])
+
         images_need_upload = []
         for img in data['images']:
             if img not in product_images + variant_images:
@@ -448,12 +459,31 @@ def product_update(product_id, data):
                 else:
                     p['images'].append(j['id'])
 
-        for i, image in enumerate(p['images']):
-            if type(image) is int:
-                continue
+        if have_variant_images:
+            for idx, v in enumerate(p['variants']):
+                new_images = []
+                for i, image in enumerate(p['variants'][idx]['images']):
+                    if type(image) is int:
+                        new_images.append(image)
+                        continue
+                    if 'id' in image and image['id'] not in images_need_delete:
+                        new_images.append(image['id'])
+                p['variants'][idx]['images'] = new_images
 
-            if 'id' in image:
-                p['images'][i] = image['id']
+            for i, image in enumerate(p['images']):
+                if type(image) is int:
+                    continue
+                if 'id' in image:
+                    p['images'][i] = image['id']
+        else:
+            new_images = []
+            for i, image in enumerate(p['images']):
+                if type(image) is int:
+                    new_images.append(image)
+                    continue
+                if 'id' in image and image['id'] not in images_need_delete:
+                    new_images.append(image['id'])
+            p['images'] = new_images
 
         for i, option in enumerate(p.get('options', [])):
             for j, thumb in enumerate(option['thumbnails']):
