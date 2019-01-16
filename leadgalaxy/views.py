@@ -939,7 +939,11 @@ def webhook(request, provider, option):
                 data=request.body,
             )
 
-            tasks.manage_product_change.apply_async(args=[product_change.pk], countdown=random.randint(1, 120))
+            countdown = random.randint(1, 120)
+            tasks.manage_product_change.apply_async(
+                args=[product_change.pk],
+                countdown=countdown,
+                expires=countdown + 900)
 
         else:
             product.monitor_id = 0
