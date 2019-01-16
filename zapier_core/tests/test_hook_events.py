@@ -33,6 +33,8 @@ class HookEventsTestCase(BaseTestCase):
         self.user = User.objects.get(pk=1)
         cache.delete_pattern('*')
 
+
+class HookEventsDeliverTest(HookEventsTestCase):
     @tag('slow')
     @mock.patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
     @patch('requests.post')
@@ -51,6 +53,8 @@ class HookEventsTestCase(BaseTestCase):
             headers=ANY,
         )
 
+
+class HookEventsDeliverAlertTest(HookEventsTestCase):
     @mock.patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
     @patch('requests.post')
     def test_deliver_hook_alert(self, requests_post, deliver):
@@ -67,6 +71,8 @@ class HookEventsTestCase(BaseTestCase):
             headers=ANY,
         )
 
+
+class HookEventsPriceChangeTest(HookEventsTestCase):
     @tag('slow')
     @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     @patch('zapier_core.tasks.deliver_hook.apply_async')
