@@ -514,6 +514,8 @@ def sync_shopify_product_quantities(self, product_id):
                 product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
                 time.sleep(0.5)
 
+        cache.delete('product_inventory_sync_{}_{}'.format(product.id, product.default_supplier.id))
+
     except ShopifyProduct.DoesNotExist:
         pass
     except Exception as e:

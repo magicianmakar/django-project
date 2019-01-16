@@ -718,6 +718,33 @@ $('.export-add-btn').click(function (e) {
 function bindExportEvents(target) {
     target = typeof(target) === 'undefined' ? document : target;
 
+    $('.sync-inventory-btn', target).click(function(e) {
+        e.preventDefault();
+
+        var btn = $(this);
+        var form = $(this).parents('.product-export-form');
+
+        btn.bootstrapBtn('loading');
+
+        $.ajax({
+            type: 'POST',
+            url: api_url('sync_with_supplier', 'shopify'),
+            context: btn,
+            data: {
+                'product': form.data('product-id'),
+            },
+            success: function(data) {
+                toastr.success('It may a couple of minutes to complete.', 'Inventory Syncing Started');
+            },
+            error: function(data) {
+                displayAjaxError('Inventory Syncing', data);
+            },
+            complete: function() {
+                btn.bootstrapBtn('reset');
+            }
+        });
+    });
+
     $('.export-save-btn', target).click(function (e) {
         e.preventDefault();
 
