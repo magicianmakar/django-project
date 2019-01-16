@@ -43,6 +43,7 @@ from shopified_core.utils import (
     safeStr,
     list_chunks,
     app_link,
+    url_join,
     save_user_ip,
     unique_username,
     send_email_from_template,
