@@ -75,7 +75,7 @@
         props: ['products'],
         data: function() {
             return {
-                task_id: null,
+                task_ids: null,
                 save_btn: null
             };
         },
@@ -94,24 +94,41 @@
                     return;
                 }
 
-                var pusher = new Pusher(sub_conf.key);
-                var channel = pusher.subscribe(sub_conf.channel);
-
+                var pusher = new Pusher(sub_confs[0].key);
                 var vm = this;
-                channel.bind('bulk-edit-connected', function(data) {
-                    if (vm.task_id === data.task) {
-                        vm.savingChangesCompleted(data);
-                    }
-                });
+                for (var i = 0; i < sub_confs.length; i++) {
+                    var sub_conf = sub_confs[i];
+                    var channel = pusher.subscribe(sub_conf.channel);
+
+                    channel.bind('bulk-edit-connected', function(data) {
+                        if (data.task in vm.task_ids) {
+                            vm.task_ids[data.task] = data;
+                            var completed = true;
+                            for (var task_id in vm.task_ids) {
+                                if (vm.task_ids.hasOwnProperty(task_id) && !vm.task_ids[task_id]) {
+                                    completed = false;
+                                }
+                            }
+                            if (completed) {
+                                vm.savingChangesCompleted(vm.task_ids);
+                            }
+                        }
+                    });
+                }
             },
             saveChanges: function(e) {
                 this.save_btn = $(e.target);
                 this.save_btn.button('loading');
+                this.task_ids = {};
 
                 toastr.clear();
 
-                var api_data = $.map(this.products, function(el) {
-                    return {
+                var api_data = {};
+                $.map(this.products, function(el) {
+                    if (!api_data[el.store]) {
+                        api_data[el.store] = [];
+                    }
+                    api_data[el.store].push({
                         'id': el.id,
                         'title': el.title,
                         'product_type': el.product_type,
@@ -126,45 +143,54 @@
                                 'weight_unit': variant.weight_unit,
                             };
                         })
-                    };
+                    });
                 });
 
-                $.ajax({
-                    url: '/api/bulk-edit-connected',
-                    type: 'POST',
-                    data: JSON.stringify({
-                        products: api_data,
-                        store: sub_conf.store
-                    }),
-                    contentType: "application/json; charset=utf-8",
-                    dataType: "json",
-                    context: {
-                        vm: this
-                    },
-                    success: function(data) {
-                        this.vm.task_id = data.task;
-                    },
-                    error: function(data) {
-                        displayAjaxError('Bulk Edit', data);
-                        this.vm.save_btn.button('reset');
+                for (var store in api_data) {
+                    if (api_data.hasOwnProperty(store)) {
+                        $.ajax({
+                            url: '/api/bulk-edit-connected',
+                            type: 'POST',
+                            data: JSON.stringify({
+                                products: api_data[store],
+                                store: store
+                            }),
+                            contentType: "application/json; charset=utf-8",
+                            dataType: "json",
+                            context: {
+                                vm: this
+                            },
+                            success: function(data) {
+                                this.vm.task_ids[data.task] = false;
+                            },
+                            error: function(data) {
+                                displayAjaxError('Bulk Edit', data);
+                                this.vm.save_btn.button('reset');
+                            }
+                        });
                     }
-                });
+                }
             },
-            savingChangesCompleted: function(data) {
+            savingChangesCompleted: function(task_ids) {
                 toastr.success('Changes saved!', 'Bulk Edit');
                 this.save_btn.button('reset');
 
-                if (data.errors && data.errors.length) {
-                    toastr.options.closeButton = true;
-                    toastr.options.newestOnTop = false;
-                    toastr.options.timeOut = 0;
-                    toastr.options.extendedTimeOut = 0;
+                for (var task_id in task_ids) {
+                    if (task_ids.hasOwnProperty(task_id)) {
+                        var data = task_ids[task_id];
+                        if (data.errors && data.errors.length) {
+                            toastr.options.closeButton = true;
+                            toastr.options.newestOnTop = false;
+                            toastr.options.timeOut = 0;
+                            toastr.options.extendedTimeOut = 0;
 
-                    toastr.error('An error occured will updating the following Products:');
+                            toastr.error('An error occured will updating the following Products:');
 
-                    $.each(data.errors, function(i, title) {
-                        toastr.error(title);
-                    });
+                            $.each(data.errors, function(i, title) {
+                                toastr.error(title);
+                            });
+                        }
+                    }
                 }
             }
         }

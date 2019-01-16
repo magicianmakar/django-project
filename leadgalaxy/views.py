@@ -1781,23 +1781,51 @@ def bulk_edit(request, what):
         })
 
     elif what == 'connected':
-        store = get_object_or_404(ShopifyStore, id=request.GET.get('store'))
-        permissions.user_can_view(request.user, store)
-
-        product_ids = request.GET.get('products')
-        if not product_ids:
+        products = request.GET.get('products')
+        if not products:
             raise Http404
 
-        products = utils.get_shopify_products(
-            store=store,
-            product_ids=product_ids,
-            fields='id,title,product_type,image,variants,vendor,tags')
+        # collect shopify product ids per a store
+        stores = {}
+        product_ids = {}
+
+        if request.GET.get('store'):  # bulk edit products from one store
+            store = get_object_or_404(ShopifyStore, id=request.GET.get('store'))
+            stores[str(store.id)] = store
+            product_ids[str(store.id)] = products
+        else:  # bulk edit products from multiple stores
+            products = ShopifyProduct.objects.select_related('store').filter(pk__in=products.split(','))
+            for product in products:
+                store = product.store
+                stores[str(store.id)] = store
+                if not product_ids.get(str(store.id)):
+                    product_ids[str(store.id)] = []
+                product_ids[str(store.id)].append(str(product.shopify_id))
+
+        # get shopify products per a store
+        products = []
+        for store_id in stores.keys():
+            store = stores[store_id]
+            permissions.user_can_view(request.user, store)
+            store_products = utils.get_shopify_products(
+                store=store,
+                product_ids=product_ids[store_id],
+                fields='id,title,product_type,image,variants,vendor,tags')
+            for product in list(store_products):
+                product['store'] = store_id
+                products.append(product)
+
+        stores = stores.values()
+
+        breadcrumbs = [{'title': 'Products', 'url': '/product'}, 'Bulk Edit']
+        if len(stores) == 1:
+            breadcrumbs.append(stores[0].title)
 
         return render(request, 'bulk_edit_connected.html', {
-            'products': list(products),
-            'store': store,
+            'products': products,
+            'stores': stores,
             'page': 'bulk',
-            'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit', store.title]
+            'breadcrumbs': breadcrumbs
         })
 
     raise Http404

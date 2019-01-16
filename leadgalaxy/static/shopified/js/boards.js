@@ -81,7 +81,30 @@ $('.apply-btn').click(function(e) {
             }
         });
     } else if (action == 'edit') {
-        $('#modal-products-edit-form').modal('show');
+        var connected = [];
+        var non_connected = [];
+        boardBox.find('input.item-select[type=checkbox]').each(function(i, el) {
+            if (el.checked) {
+                var product_box = $(el).parents('.product-box');
+                var product = product_box.attr('product-id');
+                if (product_box.attr('product-connected')) {
+                    connected.push(product);
+                } else {
+                    non_connected.push(product);
+                }
+            }
+        });
+        if (connected.length > 0 && non_connected.length > 0) {
+            toastr.warning('Connected and unconnected products are selected');
+        } else if (non_connected.length > 0) {
+            $('#modal-products-edit-form').modal('show');
+        } else if (connected.length > 0) {
+            window.open('/product/edit/connected?' + $.param({
+                products: connected.join(','),
+            }), '_blank');
+        } else {
+            toastr.warning('No product is selected');
+        }
         return;
     } else if (action == 'shopify-send') {
         currentBoardBox = boardBox;

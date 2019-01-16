@@ -51,7 +51,7 @@
     {% for item in board.products %}
     <div class="col-xs-3 col-md-3 ">
         <div class="ibox">
-            <div class="ibox-content product-box" product-id="{{item.id}}" product-title="{{item.product.title}}">
+            <div class="ibox-content product-box" product-id="{{item.id}}" product-title="{{item.product.title}}" {% if item.qelem.is_connected %}product-connected="true"{% endif %}>
                 <div class="product-imitation" style="padding: 0;">
                     <input class="item-select icheck" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
                     <label for="product_{{item.id}}"><img class="unveil"  src="{% static 'img/blank.gif' %}" data-src="{{item.images|first}}" style="width: 100%"></label>
