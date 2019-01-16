@@ -674,7 +674,23 @@
                 <form id="product-config-form" role="form">
                     <input type="hidden" name="product" value="{{product.id}}" />
                     <div class="setting-section">
-                        <h3 class="setting-title">Alert Settings</h3>
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <h3 class="setting-title">Alert Settings</h3>
+                            </div>
+                            <div class="col-sm-6 text-right">
+                                Last Check:
+                                <span class="badge badge-default">
+                                {% if not product.qelem.monitor_id > 0 %}
+                                    Not Monitored
+                                {% elif product.last_check %}
+                                    {% date_humanize product.last_check %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="row m-t">

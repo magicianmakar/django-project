@@ -46,6 +46,7 @@ from stripe_subscription.stripe_api import stripe
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     app_link,
+    url_join,
     send_email_from_template,
     version_compare,
     order_data_cache,
@@ -1431,6 +1432,24 @@ def product_view(request, pid):
 
                 product.refresh_from_db()
 
+    last_check = None
+    try:
+        if product.monitor_id > 0:
+            cache_key = 'product_last_check_{}'.format(product.id)
+            last_check = cache.get(cache_key)
+
+            if last_check is None:
+                response = requests.get(
+                    url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/', product.monitor_id),
+                    auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD),
+                    timeout=10,
+                )
+
+                last_check = arrow.get(response.json()['updated_at'])
+                cache.set(cache_key, last_check, timeout=3600)
+    except:
+        pass
+
     p = {
         'qelem': product,
         'id': product.id,
@@ -1440,7 +1459,8 @@ def product_view(request, pid):
         'updated_at': product.updated_at,
         'product': json.loads(product.data),
         'notes': product.notes,
-        'alert_config': alert_config
+        'alert_config': alert_config,
+        'last_check': last_check,
     }
 
     if 'images' not in p['product'] or not p['product']['images']:
