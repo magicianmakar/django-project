@@ -115,6 +115,10 @@ def index_view(request):
     templates = DescriptionTemplate.objects.filter(user=user.models_user).defer('description')
     markup_rules = PriceMarkupRule.objects.filter(user=user.models_user)
 
+    if config.get('alert_price_change', None) == 'update_for_increase':
+        config['alert_price_change'] = 'update'
+        config['price_update_for_increase'] = True
+
     return render(request, 'index.html', {
         'stores': stores,
         'config': config,
