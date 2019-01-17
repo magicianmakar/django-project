@@ -110,7 +110,7 @@ var PhotoPeaEditor = {
             setTimeout(function() {
                 var wnd = document.getElementById("photopea").contentWindow;
 
-                fetch(imageUrl).then(function(response) {
+                fetch(imageUrl, {cache: "no-cache"}).then(function(response) {
                     return response.arrayBuffer();
                 }).then(function(arrayBuffer) {
                     wnd.postMessage(arrayBuffer, "*");
