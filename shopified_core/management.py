@@ -3,6 +3,7 @@ import requests
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
+from django.db import connection
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 import sys
@@ -24,6 +25,8 @@ class DropifiedBaseCommand(BaseCommand):
                 return
 
         assert hasattr(self, 'start_command')
+
+        self._statement_timeout()
 
         try:
             self.start_command(*args, **options)
@@ -55,3 +58,8 @@ class DropifiedBaseCommand(BaseCommand):
 
         if tags:
             client.tags_context(tags)
+
+    def _statement_timeout(self):
+        if settings.COMMAND_STATEMENT_TIMEOUT and connection.vendor == 'postgresql':
+            with connection.cursor() as cursor:
+                cursor.execute('SET statement_timeout TO {};'.format(settings.COMMAND_STATEMENT_TIMEOUT))
