@@ -1040,7 +1040,7 @@ def get_shopify_order(store, order_id):
 
 def get_shopify_orders(store, page=1, limit=50, all_orders=False,
                        order_ids=None, fields=None, extra_params={},
-                       session=requests, raise_for_status=False):
+                       session=requests, raise_for_status=False, retry=False):
 
     if not all_orders:
         params = {
@@ -1074,10 +1074,18 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
             else:
                 params['fields'] = fields
 
-        rep = session.get(
-            url=store.get_link('/admin/orders.json', api=True),
-            params=params
-        )
+        retries = 3 if retry else 1
+
+        while retries > 0:
+            rep = session.get(
+                url=store.get_link('/admin/orders.json', api=True),
+                params=params
+            )
+
+            retries -= 1
+
+            if rep.ok:
+                break
 
         if raise_for_status:
             rep.raise_for_status()
@@ -1098,7 +1106,7 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
             rep = get_shopify_orders(store=store, page=page, limit=limit,
                                      fields=fields, all_orders=False,
                                      extra_params=extra_params, session=requests.session(),
-                                     raise_for_status=raise_for_status)
+                                     raise_for_status=raise_for_status, retry=retry)
             for p in rep:
                 yield p
 

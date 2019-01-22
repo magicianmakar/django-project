@@ -485,7 +485,7 @@ class ShopifyTrackOrderExport():
                 orders_ids = list(set([o.order_id for o in orders_chunk]))
 
                 shopify_orders = {}
-                for o in get_shopify_orders(store=self.store, order_ids=orders_ids, fields='id,name'):
+                for o in get_shopify_orders(store=self.store, order_ids=orders_ids, fields='id,name', retry=True):
                     shopify_orders[o['id']] = o
 
                 for order in orders_chunk:
