@@ -6,7 +6,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.core.cache import caches
+from django.core.cache import cache, caches
 from django.urls import reverse
 from django.db.models import Q
 from django.http import HttpResponse, Http404
@@ -957,13 +957,16 @@ class OrderPlaceRedirectView(RedirectView):
         # Verify if the user didn't pass order limit
         parent_user = self.request.user.models_user
         plan = parent_user.profile.plan
-        if plan.auto_fulfill_limit != -1:
+        limit_check_key = 'order_limit_chq_{}'.format(parent_user.id)
+        if cache.get(limit_check_key) is None and plan.auto_fulfill_limit != -1:
             month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
-            orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start).count()
+            orders_count = parent_user.commercehqordertrack_set.filter(created_at__gte=month_start).count()
 
-            if not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
+            if not settings.DEBUG and not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
                 messages.error(self.request, "You have reached your plan auto fulfill limit")
                 return '/'
+
+            cache.set(limit_check_key, arrow.utcnow().timestamp, timeout=3600)
 
         return redirect_url
 

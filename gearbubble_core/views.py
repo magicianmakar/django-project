@@ -473,13 +473,16 @@ class OrderPlaceRedirectView(RedirectView):
         # Verify if the user didn't pass order limit
         parent_user = self.request.user.models_user
         plan = parent_user.profile.plan
-        if plan.auto_fulfill_limit != -1:
+        limit_check_key = 'order_limit_gear_{}'.format(parent_user.id)
+        if cache.get(limit_check_key) is None and plan.auto_fulfill_limit != -1:
             month_start = [i.datetime for i in arrow.utcnow().span('month')][0]
             orders_count = parent_user.gearbubbleordertrack_set.filter(created_at__gte=month_start).count()
 
-            if not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
+            if not settings.DEBUG and not plan.auto_fulfill_limit or orders_count + 1 > plan.auto_fulfill_limit:
                 messages.error(self.request, "You have reached your plan auto fulfill limit")
                 return '/'
+
+            cache.set(limit_check_key, arrow.utcnow().timestamp, timeout=3600)
 
         return redirect_url
 

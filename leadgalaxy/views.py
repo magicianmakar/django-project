@@ -4133,7 +4133,8 @@ def orders_place(request):
     # Verify if the user didn't pass order limit
     parent_user = request.user.models_user
     plan = parent_user.profile.plan
-    if plan.auto_fulfill_limit != -1 and not settings.DEBUG:
+    limit_check_key = 'order_limit_shopify_{}'.format(parent_user.id)
+    if cache.get(limit_check_key) is None and plan.auto_fulfill_limit != -1:
         month_start = arrow.utcnow().span('month')[0]
 
         # This is used for Oberlo migration
@@ -4143,15 +4144,17 @@ def orders_place(request):
                 month_start = auto_start
 
         orders_count = parent_user.shopifyordertrack_set.filter(created_at__gte=month_start.datetime)
-        orders_count = orders_count.distinct('order_id').order_by('order_id').count()
+        orders_count = orders_count.order_by('order_id').count()
 
         auto_fulfill_limit = plan.auto_fulfill_limit
         if parent_user.get_config('_double_orders_limit'):
             auto_fulfill_limit *= 2
 
-        if not auto_fulfill_limit or orders_count + 1 > auto_fulfill_limit:
+        if not settings.DEBUG and not auto_fulfill_limit or orders_count + 1 > auto_fulfill_limit:
             messages.error(request, "You have reached your plan auto fulfill limit ({} orders/month)".format(auto_fulfill_limit))
             return HttpResponseRedirect('/')
+
+        cache.set(limit_check_key, arrow.utcnow().timestamp, timeout=3600)
 
     # Save Auto fulfill event
     event_data = {}
