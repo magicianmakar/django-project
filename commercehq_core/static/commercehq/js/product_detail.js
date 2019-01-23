@@ -939,6 +939,13 @@ function renderImages() {
 }
 
 function launchEditor(id, src) {
+    if (!src.match(/shopifiedapp.+?\.s3\.amazonaws\.com/)) {
+        src = app_link(['api/ali/get-image'], {url: btoa(src)});
+    }
+    if (config.DEBUG) {
+        src = src.replace('http://dev.', 'https://app.');
+    }
+
     if (config.photo_editor !== null) {
         config.feather_editor.launch({
             image: id,
