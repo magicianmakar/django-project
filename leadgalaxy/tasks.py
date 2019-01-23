@@ -182,6 +182,9 @@ def export_product(req_data, target, user_id):
                 if api_data['product'].get('variants') and len(api_data['product']['variants']) > 100:
                     api_data['product']['variants'] = api_data['product']['variants'][:100]
 
+                # Duplicated product variants
+                duplicate_parent_variants(req_data, api_data)
+
                 if user.get_config('randomize_image_names') and api_data['product'].get('images'):
                     for i, image in enumerate(api_data['product']['images']):
                         if image.get('src') and not image.get('filename'):
@@ -454,6 +457,34 @@ def export_product(req_data, target, user_id):
     }
 
 
+def duplicate_parent_variants(req_data, api_data):
+    try:
+        if not req_data.get('product'):
+            return
+
+        product = ShopifyProduct.objects.get(id=req_data['product'])
+        parent = product.parent_product
+        if parent and parent.shopify_id and parent.store.is_active and product.default_supplier.variants_map:
+            parent_shopify_product = cache.get('shopify_product_%s' % parent.shopify_id)
+            if parent_shopify_product is None:
+                parent_shopify_product = utils.get_shopify_product(parent.store, parent.shopify_id)
+                cache.set('shopify_product_%s' % parent.shopify_id, parent_shopify_product, timeout=60)
+
+            if parent_shopify_product:
+                for variant in api_data['product']['variants']:
+                    for parent_variant in parent_shopify_product['variants']:
+                        if parent_variant.get('price') is not None:
+                            match = True
+                            for option in ['option1', 'option2', 'option3']:
+                                if variant.get(option) != parent_variant.get(option):
+                                    match = False
+                                    break
+                            if match:
+                                variant['price'] = parent_variant['price']
+    except:
+        raven_client.captureException(level='warning')
+
+
 def duplicate_product_mapping(req_data, product_to_map, variants_mapping):
     try:
         if not req_data.get('product'):
@@ -462,15 +493,19 @@ def duplicate_product_mapping(req_data, product_to_map, variants_mapping):
         product = ShopifyProduct.objects.get(id=req_data['product'])
         parent = product.parent_product
         if parent and parent.shopify_id and parent.store.is_active and product.default_supplier.variants_map:
-            parent_shopify_product = utils.get_shopify_product(parent.store, parent.shopify_id)
+            parent_shopify_product = cache.get('shopify_product_%s' % parent.shopify_id)
+            if parent_shopify_product is None:
+                parent_shopify_product = utils.get_shopify_product(parent.store, parent.shopify_id)
+                cache.set('shopify_product_%s' % parent.shopify_id, parent_shopify_product, timeout=60)
+
             if parent_shopify_product:
                 parent_variants_mapping = json.loads(product.default_supplier.variants_map)
                 for variant in product_to_map['variants']:
                     for parent_variant in parent_shopify_product['variants']:
-                        if parent_variants_mapping.get(str(parent_variant['id'])):
+                        if parent_variants_mapping.get(str(parent_variant['id'])) is not None:
                             match = True
                             for option in ['option1', 'option2', 'option3']:
-                                if variant[option] != parent_variant[option]:
+                                if variant.get(option) != parent_variant.get(option):
                                     match = False
                                     break
                             if match:
