@@ -960,8 +960,8 @@ class ShopifyProduct(models.Model):
 
     title = models.TextField(blank=True, default='', db_index=True)
     price = models.FloatField(default=0.0)
-    product_type = models.CharField(max_length=255, blank=True, default='', db_index=True)
-    tag = models.TextField(blank=True, default='', db_index=True)
+    product_type = models.CharField(max_length=255, blank=True, default='')
+    tag = models.TextField(blank=True, default='')
 
     parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
 
@@ -1691,7 +1691,7 @@ class ShopifyOrderTrack(models.Model):
     source_id = models.CharField(max_length=512, blank=True, default='', db_index=True, verbose_name="Source Order ID")
     source_status = models.CharField(max_length=128, blank=True, default='', verbose_name="Source Order Status")
     source_tracking = models.CharField(max_length=128, blank=True, default='', db_index=True, verbose_name="Source Tracking Number")
-    source_status_details = models.CharField(max_length=512, blank=True, null=True, db_index=True, verbose_name="Source Status Details")
+    source_status_details = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Status Details")
     source_type = models.CharField(max_length=512, blank=True, null=True, verbose_name="Source Type")
 
     hidden = models.BooleanField(default=False)

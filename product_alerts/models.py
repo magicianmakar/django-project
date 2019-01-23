@@ -326,9 +326,9 @@ class ProductVariantPriceHistory(models.Model):
         ordering = ['-updated_at']
         index_together = [['shopify_product', 'variant_id'], ['chq_product', 'variant_id']]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    shopify_product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
-    chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=False)
+    shopify_product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE, db_index=False)
+    chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE, db_index=False)
     variant_id = models.BigIntegerField(null=True, verbose_name='Source Variant ID')
     data = models.TextField(null=True, blank=True)
     old_price = models.FloatField(null=True)
