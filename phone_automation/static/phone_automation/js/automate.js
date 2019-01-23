@@ -540,14 +540,12 @@ var demo = new Vue({
                     can_add_children: false
                 }
             }, baseBlock);
-            foundNode = this.findNode({step: 0, children: this.treeData}, parent);
+            foundNode = this.findNode({step: 0, config: {can_add_children: true}, children: this.treeData}, parent);
             // Move previous node forward
-            if (position == 0) {
-                if (foundNode.config && foundNode.config.can_add_children) {
+            if (foundNode.config && foundNode.config.can_add_children) {
+                if (position == 0) {
                     foundNode.next_step = nodeCount;
-                }
-            } else {
-                if (foundNode.config.can_add_children) {
+                } else {
                     foundNode.children[position - 1].next_step = newNode.step;
                 }
             }
