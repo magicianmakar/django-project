@@ -2,6 +2,8 @@
 
 import re
 import random
+from mock import Mock
+from django.test import TransactionTestCase
 import json
 from django.conf import settings
 from django.test import tag
@@ -19,8 +21,10 @@ from shopified_core.shipping_helper import (
     valide_aliexpress_province,
     support_other_in_province,
 )
+from shopified_core.utils import hash_url_filename
 
-from leadgalaxy.tests.factories import UserFactory, ShopifyBoardFactory, ShopifyProductFactory
+from leadgalaxy.tests.factories import UserFactory, ShopifyProductFactory
+from leadgalaxy.tests.factories import UserFactory, ShopifyProductFactory, ShopifyBoardFactory 
 
 import factory
 import requests
@@ -959,6 +963,135 @@ class ShippingHelperTestCase(BaseTestCase):
         order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
 
         self.assertEqual(customer_address['zip'], '1155967')
+
+
+class UpdateVariantsDataTestCase(TransactionTestCase):
+    def setUp(self):
+        red_image = 'http://cdn.example/com/image1.png'
+        blue_image = 'http://cdn.example/com/image2.png'
+        green_image = 'http://cdn.example/com/image3.png'
+        self.red_image_hash = hash_url_filename(red_image)
+        self.blue_image_hash = hash_url_filename(blue_image)
+        self.green_image_hash = hash_url_filename(green_image)
+
+        self.shopify_data = {
+            'options': [
+                {
+                    'name': 'Colour',
+                    'values': [
+                        'red',
+                        'blue',
+                        'green',
+                    ],
+                },
+                {
+                    'name': 'Size',
+                    'values': [
+                        'small',
+                        'large',
+                    ],
+                },
+            ],
+            'images': [
+                {
+                    'id': 1,
+                    'src': red_image
+                },
+                {
+                    'id': 2,
+                    'src': blue_image
+                },
+                {
+                    'id': 3,
+                    'src': green_image
+                },
+            ],
+            'variants': [
+                {
+                    'image_id': 1,
+                    'option1': 'red',
+                    'option2': 'small',
+                },
+                {
+                    'image_id': 1,
+                    'option1': 'red',
+                    'option2': 'large',
+                },
+                {
+                    'image_id': 2,
+                    'option1': 'blue',
+                    'option2': 'small',
+                },
+                {
+                    'image_id': 2,
+                    'option1': 'blue',
+                    'option2': 'large',
+                },
+                {
+                    'image_id': 3,
+                    'option1': 'green',
+                    'option2': 'small',
+                },
+                {
+                    'image_id': 3,
+                    'option1': 'green',
+                    'option2': 'large',
+                },
+            ],
+        }
+
+        self.product_data = {
+            'images': [
+                'http://differentcdn.example.com/image1.png',
+                'http://differentcdn.example.com/image2.png',
+            ],
+            'variants': [
+                {
+                    'title': 'Color',
+                    'values': [
+                        'red',
+                        'blue',
+                    ],
+                },
+                {
+                    'title': 'Size',
+                    'values': [
+                        'small',
+                        'large',
+                    ],
+                },
+            ],
+            'variants_images': {
+                self.red_image_hash: 'red',
+                self.blue_image_hash: 'blue',
+            },
+        }
+
+        self.product = ShopifyProductFactory()
+        self.get_shopify_product = utils.get_shopify_product = Mock(return_value=self.shopify_data)
+
+    def test_must_call_get_shopify_product(self):
+        utils.update_variants_data(self.product, self.product_data)
+        self.assertTrue(self.get_shopify_product.called)
+
+    def test_must_update_product_data_variants(self):
+        utils.update_variants_data(self.product, self.product_data)
+        shopify_variants = self.shopify_data['options']
+        for num, variant in enumerate(self.product_data['variants']):
+            self.assertEqual(variant['title'], shopify_variants[num]['name'])
+            self.assertEqual(variant['values'], shopify_variants[num]['values'])
+
+    def test_must_update_variants_images(self):
+        utils.update_variants_data(self.product, self.product_data)
+        variants_images = self.product_data['variants_images']
+        self.assertEqual(variants_images[self.red_image_hash], 'red')
+        self.assertEqual(variants_images[self.blue_image_hash], 'blue')
+        self.assertEqual(variants_images[self.green_image_hash], 'green')
+
+    def test_must_update_images(self):
+        utils.update_variants_data(self.product, self.product_data)
+        shopify_data_images = [img['src'] for img in self.shopify_data['images']]
+        self.assertEqual(self.product_data['images'], shopify_data_images)
 
 
 class ShopifyBoardTestCase(BaseTestCase):

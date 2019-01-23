@@ -14,6 +14,7 @@ import re
 import shutil
 import tempfile
 import urlparse
+import copy
 from urllib import urlencode
 from hashlib import sha256
 from math import ceil
@@ -21,6 +22,7 @@ from math import ceil
 from tld import get_tld
 from boto.s3.key import Key
 from unidecode import unidecode
+from collections import Counter
 
 from django.conf import settings
 from django.utils import timezone
@@ -50,7 +52,9 @@ from shopified_core.utils import (
     hash_url_filename,
     encode_params,
     http_exception_response,
-    extension_hash_text
+    extension_hash_text,
+    get_top_most_commons,
+    get_first_valid_option,
 )
 
 from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province, support_other_in_province
@@ -780,8 +784,78 @@ def duplicate_product(product, store=None):
     return product
 
 
+def get_variant_options(variant):
+    variant_options = []
+    option_number = 1
+
+    while True:
+        option = variant.get('option{}'.format(option_number))
+        if option:
+            variant_options.append(option)
+            option_number += 1
+            continue
+        break
+
+    return variant_options
+
+
+def get_image_src(variant, images):
+    for image in images:
+        if image['id'] == variant['image_id']:
+            return image['src']
+
+
+def update_variants(data, shopify_data):
+    data['variants'] = []
+
+    for option in shopify_data['options']:
+        data['variants'].append({'title': option['name'], 'values': option['values']})
+
+    return data
+
+
+def update_variants_images(data, shopify_data):
+    images = shopify_data['images']
+    data['images'] = [img['src'] for img in images]
+    data['variants_images'] = {}
+    image_options_map = {}
+
+    for variant in shopify_data['variants']:
+        image_src = get_image_src(variant, images)
+        if image_src:
+            hash_src = hash_url_filename(image_src)
+            variant_options = get_variant_options(variant)
+            image_options_map.setdefault(hash_src, variant_options).extend(variant_options)
+            options = image_options_map.get(hash_src, [])
+            most_commons = Counter(options).most_common()
+            if most_commons:
+                top_most_commons = get_top_most_commons(most_commons)
+                if len(top_most_commons) == 1:
+                    # Sets the image to its most popular option
+                    option, count = top_most_commons[0]
+                    data['variants_images'][hash_src] = option
+                else:
+                    # In case of a tie, assigns the first valid option
+                    valid_options = shopify_data['options'][0]['values']
+                    data['variants_images'][hash_src] = get_first_valid_option(top_most_commons, valid_options)
+
+    return data
+
+
+def update_variants_data(product, data):
+    shopify_data = get_shopify_product(product.store, product.shopify_id)
+    update_variants(data, shopify_data)
+    update_variants_images(data, shopify_data)
+
+    return data
+
+
 def split_product(product, split_factor, store=None):
     data = json.loads(product.data)
+
+    if product.is_connected:
+        update_variants_data(product, data)
+
     new_products = {}
 
     if data['variants'] and len(data['variants']):
@@ -799,7 +873,11 @@ def split_product(product, split_factor, store=None):
                 clone.parent_product = product
                 clone.shopify_id = 0
 
-                new_data = json.loads(clone.data)
+                if product.is_connected:
+                    new_data = copy.deepcopy(data)
+                else:
+                    new_data = json.loads(clone.data)
+
                 new_images = []
                 for img in new_data['images']:
                     hashval = hash_url_filename(img)

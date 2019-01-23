@@ -720,3 +720,23 @@ class CancelledOrderAlert():
     def send_email(self):
         if self._can_email_cancelled_order():
             self._send_cancelled_order_email()
+
+
+def get_top_most_commons(most_commons):
+    option, highest_count = most_commons[0]
+    top_most_commons = []
+
+    for most_common in most_commons:
+        option, count = most_common
+        if count == highest_count:
+            top_most_commons.append(most_common)
+            continue
+        break
+
+    return top_most_commons
+
+
+def get_first_valid_option(most_commons, valid_options):
+    for option, count in most_commons:
+        if option in valid_options:
+            return option
