@@ -23,4 +23,7 @@ urlpatterns = [
     url(r'^call-flow/empty/?$', phone_automation.views.call_flow_empty, name='phone_automation_call_flow_empty'),
 
     url(r'^call-flow/hangup/?$', phone_automation.views.call_flow_hangup, name='phone_automation_call_flow_hangup'),
+
+
+    url(r'^sms-flow/?$', phone_automation.views.sms_flow, name='phone_automation_sms_flow'),
 ]

@@ -7,6 +7,8 @@
 {% load phone_numbers %}
 {% block main-container %}
 
+
+
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
@@ -24,7 +26,16 @@
                             </h1>
                         </div>
                         <div class="col-md-6 text-right">
-                            <a id="config-flow" type="button" href="{% url 'phone_automation_automate' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-default setup-automation" >Setup Call Flow</a>
+
+                            {% if twilio_phone_number.automation is None %}
+                                <a id="config-flow" type="button" href="{% url 'phone_automation_automate' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-default setup-automation blink-button" >Call Flow is not set - Set Up Now</a>
+                            {% else %}
+                                <a id="config-flow" type="button" href="{% url 'phone_automation_automate' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-default setup-automation" >Setup Call Flow</a>
+                            {% endif %}
+
+                            {%  if sms_allowed %}
+                                <a id="sms-automation" type="button" data-toggle="modal" data-target="#sms-automation-hint"  class="btn btn-info remove-provision" >SMS Automation</a>
+                            {% endif %}
                             <a id="remove-provision" type="button" _href="{% url template_config.url.namespace|add:'phone_automation_provision_release' %}" class="btn btn-danger remove-provision" >Delete Number</a>
                         </div>
                     </div>
@@ -156,6 +167,38 @@
 </div>
 
 
+
+
+
+<div class="modal inmodal" id="sms-automation-hint" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog">
+        <div class="modal-content animated fadeIn">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+                <i class="fa fa-mobile modal-icon"></i>
+                <h4 class="modal-title">SMS Automation</h4>
+                <small>{{ twilio_phone_number.incoming_number|phone_number }}</small>
+            </div>
+            <div class="modal-body">
+
+                <p>Your incoming phone number supports automated SMS replies for the following commands in the message body:</p>
+                <p><blockquote class="sms-command">orders</blockquote> - get all pending orders of the customer, who send the sms message (by incoming phone number match)</p>
+                <br /><br />
+                <p><blockquote class="sms-command">orders-phone &lt;phone-number&gt;</blockquote> - get all pending orders by specified phone number</p>
+                <br /><br />
+                <p><blockquote class="sms-command">order-id &lt;store-specific-order-id&gt;</blockquote> - get the status of specified order</p>
+                <br /><br />Just send an sms message with the text in the message body to use these features.
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 {% endblock %}
 
 {% block extracss %}
@@ -164,6 +207,40 @@
         .widget h2 {font-size: 20px !important; margin-top: 0;}
         .setup-automation {margin-right:10px;}
         .phone-nummber-cont {margin-bottom:20px;}
+        .sms-command {color:#1ab394;}
+
+        .blink-button {
+          -webkit-border-radius: 3px;
+          border-radius: 3px;
+
+          -webkit-animation: glowing 1500ms infinite;
+          -moz-animation: glowing 1500ms infinite;
+          -o-animation: glowing 1500ms infinite;
+          animation: glowing 1500ms infinite;
+        }
+        @-webkit-keyframes glowing {
+          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
+          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
+          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
+        }
+
+        @-moz-keyframes glowing {
+          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
+          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
+          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
+        }
+
+        @-o-keyframes glowing {
+          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
+          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
+          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
+        }
+
+        @keyframes glowing {
+          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
+          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
+          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
+        }
     </style>
 
 {% endblock %}
@@ -192,6 +269,10 @@
                 }
             });
         });
+
+
+
+
     });
     </script>
 {% endblock %}

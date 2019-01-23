@@ -2,8 +2,8 @@
 
 import json
 import mimetypes
-from datetime import datetime, timedelta
-
+import re
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
@@ -19,6 +19,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from twilio.base.exceptions import TwilioRestException
 from twilio.twiml.voice_response import VoiceResponse, Gather
+from twilio.twiml.messaging_response import MessagingResponse
 
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.utils import safeInt, app_link
@@ -30,7 +31,7 @@ from .models import (
     TwilioLog,
     TwilioRecording
 )
-from .utils import get_month_totals, get_month_limit, get_twilio_client
+from .utils import *
 
 
 def JsonDatetimeConverter(o):
@@ -50,8 +51,8 @@ def index(request):
         twilio_logs = user.twilio_logs.filter(log_type='status-callback')
         latest_twilio_logs = twilio_logs[:5]
         twilio_stats['twilio_logs_total_count'] = twilio_logs.count()
-        # TODO: Use Arrow date with customer's timezone request.session.get('django_timezone')
-        today_twilio_logs = twilio_logs.filter(created_at__gte=timezone.now().date())
+        day_start = timezone.now().replace(hour=12, minute=0, second=0)
+        today_twilio_logs = twilio_logs.filter(created_at__gte=day_start)
         twilio_stats['twilio_logs_today_count'] = today_twilio_logs.count()
         twilio_stats['today_total_duration'] = today_twilio_logs.aggregate(Sum('call_duration'))
         twilio_stats['total_duration'] = get_month_totals(user)
@@ -66,11 +67,16 @@ def index(request):
     if (twilio_phone_number is None) and latest_twilio_logs == []:
         return HttpResponseRedirect(reverse('phone_automation_provision'))
 
+    # checking SMS abilities
+    # sms_allowed = check_sms_abilities(twilio_phone_number)
+    sms_allowed = False  # - Disabled temporary until review
+
     return render(request, 'phone_automation/index.html', {
         'page': 'phone_automation',
         'twilio_phone_number': twilio_phone_number,
         'twilio_logs': latest_twilio_logs,
         'twilio_stats': twilio_stats,
+        'sms_allowed': sms_allowed,
         'breadcrumbs': [{'title': 'CallFlex', 'url': reverse('phone_automation_index')}, 'Dashboard'],
     })
 
@@ -121,10 +127,12 @@ def provision(request):
                 .create(
                     phone_number=phone_number,
                     voice_url=app_link(reverse('phone_automation_call_flow')),
+                    sms_url=app_link(reverse('phone_automation_sms_flow')),
                     status_callback=app_link(reverse('phone_automation_status_callback'))
                 )
             twilio_metadata = incoming_phone_number._properties
             twilio_metadata = json.dumps(twilio_metadata, default=JsonDatetimeConverter)
+            twilio_metadata = json.loads(twilio_metadata)
 
             twilio_phone_number = TwilioPhoneNumber()
             twilio_phone_number.incoming_number = phone_number
@@ -153,7 +161,7 @@ def provision(request):
 
         numbers = client.available_phone_numbers("US") \
                         .toll_free \
-                        .list(voice_enabled=True, area_code=areacode, contains=mask, page_size=12)
+                        .list(voice_enabled=True, sms_enabled=True, area_code=areacode, contains=mask, page_size=12)
         twilio_phone_numbers_pool = numbers
 
     return render(request, 'phone_automation/provision.html', {
@@ -418,5 +426,66 @@ def call_flow_empty(request):
 
     response = VoiceResponse()
     response.redirect(current_step.redirect)
+
+    return HttpResponse(str(response), content_type='application/xml')
+
+
+def sms_flow(request):
+    phone = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    user = phone.user
+    phone_from = request.POST.get('From')
+    sms_message = request.POST.get('Body')
+
+    response = MessagingResponse()
+
+    command_order_phone = re.search(r'(orders-phone) (.*)', sms_message)
+    command_orders = re.search(r'(orders)(.*)', sms_message)
+    command_order_id = re.search(r'(order-id) (.*)', sms_message)
+
+    message = ""
+
+    if command_order_phone:
+        # getting order by phone number
+        command_parameter = command_order_phone.group(2).strip()
+        phone_cleaned = re.sub(r"\D", "", command_parameter)
+        orders = get_orders_by_phone(user, phone_cleaned, command_parameter)
+
+        if len(orders['shopify']) > 0 or len(orders['woo']) > 0 or len(orders['chq']) > 0 or len(orders['gear']) > 0:
+            message += "We've found the following open orders by your phone number " + command_parameter + ": \n "
+            message += get_sms_text(orders)
+        else:
+            message += "We've not found any open orders by your phone number " + command_parameter + " . \n "
+    elif command_orders:
+        # getting order by phone number
+        phone = re.sub(r"\D", "", phone_from)
+
+        orders = get_orders_by_phone(user, phone, phone_from)
+
+        if len(orders['shopify']) > 0 or len(orders['woo']) > 0 or len(orders['chq']) > 0 or len(orders['gear']) > 0:
+            message += "We've found the following open orders by your phone number " + phone_from + ": \n "
+            message += get_sms_text(orders)
+
+        else:
+            message += "We've not found any open orders by your phone number " + phone_from + " . \n "
+
+    elif command_order_id:
+        command_parameter = command_order_id.group(2).strip()
+        command_parameter = re.sub(r"\D", "", command_parameter)
+
+        # getting order by ID
+        order_id = command_parameter
+
+        orders = get_orders_by_id(user, order_id)
+        if len(orders['shopify']) > 0 or len(orders['woo']) > 0 or len(orders['chq']) > 0 or len(orders['gear']) > 0:
+            message += "We've found the following open orders by ID you provided ( " + order_id + "): \n "
+            message += get_sms_text(orders)
+
+        else:
+            message += "We've not found any open orders by ID you sent us (" + order_id + "). \n "
+
+    else:
+        message = "Command not recognized."
+
+    response.message(message)
 
     return HttpResponse(str(response), content_type='application/xml')

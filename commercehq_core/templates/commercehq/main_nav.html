@@ -89,9 +89,19 @@
                     <span class="fa arrow"></span>
                 </a>
                 <ul class="nav nav-second-level collapse">
+                    {% if user|can:'phone_automation.use'  %}
+                        <li {% if page == 'phone_automation' %}class="active"{% endif %}>
+                            <a href="{% url 'phone_automation_index' %}">
+                                <i class="fa fa-phone"></i>
+                                <span class="nav-label">CallFlex</span>
+                            </a>
+                        </li>
+                    {% endif %}
+
                     <li {% if url_name == 'product_feeds' %}class="active"{% endif %}>
                         <a href="{% url 'product_feeds' store_type='chq' %}">
-                            Product Feeds
+                            <i class="fa fa-gift"></i>
+                            <span class="nav-label">Product Feeds</span>
                         </a>
                     </li>
                 </ul>
