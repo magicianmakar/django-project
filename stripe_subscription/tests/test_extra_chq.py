@@ -92,12 +92,12 @@ class ExtraCHQStoreTestCase(BaseTestCase):
 
         utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock(invoiceitem_id))
 
-        utils.extra_store_invoice(extra_chq_store, chq=True)
+        utils.extra_store_invoice(extra_chq_store)
 
         utils.stripe.InvoiceItem.create.assert_called_once_with(
             amount=2700, currency='usd',
             customer=self.customer.customer_id,
-            description=u'Additional CHQ Store: {}'.format(extra_chq_store.title)
+            description=u'Additional CommerceHQ Store: {}'.format(extra_chq_store.title)
         )
 
         extra_chq = ExtraCHQStore.objects.get(store=extra_chq_store)
@@ -248,3 +248,34 @@ class ExtraCHQStoreTestCase(BaseTestCase):
 
         self.assertFalse(have_extra_stores(self.user))
         self.assertEqual(self.user.extrachqstore_set.count(), 0)
+
+    def test_not_generate_invoice_on_plan_limits_increase(self):
+        for i in range(10):
+            CommerceHQStore.objects.create(
+                user=self.user, title="test%s" % i, api_url=CHQ_API_URL,
+                api_key=CHQ_API_KEY, api_password=CHQ_API_PASSWORD)
+        self.assertTrue(have_extra_stores(self.user))
+
+        from stripe_subscription import utils
+        utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock())
+
+        from django.core.cache import cache
+        cache.delete('user_extra_stores_ignored_{}'.format(self.user.id))
+        cache.delete('user_invoice_checked_{}'.format(self.user.id))
+        self.assertEqual(utils.invoice_extra_stores(), 10, 'Invoice Active store')
+
+        # Change plan
+        plan = GroupPlan.objects.create(
+            title='Elite 10', slug='elite-ten-stores', stores=10,
+            payment_gateway=1)
+        plan.is_stripe = MagicMock(return_value=True)
+        self.user.profile.change_plan(plan)
+        self.assertEqual(self.user.profile.plan, plan)
+
+        # Check if invoice will be generated in the next period
+        import arrow
+        with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=40)):
+            cache.delete('user_extra_stores_ignored_{}'.format(self.user.id))
+            cache.delete('user_invoice_checked_{}'.format(self.user.id))
+            self.assertEqual(utils.invoice_extra_stores(), 1)
+            self.assertEqual(self.user.extrachqstore_set.count(), 1)

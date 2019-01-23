@@ -5,13 +5,19 @@ from mock import patch
 
 from shopified_core import permissions
 
-from stripe_subscription.models import ExtraStore, StripeCustomer
+from stripe_subscription.models import ExtraWooStore, StripeCustomer
 from stripe_subscription.utils import have_extra_stores
 
-from leadgalaxy.models import GroupPlan, ShopifyStore, User
+from leadgalaxy.models import GroupPlan, User, ShopifyStore
+from woocommerce_core.models import WooStore
+
+
+WOO_API_URL = 'https://woo.dropified.com'
+WOO_API_KEY = 'ck_4d13e1a939670468e5db05bf360b0016128a27d4'
+WOO_API_PASSWORD = 'cs_ad0bd14593670243e03ee22646bfd136e980d4bd'
 
 MYSHOPIFY_DOMAIN = 'shopified-app-ci.myshopify.com'
-SHOPIFY_APP_URL = ':88937df17024aa5126203507e2147f47@%s' % MYSHOPIFY_DOMAIN
+SHOPIFY_APP_URL = ''
 
 
 class InvoiceItemMock():
@@ -30,16 +36,16 @@ class InvoiceItemMock():
         pass
 
 
-class ExtraStoreTestCase(BaseTestCase):
+class ExtraWooStoreTestCase(BaseTestCase):
     def setUp(self):
         self.user = User.objects.create(username='me', email='me@localhost.com')
 
-        self.store = ShopifyStore.objects.create(
-            user=self.user, title="test1", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        self.store = WooStore.objects.create(
+            user=self.user, title="test1", api_url=WOO_API_URL,
+            api_key=WOO_API_KEY, api_password=WOO_API_PASSWORD)
 
         self.plan = GroupPlan.objects.create(
-            title='Elite', slug='elite', stores=1,
+            title='Elite New', slug='elite', stores=1,
             payment_gateway=1)
 
         self.user.profile.change_plan(self.plan)
@@ -58,9 +64,9 @@ class ExtraStoreTestCase(BaseTestCase):
         can_add, total_allowed, user_count = permissions.can_add_store(self.user)
         self.assertTrue(can_add)
         self.assertEqual(total_allowed, self.user.profile.plan.stores)
-        self.assertEqual(user_count, self.user.profile.get_shopify_stores().count())
+        self.assertEqual(user_count, self.user.profile.get_woo_stores().count())
 
-        self.assertEqual(self.user.extrastore_set.count(), 0)
+        self.assertEqual(self.user.extrawoostore_set.count(), 0)
 
         ShopifyStore.objects.create(
             user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
@@ -68,16 +74,17 @@ class ExtraStoreTestCase(BaseTestCase):
 
         self.assertTrue(have_extra_stores(self.user))
         self.assertEqual(self.user.extrastore_set.count(), 1)
+        self.assertEqual(self.user.extrawoostore_set.count(), 0)
 
-    def test_extra_store_invoice(self):
-        self.assertEqual(self.user.extrastore_set.count(), 0)
+    def test_extra_woo_store_invoice(self):
+        self.assertEqual(self.user.extrawoostore_set.count(), 0)
 
-        extra_store = ShopifyStore.objects.create(
-            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        extra_woo_store = WooStore.objects.create(
+            user=self.user, title="test2", api_url=WOO_API_URL,
+            api_key=WOO_API_KEY, api_password=WOO_API_PASSWORD)
 
         self.assertTrue(have_extra_stores(self.user))
-        self.assertEqual(self.user.extrastore_set.count(), 1)
+        self.assertEqual(self.user.extrawoostore_set.count(), 1)
 
         from stripe_subscription import utils
 
@@ -85,26 +92,26 @@ class ExtraStoreTestCase(BaseTestCase):
 
         utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock(invoiceitem_id))
 
-        utils.extra_store_invoice(extra_store)
+        utils.extra_store_invoice(extra_woo_store)
 
         utils.stripe.InvoiceItem.create.assert_called_once_with(
             amount=2700, currency='usd',
             customer=self.customer.customer_id,
-            description=u'Additional Shopify Store: {}'.format(extra_store.title)
+            description=u'Additional WooCommerce Store: {}'.format(extra_woo_store.title)
         )
 
-        extra = ExtraStore.objects.get(store=extra_store)
-        self.assertEqual(extra.status, 'active')
-        self.assertEqual(extra.last_invoice, invoiceitem_id)
+        extra_woo = ExtraWooStore.objects.get(store=extra_woo_store)
+        self.assertEqual(extra_woo.status, 'active')
+        self.assertEqual(extra_woo.last_invoice, invoiceitem_id)
 
     def test_pending_invoice(self):
-        ShopifyStore.objects.create(
-            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        WooStore.objects.create(
+            user=self.user, title="test2", api_url=WOO_API_URL,
+            api_key=WOO_API_KEY, api_password=WOO_API_PASSWORD)
 
-        extra = self.user.extrastore_set.first()
+        extra_woo = self.user.extrawoostore_set.first()
 
-        self.assertTrue(extra.status, 'pending')
+        self.assertTrue(extra_woo.status, 'pending')
 
         from stripe_subscription import utils
 
@@ -134,9 +141,9 @@ class ExtraStoreTestCase(BaseTestCase):
         invoiced = utils.invoice_extra_stores()
         self.assertEqual(invoiced, 1)
 
-        extra = self.user.extrastore_set.first()
-        self.assertEqual(extra.status, 'active', 'Should change the status to active')
-        self.assertEqual(extra.last_invoice, NextInvoice().get(0))
+        extra_woo = self.user.extrawoostore_set.first()
+        self.assertEqual(extra_woo.status, 'active', 'Should change the status to active')
+        self.assertEqual(extra_woo.last_invoice, NextInvoice().get(0))
 
         invoiced = utils.invoice_extra_stores()
         self.assertEqual(invoiced, 0, 'Invoice only once in a period')
@@ -145,9 +152,9 @@ class ExtraStoreTestCase(BaseTestCase):
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=40)):
             invoiced = utils.invoice_extra_stores()
 
-            extra = self.user.extrastore_set.first()
+            extra_woo = self.user.extrawoostore_set.first()
             self.assertEqual(invoiced, 1, 'Invoice after period end')
-            self.assertEqual(extra.last_invoice, NextInvoice().get(1), 'Invoice Item should be different')
+            self.assertEqual(extra_woo.last_invoice, NextInvoice().get(1), 'Invoice Item should be different')
 
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=65)):
             self.assertEqual(utils.invoice_extra_stores(), 1, 'Third billing period Invoice')
@@ -159,14 +166,14 @@ class ExtraStoreTestCase(BaseTestCase):
             self.assertEqual(utils.invoice_extra_stores(), 1, 'The fourth billing period')
             self.assertEqual(utils.invoice_extra_stores(), 0, 'Should not double invoice this period')
 
-    def test_delete_extra_store_invoice(self):
+    def test_delete_extra_woo_store_invoice(self):
         # TODO: Handle when the user delete a non-extra store whie having extra stores
 
-        ShopifyStore.objects.create(
-            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        WooStore.objects.create(
+            user=self.user, title="test2", api_url=WOO_API_URL,
+            api_key=WOO_API_KEY, api_password=WOO_API_PASSWORD)
 
-        extra = self.user.extrastore_set.first()
+        extra_woo = self.user.extrawoostore_set.first()
 
         from stripe_subscription import utils
         utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock())
@@ -175,17 +182,17 @@ class ExtraStoreTestCase(BaseTestCase):
 
         import arrow
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=35)):
-            extra.store.is_active = False
-            extra.store.save()
+            extra_woo.store.is_active = False
+            extra_woo.store.save()
 
             self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete stores')
 
-    def test_delete_extra_store_on_plan_limit(self):
-        ShopifyStore.objects.create(
-            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+    def test_delete_extra_woo_store_on_plan_limit(self):
+        WooStore.objects.create(
+            user=self.user, title="test2", api_url=WOO_API_URL,
+            api_key=WOO_API_KEY, api_password=WOO_API_PASSWORD)
 
-        extra = self.user.extrastore_set.first()
+        extra_woo = self.user.extrawoostore_set.first()
 
         from stripe_subscription import utils
         utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock())
@@ -193,23 +200,23 @@ class ExtraStoreTestCase(BaseTestCase):
         self.store.is_active = False
         self.store.save()
 
-        self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete store')
-        self.assertEqual(self.user.extrastore_set.first().status, 'disabled')
+        self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invoice delete store')
+        self.assertEqual(self.user.extrawoostore_set.first().status, 'disabled')
 
-        extra = ShopifyStore.objects.create(
-            user=self.user, title="test3", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        extra_woo = WooStore.objects.create(
+            user=self.user, title="test3", api_url=WOO_API_URL,
+            api_key=WOO_API_KEY, api_password=WOO_API_PASSWORD)
 
-        self.assertEqual(utils.invoice_extra_stores(), 1, 'Invoice Extra Store')
-        self.assertEqual(self.user.extrastore_set.first().status, 'disabled')
-        self.assertEqual(self.user.extrastore_set.last().status, 'active')
+        self.assertEqual(utils.invoice_extra_stores(), 1, 'Invoice Extra Woo Store')
+        self.assertEqual(self.user.extrawoostore_set.first().status, 'disabled')
+        self.assertEqual(self.user.extrawoostore_set.last().status, 'active')
 
         import arrow
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=35)):
-            extra.is_active = False
-            extra.save()
+            extra_woo.is_active = False
+            extra_woo.save()
 
-            self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete stores')
+            self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invoice delete stores')
 
     def test_unlimited_plans(self):
         plan = GroupPlan.objects.create(
@@ -228,25 +235,25 @@ class ExtraStoreTestCase(BaseTestCase):
         can_add, total_allowed, user_count = permissions.can_add_store(self.user)
         self.assertTrue(can_add)
         self.assertEqual(total_allowed, self.user.profile.plan.stores)
-        self.assertEqual(user_count, self.user.profile.get_shopify_stores().count())
+        self.assertEqual(user_count, self.user.profile.get_woo_stores().count())
 
-        self.assertEqual(self.user.extrastore_set.count(), 0)
+        self.assertEqual(self.user.extrawoostore_set.count(), 0)
 
         for i in range(10):
-            ShopifyStore.objects.create(
-                user=self.user, title="test%s" % i, api_url=SHOPIFY_APP_URL,
-                version=2, shop=MYSHOPIFY_DOMAIN)
+            WooStore.objects.create(
+                user=self.user, title="test%s" % i, api_url=WOO_API_URL,
+                api_key=WOO_API_KEY, api_password=WOO_API_PASSWORD)
 
-        self.assertTrue(self.user.profile.get_shopify_stores().count() >= 10)
+        self.assertTrue(self.user.profile.get_woo_stores().count() >= 10)
 
         self.assertFalse(have_extra_stores(self.user))
-        self.assertEqual(self.user.extrastore_set.count(), 0)
+        self.assertEqual(self.user.extrawoostore_set.count(), 0)
 
     def test_not_generate_invoice_on_plan_limits_increase(self):
         for i in range(10):
-            ShopifyStore.objects.create(
-                user=self.user, title="test%s" % i, api_url=SHOPIFY_APP_URL,
-                version=2, shop=MYSHOPIFY_DOMAIN)
+            WooStore.objects.create(
+                user=self.user, title="test%s" % i, api_url=WOO_API_URL,
+                api_key=WOO_API_KEY, api_password=WOO_API_PASSWORD)
         self.assertTrue(have_extra_stores(self.user))
 
         from stripe_subscription import utils
@@ -271,4 +278,4 @@ class ExtraStoreTestCase(BaseTestCase):
             cache.delete('user_extra_stores_ignored_{}'.format(self.user.id))
             cache.delete('user_invoice_checked_{}'.format(self.user.id))
             self.assertEqual(utils.invoice_extra_stores(), 1)
-            self.assertEqual(self.user.extrastore_set.count(), 1)
+            self.assertEqual(self.user.extrawoostore_set.count(), 1)

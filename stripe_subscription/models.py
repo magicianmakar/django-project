@@ -17,6 +17,8 @@ import stripe.error
 from shopified_core import permissions
 from leadgalaxy.models import GroupPlan, ShopifyStore
 from commercehq_core.models import CommerceHQStore
+from woocommerce_core.models import WooStore
+from gearbubble_core.models import GearBubbleStore
 
 PLAN_INTERVAL = (
     ('day', 'daily'),
@@ -269,7 +271,7 @@ class ExtraStore(models.Model):
         verbose_name_plural = "Extra Stores"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
+    store = models.ForeignKey(ShopifyStore, related_name='extra', on_delete=models.CASCADE)
 
     status = models.CharField(max_length=64, null=True, blank=True, default='pending')
     period_start = models.DateTimeField(null=True)
@@ -278,6 +280,8 @@ class ExtraStore(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    _invoice_name = 'Shopify'
 
     def __unicode__(self):
         return u"{}".format(self.store.title)
@@ -289,7 +293,7 @@ class ExtraCHQStore(models.Model):
         verbose_name_plural = "Extra CHQ Stores"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    store = models.ForeignKey(CommerceHQStore, on_delete=models.CASCADE)
+    store = models.ForeignKey(CommerceHQStore, related_name='extra', on_delete=models.CASCADE)
 
     status = models.CharField(max_length=64, null=True, blank=True, default='pending')
     period_start = models.DateTimeField(null=True)
@@ -299,20 +303,73 @@ class ExtraCHQStore(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    _invoice_name = 'CommerceHQ'
+
+    def __unicode__(self):
+        return u"{}".format(self.store.title)
+
+
+class ExtraWooStore(models.Model):
+    class Meta:
+        verbose_name = "Extra WooCommerce Store"
+        verbose_name_plural = "Extra WooCommerce Stores"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(WooStore, related_name='extra', on_delete=models.CASCADE)
+
+    status = models.CharField(max_length=64, null=True, blank=True, default='pending')
+    period_start = models.DateTimeField(null=True)
+    period_end = models.DateTimeField(null=True)
+    last_invoice = models.CharField(max_length=64, null=True, blank=True, verbose_name='Last Invoice Item')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    _invoice_name = 'WooCommerce'
+
+    def __unicode__(self):
+        return u"{}".format(self.store.title)
+
+
+class ExtraGearStore(models.Model):
+    class Meta:
+        verbose_name = "Extra GearBubble Store"
+        verbose_name_plural = "Extra GearBubble Stores"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey(GearBubbleStore, related_name='extra', on_delete=models.CASCADE)
+
+    status = models.CharField(max_length=64, null=True, blank=True, default='pending')
+    period_start = models.DateTimeField(null=True)
+    period_end = models.DateTimeField(null=True)
+    last_invoice = models.CharField(max_length=64, null=True, blank=True, verbose_name='Last Invoice Item')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    _invoice_name = 'GearBubble'
+
     def __unicode__(self):
         return u"{}".format(self.store.title)
 
 
 # Signals Handling
+def get_extra_model_from_store(store_model):
+    if isinstance(store_model, ShopifyStore):
+        return ExtraStore
+    if isinstance(store_model, CommerceHQStore):
+        return ExtraCHQStore
+    if isinstance(store_model, WooStore):
+        return ExtraWooStore
+    if isinstance(store_model, GearBubbleStore):
+        return ExtraGearStore
 
-@receiver(post_save, sender=ShopifyStore)
-def add_store_signal(sender, instance, created, **kwargs):
+
+def create_extra_store(sender, instance, created):
     if created:
         try:
             can_add, total_allowed, user_count = permissions.can_add_store(instance.user)
-
-            stores_count = instance.user.shopifystore_set.filter(is_active=True).count()
-            stores_count += instance.user.commercehqstore_set.filter(is_active=True).count()
+            stores_count = instance.user.profile.get_stores_count()
 
         except User.DoesNotExist:
             return
@@ -320,28 +377,28 @@ def add_store_signal(sender, instance, created, **kwargs):
         if instance.user.profile.plan.is_stripe() \
                 and total_allowed > -1 \
                 and total_allowed < stores_count:
-            ExtraStore.objects.create(
+            extra_store_model = get_extra_model_from_store(instance)
+            extra_store_model.objects.create(
                 user=instance.user,
                 store=instance,
                 period_start=timezone.now())
+
+
+@receiver(post_save, sender=ShopifyStore)
+def add_store_signal(sender, instance, created, **kwargs):
+    create_extra_store(sender, instance, created)
 
 
 @receiver(post_save, sender=CommerceHQStore)
 def add_chqstore_signal(sender, instance, created, **kwargs):
-    if created:
-        try:
-            can_add, total_allowed, user_count = permissions.can_add_store(instance.user)
+    create_extra_store(sender, instance, created)
 
-            stores_count = instance.user.shopifystore_set.filter(is_active=True).count()
-            stores_count += instance.user.commercehqstore_set.filter(is_active=True).count()
 
-        except User.DoesNotExist:
-            return
+@receiver(post_save, sender=WooStore)
+def add_woostore_signal(sender, instance, created, **kwargs):
+    create_extra_store(sender, instance, created)
 
-        if instance.user.profile.plan.is_stripe() \
-                and total_allowed > -1 \
-                and total_allowed < stores_count:
-            ExtraCHQStore.objects.create(
-                user=instance.user,
-                store=instance,
-                period_start=timezone.now())
+
+@receiver(post_save, sender=GearBubbleStore)
+def add_gearstore_signal(sender, instance, created, **kwargs):
+    create_extra_store(sender, instance, created)

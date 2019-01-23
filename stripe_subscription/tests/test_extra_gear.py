@@ -5,13 +5,18 @@ from mock import patch
 
 from shopified_core import permissions
 
-from stripe_subscription.models import ExtraStore, StripeCustomer
+from stripe_subscription.models import ExtraGearStore, StripeCustomer
 from stripe_subscription.utils import have_extra_stores
 
-from leadgalaxy.models import GroupPlan, ShopifyStore, User
+from leadgalaxy.models import GroupPlan, User, ShopifyStore
+from gearbubble_core.models import GearBubbleStore
+
+
+GEAR_API_TOKEN = '2cdf24eecbfc4496be5b716502d42db3'
+GEAR_API_MODE = GearBubbleStore.STAGING
 
 MYSHOPIFY_DOMAIN = 'shopified-app-ci.myshopify.com'
-SHOPIFY_APP_URL = ':88937df17024aa5126203507e2147f47@%s' % MYSHOPIFY_DOMAIN
+SHOPIFY_APP_URL = ''
 
 
 class InvoiceItemMock():
@@ -30,13 +35,13 @@ class InvoiceItemMock():
         pass
 
 
-class ExtraStoreTestCase(BaseTestCase):
+class ExtraGearStoreTestCase(BaseTestCase):
     def setUp(self):
         self.user = User.objects.create(username='me', email='me@localhost.com')
 
-        self.store = ShopifyStore.objects.create(
-            user=self.user, title="test1", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        self.store = GearBubbleStore.objects.create(
+            user=self.user, title="test1", api_token=GEAR_API_TOKEN,
+            mode=GEAR_API_MODE)
 
         self.plan = GroupPlan.objects.create(
             title='Elite', slug='elite', stores=1,
@@ -58,9 +63,9 @@ class ExtraStoreTestCase(BaseTestCase):
         can_add, total_allowed, user_count = permissions.can_add_store(self.user)
         self.assertTrue(can_add)
         self.assertEqual(total_allowed, self.user.profile.plan.stores)
-        self.assertEqual(user_count, self.user.profile.get_shopify_stores().count())
+        self.assertEqual(user_count, self.user.profile.get_gear_stores().count())
 
-        self.assertEqual(self.user.extrastore_set.count(), 0)
+        self.assertEqual(self.user.extragearstore_set.count(), 0)
 
         ShopifyStore.objects.create(
             user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
@@ -68,16 +73,17 @@ class ExtraStoreTestCase(BaseTestCase):
 
         self.assertTrue(have_extra_stores(self.user))
         self.assertEqual(self.user.extrastore_set.count(), 1)
+        self.assertEqual(self.user.extragearstore_set.count(), 0)
 
-    def test_extra_store_invoice(self):
-        self.assertEqual(self.user.extrastore_set.count(), 0)
+    def test_extra_gear_store_invoice(self):
+        self.assertEqual(self.user.extragearstore_set.count(), 0)
 
-        extra_store = ShopifyStore.objects.create(
-            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        extra_gear_store = GearBubbleStore.objects.create(
+            user=self.user, title="test2", api_token=GEAR_API_TOKEN,
+            mode=GEAR_API_MODE)
 
         self.assertTrue(have_extra_stores(self.user))
-        self.assertEqual(self.user.extrastore_set.count(), 1)
+        self.assertEqual(self.user.extragearstore_set.count(), 1)
 
         from stripe_subscription import utils
 
@@ -85,26 +91,26 @@ class ExtraStoreTestCase(BaseTestCase):
 
         utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock(invoiceitem_id))
 
-        utils.extra_store_invoice(extra_store)
+        utils.extra_store_invoice(extra_gear_store)
 
         utils.stripe.InvoiceItem.create.assert_called_once_with(
             amount=2700, currency='usd',
             customer=self.customer.customer_id,
-            description=u'Additional Shopify Store: {}'.format(extra_store.title)
+            description=u'Additional GearBubble Store: {}'.format(extra_gear_store.title)
         )
 
-        extra = ExtraStore.objects.get(store=extra_store)
-        self.assertEqual(extra.status, 'active')
-        self.assertEqual(extra.last_invoice, invoiceitem_id)
+        extra_gear = ExtraGearStore.objects.get(store=extra_gear_store)
+        self.assertEqual(extra_gear.status, 'active')
+        self.assertEqual(extra_gear.last_invoice, invoiceitem_id)
 
     def test_pending_invoice(self):
-        ShopifyStore.objects.create(
-            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        GearBubbleStore.objects.create(
+            user=self.user, title="test2", api_token=GEAR_API_TOKEN,
+            mode=GEAR_API_MODE)
 
-        extra = self.user.extrastore_set.first()
+        extra_gear = self.user.extragearstore_set.first()
 
-        self.assertTrue(extra.status, 'pending')
+        self.assertTrue(extra_gear.status, 'pending')
 
         from stripe_subscription import utils
 
@@ -134,9 +140,9 @@ class ExtraStoreTestCase(BaseTestCase):
         invoiced = utils.invoice_extra_stores()
         self.assertEqual(invoiced, 1)
 
-        extra = self.user.extrastore_set.first()
-        self.assertEqual(extra.status, 'active', 'Should change the status to active')
-        self.assertEqual(extra.last_invoice, NextInvoice().get(0))
+        extra_gear = self.user.extragearstore_set.first()
+        self.assertEqual(extra_gear.status, 'active', 'Should change the status to active')
+        self.assertEqual(extra_gear.last_invoice, NextInvoice().get(0))
 
         invoiced = utils.invoice_extra_stores()
         self.assertEqual(invoiced, 0, 'Invoice only once in a period')
@@ -145,9 +151,9 @@ class ExtraStoreTestCase(BaseTestCase):
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=40)):
             invoiced = utils.invoice_extra_stores()
 
-            extra = self.user.extrastore_set.first()
+            extra_gear = self.user.extragearstore_set.first()
             self.assertEqual(invoiced, 1, 'Invoice after period end')
-            self.assertEqual(extra.last_invoice, NextInvoice().get(1), 'Invoice Item should be different')
+            self.assertEqual(extra_gear.last_invoice, NextInvoice().get(1), 'Invoice Item should be different')
 
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=65)):
             self.assertEqual(utils.invoice_extra_stores(), 1, 'Third billing period Invoice')
@@ -159,14 +165,14 @@ class ExtraStoreTestCase(BaseTestCase):
             self.assertEqual(utils.invoice_extra_stores(), 1, 'The fourth billing period')
             self.assertEqual(utils.invoice_extra_stores(), 0, 'Should not double invoice this period')
 
-    def test_delete_extra_store_invoice(self):
+    def test_delete_extra_gear_store_invoice(self):
         # TODO: Handle when the user delete a non-extra store whie having extra stores
 
-        ShopifyStore.objects.create(
-            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        GearBubbleStore.objects.create(
+            user=self.user, title="test2", api_token=GEAR_API_TOKEN,
+            mode=GEAR_API_MODE)
 
-        extra = self.user.extrastore_set.first()
+        extra_gear = self.user.extragearstore_set.first()
 
         from stripe_subscription import utils
         utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock())
@@ -175,17 +181,17 @@ class ExtraStoreTestCase(BaseTestCase):
 
         import arrow
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=35)):
-            extra.store.is_active = False
-            extra.store.save()
+            extra_gear.store.is_active = False
+            extra_gear.store.save()
 
-            self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete stores')
+            self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invoice delete stores')
 
-    def test_delete_extra_store_on_plan_limit(self):
-        ShopifyStore.objects.create(
-            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+    def test_delete_extra_gear_store_on_plan_limit(self):
+        GearBubbleStore.objects.create(
+            user=self.user, title="test2", api_token=GEAR_API_TOKEN,
+            mode=GEAR_API_MODE)
 
-        extra = self.user.extrastore_set.first()
+        extra_gear = self.user.extragearstore_set.first()
 
         from stripe_subscription import utils
         utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock())
@@ -193,23 +199,23 @@ class ExtraStoreTestCase(BaseTestCase):
         self.store.is_active = False
         self.store.save()
 
-        self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete store')
-        self.assertEqual(self.user.extrastore_set.first().status, 'disabled')
+        self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invoice delete store')
+        self.assertEqual(self.user.extragearstore_set.first().status, 'disabled')
 
-        extra = ShopifyStore.objects.create(
-            user=self.user, title="test3", api_url=SHOPIFY_APP_URL,
-            version=2, shop=MYSHOPIFY_DOMAIN)
+        extra_gear = GearBubbleStore.objects.create(
+            user=self.user, title="test3", api_token=GEAR_API_TOKEN,
+            mode=GEAR_API_MODE)
 
-        self.assertEqual(utils.invoice_extra_stores(), 1, 'Invoice Extra Store')
-        self.assertEqual(self.user.extrastore_set.first().status, 'disabled')
-        self.assertEqual(self.user.extrastore_set.last().status, 'active')
+        self.assertEqual(utils.invoice_extra_stores(), 1, 'Invoice Extra Gear Store')
+        self.assertEqual(self.user.extragearstore_set.first().status, 'disabled')
+        self.assertEqual(self.user.extragearstore_set.last().status, 'active')
 
         import arrow
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=35)):
-            extra.is_active = False
-            extra.save()
+            extra_gear.is_active = False
+            extra_gear.save()
 
-            self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invcoie delete stores')
+            self.assertEqual(utils.invoice_extra_stores(), 0, 'Do not invoice delete stores')
 
     def test_unlimited_plans(self):
         plan = GroupPlan.objects.create(
@@ -228,25 +234,25 @@ class ExtraStoreTestCase(BaseTestCase):
         can_add, total_allowed, user_count = permissions.can_add_store(self.user)
         self.assertTrue(can_add)
         self.assertEqual(total_allowed, self.user.profile.plan.stores)
-        self.assertEqual(user_count, self.user.profile.get_shopify_stores().count())
+        self.assertEqual(user_count, self.user.profile.get_gear_stores().count())
 
-        self.assertEqual(self.user.extrastore_set.count(), 0)
+        self.assertEqual(self.user.extragearstore_set.count(), 0)
 
         for i in range(10):
-            ShopifyStore.objects.create(
-                user=self.user, title="test%s" % i, api_url=SHOPIFY_APP_URL,
-                version=2, shop=MYSHOPIFY_DOMAIN)
+            GearBubbleStore.objects.create(
+                user=self.user, title="test%s" % i, api_token=GEAR_API_TOKEN,
+                mode=GEAR_API_MODE)
 
-        self.assertTrue(self.user.profile.get_shopify_stores().count() >= 10)
+        self.assertTrue(self.user.profile.get_gear_stores().count() >= 10)
 
         self.assertFalse(have_extra_stores(self.user))
-        self.assertEqual(self.user.extrastore_set.count(), 0)
+        self.assertEqual(self.user.extragearstore_set.count(), 0)
 
     def test_not_generate_invoice_on_plan_limits_increase(self):
         for i in range(10):
-            ShopifyStore.objects.create(
-                user=self.user, title="test%s" % i, api_url=SHOPIFY_APP_URL,
-                version=2, shop=MYSHOPIFY_DOMAIN)
+            GearBubbleStore.objects.create(
+                user=self.user, title="test%s" % i, api_token=GEAR_API_TOKEN,
+                mode=GEAR_API_MODE)
         self.assertTrue(have_extra_stores(self.user))
 
         from stripe_subscription import utils
@@ -271,4 +277,4 @@ class ExtraStoreTestCase(BaseTestCase):
             cache.delete('user_extra_stores_ignored_{}'.format(self.user.id))
             cache.delete('user_invoice_checked_{}'.format(self.user.id))
             self.assertEqual(utils.invoice_extra_stores(), 1)
-            self.assertEqual(self.user.extrastore_set.count(), 1)
+            self.assertEqual(self.user.extragearstore_set.count(), 1)
