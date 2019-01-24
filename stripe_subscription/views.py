@@ -465,6 +465,20 @@ def subscription_cancel(request):
         return JsonResponse({'error': 'Unknown "when" parameter'}, status=500)
 
 
+@login_required
+@csrf_protect
+def subscription_activate(request):
+    user = request.user
+
+    subscription = user.stripesubscription_set.get(id=request.POST['subscription'])
+    sub = subscription.refresh()
+
+    sub.cancel_at_period_end = False
+    sub.save()
+
+    return JsonResponse({'status': 'ok'})
+
+
 @csrf_protect
 @require_http_methods(['POST'])
 @login_required

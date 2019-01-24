@@ -264,6 +264,12 @@ class StripeSubscription(models.Model):
 
         return status
 
+    def can_cancel(self):
+        sub = self.retrieve(commit=False)
+        return sub['status'] in ['active', 'trialing', 'past_due'] \
+            and not sub['cancel_at_period_end'] \
+            and not self.plan.is_free
+
 
 class ExtraStore(models.Model):
     class Meta:

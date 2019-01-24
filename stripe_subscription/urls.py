@@ -18,6 +18,9 @@ urlpatterns = [
     url(r'^cancel$', stripe_subscription.views.subscription_cancel,
         name='stripe_subscription.views.subscription_cancel'),
 
+    url(r'^activate$', stripe_subscription.views.subscription_activate,
+        name='stripe_subscription.views.subscription_activate'),
+
     url(r'^invoices/(?P<invoice_id>[\w-]+)/pay$', stripe_subscription.views.invoice_pay,
         name='invoice_pay'),
 

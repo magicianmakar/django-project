@@ -354,6 +354,32 @@
         $('#modal-subscription-cancel').modal('show');
     });
 
+    $('.reactivate-sub-btn').click(function(e) {
+        var parent = $(e.target).parents('.subsciption-plan');
+        var plan = parent.data('data-plan');
+
+        var btn = $(e.target);
+        btn.button('loading');
+
+        $.ajax({
+            url: config.subscription_activate,
+            type: 'POST',
+            data: {
+                subscription: btn.data('subscription'),
+            },
+            success: function(data) {
+                toastr.success("Your Subscription has been activated.", "Activate Subscription");
+
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
+            },
+            error: function(data) {
+                displayAjaxError('Activate Subscription', data);
+            }
+        });
+    });
+
     $('.plan-more-features .more-feature-list-btn').click(function() {
         $('.plan-more-features').hide();
         $('.plan-feature-list').fadeIn();

@@ -31,13 +31,13 @@
 
                                 {% if status.cancel_at_period_end %}
                                     <span class="badge badge-warning">
-                                    Cancelled
+                                    Canceled
                                     {% include 'partial/help_tooltip.html' with help="You have canceled your subscription, but it will stay active until the end of the billing period.<br>You will not be billed at the period end." nostyle=True %}
                                     </span>
                                 {% endif %}
                             </b>
 
-                            {% if status.status == 'active' or status.status == 'trialing' or status.status == 'past_due' and not item.is_free %}
+                            {% if item.can_cancel %}
                             <button class="btn btn-danger btn-outline btn-xs pull-right cancel-sub-btn itooltip"
                                     title="Cancel Your Subscription"
                                     data-subscription="{{item.id}}"
@@ -47,6 +47,18 @@
                                 {# <i class="fa fa-times"></i>  #}
                                 Cancel
                             </button>
+                            {% endif %}
+
+                            {% if status.cancel_at_period_end %}
+                                <button class="btn btn-success btn-xs pull-right reactivate-sub-btn itooltip"
+                                        title="Re-Activate Your Subscription"
+                                        data-subscription="{{item.id}}"
+                                        data-status="{{status.status}}"
+                                        data-period-end="{{item.period_end|date:'SHORT_DATE_FORMAT'}}"
+                                        data-plan="{{item.plan.get_description}}">
+                                    {# <i class="fa fa-times"></i>  #}
+                                    Activate Subscription
+                                </button>
                             {% endif %}
                         </li>
                         {% endwith %}
