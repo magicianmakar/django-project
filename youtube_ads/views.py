@@ -89,6 +89,8 @@ def index(request):
                 count=int(request.GET.get('offset', 0))
             )
 
+            assert len(videos) > 0, 'No videos found'
+
             if is_related:
                 breadcrumbs[1] = 'Related'
 
@@ -110,6 +112,8 @@ def index(request):
                 return redirect('{}?q={}'.format(reverse('youtube_ads.views.index'), request.GET.get('r')))
             if 'Invalid channel' in str(e):
                 error = 'Invalid Channel: {}'.format(request.GET.get('r'))
+            if 'No videos found' in str(e):
+                error = str(e)
             else:
                 error = "Sorry! Something went wrong, we're working on it. Please try again in a few minutes."
                 raven_client.captureException()
