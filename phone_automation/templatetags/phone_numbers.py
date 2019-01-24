@@ -7,7 +7,10 @@ register = template.Library()
 
 @register.filter(name='phone_number')
 def phone_format(n):
-    return u'+{}{}'.format(format(int(n[:-1]), ",").replace(",", "-"), n[-1])
+    try:
+        return u'+{}{}'.format(format(int(n[:-1]), ",").replace(",", "-"), n[-1])
+    except:
+        return 'Not Set'
 
 
 @register.filter()
