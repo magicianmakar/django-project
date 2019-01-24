@@ -26,7 +26,7 @@
                                             <tr>
                                                 {% for item in stripe_plans %}
                                                 <th class="subsciption-plan {{item.slug}} {% if current_plan == item %}selected{% endif %}"
-                                                    data-plan-title="{{item.title}}" data-plan="{{item.id}}"
+                                                    data-plan-title="{{item.description}}" data-plan="{{item.id}}"
                                                     data-trial-days="{{item.stripe_plan.trial_period_days}}"
                                                     style="width: {% widthratio 100 stripe_plans|length 1 %}%"
                                                     >
@@ -126,7 +126,7 @@
                                             <tr>
                                                 {% for item in stripe_plans_yearly %}
                                                 <th class="subsciption-plan {{item.slug}} {% if current_plan == item %}selected{% endif %}"
-                                                    data-plan-title="{{item.title}}" data-plan="{{item.id}}"
+                                                    data-plan-title="{{item.description}}" data-plan="{{item.id}}"
                                                     data-trial-days="{{item.stripe_plan.trial_period_days}}"
                                                     style="width: {% widthratio 100 stripe_plans_yearly|length 1 %}%"
                                                     >
