@@ -133,13 +133,7 @@ dj-run
 
 You should be able to access the webapp at http://dev.dropified.com:8000/.
 
-To run the celery workers, start a new terminal session of webapp:
+Docker runs the Celery worker automatically. You can connect to the log
+output of the Celery worker by:
 ```
-docker-compose run web
-```
-
-Start the worker:
-```
-export C_FORCE_ROOT=1
-dj-celery
-```
+docker-compose logs -f celery

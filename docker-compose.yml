@@ -7,7 +7,15 @@ services:
       POSTGRES_USER: postgres
   redis:
     image: redis:3.0
-
+  celery:
+    build: .
+    container_name: dropified_celery
+    command: >
+      bash -c 'source venv/bin/activate; source .env; celery -A app worker -Q celery,priority_high -O fair -l INFO';
+    volumes:
+      - .:/opt/dropified
+    depends_on:
+      - redis
   web:
     build: .
     container_name: dropified_web
@@ -19,3 +27,4 @@ services:
     depends_on:
       - db
       - redis
+      - celery
