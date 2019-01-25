@@ -1200,7 +1200,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         product.save()
 
         try:
-            if user.models_user.get_config('supplier_change_inventory_sync') and product.is_connected:
+            if user.models_user.get_config('supplier_change_inventory_sync', True) and product.is_connected:
                 tasks.sync_shopify_product_quantities.apply_async(args=[product.id])
 
             if user.models_user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
@@ -1509,6 +1509,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 'order_custom_line_attr',
                 'fix_aliexpress_address',
                 'initial_inventory_sync',
+                'supplier_change_inventory_sync',
                 'update_product_vendor',
                 'order_risk_levels_enabled',
                 'send_alerts_to_subusers',
