@@ -1200,7 +1200,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         product.save()
 
         try:
-            if product.is_connected:
+            if user.models_user.get_config('supplier_change_inventory_sync') and product.is_connected:
                 tasks.sync_shopify_product_quantities.apply_async(args=[product.id])
 
             if user.models_user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:

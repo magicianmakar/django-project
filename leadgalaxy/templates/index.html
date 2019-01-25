@@ -320,6 +320,20 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
+                                    <label for="supplier_change_inventory_sync" class="col-sm-4 col-xs-8 control-label">
+                                        Sync Product Inventory when changing Suppliers
+                                    </label>
+                                    <div class="col-sm-6 col-xs-4">
+                                        <input type="checkbox" class="js-switch" id="supplier_change_inventory_sync"
+                                               name="supplier_change_inventory_sync"{% if config.supplier_change_inventory_sync or config.supplier_change_inventory_sync is None %}checked="checked"{% endif %}>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-offset-1 col-sm-11">
+                                <div class="form-group">
                                     <label for="update_product_vendor" class="col-sm-4 col-xs-8 control-label">
                                         Update Product Vendor when Default Supplier is changed
                                     </label>
