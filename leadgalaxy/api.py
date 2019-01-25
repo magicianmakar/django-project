@@ -668,8 +668,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         api_url = 'https://www.youzign.com/api/designs/'
 
         auth_detils = {
-            'key': user.get_config('yz_public_key'),
-            'token': user.get_config('yz_access_token'),
+            'key': user.models_user.get_config('yz_public_key'),
+            'token': user.models_user.get_config('yz_access_token'),
         }
 
         try:
@@ -1153,7 +1153,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         product.save()
 
         try:
-            if user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
+            if user.models_user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
                 utils.update_shopify_product_vendor(store, product.shopify_id, product.default_supplier.supplier_name)
         except:
             raven_client.captureException()
@@ -1203,7 +1203,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             if product.is_connected:
                 tasks.sync_shopify_product_quantities.apply_async(args=[product.id])
 
-            if user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
+            if user.models_user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
                 utils.update_shopify_product_vendor(product.store, product.shopify_id, product.default_supplier.supplier_name)
         except:
             raven_client.captureException()
@@ -1694,7 +1694,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
             'user_config': {
                 'send_shipping_confirmation': data.get('fulfill-notify-customer'),
                 'validate_tracking_number': False,
-                'aftership_domain': user.get_config('aftership_domain', 'track')
+                'aftership_domain': user.models_user.get_config('aftership_domain', 'track')
             }
         }
 
@@ -1758,8 +1758,8 @@ class ShopifyStoreApi(ApiResponseMixin, View):
 
         order = order_data_cache(order_key)
         if order:
-            if user.get_config('_static_shipping_address'):
-                order['shipping_address'] = user.get_config('_static_shipping_address')
+            if user.models_user.get_config('_static_shipping_address'):
+                order['shipping_address'] = user.models_user.get_config('_static_shipping_address')
 
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
@@ -1778,7 +1778,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                 order['order']['phone'] = phone_number
                 order['order']['phoneCountry'] = phone_country
 
-            if user.get_config('_aliexpress_telephone_workarround'):
+            if user.models_user.get_config('_aliexpress_telephone_workarround'):
                 order['order']['telephone_workarround'] = True
 
             try:
@@ -1942,7 +1942,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     product.set_mapping_config({'supplier': data[k]})
 
                     try:
-                        if user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id and utils.safeInt(data[k]):
+                        if user.models_user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id and utils.safeInt(data[k]):
                             supplier = ProductSupplier.objects.get(id=data[k])
                             utils.update_shopify_product_vendor(product.store, product.shopify_id, supplier.supplier_name)
                     except:
@@ -2808,7 +2808,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if users.count():
             if users.count() == 1:
                 subuser = users.first()
-                if subuser.profile.plan.is_free and not user.get_config('_limit_subusers_invite'):
+                if subuser.profile.plan.is_free and not user.models_user.get_config('_limit_subusers_invite'):
                     plan = utils.get_plan(plan_slug='subuser-plan')
                     reg = utils.generate_plan_registration(plan=plan, sender=user, data={
                         'email': subuser_email,
@@ -2837,7 +2837,7 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         if PlanRegistration.objects.filter(email__iexact=subuser_email).count():
             return self.api_error('An Invitation is already sent to this email', status=501)
 
-        if user.get_config('_limit_subusers_invite'):
+        if user.models_user.get_config('_limit_subusers_invite'):
             raven_client.captureMessage('Sub User Invite Attempts', level='warning')
             return self.api_error('Server Error', status=501)
 

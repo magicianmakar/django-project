@@ -1073,7 +1073,7 @@ class CHQStoreApi(ApiResponseMixin, View):
             'user_config': {
                 'send_shipping_confirmation': data.get('fulfill-notify-customer'),
                 'validate_tracking_number': False,
-                'aftership_domain': user.get_config('aftership_domain', 'track')
+                'aftership_domain': user.models_user.get_config('aftership_domain', 'track')
             }
         }
 
