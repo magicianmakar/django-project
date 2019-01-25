@@ -5,6 +5,7 @@ import time
 from simplejson import JSONDecodeError
 from tqdm import tqdm
 
+from shopified_core.utils import http_exception_response
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import *
 from shopify_orders.models import ShopifyOrderLog
@@ -182,8 +183,34 @@ class Command(DropifiedBaseCommand):
                         if r.ok:
                             continue
                         else:
-                            raven_client.captureException()
-                            return False
+
+                            raven_client.captureMessage('Add Fulfillment Error', extra={
+                                'order_track': order.id,
+                                'response': r.text
+                            }, level='warning')
+
+                            r = requests.post(
+                                url=store.get_link('/admin/fulfillment_services.json', api=True),
+                                json={
+                                    "fulfillment_service": {
+                                        "name": "oberlo",
+                                        "inventory_management": False,
+                                        "tracking_support": False,
+                                        "requires_shipping_method": False,
+                                        "format": "json"
+                                    }
+                                }
+                            )
+
+                            if r.ok:
+                                continue
+                            else:
+                                raven_client.captureMessage('Add Fulfillment Workarround Error', extra={
+                                    'order_track': order.id,
+                                    'response': r.text
+                                })
+
+                                return False
 
                     elif "Your shop does not have the 'Manual' fulfillment service enabled" in rep.text:
                         order.hidden = True
@@ -265,8 +292,8 @@ class Command(DropifiedBaseCommand):
                         'response': rep.text
                     })
 
-            except:
-                raven_client.captureException()
+            except Exception as e:
+                raven_client.captureException(extra=http_exception_response(e))
             finally:
                 tries -= 1
 
