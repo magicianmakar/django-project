@@ -1943,7 +1943,10 @@ class ShopifyStoreApi(ApiResponseMixin, View):
                     product.set_mapping_config({'supplier': data[k]})
 
                     try:
-                        if user.models_user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id and utils.safeInt(data[k]):
+                        if user.models_user.get_config('update_product_vendor') \
+                                and product.default_supplier \
+                                and product.shopify_id \
+                                and utils.safeInt(data[k]):
                             supplier = ProductSupplier.objects.get(id=data[k])
                             utils.update_shopify_product_vendor(product.store, product.shopify_id, supplier.supplier_name)
                     except:
