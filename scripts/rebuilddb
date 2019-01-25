@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+dropdb --host=db -U postgres shopified
+dropdb --host=db -U postgres shopified-store
+
+createdb --host=db -U postgres -O postgres -E utf8 -T template0 shopified
+createdb --host=db -U postgres -O postgres -E utf8 -T template0 shopified-store
