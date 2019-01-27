@@ -123,6 +123,19 @@ class Command(DropifiedBaseCommand):
                 rep.raise_for_status()
 
                 fulfilled = 'fulfillment' in rep.json()
+                if fulfilled:
+                    fulfillment = rep.json()['fulfillment']
+                    if fulfillment['status'] == 'pending':
+                        r = requests.post(
+                            url=store.get_link('/admin/orders/{}/fulfillments/{}/complete.json'.format(order.order_id, fulfillment['id']), api=True),
+                            json=api_data
+                        )
+
+                        raven_client.captureMessage('Complete Pending Fulfillement', extra={
+                            'success': str(r.ok),
+                            'response': '' if r.ok else r.text,
+                        }, level='warning')
+
                 break
 
             except (JSONDecodeError, requests.exceptions.ConnectTimeout):
