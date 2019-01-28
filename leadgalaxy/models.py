@@ -957,7 +957,6 @@ class ShopifyProduct(models.Model):
     mapping_config = models.TextField(null=True, blank=True)
 
     notes = models.TextField(default='', blank=True)
-    shopify_export = models.ForeignKey('ShopifyProductExport', on_delete=models.SET_NULL, null=True, blank=True)
     is_active = models.BooleanField(default=True)
     is_excluded = models.NullBooleanField(null=True)
 
@@ -1285,15 +1284,6 @@ class ShopifyProduct(models.Model):
             all_mapping[str(supplier.id)] = variants_map
 
         return all_mapping
-
-    def get_shopify_exports(self):
-        shopify_id = self.get_shopify_id()
-        if shopify_id:
-            return ShopifyProductExport.objects.filter(
-                Q(shopify_id=self.shopify_export.shopify_id, store__user=self.user) |
-                Q(product=self))
-        else:
-            return ShopifyProductExport.objects.filter(product=self)
 
     def get_real_variant_id(self, variant_id):
         """
@@ -1644,28 +1634,6 @@ class ProductSupplier(models.Model):
                 pass
 
         super(ProductSupplier, self).save(*args, **kwargs)
-
-
-class ShopifyProductExport(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-
-    store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
-    product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
-
-    shopify_id = models.BigIntegerField(default=0, verbose_name='Shopify Product ID')
-    original_url = models.CharField(max_length=512, blank=True, default='')
-    supplier_name = models.CharField(max_length=512, null=True, blank=True, default='')
-    supplier_url = models.CharField(max_length=512, null=True, blank=True, default='')
-    is_active = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-
-    def __unicode__(self):
-        return u'{}'.format(self.shopify_id)
-
-    def shopify_url(self):
-        return self.store.get_link('/admin/products/{}'.format(self.shopify_id))
 
 
 class ShopifyProductImage(models.Model):

@@ -53,7 +53,7 @@ class ShopifyBoardAdmin(admin.ModelAdmin):
 @admin.register(ShopifyProduct)
 class ShopifyProductAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'store', 'user', 'created_at', 'updated_at')
-    raw_id_fields = ('parent_product', 'shopify_export', 'store', 'user', 'default_supplier')
+    raw_id_fields = ('parent_product', 'store', 'user', 'default_supplier')
     ordering = ('-updated_at',)
     search_fields = ('data', 'notes', 'monitor_id', 'shopify_id')
 
@@ -62,13 +62,6 @@ class ShopifyProductAdmin(admin.ModelAdmin):
 
     def view_on_site(self, obj):
         return reverse('product_view', kwargs={'pid': obj.id})
-
-
-@admin.register(ShopifyProductExport)
-class ShopifyProductExportAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'store', 'created_at')
-    search_fields = ('original_url', 'shopify_id')
-    raw_id_fields = ('store', 'product')
 
 
 @admin.register(ProductSupplier)
