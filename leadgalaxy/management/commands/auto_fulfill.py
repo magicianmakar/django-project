@@ -5,7 +5,7 @@ import time
 from simplejson import JSONDecodeError
 from tqdm import tqdm
 
-from shopified_core.utils import http_exception_response
+from shopified_core.utils import http_exception_response, last_executed
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import *
 from shopify_orders.models import ShopifyOrderLog
@@ -131,10 +131,12 @@ class Command(DropifiedBaseCommand):
                             json=api_data
                         )
 
-                        raven_client.captureMessage('Complete Pending Fulfillement', extra={
-                            'success': str(r.ok),
-                            'response': '' if r.ok else r.text,
-                        }, level='warning')
+                        if not last_executed([request.user.id], 600):
+                            raven_client.captureMessage('Complete Pending Fulfillement', extra={
+                                'response': '' if r.ok else r.text,
+                            }, tags={
+                                'success': r.status_code
+                            }, level='warning')
 
                 break
 

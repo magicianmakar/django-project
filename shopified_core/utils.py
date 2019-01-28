@@ -583,6 +583,18 @@ def execute_once_in(unique_ids, seconds):
     return decorator
 
 
+def last_executed(unique_ids, timeout, save=True):
+    key = '_last_executed_{}'.format(hash_list(unique_ids))
+    key = key.replace(' ', '_')
+
+    seen = cache.get(key)
+
+    if not seen and save:
+        cache.set(key, arrow.utcnow().timestamp, timeout=timeout)
+
+    return seen
+
+
 def http_exception_response(e, json=False, extra=True):
     try:
         if json:
