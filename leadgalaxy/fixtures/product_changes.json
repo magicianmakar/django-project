@@ -108,20 +108,6 @@
 },
 {
   "fields": {
-    "product": null,
-    "original_url": "http://www.aliexpress.com/store/product/Huawei-Honor-4C-Enhanced-Edition-Cellphone-5-0-inch-13-0MP-2G-3G-4G-LTE-Android4/100077_32618617479.html",
-    "shopify_id": 5730897861,
-    "created_at": "2016-06-04T03:48:06.719Z",
-    "is_active": false,
-    "supplier_url": "",
-    "supplier_name": "",
-    "store": 1
-  },
-  "model": "leadgalaxy.shopifyproductexport",
-  "pk": 1
-},
-{
-  "fields": {
     "product": 3,
     "created_at": "2016-05-26T01:43:18.902Z",
     "updated_at": "2016-09-09T23:11:17.800Z",
