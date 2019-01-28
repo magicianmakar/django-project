@@ -574,8 +574,9 @@ def sync_shopify_orders(self, store_id, elastic=False):
         store = ShopifyStore.objects.get(id=store_id)
         es = order_utils.get_elastic() if elastic else None
 
-        saved_count = order_utils.store_saved_orders(store, es=es)
-        shopify_count = store.get_orders_count(all_orders=True)
+        max_days_sync = 30
+        saved_count = order_utils.store_saved_orders(store, es=es, days=max_days_sync)
+        shopify_count = store.get_orders_count(all_orders=True, days=max_days_sync)
 
         need_import = shopify_count - saved_count
 
@@ -591,9 +592,12 @@ def sync_shopify_orders(self, store_id, elastic=False):
 
             imported = 0
             page = 1
+            extra_params = {
+                'created_at_min': arrow.utcnow().replace(days=-abs(max_days_sync)).isoformat()
+            }
 
             while imported < need_import:
-                shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id')
+                shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id', extra_params=extra_params)
                 shopify_order_ids = [o['id'] for o in shopify_orders]
 
                 if not shopify_order_ids:

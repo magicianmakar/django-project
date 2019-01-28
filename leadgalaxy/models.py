@@ -748,7 +748,7 @@ class ShopifyStore(models.Model):
             self.save()
 
     def get_orders_count(self, status='open', fulfillment='unshipped', financial='any',
-                         query='', all_orders=False, created_range=None):
+                         query='', all_orders=False, created_range=None, days=None):
         if all_orders:
             fulfillment = 'any'
             financial = 'any'
@@ -770,6 +770,9 @@ class ShopifyStore(models.Model):
 
             if created_range[1]:
                 params['created_at_max'] = created_range[1]
+
+        if days:
+            params['created_at_min'] = arrow.utcnow().replace(days=-abs(days)).isoformat()
 
         return requests.get(
             url=self.get_link('/admin/orders/count.json', api=True),

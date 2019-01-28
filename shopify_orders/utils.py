@@ -430,7 +430,7 @@ def order_ids_from_customer_id(store, customer_id):
     return []
 
 
-def store_saved_orders(store, es=None):
+def store_saved_orders(store, es=None, days=None):
     """ Get total saved orders in the database if es is not set, otherwise return total orders in Elastic index
 
     Args:
@@ -439,17 +439,28 @@ def store_saved_orders(store, es=None):
     """
 
     if not es:
-        return ShopifyOrder.objects.filter(store=store).count()
+        orders = ShopifyOrder.objects.filter(store=store)
+        if days:
+            orders = orders.filter(created_at__gte=arrow.utcnow().replace(days=-abs(days)).datetime)
     else:
         body = {
             'query': {
                 'bool': {
                     'must': [
                         {'term': {'store': store.id}},
-                    ],
-                },
-            },
+                    ]
+                }
+            }
         }
+
+        if days:
+            body['query']['bool']['must'].append({
+                "range": {
+                    "created_at": {
+                        "gte": arrow.utcnow().replace(days=-abs(days)).isoformat()
+                    }
+                }
+            })
 
         matchs = es.search(index='shopify-order', doc_type='order', body=body)
         return matchs['hits']['total']
