@@ -28,7 +28,6 @@ from tld import get_tld
 ALIEXPRESS_REJECTED_STATUS = {
     "buyer_pay_timeout": "Order Payment Timeout",
     "risk_reject_closed": "Rejected By Risk Control",
-    "buyer_accept_goods_timeout": "Buyer Accept Goods Timeout",
     "buyer_cancel_notpay_order": "Buyer Cancel or Doesn't Pay Order",
     "cancel_order_close_trade": "Cancel Order Close Trade",
     "seller_send_goods_timeout": "Seller Send Goods Timeout",
