@@ -442,6 +442,9 @@ def store_saved_orders(store, es=None, days=None):
         orders = ShopifyOrder.objects.filter(store=store)
         if days:
             orders = orders.filter(created_at__gte=arrow.utcnow().replace(days=-abs(days)).datetime)
+
+        return orders.count()
+
     else:
         body = {
             'query': {
