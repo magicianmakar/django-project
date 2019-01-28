@@ -131,7 +131,7 @@ class Command(DropifiedBaseCommand):
                             json=api_data
                         )
 
-                        if not last_executed([request.user.id], 600):
+                        if not last_executed([store.id], 600):
                             raven_client.captureMessage('Complete Pending Fulfillement', extra={
                                 'response': '' if r.ok else r.text,
                             }, tags={
