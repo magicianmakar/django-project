@@ -39,6 +39,7 @@ class Command(DropifiedBaseCommand):
                                       .filter(hidden=False) \
                                       .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
                                       .filter(store__is_active=True) \
+                                      .filter(store__auto_fulfill='enable') \
                                       .defer('data') \
                                       .order_by('-id')
         if fulfill_store is not None:
