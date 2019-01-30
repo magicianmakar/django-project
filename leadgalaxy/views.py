@@ -1118,6 +1118,55 @@ def webhook(request, provider, option):
 
             return HttpResponse('Results:\n{}'.format(u'\n'.join(result if result else ['Not found'])))
 
+        elif request.POST['command'] == '/user-tags':
+            # Available Commands:
+            # /user-tags <add|remove|set> <email> <tags>
+            # /user-tags <search> <tags>
+            # :tags param example: Added Product, Connected Store, Multiple Stores
+
+            if not request_from:
+                return HttpResponse(':octagonal_sign: _Dropified Support Staff Only_')
+
+            args = request.POST['text'].split(' ')
+            command = args[0]
+
+            if command == 'search':
+                tags = ' '.join(args[1:])
+                profiles = UserProfile.objects.filter(tags__icontains=tags)
+
+                result = []
+                for profile in profiles:
+                    result.append(u'{}|{}|{}'.format(
+                        profile.user.email,
+                        profile.user.get_full_name(),
+                        profile.tags
+                    ))
+
+                return HttpResponse('Results:\n{}'.format(u'\n'.join(result if result else ['Not found'])))
+            else:
+                try:
+                    profile = UserProfile.objects.get(user__email__iexact=args[1])
+                except UserProfile.DoesNotExist:
+                    return HttpResponse(':man-shrugging: Profile not found')
+
+                tags = ' '.join(args[2:]).split(',')
+                if command == 'add':
+                    profile.add_tags(tags)
+                    result = 'Tags Added'
+
+                elif command == 'set':
+                    profile.set_tags(tags)
+                    result = 'Tag Set'
+
+                elif command == 'remove':
+                    profile.remove_tags(tags)
+                    result = 'Tags Removed'
+
+                else:
+                    result = ':x: Unknown Command: {}'.format(command)
+
+                return HttpResponse(result)
+
         else:
             return HttpResponse(':x: Unknown Command')
 

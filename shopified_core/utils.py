@@ -25,6 +25,7 @@ import bleach
 import phonenumbers
 from tld import get_tld
 
+
 ALIEXPRESS_REJECTED_STATUS = {
     "buyer_pay_timeout": "Order Payment Timeout",
     "risk_reject_closed": "Rejected By Risk Control",

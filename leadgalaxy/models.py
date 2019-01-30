@@ -490,6 +490,67 @@ class UserProfile(models.Model):
     def from_shopify_app_store(self):
         return bool(self.shopify_app_store or self.get_config_value('shopify_app_store') or self.plan.payment_gateway == 'shopify')
 
+    def sync_tags(self):
+        """ Send current user tags to Intercom and Baremetrics """
+        from shopified_core.tasks import update_intercom_tags, update_baremetrics_attributes
+
+        update_intercom_tags.apply_async(
+            kwarg={
+                'email': self.user.email,
+                'attribute_id': 'user_tags',
+                'attribute_value': self.tags
+            },
+            expires=900)
+
+        if settings.BAREMETRICS_TAGS_FIELD:
+            update_baremetrics_attributes.apply_async(
+                kwarg={
+                    'email': self.user.email,
+                    'attribute_id': settings.BAREMETRICS_TAGS_FIELD,
+                    'attribute_value': self.tags
+                },
+                expires=900)
+
+    def get_tags(self):
+        """ Return user tags as a list"""
+        return map(str.strip, self.tags.split(','))
+
+    def set_tags(self, tags):
+        self.tags = ','.join(tags)
+        self.save()
+
+        self.sync_tags()
+
+    def add_tags(self, tags):
+        added_tags = []
+        current_tags = self.get_tags()
+        for tag in tags:
+            if tag not in self.tags:
+                added_tags.append(tag)
+                current_tags.append(tag)
+
+        self.tags = ','.join(current_tags)
+        self.save()
+
+        if added_tags:
+            self.sync_tags()
+
+    def remove_tags(self, tags):
+        removed_tags = []
+        current_tags = self.get_tags()
+        for tag in tags:
+            try:
+                tag_index = current_tags.index(tag)
+                removed_tags.append(current_tags.pop(tag_index))
+            except ValueError:  # Index not found
+                pass
+
+        self.tags = ','.join(current_tags)
+        self.save()
+
+        if removed_tags:
+            self.sync_tags()
+
 
 class UserCompany(models.Model):
     name = models.CharField(max_length=100, blank=True, default='')

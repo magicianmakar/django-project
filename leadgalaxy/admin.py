@@ -173,6 +173,11 @@ class UserProfileAdmin(admin.ModelAdmin):
         return super(UserProfileAdmin, self).formfield_for_manytomany(
             db_field, request=request, **kwargs)
 
+    def save_model(self, request, profile, *args, **kwargs):
+        profile.sync_tags()
+
+        super(UserProfileAdmin, self).save_model(request, profile, *args, **kwargs)
+
 
 @admin.register(AppPermission)
 class AppPermissionAdmin(admin.ModelAdmin):

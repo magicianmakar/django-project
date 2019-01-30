@@ -4,5 +4,5 @@ if [ ! -d "venv" ]; then
     virtualenv venv
 fi
 
-sudo pip install pip flake8==3.5.0
+sudo pip install pip configparser==3.5.0 flake8==3.5.0
 
