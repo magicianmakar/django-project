@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -46,6 +47,7 @@ def subscription_plan(request):
             if plan.payment_interval != 'yearly':
                 charge_type = 'recurring'
                 charge = store.shopify.RecurringApplicationCharge.create({
+                    "test": settings.DEBUG,
                     "name": 'Dropified {}'.format(plan.title),
                     "price": plan.monthly_price,
                     "trial_days": plan.trial_days,
@@ -56,6 +58,7 @@ def subscription_plan(request):
             else:
                 charge_type = 'single'
                 charge = store.shopify.ApplicationCharge.create({
+                    "test": settings.DEBUG,
                     "name": 'Dropified {}'.format(plan.title),
                     "price": plan.monthly_price * 12,
                     "trial_days": plan.trial_days,
@@ -88,6 +91,7 @@ def subscription_plan(request):
 
         request.session['active_subscription'] = sub.id
         request.session['active_plan'] = plan.id
+        request.session['charge_type'] = charge_type
 
     PlanSelectionEvent.objects.create(user=request.user)
 
@@ -115,6 +119,13 @@ def subscription_activated(request):
             del request.session['active_plan']
 
         messages.success(request, 'Your plan has been successfully changed!')
+
+        if request.session.get('charge_type') == 'single':
+            store = request.user.profile.get_shopify_stores().first()
+            if store:
+                for charge in store.shopify.RecurringApplicationCharge.find():
+                    if charge.status == 'active':
+                        charge.destroy()
 
         request.user.shopifysubscription_set.exclude(id=charge_id).update(status='cancelled')
 
