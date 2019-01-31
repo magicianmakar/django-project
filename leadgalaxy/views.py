@@ -2860,6 +2860,10 @@ def user_profile(request):
                                             .annotate(num_permissions=Count('permissions')) \
                                             .order_by('num_permissions')
 
+    if request.user.get_config('_yearly_60dc_plan'):
+        stripe_plans_yearly = list(stripe_plans_yearly)
+        stripe_plans_yearly.append(GroupPlan.objects.get(slug='premier-yearly-60dc'))
+
     clippingmagic_plans = ClippingMagicPlan.objects.all()
     clippingmagic = None
     if not request.user.profile.plan.is_free:
