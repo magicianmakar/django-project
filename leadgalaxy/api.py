@@ -16,15 +16,14 @@ from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
-from django.views.generic import View
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery import celery_app
 from last_seen.models import LastSeen
 from youtube_ads.models import VideosList
 
+from shopified_core.api_base import ApiBase
 from shopified_core import permissions
-from shopified_core.mixins import ApiResponseMixin
 from shopified_core.encryption import save_aliexpress_password, delete_aliexpress_password
 from shopified_core.shipping_helper import get_counrties_list, fix_fr_address
 from shopified_core.utils import (
@@ -58,7 +57,8 @@ from .models import *
 from .templatetags.template_helper import shopify_image_thumb, money_format
 
 
-class ShopifyStoreApi(ApiResponseMixin, View):
+class ShopifyStoreApi(ApiBase):
+    board_model = ShopifyBoard
 
     def post_register(self, request, user, data):
         return self.api_error('Please Visit Dropified Website to register a new account:\n\n'
@@ -1582,6 +1582,44 @@ class ShopifyStoreApi(ApiResponseMixin, View):
         profile.save()
 
         return self.api_success()
+
+    def get_user_boards(self, request, user, data):
+        boards = []
+        for i in user.get_boards():
+            boards.append({
+                'id': i.id,
+                'title': i.title,
+                'type': 'shopify',
+                'favorite': i.favorite
+            })
+
+        for i in user.get_chq_boards():
+            boards.append({
+                'id': i.id,
+                'title': i.title,
+                'type': 'chq',
+                'favorite': i.favorite
+            })
+
+        for i in user.get_woo_boards():
+            boards.append({
+                'id': i.id,
+                'title': i.title,
+                'type': 'woo',
+                'favorite': i.favorite
+            })
+
+        for i in user.get_gear_boards():
+            boards.append({
+                'id': i.id,
+                'title': i.title,
+                'type': 'gear',
+                'favorite': i.favorite
+            })
+
+        return self.api_success({
+            'boards': boards,
+        })
 
     def get_captcha_credits(self, request, user, data):
         if not user.can('aliexpress_captcha.use'):

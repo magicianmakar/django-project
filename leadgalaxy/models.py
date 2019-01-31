@@ -1968,6 +1968,7 @@ class ShopifyBoard(models.Model):
 
     title = models.CharField(max_length=512, blank=True, default='')
     config = models.CharField(max_length=512, blank=True, default='')
+    favorite = models.BooleanField(default=False)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     products = models.ManyToManyField(ShopifyProduct, blank=True)

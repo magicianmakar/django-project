@@ -8,7 +8,6 @@ import arrow
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from django.views.generic import View
 from django.utils.decorators import method_decorator
 from django.conf import settings
 from django.utils import timezone
@@ -19,8 +18,8 @@ from django.core.cache import cache
 from django.db import transaction
 from django.contrib import messages
 
+from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
-from shopified_core.mixins import ApiResponseMixin
 from shopified_core import permissions
 from shopified_core.utils import (
     safeInt,
@@ -47,7 +46,8 @@ import utils
 import tasks
 
 
-class GearBubbleApi(ApiResponseMixin, View):
+class GearBubbleApi(ApiBase):
+    board_model = GearBubbleBoard
 
     def validate_store_data(self, data):
         title = data.get('title', '')

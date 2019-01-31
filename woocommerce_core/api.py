@@ -9,7 +9,6 @@ import arrow
 from requests.exceptions import HTTPError
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from django.views.generic import View
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.urls import reverse
@@ -19,8 +18,8 @@ from django.utils import timezone
 from django.db import transaction
 from django.db.models import F
 
+from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
-from shopified_core.mixins import ApiResponseMixin
 from shopified_core import permissions
 from shopified_core.utils import (
     safeInt,
@@ -41,7 +40,8 @@ import tasks
 import utils
 
 
-class WooStoreApi(ApiResponseMixin, View):
+class WooStoreApi(ApiBase):
+    board_model = WooBoard
 
     def validate_store_data(self, data):
         title = data.get('title', '')

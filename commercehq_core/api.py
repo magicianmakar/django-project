@@ -8,15 +8,14 @@ from django.core.cache import cache, caches
 from django.urls import reverse
 from django.db import transaction
 from django.db.models import F
-from django.views.generic import View
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 
 import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
-from shopified_core.mixins import ApiResponseMixin
 from shopified_core import permissions
 from shopified_core.utils import (
     safeInt,
@@ -44,7 +43,8 @@ from .models import (
 )
 
 
-class CHQStoreApi(ApiResponseMixin, View):
+class CHQStoreApi(ApiBase):
+    board_model = CommerceHQBoard
 
     def post_save_orders_filter(self, request, user, data):
         utils.set_orders_filter(user, data)

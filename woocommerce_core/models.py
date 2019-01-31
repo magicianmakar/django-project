@@ -776,6 +776,7 @@ class WooBoard(models.Model):
     title = models.CharField(max_length=512)
     products = models.ManyToManyField('WooProduct', blank=True)
     config = models.CharField(max_length=512, blank=True, default='')
+    favorite = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
