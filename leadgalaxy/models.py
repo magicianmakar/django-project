@@ -2175,6 +2175,10 @@ class GroupPlan(models.Model):
         return self.payment_gateway == 'shopify'
 
     @property
+    def is_paused(self):
+        return self.slug == 'paused-plan'
+
+    @property
     def is_free(self):
         return self.slug in ['free-stripe-plan', 'free-plan'] or self.is_startup
 

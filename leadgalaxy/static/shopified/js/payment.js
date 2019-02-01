@@ -341,7 +341,7 @@
         );
     });
 
-    $('.cancel-sub-btn').click(function() {
+    $('.cancel-sub-btn').click(function(e) {
         $('#modal-subscription-cancel').data('subscription', $(this).data('subscription'));
         $('#modal-subscription-cancel .plan-name').text($(this).data('plan'));
         $('#modal-subscription-cancel .billing-end').text($(this).data('period-end'));
@@ -352,6 +352,38 @@
         }
 
         $('#modal-subscription-cancel').modal('show');
+    });
+
+    $('.pause-account').click(function(e) {
+        $('#modal-pause-account').data('plan', $(e.target).data('plan'));
+        $('#modal-pause-account').modal('show');
+    });
+
+    $(".confirm-pause-btn").click(function(e) {
+        var plan = $('#modal-pause-account').data('plan');
+        var btn = $(e.target);
+        btn.button('loading');
+
+        $.ajax({
+            url: config.subscription_plan,
+            type: 'POST',
+            data: {
+                plan: plan
+            },
+            success: function(data) {
+                toastr.success("Your account has been paused.", "Pause Account");
+                swal.close();
+
+                setTimeout(function() {
+                    $('#modal-pause-account').modal('hide');
+                    window.location.reload();
+                }, 1500);
+            },
+            error: function(data) {
+                btn.button("reset");
+                displayAjaxError('Pause Account', data);
+            }
+        });
     });
 
     $('.reactivate-sub-btn').click(function(e) {

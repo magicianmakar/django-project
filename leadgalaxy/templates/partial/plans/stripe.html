@@ -15,17 +15,17 @@
                             {{ item.plan.get_description }}
                                 {% if item.is_active %}
                                     <span class="badge badge-primary">
-                                        {{status.status_str}}
+                                        {{ status.status_str }}
                                     </span>
 
                                     {% with coupon=user.stripe_customer.get_coupon %}
                                         {% if coupon %}
-                                            <span class="badge badge-success">{{coupon}}</span>
+                                            <span class="badge badge-success">{{ coupon }}</span>
                                         {% endif %}
                                     {% endwith %}
                                 {% else %}
                                     <span class="badge badge-warning">
-                                        {{status.status_str}}
+                                        {{ status.status_str }}
                                     </span>
                                 {% endif %}
 
@@ -54,6 +54,13 @@
                             </button>
                             {% endif %}
 
+                            {% if stripe_paused_plan and item.can_cancel and not current_plan.is_paused %}
+                                <button class="btn btn-success btn-outline btn-xs itooltip pause-account pull-right m-r-sm"
+                                    title="Pause Your Subscription"
+                                    data-plan="{{stripe_paused_plan.id}}"
+                                    >Pause Account</button>
+                            {% endif %}
+
                             {% if status.cancel_at_period_end %}
                                 <button class="btn btn-success btn-xs pull-right reactivate-sub-btn itooltip"
                                         title="Re-Activate Your Subscription"
@@ -69,7 +76,11 @@
                         {% endwith %}
                     {% endfor %}
                 </ul>
-                </div>
+
+                {% if current_plan.is_paused %}
+                    <p>To resume your paused account, select a plan from below plans list.</p>
+                {% endif %}
+            </div>
             </div>
         </div>
     </div>

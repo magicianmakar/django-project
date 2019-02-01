@@ -2861,6 +2861,8 @@ def user_profile(request):
                                             .annotate(num_permissions=Count('permissions')) \
                                             .order_by('num_permissions')
 
+    stripe_paused_plan = GroupPlan.objects.filter(slug='paused-plan').first()
+
     clippingmagic_plans = ClippingMagicPlan.objects.all()
     clippingmagic = None
     if not request.user.profile.plan.is_free:
@@ -2910,6 +2912,7 @@ def user_profile(request):
         'bundles': bundles,
         'stripe_plans': stripe_plans,
         'stripe_plans_yearly': stripe_plans_yearly,
+        'stripe_paused_plan': stripe_paused_plan,
         'shopify_plans': shopify_plans,
         'shopify_plans_yearly': shopify_plans_yearly,
         'stripe_customer': stripe_customer,
