@@ -1128,6 +1128,10 @@ def calculate_sales(self, user_id, period):
 def calculate_user_statistics(self, user_id):
     try:
         user = User.objects.get(id=user_id)
+
+        if user.get_config('_disbale_user_statistics'):
+            return
+
         stores = user.profile.get_shopify_stores()
 
         stores_data = []
