@@ -603,6 +603,7 @@ class GearBubbleApi(ApiBase):
             raise PermissionDenied()
 
         permissions.user_can_view(user, store)
+
         order_id = safeInt(data.get('order_id'))
         line_id = safeInt(data.get('line_id'))
         source_id = data.get('aliexpress_order_id')
@@ -620,7 +621,11 @@ class GearBubbleApi(ApiBase):
         except UnicodeEncodeError as e:
             return self.api_error('Order ID is not a valid', status=501)
 
-        tracks = GearBubbleOrderTrack.objects.filter(store=store, order_id=order_id, line_id=line_id)
+        order_updater = utils.GearOrderUpdater(store, order_id)
+
+        tracks = GearBubbleOrderTrack.objects.filter(store=store,
+                                                     order_id=order_id,
+                                                     line_id=line_id)
         tracks_count = tracks.count()
 
         if tracks_count > 1:
@@ -645,12 +650,24 @@ class GearBubbleApi(ApiBase):
             defaults={
                 'user': user.models_user,
                 'source_id': source_id,
+                'source_type': data.get('source_type'),
                 'created_at': timezone.now(),
                 'updated_at': timezone.now(),
                 'status_updated_at': timezone.now()})
 
-        data = {'track': track.id, 'order_id': order_id, 'line_id': line_id, 'source_id': source_id}
-        store.pusher_trigger('order-source-id-add', data)
+        if user.profile.get_config_value('aliexpress_as_notes', True):
+            order_updater.mark_as_ordered_note(line_id, source_id, track)
+
+        store.pusher_trigger('order-source-id-add', {
+            'track': track.id,
+            'order_id': order_id,
+            'line_id': line_id,
+            'source_id': source_id,
+            'source_url': track.get_source_url(),
+        })
+
+        if not settings.DEBUG and 'oberlo.com' not in request.META.get('HTTP_REFERER', ''):
+            order_updater.delay_save()
 
         return self.api_success({'order_track_id': track.id})
 
@@ -1120,19 +1137,15 @@ class GearBubbleApi(ApiBase):
         store_id = safeInt(data.get('store'))
         store = GearBubbleStore.objects.get(id=store_id)
         permissions.user_can_view(user, store)
-        order_id = safeInt(data['order_id'])
-        note = data.get('note')
 
+        note = data.get('note')
         if note is None:
             return self.api_error('Note required')
 
-        api_url = store.get_api_url('private_orders/{}'.format(order_id))
-        r = store.request.put(api_url, json={'order': {'id': order_id, 'note': note}})
-
-        if not r.ok:
-            return self.api_error('GearBubble API Error')
-
-        return self.api_success()
+        if utils.set_gear_order_note(store, safeInt(data['order_id']), note):
+            return self.api_success()
+        else:
+            return self.api_error('GearBubble API Error', status=500)
 
     def delete_product_connect(self, request, user, data):
         product = GearBubbleProduct.objects.get(id=data.get('product'))

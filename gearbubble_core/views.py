@@ -1,8 +1,6 @@
 import arrow
 import json
 
-from raven.contrib.django.raven_compat.models import client as raven_client
-
 from django.views.generic import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.base import RedirectView
@@ -32,6 +30,7 @@ from .models import (
     GearBubbleProduct,
     GearBubbleBoard,
     GearBubbleOrderTrack,
+    GearBubbleSupplier,
 )
 from .utils import (
     gearbubble_products,
@@ -394,6 +393,7 @@ class OrdersList(ListView):
 
                 if product and product.has_supplier:
                     item['supplier'] = supplier = product.default_supplier
+                    item['supplier_type'] = supplier.supplier_type()
                     order_data = self.get_order_data(order, item, product, supplier)
                     order_data['variant'] = self.get_order_data_variant(item)
                     order_data_id = order_data['id']
@@ -419,22 +419,30 @@ class OrderPlaceRedirectView(RedirectView):
         return super(OrderPlaceRedirectView, self).dispatch(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
-        try:
-            assert self.request.GET['product']
+        product = None
+        supplier = None
 
+        if self.request.GET.get('supplier'):
+            supplier = GearBubbleSupplier.objects.get(id=self.request.GET['supplier'])
+            permissions.user_can_view(self.request.user, supplier.product)
+
+            product = supplier.short_product_url()
+
+        elif self.request.GET.get('product'):
             product = self.request.GET['product']
+
             if safeInt(product):
                 product = 'https://www.aliexpress.com/item//{}.html'.format(product)
 
-        except:
-            raven_client.captureException()
-            raise Http404("Product or Order not set")
+        if not product:
+            return Http404("Product or Order not set")
 
         from leadgalaxy.utils import (
             get_aliexpress_credentials,
             get_admitad_credentials,
             get_aliexpress_affiliate_url,
             get_admitad_affiliate_url,
+            get_ebay_affiliate_url,
             affiliate_link_set_query
         )
 
@@ -445,21 +453,30 @@ class OrderPlaceRedirectView(RedirectView):
 
         redirect_url = False
         if not disable_affiliate:
-            if user_admitad_credentials:
-                service = 'admitad'
-            elif user_ali_credentials:
-                service = 'ali'
-            else:
-                service = 'admitad'
+            if supplier and supplier.is_ebay:
+                if not self.request.user.models_user.can('ebay_auto_fulfill.use'):
+                    messages.error(self.request, "eBay 1-Click fulfillment is not available on your current plan. "
+                                                 "Please upgrade to Premier Plan to use this feature")
 
-            if service == 'ali' and ali_api_key and ali_tracking_id:
-                redirect_url = get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
-                if not redirect_url:
-                    messages.error(self.request, "Could not generate Aliexpress Affiliate link using your API Keys")
                     return '/'
 
-            elif service == 'admitad':
-                redirect_url = get_admitad_affiliate_url(admitad_site_id, product)
+                redirect_url = get_ebay_affiliate_url(product)
+            else:
+                if user_admitad_credentials:
+                    service = 'admitad'
+                elif user_ali_credentials:
+                    service = 'ali'
+                else:
+                    service = 'admitad'
+
+                if service == 'ali' and ali_api_key and ali_tracking_id:
+                    redirect_url = get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
+                    if not redirect_url:
+                        messages.error(self.request, "Could not generate Aliexpress Affiliate link using your API Keys")
+                        return '/'
+
+                elif service == 'admitad':
+                    redirect_url = get_admitad_affiliate_url(admitad_site_id, product)
 
         if not redirect_url:
             redirect_url = product

@@ -610,6 +610,14 @@ def order_track_fulfillment(order_track, user_config=None):
     return changed, {'tracking_number': tracking_numbers, 'tracking_company': tracking_companies}
 
 
+def set_gear_order_note(store, order_id, note):
+    api_url = store.get_api_url('private_orders/{}'.format(order_id))
+    r = store.request.put(api_url, json={'order': {'id': order_id, 'note': note}})
+    r.raise_for_status()
+
+    return r.ok
+
+
 def get_product_export_data(product):
     data = product.parsed
     vendor_product = {}
@@ -748,3 +756,65 @@ class OrderListPaginator(Paginator):
         items = self.object_list.update_params(params).items()
 
         return self._get_page(items, number, self)
+
+
+class GearOrderUpdater:
+
+    def __init__(self, store=None, order_id=None):
+        self.store = store
+        self.order_id = order_id
+
+        self.notes = []
+
+    def add_note(self, n):
+        self.notes.append(n)
+
+    def mark_as_ordered_note(self, line_id, source_id, track):
+        source = 'Aliexpress'
+
+        if track:
+            url = track.get_source_url()
+            if track.source_type == 'ebay':
+                source = 'eBay'
+        else:
+            url = 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(source_id)
+
+        note = '{} Order ID: {}\n{}'.format(source, source_id, url)
+
+        if line_id:
+            note = u'{}\nOrder Line: #{}'.format(note, line_id)
+
+        self.add_note(note)
+
+    def save_changes(self, add=True):
+        with cache.lock('updater_lock_{}_{}'.format(self.store.id, self.order_id), timeout=15):
+            self._do_save_changes(add=add)
+
+    def _do_save_changes(self, add=True):
+        if self.notes:
+            new_note = u'\n'.join(self.notes)
+            set_gear_order_note(self.store, self.order_id, new_note)
+
+    def delay_save(self, countdown=None):
+        from .tasks import order_save_changes
+
+        order_save_changes.apply_async(
+            args=[self.toJSON()],
+            countdown=countdown
+        )
+
+    def toJSON(self):
+        return json.dumps({
+            "notes": self.notes,
+            "order": self.order_id,
+            "store": self.store.id,
+        }, sort_keys=True, indent=4)
+
+    def fromJSON(self, data):
+        if type(data) is not dict:
+            data = json.loads(data)
+
+        self.store = GearBubbleStore.objects.get(id=data.get("store"))
+        self.order_id = data.get("order")
+
+        self.notes = data.get("notes")

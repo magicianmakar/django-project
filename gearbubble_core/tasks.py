@@ -9,10 +9,11 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.template.defaultfilters import truncatewords
 from django.utils.text import slugify
 from django.core.cache import cache
 
-from app.celery import celery_app, CaptureFailure
+from app.celery import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
 from shopified_core import utils
 
@@ -21,8 +22,9 @@ from .utils import (
     format_gear_errors,
     get_product_export_data,
     get_product_update_data,
+    get_effect_on_current_images,
     OrderListQuery,
-    get_effect_on_current_images
+    GearOrderUpdater,
 )
 
 
@@ -264,3 +266,29 @@ def calculate_user_statistics(self, user_id):
 
     except:
         raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, bind=True)
+def order_save_changes(self, data):
+    order_id = None
+    try:
+        updater = GearOrderUpdater()
+        updater.fromJSON(data)
+
+        order_id = updater.order_id
+
+        updater.save_changes()
+
+        order_note = '\n'.join(updater.notes)
+        updater.store.pusher_trigger('order-note-update', {
+            'order_id': order_id,
+            'note': order_note,
+            'note_snippet': truncatewords(order_note, 10),
+        })
+
+    except Exception as e:
+        raven_client.captureException(extra=utils.http_exception_response(e))
+
+        if not self.request.called_directly:
+            countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)

@@ -241,6 +241,7 @@
         return new P(function(resolve, reject) {
             window.extensionSendMessage({
                 subject: 'getOrderStatus',
+                order_details: order,
                 order: order.source_id,
             }, function(rep) {
                 setTimeout(function() {
