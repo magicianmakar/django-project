@@ -1270,6 +1270,7 @@ button.dim:active:before {
   font-weight: 600;
   color: inherit;
 }
+.bm-cancel { z-index: 2050 !important;}
 .fc-content .fc-widget-header,
 .fc-content .fc-widget-content {
   border-color: #e7eaec;

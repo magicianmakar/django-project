@@ -75,6 +75,7 @@ from product_alerts.utils import variant_index_from_supplier_sku, delete_product
 from profit_dashboard.models import FacebookAccess
 
 import tasks
+import jwt
 import utils
 from .forms import *
 from .models import *
@@ -2881,8 +2882,21 @@ def user_profile(request):
     stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
     shopify_apps_customer = request.user.profile.from_shopify_app_store()
 
+    baremetrics_jwt_token = None
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
+        subscription = request.user.stripesubscription_set.all().first()
+        baremetrics_jwt_token = jwt.encode({
+            "access_token_id": settings.BAREMETRICS_ACCESS_TOKEN,
+            "subscription_oids": [subscription.subscription_id],
+        }, settings.BAREMETRICS_JWT_TOKEN_KEY, "HS256")
+
+    baremetrics_form_enabled = (
+        settings.BAREMETRICS_ACCESS_TOKEN and
+        settings.BAREMETRICS_JWT_TOKEN_KEY and
+        stripe_customer and
+        baremetrics_jwt_token
+    )
 
     try:
         affiliate = request.user.lead_dyno_affiliation
@@ -2899,6 +2913,8 @@ def user_profile(request):
         'shopify_plans': shopify_plans,
         'shopify_plans_yearly': shopify_plans_yearly,
         'stripe_customer': stripe_customer,
+        'baremetrics_form_enabled': baremetrics_form_enabled,
+        'baremetrics_jwt_token': baremetrics_jwt_token,
         'shopify_apps_customer': shopify_apps_customer,
         'clippingmagic_plans': clippingmagic_plans,
         'clippingmagic': clippingmagic,
