@@ -481,6 +481,7 @@ class CHQStoreApi(ApiBase):
                 defaults={
                     'user': user.models_user,
                     'source_id': source_id,
+                    'source_type': data.get('source_type'),
                     'created_at': timezone.now(),
                     'updated_at': timezone.now(),
                     'status_updated_at': timezone.now()
@@ -510,7 +511,7 @@ class CHQStoreApi(ApiBase):
 
                 # TODO: Handle multi values in source_id
                 if profile.get_config_value('aliexpress_as_notes', True):
-                    order_updater.mark_as_ordered_note(line_id, source_id)
+                    order_updater.mark_as_ordered_note(line_id, source_id, track)
 
             except Exception:
                 rep = store.request.get(url=store.get_api_url('orders', order_id))
@@ -537,6 +538,7 @@ class CHQStoreApi(ApiBase):
                 'order_id': order_id,
                 'line_id': line_id,
                 'source_id': source_id,
+                'source_url': track.get_source_url(),
             })
 
             cache.set(note_delay_key, note_delay + 5, timeout=5)

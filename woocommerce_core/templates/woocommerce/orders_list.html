@@ -401,7 +401,7 @@
                                             <div class="col-xs-3 no-wrap">
                                                 <span>{{item.supplier.supplier_type|supplier_type}}</span>
                                                 {% if item.supplier %}
-                                                    <a {% if supplier.url %}
+                                                    <a {% if item.supplier.supplier_url %}
                                                         href="{{item.supplier.supplier_url|default:'#'}}" target="_blank"
                                                     {% else %}
                                                         href="#"

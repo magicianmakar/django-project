@@ -803,6 +803,7 @@ class WooStoreApi(ApiBase):
             defaults={
                 'user': user.models_user,
                 'source_id': source_id,
+                'source_type': data.get('source_type'),
                 'created_at': timezone.now(),
                 'updated_at': timezone.now(),
                 'status_updated_at': timezone.now()})

@@ -269,7 +269,6 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
     }
 
     var callback = function(success) {
-        console.log('callback!!!', success);
         if (success) {
             $('#modal-add-order-id').modal('hide');
         }
