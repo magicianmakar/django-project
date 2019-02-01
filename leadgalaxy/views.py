@@ -2863,6 +2863,10 @@ def user_profile(request):
 
     stripe_paused_plan = GroupPlan.objects.filter(slug='paused-plan').first()
 
+    if request.user.get_config('_enable_yearly_60dc_plan'):
+        stripe_plans_yearly = list(stripe_plans_yearly)
+        stripe_plans_yearly.append(GroupPlan.objects.get(slug='premier-yearly-60dc'))
+
     clippingmagic_plans = ClippingMagicPlan.objects.all()
     clippingmagic = None
     if not request.user.profile.plan.is_free:
