@@ -30,9 +30,6 @@ function addBaremetricsForm(accessToken, jwtToken) {
                     }
                 });
             },
-            callback_error: function (data) {
-                swal('Cancellation Insights', data.message, 'warning');
-            },
         };
 
     }}();
