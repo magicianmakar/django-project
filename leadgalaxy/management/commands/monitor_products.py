@@ -126,7 +126,7 @@ class Command(DropifiedBaseCommand):
 
         products = products.filter(store__is_active=True)
 
-        if user.id in self.ignored_users:
+        if user.id in self.ignored_users or user.get_config('_disbale_user_statistics'):
             self.stdout.write(u'Ignore product for user: {}'.format(user.username))
             return
 
