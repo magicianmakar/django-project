@@ -2891,11 +2891,13 @@ def user_profile(request):
     baremetrics_jwt_token = None
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
+
         subscription = request.user.stripesubscription_set.all().first()
-        baremetrics_jwt_token = jwt.encode({
-            "access_token_id": settings.BAREMETRICS_ACCESS_TOKEN,
-            "subscription_oids": [subscription.subscription_id],
-        }, settings.BAREMETRICS_JWT_TOKEN_KEY, "HS256")
+        if subscription:
+            baremetrics_jwt_token = jwt.encode({
+                "access_token_id": settings.BAREMETRICS_ACCESS_TOKEN,
+                "subscription_oids": [subscription.subscription_id],
+            }, settings.BAREMETRICS_JWT_TOKEN_KEY, "HS256")
 
     baremetrics_form_enabled = (
         settings.BAREMETRICS_ACCESS_TOKEN and
