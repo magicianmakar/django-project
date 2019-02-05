@@ -499,13 +499,15 @@ def process_webhook_event(request, event_id, raven_client):
                 return HttpResponse('Customer Not Found')
 
         current_plan = profile.plan
-        if not profile.plan.is_free and profile.plan.is_stripe():
+        if not profile.plan.is_free and profile.plan.is_stripe() and not profile.plan_expire_at:
             profile.plan = GroupPlan.objects.get(default_plan=True)
             profile.save()
 
         StripeSubscription.objects.filter(subscription_id=sub.id).delete()
 
-        if current_plan == profile.plan:
+        if not profile.plan_expire_at:
+            return HttpResponse('Subscription Deleted - Plan Exipre Set')
+        elif current_plan == profile.plan:
             return HttpResponse('Subscription Deleted - Plan Unchanged')
         else:
             return HttpResponse('Subscription Deleted - Change plan From: {} To: {}'.format(
