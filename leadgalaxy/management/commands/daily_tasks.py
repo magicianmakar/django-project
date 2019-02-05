@@ -5,6 +5,7 @@ import arrow
 from leadgalaxy.models import *
 from product_alerts.models import ProductChange
 from shopified_core.management import DropifiedBaseCommand
+from shopified_core.utils import send_email_from_template
 from stripe_subscription.utils import invoice_extra_stores
 
 
@@ -30,19 +31,15 @@ class Command(DropifiedBaseCommand):
         self.delete_alerts()
 
     def profile_changed(self, profile, expired_plan, new_plan):
-        data = {
-            'profile': profile,
-            'expired_plan': expired_plan,
-            'new_plan': new_plan
-        }
-
-        from shopified_core.utils import send_email_from_template
-
         send_email_from_template(
             tpl='expire_plan_change.html',
-            subject='[Dropified] Plan Expire',
-            recipient=['ma7dev@gmail.com', 'chase@dropified.com'],
-            data=data)
+            subject='[Dropified] Plan Expire Notification',
+            recipient=['support@dropified.com'],
+            data={
+                'profile': profile,
+                'expired_plan': expired_plan,
+                'new_plan': new_plan
+            })
 
     def delete_alerts(self):
         # Remove alerts after 30 days
