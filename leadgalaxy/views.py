@@ -2893,18 +2893,13 @@ def user_profile(request):
         sync_subscription(request.user)
 
         subscription = request.user.stripesubscription_set.all().first()
-        if subscription:
+        if subscription and settings.BAREMETRICS_ACCESS_TOKEN and settings.BAREMETRICS_JWT_TOKEN_KEY:
             baremetrics_jwt_token = jwt.encode({
                 "access_token_id": settings.BAREMETRICS_ACCESS_TOKEN,
                 "subscription_oids": [subscription.subscription_id],
             }, settings.BAREMETRICS_JWT_TOKEN_KEY, "HS256")
 
-    baremetrics_form_enabled = (
-        settings.BAREMETRICS_ACCESS_TOKEN and
-        settings.BAREMETRICS_JWT_TOKEN_KEY and
-        stripe_customer and
-        baremetrics_jwt_token
-    )
+    baremetrics_form_enabled = bool(baremetrics_jwt_token)
 
     try:
         affiliate = request.user.lead_dyno_affiliation
