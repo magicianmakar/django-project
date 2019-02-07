@@ -191,16 +191,23 @@ def get_chq_products_count(store):
     return total
 
 
-def get_chq_products(store, page=1, limit=50, all_products=False):
+def get_chq_products(store, page=1, limit=50, all_products=False, product_ids=None, expand='images,variants'):
     api_url = store.get_api_url('products')
 
     if not all_products:
-        params = {'page': page, 'size': limit, 'expand': 'images,variants'}
-        response = store.request.get(api_url, params=params)
-        products = response.json()['items']
+        params = {'page': page, 'size': limit, 'expand': expand}
 
-        for product in products:
-            yield product
+        if product_ids:
+            for product_id in product_ids:
+                response = store.request.get(api_url + '/' + str(product_id), params=params)
+                product = response.json()
+                yield product
+        else:
+            response = store.request.get(api_url, params=params)
+            products = response.json()['items']
+
+            for product in products:
+                yield product
     else:
         limit = 200
         count = get_chq_products_count(store)

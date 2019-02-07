@@ -1,5 +1,6 @@
 import arrow
 import simplejson as json
+import requests
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -10,7 +11,7 @@ from django.core.cache import cache, caches
 from django.urls import reverse
 from django.db.models import Q
 from django.http import HttpResponse, Http404
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
@@ -18,6 +19,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView
 from django.views.generic.base import RedirectView
 from django.views.generic.detail import DetailView
+from django.core.cache.utils import make_template_fragment_key
 
 
 from shopified_core import permissions
@@ -28,6 +30,7 @@ from shopified_core.utils import (
     safeInt,
     safeFloat,
     aws_s3_context,
+    url_join,
     clean_query_id
 )
 
@@ -54,6 +57,9 @@ from .utils import (
 
 import utils
 
+from product_alerts.models import ProductChange
+from product_alerts.utils import variant_index_from_supplier_sku
+
 
 @ajax_only
 @must_be_authenticated
@@ -69,6 +75,146 @@ def store_update(request, store_id):
         return HttpResponse(status=204)
 
     return render(request, 'commercehq/partial/store_update_form.html', {'form': form})
+
+
+@login_required
+def product_alerts(request):
+    if not request.user.can('price_changes.use'):
+        return render(request, 'upgrade.html')
+
+    show_hidden = True if request.GET.get('hidden') else False
+
+    product = request.GET.get('product')
+    if product:
+        product = get_object_or_404(CommerceHQProduct, id=product)
+        permissions.user_can_view(request.user, product)
+
+    post_per_page = settings.ITEMS_PER_PAGE
+    page = utils.safeInt(request.GET.get('page'), 1)
+
+    store = utils.get_store_from_request(request)
+    if not store:
+        messages.warning(request, 'Please add at least one store before using the Alerts page.')
+        return HttpResponseRedirect('/chq/')
+
+    ProductChange.objects.filter(user=request.user.models_user,
+                                 chq_product__store=None).delete()
+
+    changes = ProductChange.objects.select_related('chq_product') \
+                                   .select_related('chq_product__default_supplier') \
+                                   .filter(user=request.user.models_user,
+                                           chq_product__store=store)
+
+    if request.user.is_subuser:
+        store_ids = request.user.profile.subuser_permissions.filter(
+            codename='view_alerts'
+        ).values_list(
+            'store_id', flat=True
+        )
+        changes = changes.filter(chq_product__store_id__in=store_ids)
+
+    if product:
+        changes = changes.filter(chq_product=product)
+    else:
+        changes = changes.filter(hidden=show_hidden)
+
+    category = request.GET.get('category')
+    if category:
+        changes = changes.filter(categories__icontains=category)
+    product_type = request.GET.get('product_type', '')
+    if product_type:
+        changes = changes.filter(chq_product__product_type__icontains=product_type)
+
+    changes = changes.order_by('-updated_at')
+
+    paginator = SimplePaginator(changes, post_per_page)
+    page = min(max(1, page), paginator.num_pages)
+    page = paginator.page(page)
+    changes = page.object_list
+
+    products = []
+    product_variants = {}
+    for i in changes:
+        chq_id = i.product.get_chq_id()
+        if chq_id and str(chq_id) not in products:
+            products.append(str(chq_id))
+    try:
+        if len(products):
+            products = utils.get_chq_products(store=store, product_ids=products, expand='variants')
+            for p in products:
+                product_variants[str(p['id'])] = p
+    except:
+        raven_client.captureException()
+
+    product_changes = []
+    for i in changes:
+        change = {'qelem': i}
+        change['id'] = i.id
+        change['data'] = i.get_data()
+        change['changes'] = i.get_changes_map(category)
+        change['product'] = i.product
+        change['chq_link'] = i.product.commercehq_url
+        change['original_link'] = i.product.get_original_info().get('url')
+        p = product_variants.get(str(i.product.get_chq_id()), {})
+        variants = p.get('variants', None)
+        for c in change['changes']['variants']['quantity']:
+            if variants is not None:
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                if index is not None:
+                    # TODO: check track_inventory status
+                    if p.get('track_inventory'):
+                        quantity = 'Not Supported'  # variants[index]['quantity']
+                        c['chq_value'] = quantity
+                    else:
+                        c['chq_value'] = "Unmanaged"
+                else:
+                    c['chq_value'] = "Not Found"
+            elif p.get('is_multi') is False:
+                if p.get('track_inventory'):
+                    quantity = 'Not Supported'  # p['quantity']
+                    c['chq_value'] = quantity
+                else:
+                    c['chq_value'] = "Unmanaged"
+            else:
+                c['chq_value'] = "Not Found"
+        for c in change['changes']['variants']['price']:
+            if variants is not None:
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                if index is not None:
+                    c['chq_value'] = variants[index]['price']
+                else:
+                    c['chq_value_label'] = "Not Found"
+            elif p.get('is_multi') is False:
+                c['chq_value'] = p['price']
+            else:
+                c['chq_value_label'] = "Not Found"
+
+        product_changes.append(change)
+
+    if not show_hidden:
+        ProductChange.objects.filter(user=request.user.models_user) \
+                             .filter(id__in=[i['id'] for i in product_changes]) \
+                             .update(seen=True)
+
+    # Allow sending notification for new changes
+    cache.delete('product_change_%d' % request.user.models_user.id)
+
+    # Delete sidebar alert info cache
+    cache.delete(make_template_fragment_key('alert_info', [request.user.id]))
+
+    tpl = 'commercehq/product_alerts_tab.html' if product else 'commercehq/product_alerts.html'
+    return render(request, tpl, {
+        'product_changes': product_changes,
+        'show_hidden': show_hidden,
+        'product': product,
+        'paginator': paginator,
+        'current_page': page,
+        'page': 'product_alerts',
+        'store': store,
+        'category': category,
+        'product_type': product_type,
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts']
+    })
 
 
 class StoresList(ListView):
@@ -230,6 +376,30 @@ class ProductDetailView(DetailView):
         ]
 
         context.update(aws_s3_context())
+
+        last_check = None
+        try:
+            if self.object.monitor_id > 0:
+                cache_key = 'chq_product_last_check_{}'.format(self.object.id)
+                last_check = cache.get(cache_key)
+
+                if last_check is None:
+                    response = requests.get(
+                        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/', self.object.monitor_id),
+                        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD),
+                        timeout=10,
+                    )
+
+                    last_check = arrow.get(response.json()['updated_at'])
+                    cache.set(cache_key, last_check, timeout=3600)
+        except:
+            pass
+        context['last_check'] = last_check
+
+        try:
+            context['alert_config'] = json.loads(self.object.config)
+        except:
+            context['alert_config'] = {}
 
         return context
 

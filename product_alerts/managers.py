@@ -144,39 +144,6 @@ class ProductChangeManager():
         return variant_index_from_supplier_sku(self.product, sku, product_data.get('variants', []), ships_from_id, ships_from_title)
 
     def handle_variant_price_change(self, product_data, variant_change):
-        idx = self.get_variant(product_data, variant_change)
-        if idx is not None:
-            variant_id = product_data['variants'][idx]['id']
-            self.add_price_history(variant_id, variant_change)
-
-        new_value = variant_change.get('new_value')
-        old_value = variant_change.get('old_value')
-
-        if self.config['price_change'] == 'update':
-            if idx is not None:
-                current_price = safeFloat(product_data['variants'][idx]['price'])
-                current_compare_at_price = safeFloat(product_data['variants'][idx].get('compare_at_price'))
-
-                new_price, new_compare_at_price = calculate_price(
-                    self.user,
-                    old_value,
-                    new_value,
-                    current_price,
-                    current_compare_at_price,
-                    self.config['price_update_method'],
-                    self.markup_rules
-                )
-                if new_price:
-                    if self.config['price_update_for_increase']:
-                        if new_price > current_price:
-                            self.product_data_changed = True
-                            product_data['variants'][idx]['price'] = new_price
-                            product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
-                    else:
-                        self.product_data_changed = True
-                        product_data['variants'][idx]['price'] = new_price
-                        product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
-
         return product_data
 
     def handle_variant_quantity_change(self, product_data, variant_change):
@@ -315,6 +282,42 @@ class ShopifyProductChangeManager(ProductChangeManager):
 
         return product_data
 
+    def handle_variant_price_change(self, product_data, variant_change):
+        idx = self.get_variant(product_data, variant_change)
+        if idx is not None:
+            variant_id = product_data['variants'][idx]['id']
+            self.add_price_history(variant_id, variant_change)
+
+        new_value = variant_change.get('new_value')
+        old_value = variant_change.get('old_value')
+
+        if self.config['price_change'] == 'update':
+            if idx is not None:
+                current_price = safeFloat(product_data['variants'][idx]['price'])
+                current_compare_at_price = safeFloat(product_data['variants'][idx].get('compare_at_price'))
+
+                new_price, new_compare_at_price = calculate_price(
+                    self.user,
+                    old_value,
+                    new_value,
+                    current_price,
+                    current_compare_at_price,
+                    self.config['price_update_method'],
+                    self.markup_rules
+                )
+                if new_price:
+                    if self.config['price_update_for_increase']:
+                        if new_price > current_price:
+                            self.product_data_changed = True
+                            product_data['variants'][idx]['price'] = new_price
+                            product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+                    else:
+                        self.product_data_changed = True
+                        product_data['variants'][idx]['price'] = new_price
+                        product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+
+        return product_data
+
     def handle_variant_quantity_change(self, product_data, variant_change):
         if self.config['quantity_change'] == 'update':
             idx = self.get_variant(product_data, variant_change)
@@ -403,6 +406,65 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             product_data['is_draft'] = False
         elif self.config['product_disappears'] == 'zero_quantity':
             pass
+
+        return product_data
+
+    def handle_variant_price_change(self, product_data, variant_change):
+        idx = self.get_variant(product_data, variant_change)
+        if idx is not None:
+            variant_id = product_data['variants'][idx]['id']
+            self.add_price_history(variant_id, variant_change)
+
+        new_value = variant_change.get('new_value')
+        old_value = variant_change.get('old_value')
+
+        if self.config['price_change'] == 'update':
+            if idx is not None:
+                current_price = safeFloat(product_data['variants'][idx]['price'])
+                current_compare_at_price = safeFloat(product_data['variants'][idx].get('compare_price'))
+
+                new_price, new_compare_at_price = calculate_price(
+                    self.user,
+                    old_value,
+                    new_value,
+                    current_price,
+                    current_compare_at_price,
+                    self.config['price_update_method'],
+                    self.markup_rules
+                )
+                if new_price:
+                    if self.config['price_update_for_increase']:
+                        if new_price > current_price:
+                            self.product_data_changed = True
+                            product_data['variants'][idx]['price'] = new_price
+                            product_data['variants'][idx]['compare_price'] = new_compare_at_price
+                    else:
+                        self.product_data_changed = True
+                        product_data['variants'][idx]['price'] = new_price
+                        product_data['variants'][idx]['compare_price'] = new_compare_at_price
+            elif product_data.get('is_multi') is False:
+                current_price = safeFloat(product_data['price'])
+                current_compare_at_price = safeFloat(product_data.get('compare_price'))
+
+                new_price, new_compare_at_price = calculate_price(
+                    self.user,
+                    old_value,
+                    new_value,
+                    current_price,
+                    current_compare_at_price,
+                    self.config['price_update_method'],
+                    self.markup_rules
+                )
+                if new_price:
+                    if self.config['price_update_for_increase']:
+                        if new_price > current_price:
+                            self.product_data_changed = True
+                            product_data['price'] = new_price
+                            product_data['compare_price'] = new_compare_at_price
+                    else:
+                        self.product_data_changed = True
+                        product_data['price'] = new_price
+                        product_data['compare_price'] = new_compare_at_price
 
         return product_data
 

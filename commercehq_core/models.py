@@ -224,6 +224,12 @@ class CommerceHQProduct(models.Model):
     def get_chq_id(self):
         return self.source_id if self.store else None
 
+    def get_product(self):
+        try:
+            return json.loads(self.data)['title']
+        except:
+            return None
+
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)

@@ -22,6 +22,8 @@ urlpatterns = [
     url(r'^orders/place$', commercehq_core.views.OrderPlaceRedirectView.as_view(), name='orders_place'),
     url(r'^orders/track$', commercehq_core.views.OrdersTrackList.as_view(), name='orders_track'),
 
+    url(r'^products/update$', commercehq_core.views.product_alerts, name='product_alerts'),
+
     url(r'^subusers$', subusers.views.subusers, name='subusers'),
     url(r'^subusers/permissions/(?P<user_id>[0-9]+)$', subusers.views.subusers_perms, name='subusers_perms'),
     url(r'^subusers/permissions/(?P<user_id>[0-9]+)/edit$', subusers.views.subuser_perms_edit, name='subuser_perms_edit'),

@@ -10,6 +10,7 @@ from django.db import transaction
 from django.db.models import F
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404
 
 import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -28,6 +29,7 @@ from shopified_core.utils import (
     serializers_orders_track,
     CancelledOrderAlert
 )
+from product_alerts.models import ProductChange
 from product_alerts.utils import unmonitor_store
 from zapier_core.utils import send_order_track_change
 
@@ -45,6 +47,38 @@ from .models import (
 
 class CHQStoreApi(ApiBase):
     board_model = CommerceHQBoard
+
+    def post_alert_archive(self, request, user, data):
+        try:
+            if data.get('all') == '1':
+                store = CommerceHQStore.objects.get(id=data.get('store'))
+                permissions.user_can_view(user, store)
+
+                ProductChange.objects.filter(chq_product__store=store).update(hidden=1)
+
+            else:
+                alert = ProductChange.objects.get(id=data.get('alert'))
+                permissions.user_can_edit(user, alert)
+
+                alert.hidden = 1
+                alert.save()
+
+        except CommerceHQStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        return self.api_success()
+
+    def post_alert_delete(self, request, user, data):
+        try:
+            store = CommerceHQStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+            ProductChange.objects.filter(chq_product__store=store).delete()
+
+        except CommerceHQStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        return self.api_success()
 
     def post_save_orders_filter(self, request, user, data):
         utils.set_orders_filter(user, data)
@@ -337,6 +371,41 @@ class CHQStoreApi(ApiBase):
                 'url': reverse('chq:product_detail', kwargs={'pk': duplicate_product.id})
             }
         })
+
+    def post_product_config(self, request, user, data):
+        if not user.can('price_changes.use'):
+            raise PermissionDenied()
+
+        product = data.get('product')
+        if product:
+            product = get_object_or_404(CommerceHQProduct, id=product)
+            permissions.user_can_edit(request.user, product)
+        else:
+            return self.api_error('Product not found', status=404)
+
+        try:
+            config = json.loads(product.config)
+        except:
+            config = {}
+
+        for key in data:
+            if key == 'product':
+                continue
+            config[key] = data[key]
+
+        bool_config = ['price_update_for_increase']
+        for key in bool_config:
+            config[key] = (key in data)
+
+        # remove values if update is not selected
+        if config['alert_price_change'] != 'update':
+            config['price_update_method'] = ''
+            config['price_update_for_increase'] = ''
+
+        product.config = json.dumps(config)
+        product.save()
+
+        return self.api_success()
 
     def get_order_fulfill(self, request, user, data):
         if int(data.get('count', 0)) >= 30:
