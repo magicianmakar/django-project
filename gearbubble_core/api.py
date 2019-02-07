@@ -767,6 +767,10 @@ class GearBubbleApi(ApiBase):
                 order['order']['phone'] = phone_number
                 order['order']['phoneCountry'] = phone_country
 
+            name = order['shipping_address'].get('name', '').split(' ')
+            order['shipping_address']['first_name'] = name[0]
+            order['shipping_address']['last_name'] = ' '.join(name[1:])
+
             try:
                 order_id, line_id = order['order_id'], order['line_id']
                 track = GearBubbleOrderTrack.objects.get(store=store, order_id=order_id, line_id=line_id)

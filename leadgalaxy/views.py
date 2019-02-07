@@ -3798,7 +3798,7 @@ def orders_view(request):
                             'quantity': b['quantity'] * el['quantity'],
                             'product_id': b_product.id,
                             'source_id': b_supplier.get_source_id(),
-                            'order_url': app_link('orders/place', product=b_supplier.get_source_id(), SABundle=True),
+                            'order_url': app_link('orders/place', supplier=b_supplier.id, SABundle=True),
                             'variants': b_variants,
                             'shipping_method': b_shipping_method,
                             'country_code': country_code,

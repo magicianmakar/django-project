@@ -27,6 +27,7 @@ from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
+    app_link,
     safeInt,
     safeFloat,
     aws_s3_context,
@@ -908,6 +909,7 @@ class OrdersList(ListView):
                                 'quantity': b['quantity'] * line['quantity'],
                                 'product_id': b_product.id,
                                 'source_id': b_supplier.get_source_id(),
+                                'order_url': app_link('chq/orders/place', supplier=b_supplier.id, SABundle=True),
                                 'variants': b_variants,
                                 'shipping_method': b_shipping_method,
                                 'country_code': country_code,
