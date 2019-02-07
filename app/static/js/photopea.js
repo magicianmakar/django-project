@@ -153,6 +153,11 @@ var PhotoPeaEditor = {
             formData.append('old_url', document.getElementById(data.sourceId).src);
             formData.append('advanced', true);
 
+            var storeType = window.location.href.match('(chq|woo|gear)');
+            if (storeType) {
+                formData.append(storeType[0], 1);
+            }
+
             $.ajax({
                 url: '/upload/save_image_s3',
                 type: 'POST',
