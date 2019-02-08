@@ -696,7 +696,7 @@ class ShopifyStoreApi(ApiBase):
         return self.api_error("YouZign API Error")
 
     def post_change_plan(self, request, user, data):
-        if not user.is_superuser and not user.is_sta ff:
+        if not user.is_superuser and not user.is_staff:
             raise PermissionDenied()
 
         target_user = User.objects.get(id=data.get('user'))
