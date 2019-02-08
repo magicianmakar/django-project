@@ -696,7 +696,7 @@ class ShopifyStoreApi(ApiBase):
         return self.api_error("YouZign API Error")
 
     def post_change_plan(self, request, user, data):
-        if not user.is_superuser and not user.is_staff:
+        if not user.is_superuser and not user.is_sta ff:
             raise PermissionDenied()
 
         target_user = User.objects.get(id=data.get('user'))
@@ -2160,8 +2160,8 @@ class ShopifyStoreApi(ApiBase):
             assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
 
-            assert utils.safeInt(order_id), 'Order ID is not a numbers'
-            assert re.match('^https?://', source_id) is None, 'Aliexpress Order ID should not be a link'
+            # assert utils.safeInt(order_id), 'Order ID is not a numbers'
+            assert re.match('^https?://', source_id) is None, 'Supplier Order ID should not be a link'
 
         except AssertionError as e:
             if from_oberlo and (not source_id or not len(source_id)):
@@ -2232,7 +2232,7 @@ class ShopifyStoreApi(ApiBase):
                     return self.api_success()
 
                 if saved_track.source_id and source_id != saved_track.source_id and not from_oberlo:
-                    return self.api_error('This Order already have an Aliexpress Order ID', status=422)
+                    return self.api_error('This Order already have an Supplier Order ID', status=422)
 
             seem_source_orders = ShopifyOrderTrack.objects.filter(
                 store=store,
@@ -2240,7 +2240,7 @@ class ShopifyStoreApi(ApiBase):
             ).values_list('order_id', flat=True)
 
             if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced') and not from_oberlo:
-                return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
+                return self.api_error('Supplier Order ID is linked to an other Order', status=422)
 
             while True:
                 try:
@@ -2375,7 +2375,7 @@ class ShopifyStoreApi(ApiBase):
                 ShopifyOrderLog.objects.update_order_log(
                     store=track.store,
                     user=user,
-                    log=u'Delete Aliexpress Order ID (#{})'.format(track.source_id),
+                    log=u'Delete Supplier Order ID (#{})'.format(track.source_id),
                     level='warning',
                     icon='times',
                     order_id=track.order_id,

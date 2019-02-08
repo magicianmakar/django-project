@@ -763,11 +763,11 @@ class WooStoreApi(ApiBase):
         source_id = data.get('aliexpress_order_id')
 
         try:
-            assert len(source_id) > 0, 'Empty Order ID'
+            # assert len(source_id) > 0, 'Empty Order ID'
             assert utils.safeInt(order_id), 'Order ID is not a numeric'
             source_id.encode('ascii')
         except AssertionError as e:
-            raven_client.captureMessage('Non valid Aliexpress Order ID')
+            raven_client.captureMessage('Non valid Supplier Order ID')
             return self.api_error(e.message, status=501)
         except UnicodeEncodeError as e:
             return self.api_error('Order ID is not a valid', status=501)
@@ -787,13 +787,13 @@ class WooStoreApi(ApiBase):
             saved_track = tracks.first()
 
             if saved_track.source_id and source_id != saved_track.source_id:
-                return self.api_error('This Order already have an Aliexpress Order ID', status=422)
+                return self.api_error('This Order already have an Supplier Order ID', status=422)
 
         seen_source_orders = WooOrderTrack.objects.filter(store=store, source_id=source_id)
         seen_source_orders = seen_source_orders.values_list('order_id', flat=True)
 
         if len(seen_source_orders) and int(order_id) not in seen_source_orders and not data.get('forced'):
-            return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
+            return self.api_error('Supplier Order ID is linked to an other Order', status=422)
 
         track, created = WooOrderTrack.objects.update_or_create(
             store=store,

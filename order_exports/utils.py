@@ -476,7 +476,7 @@ class ShopifyTrackOrderExport():
         steps = 1000
 
         with open(self.file_path, 'wr') as csv_file:
-            fieldnames = ['Shopify Order', 'Shopify Item', 'Aliexpress Order ID', 'Tracking Number']
+            fieldnames = ['Shopify Order', 'Shopify Item', 'Supplier Order ID', 'Tracking Number']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
 
@@ -494,7 +494,7 @@ class ShopifyTrackOrderExport():
                     writer.writerow({
                         'Shopify Order': shopify_order['name'] if shopify_order else order.order_id,
                         'Shopify Item': order.line_id,
-                        'Aliexpress Order ID': order.source_id,
+                        'Supplier Order ID': order.source_id,
                         'Tracking Number': order.source_tracking,
                     })
 

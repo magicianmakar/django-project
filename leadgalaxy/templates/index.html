@@ -266,7 +266,7 @@
                                 <div class="form-group v-center">
                                     <label for="description_mode" class="col-sm-2 control-label" style="padding-top:0">
                                         Default Product Description
-                                        {% include 'partial/help_tooltip.html' with help="<p><b>Empty</b>: No description will be used.</p><p><b>Original</b>: The full AliExpress product description will be pre-populated.</p><p><b>Simplified</b>: The product specs portion of the AliExpress description will be pre-populated.</p><p><b>Custom</b>: The custom description entered below will be pre-populated.</p>" qtipstyle="color:#BBB" %}
+                                        {% include 'partial/help_tooltip.html' with help="<p><b>Empty</b>: No description will be used.</p><p><b>Original</b>: The full Supplier product description will be pre-populated.</p><p><b>Simplified</b>: The product specs portion of the Supplier description will be pre-populated.</p><p><b>Custom</b>: The custom description entered below will be pre-populated.</p>" qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-3">
                                         <select id="description_mode" name="description_mode" class="form-control">
@@ -383,7 +383,7 @@
                             <div class="col-sm-offset-1 col-sm-11">
                                 <label for="order_phone_number" class="col-sm-2 control-label" style="padding-top:0;padding-left:0;padding-right:25px;">
                                     Order Phone Number
-                                    {% include 'partial/help_tooltip.html' with help="The phone number to be used with Auto Order from Aliexpress" qtipstyle="color:#BBB" %}
+                                    {% include 'partial/help_tooltip.html' with help="The phone number to be used with Auto Order from Suppliers" qtipstyle="color:#BBB" %}
                                 </label>
                                 <div class="col-sm-3">
                                     <input type="text" class="form-control col-sm-2" {% if can_use %}id="order_phone_number" name="order_phone_number" value="{{config.order_phone_number}}"{% endif %}>
@@ -445,7 +445,7 @@
                                 <div class="form-group">
                                     <label for="auto_ordered_mark" class="col-sm-4 col-xs-8 control-label">
                                         Automatically Mark as Ordered
-                                        {% include 'partial/help_tooltip.html' with help="After you click on <b>'Place Order'</b> button, the order will be marked as Ordered and linked with Aliexpress Order ID." qtipstyle="color:#BBB" %}
+                                        {% include 'partial/help_tooltip.html' with help="After you click on <b>'Place Order'</b> button, the order will be marked as Ordered and linked with Supplier Order ID." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="auto_ordered_mark"
@@ -758,7 +758,7 @@
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
                                     <label for="aliexpress_as_notes" class="col-sm-4 col-xs-8 control-label">
-                                        Save AliExpress Order ID as standard Order Notes
+                                        Save Supplier Order ID as standard Order Notes
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="aliexpress_as_notes" name="aliexpress_as_notes" type="checkbox"
@@ -772,7 +772,7 @@
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
                                     <label for="aliexpress_as_custom_note" class="col-sm-4 col-xs-8 control-label">
-                                        Save AliExpress Order ID as Additional Details
+                                        Save Supplier Order ID as Additional Details
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="aliexpress_as_custom_note" name="aliexpress_as_custom_note" type="checkbox" class="js-switch" {% if config.aliexpress_as_custom_note %}checked{% endif %} />
@@ -785,7 +785,7 @@
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
                                     <label for="aliexpress_as_order_tag" class="col-sm-4 col-xs-8 control-label">
-                                        Save AliExpress Order ID as Order Tag
+                                        Save Supplier Order ID as Order Tag
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="aliexpress_as_order_tag" name="aliexpress_as_order_tag" type="checkbox"

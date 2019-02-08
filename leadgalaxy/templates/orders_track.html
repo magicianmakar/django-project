@@ -36,7 +36,7 @@
 
                             {% if not request.user.is_subuser %}
                             <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r-xs export-tracked-orders"
-                                title="Export Aliexpress IDs &amp; Tracking Numbers" data-store="{{ store.id }}"><i class="fa fa-upload"></i> Export </a>
+                                title="Export Supplier IDs &amp; Tracking Numbers" data-store="{{ store.id }}"><i class="fa fa-upload"></i> Export </a>
                             {% endif %}
 
                             <div class="btn-group ">
@@ -65,7 +65,7 @@
                             </div>
 
                             <button class="btn btn-success btn-rounded btn-outline btn-sm aliexpress-sync-btn" data-store="{{store.id}}">
-                                <i class="fa fa-refresh"></i> Sync with Aliexpress</button>
+                                <i class="fa fa-refresh"></i> Sync with Supplier</button>
                         </div>
                     </div>
                     <form method="get" action="{% url 'orders_track' %}" class="filter-form m-t-sm"
@@ -125,7 +125,7 @@
 
                     <div class="row">
                         <div class="col-md-3" style="width: 180px;margin-right: 0;padding-right: 0">
-                            <label>Aliexpress Status:</label>
+                            <label>Supplier Status:</label>
                         </div>
                         <div class="col-md-2">
                             <select name="reason" class="form-control" style="padding: 6px 0px" data-placeholder="Any">
@@ -218,8 +218,8 @@
                           </th>
                           <th  class="no-wrap" style="width:26%">
                               <a href="{% url_toggle 'sort' '-order,order' %}">Shopify Order {% sort_icon 'sort' 'order' %}</a></th>
-                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-source,source' %}">Aliexpress Order {% sort_icon 'sort' 'source' %}</a></th>
-                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-status,status' %}">Aliexpress Status {% sort_icon 'sort' 'status' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-source,source' %}">Supplier Order {% sort_icon 'sort' 'source' %}</a></th>
+                          <th class="no-wrap"><a href="{% url_toggle 'sort' '-status,status' %}">Supplier Status {% sort_icon 'sort' 'status' %}</a></th>
                           <th class="no-wrap"><a href="{% url_toggle 'sort' '-tracking,tracking' %}">Tracking Number {% sort_icon 'sort' 'tracking' %}</a></th>
                           <th class="no-wrap"><a href="{% url_toggle 'sort' '-add,add' %}">Order Date {% sort_icon 'sort' 'add' %}</a></th>
                           <th class="no-wrap"><a href="{% url_toggle 'sort' '-update,update' %}">Updated {% sort_icon 'sort' 'update' %}</a></th>

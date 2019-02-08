@@ -533,7 +533,7 @@ class CHQStoreApi(ApiBase):
                 saved_track = tracks.first()
 
                 if saved_track.source_id and source_id != saved_track.source_id:
-                    return self.api_error('This Order already have an Aliexpress Order ID', status=422)
+                    return self.api_error('This Order already have an Supplier Order ID', status=422)
 
             seem_source_orders = CommerceHQOrderTrack.objects.filter(
                 store=store,
@@ -541,7 +541,7 @@ class CHQStoreApi(ApiBase):
             ).values_list('order_id', flat=True)
 
             if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced'):
-                return self.api_error('Aliexpress Order ID is linked to an other Order', status=422)
+                return self.api_error('Supplier Order ID is linked to an other Order', status=422)
 
             track, created = CommerceHQOrderTrack.objects.update_or_create(
                 store=store,

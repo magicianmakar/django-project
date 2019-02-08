@@ -95,7 +95,7 @@
             title: 'Archive Order',
             text: 'Do you want to Archive this order?' +
                   '<br><b style="color:#dd5555">Archived orders ' +
-                  'are not synced with Aliexpress</b>' +
+                  'are not synced with Supplier</b>' +
                   '<br><b>Archive only Canceled or Completed Orders<b>',
             type: 'warning',
             html: true,

@@ -305,7 +305,7 @@
             });
         }).then(
             function(data) {
-                // Got Aliexpress order info
+                // Got Supplier order info
                 if (data.order.source_status == data.source.orderStatus &&
                     data.order.source_tracking == data.source.tracking_number &&
                     $('#update-unfulfilled-only').is(':checked') &&
@@ -318,7 +318,7 @@
                 }
             },
             function(data) {
-                // Couldn't get Aliexpress order info
+                // Couldn't get Supplier order info
                 orders.error += 1;
                 addOrderUpdateItem(data.order, data.source);
             }
