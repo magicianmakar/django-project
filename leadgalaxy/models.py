@@ -495,20 +495,12 @@ class UserProfile(models.Model):
         from shopified_core.tasks import update_intercom_tags, update_baremetrics_attributes
 
         update_intercom_tags.apply_async(
-            kwarg={
-                'email': self.user.email,
-                'attribute_id': 'user_tags',
-                'attribute_value': self.tags
-            },
+            args=[self.user.email, 'user_tags', self.tags],
             expires=900)
 
         if settings.BAREMETRICS_TAGS_FIELD:
             update_baremetrics_attributes.apply_async(
-                kwarg={
-                    'email': self.user.email,
-                    'attribute_id': settings.BAREMETRICS_TAGS_FIELD,
-                    'attribute_value': self.tags
-                },
+                args=[self.user.email, settings.BAREMETRICS_TAGS_FIELD, self.tags],
                 expires=900)
 
     def get_tags(self):
