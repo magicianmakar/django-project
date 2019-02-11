@@ -466,7 +466,7 @@ else:
 
 # Baremetrics (Customer Tags)
 BAREMETRICS_API_KEY = os.environ.get('BAREMETRICS_API_KEY')
-BAREMETRICS_TAGS_FIELD = os.environ.get('BAREMETRICS_TAGS_FIELD')
+BAREMETRICS_TAGS_FIELD = os.environ.get('BAREMETRICS_TAGS_FIELD', 753)
 
 # Baremetrics
 BAREMETRICS_ACCESS_TOKEN = os.environ.get('BAREMETRICS_ACCESS_TOKEN')
