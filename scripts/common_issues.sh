@@ -8,7 +8,14 @@ if [ "$?" == "0" ]; then
     exit -1
 fi
 
-python manage.py makemigrations | grep 'No changes detected'
+grep --exclude-dir=venv kwarg= --include="*.py" --recursive .
+if [ "$?" == "0" ]; then
+    echo
+    echo "[-] Do not use 'datetime.strptime', use arrow or django.utils.timezone for timezone aware datetime:"
+    exit -1
+fi
+
+python manage.py makemigrations | grep 'No changes detected' > /dev/null
 
 if [ ! "$?" == "0" ]; then
     echo

@@ -608,7 +608,7 @@ def sync_shopify_orders(self, store_id, elastic=False):
                 for i in missing_order_ids:
                     update_shopify_order.apply_async(
                         args=[store_id, i],
-                        kwarg={'from_webhook': False},
+                        kwargs={'from_webhook': False},
                         countdown=imported)
 
                     imported += 1

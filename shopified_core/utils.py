@@ -268,7 +268,7 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_em
 
     if async:
         from shopified_core.tasks import send_email_async
-        send_email_async.apply_async(kwarg=kwargs, queue='priority_high')
+        send_email_async.apply_async(kwargs=kwargs, queue='priority_high')
     else:
         send_mail(**kwargs)
 

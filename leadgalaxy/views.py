@@ -3229,7 +3229,7 @@ def orders_view(request):
             if arrow.get(order['updated_at']).timestamp > order['db_updated_at'] and not settings.DEBUG:
                 tasks.update_shopify_order.apply_async(
                     args=[store.id, order['id']],
-                    kwarg={'shopify_order': order, 'from_webhook': False},
+                    kwargs={'shopify_order': order, 'from_webhook': False},
                     countdown=countdown)
 
                 countdown = countdown + 1
@@ -3434,7 +3434,7 @@ def orders_view(request):
 
                     tasks.update_shopify_order.apply_async(
                         args=[store.id, order['id']],
-                        kwarg={'shopify_order': order, 'from_webhook': False},
+                        kwargs={'shopify_order': order, 'from_webhook': False},
                         countdown=countdown,
                         expires=1800)
 
@@ -3604,7 +3604,7 @@ def orders_view(request):
                 if arrow.get(order['updated_at']).timestamp > order['db_updated_at']:
                     tasks.update_shopify_order.apply_async(
                         args=[store.id, order['id']],
-                        kwarg={'shopify_order': order, 'from_webhook': False},
+                        kwargs={'shopify_order': order, 'from_webhook': False},
                         countdown=countdown,
                         expires=1800)
 
@@ -3614,7 +3614,7 @@ def orders_view(request):
 
     orders_sync_check_key = 'store_orders_sync_check_{}'.format(store.id)
     if store_sync_enabled and cache.get(orders_sync_check_key) is None:
-        tasks.sync_shopify_orders.apply_async(args=[store.id], kwarg={'elastic': es_search_enabled})
+        tasks.sync_shopify_orders.apply_async(args=[store.id], kwargs={'elastic': es_search_enabled})
         cache.set(orders_sync_check_key, True, timeout=43200)
 
     products_cache = {}
