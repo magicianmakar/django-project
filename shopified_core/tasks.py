@@ -33,7 +33,7 @@ def update_intercom_tags(self, email, attribute_id, attribute_value):
             }
         }
         try:
-            response = requests.post(url, headers=headers, json=data).text
+            response = requests.post(url, headers=headers, json=data)
             response.raise_for_status()
         except:
             raven_client.captureException()
@@ -56,7 +56,7 @@ def update_baremetrics_attributes(self, email, attribute_id, attribute_value):
         }
 
         try:
-            response = requests.post(url, headers=headers, json=data).text
+            response = requests.post(url, headers=headers, json=data)
             response.raise_for_status()
         except:
             raven_client.captureException()
