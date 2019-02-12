@@ -18,9 +18,10 @@ from django.core.cache import cache
 from django.db import transaction
 from django.contrib import messages
 
+from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
-from shopified_core import permissions
+from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.utils import (
     safeInt,
     safeFloat,
@@ -755,6 +756,8 @@ class GearBubbleApi(ApiBase):
         if order:
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
+
+            order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
 
             order['ordered'] = False
             order['fast_checkout'] = user.get_config('_fast_checkout', True)

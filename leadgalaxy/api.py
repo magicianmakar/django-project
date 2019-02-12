@@ -22,10 +22,10 @@ from app.celery import celery_app
 from last_seen.models import LastSeen
 from youtube_ads.models import VideosList
 
-from shopified_core.api_base import ApiBase
 from shopified_core import permissions
+from shopified_core.api_base import ApiBase
 from shopified_core.encryption import save_aliexpress_password, delete_aliexpress_password
-from shopified_core.shipping_helper import get_counrties_list, fix_fr_address
+from shopified_core.shipping_helper import get_counrties_list, fix_fr_address, aliexpress_country_code_map
 from shopified_core.utils import (
     app_link,
     send_email_from_template,
@@ -1806,6 +1806,8 @@ class ShopifyStoreApi(ApiBase):
             if user.models_user.get_config('_fr_address_fix'):
                 if order['shipping_address']['country_code'] == 'FR':
                     order['shipping_address'] = fix_fr_address(order['shipping_address'])
+
+            order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
 
             order['ordered'] = False
             order['fast_checkout'] = user.get_config('_fast_checkout', True)
