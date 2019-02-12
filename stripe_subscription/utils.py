@@ -16,7 +16,7 @@ import arrow
 from .models import StripeCustomer, StripeSubscription, ExtraStore, ExtraCHQStore, ExtraWooStore, ExtraGearStore
 from .stripe_api import stripe
 
-from shopified_core.utils import safeStr
+from shopified_core.utils import safe_str
 from leadgalaxy.models import GroupPlan, UserProfile
 from leadgalaxy.utils import register_new_user
 from analytic_events.models import SuccessfulPaymentEvent
@@ -566,7 +566,7 @@ def process_webhook_event(request, event_id, raven_client):
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)
         except User.DoesNotExist:
-            description = safeStr(charge.description)
+            description = safe_str(charge.description)
 
             is_unlimited = request.POST.get('unlimited') or \
                 ('Unlimited' in description and ('ECOM Jam' in description or '$997' in description)) or \

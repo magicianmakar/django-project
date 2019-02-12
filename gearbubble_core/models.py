@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 from django.core.urlresolvers import reverse
 
-from shopified_core.utils import get_domain, safeStr
+from shopified_core.utils import get_domain, safe_str
 from shopified_core.decorators import add_to_class
 
 
@@ -214,8 +214,8 @@ class GearBubbleProduct(models.Model):
         data = json.loads(self.data)
 
         self.title = data.get('title', '')
-        self.tags = safeStr(data.get('tags', ''))[:1024]
-        self.product_type = safeStr(data.get('type', ''))[:254]
+        self.tags = safe_str(data.get('tags', ''))[:1024]
+        self.product_type = safe_str(data.get('type', ''))[:254]
 
         try:
             self.price = '%.02f' % float(data['price'])

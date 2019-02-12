@@ -3,7 +3,7 @@ import requests
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from shopified_core.utils import app_link, safeFloat, http_exception_response, http_excption_status_code
+from shopified_core.utils import app_link, safe_float, http_exception_response, http_excption_status_code
 from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index_from_supplier_sku, calculate_price
@@ -293,8 +293,8 @@ class ShopifyProductChangeManager(ProductChangeManager):
 
         if self.config['price_change'] == 'update':
             if idx is not None:
-                current_price = safeFloat(product_data['variants'][idx]['price'])
-                current_compare_at_price = safeFloat(product_data['variants'][idx].get('compare_at_price'))
+                current_price = safe_float(product_data['variants'][idx]['price'])
+                current_compare_at_price = safe_float(product_data['variants'][idx].get('compare_at_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -420,8 +420,8 @@ class CommerceHQProductChangeManager(ProductChangeManager):
 
         if self.config['price_change'] == 'update':
             if idx is not None:
-                current_price = safeFloat(product_data['variants'][idx]['price'])
-                current_compare_at_price = safeFloat(product_data['variants'][idx].get('compare_price'))
+                current_price = safe_float(product_data['variants'][idx]['price'])
+                current_compare_at_price = safe_float(product_data['variants'][idx].get('compare_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -443,8 +443,8 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                         product_data['variants'][idx]['price'] = new_price
                         product_data['variants'][idx]['compare_price'] = new_compare_at_price
             elif product_data.get('is_multi') is False:
-                current_price = safeFloat(product_data['price'])
-                current_compare_at_price = safeFloat(product_data.get('compare_price'))
+                current_price = safe_float(product_data['price'])
+                current_compare_at_price = safe_float(product_data.get('compare_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,

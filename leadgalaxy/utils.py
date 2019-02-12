@@ -41,9 +41,9 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import *
 from shopified_core import permissions
 from shopified_core.utils import (
-    safeInt,
-    safeFloat,
-    safeStr,
+    safe_int,
+    safe_float,
+    safe_str,
     list_chunks,
     app_link,
     url_join,
@@ -622,7 +622,7 @@ def get_store_from_request(request):
             pass
 
     if not store and request.GET.get('store'):
-        store = get_object_or_404(stores, id=safeInt(request.GET.get('store')))
+        store = get_object_or_404(stores, id=safe_int(request.GET.get('store')))
 
     if store:
         permissions.user_can_view(request.user, store)
@@ -663,9 +663,9 @@ def get_shopify_id(url):
     if url and url.strip():
         try:
             if '/variants/' in url:
-                return safeInt(re.findall('products/([0-9]+)/variants', url)[0])
+                return safe_int(re.findall('products/([0-9]+)/variants', url)[0])
             else:
-                return safeInt(re.findall('products/([0-9]+)$', url)[0])
+                return safe_int(re.findall('products/([0-9]+)$', url)[0])
         except:
             return 0
     else:
@@ -1030,8 +1030,8 @@ def link_product_images(product):
 
 def get_shopify_variant_image(store, product_id, variant_id):
     """ product_id: Product ID in Shopify """
-    product_id = safeInt(product_id)
-    variant_id = safeInt(variant_id)
+    product_id = safe_int(product_id)
+    variant_id = safe_int(variant_id)
     image = None
 
     if not product_id:
@@ -1355,10 +1355,10 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
                     customer_address['city'] = u'{}, {}'.format(customer_address['city'], customer_province)
 
             elif fix_aliexpress_city:
-                city = safeStr(customer_address['city']).strip().strip(',')
+                city = safe_str(customer_address['city']).strip().strip(',')
                 customer_address['city'] = 'Other'
 
-                if not safeStr(customer_address['address2']).strip():
+                if not safe_str(customer_address['address2']).strip():
                     customer_address['address2'] = u'{},'.format(city)
                 else:
                     customer_address['address2'] = u'{}, {},'.format(customer_address['address2'].strip().strip(','), city)
@@ -1705,7 +1705,7 @@ def order_track_fulfillment(**kwargs):
         line_id = kwargs['line_id']
         location_id = kwargs['location_id']
         source_tracking = kwargs['source_tracking']
-        store_id = safeInt(kwargs.get('store_id'))
+        store_id = safe_int(kwargs.get('store_id'))
 
         if not len(source_tracking):
             source_tracking = None
@@ -2307,8 +2307,8 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
         product_data['description'] = shopify_product['body_html']
         product_data['published'] = shopify_product.get('published_at') is not None
 
-        prices = [safeFloat(i['price'], 0.0) for i in shopify_product['variants']]
-        compare_at_prices = [safeFloat(i['compare_at_price'], 0.0) for i in shopify_product['variants']]
+        prices = [safe_float(i['price'], 0.0) for i in shopify_product['variants']]
+        compare_at_prices = [safe_float(i['compare_at_price'], 0.0) for i in shopify_product['variants']]
 
         if len(set(prices)) == 1:  # If all variants have the same price
             product_data['price'] = prices[0]

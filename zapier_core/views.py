@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_hooks.models import Hook
 
 from shopified_core import permissions
-from shopified_core.utils import safeFloat, safeInt
+from shopified_core.utils import safe_float, safe_int
 
 from leadgalaxy.models import ShopifyProduct, ShopifyStore, ShopifyOrderTrack
 import leadgalaxy.tasks
@@ -317,8 +317,8 @@ class ProductVariantList(APIView):
 class ProductVariantUpdate(APIView):
     def post(self, request, pk, store_type):
         user = request.user
-        variant_id = safeInt(request.data.get('variant_id'))
-        price = safeFloat(request.data.get('price'))
+        variant_id = safe_int(request.data.get('variant_id'))
+        price = safe_float(request.data.get('price'))
         if store_type == 'shopify':
             product = ShopifyProduct.objects.get(id=pk)
             permissions.user_can_edit(user, product)

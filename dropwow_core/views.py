@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.conf import settings
 
 from shopified_core.paginators import SimplePaginator
-from shopified_core.utils import safeInt
+from shopified_core.utils import safe_int
 
 
 from dropwow_core.utils import (
@@ -25,11 +25,11 @@ def marketplace(request):
     if not request.user.can('dropwow.use'):
         raise PermissionDenied()
 
-    page = safeInt(request.GET.get('page', 1))
+    page = safe_int(request.GET.get('page', 1))
     title = request.GET.get('title', '')
-    category_id = safeInt(request.GET.get('category_id', 0))
-    min_price = safeInt(request.GET.get('min_price'), '')
-    max_price = safeInt(request.GET.get('max_price'), '')
+    category_id = safe_int(request.GET.get('category_id', 0))
+    min_price = safe_int(request.GET.get('min_price'), '')
+    max_price = safe_int(request.GET.get('max_price'), '')
     brand = request.GET.get('brand')
     vendor = request.GET.get('vendor')
     order_by = request.GET.get('order_by', 'title')

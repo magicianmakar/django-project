@@ -20,8 +20,8 @@ from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
 from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.utils import (
-    safeInt,
-    safeFloat,
+    safe_int,
+    safe_float,
     get_domain,
     remove_link_query,
     version_compare,
@@ -90,7 +90,7 @@ class CHQStoreApi(ApiBase):
         return self.api_success(tasks.product_save(data, user.id))
 
     def post_save_for_later(self, request, user, data):
-        store_id = safeInt(data.get('store'))
+        store_id = safe_int(data.get('store'))
         if store_id:
             store = CommerceHQStore.objects.get(pk=store_id)
             if not user.can('save_for_later.sub', store):
@@ -245,7 +245,7 @@ class CHQStoreApi(ApiBase):
         return self.api_success()
 
     def post_commercehq_products(self, request, user, data):
-        store = safeInt(data.get('store'))
+        store = safe_int(data.get('store'))
         if not store:
             return self.api_error('No Store was selected', status=404)
 
@@ -253,7 +253,7 @@ class CHQStoreApi(ApiBase):
             store = CommerceHQStore.objects.get(id=store)
             permissions.user_can_view(user, store)
 
-            page = safeInt(data.get('page'), 1)
+            page = safe_int(data.get('page'), 1)
             limit = 25
 
             params = {
@@ -327,7 +327,7 @@ class CHQStoreApi(ApiBase):
         store = CommerceHQStore.objects.get(id=data.get('store'))
         permissions.user_can_view(user, store)
 
-        source_id = safeInt(data.get('shopify'))
+        source_id = safe_int(data.get('shopify'))
 
         if source_id != product.source_id or product.store != store:
             connected_to = CommerceHQProduct.objects.filter(
@@ -486,8 +486,8 @@ class CHQStoreApi(ApiBase):
             assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
 
-            assert safeInt(order_id), 'Order ID is not a numbers'
-            # assert safeInt(source_id), 'Aliexpress ID is not a numbers'
+            assert safe_int(order_id), 'Order ID is not a numbers'
+            # assert safe_int(source_id), 'Aliexpress ID is not a numbers'
             # assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
 
             # source_id = int(source_id)
@@ -718,7 +718,7 @@ class CHQStoreApi(ApiBase):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(data.get('store_id'))
+            pk = safe_int(data.get('store_id'))
             store = CommerceHQStore.objects.get(user=user, pk=pk)
             permissions.user_can_delete(user, store)
 
@@ -763,7 +763,7 @@ class CHQStoreApi(ApiBase):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
             permissions.user_can_delete(user, board)
             board.delete()
@@ -776,7 +776,7 @@ class CHQStoreApi(ApiBase):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
             permissions.user_can_edit(user, board)
             board.products.clear()
@@ -876,7 +876,7 @@ class CHQStoreApi(ApiBase):
         if not user.can('view_product_boards.sub'):
             raise PermissionDenied()
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
             permissions.user_can_edit(user, board)
         except CommerceHQBoard.DoesNotExist:
@@ -901,7 +901,7 @@ class CHQStoreApi(ApiBase):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
             permissions.user_can_edit(user, board)
         except CommerceHQBoard.DoesNotExist:
@@ -925,14 +925,14 @@ class CHQStoreApi(ApiBase):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = CommerceHQBoard.objects.get(pk=pk)
             permissions.user_can_edit(user, board)
         except CommerceHQBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
 
         for p in data.getlist('products[]'):
-            pk = safeInt(p)
+            pk = safe_int(p)
             product = CommerceHQProduct.objects.filter(pk=pk).first()
             if product:
                 permissions.user_can_edit(user, product)
@@ -952,10 +952,10 @@ class CHQStoreApi(ApiBase):
                 product_data['tags'] = data.get('tags')
 
             if 'price' in data:
-                product_data['price'] = safeFloat(data.get('price'))
+                product_data['price'] = safe_float(data.get('price'))
 
             if 'compare_at' in data:
-                product_data['compare_at_price'] = safeFloat(data.get('compare_at'))
+                product_data['compare_at_price'] = safe_float(data.get('compare_at'))
 
             if 'type' in data:
                 product_data['type'] = data.get('type')
@@ -976,7 +976,7 @@ class CHQStoreApi(ApiBase):
     def get_products_info(self, request, user, data):
         products = {}
         for p in data.getlist('products[]'):
-            pk = safeInt(p)
+            pk = safe_int(p)
             try:
                 product = CommerceHQProduct.objects.get(pk=pk)
                 permissions.user_can_view(user, product)
@@ -1058,7 +1058,7 @@ class CHQStoreApi(ApiBase):
 
     def post_order_fulfill_update(self, request, user, data):
         if data.get('store'):
-            store = CommerceHQStore.objects.get(pk=safeInt(data['store']))
+            store = CommerceHQStore.objects.get(pk=safe_int(data['store']))
             if not user.can('place_orders.sub', store):
                 raise PermissionDenied()
 
@@ -1184,7 +1184,7 @@ class CHQStoreApi(ApiBase):
                 "data": [{
                     "fulfilment_id": fulfilment_id,
                     "tracking_number": fulfillment_data['source_tracking'],
-                    "shipping_carrier": safeInt(data.get('fulfill-tarcking-link'), ''),
+                    "shipping_carrier": safe_int(data.get('fulfill-tarcking-link'), ''),
                     "items": [{
                         "id": fulfillment_data['line_id'],
                         "quantity": caches['orders'].get('chq_quantity_{store_id}_{order_id}_{line_id}'.format(**fulfillment_data)) or 1
@@ -1231,7 +1231,7 @@ class CHQStoreApi(ApiBase):
                 'Your current plan allow up to %d saved products, currently you have %d saved products.'
                 % (total_allowed, user_count), status=401)
 
-        source_id = safeInt(data.get('product'))
+        source_id = safe_int(data.get('product'))
         supplier_url = data.get('supplier')
 
         if source_id:

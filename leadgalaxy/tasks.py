@@ -22,7 +22,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery import celery_app, CaptureFailure, retry_countdown, api_exceed_limits_countdown
 from shopified_core import permissions
 from shopified_core.utils import (
-    safeInt,
+    safe_int,
     app_link,
     url_join,
     get_domain,
@@ -854,8 +854,8 @@ def search_shopify_products(self, store, title, category, status, ppp, page):
 
     all_products = []
     errors = []
-    page = safeInt(page, 1)
-    post_per_page = safeInt(ppp)
+    page = safe_int(page, 1)
+    post_per_page = safe_int(ppp)
     max_products = post_per_page * (page + 1)
 
     try:
@@ -1494,8 +1494,8 @@ def product_randomize_image_names(self, product_id):
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def store_transfer(self, options):
     try:
-        from_user = User.objects.get(id=options['from']) if safeInt(options['from']) else User.objects.get(email__iexact=options['from'])
-        to_user = User.objects.get(id=options['to']) if safeInt(options['to']) else User.objects.get(email__iexact=options['to'])
+        from_user = User.objects.get(id=options['from']) if safe_int(options['from']) else User.objects.get(email__iexact=options['from'])
+        to_user = User.objects.get(id=options['to']) if safe_int(options['to']) else User.objects.get(email__iexact=options['to'])
 
         store = ShopifyStore.objects.get(id=options['store'], user=from_user, is_active=True)
 

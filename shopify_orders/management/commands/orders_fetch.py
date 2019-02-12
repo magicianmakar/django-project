@@ -6,7 +6,7 @@ import requests
 
 from shopified_core.management import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
-from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safeInt, str_max, delete_store_orders
+from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safe_int, str_max, delete_store_orders
 from leadgalaxy.models import ShopifyStore
 from leadgalaxy.utils import get_shopify_order
 
@@ -254,8 +254,8 @@ class Command(DropifiedBaseCommand):
         need_fulfillment = len(data.get('line_items', []))
 
         for line in data.get('line_items', []):
-            product_id = self.products_map.get(safeInt(line['product_id']))
-            track_id = self.tracking_map.get(safeInt(line['id']))
+            product_id = self.products_map.get(safe_int(line['product_id']))
+            track_id = self.tracking_map.get(safe_int(line['id']))
 
             if product_id:
                 connected_items += 1
@@ -295,15 +295,15 @@ class Command(DropifiedBaseCommand):
             lines.append(ShopifyOrderLine(
                 order=order,
                 line_id=line['id'],
-                shopify_product=safeInt(line['product_id']),
+                shopify_product=safe_int(line['product_id']),
                 title=line['title'],
                 price=line['price'],
                 quantity=line['quantity'],
-                variant_id=safeInt(line.get('variant_id')),
+                variant_id=safe_int(line.get('variant_id')),
                 variant_title=line['variant_title'],
                 fulfillment_status=line['fulfillment_status'],
-                product_id=self.products_map.get(safeInt(line['product_id'])),
-                track_id=self.tracking_map.get(safeInt(line['id']))
+                product_id=self.products_map.get(safe_int(line['product_id'])),
+                track_id=self.tracking_map.get(safe_int(line['id']))
             ))
 
         return lines

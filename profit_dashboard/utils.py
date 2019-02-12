@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.models import ShopifyOrder
-from leadgalaxy.utils import safeFloat, get_shopify_orders
+from leadgalaxy.utils import safe_float, get_shopify_orders
 from leadgalaxy.models import ShopifyOrderTrack
 
 from .models import (
@@ -177,8 +177,8 @@ def get_profits(store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
-        profits_data[date_key]['profit'] -= safeFloat(shipping.total_cost)
-        profits_data[date_key]['fulfillment_cost'] += safeFloat(shipping.total_cost)
+        profits_data[date_key]['profit'] -= safe_float(shipping.total_cost)
+        profits_data[date_key]['fulfillment_cost'] += safe_float(shipping.total_cost)
         profits_data[date_key]['fulfillments_count'] += 1
         total_fulfillments_count += 1
         profits_data[date_key]['empty'] = False
@@ -198,8 +198,8 @@ def get_profits(store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
-        ad_cost_amount = safeFloat(ad_cost['spend__sum'])
-        profits_data[date_key]['profit'] -= safeFloat(ad_cost['spend__sum'])
+        ad_cost_amount = safe_float(ad_cost['spend__sum'])
+        profits_data[date_key]['profit'] -= safe_float(ad_cost['spend__sum'])
         profits_data[date_key]['ad_spend'] = ad_cost_amount
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
@@ -218,7 +218,7 @@ def get_profits(store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
-        other_cost_value = safeFloat(other_cost['amount__sum'])
+        other_cost_value = safe_float(other_cost['amount__sum'])
         is_empty = profits_data[date_key]['empty']
 
         profits_data[date_key]['profit'] -= other_cost_value
@@ -237,8 +237,8 @@ def get_profits(store, start, end, store_timezone=''):
         'average_revenue': 0.0,
         'refunds': total_refunds,
     }
-    totals['outcome'] = safeFloat(totals['fulfillment_cost']) + safeFloat(totals['ads_spend']) + safeFloat(totals['other_costs'])
-    totals['profit'] = safeFloat(totals['revenue']) - safeFloat(totals['outcome']) - safeFloat(total_refunds)
+    totals['outcome'] = safe_float(totals['fulfillment_cost']) + safe_float(totals['ads_spend']) + safe_float(totals['other_costs'])
+    totals['profit'] = safe_float(totals['revenue']) - safe_float(totals['outcome']) - safe_float(total_refunds)
     totals['orders_count'] = totals_orders_count
     totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)

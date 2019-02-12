@@ -18,8 +18,8 @@ from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
-    safeInt,
-    safeFloat,
+    safe_int,
+    safe_float,
     aws_s3_context,
     clean_query_id,
 )
@@ -115,7 +115,7 @@ class ProductsList(ListView):
             context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('gear:products_list') + '?store=n'})
         elif self.request.GET.get('store', 'n') == 'c':
             context['breadcrumbs'].append({'title': 'Connected', 'url': reverse('gear:products_list') + '?store=c'})
-        elif safeInt(self.request.GET.get('store')):
+        elif safe_int(self.request.GET.get('store')):
             store = GearBubbleStore.objects.get(id=self.request.GET.get('store'))
             permissions.user_can_view(self.request.user, store)
             context['store'] = store
@@ -207,7 +207,7 @@ class BoardDetailView(DetailView):
         context = super(BoardDetailView, self).get_context_data(**kwargs)
         products = gearbubble_products(self.request, store=None, board=self.object.id)
         paginator = SimplePaginator(products, 25)
-        page = safeInt(self.request.GET.get('page'), 1)
+        page = safe_int(self.request.GET.get('page'), 1)
         page = paginator.page(page)
         context['searchable'] = True
         context['paginator'] = paginator
@@ -296,7 +296,7 @@ class OrdersList(ListView):
             'product_id': product.id,
             'product_source_id': product.source_id,
             'source_id': supplier.get_source_id(),
-            'total': safeFloat(item['price'], 0.0),
+            'total': safe_float(item['price'], 0.0),
             'store': store.id,
             'order': {
                 'note': models_user.get_config('order_custom_note'),
@@ -388,7 +388,7 @@ class OrdersList(ListView):
                 item['product'] = product
                 item['product_id'] = order['vendor_product_id']
                 item['quantity'] = item['qty']
-                item['total'] = safeFloat(item['price'] * item['qty'])
+                item['total'] = safe_float(item['price'] * item['qty'])
                 item = add_details_from_product_data(item, product_data)
 
                 if product and product.has_supplier:
@@ -431,7 +431,7 @@ class OrderPlaceRedirectView(RedirectView):
         elif self.request.GET.get('product'):
             product = self.request.GET['product']
 
-            if safeInt(product):
+            if safe_int(product):
                 product = 'https://www.aliexpress.com/item//{}.html'.format(product)
 
         if not product:

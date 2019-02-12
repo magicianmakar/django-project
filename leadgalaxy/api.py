@@ -27,8 +27,8 @@ from shopified_core.api_base import ApiBase
 from shopified_core.encryption import save_aliexpress_password, delete_aliexpress_password
 from shopified_core.shipping_helper import get_counrties_list, fix_fr_address, aliexpress_country_code_map
 from shopified_core.utils import (
-    safeInt,
-    safeFloat,
+    safe_int,
+    safe_float,
     app_link,
     get_domain,
     remove_link_query,
@@ -174,7 +174,7 @@ class ShopifyStoreApi(ApiBase):
             store = ShopifyStore.objects.get(id=store)
             permissions.user_can_edit(user, store)
 
-            store.list_index = safeInt(idx, 0)
+            store.list_index = safe_int(idx, 0)
             store.save()
 
         return self.api_success()
@@ -270,7 +270,7 @@ class ShopifyStoreApi(ApiBase):
 
     def get_export_product(self, request, user, data):
         task = tasks.export_product.AsyncResult(data.get('id'))
-        count = safeInt(data.get('count'))
+        count = safe_int(data.get('count'))
 
         if count == 60:
             raven_client.context.merge(raven_client.get_data_from_request(request))
@@ -340,8 +340,8 @@ class ShopifyStoreApi(ApiBase):
 
             product_data['title'] = data.get('title[%s]' % p)
             product_data['tags'] = data.get('tags[%s]' % p)
-            product_data['price'] = safeFloat(data.get('price[%s]' % p))
-            product_data['compare_at_price'] = safeFloat(data.get('compare_at[%s]' % p))
+            product_data['price'] = safe_float(data.get('price[%s]' % p))
+            product_data['compare_at_price'] = safe_float(data.get('compare_at[%s]' % p))
             product_data['type'] = data.get('type[%s]' % p)
             product_data['weight'] = data.get('weight[%s]' % p)
 
@@ -386,10 +386,10 @@ class ShopifyStoreApi(ApiBase):
                 product_data['tags'] = data.get('tags')
 
             if 'price' in data:
-                product_data['price'] = safeFloat(data.get('price'))
+                product_data['price'] = safe_float(data.get('price'))
 
             if 'compare_at' in data:
-                product_data['compare_at_price'] = safeFloat(data.get('compare_at'))
+                product_data['compare_at_price'] = safe_float(data.get('compare_at'))
 
             if 'type' in data:
                 product_data['type'] = data.get('type')
@@ -586,7 +586,7 @@ class ShopifyStoreApi(ApiBase):
         store = ShopifyStore.objects.get(id=data.get('store'))
         permissions.user_can_view(user, store)
 
-        product = safeInt(data.get('product'))
+        product = safe_int(data.get('product'))
         if not product:
             return self.api_error('Product Not Found', status=404)
 
@@ -771,7 +771,7 @@ class ShopifyStoreApi(ApiBase):
 
         target_user = User.objects.get(id=data.get('user'))
 
-        amount = safeFloat(data.get('amount'))
+        amount = safe_float(data.get('amount'))
         if not amount:
             return self.api_error('Invalid Refund Amount')
 
@@ -969,7 +969,7 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success()
 
     def post_shopify_products(self, request, user, data):
-        store = safeInt(data.get('store'))
+        store = safe_int(data.get('store'))
         if not store:
             return self.api_error('No Store was selected', status=404)
 
@@ -977,7 +977,7 @@ class ShopifyStoreApi(ApiBase):
             store = ShopifyStore.objects.get(id=store)
             permissions.user_can_view(user, store)
 
-            page = safeInt(data.get('page'), 1)
+            page = safe_int(data.get('page'), 1)
             limit = 25
 
             params = {
@@ -1046,7 +1046,7 @@ class ShopifyStoreApi(ApiBase):
         store = ShopifyStore.objects.get(id=data.get('store'))
         permissions.user_can_view(user, store)
 
-        shopify_id = safeInt(data.get('shopify'))
+        shopify_id = safe_int(data.get('shopify'))
 
         if shopify_id != product.shopify_id or product.store != store:
             connected_to = ShopifyProduct.objects.filter(
@@ -1990,7 +1990,7 @@ class ShopifyStoreApi(ApiBase):
                         if user.models_user.get_config('update_product_vendor') \
                                 and product.default_supplier \
                                 and product.shopify_id \
-                                and safeInt(data[k]):
+                                and safe_int(data[k]):
                             supplier = ProductSupplier.objects.get(id=data[k])
                             utils.update_shopify_product_vendor(product.store, product.shopify_id, supplier.supplier_name)
                     except:
@@ -2166,7 +2166,7 @@ class ShopifyStoreApi(ApiBase):
             assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
 
-            # assert safeInt(order_id), 'Order ID is not a numbers'
+            # assert safe_int(order_id), 'Order ID is not a numbers'
             assert re.match('^https?://', source_id) is None, 'Supplier Order ID should not be a link'
 
         except AssertionError as e:
@@ -2300,7 +2300,7 @@ class ShopifyStoreApi(ApiBase):
                 need_fulfillment = order.need_fulfillment
 
                 for line in order.shopifyorderline_set.all():
-                    if line.line_id == safeInt(line_id):
+                    if line.line_id == safe_int(line_id):
                         line.track = track
                         try:
                             line.save()
@@ -2972,7 +2972,7 @@ class ShopifyStoreApi(ApiBase):
                 'Your current plan allow up to %d saved products, currently you have %d saved products.'
                 % (total_allowed, user_count), status=401)
 
-        shopify_product = safeInt(data.get('product'))
+        shopify_product = safe_int(data.get('product'))
         supplier_url = data.get('supplier')
         product = None
 
@@ -3139,22 +3139,22 @@ class ShopifyStoreApi(ApiBase):
 
         min_price = 0
         if data.get('min_price', '').strip():
-            min_price = safeFloat(data.get('min_price', ''))
+            min_price = safe_float(data.get('min_price', ''))
 
         max_price = -1
         if data.get('max_price', '').strip():
-            max_price = safeFloat(data.get('max_price', ''))
+            max_price = safe_float(data.get('max_price', ''))
 
         if not data.get('markup_type', '').strip():
             return self.api_error('Markup Type is not set', status=422)
 
         if not data.get('markup_value', '').strip():
             return self.api_error('Markup Value is not set', status=422)
-        markup_value = safeFloat(data.get('markup_value', ''))
+        markup_value = safe_float(data.get('markup_value', ''))
 
         if not data.get('markup_compare_value', '').strip():
             return self.api_error('Markup Value for Compare at price is not set', status=422)
-        markup_compare_value = safeFloat(data.get('markup_compare_value', ''))
+        markup_compare_value = safe_float(data.get('markup_compare_value', ''))
 
         if data.get('id'):
             rule, created = PriceMarkupRule.objects.update_or_create(
@@ -3309,8 +3309,8 @@ class ShopifyStoreApi(ApiBase):
             return self.api_error('Sync in progress', status=404)
 
         sync_price = data.get('sync_price', False)
-        price_markup = safeFloat(data['price_markup'])
-        compare_markup = safeFloat(data['compare_markup'])
+        price_markup = safe_float(data['price_markup'])
+        compare_markup = safe_float(data['compare_markup'])
         sync_inventory = data.get('sync_inventory', False)
 
         task = tasks.products_supplier_sync.apply_async(
@@ -3368,7 +3368,7 @@ class ShopifyStoreApi(ApiBase):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        store.primary_location = safeInt(request.POST.get('primary_location'), None)
+        store.primary_location = safe_int(request.POST.get('primary_location'), None)
         store.save()
 
         return self.api_success()
@@ -3465,7 +3465,7 @@ class ShopifyStoreApi(ApiBase):
             raise PermissionDenied()
 
         title = data.get('newListTitle', '').strip()
-        list_id = safeInt(data.get('selectedList'))
+        list_id = safe_int(data.get('selectedList'))
         videos = data.get('selected').strip(';').split(';')
 
         if not title and not list_id:
@@ -3485,7 +3485,7 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success({'id': video_list.pk})
 
     def delete_video_list(self, request, user, data):
-        list_id = safeInt(data.get('list_id'))
+        list_id = safe_int(data.get('list_id'))
 
         try:
             video_list = VideosList.objects.get(user=user, pk=list_id)
@@ -3497,7 +3497,7 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success()
 
     def delete_list_video(self, request, user, data):
-        list_id = safeInt(data.get('list_id'))
+        list_id = safe_int(data.get('list_id'))
         video_id = data.get('video_id')
 
         if not video_id:
@@ -3521,7 +3521,7 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success()
 
     def delete_list_videos(self, request, user, data):
-        list_id = safeInt(data.get('list_id'))
+        list_id = safe_int(data.get('list_id'))
         video_ids = data.getlist('video_ids[]')
 
         try:

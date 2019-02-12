@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 
 from shopified_core.exceptions import ApiProcessException
-from leadgalaxy.utils import get_store_from_request, safeInt
+from leadgalaxy.utils import get_store_from_request, safe_int
 
 from .tasks import import_orders, approve_imported_orders
 from .utils import ShopifyOrderImport
@@ -39,7 +39,7 @@ def upload(request, store_id):
 
     if request.method == 'POST':
         stores = request.user.profile.get_shopify_stores()
-        store = get_object_or_404(stores, id=safeInt(store_id))
+        store = get_object_or_404(stores, id=safe_int(store_id))
         api = ShopifyOrderImport(store=store)
 
         raw_headers = {

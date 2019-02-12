@@ -6,7 +6,7 @@ from django.utils import timezone
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.models import ShopifyOrderTrack
-from leadgalaxy.utils import safeInt, get_shopify_order, get_shopify_order_line
+from leadgalaxy.utils import safe_int, get_shopify_order, get_shopify_order_line
 from shopify_orders.utils import get_datetime
 
 
@@ -97,7 +97,7 @@ def fulfill_dropwow_order(order_status):
     order_data = get_shopify_order(store, order_status.shopify_order_id)
     line = get_shopify_order_line(store, order_status.shopify_order_id, order_status.shopify_line_id, shopify_data=order_data)
 
-    dropwow_order_delay = safeInt(store.user.get_config('dropwow_order_delay'))
+    dropwow_order_delay = safe_int(store.user.get_config('dropwow_order_delay'))
     if dropwow_order_delay:
         created_at = get_datetime(order_data['created_at'])
         fulfill_until = timezone.now() - timezone.timedelta(hours=dropwow_order_delay)

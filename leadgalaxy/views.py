@@ -45,8 +45,8 @@ from stripe_subscription.stripe_api import stripe
 
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
-    safeInt,
-    safeFloat,
+    safe_int,
+    safe_float,
     app_link,
     url_join,
     hash_text,
@@ -933,7 +933,7 @@ def webhook(request, provider, option):
             return JsonResponse({'error': 'Unknown Product Type'}, status=500)
 
         monitor_id = request.GET.get('monitor_id')
-        if monitor_id and product.monitor_id != safeInt(monitor_id):
+        if monitor_id and product.monitor_id != safe_int(monitor_id):
             return JsonResponse({'error': 'Not Registered Monitor ID'}, status=404)
 
         if product.user.can('price_changes.use') and product.is_connected and product.store.is_active:
@@ -983,12 +983,12 @@ def webhook(request, provider, option):
                 return HttpResponse(":x: Invalid Command Format")
 
             try:
-                from_user = User.objects.get(id=options['from']) if safeInt(options['from']) else User.objects.get(email__iexact=options['from'])
+                from_user = User.objects.get(id=options['from']) if safe_int(options['from']) else User.objects.get(email__iexact=options['from'])
             except:
                 return HttpResponse(":x: {} user not found".format(options['from']))
 
             try:
-                to_user = User.objects.get(id=options['to']) if safeInt(options['to']) else User.objects.get(email__iexact=options['to'])
+                to_user = User.objects.get(id=options['to']) if safe_int(options['to']) else User.objects.get(email__iexact=options['to'])
             except:
                 return HttpResponse(":x: {} user not found".format(options['to']))
 
@@ -1071,7 +1071,7 @@ def webhook(request, provider, option):
 
             try:
                 captchacredit = CaptchaCredit.objects.get(user=user)
-                captchacredit.remaining_credits += safeInt(credits, 0)
+                captchacredit.remaining_credits += safe_int(credits, 0)
                 captchacredit.save()
 
             except CaptchaCredit.DoesNotExist:
@@ -1198,7 +1198,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         elif store == 'n':  # non-connected
             res = res.filter(shopify_id=0)
 
-            in_store = safeInt(request.GET.get('in'))
+            in_store = safe_int(request.GET.get('in'))
             if in_store:
                 in_store = get_object_or_404(ShopifyStore, id=in_store)
                 if len(user_stores) == 1:
@@ -1208,7 +1208,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
                 permissions.user_can_view(user, in_store)
         else:
-            store = get_object_or_404(ShopifyStore, id=safeInt(store))
+            store = get_object_or_404(ShopifyStore, id=safe_int(store))
             res = res.filter(shopify_id__gt=0, store=store)
 
             permissions.user_can_view(user, store)
@@ -1239,7 +1239,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
     paginator = SimplePaginator(res, post_per_page)
 
-    page = min(max(1, safeInt(page)), paginator.num_pages)
+    page = min(max(1, safe_int(page)), paginator.num_pages)
     page = paginator.page(page)
     res = page
 
@@ -1259,7 +1259,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         except:
             pass
 
-        p['price'] = '%.02f' % safeFloat(p['product'].get('price'))
+        p['price'] = '%.02f' % safe_float(p['product'].get('price'))
         p['price'] = money_format(p['price'], i.store)
 
         price_range = p['product'].get('price_range')
@@ -1316,8 +1316,8 @@ def accept_product(res, fdata):
         res = res.filter(title__icontains=title)
 
     if fdata.get('price_min') or fdata.get('price_max'):
-        min_price = safeFloat(fdata.get('price_min'), -1)
-        max_price = safeFloat(fdata.get('price_max'), -1)
+        min_price = safe_float(fdata.get('price_min'), -1)
+        max_price = safe_float(fdata.get('price_max'), -1)
 
         if (min_price > 0 and max_price > 0):
             res = res.filter(price__gte=min_price, price__lte=max_price)
@@ -1369,7 +1369,7 @@ def products_list(request, tpl='grid'):
         tpl = 'product_table.html'
 
     try:
-        store = ShopifyStore.objects.get(id=safeInt(store))
+        store = ShopifyStore.objects.get(id=safe_int(store))
     except:
         store = None
 
@@ -1386,7 +1386,7 @@ def products_list(request, tpl='grid'):
     elif request.GET.get('store', 'n') == 'c':
         breadcrumbs.append({'title': 'Connected', 'url': '/product?store=c'})
 
-    in_store = safeInt(request.GET.get('in'))
+    in_store = safe_int(request.GET.get('in'))
     if in_store:
         in_store = get_object_or_404(request.user.profile.get_shopify_stores(), id=in_store)
     elif store:
@@ -1416,7 +1416,7 @@ def shopify_migration(request):
         messages.warning(request, 'Please add at least one store before using the Migration page.')
         return HttpResponseRedirect('/')
 
-    ppp = min(safeInt(request.GET.get('ppp'), 50), 100)
+    ppp = min(safe_int(request.GET.get('ppp'), 50), 100)
     page = request.GET.get('page', '1')
 
     if request.GET.get('reset') == '1':
@@ -1525,7 +1525,7 @@ def product_view(request, pid):
     if 'images' not in p['product'] or not p['product']['images']:
         p['product']['images'] = []
 
-    p['price'] = '$%.02f' % safeFloat(p['product'].get('price'))
+    p['price'] = '$%.02f' % safe_float(p['product'].get('price'))
 
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
@@ -1622,7 +1622,7 @@ def product_mapping(request, product_id):
             messages.error(request, 'You have to add at least one supplier before using Variants Mapping')
             return HttpResponseRedirect('/product/{}'.format(product.id))
 
-    current_supplier = safeInt(request.GET.get('supplier'))
+    current_supplier = safe_int(request.GET.get('supplier'))
     if not current_supplier and product.default_supplier:
         current_supplier = product.default_supplier.id
 
@@ -1926,7 +1926,7 @@ def boards_list(request):
     boards_count = len(boards_list)
 
     paginator = SimplePaginator(boards_list, 10)
-    page = safeInt(request.GET.get('page'), 1)
+    page = safe_int(request.GET.get('page'), 1)
     page = min(max(1, page), paginator.num_pages)
     current_page = paginator.page(page)
 
@@ -2113,13 +2113,13 @@ def acp_users_list(request):
     if q:
         if request.GET.get('store'):
             users = users.filter(
-                Q(shopifystore__id=safeInt(request.GET.get('store'))) |
+                Q(shopifystore__id=safe_int(request.GET.get('store'))) |
                 Q(shopifystore__shop__iexact=q) |
                 Q(commercehqstore__api_url__icontains=q) |
                 Q(woostore__api_url__icontains=q) |
                 Q(shopifystore__title__icontains=q)
             )
-        elif request.GET.get('user') and safeInt(request.GET.get('user')):
+        elif request.GET.get('user') and safe_int(request.GET.get('user')):
             users = users.filter(id=request.GET['user'])
         else:
             if '@' in q:
@@ -2298,8 +2298,8 @@ def acp_graph(request):
     graph_type = request.GET.get('t', 'users')
 
     days = request.GET.get('days', '30')
-    if safeInt(days):
-        time_threshold = timezone.now() - timezone.timedelta(days=safeInt(days))
+    if safe_int(days):
+        time_threshold = timezone.now() - timezone.timedelta(days=safe_int(days))
     else:
         time_threshold = None
 
@@ -3076,8 +3076,8 @@ def orders_view(request):
 
     all_orders = []
     store = None
-    post_per_page = safeInt(request.GET.get('ppp'), 20)
-    page = safeInt(request.GET.get('page'), 1)
+    post_per_page = safe_int(request.GET.get('ppp'), 20)
+    page = safe_int(request.GET.get('page'), 1)
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -3209,7 +3209,7 @@ def orders_view(request):
             order_id = None
 
         open_orders = store.get_orders_count(status, fulfillment, financial,
-                                             query=safeInt(order_id, query),
+                                             query=safe_int(order_id, query),
                                              created_range=[created_at_start, created_at_end])
         orders = xrange(0, open_orders)
 
@@ -3224,7 +3224,7 @@ def orders_view(request):
             created_at_end
         )
         paginator.set_reverse_order(sort == 'desc' and sort != 'created_at')
-        paginator.set_query(safeInt(order_id, query))
+        paginator.set_query(safe_int(order_id, query))
 
         page = min(max(1, page), paginator.num_pages)
         current_page = paginator.page(page)
@@ -3254,7 +3254,7 @@ def orders_view(request):
             if order_id:
                 _must_term.append({'term': {'order_id': order_id}})
             else:
-                source_id = safeInt(query_order.replace('#', '').strip(), 123)
+                source_id = safe_int(query_order.replace('#', '').strip(), 123)
                 order_ids = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
                                                      .defer('data') \
                                                      .values_list('order_id', flat=True)
@@ -3265,7 +3265,7 @@ def orders_view(request):
                         }
                     })
                 else:
-                    _must_term.append({'term': {'order_id': safeInt(query_order, 0)}})
+                    _must_term.append({'term': {'order_id': safe_int(query_order, 0)}})
 
         if status == 'open':
             _must_not_term.append({"exists": {'field': 'closed_at'}})
@@ -3462,14 +3462,14 @@ def orders_view(request):
             if order_id:
                 orders = orders.filter(order_id=order_id)
             else:
-                source_id = safeInt(query_order.replace('#', '').strip(), 123)
+                source_id = safe_int(query_order.replace('#', '').strip(), 123)
                 order_ids = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
                                                      .defer('data') \
                                                      .values_list('order_id', flat=True)
                 if len(order_ids):
                     orders = orders.filter(order_id__in=order_ids)
                 else:
-                    orders = orders.filter(order_id=safeInt(query_order, 0))
+                    orders = orders.filter(order_id=safe_int(query_order, 0))
 
         if created_at_start:
             orders = orders.filter(created_at__gte=created_at_start)
@@ -3477,7 +3477,7 @@ def orders_view(request):
         if created_at_end:
             orders = orders.filter(created_at__lte=created_at_end)
 
-        if safeInt(query_customer_id):
+        if safe_int(query_customer_id):
             order_ids = shopify_orders_utils.order_ids_from_customer_id(store, query_customer_id)
             if len(order_ids):
                 orders = orders.filter(order_id__in=order_ids)
@@ -3697,7 +3697,7 @@ def orders_view(request):
 
         for i, el in enumerate((order['line_items'])):
             if request.GET.get('line_id'):
-                if safeInt(request.GET['line_id']) != el['id']:
+                if safe_int(request.GET['line_id']) != el['id']:
                     continue
 
             order['line_items'][i]['refunded'] = el['id'] in order['refunded_lines']
@@ -3842,7 +3842,7 @@ def orders_view(request):
                         'source_id': supplier.get_source_id() if supplier else None,
                         'supplier_id': supplier.get_store_id() if supplier else None,
                         'supplier_type': supplier.supplier_type() if supplier else None,
-                        'total': safeFloat(el['price'], 0.0),
+                        'total': safe_float(el['price'], 0.0),
                         'store': store.id,
                         'order': {
                             'phone': {
@@ -3989,8 +3989,8 @@ def orders_track(request):
     sorting = order_map.get(sorting, 'status_updated_at')
 
     store = None
-    post_per_page = safeInt(request.GET.get('ppp'), 20)
-    page = safeInt(request.GET.get('page'), 1)
+    post_per_page = safe_int(request.GET.get('ppp'), 20)
+    page = safe_int(request.GET.get('page'), 1)
     query = request.GET.get('query')
     tracking_filter = request.GET.get('tracking')
     fulfillment_filter = request.GET.get('fulfillment')
@@ -4087,11 +4087,11 @@ def orders_track(request):
         else:
             errors = 0
             for i in errors_list:
-                errors |= safeInt(i, 0)
+                errors |= safe_int(i, 0)
 
             orders = orders.filter(errors=errors)
 
-    days_passed = safeInt(days_passed)
+    days_passed = safe_int(days_passed)
     if days_passed:
         days_passed = min(days_passed, 30)
         time_threshold = timezone.now() - timezone.timedelta(days=days_passed)
@@ -4103,7 +4103,7 @@ def orders_track(request):
     if created_at_end:
         orders = orders.filter(created_at__lte=created_at_end)
 
-    sync_delay_notify_days = safeInt(request.user.get_config('sync_delay_notify_days'))
+    sync_delay_notify_days = safe_int(request.user.get_config('sync_delay_notify_days'))
     sync_delay_notify_highlight = request.user.get_config('sync_delay_notify_highlight')
     order_threshold = None
     if sync_delay_notify_days > 0 and sync_delay_notify_highlight:
@@ -4167,7 +4167,7 @@ def orders_place(request):
     elif request.GET.get('product'):
         product = request.GET['product']
 
-        if safeInt(product):
+        if safe_int(product):
             product = 'https://www.aliexpress.com/item//{}.html'.format(product)
 
     if not product:
@@ -4267,7 +4267,7 @@ def orders_place(request):
             elif k == 'product':
                 event_data['product'] = request.GET[k]
 
-                if not safeInt(event_data['product']):  # Check if we are using product link or just the ID
+                if not safe_int(event_data['product']):  # Check if we are using product link or just the ID
                     event_data['product'] = re.findall('[/_]([0-9]+).html', event_data['product'])
                     if event_data['product']:
                         event_data['product'] = event_data['product'][0]
@@ -4309,7 +4309,7 @@ def locate(request, what):
     from commercehq_core.models import CommerceHQOrderTrack
 
     if what == 'order':
-        aliexpress_id = safeInt(request.GET.get('aliexpress'))
+        aliexpress_id = safe_int(request.GET.get('aliexpress'))
 
         if aliexpress_id:
             track = ShopifyOrderTrack.objects.filter(user=request.user.models_user, source_id=aliexpress_id).first()
@@ -4347,7 +4347,7 @@ def product_alerts(request):
         permissions.user_can_view(request.user, product)
 
     post_per_page = settings.ITEMS_PER_PAGE
-    page = safeInt(request.GET.get('page'), 1)
+    page = safe_int(request.GET.get('page'), 1)
 
     store = utils.get_store_from_request(request)
     if not store:

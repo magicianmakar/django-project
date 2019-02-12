@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 
 import re
 
-from shopified_core.utils import safeInt
+from shopified_core.utils import safe_int
 from shopify_orders.models import ShopifyOrder
 from leadgalaxy.utils import detach_webhooks
 from leadgalaxy.models import (
@@ -26,8 +26,8 @@ class Command(DropifiedBaseCommand):
                             help='Check if recipient have the store in his account')
 
     def start_command(self, *args, **options):
-        from_user = User.objects.get(id=options['from']) if safeInt(options['from']) else User.objects.get(email__iexact=options['from'])
-        to_user = User.objects.get(id=options['to']) if safeInt(options['to']) else User.objects.get(email__iexact=options['to'])
+        from_user = User.objects.get(id=options['from']) if safe_int(options['from']) else User.objects.get(email__iexact=options['from'])
+        to_user = User.objects.get(id=options['to']) if safe_int(options['to']) else User.objects.get(email__iexact=options['to'])
 
         shop = re.findall('[^/@\.]+\.myshopify\.com', options['store'])
         if not shop:
