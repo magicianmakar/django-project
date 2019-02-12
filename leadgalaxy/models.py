@@ -505,7 +505,8 @@ class UserProfile(models.Model):
 
     def get_tags(self):
         """ Return user tags as a list"""
-        return [i.strip() for i in self.tags.split(',')]
+        tags = self.tags or ''
+        return [i.strip() for i in tags.split(',')]
 
     def set_tags(self, tags):
         self.tags = ','.join(tags)
