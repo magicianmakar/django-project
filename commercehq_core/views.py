@@ -91,7 +91,7 @@ def product_alerts(request):
         permissions.user_can_view(request.user, product)
 
     post_per_page = settings.ITEMS_PER_PAGE
-    page = utils.safeInt(request.GET.get('page'), 1)
+    page = safeInt(request.GET.get('page'), 1)
 
     store = utils.get_store_from_request(request)
     if not store:

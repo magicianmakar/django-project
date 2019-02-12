@@ -12,22 +12,8 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 
-from shopified_core.utils import get_domain
-
-
-def add_to_class(cls, name):
-    def _decorator(*args, **kwargs):
-        cls.add_to_class(name, args[0])
-    return _decorator
-
-
-def safeStr(v, default=''):
-    """ Always return a str object """
-
-    if isinstance(v, basestring):
-        return v
-    else:
-        return default
+from shopified_core.utils import get_domain, safeStr
+from shopified_core.decorators import add_to_class
 
 
 @add_to_class(User, 'get_woo_boards')

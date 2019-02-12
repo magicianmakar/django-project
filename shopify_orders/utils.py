@@ -11,18 +11,11 @@ import simplejson as json
 from elasticsearch import Elasticsearch
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
-from shopified_core.utils import OrderErrors, delete_model_from_db
+from shopified_core.utils import OrderErrors, delete_model_from_db, safeInt
 from shopified_core.shipping_helper import country_from_code
 from zapier_core.utils import user_have_hooks
 
 from zapier_core.utils import send_shopify_order_event
-
-
-def safeInt(v, default=0):
-    try:
-        return int(v)
-    except:
-        return default
 
 
 def str_max(text, max_len):

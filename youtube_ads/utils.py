@@ -9,7 +9,8 @@ from django.shortcuts import reverse
 from apiclient.discovery import build
 from oauth2client import client
 
-from leadgalaxy.utils import hash_text, aws_s3_get_key
+from shopified_core.utils import hash_text
+from leadgalaxy.utils import aws_s3_get_key
 
 
 YOUTUBE_READ_WRITE_SCOPE = "https://www.googleapis.com/auth/youtube"

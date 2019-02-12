@@ -11,23 +11,9 @@ import urlparse
 import requests
 from pusher import Pusher
 
-from shopified_core.utils import hash_url_filename, get_domain
+from shopified_core.utils import hash_url_filename, get_domain, safeStr
+from shopified_core.decorators import add_to_class
 from product_alerts.utils import monitor_product
-
-
-def add_to_class(cls, name):
-    def _decorator(*args, **kwargs):
-        cls.add_to_class(name, args[0])
-    return _decorator
-
-
-def safeStr(v, default=''):
-    """ Always return a str object """
-
-    if isinstance(v, basestring):
-        return v
-    else:
-        return default
 
 
 @add_to_class(User, 'get_chq_boards')

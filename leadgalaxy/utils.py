@@ -19,7 +19,6 @@ from urllib import urlencode
 from hashlib import sha256
 from math import ceil
 
-from tld import get_tld
 from boto.s3.key import Key
 from unidecode import unidecode
 from collections import Counter
@@ -42,10 +41,16 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import *
 from shopified_core import permissions
 from shopified_core.utils import (
+    safeInt,
+    safeFloat,
     safeStr,
     list_chunks,
     app_link,
     url_join,
+    hash_text,
+    random_hash,
+    get_domain,
+    remove_link_query,
     save_user_ip,
     unique_username,
     send_email_from_template,
@@ -59,37 +64,6 @@ from shopified_core.utils import (
 
 from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province, support_other_in_province
 from shopify_orders.models import ShopifyOrderLine
-
-
-def safeInt(v, default=0):
-    try:
-        return int(v)
-    except:
-        return default
-
-
-def safeFloat(v, default=0.0):
-    try:
-        return float(v)
-    except:
-        return default
-
-
-def get_domain(url, full=False):
-    if not url:
-        return None
-
-    if not url.startswith('http'):
-        url = u'http://{}'.format(url)
-
-    hostname = urlparse.urlparse(url).hostname
-    if hostname is None:
-        return hostname
-
-    if full:
-        return hostname
-    else:
-        return get_tld(url, as_object=True).domain
 
 
 def upload_from_url(url, stores=[]):
@@ -109,29 +83,6 @@ def upload_from_url(url, stores=[]):
     mimetype = mimetypes.guess_type(remove_link_query(url))[0]
 
     return can_pull and mimetype in allowed_mimetypes
-
-
-def remove_link_query(link):
-    if not link:
-        return ''
-
-    if not link.startswith('http'):
-        link = u'http://{}'.format(re.sub('^([:/]*)', r'', link))
-
-    return re.sub('([?#].*)$', r'', link)
-
-
-def random_hash():
-    token = get_random_string(32)
-    return hashlib.md5(token).hexdigest()
-
-
-def hash_text(text):
-    return hashlib.md5(text).hexdigest()
-
-
-def hash_list(data, sep=''):
-    return hash_text(sep.join(data))
 
 
 def random_filename(filename):
@@ -2159,14 +2110,6 @@ def fix_product_url(data, request):
     return data
 
 
-def clean_query_id(qid):
-    ids = re.findall('([0-9]+)', qid)
-    if len(ids):
-        return safeInt(ids[0], 0)
-    else:
-        return 0
-
-
 def ensure_title(text):
     """ Ensure the given string start with an upper case letter """
 
@@ -2313,18 +2256,6 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
         return upload_url, time.time() - upload_start
     else:
         return upload_url
-
-
-def get_filename_from_url(url):
-    return remove_link_query(url).split('/').pop()
-
-
-def get_fileext_from_url(url, fallback=''):
-    name = get_filename_from_url(url)
-    if '.' in name:
-        return name.split('.').pop()
-    else:
-        return fallback
 
 
 def attach_boards_with_product(user, product, ids):

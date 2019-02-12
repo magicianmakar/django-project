@@ -21,6 +21,7 @@ from shopified_core.exceptions import ProductExportException
 from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.utils import (
     safeInt,
+    safeFloat,
     get_domain,
     remove_link_query,
     version_compare,
@@ -951,10 +952,10 @@ class CHQStoreApi(ApiBase):
                 product_data['tags'] = data.get('tags')
 
             if 'price' in data:
-                product_data['price'] = utils.safeFloat(data.get('price'))
+                product_data['price'] = safeFloat(data.get('price'))
 
             if 'compare_at' in data:
-                product_data['compare_at_price'] = utils.safeFloat(data.get('compare_at'))
+                product_data['compare_at_price'] = safeFloat(data.get('compare_at'))
 
             if 'type' in data:
                 product_data['type'] = data.get('type')

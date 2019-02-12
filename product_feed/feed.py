@@ -12,7 +12,7 @@ from urlparse import urlparse
 
 from loxun import XmlWriter
 
-from shopified_core.utils import safeStr
+from shopified_core.utils import safeStr, safeInt
 from leadgalaxy.utils import (
     aws_s3_upload,
     get_shopify_products_count,
@@ -30,13 +30,6 @@ from woocommerce_core.utils import (
 )
 
 from .models import FeedStatus, CommerceHQFeedStatus, WooFeedStatus, GearBubbleFeedStatus
-
-
-def safeInt(v, default=0):
-    try:
-        return int(v)
-    except:
-        return default
 
 
 class ProductFeed():
