@@ -907,29 +907,6 @@ class WooStoreApi(ApiBase):
 
         return self.api_success()
 
-    def post_board_config(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        try:
-            pk = safe_int(data.get('board_id'))
-            board = WooBoard.objects.get(pk=pk)
-        except WooBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-        else:
-            permissions.user_can_edit(user, board)
-
-        board.title = data.get('title')
-        board.config = json.dumps({
-            'title': data.get('product_title'),
-            'tags': data.get('product_tags'),
-            'type': data.get('product_type')})
-        board.save()
-
-        utils.smart_board_by_board(user.models_user, board)
-
-        return self.api_success()
-
     def delete_board(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()

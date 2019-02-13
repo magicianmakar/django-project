@@ -445,26 +445,6 @@ class GearBubbleApi(ApiBase):
 
         return self.api_success()
 
-    def post_board_config(self, request, user, data):
-        board_id = safe_int(data.get('board_id'))
-
-        try:
-            board = GearBubbleBoard.objects.get(pk=board_id)
-        except GearBubbleBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        permissions.user_can_edit(user, board)
-
-        board.title = data.get('title')
-        board.config = json.dumps({'title': data.get('product_title'),
-                                   'tags': data.get('product_tags'),
-                                   'type': data.get('product_type')})
-        board.save()
-
-        utils.smart_board_by_board(user.models_user, board)
-
-        return self.api_success()
-
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def post_board_empty(self, request, user, data):
         board_id = safe_int(data.get('board_id'))

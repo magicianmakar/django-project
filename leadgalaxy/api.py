@@ -485,27 +485,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def post_board_config(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        board = ShopifyBoard.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
-
-        board.title = data.get('store-title')
-
-        board.config = json.dumps({
-            'title': data.get('title'),
-            'tags': data.get('tags'),
-            'type': data.get('type'),
-        })
-
-        board.save()
-
-        utils.smart_board_by_board(user.models_user, board)
-
-        return self.api_success()
-
     def post_variant_image(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))

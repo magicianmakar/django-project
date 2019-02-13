@@ -2,9 +2,11 @@ import simplejson as json
 
 from django.views.generic import View
 from django.utils.decorators import method_decorator
+from django.db.models import ObjectDoesNotExist
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
+from shopified_core.utils import dict_val
 
 from shopified_core.decorators import HasSubuserPermission
 
@@ -14,9 +16,9 @@ class ApiBase(ApiResponseMixin, View):
 
     def __init__(self):
         super(ApiBase, self).__init__()
-        self.assert_configured()
+        self._assert_configured()
 
-    def assert_configured(self):
+    def _assert_configured(self):
         assert self.board_model, 'Boards Model is not set'
 
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
@@ -47,8 +49,12 @@ class ApiBase(ApiResponseMixin, View):
 
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def post_board_favorite(self, request, user, data):
-        board = self.board_model.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
+        try:
+            board = self.board_model.objects.get(id=data.get('board'))
+            permissions.user_can_edit(user, board)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Board not found.', status=404)
 
         board.favorite = bool(data.get('favorite'))
         board.save()
@@ -58,11 +64,11 @@ class ApiBase(ApiResponseMixin, View):
     @method_decorator(HasSubuserPermission('view_product_boards.sub'))
     def get_board_config(self, request, user, data):
         try:
-            pk = self.get_query_data(request, ['board', 'board_id'])
+            pk = dict_val(data, ['board', 'board_id'])
             board = self.board_model.objects.get(pk=pk)
             permissions.user_can_edit(user, board)
 
-        except self.board_model.DoesNotExist:
+        except ObjectDoesNotExist:
             return self.api_error('Board not found.', status=404)
 
         try:
@@ -74,3 +80,24 @@ class ApiBase(ApiResponseMixin, View):
             'title': board.title,
             'config': config
         })
+
+    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
+    def post_board_config(self, request, user, data):
+        try:
+            pk = dict_val(data, ['board', 'board_id'])
+            board = self.board_model.objects.get(pk=pk)
+            permissions.user_can_edit(user, board)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Board not found.', status=404)
+
+        board.title = data.get('title')
+        board.config = json.dumps({
+            'title': data['product_title'],
+            'tags': data['product_tags'],
+            'type': data['product_type']
+        })
+
+        board.save()
+
+        return self.api_success()

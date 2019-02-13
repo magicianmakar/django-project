@@ -68,6 +68,22 @@ def safe_str(v, default=''):
         return default
 
 
+def dict_val(data, name, default=None):
+    """ Return dict value or default value if no key is found
+
+    if name is a list, return the first value found in data
+    """
+
+    if type(name) is list:
+        for i in name:
+            if i in data:
+                return data[i]
+
+        return default
+    else:
+        return data.get(name, default)
+
+
 def list_chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in xrange(0, len(l), n):
