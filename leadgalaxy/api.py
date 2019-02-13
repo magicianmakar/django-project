@@ -2166,7 +2166,6 @@ class ShopifyStoreApi(ApiBase):
             assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
 
-            # assert safe_int(order_id), 'Order ID is not a numbers'
             assert re.match('^https?://', source_id) is None, 'Supplier Order ID should not be a link'
 
         except AssertionError as e:

@@ -377,15 +377,6 @@ def process_webhook_event(request, event_id, raven_client):
         else:
             return HttpResponse('ok')
 
-    # elif event.type == 'customer.source.created':
-        # cus = stripe.Customer.retrieve(event.data.object.customer)
-        # if cus.delinquent:
-        #     resub = resubscribe_customer(cus.id)
-        #     print 'ReSubscribe Customer: {}'.format(resub)
-        #     return HttpResponse('ReSubscribe Customer: {}'.format(resub))
-
-        # return HttpResponse('ok')
-
     elif event.type == 'customer.subscription.created':
         sub = event.data.object
         created = False

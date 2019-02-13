@@ -77,7 +77,6 @@ class ShopifyOrderTrackAdmin(admin.ModelAdmin):
                     'status_updated_at', 'seen', 'hidden', 'check_count', 'source_tracking', 'source_type',
                     'created_at', 'updated_at')
 
-    # list_filter = ('shopify_status', 'source_status', 'seen', 'hidden',)
     search_fields = ('order_id', 'line_id', 'source_id', 'source_tracking', 'data')
     raw_id_fields = ('store', 'user')
 

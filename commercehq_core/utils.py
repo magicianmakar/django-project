@@ -97,7 +97,7 @@ def duplicate_product(product, store=None):
             variant_image_urls = []
             for variant in chq_product['variants']:
                 if len(variant['sku'] or '') > 0:
-                    titles = variant['variant']  # u'variant': [u'L']
+                    titles = variant['variant']
                     values = variant['sku'].split(';')
                     if titles:
                         if values:

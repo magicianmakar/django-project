@@ -764,8 +764,7 @@ class WooStoreApi(ApiBase):
         source_id = data.get('aliexpress_order_id')
 
         try:
-            # assert len(source_id) > 0, 'Empty Order ID'
-            assert safe_int(order_id), 'Order ID is not a numeric'
+            assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
         except AssertionError as e:
             raven_client.captureMessage('Non valid Supplier Order ID')

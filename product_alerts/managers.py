@@ -137,7 +137,7 @@ class ProductChangeManager():
         return product_data
 
     def get_variant(self, product_data, variant_change):
-        # 14:173#66Blue;5:361386 <OptionGroup>:<OptionID>#<OptionTitle>;
+        # Example Aliexpress SKU: "15:173#66Blue;5:361386" match to "<OptionGroup>:<OptionID>#<OptionTitle>"
         sku = variant_change.get('sku')
         ships_from_id = variant_change.get('ships_from_id')
         ships_from_title = variant_change.get('ships_from_title')

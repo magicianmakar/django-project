@@ -580,9 +580,6 @@ def ebay_shipping_info(item_id, country_name):
     shippement_key = 'ebay_shipping_info_{}_{}'.format(item_id, country_code)
     shippement_data = cache.get(shippement_key)
 
-    # if shippement_data is not None:
-    #     return shippement_data
-
     r = requests.get(
         url="https://shopified-helper-app.herokuapp.com/ebay/shipping/info",
         timeout=10,
@@ -838,7 +835,6 @@ def split_product(product, split_factor, store=None):
                         new_images.insert(0, img)
                 new_data['images'] = new_images
                 new_data['variants'] = [v1 for v1 in new_data['variants'] if v1['title'] != split_factor]
-                # new_data['variants'].append({'title': split_factor, 'values': [v]})
                 new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
 
                 clone.data = json.dumps(new_data)

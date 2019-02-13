@@ -264,9 +264,6 @@ def product_export(store_id, product_id, user_id, publish=None):
             }],
             'images': [] if have_variant_images else images,
 
-            # 'seo_url': slugify(p['title']),
-            # 'seo_title': p['title'],
-
             'vendor': p['vendor'],
             'tags': p.get('tags', '').split(','),
             'type': p.get('type') or 'Default',
@@ -327,7 +324,6 @@ def product_export(store_id, product_id, user_id, publish=None):
                     'compare_price': utils.safe_float(p['compare_at_price'], ''),
                     'shipping_weight': weight,
                     'variant': variants,
-                    # 'sku': ';'.join(sku),
                     'images': []
                 }
 

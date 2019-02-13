@@ -14,22 +14,14 @@ import os
 import dj_database_url
 import warnings
 
-# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'i+acxn5(akgsn!sr4^qgf(^m&*@+g1@u^t@=8s@axc41ml*f=s'
 
 API_SECRECT_KEY = os.environ.get('API_SECRECT_KEY', 'TEST')
 ENCRYPTION_SECRECT_KEY = os.environ.get('ENCRYPTION_SECRECT_KEY', 'TEST')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = (os.environ.get('DEBUG_APP') == 'TRUE')
 
 if DEBUG:
@@ -57,7 +49,7 @@ INSTALLED_APPS = (
     'rest_hooks',
 
     'raven.contrib.django.raven_compat',
-    'widget_tweaks',    # For forms
+    'widget_tweaks',
     'hijack',
     'compat',
     'compressor',
@@ -95,10 +87,8 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    # 'django.middleware.gzip.GZipMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'hijack.middleware.HijackRemoteUserMiddleware',
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
@@ -141,7 +131,6 @@ TEMPLATES = [
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    # other finders..
     'compressor.finders.CompressorFinder',
 )
 
@@ -156,7 +145,6 @@ DROPIFIED_API = {
 }
 
 # Database
-# https://docs.djangoproject.com/en/1.8/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -188,9 +176,6 @@ CACHES = {
     }
 }
 
-# Internationalization
-# https://docs.djangoproject.com/en/1.8/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
@@ -218,9 +203,6 @@ SECURE_REDIRECT_EXEMPT = [
     '^webhook/',
     '^marketing/feeds/',
 ]
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.8/howto/static-files/
 
 BASE_DIR2 = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = 'staticfiles'
@@ -314,14 +296,12 @@ COMPRESS_URL = STATIC_URL
 
 COMPRESS_JS_FILTERS = [
     'compressor.filters.yuglify.YUglifyJSFilter'
-    # 'compressor.filters.jsmin.SlimItFilter'
 ]
 
 COMPRESS_CSS_FILTERS = [
     # Creates absolute urls from relative ones.
     'compressor.filters.css_default.CssAbsoluteFilter',
     # CSS minimizer.
-    # 'compressor.filters.cssmin.CSSMinFilter',
     'compressor.filters.yuglify.YUglifyJSFilter'
 ]
 

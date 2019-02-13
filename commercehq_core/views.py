@@ -164,7 +164,7 @@ def product_alerts(request):
                 if index is not None:
                     # TODO: check track_inventory status
                     if p.get('track_inventory'):
-                        quantity = 'Not Supported'  # variants[index]['quantity']
+                        quantity = 'Not Supported'
                         c['chq_value'] = quantity
                     else:
                         c['chq_value'] = "Unmanaged"
@@ -172,7 +172,7 @@ def product_alerts(request):
                     c['chq_value'] = "Not Found"
             elif p.get('is_multi') is False:
                 if p.get('track_inventory'):
-                    quantity = 'Not Supported'  # p['quantity']
+                    quantity = 'Not Supported'
                     c['chq_value'] = quantity
                 else:
                     c['chq_value'] = "Unmanaged"
@@ -639,7 +639,6 @@ class MappingBundleView(DetailView):
 class OrdersList(ListView):
     model = CommerceHQProduct
     template_name = 'commercehq/orders_list.html'
-    # context_object_name = 'orders'
 
     paginator_class = CommerceHQOrdersPaginator
     paginate_by = 20
@@ -761,11 +760,6 @@ class OrdersList(ListView):
             order['connected_lines'] = 0
             order['lines_count'] = len(order['items'])
             order['refunded_lines'] = []
-
-            # if type(order['refunds']) is list:
-            #     for refund in order['refunds']:
-            #         for refund_line in refund['refund_line_items']:
-            #             order['refunded_lines'].append(refund_line['line_item_id'])
 
             order_status = {
                 0: 'Not sent to fulfilment',

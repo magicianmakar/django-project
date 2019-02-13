@@ -21,15 +21,14 @@ from .models import (
     OtherCost
 )
 
+# Note: Ignore this status: buyer_accept_goods_timeout, buyer_accept_goods
 ALIEXPRESS_CANCELLED_STATUS = [
     'buyer_pay_timeout',
     'risk_reject_closed',
-    # 'buyer_accept_goods_timeout',
     'buyer_cancel_notpay_order',
     'cancel_order_close_trade',
     'seller_send_goods_timeout',
     'buyer_cancel_order_in_risk',
-    # 'buyer_accept_goods',
     'seller_accept_issue_no_goods_return',
     'seller_response_issue_timeout',
 ]
@@ -117,12 +116,12 @@ def get_profits(store, start, end, store_timezone=''):
     orders_map = {}
     totals_orders_count = 0
     for order in orders.values('created_at', 'total_price', 'order_id'):
-        # Date: YYYY-MM-DD
         try:
             # Correct our database date to show these at the correct day
             created_at = arrow.get(order['created_at']).to(store_timezone)
         except:
             pass
+
         date_key = created_at.format('YYYY-MM-DD')
         if date_key not in profits_data:
             continue

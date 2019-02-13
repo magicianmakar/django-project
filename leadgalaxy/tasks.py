@@ -349,7 +349,6 @@ def export_product(req_data, target, user_id):
             else:
                 product = None
         else:
-            # messages.success(request, 'Product updated in Shopify.')
             pass
 
         # update product collections
@@ -1058,7 +1057,6 @@ def calculate_sales(self, user_id, period):
         order_tracks = ShopifyOrderTrack.objects.exclude(data='')
         if period:
             period = timezone.now() - timedelta(days=int(period))
-            # order_tracks = order_tracks.filter(created_at__gte=period).order_by('id')
             first_track = order_tracks.filter(created_at__gte=period).order_by('id')[0:1].first()
             order_tracks = order_tracks.filter(id__gte=first_track.id)
 
