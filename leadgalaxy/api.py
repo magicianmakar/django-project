@@ -485,28 +485,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def get_board_config(self, request, user, data):
-        if not user.can('view_product_boards.sub'):
-            raise PermissionDenied()
-
-        board = ShopifyBoard.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
-
-        try:
-            return self.api_success({
-                'title': board.title,
-                'config': json.loads(board.config)
-            })
-        except:
-            return self.api_success({
-                'title': board.title,
-                'config': {
-                    'title': '',
-                    'tags': '',
-                    'type': ''
-                }
-            })
-
     def post_board_config(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()

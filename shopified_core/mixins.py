@@ -44,6 +44,18 @@ class ApiResponseMixin():
         elif request.method in ['GET', 'DELETE']:
             return request.GET
 
+    def get_query_data(self, request, name, default=None):
+        data = self.request_data(request)
+
+        if type(name) is list:
+            for i in name:
+                if i in data:
+                    return data[i]
+        else:
+            return data.get(name, default)
+
+        return default
+
     def get_user(self, request, data=None, assert_login=True):
         """
             Return User from the current request data

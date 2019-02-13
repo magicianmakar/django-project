@@ -22,6 +22,7 @@ from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
 from shopified_core.shipping_helper import aliexpress_country_code_map
+from shopified_core.decorators import HasSubuserPermission, restrict_subuser_access
 from shopified_core.utils import (
     safe_int,
     safe_float,
@@ -41,7 +42,6 @@ from .models import (
     GearBubbleBoard,
     GearBubbleOrderTrack,
 )
-from .decorators import restrict_subuser_access, HasSubuserPermission
 
 import utils
 import tasks
@@ -445,25 +445,6 @@ class GearBubbleApi(ApiBase):
 
         return self.api_success()
 
-    @method_decorator(HasSubuserPermission('view_product_boards.sub'))
-    def get_board_config(self, request, user, data):
-        board_id = safe_int(data.get('board_id'))
-
-        try:
-            board = GearBubbleBoard.objects.get(pk=board_id)
-        except GearBubbleBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        permissions.user_can_edit(user, board)
-
-        try:
-            config = json.loads(board.config)
-        except:
-            config = {'title': '', 'tags': '', 'type': ''}
-
-        return self.api_success({'title': board.title, 'config': config})
-
-    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def post_board_config(self, request, user, data):
         board_id = safe_int(data.get('board_id'))
 

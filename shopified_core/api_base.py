@@ -1,8 +1,12 @@
-from django.core.exceptions import PermissionDenied
+import simplejson as json
+
 from django.views.generic import View
+from django.utils.decorators import method_decorator
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
+
+from shopified_core.decorators import HasSubuserPermission
 
 
 class ApiBase(ApiResponseMixin, View):
@@ -15,10 +19,8 @@ class ApiBase(ApiResponseMixin, View):
     def assert_configured(self):
         assert self.board_model, 'Boards Model is not set'
 
+    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def post_boards_add(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
         can_add, total_allowed, user_count = permissions.can_add_board(user)
 
         if not can_add:
@@ -43,10 +45,8 @@ class ApiBase(ApiResponseMixin, View):
             }
         })
 
+    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def post_board_favorite(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
         board = self.board_model.objects.get(id=data.get('board'))
         permissions.user_can_edit(user, board)
 
@@ -54,3 +54,23 @@ class ApiBase(ApiResponseMixin, View):
         board.save()
 
         return self.api_success()
+
+    @method_decorator(HasSubuserPermission('view_product_boards.sub'))
+    def get_board_config(self, request, user, data):
+        try:
+            pk = self.get_query_data(request, ['board', 'board_id'])
+            board = self.board_model.objects.get(pk=pk)
+            permissions.user_can_edit(user, board)
+
+        except self.board_model.DoesNotExist:
+            return self.api_error('Board not found.', status=404)
+
+        try:
+            config = json.loads(board.config)
+        except:
+            config = {'title': '', 'tags': '', 'type': ''}
+
+        return self.api_success({
+            'title': board.title,
+            'config': config
+        })

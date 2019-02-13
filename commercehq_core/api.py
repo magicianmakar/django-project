@@ -844,31 +844,6 @@ class CHQStoreApi(ApiBase):
                 }
             })
 
-    def get_board_config(self, request, user, data):
-        if not user.can('view_product_boards.sub'):
-            raise PermissionDenied()
-        try:
-            pk = safe_int(data.get('board_id'))
-            board = CommerceHQBoard.objects.get(pk=pk)
-            permissions.user_can_edit(user, board)
-        except CommerceHQBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        try:
-            return self.api_success({
-                'title': board.title,
-                'config': json.loads(board.config)
-            })
-        except:
-            return self.api_success({
-                'title': board.title,
-                'config': {
-                    'title': '',
-                    'tags': '',
-                    'type': ''
-                }
-            })
-
     def post_board_config(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()

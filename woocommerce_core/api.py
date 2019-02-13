@@ -907,25 +907,6 @@ class WooStoreApi(ApiBase):
 
         return self.api_success()
 
-    def get_board_config(self, request, user, data):
-        if not user.can('view_product_boards.sub'):
-            raise PermissionDenied()
-
-        try:
-            pk = safe_int(data.get('board_id'))
-            board = WooBoard.objects.get(pk=pk)
-        except WooBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-        else:
-            permissions.user_can_edit(user, board)
-
-        try:
-            config = json.loads(board.config)
-        except:
-            config = {'title': '', 'tags': '', 'type': ''}
-
-        return self.api_success({'title': board.title, 'config': config})
-
     def post_board_config(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
