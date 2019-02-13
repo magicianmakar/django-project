@@ -3,7 +3,7 @@ import requests
 from django.conf import settings
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from shopified_core.utils import app_link, url_join, safeFloat, safeInt
+from shopified_core.utils import app_link, url_join, safe_float, safe_int
 
 
 def get_supplier_variants(supplier_type, product_id):
@@ -259,8 +259,8 @@ def calculate_price(user, old_value, new_value, current_price, current_compare_a
     new_compare_at = None
 
     if price_update_method == 'global_markup':
-        auto_margin = safeFloat(user.get_config('auto_margin', '').rstrip('%'))
-        auto_compare_at = safeFloat(user.get_config('auto_compare_at', '').rstrip('%'))
+        auto_margin = safe_float(user.get_config('auto_margin', '').rstrip('%'))
+        auto_compare_at = safe_float(user.get_config('auto_compare_at', '').rstrip('%'))
         if auto_margin > 0:
             new_price = new_value + ((new_value * auto_margin) / 100.0)
             new_price = round(new_price, 2)
@@ -297,14 +297,14 @@ def calculate_price(user, old_value, new_value, current_price, current_compare_a
         if current_compare_at:
             new_compare_at = round((current_compare_at * new_value) / old_value, 2)
 
-    auto_margin_cents = safeInt(user.get_config('auto_margin_cents'), None)
+    auto_margin_cents = safe_int(user.get_config('auto_margin_cents'), None)
     if new_price is not None and auto_margin_cents >= 0:
-        new_price = safeFloat(str(int(new_price)) + '.' + ('0' if auto_margin_cents <= 9 else '') + str(auto_margin_cents))
+        new_price = safe_float(str(int(new_price)) + '.' + ('0' if auto_margin_cents <= 9 else '') + str(auto_margin_cents))
         new_price = round(new_price, 2)
 
-    auto_compare_at_cents = safeInt(user.get_config('auto_compare_at_cents'), None)
+    auto_compare_at_cents = safe_int(user.get_config('auto_compare_at_cents'), None)
     if new_compare_at is not None and auto_compare_at_cents >= 0:
-        new_compare_at = safeFloat(str(int(new_compare_at)) + '.' + ('0' if auto_compare_at_cents <= 9 else '') + str(auto_compare_at_cents))
+        new_compare_at = safe_float(str(int(new_compare_at)) + '.' + ('0' if auto_compare_at_cents <= 9 else '') + str(auto_compare_at_cents))
         new_compare_at = round(new_compare_at, 2)
 
     return [new_price, new_compare_at]

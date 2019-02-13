@@ -22,9 +22,9 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     aws_s3_context,
-    safeInt,
+    safe_int,
     clean_query_id,
-    safeFloat,
+    safe_float,
 )
 
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
@@ -138,7 +138,7 @@ class ProductsList(ListView):
             context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('woo:products_list') + '?store=n'})
         elif self.request.GET.get('store', 'n') == 'c':
             context['breadcrumbs'].append({'title': 'Connected', 'url': reverse('woo:products_list') + '?store=c'})
-        elif safeInt(self.request.GET.get('store')):
+        elif safe_int(self.request.GET.get('store')):
             store = WooStore.objects.get(id=self.request.GET.get('store'))
             permissions.user_can_view(self.request.user, store)
 
@@ -440,7 +440,7 @@ class OrdersList(ListView):
             'product_id': product.id,
             'product_source_id': product.source_id,
             'source_id': supplier.get_source_id(),
-            'total': safeFloat(item['price'], 0.0),
+            'total': safe_float(item['price'], 0.0),
             'store': store.id,
             'order': {
                 'phone': {
@@ -743,7 +743,7 @@ class BoardDetailView(DetailView):
 
         products = woocommerce_products(self.request, store=None, board=self.object.id)
         paginator = SimplePaginator(products, 25)
-        page = safeInt(self.request.GET.get('page'), 1)
+        page = safe_int(self.request.GET.get('page'), 1)
         page = paginator.page(page)
 
         context['searchable'] = True
@@ -779,7 +779,7 @@ class OrderPlaceRedirectView(RedirectView):
         elif self.request.GET.get('product'):
             product = self.request.GET['product']
 
-            if safeInt(product):
+            if safe_int(product):
                 product = 'https://www.aliexpress.com/item//{}.html'.format(product)
 
         if not product:

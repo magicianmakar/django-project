@@ -22,8 +22,13 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery import celery_app, CaptureFailure, retry_countdown, api_exceed_limits_countdown
 from shopified_core import permissions
 from shopified_core.utils import (
+    safe_int,
     app_link,
     url_join,
+    get_domain,
+    random_hash,
+    hash_list,
+    get_fileext_from_url,
     http_exception_response,
     http_excption_status_code,
     delete_model_from_db,
@@ -134,7 +139,7 @@ def export_product(req_data, target, user_id):
                 'error': "Product: {}".format(e.message)
             }
     try:
-        import_store = utils.get_domain(original_url)
+        import_store = get_domain(original_url)
     except:
         raven_client.captureException(extra={'original_url': original_url})
 
@@ -189,7 +194,7 @@ def export_product(req_data, target, user_id):
                     for i, image in enumerate(api_data['product']['images']):
                         if image.get('src') and not image.get('filename'):
                             path, ext = os.path.splitext(image.get('src'))
-                            api_data['product']['images'][i]['filename'] = '{}{}'.format(utils.random_hash(), ext)
+                            api_data['product']['images'][i]['filename'] = '{}{}'.format(random_hash(), ext)
 
                 r = requests.post(endpoint, json=api_data)
 
@@ -344,7 +349,6 @@ def export_product(req_data, target, user_id):
             else:
                 product = None
         else:
-            # messages.success(request, 'Product updated in Shopify.')
             pass
 
         # update product collections
@@ -849,8 +853,8 @@ def search_shopify_products(self, store, title, category, status, ppp, page):
 
     all_products = []
     errors = []
-    page = utils.safeInt(page, 1)
-    post_per_page = utils.safeInt(ppp)
+    page = safe_int(page, 1)
+    post_per_page = safe_int(ppp)
     max_products = post_per_page * (page + 1)
 
     try:
@@ -912,7 +916,7 @@ def generate_order_export_query(self, order_export_id):
 def create_image_zip(self, images, product_id):
     try:
         product = ShopifyProduct.objects.get(pk=product_id)
-        cache_key = 'image_zip_{}_{}'.format(product_id, utils.hash_list(images))
+        cache_key = 'image_zip_{}_{}'.format(product_id, hash_list(images))
         url = cache.get(cache_key)
         if not url:
             filename = tempfile.mktemp(suffix='.zip', prefix='{}-'.format(product_id))
@@ -922,7 +926,7 @@ def create_image_zip(self, images, product_id):
                     if img_url.startswith('//'):
                         img_url = u'http:{}'.format(img_url)
 
-                    image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
+                    image_name = u'image-{}.{}'.format(i + 1, get_fileext_from_url(img_url, fallback='jpg'))
                     images_zip.writestr(image_name, requests.get(img_url).content)
 
             s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
@@ -1053,7 +1057,6 @@ def calculate_sales(self, user_id, period):
         order_tracks = ShopifyOrderTrack.objects.exclude(data='')
         if period:
             period = timezone.now() - timedelta(days=int(period))
-            # order_tracks = order_tracks.filter(created_at__gte=period).order_by('id')
             first_track = order_tracks.filter(created_at__gte=period).order_by('id')[0:1].first()
             order_tracks = order_tracks.filter(id__gte=first_track.id)
 
@@ -1459,7 +1462,7 @@ def product_randomize_image_names(self, product_id):
 
             # Post a shopify product image with new filename
             path, ext = os.path.splitext(image['src'])
-            image['filename'] = '{}{}'.format(utils.random_hash(), ext)
+            image['filename'] = '{}{}'.format(random_hash(), ext)
             rep = requests.post(
                 store.get_link('/admin/products/{}/images.json'.format(shopify_id), api=True),
                 json={'image': image}
@@ -1489,8 +1492,8 @@ def product_randomize_image_names(self, product_id):
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def store_transfer(self, options):
     try:
-        from_user = User.objects.get(id=options['from']) if safeInt(options['from']) else User.objects.get(email__iexact=options['from'])
-        to_user = User.objects.get(id=options['to']) if safeInt(options['to']) else User.objects.get(email__iexact=options['to'])
+        from_user = User.objects.get(id=options['from']) if safe_int(options['from']) else User.objects.get(email__iexact=options['from'])
+        to_user = User.objects.get(id=options['to']) if safe_int(options['to']) else User.objects.get(email__iexact=options['to'])
 
         store = ShopifyStore.objects.get(id=options['store'], user=from_user, is_active=True)
 

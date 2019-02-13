@@ -45,21 +45,21 @@ class OrderErrors:
     COUNTRY = 4
 
 
-def safeInt(v, default=0):
+def safe_int(v, default=0):
     try:
         return int(v)
     except:
         return default
 
 
-def safeFloat(v, default=0.0):
+def safe_float(v, default=0.0):
     try:
         return float(v)
     except:
         return default
 
 
-def safeStr(v, default=''):
+def safe_str(v, default=''):
     """ Always return a str object """
 
     if isinstance(v, basestring):
@@ -99,7 +99,7 @@ def app_link(*args, **kwargs):
 
 
 def remove_trailing_slash(t):
-    t = safeStr(t, str(t))
+    t = safe_str(t, str(t))
     return t.strip('/')
 
 
@@ -131,7 +131,7 @@ def decode_params(val):
         if val.startswith('b:'):
             return base64.decodestring(val[2:])
 
-        elif not safeInt(val):
+        elif not safe_int(val):
             try:
                 r = base64.decodestring(val).decode('utf-8')
                 if '@' in r:
@@ -372,7 +372,7 @@ def aws_s3_context():
 def clean_query_id(qid):
     ids = re.findall('([0-9]+)', qid)
     if len(ids):
-        return safeInt(ids[0], 0)
+        return safe_int(ids[0], 0)
     else:
         return 0
 

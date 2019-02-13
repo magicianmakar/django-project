@@ -11,7 +11,7 @@ from django.utils import timezone
 
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.models import ShopifyOrder
-from leadgalaxy.utils import safeFloat, get_shopify_orders
+from leadgalaxy.utils import safe_float, get_shopify_orders
 from leadgalaxy.models import ShopifyOrderTrack
 
 from .models import (
@@ -21,15 +21,14 @@ from .models import (
     OtherCost
 )
 
+# Note: Ignore this status: buyer_accept_goods_timeout, buyer_accept_goods
 ALIEXPRESS_CANCELLED_STATUS = [
     'buyer_pay_timeout',
     'risk_reject_closed',
-    # 'buyer_accept_goods_timeout',
     'buyer_cancel_notpay_order',
     'cancel_order_close_trade',
     'seller_send_goods_timeout',
     'buyer_cancel_order_in_risk',
-    # 'buyer_accept_goods',
     'seller_accept_issue_no_goods_return',
     'seller_response_issue_timeout',
 ]
@@ -117,12 +116,12 @@ def get_profits(store, start, end, store_timezone=''):
     orders_map = {}
     totals_orders_count = 0
     for order in orders.values('created_at', 'total_price', 'order_id'):
-        # Date: YYYY-MM-DD
         try:
             # Correct our database date to show these at the correct day
             created_at = arrow.get(order['created_at']).to(store_timezone)
         except:
             pass
+
         date_key = created_at.format('YYYY-MM-DD')
         if date_key not in profits_data:
             continue
@@ -177,8 +176,8 @@ def get_profits(store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
-        profits_data[date_key]['profit'] -= safeFloat(shipping.total_cost)
-        profits_data[date_key]['fulfillment_cost'] += safeFloat(shipping.total_cost)
+        profits_data[date_key]['profit'] -= safe_float(shipping.total_cost)
+        profits_data[date_key]['fulfillment_cost'] += safe_float(shipping.total_cost)
         profits_data[date_key]['fulfillments_count'] += 1
         total_fulfillments_count += 1
         profits_data[date_key]['empty'] = False
@@ -198,8 +197,8 @@ def get_profits(store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
-        ad_cost_amount = safeFloat(ad_cost['spend__sum'])
-        profits_data[date_key]['profit'] -= safeFloat(ad_cost['spend__sum'])
+        ad_cost_amount = safe_float(ad_cost['spend__sum'])
+        profits_data[date_key]['profit'] -= safe_float(ad_cost['spend__sum'])
         profits_data[date_key]['ad_spend'] = ad_cost_amount
         profits_data[date_key]['empty'] = False
         profits_data[date_key]['css_empty'] = ''
@@ -218,7 +217,7 @@ def get_profits(store, start, end, store_timezone=''):
         if date_key not in profits_data:
             continue
 
-        other_cost_value = safeFloat(other_cost['amount__sum'])
+        other_cost_value = safe_float(other_cost['amount__sum'])
         is_empty = profits_data[date_key]['empty']
 
         profits_data[date_key]['profit'] -= other_cost_value
@@ -237,8 +236,8 @@ def get_profits(store, start, end, store_timezone=''):
         'average_revenue': 0.0,
         'refunds': total_refunds,
     }
-    totals['outcome'] = safeFloat(totals['fulfillment_cost']) + safeFloat(totals['ads_spend']) + safeFloat(totals['other_costs'])
-    totals['profit'] = safeFloat(totals['revenue']) - safeFloat(totals['outcome']) - safeFloat(total_refunds)
+    totals['outcome'] = safe_float(totals['fulfillment_cost']) + safe_float(totals['ads_spend']) + safe_float(totals['other_costs'])
+    totals['profit'] = safe_float(totals['revenue']) - safe_float(totals['outcome']) - safe_float(total_refunds)
     totals['orders_count'] = totals_orders_count
     totals['fulfillments_count'] = total_fulfillments_count
     totals['orders_per_day'] = totals['orders_count'] / len(days)

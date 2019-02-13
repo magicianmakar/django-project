@@ -12,7 +12,7 @@ from urlparse import urlparse
 
 from loxun import XmlWriter
 
-from shopified_core.utils import safeStr
+from shopified_core.utils import safe_str, safe_int
 from leadgalaxy.utils import (
     aws_s3_upload,
     get_shopify_products_count,
@@ -32,13 +32,6 @@ from woocommerce_core.utils import (
 from .models import FeedStatus, CommerceHQFeedStatus, WooFeedStatus, GearBubbleFeedStatus
 
 
-def safeInt(v, default=0):
-    try:
-        return int(v)
-    except:
-        return default
-
-
 class ProductFeed():
     def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category='', feed=None):
         self.store = store
@@ -47,7 +40,7 @@ class ProductFeed():
         self.currency = self.info['currency']
         self.domain = self.info['domain']
 
-        self.revision = safeInt(revision, 1)  # 1,2: For FaceBook - 3: For Google
+        self.revision = safe_int(revision, 1)  # 1,2: For FaceBook - 3: For Google
         self.all_variants = all_variants
         self.include_variants = include_variants or self.revision == 3
         self.default_product_category = default_product_category
@@ -146,7 +139,7 @@ class ProductFeed():
         self._add_element('g:image_link', image)
         self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
         self._add_element('g:shipping_weight', '{variant[weight]} {variant[weight_unit]}'.format(variant=variant))
-        self._add_element('g:google_product_category', safeStr(product.get('product_type') or self.default_product_category))
+        self._add_element('g:google_product_category', safe_str(product.get('product_type') or self.default_product_category))
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
 
@@ -190,7 +183,7 @@ class CommerceHQProductFeed():
         self.currency = self.info['currency']
         self.domain = self.info['domain']
 
-        self.revision = safeInt(revision, 1)
+        self.revision = safe_int(revision, 1)
         self.all_variants = all_variants
         self.include_variants = include_variants
         self.default_product_category = default_product_category
@@ -280,7 +273,7 @@ class CommerceHQProductFeed():
         self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
         self._add_element('g:shipping_weight', '{product[shipping_weight]} kg'.format(product=product))
         self._add_element('g:brand', product.get('vendor') or '')
-        self._add_element('g:google_product_category', safeStr(product.get('type') or self.default_product_category))
+        self._add_element('g:google_product_category', safe_str(product.get('type') or self.default_product_category))
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
 
@@ -306,7 +299,7 @@ class WooProductFeed():
         self.currency = self.info['currency']
         self.domain = self.info['domain']
 
-        self.revision = safeInt(revision, 1)
+        self.revision = safe_int(revision, 1)
         self.all_variants = all_variants
         self.include_variants = include_variants
         self.default_product_category = default_product_category
@@ -436,7 +429,7 @@ class GearBubbleProductFeed(object):
         self.store = store
         self.currency = self.info['currency']
         self.domain = self.info['domain']
-        self.revision = safeInt(revision, 1)
+        self.revision = safe_int(revision, 1)
         self.all_variants = all_variants
         self.include_variants = include_variants
         self.default_product_category = default_product_category

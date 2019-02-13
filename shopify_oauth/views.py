@@ -51,7 +51,6 @@ def encoded_params_for_signature(params):
 
 
 def verify_hmac_signature(request):
-    # message = "code={r[code]}&shop={r[shop]}&state={r[state]}&timestamp={r[timestamp]}".format(r=request.GET)
     message = encoded_params_for_signature(request.GET)
     message_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
 

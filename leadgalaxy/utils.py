@@ -19,7 +19,6 @@ from urllib import urlencode
 from hashlib import sha256
 from math import ceil
 
-from tld import get_tld
 from boto.s3.key import Key
 from unidecode import unidecode
 from collections import Counter
@@ -42,10 +41,16 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import *
 from shopified_core import permissions
 from shopified_core.utils import (
-    safeStr,
+    safe_int,
+    safe_float,
+    safe_str,
     list_chunks,
     app_link,
     url_join,
+    hash_text,
+    random_hash,
+    get_domain,
+    remove_link_query,
     save_user_ip,
     unique_username,
     send_email_from_template,
@@ -59,37 +64,6 @@ from shopified_core.utils import (
 
 from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province, support_other_in_province
 from shopify_orders.models import ShopifyOrderLine
-
-
-def safeInt(v, default=0):
-    try:
-        return int(v)
-    except:
-        return default
-
-
-def safeFloat(v, default=0.0):
-    try:
-        return float(v)
-    except:
-        return default
-
-
-def get_domain(url, full=False):
-    if not url:
-        return None
-
-    if not url.startswith('http'):
-        url = u'http://{}'.format(url)
-
-    hostname = urlparse.urlparse(url).hostname
-    if hostname is None:
-        return hostname
-
-    if full:
-        return hostname
-    else:
-        return get_tld(url, as_object=True).domain
 
 
 def upload_from_url(url, stores=[]):
@@ -109,29 +83,6 @@ def upload_from_url(url, stores=[]):
     mimetype = mimetypes.guess_type(remove_link_query(url))[0]
 
     return can_pull and mimetype in allowed_mimetypes
-
-
-def remove_link_query(link):
-    if not link:
-        return ''
-
-    if not link.startswith('http'):
-        link = u'http://{}'.format(re.sub('^([:/]*)', r'', link))
-
-    return re.sub('([?#].*)$', r'', link)
-
-
-def random_hash():
-    token = get_random_string(32)
-    return hashlib.md5(token).hexdigest()
-
-
-def hash_text(text):
-    return hashlib.md5(text).hexdigest()
-
-
-def hash_list(data, sep=''):
-    return hash_text(sep.join(data))
 
 
 def random_filename(filename):
@@ -629,9 +580,6 @@ def ebay_shipping_info(item_id, country_name):
     shippement_key = 'ebay_shipping_info_{}_{}'.format(item_id, country_code)
     shippement_data = cache.get(shippement_key)
 
-    # if shippement_data is not None:
-    #     return shippement_data
-
     r = requests.get(
         url="https://shopified-helper-app.herokuapp.com/ebay/shipping/info",
         timeout=10,
@@ -671,7 +619,7 @@ def get_store_from_request(request):
             pass
 
     if not store and request.GET.get('store'):
-        store = get_object_or_404(stores, id=safeInt(request.GET.get('store')))
+        store = get_object_or_404(stores, id=safe_int(request.GET.get('store')))
 
     if store:
         permissions.user_can_view(request.user, store)
@@ -712,9 +660,9 @@ def get_shopify_id(url):
     if url and url.strip():
         try:
             if '/variants/' in url:
-                return safeInt(re.findall('products/([0-9]+)/variants', url)[0])
+                return safe_int(re.findall('products/([0-9]+)/variants', url)[0])
             else:
-                return safeInt(re.findall('products/([0-9]+)$', url)[0])
+                return safe_int(re.findall('products/([0-9]+)$', url)[0])
         except:
             return 0
     else:
@@ -887,7 +835,6 @@ def split_product(product, split_factor, store=None):
                         new_images.insert(0, img)
                 new_data['images'] = new_images
                 new_data['variants'] = [v1 for v1 in new_data['variants'] if v1['title'] != split_factor]
-                # new_data['variants'].append({'title': split_factor, 'values': [v]})
                 new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
 
                 clone.data = json.dumps(new_data)
@@ -1079,8 +1026,8 @@ def link_product_images(product):
 
 def get_shopify_variant_image(store, product_id, variant_id):
     """ product_id: Product ID in Shopify """
-    product_id = safeInt(product_id)
-    variant_id = safeInt(variant_id)
+    product_id = safe_int(product_id)
+    variant_id = safe_int(variant_id)
     image = None
 
     if not product_id:
@@ -1404,10 +1351,10 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
                     customer_address['city'] = u'{}, {}'.format(customer_address['city'], customer_province)
 
             elif fix_aliexpress_city:
-                city = safeStr(customer_address['city']).strip().strip(',')
+                city = safe_str(customer_address['city']).strip().strip(',')
                 customer_address['city'] = 'Other'
 
-                if not safeStr(customer_address['address2']).strip():
+                if not safe_str(customer_address['address2']).strip():
                     customer_address['address2'] = u'{},'.format(city)
                 else:
                     customer_address['address2'] = u'{}, {},'.format(customer_address['address2'].strip().strip(','), city)
@@ -1754,7 +1701,7 @@ def order_track_fulfillment(**kwargs):
         line_id = kwargs['line_id']
         location_id = kwargs['location_id']
         source_tracking = kwargs['source_tracking']
-        store_id = safeInt(kwargs.get('store_id'))
+        store_id = safe_int(kwargs.get('store_id'))
 
         if not len(source_tracking):
             source_tracking = None
@@ -2159,14 +2106,6 @@ def fix_product_url(data, request):
     return data
 
 
-def clean_query_id(qid):
-    ids = re.findall('([0-9]+)', qid)
-    if len(ids):
-        return safeInt(ids[0], 0)
-    else:
-        return 0
-
-
 def ensure_title(text):
     """ Ensure the given string start with an upper case letter """
 
@@ -2315,18 +2254,6 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
         return upload_url
 
 
-def get_filename_from_url(url):
-    return remove_link_query(url).split('/').pop()
-
-
-def get_fileext_from_url(url, fallback=''):
-    name = get_filename_from_url(url)
-    if '.' in name:
-        return name.split('.').pop()
-    else:
-        return fallback
-
-
 def attach_boards_with_product(user, product, ids):
     # remove boards
     boards = ShopifyBoard.objects.filter(products=product).exclude(id__in=ids)
@@ -2376,8 +2303,8 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
         product_data['description'] = shopify_product['body_html']
         product_data['published'] = shopify_product.get('published_at') is not None
 
-        prices = [safeFloat(i['price'], 0.0) for i in shopify_product['variants']]
-        compare_at_prices = [safeFloat(i['compare_at_price'], 0.0) for i in shopify_product['variants']]
+        prices = [safe_float(i['price'], 0.0) for i in shopify_product['variants']]
+        compare_at_prices = [safe_float(i['compare_at_price'], 0.0) for i in shopify_product['variants']]
 
         if len(set(prices)) == 1:  # If all variants have the same price
             product_data['price'] = prices[0]

@@ -21,7 +21,7 @@ from pusher import Pusher
 
 from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
-from shopified_core.utils import safeInt, safeStr, get_domain, OrderErrors
+from shopified_core.utils import safe_int, safe_str, get_domain, OrderErrors
 from product_alerts.utils import monitor_product
 
 ENTITY_STATUS_CHOICES = (
@@ -147,7 +147,7 @@ class UserProfile(models.Model):
         if self.config:
             config = json.loads(self.config)
 
-            sync_delay_notify = safeInt(config.get('sync_delay_notify_days'))
+            sync_delay_notify = safe_int(config.get('sync_delay_notify_days'))
             if not config.get('sync_delay_notify'):
                 sync_delay_notify = 0
 
@@ -1868,11 +1868,11 @@ class ShopifyOrderTrack(models.Model):
         if self.source_status_details and ',' in self.source_status_details:
             source_status_details = []
             for i in self.source_status_details.split(','):
-                source_status_details.append(ALIEXPRESS_REJECTED_STATUS.get(safeStr(i).lower()))
+                source_status_details.append(ALIEXPRESS_REJECTED_STATUS.get(safe_str(i).lower()))
 
             return ', '.join(set(source_status_details))
         else:
-            return ALIEXPRESS_REJECTED_STATUS.get(safeStr(self.source_status_details).lower())
+            return ALIEXPRESS_REJECTED_STATUS.get(safe_str(self.source_status_details).lower())
 
     def get_source_status_color(self):
         if not self.source_status:

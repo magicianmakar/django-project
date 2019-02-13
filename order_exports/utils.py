@@ -15,8 +15,8 @@ from django.utils import timezone
 from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment, clean_query_id, get_shopify_orders
-from shopified_core.utils import app_link, send_email_from_template
+from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment, get_shopify_orders
+from shopified_core.utils import app_link, send_email_from_template, clean_query_id
 
 from leadgalaxy.models import ShopifyOrderTrack, User, ShopifyStore
 from shopify_orders import utils as shopify_orders_utils

@@ -68,8 +68,8 @@ class ProductChange(models.Model):
         return None
 
     def get_data(self, category=None):
-        # returns a list of product changes filtered by category:
-        # 'product:offline', 'variant:quantity', 'variant:price', 'variant:var_added', 'variant:var_removed'
+        # Returns a list of product changes filtered by category
+        # Categories: product:offline variant:quantity variant:price variant:var_added variant:var_removed
         try:
             changes_data = json.loads(self.data)
             changes = []
@@ -89,8 +89,8 @@ class ProductChange(models.Model):
         return changes
 
     def get_changes_map(self, category=None):
-        # returns a map of product changes filtered by category:
-        # 'product:offline', 'variant:quantity', 'variant:price', 'variant:var_added', 'variant:var_removed'
+        # Returns a list of product changes filtered by category
+        # Categories: product:offline variant:quantity variant:price variant:var_added variant:var_removed
         changes = self.get_data(category)
 
         changes_map = {

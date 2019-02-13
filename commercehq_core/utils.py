@@ -16,8 +16,8 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard, CommerceHQOrderTrack
 from shopified_core import permissions
 from shopified_core.utils import (
-    safeInt,
-    safeFloat,
+    safe_int,
+    safe_float,
     hash_url_filename,
     decode_params,
     http_exception_response,
@@ -48,7 +48,7 @@ def get_store_from_request(request):
             pass
 
     if not store and request.GET.get('store'):
-        store = get_object_or_404(stores, id=safeInt(request.GET.get('store')))
+        store = get_object_or_404(stores, id=safe_int(request.GET.get('store')))
 
     if store:
         permissions.user_can_view(request.user, store)
@@ -97,7 +97,7 @@ def duplicate_product(product, store=None):
             variant_image_urls = []
             for variant in chq_product['variants']:
                 if len(variant['sku'] or '') > 0:
-                    titles = variant['variant']  # u'variant': [u'L']
+                    titles = variant['variant']
                     values = variant['sku'].split(';')
                     if titles:
                         if values:
@@ -250,7 +250,7 @@ def commercehq_products(request, post_per_page=25, sort=None, board=None, store=
         elif store == 'n':  # non-connected
             res = res.filter(source_id=0)
 
-            in_store = safeInt(request.GET.get('in'))
+            in_store = safe_int(request.GET.get('in'))
             if in_store:
                 in_store = get_object_or_404(CommerceHQStore, id=in_store)
                 res = res.filter(store=in_store)
@@ -281,8 +281,8 @@ def filter_products(res, fdata):
         res = res.filter(title__icontains=title)
 
     if fdata.get('price_min') or fdata.get('price_max'):
-        min_price = safeFloat(fdata.get('price_min'), -1)
-        max_price = safeFloat(fdata.get('price_max'), -1)
+        min_price = safe_float(fdata.get('price_min'), -1)
+        max_price = safe_float(fdata.get('price_max'), -1)
 
         if (min_price > 0 and max_price > 0):
             res = res.filter(price__gte=min_price, price__lte=max_price)
@@ -671,9 +671,9 @@ class CommerceHQOrdersPaginator(Paginator):
 
         for k, v in filters.items():
             if type(filters[k]) is list:
-                filters[k] = list(map((lambda x: safeInt(x)), filters[k]))
+                filters[k] = list(map((lambda x: safe_int(x)), filters[k]))
             elif k != 'email':
-                filters[k] = safeInt(v, None)
+                filters[k] = safe_int(v, None)
 
             if not filters[k]:
                 del filters[k]

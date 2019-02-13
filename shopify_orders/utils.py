@@ -11,18 +11,11 @@ import simplejson as json
 from elasticsearch import Elasticsearch
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
-from shopified_core.utils import OrderErrors, delete_model_from_db
+from shopified_core.utils import OrderErrors, delete_model_from_db, safe_int
 from shopified_core.shipping_helper import country_from_code
 from zapier_core.utils import user_have_hooks
 
 from zapier_core.utils import send_shopify_order_event
-
-
-def safeInt(v, default=0):
-    try:
-        return int(v)
-    except:
-        return default
 
 
 def str_max(text, max_len):
@@ -208,7 +201,7 @@ def update_shopify_order(store, data, sync_check=True):
         cache_key = 'export_product_{}_{}'.format(store.id, line['product_id'])
         product = cache.get(cache_key)
         if product is None:
-            product = store.shopifyproduct_set.filter(shopify_id=safeInt(line['product_id'])).first()
+            product = store.shopifyproduct_set.filter(shopify_id=safe_int(line['product_id'])).first()
             cache.set(cache_key, product.id if product else 0, timeout=300)
         else:
             product = store.shopifyproduct_set.get(id=product) if product != 0 else None
@@ -225,11 +218,11 @@ def update_shopify_order(store, data, sync_check=True):
             order=order,
             line_id=line['id'],
             defaults={
-                'shopify_product': safeInt(line['product_id']),
+                'shopify_product': safe_int(line['product_id']),
                 'title': line['title'],
                 'price': line['price'],
                 'quantity': line['quantity'],
-                'variant_id': safeInt(line['variant_id']),
+                'variant_id': safe_int(line['variant_id']),
                 'variant_title': line['variant_title'],
                 'fulfillment_status': line['fulfillment_status'],
                 'product': product,
@@ -267,7 +260,7 @@ def update_line_export(store, shopify_id):
 
         connected_items = 0
         for line in order.shopifyorderline_set.all():
-            if line.shopify_product == safeInt(shopify_id):
+            if line.shopify_product == safe_int(shopify_id):
                 line.product = product
                 line.save()
 

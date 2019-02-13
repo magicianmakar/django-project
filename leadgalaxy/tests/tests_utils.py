@@ -21,10 +21,9 @@ from shopified_core.shipping_helper import (
     valide_aliexpress_province,
     support_other_in_province,
 )
-from shopified_core.utils import hash_url_filename
+from shopified_core.utils import hash_url_filename, get_domain, remove_link_query, random_hash
 
-from leadgalaxy.tests.factories import UserFactory, ShopifyProductFactory
-from leadgalaxy.tests.factories import UserFactory, ShopifyProductFactory, ShopifyBoardFactory 
+from leadgalaxy.tests.factories import UserFactory, ShopifyProductFactory, ShopifyBoardFactory
 
 import factory
 import requests
@@ -478,12 +477,12 @@ class OrdersTestCase(BaseTestCase):
         order = utils.get_shopify_order(store, order_id)
         self.assertEqual(order['id'], order_id)
 
-        note1 = 'Test Note #%s' % utils.random_hash()
+        note1 = 'Test Note #%s' % random_hash()
         utils.set_shopify_order_note(store, order_id, note1)
 
         self.assertEqual(note1, utils.get_shopify_order_note(store, order_id))
 
-        note2 = 'An other Test Note #%s' % utils.random_hash()
+        note2 = 'An other Test Note #%s' % random_hash()
         utils.add_shopify_order_note(store, order_id, note2)
 
         order_note = utils.get_shopify_order_note(store, order_id)
@@ -497,7 +496,7 @@ class OrdersTestCase(BaseTestCase):
         self.assertEqual(line['id'], line_id)
         self.assertIsNotNone(current_note)
 
-        note3 = 'Yet An other Test Note #%s' % utils.random_hash()
+        note3 = 'Yet An other Test Note #%s' % random_hash()
         utils.add_shopify_order_note(store, order_id, note3, current_note=current_note)
 
         order_note = utils.get_shopify_order_note(store, order_id)
@@ -513,7 +512,7 @@ class OrdersTestCase(BaseTestCase):
         store = ShopifyStoreFactory()
         order_id = 579111223384
 
-        note = 'Test Note #%s' % utils.random_hash()
+        note = 'Test Note #%s' % random_hash()
 
         updater = utils.ShopifyOrderUpdater(store, order_id)
         updater.add_note(note)
@@ -539,7 +538,7 @@ class OrdersTestCase(BaseTestCase):
 
         utils.set_shopify_order_note(store, order_id, unicode_text)
 
-        note = 'Test Note #%s' % utils.random_hash()
+        note = 'Test Note #%s' % random_hash()
 
         updater = utils.ShopifyOrderUpdater(store, order_id)
         updater.add_note(note)
@@ -560,7 +559,7 @@ class OrdersTestCase(BaseTestCase):
         store = ShopifyStoreFactory()
         order_id = 579111714904
 
-        tag = '#%s' % utils.random_hash()
+        tag = '#%s' % random_hash()
 
         updater = utils.ShopifyOrderUpdater(store, order_id)
         updater.add_tag(tag)
@@ -579,7 +578,7 @@ class OrdersTestCase(BaseTestCase):
         store = ShopifyStoreFactory()
         order_id = 579111845976
 
-        attrib = {'name': utils.random_hash(), 'value': utils.random_hash()}
+        attrib = {'name': random_hash(), 'value': random_hash()}
 
         updater = utils.ShopifyOrderUpdater(store, order_id)
         updater.add_attribute(attrib)
@@ -597,7 +596,7 @@ class OrdersTestCase(BaseTestCase):
         updater = utils.ShopifyOrderUpdater(ShopifyStoreFactory(), 579431268440)
         self.assertFalse(updater.have_changes())
 
-        updater.add_attribute({'name': utils.random_hash(), 'value': utils.random_hash()})
+        updater.add_attribute({'name': random_hash(), 'value': random_hash()})
         self.assertTrue(updater.have_changes())
 
     def test_order_updater_have_changes_tags(self):
@@ -620,7 +619,7 @@ class OrdersTestCase(BaseTestCase):
 
         updater.add_tag('tag')
         updater.add_note('note')
-        updater.add_attribute({'name': utils.random_hash(), 'value': utils.random_hash()})
+        updater.add_attribute({'name': random_hash(), 'value': random_hash()})
 
         self.assertTrue(updater.have_changes())
 
@@ -630,70 +629,70 @@ class UtilsTestCase(BaseTestCase):
         pass
 
     def test_get_domain(self):
-        self.assertEqual(utils.get_domain('www.aliexpress.com'), 'aliexpress')
-        self.assertEqual(utils.get_domain('http://www.aliexpress.com'), 'aliexpress')
-        self.assertEqual(utils.get_domain('www.aliexpress.com/item/UNO-R3/32213964945.html'), 'aliexpress')
-        self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html'), 'aliexpress')
-        self.assertEqual(utils.get_domain('http://s.aliexpress.com/seeplink.html?id=32213964945'), 'aliexpress')
-        self.assertEqual(utils.get_domain('www.ebay.com/itm/131696353919'), 'ebay')
-        self.assertEqual(utils.get_domain('http://www.ebay.com/itm/131696353919'), 'ebay')
-        self.assertEqual(utils.get_domain('www.amazon.co.uk'), 'amazon')
-        self.assertEqual(utils.get_domain('www.amazon.fr'), 'amazon')
-        self.assertEqual(utils.get_domain('www.amazon.de'), 'amazon')
-        self.assertEqual(utils.get_domain('www.wanelo.co'), 'wanelo')
-        self.assertEqual(utils.get_domain('http://www.costco.com/Jura.product.100223622.html'), 'costco')
-        self.assertEqual(utils.get_domain('http://www.qvc.com/egiftcards'), 'qvc')
-        self.assertEqual(utils.get_domain('http://shopified-app-ci.myshopify.com/admin/products/1234'), 'myshopify')
+        self.assertEqual(get_domain('www.aliexpress.com'), 'aliexpress')
+        self.assertEqual(get_domain('http://www.aliexpress.com'), 'aliexpress')
+        self.assertEqual(get_domain('www.aliexpress.com/item/UNO-R3/32213964945.html'), 'aliexpress')
+        self.assertEqual(get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html'), 'aliexpress')
+        self.assertEqual(get_domain('http://s.aliexpress.com/seeplink.html?id=32213964945'), 'aliexpress')
+        self.assertEqual(get_domain('www.ebay.com/itm/131696353919'), 'ebay')
+        self.assertEqual(get_domain('http://www.ebay.com/itm/131696353919'), 'ebay')
+        self.assertEqual(get_domain('www.amazon.co.uk'), 'amazon')
+        self.assertEqual(get_domain('www.amazon.fr'), 'amazon')
+        self.assertEqual(get_domain('www.amazon.de'), 'amazon')
+        self.assertEqual(get_domain('www.wanelo.co'), 'wanelo')
+        self.assertEqual(get_domain('http://www.costco.com/Jura.product.100223622.html'), 'costco')
+        self.assertEqual(get_domain('http://www.qvc.com/egiftcards'), 'qvc')
+        self.assertEqual(get_domain('http://shopified-app-ci.myshopify.com/admin/products/1234'), 'myshopify')
 
-        self.assertEqual(utils.get_domain('www.aliexpress.com', full=True), 'www.aliexpress.com')
-        self.assertEqual(utils.get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'www.aliexpress.com')
-        self.assertEqual(utils.get_domain('http://aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'aliexpress.com')
-        self.assertEqual(utils.get_domain('http://www.ebay.com/itm/131696353919', full=True), 'www.ebay.com')
-        self.assertEqual(utils.get_domain('http://shopified-app-ci.myshopify.com/admin/products/1234', full=True), 'shopified-app-ci.myshopify.com')
+        self.assertEqual(get_domain('www.aliexpress.com', full=True), 'www.aliexpress.com')
+        self.assertEqual(get_domain('http://www.aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'www.aliexpress.com')
+        self.assertEqual(get_domain('http://aliexpress.com/item/UNO-R3/32213964945.html', full=True), 'aliexpress.com')
+        self.assertEqual(get_domain('http://www.ebay.com/itm/131696353919', full=True), 'www.ebay.com')
+        self.assertEqual(get_domain('http://shopified-app-ci.myshopify.com/admin/products/1234', full=True), 'shopified-app-ci.myshopify.com')
 
     def test_remove_link_query(self):
         self.assertEqual(
-            utils.remove_link_query('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg?v=1452639314'),
+            remove_link_query('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg?v=1452639314'),
             'https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg')
 
         self.assertEqual(
-            utils.remove_link_query('http://www.ebay.com/itm/131696353919?v=1452639314'),
+            remove_link_query('http://www.ebay.com/itm/131696353919?v=1452639314'),
             'http://www.ebay.com/itm/131696353919')
 
         self.assertEqual(
-            utils.remove_link_query('http://www.ebay.com/itm/131696353919#hash:12'),
+            remove_link_query('http://www.ebay.com/itm/131696353919#hash:12'),
             'http://www.ebay.com/itm/131696353919')
 
         self.assertEqual(
-            utils.remove_link_query('https://i.ebayimg.com/images/g/RHIAAOSwQaJXRBkE/s-l500.jpg?hash=1e56ace2'),
+            remove_link_query('https://i.ebayimg.com/images/g/RHIAAOSwQaJXRBkE/s-l500.jpg?hash=1e56ace2'),
             'https://i.ebayimg.com/images/g/RHIAAOSwQaJXRBkE/s-l500.jpg')
 
         self.assertEqual(
-            utils.remove_link_query('http://www.ebay.com/itm/131696353919?v=1452639314#hash:12'),
+            remove_link_query('http://www.ebay.com/itm/131696353919?v=1452639314#hash:12'),
             'http://www.ebay.com/itm/131696353919')
 
         self.assertEqual(
-            utils.remove_link_query('http://g03.a.alicdn.com/kf/HTB13OOBLFXXXXcoXpXXq6xXFXXXp/Vente-chaude-vinyle-amovible-stickers-muraux-t&ecirc;te-de-cheval-peintures-murales-salon-d&eacute;corative-animaux-accueil-autocollant.jpg'),
+            remove_link_query('http://g03.a.alicdn.com/kf/HTB13OOBLFXXXXcoXpXXq6xXFXXXp/Vente-chaude-vinyle-amovible-stickers-muraux-t&ecirc;te-de-cheval-peintures-murales-salon-d&eacute;corative-animaux-accueil-autocollant.jpg'),
             'http://g03.a.alicdn.com/kf/HTB13OOBLFXXXXcoXpXXq6xXFXXXp/Vente-chaude-vinyle-amovible-stickers-muraux-t&ecirc;te-de-cheval-peintures-murales-salon-d&eacute;corative-animaux-accueil-autocollant.jpg')
 
         self.assertEqual(
-            utils.remove_link_query('www.aliexpress.com/store/1185416?spm=2114.10010108.0.627.LN13ZN'),
+            remove_link_query('www.aliexpress.com/store/1185416?spm=2114.10010108.0.627.LN13ZN'),
             'http://www.aliexpress.com/store/1185416')
 
         self.assertEqual(
-            utils.remove_link_query('http://www.ebay.com/itm/131696353919?'),
+            remove_link_query('http://www.ebay.com/itm/131696353919?'),
             'http://www.ebay.com/itm/131696353919')
 
         self.assertEqual(
-            utils.remove_link_query('http://www.ebay.com/itm/131696353919'),
+            remove_link_query('http://www.ebay.com/itm/131696353919'),
             'http://www.ebay.com/itm/131696353919')
 
         self.assertEqual(
-            utils.remove_link_query('//www.ebay.com/itm/131696353919'),
+            remove_link_query('//www.ebay.com/itm/131696353919'),
             'http://www.ebay.com/itm/131696353919')
 
         self.assertEqual(
-            utils.remove_link_query('://www.ebay.com/itm/131696353919'),
+            remove_link_query('://www.ebay.com/itm/131696353919'),
             'http://www.ebay.com/itm/131696353919')
 
     def test_upload_from_url(self):

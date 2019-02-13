@@ -7,7 +7,7 @@ from django.db.models import Count
 from django.utils.timesince import timesince
 
 from leadgalaxy.models import ShopifyProduct
-from leadgalaxy.utils import get_domain
+from shopified_core.utils import get_domain
 
 
 class Command(DropifiedBaseCommand):

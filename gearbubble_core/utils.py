@@ -19,8 +19,8 @@ import leadgalaxy.utils as leadgalaxy_utils
 
 from shopified_core import permissions
 from shopified_core.utils import (
-    safeInt,
-    safeFloat,
+    safe_int,
+    safe_float,
     decode_params,
     hash_url_filename,
 )
@@ -39,8 +39,8 @@ def filter_products(res, fdata):
         res = res.filter(title__icontains=title)
 
     if fdata.get('price_min') or fdata.get('price_max'):
-        min_price = safeFloat(fdata.get('price_min'), -1)
-        max_price = safeFloat(fdata.get('price_max'), -1)
+        min_price = safe_float(fdata.get('price_min'), -1)
+        max_price = safe_float(fdata.get('price_max'), -1)
 
         if (min_price > 0 and max_price > 0):
             res = res.filter(price__gte=min_price, price__lte=max_price)
@@ -78,7 +78,7 @@ def gearbubble_products(request, post_per_page=25, sort=None, board=None, store=
         elif store == 'n':  # non-connected
             res = res.filter(source_id=0)
 
-            in_store = safeInt(request.GET.get('in'))
+            in_store = safe_int(request.GET.get('in'))
             if in_store:
                 in_store = get_object_or_404(GearBubbleStore, id=in_store)
                 res = res.filter(store=in_store)
@@ -295,7 +295,7 @@ def get_store_from_request(request):
             pass
 
     if not store and request.GET.get('store'):
-        store = get_object_or_404(stores, id=safeInt(request.GET.get('store')))
+        store = get_object_or_404(stores, id=safe_int(request.GET.get('store')))
 
     if store:
         permissions.user_can_view(request.user, store)

@@ -10,9 +10,6 @@ from lib.test import BaseTestCase
 from leadgalaxy.models import User
 from commercehq_core import utils
 from commercehq_core.models import CommerceHQStore
-from leadgalaxy.utils import (
-    random_hash
-)
 from .factories import (
     CommerceHQStoreFactory,
     CommerceHQOrderTrackFactory,
@@ -25,7 +22,7 @@ from ..utils import (
     cache_fulfillment_data,
 )
 
-from shopified_core.utils import hash_url_filename, update_product_data_images
+from shopified_core.utils import hash_url_filename, update_product_data_images, random_hash
 
 
 CHQ_API_URL = 'chq-shopified-test.commercehqtesting.com'

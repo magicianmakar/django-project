@@ -28,8 +28,8 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     app_link,
-    safeInt,
-    safeFloat,
+    safe_int,
+    safe_float,
     aws_s3_context,
     url_join,
     clean_query_id
@@ -91,7 +91,7 @@ def product_alerts(request):
         permissions.user_can_view(request.user, product)
 
     post_per_page = settings.ITEMS_PER_PAGE
-    page = utils.safeInt(request.GET.get('page'), 1)
+    page = safe_int(request.GET.get('page'), 1)
 
     store = utils.get_store_from_request(request)
     if not store:
@@ -164,7 +164,7 @@ def product_alerts(request):
                 if index is not None:
                     # TODO: check track_inventory status
                     if p.get('track_inventory'):
-                        quantity = 'Not Supported'  # variants[index]['quantity']
+                        quantity = 'Not Supported'
                         c['chq_value'] = quantity
                     else:
                         c['chq_value'] = "Unmanaged"
@@ -172,7 +172,7 @@ def product_alerts(request):
                     c['chq_value'] = "Not Found"
             elif p.get('is_multi') is False:
                 if p.get('track_inventory'):
-                    quantity = 'Not Supported'  # p['quantity']
+                    quantity = 'Not Supported'
                     c['chq_value'] = quantity
                 else:
                     c['chq_value'] = "Unmanaged"
@@ -295,7 +295,7 @@ class BoardDetailView(DetailView):
 
         products = commercehq_products(self.request, store=None, board=self.object.id)
         paginator = SimplePaginator(products, 25)
-        page = safeInt(self.request.GET.get('page'), 1)
+        page = safe_int(self.request.GET.get('page'), 1)
         page = paginator.page(page)
 
         context['paginator'] = paginator
@@ -333,7 +333,7 @@ class ProductsList(ListView):
             context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('chq:products_list') + '?store=n'})
         elif self.request.GET.get('store', 'n') == 'c':
             context['breadcrumbs'].append({'title': 'Connected', 'url': reverse('chq:products_list') + '?store=c'})
-        elif safeInt(self.request.GET.get('store')):
+        elif safe_int(self.request.GET.get('store')):
             store = CommerceHQStore.objects.get(id=self.request.GET.get('store'))
             permissions.user_can_view(self.request.user, store)
 
@@ -639,7 +639,6 @@ class MappingBundleView(DetailView):
 class OrdersList(ListView):
     model = CommerceHQProduct
     template_name = 'commercehq/orders_list.html'
-    # context_object_name = 'orders'
 
     paginator_class = CommerceHQOrdersPaginator
     paginate_by = 20
@@ -761,11 +760,6 @@ class OrdersList(ListView):
             order['connected_lines'] = 0
             order['lines_count'] = len(order['items'])
             order['refunded_lines'] = []
-
-            # if type(order['refunds']) is list:
-            #     for refund in order['refunds']:
-            #         for refund_line in refund['refund_line_items']:
-            #             order['refunded_lines'].append(refund_line['line_item_id'])
 
             order_status = {
                 0: 'Not sent to fulfilment',
@@ -939,7 +933,7 @@ class OrdersList(ListView):
                     'product_id': product.id if product else None,
                     'source_id': supplier.get_source_id() if supplier else None,
                     'supplier_id': supplier.get_store_id() if supplier else None,
-                    'total': safeFloat(line['price'], 0.0),
+                    'total': safe_float(line['price'], 0.0),
                     'store': self.store.id,
                     'order': {
                         'phone': {
@@ -1090,7 +1084,7 @@ class OrderPlaceRedirectView(RedirectView):
         elif self.request.GET.get('product'):
             product = self.request.GET['product']
 
-            if safeInt(product):
+            if safe_int(product):
                 product = 'https://www.aliexpress.com/item//{}.html'.format(product)
 
         if not product:

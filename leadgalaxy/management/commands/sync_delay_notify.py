@@ -10,7 +10,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.models import UserProfile, ShopifyOrderTrack
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import (
-    safeInt,
+    safe_int,
     app_link,
     send_email_from_template,
 )
@@ -28,7 +28,7 @@ class Command(DropifiedBaseCommand):
 
         for profile in profiles:
             user = profile.user
-            notify_days = safeInt(user.get_config('sync_delay_notify_days'), 0)
+            notify_days = safe_int(user.get_config('sync_delay_notify_days'), 0)
             if not notify_days or not (user.get_config('sync_delay_notify_email') or user.get_config('sync_delay_notify_push')):
                 continue
 

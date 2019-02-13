@@ -23,8 +23,8 @@ from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
 from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.utils import (
-    safeInt,
-    safeFloat,
+    safe_int,
+    safe_float,
     get_domain,
     remove_link_query,
     orders_update_limit,
@@ -238,7 +238,7 @@ class WooStoreApi(ApiBase):
             return self.api_error('API credentials are not correct\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
 
     def post_product_save(self, request, user, data):
-        store_id = safeInt(data.get('store'))
+        store_id = safe_int(data.get('store'))
         if store_id:
             store = WooStore.objects.get(pk=store_id)
             if not user.can('save_for_later.sub', store):
@@ -251,13 +251,13 @@ class WooStoreApi(ApiBase):
         return self.post_product_save(request, user, data)
 
     def post_woocommerce_products(self, request, user, data):
-        store = safeInt(data.get('store'))
+        store = safe_int(data.get('store'))
         if not store:
             return self.api_error('No store was selected', status=404)
         try:
             store = WooStore.objects.get(id=store)
             permissions.user_can_view(user, store)
-            page = safeInt(data.get('page'), 1)
+            page = safe_int(data.get('page'), 1)
             limit = 25
             params = {'per_page': limit, 'page': page}
 
@@ -297,7 +297,7 @@ class WooStoreApi(ApiBase):
                 'Your current plan allow up to %d saved products, currently you have %d saved products.'
                 % (total_allowed, user_count), status=401)
 
-        source_id = safeInt(data.get('product'))
+        source_id = safe_int(data.get('product'))
         supplier_url = data.get('supplier')
 
         if source_id:
@@ -382,10 +382,10 @@ class WooStoreApi(ApiBase):
                 product_data['tags'] = data.get('tags')
 
             if 'price' in data:
-                product_data['price'] = safeFloat(data.get('price'))
+                product_data['price'] = safe_float(data.get('price'))
 
             if 'compare_at' in data:
-                product_data['compare_at_price'] = safeFloat(data.get('compare_at'))
+                product_data['compare_at_price'] = safe_float(data.get('compare_at'))
 
             if 'weight' in data:
                 product_data['weight'] = data.get('weight')
@@ -402,7 +402,7 @@ class WooStoreApi(ApiBase):
 
     def delete_product(self, request, user, data):
         try:
-            pk = safeInt(data.get('product'))
+            pk = safe_int(data.get('product'))
             product = WooProduct.objects.get(pk=pk)
             permissions.user_can_delete(user, product)
 
@@ -418,7 +418,7 @@ class WooStoreApi(ApiBase):
 
     def post_product_export(self, request, user, data):
         try:
-            store = WooStore.objects.get(pk=safeInt(data.get('store')))
+            store = WooStore.objects.get(pk=safe_int(data.get('store')))
         except WooStore.DoesNotExist:
             return self.api_error('Store does not exist')
         else:
@@ -427,7 +427,7 @@ class WooStoreApi(ApiBase):
                 raise PermissionDenied()
 
         try:
-            product = WooProduct.objects.get(pk=safeInt(data.get('product')))
+            product = WooProduct.objects.get(pk=safe_int(data.get('product')))
         except WooProduct.DoesNotExist:
             return self.api_error('Product does not exist')
         else:
@@ -446,7 +446,7 @@ class WooStoreApi(ApiBase):
 
     def post_product_update(self, request, user, data):
         try:
-            pk = safeInt(data.get('product', 0))
+            pk = safe_int(data.get('product', 0))
             product = WooProduct.objects.get(pk=pk)
             permissions.user_can_edit(user, product)
             product_data = json.loads(data['data'])
@@ -571,10 +571,10 @@ class WooStoreApi(ApiBase):
         return self.api_success()
 
     def post_variant_image(self, request, user, data):
-        store_id = safeInt(data.get('store'))
-        product_id = safeInt(data.get('product'))
-        variant_id = safeInt(data.get('variant'))
-        image_id = safeInt(data.get('image'))
+        store_id = safe_int(data.get('store'))
+        product_id = safe_int(data.get('product'))
+        variant_id = safe_int(data.get('variant'))
+        image_id = safe_int(data.get('image'))
 
         try:
             store = WooStore.objects.get(id=store_id)
@@ -597,7 +597,7 @@ class WooStoreApi(ApiBase):
 
     def get_product_image_download(self, request, user, data):
         try:
-            product = WooProduct.objects.get(id=safeInt(data.get('product')))
+            product = WooProduct.objects.get(id=safe_int(data.get('product')))
             permissions.user_can_view(user, product)
 
         except WooProduct.DoesNotExist:
@@ -612,7 +612,7 @@ class WooStoreApi(ApiBase):
         return self.api_success()
 
     def post_product_duplicate(self, request, user, data):
-        pk = safeInt(data.get('product'))
+        pk = safe_int(data.get('product'))
         product = WooProduct.objects.get(pk=pk)
         permissions.user_can_view(user, product)
         duplicate_product = utils.duplicate_product(product)
@@ -754,8 +754,8 @@ class WooStoreApi(ApiBase):
 
         permissions.user_can_view(user, store)
 
-        order_id = safeInt(data.get('order_id'))
-        line_id = safeInt(data.get('line_id'))
+        order_id = safe_int(data.get('order_id'))
+        line_id = safe_int(data.get('line_id'))
 
         if not (order_id and line_id):
             return self.api_error('Required input is missing')
@@ -764,8 +764,7 @@ class WooStoreApi(ApiBase):
         source_id = data.get('aliexpress_order_id')
 
         try:
-            # assert len(source_id) > 0, 'Empty Order ID'
-            assert utils.safeInt(order_id), 'Order ID is not a numeric'
+            assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
         except AssertionError as e:
             raven_client.captureMessage('Non valid Supplier Order ID')
@@ -839,7 +838,7 @@ class WooStoreApi(ApiBase):
 
     def post_order_fulfill_update(self, request, user, data):
         if data.get('store'):
-            store = WooStore.objects.get(pk=safeInt(data['store']))
+            store = WooStore.objects.get(pk=safe_int(data['store']))
             if not user.can('place_orders.sub', store):
                 raise PermissionDenied()
 
@@ -935,7 +934,7 @@ class WooStoreApi(ApiBase):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = WooBoard.objects.get(pk=pk)
         except WooBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
@@ -954,7 +953,7 @@ class WooStoreApi(ApiBase):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = WooBoard.objects.get(pk=pk)
         except WooBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
@@ -977,7 +976,7 @@ class WooStoreApi(ApiBase):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = WooBoard.objects.get(pk=pk)
         except WooBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
@@ -991,7 +990,7 @@ class WooStoreApi(ApiBase):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = WooBoard.objects.get(pk=pk)
         except WooBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
@@ -1003,7 +1002,7 @@ class WooStoreApi(ApiBase):
     def get_products_info(self, request, user, data):
         products = {}
         for p in data.getlist('products[]'):
-            pk = safeInt(p)
+            pk = safe_int(p)
             try:
                 product = WooProduct.objects.get(pk=pk)
             except WooProduct.DoesNotExist:
@@ -1020,7 +1019,7 @@ class WooStoreApi(ApiBase):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(data.get('board_id'))
+            pk = safe_int(data.get('board_id'))
             board = WooBoard.objects.get(pk=pk)
         except WooBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
@@ -1028,7 +1027,7 @@ class WooStoreApi(ApiBase):
             permissions.user_can_edit(user, board)
 
         for p in data.getlist('products[]'):
-            pk = safeInt(p)
+            pk = safe_int(p)
             product = WooProduct.objects.filter(pk=pk).first()
             if product:
                 permissions.user_can_edit(user, product)
@@ -1041,7 +1040,7 @@ class WooStoreApi(ApiBase):
             raise PermissionDenied()
 
         try:
-            pk = safeInt(data.get('board'))
+            pk = safe_int(data.get('board'))
             board = WooBoard.objects.get(pk=pk)
         except WooBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
@@ -1049,7 +1048,7 @@ class WooStoreApi(ApiBase):
             permissions.user_can_edit(user, board)
 
         for p in data.getlist('products[]'):
-            pk = safeInt(p)
+            pk = safe_int(p)
             product = WooProduct.objects.filter(pk=pk).first()
             if product:
                 permissions.user_can_edit(user, product)
@@ -1179,7 +1178,7 @@ class WooStoreApi(ApiBase):
     def post_order_note(self, request, user, data):
         store = WooStore.objects.get(id=data.get('store'))
         permissions.user_can_view(user, store)
-        order_id = safeInt(data['order_id'])
+        order_id = safe_int(data['order_id'])
         note = data['note']
 
         if note == utils.get_latest_order_note(store, order_id):
@@ -1197,7 +1196,7 @@ class WooStoreApi(ApiBase):
         store = WooStore.objects.get(id=data.get('store'))
         permissions.user_can_view(user, store)
 
-        source_id = safeInt(data.get('woocommerce'))
+        source_id = safe_int(data.get('woocommerce'))
 
         if source_id != product.source_id or product.store != store:
             connected_to = WooProduct.objects.filter(

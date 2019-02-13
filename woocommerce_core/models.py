@@ -12,22 +12,8 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 
-from shopified_core.utils import get_domain
-
-
-def add_to_class(cls, name):
-    def _decorator(*args, **kwargs):
-        cls.add_to_class(name, args[0])
-    return _decorator
-
-
-def safeStr(v, default=''):
-    """ Always return a str object """
-
-    if isinstance(v, basestring):
-        return v
-    else:
-        return default
+from shopified_core.utils import get_domain, safe_str
+from shopified_core.decorators import add_to_class
 
 
 @add_to_class(User, 'get_woo_boards')
@@ -208,8 +194,8 @@ class WooProduct(models.Model):
         data = json.loads(self.data)
 
         self.title = data.get('title', '')
-        self.tags = safeStr(data.get('tags', ''))[:1024]
-        self.product_type = safeStr(data.get('type', ''))[:254]
+        self.tags = safe_str(data.get('tags', ''))[:1024]
+        self.product_type = safe_str(data.get('type', ''))[:254]
 
         try:
             self.price = '%.02f' % float(data['price'])
@@ -757,11 +743,11 @@ class WooOrderTrack(models.Model):
         if self.source_status_details and ',' in self.source_status_details:
             source_status_details = []
             for i in self.source_status_details.split(','):
-                source_status_details.append(ALIEXPRESS_REJECTED_STATUS.get(safeStr(i).lower()))
+                source_status_details.append(ALIEXPRESS_REJECTED_STATUS.get(safe_str(i).lower()))
 
             return ', '.join(set(source_status_details))
         else:
-            return ALIEXPRESS_REJECTED_STATUS.get(safeStr(self.source_status_details).lower())
+            return ALIEXPRESS_REJECTED_STATUS.get(safe_str(self.source_status_details).lower())
 
     def __unicode__(self):
         return u'{} | {}'.format(self.order_id, self.line_id)

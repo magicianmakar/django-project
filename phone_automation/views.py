@@ -22,7 +22,7 @@ from twilio.twiml.voice_response import VoiceResponse, Gather
 from twilio.twiml.messaging_response import MessagingResponse
 
 from leadgalaxy.utils import aws_s3_upload
-from shopified_core.utils import safeInt, app_link
+from shopified_core.utils import safe_int, app_link
 from shopified_core.decorators import no_subusers
 from .forms import TwilioAutomationForm
 from .models import (
@@ -364,7 +364,7 @@ def call_flow_menu_options(request):
     config = current_step.get_config()
 
     response = VoiceResponse()
-    choice = safeInt(request.POST.get('Digits'))
+    choice = safe_int(request.POST.get('Digits'))
     for children_step in current_step.children.all():
         children_config = children_step.get_config()
         if children_config.get('number') == choice:
@@ -373,7 +373,7 @@ def call_flow_menu_options(request):
             break
     else:
         repeat = config.get('repeat', False)
-        repeated = safeInt(request.GET.get('repeated', 0))
+        repeated = safe_int(request.GET.get('repeated', 0))
         if repeat and repeated < 1:
             repeated += 1
             response.redirect(u'{}&repeated={}'.format(current_step.url, repeated))

@@ -13,6 +13,7 @@ from django.template.loader import render_to_string
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy import utils
+from shopified_core.utils import safe_int
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.utils import is_store_synced
 from .utils import (
@@ -69,8 +70,8 @@ def index(request):
 
     try:
         start, end = get_date_range(request, user_timezone)
-        limit = utils.safeInt(request.GET.get('limit'), 31)
-        current_page = utils.safeInt(request.GET.get('page'), 1)
+        limit = safe_int(request.GET.get('limit'), 31)
+        current_page = safe_int(request.GET.get('page'), 1)
 
         profits, totals, details = get_profits(store, start, end, user_timezone)
         profit_details, details_paginator = details
@@ -153,7 +154,7 @@ def facebook_insights(request):
 
             # Force renewal of FacebookAccess.access_token in case its expired or empty
             access_token = request.POST.get('fb_access_token')
-            expires_in = utils.safeInt(request.POST.get('fb_expires_in'))
+            expires_in = safe_int(request.POST.get('fb_expires_in'))
             facebook_access = facebook_access_list.first()
             if access_token and facebook_access:
                 facebook_access.get_or_update_token(access_token, expires_in)
@@ -175,7 +176,7 @@ def facebook_accounts(request):
     """
     store = utils.get_store_from_request(request)
     access_token = request.GET.get('fb_access_token')
-    expires_in = utils.safeInt(request.GET.get('fb_expires_in'))
+    expires_in = safe_int(request.GET.get('fb_expires_in'))
     facebook_user_id = request.GET.get('fb_user_id')
 
     # Sometimes facebook doesn't reload the access_token and it comes empty
@@ -355,8 +356,8 @@ def profit_details(request):
 
     store_timezone = request.session.get('django_timezone', '')
     start, end = get_date_range(request, store_timezone)
-    limit = utils.safeInt(request.GET.get('limit'), 20)
-    current_page = utils.safeInt(request.GET.get('page'), 1)
+    limit = safe_int(request.GET.get('limit'), 20)
+    current_page = safe_int(request.GET.get('page'), 1)
 
     details, paginator = get_profit_details(store,
                                             (start, end),
