@@ -64,10 +64,6 @@ from .templatetags.template_helper import shopify_image_thumb, money_format
 class ShopifyStoreApi(ApiBase):
     board_model = ShopifyBoard
 
-    def post_register(self, request, user, data):
-        return self.api_error('Please Visit Dropified Website to register a new account:\n\n'
-                              '{}'.format(app_link('accounts/register')), status=501)
-
     def post_delete_store(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
         permissions.user_can_delete(user, store)  # Sub users can't delete a store

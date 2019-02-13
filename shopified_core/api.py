@@ -87,6 +87,10 @@ class ShopifiedApi(ApiResponseMixin, View):
 
         return self.api_error('Invalid Email or password')
 
+    def post_register(self, request, user, data):
+        return self.api_error('Please Visit Dropified Website to register a new account:\n\n'
+                              '{}'.format(core_utils.app_link('accounts/register')), status=501)
+
     def get_me(self, request, user, data):
         if not user.is_authenticated:
             return self.api_error('Logging is required', status=403)
