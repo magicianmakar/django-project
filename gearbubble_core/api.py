@@ -432,26 +432,6 @@ class GearBubbleApi(ApiBase):
         return self.api_success()
 
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
-    def post_boards_add(self, request, user, data):
-        can_add, total_allowed, user_count = permissions.can_add_board(user)
-
-        if not can_add:
-            return self.api_error(
-                'Your current plan allow up to %d boards, currently you have %d boards.'
-                % (total_allowed, user_count))
-
-        board_name = data.get('title', '').strip()
-
-        if not len(board_name):
-            return self.api_error('Board name is required', status=501)
-
-        board = GearBubbleBoard(title=board_name, user=user.models_user)
-        permissions.user_can_add(user, board)
-        board.save()
-
-        return self.api_success({'board': {'id': board.id, 'title': board.title}})
-
-    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def delete_board(self, request, user, data):
         board_id = safe_int(data.get('board_id'))
 
