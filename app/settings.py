@@ -83,7 +83,6 @@ INSTALLED_APPS = (
     'order_exports',
     'order_imports',
     'profit_dashboard',
-    'affiliations',
     'subusers',
     'tapfiliate',
     'youtube_ads',
