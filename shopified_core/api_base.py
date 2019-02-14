@@ -93,9 +93,9 @@ class ApiBase(ApiResponseMixin, View):
 
         board.title = data.get('title')
         board.config = json.dumps({
-            'title': data['product_title'],
-            'tags': data['product_tags'],
-            'type': data['product_type']
+            'title': data.get('product_title'),
+            'tags': data.get('product_tags'),
+            'type': data.get('product_type')
         })
 
         board.save()
