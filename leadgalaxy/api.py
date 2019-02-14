@@ -64,10 +64,6 @@ from .templatetags.template_helper import shopify_image_thumb, money_format
 class ShopifyStoreApi(ApiBase):
     board_model = ShopifyBoard
 
-    def post_register(self, request, user, data):
-        return self.api_error('Please Visit Dropified Website to register a new account:\n\n'
-                              '{}'.format(app_link('accounts/register')), status=501)
-
     def post_delete_store(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
         permissions.user_can_delete(user, store)  # Sub users can't delete a store
@@ -407,34 +403,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success({'products': products})
 
-    def post_boards_add(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        can_add, total_allowed, user_count = permissions.can_add_board(user)
-
-        if not can_add:
-            return self.api_error(
-                'Your current plan allow up to %d boards, currently you have %d boards.'
-                % (total_allowed, user_count))
-
-        board_name = data.get('title', '').strip()
-
-        if not len(board_name):
-            return self.api_error('Board name is required', status=501)
-
-        board = ShopifyBoard(title=board_name, user=user.models_user)
-        permissions.user_can_add(user, board)
-
-        board.save()
-
-        return self.api_success({
-            'board': {
-                'id': board.id,
-                'title': board.title
-            }
-        })
-
     def post_board_add_products(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
@@ -514,49 +482,6 @@ class ShopifyStoreApi(ApiBase):
         permissions.user_can_edit(user, board)
 
         board.products.clear()
-
-        return self.api_success()
-
-    def get_board_config(self, request, user, data):
-        if not user.can('view_product_boards.sub'):
-            raise PermissionDenied()
-
-        board = ShopifyBoard.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
-
-        try:
-            return self.api_success({
-                'title': board.title,
-                'config': json.loads(board.config)
-            })
-        except:
-            return self.api_success({
-                'title': board.title,
-                'config': {
-                    'title': '',
-                    'tags': '',
-                    'type': ''
-                }
-            })
-
-    def post_board_config(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        board = ShopifyBoard.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
-
-        board.title = data.get('store-title')
-
-        board.config = json.dumps({
-            'title': data.get('title'),
-            'tags': data.get('tags'),
-            'type': data.get('type'),
-        })
-
-        board.save()
-
-        utils.smart_board_by_board(user.models_user, board)
 
         return self.api_success()
 

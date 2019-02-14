@@ -312,11 +312,11 @@ $('#smartboard-save-changes').click(function(e) {
         url: '/api/board-config',
         type: 'POST',
         data: {
-            'store-title': $('#board-title').val(),
-            'board': $('#smartboard-board').val(),
-            'title': $('#smartboard-product-title').val(),
-            'type': $('#smartboard-product-type').val(),
-            'tags': $('#smartboard-product-tags').val(),
+            'title': $('#board-title').val(),
+            'board_id': $('#smartboard-board').val(),
+            'product_title': $('#smartboard-product-title').val(),
+            'product_type': $('#smartboard-product-type').val(),
+            'product_tags': $('#smartboard-product-tags').val(),
         },
         success: function(data) {
             $('#smartboard-modal').modal('hide');

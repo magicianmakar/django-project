@@ -1145,21 +1145,3 @@ class ShopifyBoardTestCase(BaseTestCase):
         utils.smart_board_by_product(self.user, self.connected_product)
         utils.smart_board_by_product(self.user, self.saved_product)
         self.assertEqual(self.board.saved_count(), 1)
-
-    def test_smart_board_by_connected_board(self):
-        self.saved_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
-        self.saved_product.save()
-        self.connected_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
-        self.connected_product.save()
-
-        utils.smart_board_by_board(self.user, self.board)
-        self.assertEqual(self.board.connected_count(), 1)
-
-    def test_smart_board_by_saved_board(self):
-        self.saved_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
-        self.saved_product.save()
-        self.connected_product.data = json.dumps({'type': 'Test Category', 'title': 'Testing'})
-        self.connected_product.save()
-
-        utils.smart_board_by_board(self.user, self.board)
-        self.assertEqual(self.board.saved_count(), 1)

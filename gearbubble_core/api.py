@@ -22,6 +22,7 @@ from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
 from shopified_core.shipping_helper import aliexpress_country_code_map
+from shopified_core.decorators import HasSubuserPermission, restrict_subuser_access
 from shopified_core.utils import (
     safe_int,
     safe_float,
@@ -41,7 +42,6 @@ from .models import (
     GearBubbleBoard,
     GearBubbleOrderTrack,
 )
-from .decorators import restrict_subuser_access, HasSubuserPermission
 
 import utils
 import tasks
@@ -432,26 +432,6 @@ class GearBubbleApi(ApiBase):
         return self.api_success()
 
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
-    def post_boards_add(self, request, user, data):
-        can_add, total_allowed, user_count = permissions.can_add_board(user)
-
-        if not can_add:
-            return self.api_error(
-                'Your current plan allow up to %d boards, currently you have %d boards.'
-                % (total_allowed, user_count))
-
-        board_name = data.get('title', '').strip()
-
-        if not len(board_name):
-            return self.api_error('Board name is required', status=501)
-
-        board = GearBubbleBoard(title=board_name, user=user.models_user)
-        permissions.user_can_add(user, board)
-        board.save()
-
-        return self.api_success({'board': {'id': board.id, 'title': board.title}})
-
-    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def delete_board(self, request, user, data):
         board_id = safe_int(data.get('board_id'))
 
@@ -462,45 +442,6 @@ class GearBubbleApi(ApiBase):
 
         permissions.user_can_delete(user, board)
         board.delete()
-
-        return self.api_success()
-
-    @method_decorator(HasSubuserPermission('view_product_boards.sub'))
-    def get_board_config(self, request, user, data):
-        board_id = safe_int(data.get('board_id'))
-
-        try:
-            board = GearBubbleBoard.objects.get(pk=board_id)
-        except GearBubbleBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        permissions.user_can_edit(user, board)
-
-        try:
-            config = json.loads(board.config)
-        except:
-            config = {'title': '', 'tags': '', 'type': ''}
-
-        return self.api_success({'title': board.title, 'config': config})
-
-    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
-    def post_board_config(self, request, user, data):
-        board_id = safe_int(data.get('board_id'))
-
-        try:
-            board = GearBubbleBoard.objects.get(pk=board_id)
-        except GearBubbleBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        permissions.user_can_edit(user, board)
-
-        board.title = data.get('title')
-        board.config = json.dumps({'title': data.get('product_title'),
-                                   'tags': data.get('product_tags'),
-                                   'type': data.get('product_type')})
-        board.save()
-
-        utils.smart_board_by_board(user.models_user, board)
 
         return self.api_success()
 

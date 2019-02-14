@@ -677,39 +677,6 @@ def get_tracking_orders(store, tracker_orders, per_page=50):
     return new_tracker_orders
 
 
-def smart_board_by_board(user, board):
-    for product in user.wooproduct_set.all():
-        product_info = json.loads(product.data)
-        product_info = {
-            'title': product_info.get('title', '').lower(),
-            'tags': product_info.get('tags', '').lower(),
-            'type': product_info.get('type', '').lower(),
-        }
-
-        try:
-            config = json.loads(board.config)
-        except:
-            continue
-
-        product_added = False
-        for j in ['title', 'tags', 'type']:
-            if product_added:
-                break
-
-            if not len(config.get(j, '')) or not len(product_info[j]):
-                continue
-
-            for f in config.get(j, '').split(','):
-                if f.lower() in product_info[j]:
-                    board.products.add(product)
-                    product_added = True
-
-                    break
-
-        if product_added:
-            board.save()
-
-
 def get_woo_products_count(store):
     return WooListQuery(store, 'products').count()
 

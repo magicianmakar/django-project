@@ -17,6 +17,7 @@ from django.http import Http404, JsonResponse
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
+from shopified_core.decorators import HasSubuserPermission
 from shopified_core.utils import (
     safe_int,
     safe_float,
@@ -24,7 +25,7 @@ from shopified_core.utils import (
     clean_query_id,
 )
 
-from .decorators import platform_permission_required, HasSubuserPermission
+from .decorators import platform_permission_required
 from .models import (
     GearBubbleStore,
     GearBubbleProduct,

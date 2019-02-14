@@ -322,44 +322,6 @@ def smart_board_by_product(user, product):
             i.save()
 
 
-def smart_board_by_board(user, board):
-    for product in user.shopifyproduct_set.only('id', 'title', 'product_type', 'tag').all()[:1000]:
-        product_info = {
-            'title': product.title,
-            'tags': product.tag,
-            'type': product.product_type,
-        }
-
-        for k, v in product_info.items():
-            if v:
-                product_info[k] = [i.lower().strip() for i in v.split(',')]
-            else:
-                product_info[k] = []
-
-        try:
-            config = json.loads(board.config)
-        except:
-            continue
-
-        product_added = False
-        for j in ['title', 'tags', 'type']:
-            if product_added:
-                break
-
-            if not len(config.get(j, '')) or not product_info[j]:
-                continue
-
-            for f in config.get(j, '').split(','):
-                if f.lower().strip() in product_info[j]:
-                    board.products.add(product)
-                    product_added = True
-
-                    break
-
-        if product_added:
-            board.save()
-
-
 def format_data(data, title=True):
     text = ''
     for k, v in data.items():

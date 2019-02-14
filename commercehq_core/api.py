@@ -784,34 +784,6 @@ class CHQStoreApi(ApiBase):
         except CommerceHQBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
 
-    def post_boards_add(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        can_add, total_allowed, user_count = permissions.can_add_board(user)
-
-        if not can_add:
-            return self.api_error(
-                'Your current plan allow up to %d boards, currently you have %d boards.'
-                % (total_allowed, user_count))
-
-        board_name = data.get('title', '').strip()
-
-        if not len(board_name):
-            return self.api_error('Board name is required', status=501)
-
-        board = CommerceHQBoard(title=board_name, user=user.models_user)
-        permissions.user_can_add(user, board)
-
-        board.save()
-
-        return self.api_success({
-            'board': {
-                'id': board.id,
-                'title': board.title
-            }
-        })
-
     def post_board_add_products(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
@@ -871,55 +843,6 @@ class CHQStoreApi(ApiBase):
                     'title': board.title
                 }
             })
-
-    def get_board_config(self, request, user, data):
-        if not user.can('view_product_boards.sub'):
-            raise PermissionDenied()
-        try:
-            pk = safe_int(data.get('board_id'))
-            board = CommerceHQBoard.objects.get(pk=pk)
-            permissions.user_can_edit(user, board)
-        except CommerceHQBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        try:
-            return self.api_success({
-                'title': board.title,
-                'config': json.loads(board.config)
-            })
-        except:
-            return self.api_success({
-                'title': board.title,
-                'config': {
-                    'title': '',
-                    'tags': '',
-                    'type': ''
-                }
-            })
-
-    def post_board_config(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-        try:
-            pk = safe_int(data.get('board_id'))
-            board = CommerceHQBoard.objects.get(pk=pk)
-            permissions.user_can_edit(user, board)
-        except CommerceHQBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        board.title = data.get('title')
-
-        board.config = json.dumps({
-            'title': data.get('product_title'),
-            'tags': data.get('product_tags'),
-            'type': data.get('product_type'),
-        })
-
-        board.save()
-
-        utils.smart_board_by_board(user.models_user, board)
-
-        return self.api_success()
 
     def delete_board_products(self, request, user, data):
         if not user.can('edit_product_boards.sub'):

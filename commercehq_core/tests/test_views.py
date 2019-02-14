@@ -627,7 +627,6 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
-    @patch('commercehq_core.utils.smart_board_by_board', Mock(return_value=True))
     def test_subuser_can_edit_board_config_with_permission(self):
         self.user.profile.have_global_permissions()
         board = CommerceHQBoardFactory(user=self.user)
@@ -640,7 +639,6 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
             self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.user_can_edit', Mock(return_value=True))
-    @patch('commercehq_core.utils.smart_board_by_board', Mock(return_value=True))
     def test_subuser_cannot_edit_board_config_without_permission(self):
         board = CommerceHQBoardFactory(user=self.user)
         data = {'board_id': board.id, 'title': 'test'}
