@@ -24,13 +24,7 @@ ENCRYPTION_SECRECT_KEY = os.environ.get('ENCRYPTION_SECRECT_KEY', 'TEST')
 
 DEBUG = (os.environ.get('DEBUG_APP') == 'TRUE')
 
-if DEBUG:
-    ALLOWED_HOSTS = ['*']
-else:
-    ALLOWED_HOSTS = [
-        '.shopifiedapp.com',
-        '.dropified.com',
-    ]
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 APP_DOMAIN = os.environ.get('APP_DOMAIN', 'app.dropified.com')
 APP_URL = os.environ.get('APP_URL', 'https://{}'.format(APP_DOMAIN))
@@ -165,14 +159,15 @@ COMMAND_STATEMENT_TIMEOUT = os.environ.get('COMMAND_STATEMENT_TIMEOUT')
 warnings.filterwarnings("ignore", module="psycopg2")
 
 # Cache
+REDISCLOUD_URL = os.environ['REDISCLOUD_URL']
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "{0}/{1}".format(os.environ['REDISCLOUD_CACHE'], 0),
+        "LOCATION": "{0}/0".format(os.environ.get('REDISCLOUD_CACHE', REDISCLOUD_URL)),
     },
     "orders": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "{0}/{1}".format(os.environ['REDISCLOUD_ORDERS'], 0),
+        "LOCATION": "{0}/0".format(os.environ.get('REDISCLOUD_ORDERS', REDISCLOUD_URL)),
     }
 }
 
@@ -313,8 +308,8 @@ ZAXAA_API_SIGNATURE = os.environ.get('ZAXAA_API_SIGNATURE')
 
 # Celery Config
 
-BROKER_URL = os.environ['REDISCLOUD_URL']
-CELERY_RESULT_BACKEND = os.environ['REDISCLOUD_URL']
+BROKER_URL = REDISCLOUD_URL
+CELERY_RESULT_BACKEND = REDISCLOUD_URL
 CELERY_ACCEPT_CONTENT = ['pickle', 'json', 'msgpack', 'yaml']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
@@ -425,8 +420,6 @@ FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET')
 
 ELASTICSEARCH_API = os.environ.get('FOUNDELASTICSEARCH_URL', '').split(',')
 ELASTICSEARCH_AUTH = (os.environ.get('FOUNDELASTICSEARCH_USER'), os.environ.get('FOUNDELASTICSEARCH_PASSWORD'))
-
-LEAD_DYNO_API_KEY = os.environ.get('LEAD_DYNO_API_KEY')
 
 TAPFILIATE_API_KEY = os.environ.get('TAPFILIATE_API_KEY')
 
