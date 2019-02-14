@@ -190,7 +190,10 @@ $('#save-aliexpress-integration').click(function() {
     $.ajax({
         url: '/api/aliexpress-integration',
         type: 'POST',
-        data: $('form#aliexpress-integration').serialize(),
+        data: {
+            ali_email: $('#ali_email').val(),
+            ali_pass: $('#ali_pass').val(),
+        },
         context: {
             btn: btn
         },
