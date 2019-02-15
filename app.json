@@ -68,15 +68,15 @@
     "formation": {
         "web": {
             "quantity": 1,
-            "size": "Standard-1X"
+            "size": "Hobby"
         },
         "worker": {
             "quantity": 1,
-            "size": "Standard-1X"
+            "size": "Hobby"
         },
         "worker2": {
             "quantity": 0,
-            "size": "Standard-1X"
+            "size": "Hobby"
         }
     },
     "addons": [
