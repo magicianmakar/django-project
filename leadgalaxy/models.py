@@ -2314,31 +2314,6 @@ class PlanRegistration(models.Model):
             return u'<PlanRegistration: {}>'.format(self.id)
 
 
-class AliexpressProductChange(models.Model):
-    class Meta:
-        ordering = ['-updated_at']
-        index_together = ['user', 'seen', 'hidden']
-
-    user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
-    product = models.ForeignKey(ShopifyProduct, on_delete=models.CASCADE)
-    hidden = models.BooleanField(default=False, verbose_name='Archived change')
-    seen = models.BooleanField(default=False, verbose_name='User viewed the changes')
-    data = models.TextField(blank=True, default='')
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    notified_at = models.DateTimeField(null=True, verbose_name='Email Notification Sate')
-
-    def __unicode__(self):
-        return u'{}'.format(self.id)
-
-    def orders_count(self, open=True):
-        return self.product.shopifyorderline_set \
-                           .exclude(order__fulfillment_status='fulfilled') \
-                           .filter(order__closed_at=None, order__cancelled_at=None) \
-                           .count()
-
-
 class PlanPayment(models.Model):
     class Meta:
         ordering = ['-created_at']
