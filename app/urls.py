@@ -15,7 +15,6 @@ urlpatterns = [
     url(r'^(lifetime|monthly)/', include('plan_checkout.urls')),
     url(r'^marketing/', include('product_feed.urls')),
     url(r'^pages/', include('article.urls')),
-    url(r'^revision/', include('shopify_revision.urls')),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^hijack/', include('hijack.urls')),
     url(r'^order/exports/', include('order_exports.urls')),

@@ -58,7 +58,6 @@ INSTALLED_APPS = (
     'shopified_core',
     'shopify_oauth',
     'shopify_orders',
-    'shopify_revision',
     'stripe_subscription',
     'shopify_subscription',
     'plan_checkout',
