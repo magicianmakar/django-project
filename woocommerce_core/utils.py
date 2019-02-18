@@ -21,7 +21,14 @@ from django.utils import timezone
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
-from shopified_core.utils import safe_int, safe_float, hash_url_filename, decode_params, http_exception_response
+from shopified_core.utils import (
+    safe_int, safe_float,
+    hash_url_filename,
+    decode_params,
+    http_exception_response,
+    get_top_most_commons,
+    get_first_valid_option
+)
 from shopified_core.shipping_helper import (
     load_uk_provincess,
     country_from_code,
@@ -267,26 +274,6 @@ def update_variants_api_data(data):
         variants.append(variant)
 
     return variants
-
-
-def get_top_most_commons(most_commons):
-    option, highest_count = most_commons[0]
-    top_most_commons = []
-
-    for most_common in most_commons:
-        option, count = most_common
-        if count == highest_count:
-            top_most_commons.append(most_common)
-            continue
-        break
-
-    return top_most_commons
-
-
-def get_first_valid_option(most_commons, valid_options):
-    for option, count in most_commons:
-        if option in valid_options:
-            return option
 
 
 def map_images(product, product_data):
