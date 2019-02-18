@@ -817,7 +817,8 @@ def manage_product_change(change_id):
 
     except ProductChange.DoesNotExist:
         pass
-    except:
+
+    except Exception as e:
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
             raven_client.captureException()
 
