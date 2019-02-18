@@ -220,9 +220,8 @@ def list_detail(request, pk):
     page_number = request.GET.get('page_number', 1)
     page = paginator.page(page_number)
 
-    video_type = request.GET.get('type') == 'all'
     youtube = Youtube(request)
-    videos = get_videos_info(youtube.client, page.object_list, video_type)
+    videos = get_videos_info(youtube.client, page.object_list, True)
 
     breadcrumbs = [
         {'url': reverse('youtube_ads.views.index'), 'title': 'TubeHunt'},
