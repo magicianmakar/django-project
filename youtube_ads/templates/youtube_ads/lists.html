@@ -52,7 +52,7 @@
         var params = { list_id: $(this).attr('list-id') };
         $.ajax({
             type: 'DELETE',
-            url: '/api/video-list?' + $.param(params),
+            url: '/api/tubehunt/video-list?' + $.param(params),
             context: this,
             success: function (data) {
                 if (data.status === 'ok') {

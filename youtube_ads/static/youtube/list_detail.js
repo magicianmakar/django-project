@@ -27,7 +27,7 @@
 
         $.ajax({
             type: 'DELETE',
-            url: '/api/list-videos?' + $.param({ list_id: listId, video_ids: videoIds }),
+            url: '/api/tubehunt/list-videos?' + $.param({ list_id: listId, video_ids: videoIds }),
             success: function(data) {
                 if (data.status === 'ok') {
                     for (var i = 0; i < data.deleted.length; i++) {
@@ -47,7 +47,7 @@
         };
         $.ajax({
             type: 'DELETE',
-            url: '/api/list-video?' + $.param(params),
+            url: '/api/tubehunt/list-video?' + $.param(params),
             context: this,
             success: function(data) {
                 if (data.status === 'ok') {

@@ -51,7 +51,7 @@
 
         $.ajax({
             type: 'GET',
-            url: '/api/video-lists',
+            url: '/api/tubehunt/video-lists',
             dataType: 'json',
             success: function(data) {
                 $('select#user-list').html($('<option>', {}));
@@ -85,7 +85,7 @@
 
         $.ajax({
             type: 'POST',
-            url: '/api/video-list',
+            url: '/api/tubehunt/video-list',
             data: data,
             success: function(data) {
                 if (data.status === 'ok') {
@@ -108,7 +108,7 @@
         };
         $.ajax({
             type: 'DELETE',
-            url: '/api/list-video?' + $.param(params),
+            url: '/api/tubehunt/list-video?' + $.param(params),
             context: this,
             success: function(data) {
                 if (data.status === 'ok') {

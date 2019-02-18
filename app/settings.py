@@ -135,6 +135,7 @@ DROPIFIED_API = {
     'chq': 'commercehq_core.api.CHQStoreApi',
     'gear': 'gearbubble_core.api.GearBubbleApi',
     'woo': 'woocommerce_core.api.WooStoreApi',
+    'tubehunt': 'youtube_ads.api.TubeHuntApi',
 }
 
 # Database
