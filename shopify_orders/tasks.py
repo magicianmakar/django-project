@@ -54,7 +54,7 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
             continue
 
         variant_id = product.get_real_variant_id(variant_id)
-        supplier = product.get_suppier_for_variant(variant_id)
+        supplier = product.get_supplier_for_variant(variant_id)
         if not product.have_supplier() or not supplier:
             continue
 

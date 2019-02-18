@@ -383,7 +383,7 @@ class CommerceHQProduct(models.Model):
 
         self.bundle_map = json.dumps(bundle_map)
 
-    def get_suppier_for_variant(self, variant_id):
+    def get_supplier_for_variant(self, variant_id):
         """
             Return the mapped Supplier for the given variant_id
             or the default one if mapping is not set/found
@@ -491,7 +491,7 @@ class CommerceHQProduct(models.Model):
 
         if supplier is None:
             if mapping_supplier:
-                supplier = self.get_suppier_for_variant(name)
+                supplier = self.get_supplier_for_variant(name)
             else:
                 supplier = self.default_supplier
 

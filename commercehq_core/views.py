@@ -845,7 +845,7 @@ class OrdersList(ListView):
 
                 if product and product.have_supplier():
                     variant_id = product.get_real_variant_id(variant_id)
-                    supplier = product.get_suppier_for_variant(variant_id)
+                    supplier = product.get_supplier_for_variant(variant_id)
                     if supplier:
                         shipping_method = product.get_shipping_for_variant(
                             supplier_id=supplier.id,
@@ -876,7 +876,7 @@ class OrdersList(ListView):
                                 continue
 
                             b_variant_id = b_product.get_real_variant_id(b['variant_id'])
-                            b_supplier = b_product.get_suppier_for_variant(b_variant_id)
+                            b_supplier = b_product.get_supplier_for_variant(b_variant_id)
                             if b_supplier:
                                 b_shipping_method = b_product.get_shipping_for_variant(
                                     supplier_id=b_supplier.id,
