@@ -624,7 +624,9 @@ def sync_shopify_orders(self, store_id, elastic=False):
 
                 page += 1
 
-        print 'Sync {}/{} Orders @{} Complete in {}s'.format(need_import, shopify_count, store.id, (arrow.now() - start_time).seconds)
+            took = (arrow.now() - start_time).seconds
+            print 'Sync Need: {}, Total: {}, Imported: {}, Store: {}, Took: {}s'.format(
+                need_import, shopify_count, imported, store.shop, took)
 
     except Exception:
         raven_client.captureException()
@@ -816,6 +818,9 @@ def manage_product_change(change_id):
     except ProductChange.DoesNotExist:
         pass
     except:
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            raven_client.captureException()
+
         raven_client.captureException()
 
 
@@ -960,7 +965,8 @@ def order_save_changes(self, data):
         updater.save_changes()
 
     except Exception as e:
-        raven_client.captureException(extra=http_exception_response(e))
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            raven_client.captureException(extra=http_exception_response(e))
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)

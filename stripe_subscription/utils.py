@@ -59,7 +59,7 @@ def sync_subscription(user):
     for sub in user.stripesubscription_set.all():
         try:
             sub.refresh()
-        except stripe.InvalidRequestError:
+        except stripe.error.InvalidRequestError:
             sub.delete()
 
 
@@ -112,13 +112,13 @@ def subscription_end_trial(user, raven_client, delete_on_error=False):
 
             try:
                 sub.save()
-            except stripe.CardError as e:
+            except stripe.error.CardError as e:
                 if delete_on_error:
                     sub.delete()
 
                 raise SubscriptionException('Subscription Error: {}'.format(e.message))
 
-            except stripe.InvalidRequestError as e:
+            except stripe.error.InvalidRequestError as e:
                 if delete_on_error:
                     sub.delete()
 
@@ -448,7 +448,7 @@ def process_webhook_event(request, event_id, raven_client):
 
                 update_subscription(customer.user, plan, sub)
 
-            except stripe.InvalidRequestError:
+            except stripe.error.InvalidRequestError:
                 pass
 
         if created:
@@ -670,7 +670,7 @@ def normalize_invoice(invoice):
     invoice.subtotal *= Decimal('0.01')
     if invoice.tax:
         invoice.tax = invoice.tax * Decimal('0.01')
-    if isinstance(invoice.charge, stripe.resource.Charge):
+    if isinstance(invoice.charge, stripe.Charge):
         invoice.charge = normalize_charge(invoice.charge)
     invoice.discount_amount = 0 * Decimal('0.01')
     if invoice.discount is not None:
@@ -699,6 +699,6 @@ def normalize_invoice(invoice):
 def normalize_charge(charge):
     charge.created = datetime.datetime.fromtimestamp(float(charge.created))
     charge.amount *= Decimal('0.01')
-    if isinstance(charge.invoice, stripe.resource.Invoice):
+    if isinstance(charge.invoice, stripe.Invoice):
         charge.invoice = normalize_invoice(charge.invoice)
     return charge

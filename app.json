@@ -91,5 +91,6 @@
     }, {
         "url": "heroku/python"
     }],
+    "success_url": "/accounts/sudo/?email=admin@dropified.com",
     "stack": "heroku-16"
 }

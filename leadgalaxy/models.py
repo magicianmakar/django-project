@@ -915,7 +915,10 @@ class ShopifyStore(models.Model):
             key=settings.PUSHER_KEY,
             secret=settings.PUSHER_SECRET)
 
-        pusher.trigger(self.pusher_channel(), event, data)
+        try:
+            pusher.trigger(self.pusher_channel(), event, data)
+        except ValueError:
+            pass
 
     def get_primary_location(self):
         if self.primary_location:

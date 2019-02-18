@@ -709,7 +709,7 @@ class ShopifyStoreApi(ApiBase):
 
         try:
             charge.refund(amount=int(amount * 100))
-        except stripe.InvalidRequestError as e:
+        except stripe.error.InvalidRequestError as e:
             raven_client.captureException(level='warning')
             return self.api_error(e.message)
 
@@ -2938,7 +2938,8 @@ class ShopifyStoreApi(ApiBase):
             supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['ulp'].pop()
 
         else:
-            raven_client.captureMessage('Unsupported Import Source', level='warning', extra={'url': supplier_url})
+            if 'app.oberlo.com/suppliers' not in supplier_url:
+                raven_client.captureMessage('Unsupported Import Source', level='warning', extra={'url': supplier_url})
 
         supplier_url = remove_link_query(supplier_url)
 

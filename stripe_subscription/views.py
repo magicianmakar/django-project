@@ -1,5 +1,3 @@
-from math import ceil
-
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
@@ -22,7 +20,6 @@ from .utils import (
     SubscriptionException,
     subscription_end_trial,
     update_subscription,
-    get_recent_invoice,
     get_stripe_invoice,
     refresh_invoice_cache,
 )
@@ -47,7 +44,7 @@ def customer_source(request):
             user.first_name, user.last_name = fullname[0], ' '.join(fullname[1:])
             user.save()
 
-    except stripe.CardError as e:
+    except stripe.error.CardError as e:
         raven_client.captureException()
 
         return JsonResponse({
@@ -151,7 +148,7 @@ def subscription_plan(request):
             try:
                 sub.save()
 
-            except (SubscriptionException, stripe.CardError, stripe.InvalidRequestError) as e:
+            except (SubscriptionException, stripe.error.CardError, stripe.error.InvalidRequestError) as e:
                 raven_client.captureException(level='warning')
                 msg = 'Subscription Error: {}'.format(e.message)
                 if 'This customer has no attached payment source' in e.message:
@@ -185,7 +182,7 @@ def subscription_plan(request):
 
             update_subscription(user, plan, sub)
 
-        except (SubscriptionException, stripe.CardError, stripe.InvalidRequestError) as e:
+        except (SubscriptionException, stripe.error.CardError, stripe.error.InvalidRequestError) as e:
             raven_client.captureException(level='warning')
             msg = 'Subscription Error: {}'.format(e.message)
             if 'This customer has no attached payment source' in e.message:
@@ -288,14 +285,14 @@ def clippingmagic_subscription(request):
             'error': 'Selected Credit not found'
         }, status=500)
 
-    except stripe.CardError as e:
+    except stripe.error.CardError as e:
         raven_client.captureException(level='warning')
 
         return JsonResponse({
             'error': 'Credit Card Error: {}'.format(e.message)
         }, status=500)
 
-    except stripe.InvalidRequestError as e:
+    except stripe.error.InvalidRequestError as e:
         raven_client.captureException(level='warning')
         return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
 
@@ -380,14 +377,14 @@ def captchacredit_subscription(request):
             'error': 'Selected Credit not found'
         }, status=500)
 
-    except stripe.CardError as e:
+    except stripe.error.CardError as e:
         raven_client.captureException(level='warning')
 
         return JsonResponse({
             'error': 'Credit Card Error: {}'.format(e.message)
         }, status=500)
 
-    except stripe.InvalidRequestError as e:
+    except stripe.error.InvalidRequestError as e:
         raven_client.captureException(level='warning')
         return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
 
@@ -418,49 +415,6 @@ def subscription_cancel(request):
     if when == 'period_end':
         sub.delete(at_period_end=True)
         return JsonResponse({'status': 'ok'})
-
-    elif when == 'immediately':
-        if sub.status == 'active':
-            invoice = get_recent_invoice(sub.customer, plan_invoices_only=True)
-
-            if len(invoice.lines.data) == 1:
-                period = invoice.lines.data[0].period
-                invoiced_duration = period.end - period.start
-                usage_duration = arrow.utcnow().timestamp - period.start
-
-                if invoice.paid and invoice.closed and invoice.amount_due:
-                    refound_amount = invoice.amount_due - ((usage_duration * invoice.amount_due) / invoiced_duration)
-                    refound_amount = int(ceil(refound_amount / 100.0) * 100)
-
-                    if 0 < refound_amount and refound_amount <= invoice.amount_due:
-                        try:
-                            stripe.Refund.create(
-                                charge=invoice.charge,
-                                amount=refound_amount
-                            )
-                        except:
-                            raven_client.captureException()
-
-                        raven_client.captureMessage('Subscription Refund', level='info', extra={
-                            'amount': refound_amount,
-                            'invoice': invoice.id,
-                            'subscription': sub.id
-                        })
-                    else:
-                        raven_client.captureMessage('Subscription Refund More Than Due', extra={
-                            'amount': refound_amount,
-                            'invoice': invoice.id,
-                            'subscription': sub.id
-                        })
-            else:
-                raven_client.captureMessage('Subscription Refund More Than One Invoice Item', extra={
-                    'invoice': invoice.id,
-                    'subscription': sub.id
-                })
-
-        sub.delete()
-        return JsonResponse({'status': 'ok'})
-
     else:
         return JsonResponse({'error': 'Unknown "when" parameter'}, status=500)
 
@@ -508,7 +462,7 @@ def invoice_pay(request, invoice_id):
             raven_client.captureException(level='warning')
             return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
 
-        except stripe.InvalidRequestError as e:
+        except stripe.error.InvalidRequestError as e:
             raven_client.captureException(level='warning')
             return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
 

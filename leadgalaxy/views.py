@@ -4694,6 +4694,8 @@ def sudo_login(request):
     target_user = None
     if request.session.get('sudo_user'):
         target_user = User.objects.get(id=request.session['sudo_user'])
+    elif request.GET.get('email'):
+        target_user = User.objects.get(email__iexact=request.GET['email'])
 
     return login_view(
         request,

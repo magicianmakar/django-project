@@ -49,7 +49,9 @@ class ShopifiedApiBase(ApiResponseMixin, View):
 
             # Check if HTTP request method is supported
             if request.method.upper() not in self.http_method_names:
-                raven_client.captureMessage('Unsupported Request Method', extra={'method': request.method})
+                if request.method != 'OPTIONS':
+                    raven_client.captureMessage('Unsupported Request Method', extra={'method': request.method})
+
                 return self.http_method_not_allowed(request, *args, **kwargs)
 
             # Do we have this method in our 'all' APIs?

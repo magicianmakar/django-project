@@ -62,7 +62,7 @@ class PlanCheckoutView(TemplateView):
                 description=description,
             )
 
-        except (stripe.CardError, stripe.InvalidRequestError) as e:
+        except (stripe.error.CardError, stripe.error.InvalidRequestError) as e:
             raven_client.captureException(level='warning')
             error = 'Credit Card Error: {}'.format(e.message)
 
@@ -181,7 +181,7 @@ class MonthlyCheckoutView(TemplateView):
 
             PlanSelectionEvent.objects.create(user=user)
 
-        except (stripe.CardError, stripe.InvalidRequestError) as e:
+        except (stripe.error.CardError, stripe.error.InvalidRequestError) as e:
             raven_client.captureException(level='warning')
             error = 'Credit Card Error: {}'.format(e.message)
 

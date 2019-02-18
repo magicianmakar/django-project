@@ -118,7 +118,9 @@ class ApiResponseMixin():
 
     def dispatch(self, request, *args, **kwargs):
         if request.method.lower() not in self.http_method_names:
-            raven_client.captureMessage('Unsupported Request Method', extra={'method': request.method})
+            if request.method != 'OPTIONS':
+                raven_client.captureMessage('Unsupported Request Method', extra={'method': request.method})
+
             return self.http_method_not_allowed(request, *args, **kwargs)
 
         self.request_kwargs = kwargs
