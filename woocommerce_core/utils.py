@@ -31,8 +31,10 @@ from shopified_core.utils import (
 )
 from shopified_core.shipping_helper import (
     load_uk_provincess,
+    valide_aliexpress_province,
     country_from_code,
-    province_from_code
+    province_from_code,
+    support_other_in_province,
 )
 
 import leadgalaxy.utils as leadgalaxy_utils
@@ -689,7 +691,7 @@ def get_woo_products(store, page=1, limit=50, all_products=False):
                 yield product
 
 
-def woo_customer_address(order):
+def woo_customer_address(order, aliexpress_fix=False):
     customer_address = {}
     shipping_address = order['shipping'] if any(order['shipping'].values()) else order['billing']
 
@@ -707,6 +709,7 @@ def woo_customer_address(order):
 
     country = country_from_code(customer_address['country_code'], '')
     customer_address['country'] = unidecode(country) if type(country) is unicode else country
+
     province = province_from_code(customer_address['country_code'], customer_address['province_code'])
     customer_address['province'] = unidecode(province) if type(province) is unicode else province
 
@@ -756,6 +759,11 @@ def woo_customer_address(order):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
 
     customer_address['name'] = u'{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
+
+    if aliexpress_fix:
+        if not valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city']):
+            if support_other_in_province(customer_address['country']):
+                customer_address['province'] = 'Other'
 
     return customer_address
 

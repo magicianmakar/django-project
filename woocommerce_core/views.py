@@ -429,12 +429,13 @@ class OrdersList(ListView):
     def get_order_data(self, order, item, product, supplier):
         store = self.get_store()
         models_user = self.request.user.models_user
+        fix_aliexpress_address = self.request.user.get_config('fix_aliexpress_address', False)
         country = order['shipping']['country'] or order['billing']['country']
 
         return {
             'id': '{}_{}_{}'.format(store.id, order['id'], item['id']),
             'quantity': item['quantity'],
-            'shipping_address': woo_customer_address(order),
+            'shipping_address': woo_customer_address(order, aliexpress_fix=fix_aliexpress_address),
             'order_id': order['id'],
             'line_id': item['id'],
             'product_id': product.id,
