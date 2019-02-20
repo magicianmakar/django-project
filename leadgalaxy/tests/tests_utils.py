@@ -3,7 +3,6 @@
 import re
 import random
 from mock import Mock
-from django.test import TransactionTestCase
 import json
 from django.conf import settings
 from django.test import tag
@@ -1018,7 +1017,7 @@ class ShippingHelperTestCase(BaseTestCase):
         self.assertEqual(customer_address['zip'], '1155967')
 
 
-class UpdateVariantsDataTestCase(TransactionTestCase):
+class UpdateVariantsDataTestCase(BaseTestCase):
     def setUp(self):
         red_image = 'http://cdn.example/com/image1.png'
         blue_image = 'http://cdn.example/com/image2.png'
