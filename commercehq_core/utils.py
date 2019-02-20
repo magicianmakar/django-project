@@ -18,6 +18,7 @@ from shopified_core import permissions
 from shopified_core.utils import (
     safe_int,
     safe_float,
+    safe_str,
     hash_url_filename,
     decode_params,
     http_exception_response,
@@ -26,6 +27,7 @@ from shopified_core.utils import (
 from shopified_core.shipping_helper import (
     get_uk_province,
     valide_aliexpress_province,
+    support_other_in_province,
     country_from_code,
     province_from_code
 )
@@ -305,7 +307,7 @@ def filter_products(res, fdata):
     return res
 
 
-def chq_customer_address(order, aliexpress_fix=False):
+def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False):
     customer_address = {}
     shipping_address = order['shipping_address']
 
@@ -314,6 +316,8 @@ def chq_customer_address(order, aliexpress_fix=False):
             customer_address[k] = unidecode(shipping_address[k])
         else:
             customer_address[k] = shipping_address[k]
+
+    customer_province = customer_address['province']
 
     customer_address['address1'] = customer_address.get('street')
     customer_address['address2'] = customer_address.get('suite')
@@ -376,8 +380,34 @@ def chq_customer_address(order, aliexpress_fix=False):
     #                                                 customer_address['company'])
 
     if aliexpress_fix:
-        if not valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city']):
-            customer_address['province'] = 'Other'
+        valide, correction = valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city'])
+        if not valide:
+            if support_other_in_province(customer_address['country']):
+                customer_address['province'] = 'Other'
+
+                if customer_address['country'] == 'United Kingdom' and customer_address['city']:
+                    province = get_uk_province(customer_address['city'])
+                    if province:
+                        customer_address['province'] = province
+
+                if customer_province and customer_address['province'] == 'Other':
+                    customer_address['city'] = u'{}, {}'.format(customer_address['city'], customer_province)
+
+            elif fix_aliexpress_city:
+                city = safe_str(customer_address['city']).strip().strip(',')
+                customer_address['city'] = 'Other'
+
+                if not safe_str(customer_address['address2']).strip():
+                    customer_address['address2'] = u'{},'.format(city)
+                else:
+                    customer_address['address2'] = u'{}, {},'.format(customer_address['address2'].strip().strip(','), city)
+
+        elif correction:
+            if 'province' in correction:
+                customer_address['province'] = correction['province'].title()
+
+            if 'city' in correction:
+                customer_address['city'] = correction['city'].title()
 
     return customer_address
 

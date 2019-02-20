@@ -1300,7 +1300,8 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
         customer_address['name'] = u'{} - {}'.format(customer_address['name'], customer_address['company'])
 
     if aliexpress_fix:
-        if not valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city']):
+        valide, correction = valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city'])
+        if not valide:
             if support_other_in_province(customer_address['country']):
                 customer_address['province'] = 'Other'
 
@@ -1320,6 +1321,13 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
                     customer_address['address2'] = u'{},'.format(city)
                 else:
                     customer_address['address2'] = u'{}, {},'.format(customer_address['address2'].strip().strip(','), city)
+
+        elif correction:
+            if 'province' in correction:
+                customer_address['province'] = correction['province'].title()
+
+            if 'city' in correction:
+                customer_address['city'] = correction['city'].title()
 
     return order, customer_address
 

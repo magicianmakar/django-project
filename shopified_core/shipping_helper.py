@@ -4,6 +4,7 @@ import requests
 
 from collections import OrderedDict
 from unidecode import unidecode
+from fuzzyset import FuzzySet
 
 from django.conf import settings
 from django.core.cache import cache
@@ -174,8 +175,11 @@ def get_uk_province(city, default=''):
             province = country
             break
 
-    if not province or not valide_aliexpress_province('UK', province, city):
+    valide, correction = valide_aliexpress_province('UK', province, city)
+    if not province or not valide:
         province = 'Other'
+    elif correction:
+        province = correction.get('province', province)
 
     return province
 
@@ -262,26 +266,54 @@ def fix_fr_address(shipping_address):
     return shipping_address
 
 
+def fuzzy_find_in_list(options, value, default=None):
+    if options and value:
+        f = FuzzySet(options)
+        res = f.get(value)
+        if len(res):
+            score, match = res[0]
+            if score > 0.7:
+                return match
+
+    return default
+
+
 def valide_aliexpress_province(country, province, city):
     country = country.lower().strip() if country else ''
     province = province.lower().strip() if province else ''
     city = city.lower().strip() if city else ''
 
     country_code = normalize_country_code(country)
+    correction = {}
 
     if country_code:
         aliexpress_countries = load_aliexpress_countries()
 
         if aliexpress_countries.get(country_code):
-            return province in aliexpress_countries.get(country_code) and \
-                (city in aliexpress_countries.get(country_code).get(province) or
-                    len(aliexpress_countries.get(country_code).get(province)) == 0)
+            province_list = aliexpress_countries.get(country_code)
+            province_match = fuzzy_find_in_list(province_list.keys(), province, default=province)
 
-    return True
+            if province_match and province_list and province_match.lower().strip() != province:
+                correction['province'] = province_match
+                print 'Correction|{}|Province|{}|{}|'.format(country.title(), province.title(), province_match.title())
+            city_list = province_list.get(province_match)
+            if type(city_list) is list and not len(city_list):
+                # Province have a field for city
+                return True, correction
+
+            city_match = fuzzy_find_in_list(city_list, city, default=None)
+
+            if city_match and city and city_match.lower().strip() != city:
+                correction['city'] = city_match
+                print 'Correction|{}|City|{}|{}|'.format(country.title(), city.title(), city_match.title())
+
+            return bool(city_match), correction
+
+    return True, correction
 
 
 def support_other_in_province(country):
-    """ Return True if the coutry have "Other" option in Aliexpress Province Dropfown
+    """ Return True if the country have "Other" option in Aliexpress Province Dropdown
 
 
     Args:

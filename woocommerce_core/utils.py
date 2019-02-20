@@ -761,7 +761,8 @@ def woo_customer_address(order, aliexpress_fix=False):
     customer_address['name'] = u'{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
 
     if aliexpress_fix:
-        if not valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city']):
+        valide, correction = valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city'])
+        if not valide:
             if support_other_in_province(customer_address['country']):
                 customer_address['province'] = 'Other'
 
