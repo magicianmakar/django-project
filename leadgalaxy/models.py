@@ -2413,7 +2413,7 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
     try:
         change_log, created = GroupPlanChangeLog.objects.get_or_create(user=user)
     except:
-        pass
+        return
 
     if current_plan != change_log.plan:
         change_log.previous_plan = change_log.plan
