@@ -295,7 +295,8 @@ def valide_aliexpress_province(country, province, city):
 
             if province_match and province_list and province_match.lower().strip() != province:
                 correction['province'] = province_match
-                print 'Correction|{}|Province|{}|{}|'.format(country.title(), province.title(), province_match.title())
+                print 'Correction|{}, {}, {}|Province|{} => {}|'.format(country.title(), province.title(), city.title(),
+                                                                        province.title(), province_match.title())
             city_list = province_list.get(province_match)
             if type(city_list) is list and not len(city_list):
                 # Province have a field for city
@@ -305,7 +306,8 @@ def valide_aliexpress_province(country, province, city):
 
             if city_match and city and city_match.lower().strip() != city:
                 correction['city'] = city_match
-                print 'Correction|{}|City|{}|{}|'.format(country.title(), city.title(), city_match.title())
+                print 'Correction|{}, {}, {}|City|{} => {}|'.format(country.title(), province.title(), city.title(),
+                                                                    city.title(), city_match.title())
 
             return bool(city_match), correction
 

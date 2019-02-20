@@ -317,8 +317,6 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
         else:
             customer_address[k] = shipping_address[k]
 
-    customer_province = customer_address['province']
-
     customer_address['address1'] = customer_address.get('street')
     customer_address['address2'] = customer_address.get('suite')
     customer_address['country_code'] = customer_address.get('country')
@@ -327,6 +325,7 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
     customer_address['country'] = country_from_code(customer_address['country_code'])
     customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
 
+    customer_province = customer_address['province']
     if not customer_address.get('province'):
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:
             province = get_uk_province(customer_address['city'])
