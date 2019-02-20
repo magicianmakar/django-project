@@ -278,7 +278,7 @@ def fuzzy_find_in_list(options, value, default=None):
     return default
 
 
-def valide_aliexpress_province(country, province, city):
+def valide_aliexpress_province(country, province, city, auto_correct=False):
     country = country.lower().strip() if country else ''
     province = province.lower().strip() if province else ''
     city = city.lower().strip() if city else ''
@@ -291,23 +291,25 @@ def valide_aliexpress_province(country, province, city):
 
         if aliexpress_countries.get(country_code):
             province_list = aliexpress_countries.get(country_code)
-            province_match = fuzzy_find_in_list(province_list.keys(), province, default=province)
+            province_match = fuzzy_find_in_list(province_list.keys(), province, default=province) if auto_correct else province
 
             if province_match and province_list and province_match.lower().strip() != province:
-                correction['province'] = province_match
-                print 'Correction|{}, {}, {}|Province|{} => {}|'.format(country.title(), province.title(), city.title(),
-                                                                        province.title(), province_match.title())
+                if auto_correct:
+                    correction['province'] = province_match
+                else:
+                    return False, correction
+
             city_list = province_list.get(province_match)
             if type(city_list) is list and not len(city_list):
                 # Province have a field for city
                 return True, correction
 
-            city_match = fuzzy_find_in_list(city_list, city, default=None)
-
-            if city_match and city and city_match.lower().strip() != city:
-                correction['city'] = city_match
-                print 'Correction|{}, {}, {}|City|{} => {}|'.format(country.title(), province.title(), city.title(),
-                                                                    city.title(), city_match.title())
+            if auto_correct:
+                city_match = fuzzy_find_in_list(city_list, city, default=None)
+                if city_match and city and city_match and city_match.lower().strip() != city:
+                        correction['city'] = city_match
+            else:
+                city_match = city_list and city in city_list
 
             return bool(city_match), correction
 
