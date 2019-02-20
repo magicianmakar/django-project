@@ -24,6 +24,13 @@ class GroupPlanAdmin(admin.ModelAdmin):
             return '/accounts/register/{}-subscribe'.format(obj.slug)
 
 
+@admin.register(GroupPlanChangeLog)
+class GroupPlanChangeLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'plan', 'changed_at', 'updated_at')
+    list_filter = ('plan',)
+    raw_id_fields = ('user',)
+
+
 @admin.register(FeatureBundle)
 class FeatureBundleAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'permissions_count')

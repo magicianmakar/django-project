@@ -171,7 +171,6 @@ class UserProfile(models.Model):
 
         if reg.plan:
             self.plan = reg.plan
-
             if reg.plan.slug == 'subuser-plan':
                 self.subuser_parent = reg.sender
 
@@ -2194,6 +2193,16 @@ class GroupPlan(models.Model):
         return self.title
 
 
+class GroupPlanChangeLog(models.Model):
+    user = models.OneToOneField(User, related_name='plan_change_log', on_delete=models.CASCADE)
+    plan = models.ForeignKey(GroupPlan, null=True, on_delete=models.CASCADE)
+    previous_plan = models.ForeignKey(GroupPlan, null=True, related_name='previous_plan', on_delete=models.CASCADE)
+
+    changed_at = models.DateTimeField(null=True, blank=True, verbose_name='When Plan Changed')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
 class FeatureBundle(models.Model):
     title = models.CharField(max_length=30, verbose_name="Bundle Title")
     slug = models.SlugField(unique=True, max_length=30, verbose_name="Bundle Slug")
@@ -2395,6 +2404,20 @@ User.add_to_class("models_user", cached_property(user_models_user))
 
 # Signals Handling
 # TODO: Move signals to singlas.py and load them in AppConfig.ready
+
+@receiver(post_save, sender=UserProfile)
+def update_plan_changed_date(sender, instance, created, **kwargs):
+    user = instance.user
+    current_plan = None
+
+    change_log, created = GroupPlanChangeLog.objects.get_or_create(user=user)
+
+    if current_plan != change_log.plan:
+        change_log.previous_plan = change_log.plan
+        change_log.plan = current_plan
+        change_log.changed_at = arrow.utcnow().datetime
+        change_log.save()
+
 
 @receiver(post_save, sender=UserProfile)
 def invalidate_acp_users(sender, instance, created, **kwargs):
