@@ -271,7 +271,7 @@ function placeOrder(e) {
         },
     }).done(function(data) {
         swal.close();
-        toastr.success('Item added to orders queue', 'Order Placed');
+        toastr.success('Item added to Orders Queue', 'Order Placed');
         // btn.hide();
 
     }).fail(function(data) {
@@ -924,7 +924,7 @@ function orderItems(current_order, supplier_type, exclude_lines) {
 
         addOrderToQueue(order);
     } else {
-        toastr.error('The items have been orderd or are not connected', 'No Items to orders');
+        toastr.error('The items have been ordered or are not connected', 'No Items to order');
     }
 }
 
