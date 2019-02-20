@@ -2413,9 +2413,9 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
     try:
         change_log, created = GroupPlanChangeLog.objects.get_or_create(user=user)
     except:
-        change_log = GroupPlanChangeLog.objects.filter(user=user).first()
+        pass
 
-    if change_log and current_plan != change_log.plan:
+    if current_plan != change_log.plan:
         change_log.previous_plan = change_log.plan
         change_log.plan = current_plan
         change_log.changed_at = arrow.utcnow().datetime
