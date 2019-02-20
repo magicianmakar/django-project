@@ -270,7 +270,7 @@ def fuzzy_find_in_list(options, value, default=None):
     if options and value:
         f = FuzzySet(options)
         res = f.get(value)
-        if len(res):
+        if res and len(res):
             score, match = res[0]
             if score > 0.7:
                 return match
