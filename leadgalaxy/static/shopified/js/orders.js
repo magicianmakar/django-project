@@ -924,7 +924,7 @@ function orderItems(current_order, supplier_type, exclude_lines) {
 
         addOrderToQueue(order);
     } else {
-        toastr.error('The items have been ordered or are not connected', 'No Items to order');
+        toastr.error('The items have been ordered or are not connected', 'No items to order');
     }
 }
 
