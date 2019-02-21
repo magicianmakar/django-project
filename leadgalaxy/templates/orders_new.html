@@ -752,8 +752,11 @@
                                                 </div>
                                                 {% endfor %}
 
-                                                <button class="btn btn-success btn-xs order-bundle-btn"
+                                                <button class="btn btn-success btn-xs order-bundle"
                                                         store-type="shopify"
+                                                        supplier-type="{{item.supplier_type}}"
+                                                        order-data="{{item.order_data_id}}"
+                                                        order-number="{{order.name}}"
                                                         style="position:absolute;right:25px;top:50px;"
                                                         >Order Bundle</button>
                                             </div>

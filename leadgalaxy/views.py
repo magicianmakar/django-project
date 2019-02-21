@@ -3805,6 +3805,7 @@ def orders_view(request):
                         })
 
                         bundle_data.append({
+                            'title': b_product.title,
                             'quantity': b['quantity'] * el['quantity'],
                             'product_id': b_product.id,
                             'source_id': b_supplier.get_source_id(),
@@ -3812,6 +3813,7 @@ def orders_view(request):
                             'variants': b_variants,
                             'shipping_method': b_shipping_method,
                             'country_code': country_code,
+                            'supplier_type': b_supplier.supplier_type(),
                         })
 
                     order['line_items'][i]['bundles'] = product_bundles

@@ -973,6 +973,77 @@ $('.order-seleted-suppliers').click(function(e) {
     orderItems(order, supplier_type);
 });
 
+$('.order-bundle').click(function(e) {
+    e.preventDefault();
+
+    var order_data_id = $(e.target).attr('order-data');
+    var order_name = $(e.target).attr('order-number');
+    var store_type = $(e.target).attr('store-type');
+
+    $.ajax({
+        url: api_url('order-data', 'shopify'),
+        type: 'GET',
+        data: {
+            order: order_data_id
+        },
+    }).done(function(data) {
+        if (!data.is_bundle) {
+            return displayAjaxError('Order Bundle', 'Not a bundle order');
+        }
+
+        var order = {
+            cart: true,
+            bundle: true,
+            items: []
+        };
+
+        $.each(data.products, function(i, product) {
+            order.items.push({
+                url: product.order_url,
+                order_data: order_data_id,
+                order_name: order_name,
+                order_id: data.order_id,
+                line_id: data.line_id,
+                line_title: product.title,
+                supplier_type: product.supplier_type,
+                store_type: store_type,
+                product: product,
+            });
+        });
+
+        if (order.items.length > 1) {
+            order.order_data = order.items[0].order_data.replace(/_[^_]+$/, '');
+            order.order_name = order.items[0].order_name;
+            order.order_id = order.items[0].order_id;
+            order.supplier_type = order.items[0].supplier_type;
+            order.store_type = order.items[0].store_type;
+
+            order.line_id = $.map(order.items, function(el) {
+                return el.line_id;
+            });
+
+            order.line_title = '<ul style="padding:0px;overflow-x:hidden;">';
+
+            order.line_title += $.map(order.items.slice(0, 3), function(el) {
+                return '<li>&bull; ' + el.line_title + '</li>';
+            }).join('');
+
+            if (order.items.length > 3) {
+                var extra_count = order.items.length - 3;
+                order.line_title += '<li>&bull; Plus ' + (extra_count) + ' Product' + (extra_count > 1 ? 's' : '') + '...</li>';
+            }
+
+            order.line_title += '</ul>';
+
+        }
+
+        addOrderToQueue(order);
+
+    }).fail(function(data) {
+        displayAjaxError('Order Bundle', data);
+    });
+});
+
 $('.help-select').each(function (i, el) {
     $('option', el).each(function (index, option) {
         $(option).attr('title', $(option).text());
