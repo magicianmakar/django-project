@@ -2866,10 +2866,7 @@ def user_profile(request):
                                             .annotate(num_permissions=Count('permissions')) \
                                             .order_by('num_permissions')
 
-    if request.user.can('paused_plan.use'):
-        stripe_paused_plan = GroupPlan.objects.filter(slug='paused-plan').first()
-    else:
-        stripe_paused_plan = None
+    stripe_paused_plan = GroupPlan.objects.filter(slug='paused-plan').first()
 
     if request.user.get_config('_enable_yearly_60dc_plan'):
         stripe_plans_yearly = list(stripe_plans_yearly)
@@ -2902,8 +2899,7 @@ def user_profile(request):
 
         subscription = request.user.stripesubscription_set.all().first()
         if subscription and settings.BAREMETRICS_ACCESS_TOKEN \
-                and settings.BAREMETRICS_JWT_TOKEN_KEY \
-                and request.user.can('baremetrics_cancel.use'):
+                and settings.BAREMETRICS_JWT_TOKEN_KEY:
             baremetrics_jwt_token = jwt.encode({
                 "access_token_id": settings.BAREMETRICS_ACCESS_TOKEN,
                 "subscription_oids": [subscription.subscription_id],
