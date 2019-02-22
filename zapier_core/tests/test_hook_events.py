@@ -1,5 +1,6 @@
-import simplejson as json
+import traceback
 import mock
+import simplejson as json
 from mock import patch, ANY
 
 from django.test import RequestFactory, tag
@@ -77,32 +78,37 @@ class HookEventsPriceChangeTest(HookEventsTestCase):
     @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     @patch('zapier_core.tasks.deliver_hook.apply_async')
     def test_variant_price_changed(self, deliver_hook, manage):
-        hook = Hook.objects.create(
-            user=self.user,
-            event='variant:price',
-            target='TARGETURL',
-        )
+        try:
+            hook = Hook.objects.create(
+                user=self.user,
+                event='variant:price',
+                target='TARGETURL',
+            )
 
-        product_changes = []
-        product = ShopifyProduct.objects.get(pk=4)
-        shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
-        variant = shopify_product['variants'][0]
-        price = round(float(variant['price']), 2)
+            product_changes = []
+            product = ShopifyProduct.objects.get(pk=4)
+            shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
+            variant = shopify_product['variants'][0]
+            price = round(float(variant['price']), 2)
 
-        new_value = price + 5
-        old_value = price
-        product_changes.append({
-            'level': 'variant',
-            'name': 'price',
-            'sku': variant['sku'],
-            'new_value': new_value,
-            'old_value': old_value,
-        })
-        request = self.factory.post(
-            '/webhook/price-monitor/product?product={}&dropified_type=shopify'.format(product.id),
-            data=json.dumps(product_changes),
-            content_type='application/json'
-        )
-        response = webhook(request, 'price-monitor', None)
-        self.assertEqual(response.status_code, 200)
-        deliver_hook.assert_called_once_with(args=[hook.target, ANY, None, hook.id])
+            new_value = price + 5
+            old_value = price
+            product_changes.append({
+                'level': 'variant',
+                'name': 'price',
+                'sku': variant['sku'],
+                'new_value': new_value,
+                'old_value': old_value,
+            })
+            request = self.factory.post(
+                '/webhook/price-monitor/product?product={}&dropified_type=shopify'.format(product.id),
+                data=json.dumps(product_changes),
+                content_type='application/json'
+            )
+            response = webhook(request, 'price-monitor', None)
+            self.assertEqual(response.status_code, 200)
+            deliver_hook.assert_called_once_with(args=[hook.target, ANY, None, hook.id])
+
+        except:
+            traceback.print_exc()
+            print [{k: v}for k, v in locals().items() if not k.startswith('__') and '__' not in str(v)]

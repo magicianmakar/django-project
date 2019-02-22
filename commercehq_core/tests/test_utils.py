@@ -1,4 +1,5 @@
 import json
+import traceback
 
 from mock import patch, Mock
 from requests.exceptions import HTTPError
@@ -22,7 +23,7 @@ from ..utils import (
     cache_fulfillment_data,
 )
 
-from shopified_core.utils import hash_url_filename, update_product_data_images, random_hash
+from shopified_core.utils import hash_url_filename, update_product_data_images, random_hash, http_excption_status_code
 
 
 CHQ_API_URL = 'chq-shopified-test.commercehqtesting.com'
@@ -285,30 +286,39 @@ class OrdersTestCase(BaseTestCase):
 
     @tag('slow')
     def test_order_notes(self):
-        order_id = 1016
-        line_id = 9309669834
+        try:
+            order_id = 1016
+            line_id = 9309669834
 
-        store = self.store
-        order = utils.get_chq_order(store, order_id)
-        self.assertEqual(order['id'], order_id)
+            store = self.store
+            order = utils.get_chq_order(store, order_id)
+            self.assertEqual(order['id'], order_id)
 
-        note1 = 'Test Note #%s' % random_hash()
-        utils.set_chq_order_note(store, order_id, note1)
+            note1 = 'Test Note #%s' % random_hash()
+            utils.set_chq_order_note(store, order_id, note1)
 
-        self.assertEqual(note1, utils.get_chq_order_note(store, order_id))
+            self.assertEqual(note1, utils.get_chq_order_note(store, order_id))
+
+        except Exception as e:
+            traceback.print_exc()
+            self.assertEqual(http_excption_status_code(e), 500)
 
     @tag('slow')
     def test_order_updater_note(self):
-        store = self.store
-        order_id = 1015
+        try:
+            store = self.store
+            order_id = 1015
 
-        note = 'Test Note #%s' % random_hash()
+            note = 'Test Note #%s' % random_hash()
 
-        updater = utils.CHQOrderUpdater(store, order_id)
-        updater.add_note(note)
-        updater.save_changes(add=False)
+            updater = utils.CHQOrderUpdater(store, order_id)
+            updater.add_note(note)
+            updater.save_changes(add=False)
 
-        self.assertEqual(note, utils.get_chq_order_note(store, order_id))
+            self.assertEqual(note, utils.get_chq_order_note(store, order_id))
+        except Exception as e:
+            traceback.print_exc()
+            self.assertEqual(http_excption_status_code(e), 500)
 
 
 class UpdateProductDataImageVariantsTestCase(BaseTestCase):
