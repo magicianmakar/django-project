@@ -517,7 +517,7 @@ class UserProfile(models.Model):
         added_tags = []
         current_tags = self.get_tags()
         for tag in tags:
-            if tag not in self.tags:
+            if tag not in current_tags:
                 added_tags.append(tag)
                 current_tags.append(tag)
 
