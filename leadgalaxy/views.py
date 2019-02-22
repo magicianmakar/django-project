@@ -42,6 +42,8 @@ from shopify_orders import utils as shopify_orders_utils
 from commercehq_core.models import CommerceHQProduct
 from product_alerts.models import ProductChange
 from stripe_subscription.stripe_api import stripe
+from shopify_subscription.tasks import cancel_baremetrics_subscriptions
+from shopify_subscription.models import BaremetricsCustomer
 
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
@@ -766,6 +768,14 @@ def webhook(request, provider, option):
                     store.user.profile.change_plan(GroupPlan.objects.get(
                         payment_gateway='shopify',
                         slug='shopify-free-plan'))
+
+                    try:
+                        cancel_baremetrics_subscriptions.apply_async(
+                            args=[store.baremetrics_customer.pk],
+                            expires=900
+                        )
+                    except BaremetricsCustomer.DoesNotExist:
+                        pass
 
                 return JsonResponse({'status': 'ok'})
             else:

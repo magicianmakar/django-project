@@ -81,3 +81,16 @@ class ShopifySubscription(models.Model):
             status['status_str'] = 'Trial ends {}'.format(arrow.get(sub.get('trial_end')).humanize())
 
         return status
+
+
+class BaremetricsCustomer(models.Model):
+    store = models.OneToOneField(ShopifyStore, related_name='baremetrics_customer', null=True, on_delete=models.CASCADE)
+    customer_oid = models.CharField(max_length=50)
+    is_active = models.BooleanField(default=True)
+
+
+class BaremetricsSubscription(models.Model):
+    customer = models.ForeignKey(BaremetricsCustomer, related_name='subscriptions', on_delete=models.CASCADE)
+    shopify_subscription = models.OneToOneField(ShopifySubscription, related_name='baremetrics_subscription', on_delete=models.CASCADE)
+    subscription_oid = models.CharField(max_length=50)
+    canceled_at = models.DateTimeField(null=True)
