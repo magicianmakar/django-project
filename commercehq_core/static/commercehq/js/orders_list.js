@@ -415,7 +415,7 @@ $('.add-order-note').click(function (e) {
             success: function (data) {
                 if (data.status == 'ok') {
                     swal.close();
-                    toastr.success('Note added to the order in Shopify.', 'Add Note');
+                    toastr.success('Note added to the order in CommerceHQ.', 'Add Note');
                 } else {
                     displayAjaxError('Add Note', data);
                 }
@@ -871,7 +871,7 @@ $('.order-bundle').click(function(e) {
     var store_type = $(e.target).attr('store-type');
 
     $.ajax({
-        url: api_url('order-data', 'shopify'),
+        url: api_url('order-data', 'chq'),
         type: 'GET',
         data: {
             order: order_data_id
