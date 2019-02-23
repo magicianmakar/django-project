@@ -822,8 +822,6 @@ def manage_product_change(change_id):
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
             raven_client.captureException()
 
-        raven_client.captureException()
-
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def bulk_edit_products(self, store, products):
