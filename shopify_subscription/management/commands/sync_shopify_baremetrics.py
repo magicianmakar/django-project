@@ -3,14 +3,15 @@ from django.core.cache import cache
 from requests.exceptions import HTTPError
 from tqdm import tqdm
 
+from shopified_core.utils import http_exception_response
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyStore
+from shopify_subscription.utils import BaremetricsRequest
 from shopify_subscription.models import (
     ShopifySubscription,
     BaremetricsCustomer,
     BaremetricsSubscription,
 )
-from shopify_subscription.utils import BaremetricsRequest
 
 
 class Command(DropifiedBaseCommand):
@@ -122,16 +123,20 @@ class Command(DropifiedBaseCommand):
         data = {
             'oid': 'shopify_{}'.format(shopify_subscription.id),
             'started_at': arrow.get(shopify_subscription.activated_on).timestamp,
-            'canceled_at': canceled_at,
             'plan_oid': shopify_subscription.plan.id,
             'customer_oid': customer.customer_oid,
         }
+
+        if canceled_at:
+            data['canceled_at'] = canceled_at
+
         self.requests.post('/{source_id}/subscriptions', json=data)
+
         BaremetricsSubscription.objects.create(
             customer=customer,
-            shopify=shopify_subscription,
+            shopify_subscription=shopify_subscription,
             subscription_oid=data['oid'],
-            canceled_at=canceled_at
+            canceled_at=arrow.get(canceled_at).datetime if canceled_at else None
         )
 
     def sync_with_baremetrics(self, charge, baremetrics_subscription):

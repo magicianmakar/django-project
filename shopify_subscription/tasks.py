@@ -22,6 +22,6 @@ def cancel_baremetrics_subscriptions(self, baremetrics_customer_id=None):
         'canceled_at': arrow.get().timestamp
     }
 
-    for subscription in customer.subscriptions.filter(canceled_at__is_null=True):
+    for subscription in customer.subscriptions.filter(canceled_at=None):
         url = '{}/subscriptions/{}/cancel'.format('{source_id}', subscription.subscription_oid)
         baremetrics.put(url, data=data)
