@@ -60,7 +60,7 @@ def user_can_add(user, obj, raise_on_error=True):
                     return raise_or_return_result("You don't have autorization to edit this store.", raise_on_error=raise_on_error)
 
     if not can:
-        return raise_or_return_result("Unautorized Add Action", raise_on_error=raise_on_error)
+        return raise_or_return_result("Unauthorized Add Action", raise_on_error=raise_on_error)
 
     return can
 
@@ -101,7 +101,7 @@ def user_can_view(user, obj, raise_on_error=True, superuser_can=True):
                     return raise_or_return_result("You don't have autorization to view this store.", raise_on_error=raise_on_error)
 
     if not can:
-        return raise_or_return_result("Unautorized View Action", raise_on_error=raise_on_error)
+        return raise_or_return_result("Unauthorized View Action", raise_on_error=raise_on_error)
 
     return can
 
@@ -141,7 +141,7 @@ def user_can_edit(user, obj, raise_on_error=True):
                     return raise_or_return_result("You don't have autorization to view this store.", raise_on_error=raise_on_error)
 
     if not can:
-        return raise_or_return_result("Unautorized Edit Action", raise_on_error=raise_on_error)
+        return raise_or_return_result("Unauthorized Edit Action", raise_on_error=raise_on_error)
 
     return can
 
@@ -161,7 +161,7 @@ def user_can_delete(user, obj, raise_on_error=True):
         can = obj_user == user.profile.subuser_parent
 
     if not can:
-        return raise_or_return_result("Unautorized Delete Action", raise_on_error=raise_on_error)
+        return raise_or_return_result("Unauthorized Delete Action", raise_on_error=raise_on_error)
 
     return can
 
