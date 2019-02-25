@@ -335,7 +335,7 @@
                     success: function (data) {
                         if (data.status == 'ok') {
                             var link = app_link(['accounts/register', data.hash]);
-                            var msg = 'An email has been sent to the entred address with the following registration link:<br/>'+
+                            var msg = 'An email has been sent to the entered address with the following registration link:<br/>'+
                                       '<a href="'+link+'" style="word-wrap: break-word">'+link+'</a>';
 
                             swal({

@@ -223,6 +223,10 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 DEFAULT_FROM_EMAIL = "support@dropified.com"
 
+if not EMAIL_HOST_USER and DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+
 DATA_UPLOAD_MAX_NUMBER_FIELDS = None
 ITEMS_PER_PAGE = 24
 
