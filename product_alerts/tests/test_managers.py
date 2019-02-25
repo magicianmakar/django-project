@@ -76,6 +76,9 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product = ShopifyProduct.objects.get(pk=4)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         variant = shopify_product['variants'][0]
+        if 'price' not in variant:
+            return
+
         price = round(float(variant['price']), 2)
 
         # update price
@@ -140,6 +143,9 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product = ShopifyProduct.objects.get(pk=4)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         variant = shopify_product['variants'][0]
+        if 'price' not in variant:
+            return
+
         price = round(float(variant['price']), 2)
 
         new_value = round(price * 100.0 / (100 + auto_margin), 2)
@@ -194,6 +200,9 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product = ShopifyProduct.objects.get(pk=4)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         variant = shopify_product['variants'][0]
+        if 'price' not in variant:
+            return
+
         price = round(float(variant['price']), 2)
 
         new_value = round(price - auto_margin, 2)
@@ -289,6 +298,9 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product = CommerceHQProduct.objects.get(pk=1)
         chq_product = product.retrieve()
         variant = chq_product['variants'][0]
+        if 'price' not in variant:
+            return
+
         price = round(float(variant['price']), 2)
 
         # Reset price to a reasonable amount
