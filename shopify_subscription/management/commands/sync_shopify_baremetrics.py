@@ -173,11 +173,15 @@ class Command(DropifiedBaseCommand):
             return baremetrics_plan
 
         # Check plan exists in baremetrics before creating
-        r = self.requests.get('/{}/plans/{}'.format('{source_id}', plan.id))
-        baremetrics_plan = r.json().get('plan')
-        if baremetrics_plan:
-            cache.set('baremetrics_plan_{}'.format(plan.id), baremetrics_plan, timeout=1800)
-            return baremetrics_plan
+        try:
+            r = self.requests.get('/{}/plans/{}'.format('{source_id}', plan.id))
+            baremetrics_plan = r.json().get('plan')
+            if baremetrics_plan:
+                cache.set('baremetrics_plan_{}'.format(plan.id), baremetrics_plan, timeout=1800)
+                return baremetrics_plan
+        except HTTPError as e:
+            if e.response.status_code != 404:
+                raise
 
         # Plan must exist in baremetrics
         interval = 'month'
