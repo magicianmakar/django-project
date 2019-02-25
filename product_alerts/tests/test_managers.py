@@ -55,6 +55,9 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product_change = ProductChange.objects.get(pk=2)
         manager = ProductChangeManager.initialize(product_change)
         product_data = utils.get_shopify_product(product_change.shopify_product.store, product_change.shopify_product.shopify_id)
+        if 'id' not in product_data['variants'][0]:
+            return
+
         result = manager.get_variant(product_data, manager.variant_changes[0])
         self.assertEqual(result, 0)
 
@@ -260,6 +263,9 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product = ShopifyProduct.objects.get(pk=5)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         variant = shopify_product['variants'][0]
+        if 'id' not in variant:
+            return
+
         quantity = product.get_variant_quantity(variant=variant)
 
         # update quantity
