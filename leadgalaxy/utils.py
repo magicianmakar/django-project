@@ -27,7 +27,6 @@ from collections import Counter
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
@@ -66,7 +65,6 @@ from shopified_core.utils import (
     get_first_valid_option,
 )
 from leadgalaxy.models import (
-    userprofile_creation,
     GroupPlan,
     PlanRegistration,
     ShopifyBoard,
