@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 
-from article.models import *
+from article.models import Article, ArticleTag
 from article.forms import ArticleForm
 
 import simplejson as json

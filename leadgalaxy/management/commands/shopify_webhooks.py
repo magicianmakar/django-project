@@ -1,7 +1,7 @@
 from django.core.management.base import CommandError
 
 from shopified_core.management import DropifiedBaseCommand
-from leadgalaxy.models import *
+from leadgalaxy.models import AppPermission, ShopifyStore, GroupPlan
 from leadgalaxy import utils
 
 

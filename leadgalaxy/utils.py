@@ -1,6 +1,4 @@
 import os
-import simplejson as json
-import requests
 import hashlib
 import pytz
 import time
@@ -19,11 +17,17 @@ from urllib import urlencode
 from hashlib import sha256
 from math import ceil
 
+import arrow
+import requests
+import simplejson as json
+
 from boto.s3.key import Key
 from unidecode import unidecode
 from collections import Counter
 
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
@@ -38,7 +42,7 @@ from django.template.defaultfilters import pluralize
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.models import *
+from app.celery import retry_countdown
 from shopified_core import permissions
 from shopified_core.utils import (
     safe_int,
@@ -61,7 +65,17 @@ from shopified_core.utils import (
     get_top_most_commons,
     get_first_valid_option,
 )
-
+from leadgalaxy.models import (
+    userprofile_creation,
+    GroupPlan,
+    PlanRegistration,
+    ShopifyBoard,
+    ShopifyProduct,
+    ShopifyProductImage,
+    ShopifyStore,
+    ShopifyWebhook,
+    UserProfile,
+)
 from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province, support_other_in_province
 from shopify_orders.models import ShopifyOrderLine
 

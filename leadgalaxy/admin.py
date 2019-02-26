@@ -1,9 +1,35 @@
+import simplejson as json
+
 from django.contrib import admin
-from .models import *
 from django import forms
 
 from django.urls import reverse
 
+from .models import (
+    AccessToken,
+    AdminEvent,
+    AppPermission,
+    CaptchaCredit,
+    CaptchaCreditPlan,
+    ClippingMagic,
+    ClippingMagicPlan,
+    DescriptionTemplate,
+    FeatureBundle,
+    GroupPlan,
+    GroupPlanChangeLog,
+    PlanPayment,
+    PlanRegistration,
+    PriceMarkupRule,
+    ProductSupplier,
+    ShopifyBoard,
+    ShopifyOrderTrack,
+    ShopifyProduct,
+    ShopifyProductImage,
+    ShopifyStore,
+    ShopifyWebhook,
+    UserProfile,
+    UserUpload,
+)
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 

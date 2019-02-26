@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import *
+from .models import (
+    RegistrationEvent,
+    PlanSelectionEvent,
+    BillingInformationEntryEvent,
+    SuccessfulPaymentEvent
+)
 
 admin.site.register(RegistrationEvent)
 admin.site.register(PlanSelectionEvent)

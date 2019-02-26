@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 
 from shopified_core.management import DropifiedBaseCommand
-from leadgalaxy.models import *
+from leadgalaxy.models import PlanRegistration
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 

@@ -1,13 +1,14 @@
 import re
+import time
+
+import arrow
+import requests
+from simplejson import JSONDecodeError
 
 from django.utils import timezone
 
-import requests
-import time
-from simplejson import JSONDecodeError
-
 from shopified_core.management import DropifiedBaseCommand
-from leadgalaxy.models import *
+from leadgalaxy.models import ShopifyOrderTrack
 from leadgalaxy import utils
 from leadgalaxy import tasks
 

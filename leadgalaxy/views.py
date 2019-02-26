@@ -1,21 +1,33 @@
 # -*- coding: utf-8 -*-
+import re
+import traceback
+
 import StringIO
 import base64
 import hmac
 import mimetypes
 import random
 import time
-import traceback
 import urllib
 import zlib
 from hashlib import sha1
 from io import BytesIO
 
+import arrow
+import requests
+import jwt
+
+import simplejson as json
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as user_logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.cache import cache, caches
+from django.core.cache.utils import make_template_fragment_key
 from django.core.mail import send_mail
 from django.urls import reverse
 from django.core.exceptions import PermissionDenied
@@ -29,7 +41,6 @@ from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
-from raven.contrib.django.raven_compat.models import client as raven_client
 
 from analytic_events.models import RegistrationEvent
 
@@ -38,6 +49,7 @@ from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.exceptions import ApiLoginException
+
 from shopify_orders import utils as shopify_orders_utils
 from commercehq_core.models import CommerceHQProduct
 from product_alerts.models import ProductChange
@@ -82,10 +94,34 @@ from product_alerts.utils import variant_index_from_supplier_sku, delete_product
 from profit_dashboard.models import FacebookAccess
 
 import tasks
-import jwt
 import utils
-from .forms import *
-from .models import *
+from .forms import (
+    EmailAuthenticationForm,
+    EmailForm,
+    RegisterForm
+)
+from .models import (
+    AdminEvent,
+    AppPermission,
+    CaptchaCredit,
+    CaptchaCreditPlan,
+    ClippingMagic,
+    ClippingMagicPlan,
+    DescriptionTemplate,
+    FeatureBundle,
+    GroupPlan,
+    PlanPayment,
+    PlanRegistration,
+    PriceMarkupRule,
+    ProductSupplier,
+    ShopifyBoard,
+    ShopifyOrderTrack,
+    ShopifyProduct,
+    ShopifyProductImage,
+    ShopifyStore,
+    UserProfile,
+    UserUpload,
+)
 from .templatetags.template_helper import money_format
 
 

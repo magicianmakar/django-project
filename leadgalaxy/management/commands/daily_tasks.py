@@ -2,7 +2,7 @@ from django.utils import timezone
 
 import arrow
 
-from leadgalaxy.models import *
+from leadgalaxy.models import UserProfile
 from product_alerts.models import ProductChange
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import send_email_from_template

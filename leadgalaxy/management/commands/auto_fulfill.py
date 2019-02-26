@@ -1,13 +1,16 @@
 from django.utils import timezone
 
-import requests
 import time
-from simplejson import JSONDecodeError
+
+import arrow
+import requests
+
 from tqdm import tqdm
+from simplejson import JSONDecodeError
 
 from shopified_core.utils import http_exception_response
 from shopified_core.management import DropifiedBaseCommand
-from leadgalaxy.models import *
+from leadgalaxy.models import ShopifyOrderTrack
 from shopify_orders.models import ShopifyOrderLog
 from leadgalaxy import utils
 from leadgalaxy import tasks

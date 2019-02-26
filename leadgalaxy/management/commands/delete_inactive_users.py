@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
-from leadgalaxy.models import *
 from django.utils import timezone
+
+from leadgalaxy.models import GroupPlanChangeLog
 
 
 class Command(BaseCommand):

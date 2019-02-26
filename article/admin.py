@@ -1,7 +1,7 @@
 # -*- coding:utf8 -*-
 
 from django.contrib import admin
-from article.models import *
+from article.models import Article, ArticleTag, SidebarLink
 
 
 class ArticleAdmin(admin.ModelAdmin):

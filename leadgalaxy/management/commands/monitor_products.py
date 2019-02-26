@@ -1,13 +1,16 @@
 from Queue import Queue
 from threading import Thread
 
+import requests
+
+from django.conf import settings
 from django.core.management.base import CommandError
 from django.contrib.auth.models import User
 from django.db.models import Q
 
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import url_join
-from leadgalaxy.models import *
+from leadgalaxy.models import AppPermission, GroupPlan, ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
 from product_alerts.utils import monitor_product
 from last_seen.models import LastSeen
