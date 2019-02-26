@@ -1010,10 +1010,13 @@ def webhook(request, provider, option):
             if request.POST['user_id'] in user.get_config('_slack_id', ''):
                 request_from = user
 
-        if request.POST['command'] == '/store-transfer':
-            if not request_from:
-                return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
+        try:
+            assert request_from, 'Slack Support Staff Check'
+        except:
+            raven_client.captureException()
+            return HttpResponse(':octagonal_sign: _Dropified Support Staff Only (ID: {})_'.format(request.POST['user_id']))
 
+        if request.POST['command'] == '/store-transfer':
             try:
                 text = re.split(' +', request.POST['text'])
                 options = {
@@ -1070,9 +1073,6 @@ def webhook(request, provider, option):
             return HttpResponse(':hourglass_flowing_sand: Transferring {shop} from {from} to {to} is in progress...'.format(**options))
 
         elif request.POST['command'] == '/cancel-shopify':
-            if not request_from:
-                return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
-
             shop = re.findall('[^/]+.myshopify.com', request.POST['text'])
             if not shop:
                 return HttpResponse(':x: Could not find shop in {}'.format(request.POST['text']))
@@ -1092,9 +1092,6 @@ def webhook(request, provider, option):
                 return HttpResponse('No Recurring Charges found on *{}*'.format(shop))
 
         elif request.POST['command'] == '/captcha-credit':
-            if not request_from:
-                return HttpResponse(':octagonal_sign: _Dropified Support Stuff Only_')
-
             is_review_bonus = False
             args = request.POST['text'].split(' ')
             if len(args) == 2:
@@ -1129,9 +1126,6 @@ def webhook(request, provider, option):
             return HttpResponse('{} Captcha Credits added to *{}*'.format(credits, email))
 
         elif request.POST['command'] == '/dash-facebook-reset':
-            if not request_from:
-                return HttpResponse(':octagonal_sign: _Dropified Support Staff Only_')
-
             args = request.POST['text'].split(' ')
             access = FacebookAccess.objects
 
@@ -1155,9 +1149,6 @@ def webhook(request, provider, option):
             return HttpResponse("Deleted {} Facebook Synced Accounts".format(models.get(u'profit_dashboard.FacebookAccess', 0)))
 
         elif request.POST['command'] == '/dash-facebook-list':
-            if not request_from:
-                return HttpResponse(':octagonal_sign: _Dropified Support Staff Only_')
-
             access_list = FacebookAccess.objects.select_related('store').filter(user__email=request.POST['text'])
             result = []
             for access in access_list:
@@ -1175,9 +1166,6 @@ def webhook(request, provider, option):
             # /user-tags <add|remove|set> <email> <tags>
             # /user-tags <search> <tags>
             # :tags param example: Added Product, Connected Store, Multiple Stores
-
-            if not request_from:
-                return HttpResponse(':octagonal_sign: _Dropified Support Staff Only_')
 
             args = request.POST['text'].split(' ')
             command = args[0]
@@ -1220,7 +1208,7 @@ def webhook(request, provider, option):
                 return HttpResponse(result)
 
         else:
-            return HttpResponse(':x: Unknown Command')
+            return HttpResponse(':x: Unknown Command: {}'.format(request.POST['command']))
 
     else:
         raven_client.captureMessage('Unknown Webhook Provider')
