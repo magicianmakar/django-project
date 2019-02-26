@@ -3,7 +3,7 @@ import requests
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from shopified_core.utils import app_link, safe_float, http_exception_response, http_excption_status_code
+from shopified_core.utils import app_link, safe_float, http_exception_response
 from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index_from_supplier_sku, calculate_price
@@ -357,15 +357,16 @@ class ShopifyProductChangeManager(ProductChangeManager):
     def update_product(self, product_data):
         update_endpoint = self.product.store.get_link('/admin/products/{}.json'.format(
             self.product.get_shopify_id()), api=True)
+
+        if product_data and product_data.get('variants') == []:
+            del product_data['variants']
+
+        r = requests.put(update_endpoint, json={'product': product_data})
+
         try:
-            if product_data and product_data.get('variants') == []:
-                del product_data['variants']
-
-            r = requests.put(update_endpoint, json={'product': product_data})
             r.raise_for_status()
-
         except Exception as e:
-            if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            if r.status_code not in [401, 402, 403, 404, 429]:
                 raven_client.captureException(extra={
                     'rep': r.text,
                     'data': product_data,
@@ -498,22 +499,22 @@ class CommerceHQProductChangeManager(ProductChangeManager):
         return product_data
 
     def update_product(self, product_data):
-        try:
-            store = self.product.store
-            r = store.request.patch(
-                url='{}/{}'.format(store.get_api_url('products'), self.product.source_id),
-                json={
-                    'is_draft': product_data['is_draft'],
-                    'variants': product_data['variants'],
-                }
-            )
+        store = self.product.store
+        r = store.request.patch(
+            url='{}/{}'.format(store.get_api_url('products'), self.product.source_id),
+            json={
+                'is_draft': product_data['is_draft'],
+                'variants': product_data['variants'],
+            }
+        )
 
+        try:
             r.raise_for_status()
 
             self.product.update_data(product_data)
 
         except Exception as e:
-            if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            if r.status_code not in [401, 402, 403, 404, 429]:
                 raven_client.captureMessage(extra={
                     'rep': r.text,
                     'data': product_data,
