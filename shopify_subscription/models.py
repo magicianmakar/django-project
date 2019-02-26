@@ -94,3 +94,8 @@ class BaremetricsSubscription(models.Model):
     shopify_subscription = models.OneToOneField(ShopifySubscription, related_name='baremetrics_subscription', on_delete=models.CASCADE)
     subscription_oid = models.CharField(max_length=50)
     canceled_at = models.DateTimeField(null=True)
+
+
+class BaremetricsCharge(models.Model):
+    customer = models.ForeignKey(BaremetricsCustomer, related_name='charges', on_delete=models.CASCADE)
+    charge_oid = models.CharField(max_length=50)

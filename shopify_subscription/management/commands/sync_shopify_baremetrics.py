@@ -4,12 +4,14 @@ from requests.exceptions import HTTPError
 from tqdm import tqdm
 
 from shopified_core.management import DropifiedBaseCommand
+from shopified_core.utils import http_exception_response
 from leadgalaxy.models import ShopifyStore
 from shopify_subscription.utils import BaremetricsRequest
 from shopify_subscription.models import (
     ShopifySubscription,
     BaremetricsCustomer,
     BaremetricsSubscription,
+    BaremetricsCharge,
 )
 
 
@@ -48,17 +50,23 @@ class Command(DropifiedBaseCommand):
             if store.shopifysubscription_set.count() == 0:
                 continue
 
-            reccuring_charges = store.shopify.RecurringApplicationCharge.find()
+            try:
+                reccuring_charges = store.shopify.RecurringApplicationCharge.find()
+            except:
+                # shopify API error 401 mean uninstalled
+                continue
+
             single_charges = store.shopify.ApplicationCharge.find()
             for charge in reccuring_charges + single_charges:
                 # Shopify single charges can be yearly plan subscription or extra credits
                 try:
                     shopify_subscription = store.shopifysubscription_set.get(subscription_id=charge.id)
+                    baremetrics_subscription = shopify_subscription.baremetrics_subscription
+
                 except ShopifySubscription.DoesNotExist:
                     shopify_subscription = None
+                    baremetrics_subscription = None
 
-                try:
-                    baremetrics_subscription = shopify_subscription.baremetrics_subscription
                 except BaremetricsSubscription.DoesNotExist:
                     baremetrics_subscription = None
 
@@ -70,8 +78,9 @@ class Command(DropifiedBaseCommand):
                     elif baremetrics_subscription.status != charge.status:
                         self.sync_with_baremetrics(charge, baremetrics_subscription)
                 else:
-                    if charge.status == 'active':
-                        self.send_charge_to_baremetrics(shopify_subscription, charge, baremetrics_customer)
+                    baremetrics_charge = baremetrics_customer.charges.filter(charge_oid='shopifyc_{}'.format(charge.id))
+                    if charge.status == 'active' and not baremetrics_charge.exists():
+                        self.send_charge_to_baremetrics(charge, baremetrics_customer)
 
             if progress:
                 progress_bar.update(1)
@@ -93,16 +102,22 @@ class Command(DropifiedBaseCommand):
         baremetrics_customer = BaremetricsCustomer.objects.create(store=store, customer_oid=customer['oid'])
         return baremetrics_customer
 
-    def send_charge_to_baremetrics(self, subscription, charge, customer):
+    def send_charge_to_baremetrics(self, charge, customer):
         data = {
-            'oid': subscription.id,
-            'amount': int(float(charge.price) * 100),  # In cents
+            'oid': 'shopifyc_{}'.format(charge.id),
+            'amount': int(float(charge.price) * 100.0 * 0.8),  # In cents / Shopify takse 20% of revenue
             'currency': 'USD',
             'customer_oid': customer.customer_oid,
             'created': arrow.get(charge.created_at).timestamp,
             'status': 'paid' if charge.status == 'active' else 'failed'
         }
-        self.requests.post('/{source_id}/charges', json=data)
+        try:
+            self.requests.post('/{source_id}/charges', json=data)
+        except HTTPError as e:
+            self.write(http_exception_response(e, extra=False))
+            return
+
+        BaremetricsCharge.objects.create(customer=customer, charge_oid=data['oid'])
 
     def send_subscription_to_baremetrics(self, shopify_subscription, customer):
         # Only activated plans generate MRR
@@ -117,11 +132,11 @@ class Command(DropifiedBaseCommand):
 
         # Shopify yearly plans are single charges and dont reoccur
         if plan['interval'] == 'year' and canceled_at:
-            canceled_at = arrow.get(shopify_subscription.activated_on).replace(days=364)
+            canceled_at = arrow.get(shopify_subscription.created_at).replace(days=364)
 
         data = {
             'oid': 'shopify_{}'.format(shopify_subscription.id),
-            'started_at': arrow.get(shopify_subscription.activated_on).timestamp,
+            'started_at': arrow.get(shopify_subscription.created_at).timestamp,
             'plan_oid': shopify_subscription.plan.id,
             'customer_oid': customer.customer_oid,
         }
@@ -129,7 +144,11 @@ class Command(DropifiedBaseCommand):
         if canceled_at:
             data['canceled_at'] = canceled_at
 
-        self.requests.post('/{source_id}/subscriptions', json=data)
+        try:
+            self.requests.post('/{source_id}/subscriptions', json=data)
+        except HTTPError as e:
+            self.write(http_exception_response(e, extra=False))
+            return
 
         BaremetricsSubscription.objects.create(
             customer=customer,
@@ -140,7 +159,7 @@ class Command(DropifiedBaseCommand):
 
     def sync_with_baremetrics(self, charge, baremetrics_subscription):
         # Only activated plans generate MRR
-        if not charge.activated_on:
+        if not charge.created_at:
             return
 
         # Only plan subscriptions can change status
@@ -198,7 +217,7 @@ class Command(DropifiedBaseCommand):
             'oid': plan.id,
             'name': plan.get_description(),
             'currency': 'USD',
-            'amount': int(amount * 100),  # In cents
+            'amount': int(amount * 100 * 0.8),  # In cents / Shopify takes 20% of revenue
             'interval': interval,
             'interval_count': 1,
             'trial_duration': plan.trial_days,
