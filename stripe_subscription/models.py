@@ -4,21 +4,12 @@ from django.db import models
 
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-from django.utils import timezone
 
 import simplejson as json
 import arrow
 
 from .stripe_api import stripe
 import stripe.error
-
-from shopified_core import permissions
-from leadgalaxy.models import GroupPlan, ShopifyStore
-from commercehq_core.models import CommerceHQStore
-from woocommerce_core.models import WooStore
-from gearbubble_core.models import GearBubbleStore
 
 PLAN_INTERVAL = (
     ('day', 'daily'),
@@ -132,7 +123,7 @@ class StripePlan(models.Model):
         verbose_name_plural = "Plans"
 
     name = models.CharField(max_length=150)
-    plan = models.OneToOneField(GroupPlan, null=True, related_name='stripe_plan', on_delete=models.CASCADE)
+    plan = models.OneToOneField('leadgalaxy.GroupPlan', null=True, related_name='stripe_plan', on_delete=models.CASCADE)
 
     amount = models.DecimalField(decimal_places=2, max_digits=9, verbose_name='Amount(in USD)')
     currency = models.CharField(max_length=15, default='usd')
@@ -189,7 +180,7 @@ class StripeSubscription(models.Model):
         get_latest_by = 'created_at'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    plan = models.ForeignKey(GroupPlan, on_delete=models.CASCADE)
+    plan = models.ForeignKey('leadgalaxy.GroupPlan', on_delete=models.CASCADE)
 
     subscription_id = models.CharField(max_length=255, unique=True, editable=False, verbose_name='Stripe Subscription ID')
     status = models.CharField(null=True, blank=True, max_length=64, editable=False, verbose_name='Subscription Status')
@@ -208,6 +199,8 @@ class StripeSubscription(models.Model):
         return stripe.Subscription.retrieve(self.subscription_id)
 
     def refresh(self, sub=None, commit=True):
+        from leadgalaxy.models import GroupPlan
+
         if sub is None:
             sub = stripe.Subscription.retrieve(self.subscription_id)
 
@@ -277,7 +270,7 @@ class ExtraStore(models.Model):
         verbose_name_plural = "Extra Stores"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    store = models.ForeignKey(ShopifyStore, related_name='extra', on_delete=models.CASCADE)
+    store = models.ForeignKey('leadgalaxy.ShopifyStore', related_name='extra', on_delete=models.CASCADE)
 
     status = models.CharField(max_length=64, null=True, blank=True, default='pending')
     period_start = models.DateTimeField(null=True)
@@ -299,7 +292,7 @@ class ExtraCHQStore(models.Model):
         verbose_name_plural = "Extra CHQ Stores"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    store = models.ForeignKey(CommerceHQStore, related_name='extra', on_delete=models.CASCADE)
+    store = models.ForeignKey('commercehq_core.CommerceHQStore', related_name='extra', on_delete=models.CASCADE)
 
     status = models.CharField(max_length=64, null=True, blank=True, default='pending')
     period_start = models.DateTimeField(null=True)
@@ -321,7 +314,7 @@ class ExtraWooStore(models.Model):
         verbose_name_plural = "Extra WooCommerce Stores"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    store = models.ForeignKey(WooStore, related_name='extra', on_delete=models.CASCADE)
+    store = models.ForeignKey('woocommerce_core.WooStore', related_name='extra', on_delete=models.CASCADE)
 
     status = models.CharField(max_length=64, null=True, blank=True, default='pending')
     period_start = models.DateTimeField(null=True)
@@ -343,7 +336,7 @@ class ExtraGearStore(models.Model):
         verbose_name_plural = "Extra GearBubble Stores"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    store = models.ForeignKey(GearBubbleStore, related_name='extra', on_delete=models.CASCADE)
+    store = models.ForeignKey('gearbubble_core.GearBubbleStore', related_name='extra', on_delete=models.CASCADE)
 
     status = models.CharField(max_length=64, null=True, blank=True, default='pending')
     period_start = models.DateTimeField(null=True)
@@ -357,54 +350,3 @@ class ExtraGearStore(models.Model):
 
     def __unicode__(self):
         return u"{}".format(self.store.title)
-
-
-# Signals Handling
-def get_extra_model_from_store(store_model):
-    if isinstance(store_model, ShopifyStore):
-        return ExtraStore
-    if isinstance(store_model, CommerceHQStore):
-        return ExtraCHQStore
-    if isinstance(store_model, WooStore):
-        return ExtraWooStore
-    if isinstance(store_model, GearBubbleStore):
-        return ExtraGearStore
-
-
-def create_extra_store(sender, instance, created):
-    if created:
-        try:
-            can_add, total_allowed, user_count = permissions.can_add_store(instance.user)
-            stores_count = instance.user.profile.get_stores_count()
-
-        except User.DoesNotExist:
-            return
-
-        if instance.user.profile.plan.is_stripe() \
-                and total_allowed > -1 \
-                and total_allowed < stores_count:
-            extra_store_model = get_extra_model_from_store(instance)
-            extra_store_model.objects.create(
-                user=instance.user,
-                store=instance,
-                period_start=timezone.now())
-
-
-@receiver(post_save, sender=ShopifyStore)
-def add_store_signal(sender, instance, created, **kwargs):
-    create_extra_store(sender, instance, created)
-
-
-@receiver(post_save, sender=CommerceHQStore)
-def add_chqstore_signal(sender, instance, created, **kwargs):
-    create_extra_store(sender, instance, created)
-
-
-@receiver(post_save, sender=WooStore)
-def add_woostore_signal(sender, instance, created, **kwargs):
-    create_extra_store(sender, instance, created)
-
-
-@receiver(post_save, sender=GearBubbleStore)
-def add_gearstore_signal(sender, instance, created, **kwargs):
-    create_extra_store(sender, instance, created)

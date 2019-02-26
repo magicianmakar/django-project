@@ -1,9 +1,9 @@
 from datetime import timedelta
 
-from django.conf import settings
 from django.urls import reverse
 from lib.test import BaseTestCase
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 import factory
 from factory import fuzzy
@@ -20,7 +20,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     is_active = True
 
     class Meta:
-        model = settings.AUTH_USER_MODEL
+        model = User
 
 
 class ShopifyStoreFactory(factory.django.DjangoModelFactory):

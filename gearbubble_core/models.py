@@ -33,7 +33,7 @@ class GearBubbleStore(models.Model):
     LIVE = 'live'
     MODE_CHOICES = [(STAGING, 'Staging'), (LIVE, 'Live')]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(User)
     title = models.CharField(max_length=300, blank=True, default='')
     api_token = models.CharField(max_length=300)
     is_active = models.BooleanField(default=True)
@@ -114,7 +114,7 @@ class GearBubbleProduct(models.Model):
         ordering = ['-created_at']
 
     store = models.ForeignKey('GearBubbleStore', related_name='products', null=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(User)
 
     data = models.TextField(default='{}', blank=True)
     notes = models.TextField(null=True, blank=True)
@@ -615,7 +615,7 @@ class GearUserUpload(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(User)
     product = models.ForeignKey('GearBubbleProduct', null=True)
     url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
 
@@ -631,7 +631,7 @@ class GearBubbleBoard(models.Model):
         verbose_name = "GearBubble Board"
         verbose_name_plural = "GearBubble Boards"
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(User)
     title = models.CharField(max_length=512)
     products = models.ManyToManyField('GearBubbleProduct', blank=True)
     config = models.CharField(max_length=512, blank=True, default='')
@@ -658,7 +658,7 @@ class GearBubbleOrderTrack(models.Model):
         ordering = ['-created_at']
         index_together = ['store', 'order_id', 'line_id']
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(User)
     store = models.ForeignKey('GearBubbleStore', null=True)
     order_id = models.BigIntegerField()
     line_id = models.BigIntegerField()

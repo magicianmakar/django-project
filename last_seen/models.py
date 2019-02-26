@@ -1,10 +1,9 @@
 import time
 import datetime
 from django.db import models
-from django.db.models.signals import pre_delete
-from django.dispatch import receiver
 from django.utils import timezone
 from django.core.cache import cache
+from django.contrib.auth.models import User
 
 from . import settings
 
@@ -59,7 +58,7 @@ class LastSeenManager(models.Manager):
 
 
 class LastSeen(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     module = models.CharField(default=settings.LAST_SEEN_DEFAULT_MODULE, max_length=20)
     last_seen = models.DateTimeField(default=timezone.now)
 
@@ -124,10 +123,3 @@ def clear_interval(user):
 
     if keys:
         cache.set_many(keys)
-
-
-@receiver(pre_delete, sender=LastSeen, dispatch_uid='delete_last_seen_cache')
-def delete_last_seen_cache(sender, instance, using, **kwargs):
-    cache.delete(get_cache_key(settings.LAST_SEEN_DEFAULT_MODULE, instance.user))
-    cache.delete(get_cache_key(settings.LAST_SEEN_API_MODULE, instance.user))
-    cache.delete(get_cache_key(settings.LAST_SEEN_ADMIN_MODULE, instance.user))

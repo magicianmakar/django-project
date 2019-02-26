@@ -194,13 +194,12 @@ def apply_shared_registration(user, registration):
 
 
 def create_user_without_signals(**kwargs):
-    post_save.disconnect(userprofile_creation, User, dispatch_uid="userprofile_creation")
-
     password = kwargs.get('password')
     if password:
         del kwargs['password']
 
     user = User(**kwargs)
+    user.no_auto_profile = True
 
     if password:
         user.set_password(password)
@@ -208,8 +207,6 @@ def create_user_without_signals(**kwargs):
     user.save()
 
     profile = UserProfile.objects.create(user=user)
-
-    post_save.connect(userprofile_creation, User, dispatch_uid="userprofile_creation")
 
     return user, profile
 

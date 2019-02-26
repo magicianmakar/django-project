@@ -3,8 +3,8 @@ import simplejson as json
 from decimal import Decimal
 
 from django.db import models
-from django.conf import settings
 from django.utils.functional import cached_property
+from django.contrib.auth.models import User
 
 from polymorphic.models import PolymorphicModel
 
@@ -12,7 +12,7 @@ from leadgalaxy.models import ENTITY_STATUS_CHOICES
 
 
 class Event(PolymorphicModel):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

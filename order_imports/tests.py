@@ -2,14 +2,13 @@ import csv
 from StringIO import StringIO
 
 import requests_mock
-from django.conf import settings
-from django.urls import reverse
 from django.test import tag
 from lib.test import BaseTestCase
 
 import factory
 from factory import fuzzy
 
+from django.contrib.auth.models import User
 from leadgalaxy.models import ShopifyStore
 from order_imports.utils import ShopifyOrderImport
 
@@ -21,7 +20,7 @@ class UserFactory(factory.django.DjangoModelFactory):
     is_active = True
 
     class Meta:
-        model = settings.AUTH_USER_MODEL
+        model = User
 
 
 class ShopifyStoreFactory(factory.django.DjangoModelFactory):

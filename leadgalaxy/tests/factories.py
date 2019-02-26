@@ -1,6 +1,6 @@
 import datetime
-from django.conf import settings
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 import factory
 import factory.fuzzy
@@ -17,7 +17,7 @@ class UserFactory(factory.DjangoModelFactory):
     is_active = True
 
     class Meta:
-        model = settings.AUTH_USER_MODEL
+        model = User
         django_get_or_create = ['id']
 
 
