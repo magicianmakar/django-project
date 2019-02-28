@@ -365,7 +365,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
 
         try:
             r.raise_for_status()
-        except Exception as e:
+        except:
             if r.status_code not in [401, 402, 403, 404, 429]:
                 raven_client.captureException(extra={
                     'rep': r.text,
@@ -374,8 +374,6 @@ class ShopifyProductChangeManager(ProductChangeManager):
                     'product': self.product.id,
                     'store': self.product.store,
                 })
-            else:
-                raven_client.captureException(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
         history, created = ProductVariantPriceHistory.objects.get_or_create(
