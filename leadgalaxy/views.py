@@ -4330,7 +4330,9 @@ def orders_place(request):
             'cart': 'SACart' in request.GET
         })
 
-        tasks.keen_add_event.delay("auto_fulfill", event_data)
+        if not settings.DEBUG:
+            tasks.keen_add_event.delay("auto_fulfill", event_data)
+
         cache.set(event_key, True, timeout=3600)
 
     return HttpResponseRedirect(redirect_url)
