@@ -159,6 +159,7 @@ class Command(DropifiedBaseCommand):
             customer=customer,
             shopify_subscription=shopify_subscription,
             subscription_oid=data['oid'],
+            status=shopify_subscription.status,
             canceled_at=arrow.get(canceled_at).datetime if canceled_at else None
         )
 
@@ -174,6 +175,7 @@ class Command(DropifiedBaseCommand):
         shopify_subscription = baremetrics_subscription.shopify_subscription
         shopify_subscription.refresh(charge)
 
+        # Recurring monthly plans can be cancelled
         canceled_at = None
         if charge.to_dict().get('cancelled_on'):
             canceled_at = arrow.get(charge.cancelled_on)
