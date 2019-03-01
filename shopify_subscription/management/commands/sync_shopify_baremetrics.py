@@ -77,6 +77,9 @@ class Command(DropifiedBaseCommand):
                         self.send_subscription_to_baremetrics(shopify_subscription, baremetrics_customer)
                     elif baremetrics_subscription.status != charge.status:
                         self.sync_with_baremetrics(charge, baremetrics_subscription)
+                    elif baremetrics_subscription.interval == 'yearly' and baremetrics_subscription.canceled_at is None:
+                        # see if yearly plan needs cancelation then cancel it and update baremetrics_subscription.canceled_at
+                        self.sync_with_baremetrics(charge, baremetrics_subscription)
                 else:
                     baremetrics_charge = baremetrics_customer.charges.filter(charge_oid='shopifyc_{}'.format(charge.id))
                     if charge.status == 'active' and not baremetrics_charge.exists():
@@ -120,8 +123,8 @@ class Command(DropifiedBaseCommand):
         BaremetricsCharge.objects.create(customer=customer, charge_oid=data['oid'])
 
     def send_subscription_to_baremetrics(self, shopify_subscription, customer):
-        # Only activated plans generate MRR
-        if shopify_subscription.status != 'active':
+        # Only once activated plans generated MRR
+        if shopify_subscription.status not in ['active', 'frozen', 'cancelled']:
             return
 
         plan = self.get_baremetrics_plan(shopify_subscription)
@@ -131,8 +134,10 @@ class Command(DropifiedBaseCommand):
             canceled_at = arrow.get(shopify_subscription.subscription.get('cancelled_on')).timestamp
 
         # Shopify yearly plans are single charges and dont reoccur
-        if plan['interval'] == 'year' and canceled_at:
-            canceled_at = arrow.get(shopify_subscription.created_at).replace(days=364)
+        if plan['interval'] == 'year':
+            expect_canceled_at = arrow.get(shopify_subscription.created_at).replace(days=363)
+            if expect_canceled_at < arrow.get():
+                canceled_at = expect_canceled_at.timestamp  # one day before subscription is auto renewed
 
         data = {
             'oid': 'shopify_{}'.format(shopify_subscription.id),
@@ -166,26 +171,37 @@ class Command(DropifiedBaseCommand):
         if not baremetrics_subscription.shopify_subscription.plan:
             return
 
-        baremetrics_subscription.shopify_subscription.refresh(charge)
+        shopify_subscription = baremetrics_subscription.shopify_subscription
+        shopify_subscription.refresh(charge)
 
         canceled_at = None
-        if charge.cancelled_on:
+        if charge.to_dict().get('cancelled_on'):
             canceled_at = arrow.get(charge.cancelled_on)
             baremetrics_subscription.canceled_at = canceled_at.datetime
 
-        baremetrics_subscription.status = charge.status
-        baremetrics_subscription.save()
+        # Shopify yearly plans must be cancelled one day before renew
+        is_yearly_cancel = False
+        if shopify_subscription.plan.payment_interval == 'yearly':
+            expect_canceled_at = arrow.get(shopify_subscription.created_at).replace(days=363)
+            if expect_canceled_at < arrow.get():
+                is_yearly_cancel = True
+                canceled_at = expect_canceled_at.timestamp
+                baremetrics_subscription.canceled_at = canceled_at.datetime
 
         # Handle baremetrics subscription cancelation only if needed
-        if charge.status in ['frozen', 'cancelled', 'declined'] and canceled_at:
+        if charge.status in ['frozen', 'cancelled', 'declined'] or is_yearly_cancel and canceled_at:
             data = {
                 'canceled_at': canceled_at.timestamp
             }
             try:
-                self.requests.put('/{}/subscriptions/{}/cancel'.format('{source_id}', baremetrics_subscription.subscription_oid), data=data)
+                url = '/{}/subscriptions/{}/cancel'.format('{source_id}', baremetrics_subscription.subscription_oid)
+                self.requests.put(url, data=data)
             except HTTPError as e:
                 if e.response.status_code != 404:
                     raise
+
+        baremetrics_subscription.status = charge.status
+        baremetrics_subscription.save()
 
     def get_baremetrics_plan(self, subscription):
         plan = subscription.plan
