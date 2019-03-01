@@ -11,11 +11,15 @@ upstream dropified_backend  {
 }
 
 upstream dropifiedhelper_backend  {
-  server shopified-helper-app.herokuapp.com;
+    server shopified-helper-app.herokuapp.com;
 }
 
 upstream captchasolver_backend  {
-  server dropified-captcha.herokuapp.com;
+    server dropified-captcha.herokuapp.com;
+}
+
+upstream ae_backend  {
+    server api.aliextractor.com;
 }
 
 server {
@@ -112,6 +116,18 @@ server {
         proxy_pass  http://dropifiedhelper_backend;
     }
 
+    location /api/ae/ {
+        access_log  /var/log/nginx/aeapp.access.log;
+        error_log   /var/log/nginx/aeapp.error.log;
+
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Proxy-Protocol $scheme;
+        proxy_set_header Host api.aliextractor.com;
+
+        proxy_pass  http://ae_backend/;
+    }
 
     location / {
         rewrite /terms-of-service /pages/terms-of-service  break;
