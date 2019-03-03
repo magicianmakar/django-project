@@ -1,4 +1,4 @@
-# Configuration for production server
+# Configuration for Development server
 
 server {
     listen 80;
@@ -7,7 +7,7 @@ server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
 
-    server_name app.dropified.com;
+    server_name dev.dropified.com;
 
     ### Hide OS and Nginx version
     server_tokens off;
@@ -19,8 +19,8 @@ server {
     client_max_body_size 10m;
 
     ### SSL Settings
-    ssl_certificate     /etc/nginx/ssl/app.dropified.com/app_dropified_com-bundle.crt;
-    ssl_certificate_key /etc/nginx/ssl/app.dropified.com/app_dropified_com.key;
+    ssl_certificate     /etc/nginx/ssl/dev.dropified.com/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/dev.dropified.com/privkey.pem;
     ssl_ciphers EECDH+CHACHA20:EECDH+AES128:RSA+AES128:EECDH+AES256:RSA+AES256:EECDH+3DES:RSA+3DES:!MD5;
     ssl_prefer_server_ciphers on;
     ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
@@ -98,6 +98,6 @@ server {
         rewrite /pages/view/what-websites-will-shopified-app-import-products-from /pages/11 break;
         rewrite /pages/what-websites-will-shopified-app-import-products-from /pages/11 break;
 
-        proxy_pass  http://shopifytools.herokuapp.com;
+        proxy_pass  http://127.0.0.1:8000;
     }
 }
