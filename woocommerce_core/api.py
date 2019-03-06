@@ -36,6 +36,7 @@ from shopified_core.utils import (
 )
 from zapier_core.utils import send_order_track_change
 
+from .api_helper import WooApiHelper
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
 import tasks
 import utils
@@ -43,6 +44,7 @@ import utils
 
 class WooStoreApi(ApiBase):
     board_model = WooBoard
+    helper = WooApiHelper()
 
     def validate_store_data(self, data):
         title = data.get('title', '')

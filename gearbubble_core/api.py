@@ -35,6 +35,7 @@ from shopified_core.utils import (
 )
 from zapier_core.utils import send_order_track_change
 
+from .api_helper import GearBubbleApiHelper
 from .models import (
     GearBubbleStore,
     GearBubbleProduct,
@@ -49,6 +50,7 @@ import tasks
 
 class GearBubbleApi(ApiBase):
     board_model = GearBubbleBoard
+    helper = GearBubbleApiHelper()
 
     def validate_store_data(self, data):
         title = data.get('title', '')

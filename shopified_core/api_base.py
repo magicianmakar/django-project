@@ -13,6 +13,7 @@ from shopified_core.decorators import HasSubuserPermission
 
 class ApiBase(ApiResponseMixin, View):
     board_model = None
+    helper = None
 
     def __init__(self):
         super(ApiBase, self).__init__()
@@ -20,6 +21,7 @@ class ApiBase(ApiResponseMixin, View):
 
     def _assert_configured(self):
         assert self.board_model, 'Boards Model is not set'
+        assert self.helper, 'Helper is not set'
 
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def post_boards_add(self, request, user, data):
@@ -99,5 +101,7 @@ class ApiBase(ApiResponseMixin, View):
         })
 
         board.save()
+
+        self.helper.smart_board_sync(user.models_user, board)
 
         return self.api_success()

@@ -38,6 +38,7 @@ from zapier_core.utils import send_order_track_change
 import tasks
 import utils
 
+from .api_helper import CHQApiHelper
 from .models import (
     CommerceHQStore,
     CommerceHQProduct,
@@ -49,6 +50,7 @@ from .models import (
 
 class CHQStoreApi(ApiBase):
     board_model = CommerceHQBoard
+    helper = CHQApiHelper()
 
     def post_alert_archive(self, request, user, data):
         try:

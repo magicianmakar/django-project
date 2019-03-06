@@ -64,6 +64,7 @@ from zapier_core.utils import send_order_track_change
 
 import tasks
 import utils
+from .api_helper import ShopifyApiHelper
 from .forms import (
     EmailForm,
     UserProfileEmailForm,
@@ -94,6 +95,7 @@ from .templatetags.template_helper import shopify_image_thumb, money_format
 
 class ShopifyStoreApi(ApiBase):
     board_model = ShopifyBoard
+    helper = ShopifyApiHelper()
 
     def post_delete_store(self, request, user, data):
         store = ShopifyStore.objects.get(id=data.get('store'), user=user)
