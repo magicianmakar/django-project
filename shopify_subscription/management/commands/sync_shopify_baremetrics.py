@@ -23,15 +23,29 @@ class Command(DropifiedBaseCommand):
             '--store', dest='store_id', action='store', type=int,
             help='Sync single store with baremetrics')
 
+        parser.add_argument(
+            '--plans', dest='plans', action='store', type=str,
+            help='Sync only selected plans (comma separated)')
+
+        parser.add_argument(
+            '--days', dest='days', action='store', type=int,
+            help='Sync subscriptions older than this number of days')
+
         parser.add_argument('--progress', dest='progress', action='store_true', help='Show sync progress')
 
     def start_command(self, *args, **options):
-        store_id = options.get('store_id')
         progress = options.get('progress')
 
         stores = ShopifyStore.objects.filter(is_active=True)
-        if store_id:
-            stores = stores.filter(id=store_id)
+
+        if options.get('plans'):
+            stores = stores.filter(user__profile__plan__in=options.get('plans').split(','))
+
+        if options.get('days'):
+            stores = stores.filter(created_at__lte=arrow.utcnow().replace(days=-abs(options['days'])).datetime)
+
+        if options.get('store_id'):
+            stores = stores.filter(id=options.get('store_id'))
 
         if progress:
             progress_bar = tqdm(total=stores.count())
