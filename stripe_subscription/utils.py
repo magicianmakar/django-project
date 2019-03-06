@@ -440,8 +440,8 @@ def process_webhook_event(request, event_id, raven_client):
         except StripeSubscription.DoesNotExist:
             try:
                 sub = stripe.Subscription.retrieve(sub.id)
-                plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) |
-                                             Q(stripe_plan__stripe_id=sub.plan.id))
+                plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id'))
+                                             | Q(stripe_plan__stripe_id=sub.plan.id))
 
                 if plan.is_stripe():
                     customer.user.profile.change_plan(plan)

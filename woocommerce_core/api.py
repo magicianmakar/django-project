@@ -1145,8 +1145,8 @@ class WooStoreApi(ApiBase):
             if connected_to.exists():
                 return self.api_error(
                     '\n'.join(
-                        ['The selected Product is already connected to:\n'] +
-                        [request.build_absolute_uri('/woo/product/{}'.format(i))
+                        ['The selected Product is already connected to:\n']
+                        + [request.build_absolute_uri('/woo/product/{}'.format(i))
                             for i in connected_to.values_list('id', flat=True)]),
                     status=500)
 

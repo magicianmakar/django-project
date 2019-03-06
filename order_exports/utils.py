@@ -444,8 +444,8 @@ class ShopifyTrackOrderExport():
             if order_id:
                 orders = orders.filter(order_id=order_id)
             else:
-                orders = orders.filter(Q(source_id=clean_query_id(params["query"])) |
-                                       Q(source_tracking=params["query"]))
+                orders = orders.filter(Q(source_id=clean_query_id(params["query"]))
+                                       | Q(source_tracking=params["query"]))
 
         if params["tracking"] == '0':
             orders = orders.filter(source_tracking='')

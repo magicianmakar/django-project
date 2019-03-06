@@ -29,7 +29,7 @@ class Command(DropifiedBaseCommand):
         from_user = User.objects.get(id=options['from']) if safe_int(options['from']) else User.objects.get(email__iexact=options['from'])
         to_user = User.objects.get(id=options['to']) if safe_int(options['to']) else User.objects.get(email__iexact=options['to'])
 
-        shop = re.findall('[^/@\.]+\.myshopify\.com', options['store'])
+        shop = re.findall(r'[^/@\.]+\.myshopify\.com', options['store'])
         if not shop:
             self.write(u'Store {} not found'.format(shop))
             return

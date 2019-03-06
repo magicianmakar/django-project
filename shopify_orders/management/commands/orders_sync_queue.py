@@ -97,20 +97,20 @@ class Command(DropifiedBaseCommand):
         try:
             ShopifySyncStatus.objects.get(store=store, sync_type=self.sync_type)
         except ShopifySyncStatus.DoesNotExist:
-                self.write_success(u'Sync Store: {}'.format(store.title))
-                sync = ShopifySyncStatus(store=store, sync_type=self.sync_type)
+            self.write_success(u'Sync Store: {}'.format(store.title))
+            sync = ShopifySyncStatus(store=store, sync_type=self.sync_type)
 
-                try:
-                    sync.orders_count = store.get_orders_count(all_orders=True)
+            try:
+                sync.orders_count = store.get_orders_count(all_orders=True)
 
-                    webhooks = utils.attach_webhooks(store)
-                    self.write_success(u'    + Install {} webhooks'.format(len(webhooks)))
+                webhooks = utils.attach_webhooks(store)
+                self.write_success(u'    + Install {} webhooks'.format(len(webhooks)))
 
-                    self.queued_store.append(store.id)
-                except:
-                    sync.sync_status = 4
-                    raven_client.captureException()
+                self.queued_store.append(store.id)
+            except:
+                sync.sync_status = 4
+                raven_client.captureException()
 
-                sync.save()
+            sync.save()
 
         self.synced_store.append(store.id)

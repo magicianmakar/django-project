@@ -554,9 +554,9 @@ class OrdersTrackList(ListView):
                 query = str(order_id)
 
             orders = orders.filter(
-                Q(order_id=clean_query_id(query)) |
-                Q(source_id=clean_query_id(query)) |
-                Q(source_tracking__icontains=query)
+                Q(order_id=clean_query_id(query))
+                | Q(source_id=clean_query_id(query))
+                | Q(source_tracking__icontains=query)
             )
 
         if tracking_filter == '0':

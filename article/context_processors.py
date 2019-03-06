@@ -16,7 +16,7 @@ def sidebarlinks(request):
                 queryset = SidebarLink.objects.exclude(title__icontains='Bonus Training')
                 sidebar_links = sidebar_links.prefetch_related(Prefetch('childs', queryset=queryset))
         else:
-            sidebar_links = sidebar_links.exclude(Q(title__icontains='Help & Training') |
-                                                  Q(title__icontains='Support'))
+            sidebar_links = sidebar_links.exclude(Q(title__icontains='Help & Training')
+                                                  | Q(title__icontains='Support'))
 
     return {'sidebar_links': sidebar_links}

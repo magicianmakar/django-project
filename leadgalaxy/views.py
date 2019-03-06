@@ -1041,7 +1041,7 @@ def webhook(request, provider, option):
             except:
                 return HttpResponse(":x: {} user not found".format(options['to']))
 
-            shop = re.findall('[^/@\.]+\.myshopify\.com', options['store'])
+            shop = re.findall(r'[^/@\.]+\.myshopify\.com', options['store'])
             if not shop:
                 return HttpResponse(':x: Store link is invalid')
             else:
@@ -1130,7 +1130,7 @@ def webhook(request, provider, option):
             access = FacebookAccess.objects
 
             if len(args) >= 2:
-                shop = re.findall('[^/@\.]+\.myshopify\.com', args[1])
+                shop = re.findall(r'[^/@\.]+\.myshopify\.com', args[1])
                 if not shop:
                     return HttpResponse(':x: Store link is invalid')
                 else:
@@ -2147,11 +2147,11 @@ def acp_users_list(request):
     if q:
         if request.GET.get('store'):
             users = users.filter(
-                Q(shopifystore__id=safe_int(request.GET.get('store'))) |
-                Q(shopifystore__shop__iexact=q) |
-                Q(commercehqstore__api_url__icontains=q) |
-                Q(woostore__api_url__icontains=q) |
-                Q(shopifystore__title__icontains=q)
+                Q(shopifystore__id=safe_int(request.GET.get('store')))
+                | Q(shopifystore__shop__iexact=q)
+                | Q(commercehqstore__api_url__icontains=q)
+                | Q(woostore__api_url__icontains=q)
+                | Q(shopifystore__title__icontains=q)
             )
         elif request.GET.get('user') and safe_int(request.GET.get('user')):
             users = users.filter(id=request.GET['user'])
@@ -2162,14 +2162,14 @@ def acp_users_list(request):
                 users = users.filter(Q(username__icontains=q) | Q(shopifystore__shop__iexact=q))
             else:
                 users = users.filter(
-                    Q(username__icontains=q) |
-                    Q(email__icontains=q) |
-                    Q(profile__emails__icontains=q) |
-                    Q(profile__ips__icontains=q) |
-                    Q(shopifystore__shop__iexact=q) |
-                    Q(commercehqstore__api_url__icontains=q) |
-                    Q(woostore__api_url__icontains=q) |
-                    Q(shopifystore__title__icontains=q)
+                    Q(username__icontains=q)
+                    | Q(email__icontains=q)
+                    | Q(profile__emails__icontains=q)
+                    | Q(profile__ips__icontains=q)
+                    | Q(shopifystore__shop__iexact=q)
+                    | Q(commercehqstore__api_url__icontains=q)
+                    | Q(woostore__api_url__icontains=q)
+                    | Q(shopifystore__title__icontains=q)
                 )
 
         users = users.distinct()
@@ -2413,9 +2413,9 @@ def acp_graph(request):
                                                  .filter(updated_at__gt=time_threshold).count(),
                 'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
                                                      .filter(updated_at__gt=time_threshold)
-                                                     .exclude(Q(store__auto_fulfill='hourly') |
-                                                              Q(store__auto_fulfill='daily') |
-                                                              Q(store__auto_fulfill='enable')).count()
+                                                     .exclude(Q(store__auto_fulfill='hourly')
+                                                              | Q(store__auto_fulfill='daily')
+                                                              | Q(store__auto_fulfill='enable')).count()
             }
         else:
             tracking_count = {
@@ -2424,9 +2424,9 @@ def acp_graph(request):
                 'fulfilled': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled').count(),
                 'auto': ShopifyOrderTrack.objects.filter(shopify_status='fulfilled', auto_fulfilled=True).count(),
                 'disabled': ShopifyOrderTrack.objects.exclude(shopify_status='fulfilled').exclude(source_tracking='')
-                                                     .exclude(Q(store__auto_fulfill='hourly') |
-                                                              Q(store__auto_fulfill='daily') |
-                                                              Q(store__auto_fulfill='enable')).count()
+                                                     .exclude(Q(store__auto_fulfill='hourly')
+                                                              | Q(store__auto_fulfill='daily')
+                                                              | Q(store__auto_fulfill='enable')).count()
 
             }
 
@@ -3717,8 +3717,8 @@ def orders_view(request):
         order['refunded_lines'] = []
         order['order_log'] = orders_log.get(order['id'])
         order['supplier_types'] = set()
-        order['pending_payment'] = (order['financial_status'] == 'pending' and
-                                    (order['gateway'] == 'paypal' or 'amazon' in order['gateway'].lower()))
+        order['pending_payment'] = (order['financial_status'] == 'pending'
+                                    and (order['gateway'] == 'paypal' or 'amazon' in order['gateway'].lower()))
 
         if type(order['refunds']) is list:
             for refund in order['refunds']:
@@ -4074,8 +4074,8 @@ def orders_track(request):
         if order_id:
             orders = orders.filter(order_id=order_id)
         else:
-            orders = orders.filter(Q(source_id=clean_query_id(query)) |
-                                   Q(source_tracking=query))
+            orders = orders.filter(Q(source_id=clean_query_id(query))
+                                   | Q(source_tracking=query))
 
     if tracking_filter == '0':
         orders = orders.filter(source_tracking='')

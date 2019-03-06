@@ -748,9 +748,9 @@ class ShopifyStore(models.Model):
 
     def get_link(self, page=None, api=False):
         if api:
-            url = re.findall('[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
+            url = re.findall(r'[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
         else:
-            url = re.findall('[^@\.]+\.myshopify\.com', self.api_url)[0]
+            url = re.findall(r'[^@\.]+\.myshopify\.com', self.api_url)[0]
 
         if page:
             url = 'https://{}/{}'.format(url, page.lstrip('/'))

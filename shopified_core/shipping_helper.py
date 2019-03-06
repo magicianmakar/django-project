@@ -307,7 +307,7 @@ def valide_aliexpress_province(country, province, city, auto_correct=False):
             if auto_correct:
                 city_match = fuzzy_find_in_list(city_list, city, default=None)
                 if city_match and city and city_match and city_match.lower().strip() != city:
-                        correction['city'] = city_match
+                    correction['city'] = city_match
             else:
                 city_match = city_list and city in city_list
 

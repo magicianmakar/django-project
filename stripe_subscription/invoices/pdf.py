@@ -107,8 +107,8 @@ def invoice_total_paragraph(invoice):
 
 
 def invoicer_paragraph(invoice):
-    return Paragraph('Dropified LLC<br />' +
-                     '1430 Gadsden Hwy #116 #110, Birmingham, AL 35235', STYLES['default'])
+    return Paragraph('Dropified LLC<br />'
+                     + '1430 Gadsden Hwy #116 #110, Birmingham, AL 35235', STYLES['default'])
 
 
 def invoice_due_paragraph(invoice):

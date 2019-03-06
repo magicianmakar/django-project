@@ -95,7 +95,7 @@ def tapafilate_conversaion(request):
     if request.user.is_authenticated \
             and request.user.is_stripe_customer() \
             and cache.get('affilaite_{}'.format(request.user.stripe_customer.customer_id)):
-            affilaite = request.user.stripe_customer.customer_id
+        affilaite = request.user.stripe_customer.customer_id
 
     return {
         'tapafilate_conversaion': affilaite

@@ -1,6 +1,6 @@
 [flake8]
 
-ignore = E722, E402
+ignore = E722, E402, W503
 max-line-length = 150
 exclude = 
 	venv*,

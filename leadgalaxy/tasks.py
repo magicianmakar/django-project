@@ -1341,10 +1341,10 @@ def products_supplier_sync(self, store_id, sync_price, price_markup, compare_mar
 
         try:
             # Check if there's only one price
-            seem_price = (len('variants') == 1 or
-                          len(set([v['price'] for v in product_data['variants']])) == 1 or
-                          len(supplier_variants) == 1 or
-                          supplier_min_price == supplier_max_price)
+            seem_price = (len('variants') == 1
+                          or len(set([v['price'] for v in product_data['variants']])) == 1
+                          or len(supplier_variants) == 1
+                          or supplier_min_price == supplier_max_price)
 
             # New Data
             api_variants_data = [{'id': v['id']} for v in product_data['variants']]

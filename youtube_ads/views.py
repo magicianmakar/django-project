@@ -43,7 +43,7 @@ def autocomplete(request):
         'q=%s&callback=google.sbox.p50&gs_gbg=O1x8jxdhuqvwV62b34' % q
     )
     r = requests.get(url, headers=headers)
-    res = re.findall('\["([^"]+)"', r.text)
+    res = re.findall(r'\["([^"]+)"', r.text)
 
     return JsonResponse(res)
 
