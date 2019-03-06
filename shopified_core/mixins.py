@@ -9,6 +9,7 @@ from .exceptions import ApiLoginException
 
 class ApiResponseMixin():
     response = None
+    login_non_required = []
 
     def api_error(self, description, status=500):
         self.response = JsonResponse({
@@ -131,7 +132,7 @@ class ApiResponseMixin():
         self.target = target
         self.data = self.request_data(request)
 
-        assert_login = target not in ['login', 'shipping-aliexpress']
+        assert_login = target not in self.login_non_required
 
         user = self.get_user(request, assert_login=assert_login)
         if user:

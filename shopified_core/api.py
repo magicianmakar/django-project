@@ -27,6 +27,7 @@ import utils as core_utils
 
 
 class ShopifiedApi(ApiResponseMixin, View):
+    login_non_required = ['login']
 
     def post_login(self, request, user, data):
         email = data.get('username')
