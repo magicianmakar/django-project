@@ -9,16 +9,10 @@ RUN apt-get update && apt-get install -y \
     gettext \
     nodejs \
     postgresql-client
-RUN pip install virtualenv==16.0.0
-RUN pip install autoenv==1.0.0
-RUN pip install pip==18.1
+RUN pip install pip==19.0.3
 WORKDIR /opt/dropified
-RUN virtualenv venv && /bin/bash -c "source /opt/dropified/venv/bin/activate"
 COPY requirements.txt requirements.txt
-RUN /opt/dropified/venv/bin/pip install -r requirements.txt
+RUN pip install -r requirements.txt
 COPY package.json package.json
-RUN npm install
-COPY bower.json bower.json
-RUN ./node_modules/bower/bin/bower install --allow-root
 RUN echo "source /opt/dropified/.env" > /root/.bashrc
 EXPOSE 8000

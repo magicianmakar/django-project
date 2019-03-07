@@ -111,23 +111,22 @@ export DATA_STORE_DATABASE_URL=postgres://postgres:@db:5432/shopified-store
 export REDISCLOUD_URL="redis://redis:6379"
 export REDISCLOUD_CACHE="redis://redis:6379"
 export REDISCLOUD_ORDERS="redis://redis:6379"
-alias dj-run='dj-activate; python manage.py runserver 0.0.0.0:8000'
+alias dj-activate='echo "Empty dj-activate"'
+alias dj-run='python manage.py runserver 0.0.0.0:8000'
+```
+
+Setup Docker docker environment:
+```
+./scripts/setup-docker
 ```
 
 Log into the docker image:
 ```
-docker-compose run -p 8000:8000 web
-```
-
-Create databases if you are logging in for the first time:
-```
-createdb --host=db -U postgres -O postgres -E utf8 -T template0 shopified
-createdb --host=db -U postgres -O postgres -E utf8 -T template0 shopified-store
+docker-compose run --service-ports web
 ```
 
 Run the application:
 ```
-dj-migrate
 dj-run
 ```
 
