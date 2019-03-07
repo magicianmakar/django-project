@@ -94,6 +94,8 @@ from .templatetags.template_helper import shopify_image_thumb, money_format
 
 class ShopifyStoreApi(ApiBase):
     board_model = ShopifyBoard
+    product_model = ShopifyProduct
+    order_track_model = ShopifyOrderTrack
     helper = ShopifyApiHelper()
 
     def post_delete_store(self, request, user, data):
@@ -244,19 +246,6 @@ class ShopifyStoreApi(ApiBase):
 
         return JsonResponse(json.loads(product.data), safe=False)
 
-    def get_products_info(self, request, user, data):
-        products = {}
-        for p in data.getlist('products[]'):
-            try:
-                product = ShopifyProduct.objects.get(id=p)
-                permissions.user_can_view(user, product)
-
-                products[p] = json.loads(product.data)
-            except:
-                return self.api_error('Product not found')
-
-        return JsonResponse(products, safe=False)
-
     def post_shopify(self, request, user, data):
         if data.get('store'):
             store = ShopifyStore.objects.get(pk=data['store'])
@@ -402,56 +391,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success({'ids': ids})
 
-    def post_product_edit(self, request, user, data):
-        products = []
-        for p in data.getlist('products[]'):
-            product = ShopifyProduct.objects.get(id=p)
-            permissions.user_can_edit(user, product)
-
-            product_data = json.loads(product.data)
-
-            if 'tags' in data:
-                product_data['tags'] = data.get('tags')
-
-            if 'price' in data:
-                product_data['price'] = safe_float(data.get('price'))
-
-            if 'compare_at' in data:
-                product_data['compare_at_price'] = safe_float(data.get('compare_at'))
-
-            if 'type' in data:
-                product_data['type'] = data.get('type')
-
-            if 'weight' in data:
-                product_data['weight'] = data.get('weight')
-
-            if 'weight_unit' in data:
-                product_data['weight_unit'] = data.get('weight_unit')
-
-            products.append(product_data)
-
-            product.data = json.dumps(product_data)
-            product.save()
-
-        return self.api_success({'products': products})
-
-    def post_board_add_products(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        board = ShopifyBoard.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
-
-        for p in data.getlist('products[]'):
-            product = ShopifyProduct.objects.get(id=p)
-            permissions.user_can_edit(user, product)
-
-            board.products.add(product)
-
-        board.save()
-
-        return self.api_success()
-
     def post_product_remove_board(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
@@ -469,32 +408,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def post_product_board(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        if data.get('board') == '0':
-            product.shopifyboard_set.clear()
-            product.save()
-
-            return self.api_success()
-        else:
-            board = ShopifyBoard.objects.get(id=data.get('board'))
-            permissions.user_can_edit(user, board)
-
-            board.products.add(product)
-            board.save()
-
-            return self.api_success({
-                'board': {
-                    'id': board.id,
-                    'title': board.title
-                }
-            })
-
     def post_board_delete(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
@@ -503,17 +416,6 @@ class ShopifyStoreApi(ApiBase):
         permissions.user_can_delete(user, board)
 
         board.delete()
-
-        return self.api_success()
-
-    def post_board_empty(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        board = ShopifyBoard.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
-
-        board.products.clear()
 
         return self.api_success()
 
@@ -913,15 +815,6 @@ class ShopifyStoreApi(ApiBase):
 
         cus.account_balance = 0
         cus.save()
-
-        return self.api_success()
-
-    def post_product_notes(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        product.notes = data.get('notes')
-        product.save()
 
         return self.api_success()
 
@@ -2538,15 +2431,6 @@ class ShopifyStoreApi(ApiBase):
             return self.api_success()
         else:
             return self.api_error('Shopify API Error', status=500)
-
-    def post_order_fullfill_hide(self, request, user, data):
-        order = ShopifyOrderTrack.objects.get(id=data.get('order'))
-        permissions.user_can_edit(user, order)
-
-        order.hidden = data.get('hide') == 'true'
-        order.save()
-
-        return self.api_success()
 
     def get_find_product(self, request, user, data):
         try:

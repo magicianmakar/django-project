@@ -184,6 +184,10 @@ class WooProduct(models.Model):
     def is_connected(self):
         return bool(self.source_id)
 
+    @property
+    def boards(self):
+        return self.wooboard_set
+
     def has_supplier(self):
         try:
             return self.default_supplier is not None

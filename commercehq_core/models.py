@@ -201,6 +201,10 @@ class CommerceHQProduct(models.Model):
     def is_connected(self):
         return bool(self.get_chq_id())
 
+    @property
+    def boards(self):
+        return self.commercehqboard_set
+
     def have_supplier(self):
         try:
             return self.default_supplier is not None

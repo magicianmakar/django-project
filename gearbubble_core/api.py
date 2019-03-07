@@ -25,7 +25,6 @@ from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.decorators import HasSubuserPermission, restrict_subuser_access
 from shopified_core.utils import (
     safe_int,
-    safe_float,
     remove_link_query,
     version_compare,
     order_phone_number,
@@ -49,6 +48,8 @@ import tasks
 
 class GearBubbleApi(ApiBase):
     board_model = GearBubbleBoard
+    product_model = GearBubbleProduct
+    order_track_model = GearBubbleOrderTrack
     helper = GearBubbleApiHelper()
 
     def validate_store_data(self, data):
@@ -271,46 +272,6 @@ class GearBubbleApi(ApiBase):
 
         return self.api_success()
 
-    def post_product_edit(self, request, user, data):
-        products = []
-        for p in data.getlist('products[]'):
-            product = GearBubbleProduct.objects.get(id=p)
-            permissions.user_can_edit(user, product)
-
-            product_data = json.loads(product.data)
-
-            if 'tags' in data:
-                product_data['tags'] = data.get('tags')
-
-            if 'price' in data:
-                product_data['price'] = safe_float(data.get('price'))
-
-            if 'compare_at' in data:
-                product_data['compare_at_price'] = safe_float(data.get('compare_at'))
-
-            if 'weight' in data:
-                product_data['weight'] = data.get('weight')
-
-            if 'weight_unit' in data:
-                product_data['weight_unit'] = data.get('weight_unit')
-
-            products.append(product_data)
-
-            product.data = json.dumps(product_data)
-            product.save()
-
-        return self.api_success({'products': products})
-
-    def post_product_notes(self, request, user, data):
-        product_id = safe_int(data.get('product'))
-        product = GearBubbleProduct.objects.get(id=product_id)
-        permissions.user_can_edit(user, product)
-
-        product.notes = data.get('notes')
-        product.save()
-
-        return self.api_success()
-
     def post_supplier(self, request, user, data):
         product_id = safe_int(data.get('product'))
         product = GearBubbleProduct.objects.get(id=product_id)
@@ -447,20 +408,6 @@ class GearBubbleApi(ApiBase):
         return self.api_success()
 
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
-    def post_board_empty(self, request, user, data):
-        board_id = safe_int(data.get('board_id'))
-
-        try:
-            board = GearBubbleBoard.objects.get(pk=board_id)
-        except GearBubbleBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        permissions.user_can_edit(user, board)
-        board.products.clear()
-
-        return self.api_success()
-
-    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def delete_board_products(self, request, user, data):
         board_id = safe_int(data.get('board_id'))
 
@@ -479,61 +426,6 @@ class GearBubbleApi(ApiBase):
         board.products.remove(*products)
 
         return self.api_success()
-
-    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
-    def post_product_board(self, request, user, data):
-        try:
-            product = GearBubbleProduct.objects.get(id=safe_int(data.get('product')))
-        except GearBubbleProduct.DoesNotExist:
-            return self.api_error('Product not found.', status=404)
-
-        permissions.user_can_edit(user, product)
-
-        if data.get('board') == '0':
-            product.gearbubbleboard_set.clear()
-            product.save()
-
-            return self.api_success()
-
-        else:
-            try:
-                board = GearBubbleBoard.objects.get(id=safe_int(data.get('board')))
-            except GearBubbleBoard.DoesNotExist:
-                return self.api_error('Board not found.', status=404)
-
-            permissions.user_can_edit(user, board)
-            board.products.add(product)
-
-            return self.api_success({'board': {'id': board.id, 'title': board.title}})
-
-    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
-    def post_board_add_products(self, request, user, data):
-        try:
-            board = GearBubbleBoard.objects.get(pk=safe_int(data.get('board')))
-        except GearBubbleBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        permissions.user_can_edit(user, board)
-        product_ids = [safe_int(pk) for pk in data.getlist('products[]')]
-        products = GearBubbleProduct.objects.filter(pk__in=product_ids)
-
-        for product in products:
-            permissions.user_can_edit(user, product)
-
-        board.products.add(*products)
-
-        return self.api_success()
-
-    def get_products_info(self, request, user, data):
-        products_map = {}
-        product_ids = [safe_int(pk) for pk in data.getlist('products[]')]
-        products = GearBubbleProduct.objects.filter(pk__in=product_ids)
-
-        for product in products:
-            permissions.user_can_view(user, product)
-            products_map[product.id] = json.loads(product.data)
-
-        return self.api_success({'products': products_map})
 
     def post_order_fulfill(self, request, user, data):
         try:
@@ -829,19 +721,6 @@ class GearBubbleApi(ApiBase):
 
         order.data = json.dumps(order_data)
 
-        order.save()
-
-        return self.api_success()
-
-    def post_order_fullfill_hide(self, request, user, data):
-        try:
-            order = GearBubbleOrderTrack.objects.get(id=safe_int(data.get('order')))
-        except GearBubbleOrderTrack.DoesNotExist:
-            return self.api_error('Order track not found', status=404)
-
-        permissions.user_can_edit(user, order)
-
-        order.hidden = data.get('hide') == 'true'
         order.save()
 
         return self.api_success()

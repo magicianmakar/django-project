@@ -197,6 +197,10 @@ class GearBubbleProduct(models.Model):
         return bool(self.source_id)
 
     @property
+    def boards(self):
+        return self.gearbubbleboard_set
+
+    @property
     def has_supplier(self):
         try:
             return self.default_supplier is not None

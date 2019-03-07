@@ -24,7 +24,6 @@ from shopified_core.exceptions import ProductExportException
 from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.utils import (
     safe_int,
-    safe_float,
     get_domain,
     remove_link_query,
     orders_update_limit,
@@ -43,6 +42,8 @@ import utils
 
 class WooStoreApi(ApiBase):
     board_model = WooBoard
+    product_model = WooProduct
+    order_track_model = WooOrderTrack
     helper = WooApiHelper()
 
     def validate_store_data(self, data):
@@ -371,36 +372,6 @@ class WooStoreApi(ApiBase):
 
         return self.api_success({'ids': list(ids)})
 
-    def post_product_edit(self, request, user, data):
-        products = []
-        for p in data.getlist('products[]'):
-            product = WooProduct.objects.get(id=p)
-            permissions.user_can_edit(user, product)
-
-            product_data = json.loads(product.data)
-
-            if 'tags' in data:
-                product_data['tags'] = data.get('tags')
-
-            if 'price' in data:
-                product_data['price'] = safe_float(data.get('price'))
-
-            if 'compare_at' in data:
-                product_data['compare_at_price'] = safe_float(data.get('compare_at'))
-
-            if 'weight' in data:
-                product_data['weight'] = data.get('weight')
-
-            if 'weight_unit' in data:
-                product_data['weight_unit'] = data.get('weight_unit')
-
-            products.append(product_data)
-
-            product.data = json.dumps(product_data)
-            product.save()
-
-        return self.api_success({'products': products})
-
     def delete_product(self, request, user, data):
         try:
             pk = safe_int(data.get('product'))
@@ -500,15 +471,6 @@ class WooStoreApi(ApiBase):
             product.set_suppliers_mapping(mapping)
             product.set_shipping_mapping(shipping_map)
             product.save()
-
-        return self.api_success()
-
-    def post_product_notes(self, request, user, data):
-        product = WooProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        product.notes = data.get('notes')
-        product.save()
 
         return self.api_success()
 
@@ -828,15 +790,6 @@ class WooStoreApi(ApiBase):
 
         return self.api_success({'order_track_id': track.id})
 
-    def post_order_fullfill_hide(self, request, user, data):
-        order = WooOrderTrack.objects.get(id=data.get('order'))
-        permissions.user_can_edit(user, order)
-
-        order.hidden = data.get('hide') == 'true'
-        order.save()
-
-        return self.api_success()
-
     def post_order_fulfill_update(self, request, user, data):
         if data.get('store'):
             store = WooStore.objects.get(pk=safe_int(data['store']))
@@ -917,35 +870,6 @@ class WooStoreApi(ApiBase):
             board.delete()
             return self.api_success()
 
-    def post_board_empty(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        try:
-            pk = safe_int(data.get('board_id'))
-            board = WooBoard.objects.get(pk=pk)
-        except WooBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-        else:
-            permissions.user_can_edit(user, board)
-            board.products.clear()
-            return self.api_success()
-
-    def get_products_info(self, request, user, data):
-        products = {}
-        for p in data.getlist('products[]'):
-            pk = safe_int(p)
-            try:
-                product = WooProduct.objects.get(pk=pk)
-            except WooProduct.DoesNotExist:
-
-                return self.api_error('Product not found')
-            else:
-                permissions.user_can_view(user, product)
-                products[p] = json.loads(product.data)
-
-        return self.api_success({'products': products})
-
     def delete_board_products(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
@@ -966,47 +890,6 @@ class WooStoreApi(ApiBase):
                 board.products.remove(product)
 
         return self.api_success()
-
-    def post_board_add_products(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        try:
-            pk = safe_int(data.get('board'))
-            board = WooBoard.objects.get(pk=pk)
-        except WooBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-        else:
-            permissions.user_can_edit(user, board)
-
-        for p in data.getlist('products[]'):
-            pk = safe_int(p)
-            product = WooProduct.objects.filter(pk=pk).first()
-            if product:
-                permissions.user_can_edit(user, product)
-                board.products.add(product)
-
-        board.save()
-
-        return self.api_success()
-
-    def post_product_board(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        product = WooProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        if data.get('board') == '0':
-            product.wooboard_set.clear()
-            product.save()
-            return self.api_success()
-        else:
-            board = WooBoard.objects.get(id=data.get('board'))
-            permissions.user_can_edit(user, board)
-            board.products.add(product)
-            board.save()
-            return self.api_success({'board': {'id': board.id, 'title': board.title}})
 
     def delete_supplier(self, request, user, data):
         product = WooProduct.objects.get(id=data.get('product'))

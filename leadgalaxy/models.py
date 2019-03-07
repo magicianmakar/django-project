@@ -1113,6 +1113,10 @@ class ShopifyProduct(models.Model):
     def is_connected(self):
         return bool(self.get_shopify_id())
 
+    @property
+    def boards(self):
+        return self.shopifyboard_set
+
     def have_supplier(self):
         try:
             return self.default_supplier is not None

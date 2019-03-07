@@ -21,7 +21,6 @@ from shopified_core.exceptions import ProductExportException
 from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.utils import (
     safe_int,
-    safe_float,
     get_domain,
     remove_link_query,
     version_compare,
@@ -49,6 +48,8 @@ from .models import (
 
 class CHQStoreApi(ApiBase):
     board_model = CommerceHQBoard
+    product_model = CommerceHQProduct
+    order_track_model = CommerceHQOrderTrack
     helper = CHQApiHelper()
 
     def post_alert_archive(self, request, user, data):
@@ -761,36 +762,6 @@ class CHQStoreApi(ApiBase):
         except CommerceHQBoard.DoesNotExist:
             return self.api_error('Board not found.', status=404)
 
-    def post_board_empty(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        try:
-            pk = safe_int(data.get('board_id'))
-            board = CommerceHQBoard.objects.get(pk=pk)
-            permissions.user_can_edit(user, board)
-            board.products.clear()
-            return self.api_success()
-        except CommerceHQBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-    def post_board_add_products(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        board = CommerceHQBoard.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
-
-        for p in data.getlist('products[]'):
-            product = CommerceHQProduct.objects.get(id=p)
-            permissions.user_can_edit(user, product)
-
-            board.products.add(product)
-
-        board.save()
-
-        return self.api_success()
-
     def post_product_remove_board(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
             raise PermissionDenied()
@@ -807,32 +778,6 @@ class CHQStoreApi(ApiBase):
         board.save()
 
         return self.api_success()
-
-    def post_product_board(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        product = CommerceHQProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        if data.get('board') == '0':
-            product.commercehqboard_set.clear()
-            product.save()
-
-            return self.api_success()
-        else:
-            board = CommerceHQBoard.objects.get(id=data.get('board'))
-            permissions.user_can_edit(user, board)
-
-            board.products.add(product)
-            board.save()
-
-            return self.api_success({
-                'board': {
-                    'id': board.id,
-                    'title': board.title
-                }
-            })
 
     def delete_board_products(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
@@ -852,53 +797,6 @@ class CHQStoreApi(ApiBase):
                 board.products.remove(product)
 
         return self.api_success()
-
-    def post_product_edit(self, request, user, data):
-        products = []
-        for p in data.getlist('products[]'):
-            product = CommerceHQProduct.objects.get(id=p)
-            permissions.user_can_edit(user, product)
-
-            product_data = json.loads(product.data)
-
-            if 'tags' in data:
-                product_data['tags'] = data.get('tags')
-
-            if 'price' in data:
-                product_data['price'] = safe_float(data.get('price'))
-
-            if 'compare_at' in data:
-                product_data['compare_at_price'] = safe_float(data.get('compare_at'))
-
-            if 'type' in data:
-                product_data['type'] = data.get('type')
-
-            if 'weight' in data:
-                product_data['weight'] = data.get('weight')
-
-            if 'weight_unit' in data:
-                product_data['weight_unit'] = data.get('weight_unit')
-
-            products.append(product_data)
-
-            product.data = json.dumps(product_data)
-            product.save()
-
-        return self.api_success({'products': products})
-
-    def get_products_info(self, request, user, data):
-        products = {}
-        for p in data.getlist('products[]'):
-            pk = safe_int(p)
-            try:
-                product = CommerceHQProduct.objects.get(pk=pk)
-                permissions.user_can_view(user, product)
-
-                products[p] = json.loads(product.data)
-            except:
-                return self.api_error('Product not found')
-
-        return self.api_success({'products': products})
 
     def get_order_data(self, request, user, data):
         version = request.META.get('HTTP_X_EXTENSION_VERSION')
@@ -1025,15 +923,6 @@ class CHQStoreApi(ApiBase):
 
         # Send e-mail notifications for cancelled orders
         cancelled_order_alert.send_email()
-
-        return self.api_success()
-
-    def post_order_fullfill_hide(self, request, user, data):
-        order = CommerceHQOrderTrack.objects.get(id=data.get('order'))
-        permissions.user_can_edit(user, order)
-
-        order.hidden = data.get('hide') == 'true'
-        order.save()
 
         return self.api_success()
 
@@ -1276,15 +1165,6 @@ class CHQStoreApi(ApiBase):
             return self.api_error('Product doesn\'t have any images', status=422)
 
         tasks.create_image_zip.apply_async(args=[images, product.id], countdown=5)
-
-        return self.api_success()
-
-    def post_product_notes(self, request, user, data):
-        product = CommerceHQProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        product.notes = data.get('notes')
-        product.save()
 
         return self.api_success()
 
