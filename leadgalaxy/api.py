@@ -1045,22 +1045,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def delete_product_connect(self, request, user, data):
-        product_ids = data.get('product').split(',')
-        for product_id in product_ids:
-            product = ShopifyProduct.objects.get(id=product_id)
-            permissions.user_can_edit(user, product)
-
-            shopify_id = product.shopify_id
-            if shopify_id:
-                product.shopify_id = 0
-                product.save()
-
-                cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
-                tasks.update_product_connection.delay(product.store.id, shopify_id)
-
-        return self.api_success()
-
     def post_product_metadata(self, request, user, data):
         if not user.can('product_metadata.use'):
             return self.api_error('Your current plan doesn\'t have this feature.', status=500)

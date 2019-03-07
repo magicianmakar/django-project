@@ -13,3 +13,6 @@ class ApiHelperBase:
                                  Only implmented in: N/A
         """
         raise NotImplementedError('Smart Board Sync')
+
+    def after_delete_product_connect(self, product, source_id):
+        raise NotImplementedError('After Delete Product Connect')

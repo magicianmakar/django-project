@@ -1102,6 +1102,14 @@ class ShopifyProduct(models.Model):
             return {}
 
     @property
+    def source_id(self):
+        return self.shopify_id
+
+    @source_id.setter
+    def source_id(self, source_id):
+        self.shopify_id = source_id
+
+    @property
     def is_connected(self):
         return bool(self.get_shopify_id())
 

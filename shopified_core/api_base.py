@@ -105,3 +105,18 @@ class ApiBase(ApiResponseMixin, View):
         self.helper.smart_board_sync(user.models_user, board)
 
         return self.api_success()
+
+    def delete_product_connect(self, request, user, data):
+        product_ids = data.get('product').split(',')
+        for product_id in product_ids:
+            product = self.product_model.objects.get(id=product_id)
+            permissions.user_can_edit(user, product)
+
+            source_id = product.source_id
+            if source_id:
+                product.source_id = 0
+                product.save()
+
+                self.helper.after_delete_product_connect(product, source_id)
+
+        return self.api_success()
