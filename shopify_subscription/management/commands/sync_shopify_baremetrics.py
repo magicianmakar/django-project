@@ -249,7 +249,7 @@ class Command(DropifiedBaseCommand):
             'oid': plan.id,
             'name': plan.get_description(),
             'currency': 'USD',
-            'amount': int(amount * 100 * 0.8),  # In cents / Shopify takes 20% of revenue
+            'amount': int(float(amount) * 100 * 0.8),  # In cents / Shopify takes 20% of revenue
             'interval': interval,
             'interval_count': 1,
             'trial_duration': plan.trial_days,
