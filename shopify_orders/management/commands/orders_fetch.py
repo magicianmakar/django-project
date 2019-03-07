@@ -18,15 +18,9 @@ class Command(DropifiedBaseCommand):
     total_order_fetch = 0  # Number of imported orders since command start
 
     def add_arguments(self, parser):
-        parser.add_argument('--status', dest='sync_status', action='append',
-                            type=int, help='Sync Store with the given status')
-
-        parser.add_argument('--reset', dest='reset',
-                            action='store_true', help='Delete All Imported Orders and queue stores for re-import')
-
-        parser.add_argument('--progress', dest='progress',
-                            action='store_true', help='Shopw Reset Progress')
-
+        parser.add_argument('--status', dest='sync_status', action='append', type=int, help='Sync Store with the given status')
+        parser.add_argument('--reset', dest='reset', action='store_true', help='Delete Imported Orders and queue for re-import')
+        parser.add_argument('--progress', dest='progress', action='store_true', help='Shopw Reset Progress')
         parser.add_argument('--store', dest='store_id', action='append', type=int, help='Store ID')
         parser.add_argument('--max_orders', dest='max_orders', type=int, help='Sync Stores with Maximum Orders count')
         parser.add_argument('--max_import', dest='max_import', type=int, help='Maximum number of orders to import')
