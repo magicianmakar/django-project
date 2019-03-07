@@ -60,7 +60,6 @@ from shopify_orders.models import (
 )
 from product_alerts.models import ProductChange
 from product_alerts.utils import unmonitor_store
-from zapier_core.utils import send_order_track_change
 
 import tasks
 import utils
@@ -2366,10 +2365,6 @@ class ShopifyStoreApi(ApiBase):
         try:
             order = ShopifyOrderTrack.objects.get(id=data.get('order'))
             permissions.user_can_edit(user, order)
-
-            source_status = order.source_status
-            source_tracking = order.source_tracking
-
         except ShopifyOrderTrack.DoesNotExist:
             return self.api_error('Order Track Not Found', status=404)
 
@@ -2419,7 +2414,6 @@ class ShopifyStoreApi(ApiBase):
         order.data = json.dumps(order_data)
 
         order.save()
-        send_order_track_change(order, source_status, source_tracking)
 
         tracking_number_tags = models_user.get_config('tracking_number_tags')
         if new_tracking_number:

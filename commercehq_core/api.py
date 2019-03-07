@@ -33,7 +33,6 @@ from shopified_core.utils import (
 )
 from product_alerts.models import ProductChange
 from product_alerts.utils import unmonitor_store
-from zapier_core.utils import send_order_track_change
 
 import tasks
 import utils
@@ -990,10 +989,6 @@ class CHQStoreApi(ApiBase):
         try:
             order = CommerceHQOrderTrack.objects.get(id=data.get('order'))
             permissions.user_can_edit(user, order)
-
-            source_status = order.source_status
-            source_tracking = order.source_tracking
-
         except CommerceHQOrderTrack.DoesNotExist:
             return self.api_error('Order Not Found', status=404)
 
@@ -1038,7 +1033,6 @@ class CHQStoreApi(ApiBase):
         order.data = json.dumps(order_data)
 
         order.save()
-        send_order_track_change(order, source_status, source_tracking)
 
         # Send e-mail notifications for cancelled orders
         cancelled_order_alert.send_email()
