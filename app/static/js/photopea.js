@@ -6,9 +6,79 @@ var PhotoPeaEditor = {
     deferred: $.Deferred(),
     running: false,
     photoPeaWindow: $('#photopea').get(0).contentWindow,
+    isInit: false,
     init: function() {
         this.doInit();
         this.listenIncomingAction();
+    },
+    ensureInit: function(callback) {
+        if(!PhotoPeaEditor.isInit) {
+            this.doInit(callback);
+            this.listenIncomingAction();
+            PhotoPeaEditor.isInit = true;
+        } else {
+            if (callback) {
+                callback();
+            }
+        }
+    },
+    doInit: function(callback) {
+        PhotoPeaEditor.actionAdd(function() {
+            PhotoPeaEditor.currentAction = 'init';
+            var photoPeaConfig = encodeURI(JSON.stringify({
+                "environment": {
+                    "customIO"  : {
+                        "save": "app.echoToOE('save:' + app.activeDocument.source);"
+                    },
+                    "localsave": true
+                }
+            }));
+
+            $('#modal-photopea iframe').on('load', function () {
+                if (callback) {
+                    callback();
+                }
+            });
+
+            $('#modal-photopea iframe').attr('src', 'https://www.photopea.com?p=' + photoPeaConfig);
+
+            return {};
+        });
+    },
+    doLoad: function(imageUrl, imageId) {
+        toastr.info('Loading image...', 'Advanced Editor', {timeOut: 0});
+
+        PhotoPeaEditor.ensureInit(function () {
+            setTimeout(function () {
+                PhotoPeaEditor.actionAdd(function() {
+                    PhotoPeaEditor.currentAction = 'load';
+
+                    $('#modal-photopea').modal('show');
+                    setTimeout(function() {
+                        var wnd = document.getElementById("photopea").contentWindow;
+
+                        fetch(imageUrl, {cache: "no-cache"}).then(function(response) {
+                            return response.arrayBuffer();
+                        }).then(function(arrayBuffer) {
+                            wnd.postMessage(arrayBuffer, "*");
+                        }).catch(function(err) {
+                        });
+
+                        toastr.clear();
+                    }, 1000);
+
+                    return {'url': imageUrl, 'id': imageId};
+                });
+            }, 5000);
+        });
+    },
+    doSave: function(sourceId) {
+        PhotoPeaEditor.actionAdd(function() {
+            PhotoPeaEditor.currentAction = 'save';
+            PhotoPeaEditor.postMessage("app.activeDocument.saveToOE('png');");
+
+            return {'sourceId': sourceId};
+        });
     },
     listenIncomingAction: function() {
         window.addEventListener("message", function(e) {
@@ -80,55 +150,10 @@ var PhotoPeaEditor = {
                     PhotoPeaEditor.actionRun();
                 }, 1000);  // Wait before moving to next action
             }).fail(function() {
-                console.error('error getting response from photopea');
             });
         } else {
             PhotoPeaEditor.running = false;
         }
-    },
-    doInit: function() {
-        PhotoPeaEditor.actionAdd(function() {
-            PhotoPeaEditor.currentAction = 'init';
-            var photoPeaConfig = encodeURI(JSON.stringify({
-                "environment": {
-                    "customIO"  : {
-                        "save": "app.echoToOE('save:' + app.activeDocument.source);"
-                    },
-                    "localsave": true
-                }
-            }));
-            $('#modal-photopea iframe').attr('src', 'https://www.photopea.com?p=' + photoPeaConfig);
-
-            return {};
-        });
-    },
-    doLoad: function(imageUrl, imageId) {
-        PhotoPeaEditor.actionAdd(function() {
-            PhotoPeaEditor.currentAction = 'load';
-
-            $('#modal-photopea').modal('show');
-            setTimeout(function() {
-                var wnd = document.getElementById("photopea").contentWindow;
-
-                fetch(imageUrl, {cache: "no-cache"}).then(function(response) {
-                    return response.arrayBuffer();
-                }).then(function(arrayBuffer) {
-                    wnd.postMessage(arrayBuffer, "*");
-                }).catch(function(err) {
-                    console.error('error loading image', err);
-                });
-            }, 1000);
-
-            return {'url': imageUrl, 'id': imageId};
-        });
-    },
-    doSave: function(sourceId) {
-        PhotoPeaEditor.actionAdd(function() {
-            PhotoPeaEditor.currentAction = 'save';
-            PhotoPeaEditor.postMessage("app.activeDocument.saveToOE('png');");
-
-            return {'sourceId': sourceId};
-        });
     },
     onInit: function(data) {
         PhotoPeaEditor.postMessage("app.echoToOE('init done');");
@@ -192,4 +217,3 @@ var PhotoPeaEditor = {
         document.getElementById("photopea").contentWindow.postMessage(script, "*");
     }
 };
-PhotoPeaEditor.init();
