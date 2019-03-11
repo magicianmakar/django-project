@@ -101,7 +101,9 @@ jobs:
           command: |
             source venv/bin/activate
             ./scripts/common_issues.sh
-            python manage.py test --noinput -v2
+            coverage run ./manage.py test --noinput -v2
+            coverage report --skip-covered
+            coverage html --skip-covered
 
       - run:
           name: Static Files
@@ -109,3 +111,6 @@ jobs:
             source venv/bin/activate
             python manage.py collectstatic --noinput --traceback 2>&1 | sed '/^Post-processed/d;/^Copying/d;/^$/d'
             DEBUG_APP="FALSE" python manage.py compress
+
+      - store_artifacts:
+          path: htmlcov
