@@ -91,7 +91,7 @@ class Command(DropifiedBaseCommand):
                         self.send_subscription_to_baremetrics(shopify_subscription, baremetrics_customer)
                     elif baremetrics_subscription.status != charge.status:
                         self.sync_with_baremetrics(charge, baremetrics_subscription)
-                    elif baremetrics_subscription.interval == 'yearly' and baremetrics_subscription.canceled_at is None:
+                    elif shopify_subscription.plan.payment_interval == 'yearly' and baremetrics_subscription.canceled_at is None:
                         # see if yearly plan needs cancelation then cancel it and update baremetrics_subscription.canceled_at
                         self.sync_with_baremetrics(charge, baremetrics_subscription)
                 else:

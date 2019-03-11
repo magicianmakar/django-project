@@ -49,7 +49,7 @@ class ShopifySubscription(models.Model):
 
         self.status = sub.status
         try:
-            self.activated_on = sub.activated_on
+            self.activated_on = arrow.get(sub.activated_on).to('utc').datetime
         except:
             pass
 
