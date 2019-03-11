@@ -2012,7 +2012,7 @@ class ShopifyStoreApi(ApiBase):
             return self.api_error(e.message, status=501)
 
         except UnicodeEncodeError as e:
-            return self.api_error('Order ID is not a valid', status=501)
+            return self.api_error('Order ID is invalid', status=501)
 
         if not order_lines and order_line_sku:
             try:
@@ -2071,7 +2071,7 @@ class ShopifyStoreApi(ApiBase):
                     return self.api_success()
 
                 if saved_track.source_id and source_id != saved_track.source_id and not from_oberlo:
-                    return self.api_error('This Order already have an Supplier Order ID', status=422)
+                    return self.api_error('This order already has a supplier order ID', status=422)
 
             seem_source_orders = ShopifyOrderTrack.objects.filter(
                 store=store,
@@ -2079,7 +2079,7 @@ class ShopifyStoreApi(ApiBase):
             ).values_list('order_id', flat=True)
 
             if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced') and not from_oberlo:
-                return self.api_error('Supplier Order ID is linked to an other Order', status=422)
+                return self.api_error('Supplier order ID is linked to another order', status=422)
 
             while True:
                 try:

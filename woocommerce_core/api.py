@@ -730,10 +730,10 @@ class WooStoreApi(ApiBase):
             assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
         except AssertionError as e:
-            raven_client.captureMessage('Non valid Supplier Order ID')
+            raven_client.captureMessage('Invalid supplier order ID')
             return self.api_error(e.message, status=501)
         except UnicodeEncodeError as e:
-            return self.api_error('Order ID is not a valid', status=501)
+            return self.api_error('Order ID is invalid', status=501)
 
         order_updater = utils.WooOrderUpdater(store, order_id)
 
@@ -750,13 +750,13 @@ class WooStoreApi(ApiBase):
             saved_track = tracks.first()
 
             if saved_track.source_id and source_id != saved_track.source_id:
-                return self.api_error('This Order already have an Supplier Order ID', status=422)
+                return self.api_error('This order already has a supplier order ID', status=422)
 
         seen_source_orders = WooOrderTrack.objects.filter(store=store, source_id=source_id)
         seen_source_orders = seen_source_orders.values_list('order_id', flat=True)
 
         if len(seen_source_orders) and int(order_id) not in seen_source_orders and not data.get('forced'):
-            return self.api_error('Supplier Order ID is linked to an other Order', status=422)
+            return self.api_error('Supplier order ID is linked to another order', status=422)
 
         track, created = WooOrderTrack.objects.update_or_create(
             store=store,
