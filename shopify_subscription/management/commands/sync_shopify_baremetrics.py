@@ -34,7 +34,7 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--progress', dest='progress', action='store_true', help='Show sync progress')
 
     def start_command(self, *args, **options):
-        progress = options.get('progress')
+        self.progress = options.get('progress')
 
         stores = ShopifyStore.objects.filter(is_active=True)
 
@@ -47,7 +47,7 @@ class Command(DropifiedBaseCommand):
         if options.get('store_id'):
             stores = stores.filter(id=options.get('store_id'))
 
-        if progress:
+        if self.progress:
             progress_bar = tqdm(total=stores.count())
 
         self.requests = BaremetricsRequest()
@@ -99,10 +99,10 @@ class Command(DropifiedBaseCommand):
                     if charge.status == 'active' and not baremetrics_charge.exists():
                         self.send_charge_to_baremetrics(charge, baremetrics_customer)
 
-            if progress:
+            if self.progress:
                 progress_bar.update(1)
 
-        if progress:
+        if self.progress:
             progress_bar.close()
 
     def create_baremetrics_user(self, store):
@@ -131,7 +131,9 @@ class Command(DropifiedBaseCommand):
         try:
             self.requests.post('/{source_id}/charges', json=data)
         except HTTPError as e:
-            self.write(http_exception_response(e, extra=False))
+            if self.progress:
+                self.write(http_exception_response(e, extra=False))
+
             return
 
         BaremetricsCharge.objects.create(customer=customer, charge_oid=data['oid'])
@@ -166,7 +168,9 @@ class Command(DropifiedBaseCommand):
         try:
             self.requests.post('/{source_id}/subscriptions', json=data)
         except HTTPError as e:
-            self.write(http_exception_response(e, extra=False))
+            if self.progress:
+                self.write(http_exception_response(e, extra=False))
+
             return
 
         BaremetricsSubscription.objects.create(
