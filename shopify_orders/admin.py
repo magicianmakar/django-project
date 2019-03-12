@@ -1,11 +1,13 @@
 from django.contrib import admin
 
 from shopify_orders.models import (
-    ShopifySyncStatus,
     ShopifyOrder,
     ShopifyOrderLine,
+    ShopifyOrderLog,
     ShopifyOrderRisk,
-    ShopifyOrderLog
+    ShopifyOrderShippingLine,
+    ShopifyOrderVariant,
+    ShopifySyncStatus
 )
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
@@ -44,3 +46,17 @@ class ShopifyOrderLogAdmin(admin.ModelAdmin):
     list_display = ('store', 'order_id', 'seen', 'created_at', 'updated_at')
     raw_id_fields = ('store',)
     search_fields = ('store__id', 'store__shop', 'order_id')
+
+
+@admin.register(ShopifyOrderShippingLine)
+class ShopifyOrderShippingLineAdmin(admin.ModelAdmin):
+    list_display = ('id', 'store', 'order', 'shipping_line_id', 'price', 'title', 'code', 'source', 'phone', 'carrier_identifier', )
+    raw_id_fields = ('store', 'order')
+
+
+@admin.register(ShopifyOrderVariant)
+class ShopifyOrderVariantAdmin(admin.ModelAdmin):
+    list_display = ('id', 'store', 'changed_by', 'order_id', 'line_id', 'variant_id', 'variant_title', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at')
+    raw_id_fields = ('store', 'changed_by')
+    date_hierarchy = 'created_at'

@@ -1,7 +1,7 @@
 # -*- coding:utf8 -*-
 
+from article.models import Article, ArticleTag, Comment, CommentVote, SidebarLink
 from django.contrib import admin
-from article.models import Article, ArticleTag, SidebarLink
 
 
 class ArticleAdmin(admin.ModelAdmin):
@@ -34,6 +34,40 @@ class SidebarLinkAdmin(admin.ModelAdmin):
     list_display = ('title', 'order', 'link')
     search_fields = ('title', 'link')
     filter_horizontal = ('display_plans',)
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'title',
+        'body',
+        'votes',
+        'stat',
+        'parent',
+        'created_at',
+        'updated_at',
+        'author',
+        'article',
+    )
+    list_filter = ('created_at', 'updated_at')
+    raw_id_fields = ('author', 'article')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(CommentVote)
+class CommentVoteAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'article',
+        'comment',
+        'user',
+        'created_at',
+        'vote_value',
+    )
+    list_filter = ('created_at',)
+    raw_id_fields = ('article', 'comment', 'user')
+    date_hierarchy = 'created_at'
 
 
 admin.site.register(Article, ArticleAdmin)

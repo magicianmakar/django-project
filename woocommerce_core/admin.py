@@ -7,6 +7,7 @@ from .models import (
     WooSupplier,
     WooOrderTrack,
     WooBoard,
+    WooUserUpload,
 )
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
@@ -42,5 +43,25 @@ class WooOrderTrackAdmin(admin.ModelAdmin):
     search_fields = ('data', 'source_id', 'store__id') + USER_SEARCH_FIELDS
 
 
-admin.site.register(WooSupplier)
-admin.site.register(WooBoard)
+@admin.register(WooSupplier)
+class WooSupplierAdmin(admin.ModelAdmin):
+    list_display = ('id', 'store', 'product', 'supplier_name', 'supplier_url', 'created_at', 'updated_at', )
+    list_filter = ('is_default', 'created_at', 'updated_at')
+    raw_id_fields = ('store', 'product')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(WooBoard)
+class WooBoardAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'title', 'config', 'favorite', 'created_at', 'updated_at')
+    list_filter = ('favorite', 'created_at', 'updated_at')
+    raw_id_fields = ('user',)
+    date_hierarchy = 'created_at'
+
+
+@admin.register(WooUserUpload)
+class WooUserUploadAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'product', 'url', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at')
+    raw_id_fields = ('user', 'product')
+    date_hierarchy = 'created_at'

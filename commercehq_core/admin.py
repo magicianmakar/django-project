@@ -7,6 +7,7 @@ from .models import (
     CommerceHQSupplier,
     CommerceHQBoard,
     CommerceHQOrderTrack,
+    CommerceHQUserUpload,
 )
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
@@ -56,3 +57,11 @@ class CommerceHQOrderTrackAdmin(admin.ModelAdmin):
     list_filter = ('commercehq_status', 'source_status', 'seen', 'hidden',)
     search_fields = ('order_id', 'line_id', 'source_id', 'source_tracking', 'data')
     raw_id_fields = ('store', 'user')
+
+
+@admin.register(CommerceHQUserUpload)
+class CommerceHQUserUploadAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'product', 'url', 'created_at', 'updated_at')
+    list_filter = ('created_at', 'updated_at')
+    raw_id_fields = ('user', 'product')
+    date_hierarchy = 'created_at'

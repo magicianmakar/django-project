@@ -1,8 +1,6 @@
 import simplejson as json
-
-from django.contrib import admin
 from django import forms
-
+from django.contrib import admin
 from django.urls import reverse
 
 from .models import (
@@ -27,8 +25,13 @@ from .models import (
     ShopifyProductImage,
     ShopifyStore,
     ShopifyWebhook,
+    SubuserCHQPermission,
+    SubuserGearPermission,
+    SubuserPermission,
+    SubuserWooPermission,
+    UserCompany,
     UserProfile,
-    UserUpload,
+    UserUpload
 )
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
@@ -301,6 +304,40 @@ class AdminEventAdmin(admin.ModelAdmin):
             pass
 
         return ''
+
+
+@admin.register(UserCompany)
+class UserCompanyAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'address_line1', 'address_line2', 'city', 'state', 'country', 'zip_code', 'vat', )
+    search_fields = ('name',)
+
+
+@admin.register(SubuserPermission)
+class SubuserPermissionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'codename', 'name', 'store')
+    raw_id_fields = ('store',)
+    search_fields = ('name',)
+
+
+@admin.register(SubuserCHQPermission)
+class SubuserCHQPermissionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'codename', 'name', 'store')
+    raw_id_fields = ('store',)
+    search_fields = ('name',)
+
+
+@admin.register(SubuserWooPermission)
+class SubuserWooPermissionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'codename', 'name', 'store')
+    raw_id_fields = ('store',)
+    search_fields = ('name',)
+
+
+@admin.register(SubuserGearPermission)
+class SubuserGearPermissionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'codename', 'name', 'store')
+    raw_id_fields = ('store',)
+    search_fields = ('name',)
 
 
 admin.site.register(ClippingMagicPlan)
