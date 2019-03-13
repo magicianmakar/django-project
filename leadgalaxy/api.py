@@ -25,7 +25,7 @@ from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 
 from raven.contrib.django.raven_compat.models import client as raven_client
-from app.celery import celery_app
+from app.celery_base import celery_app
 from last_seen.models import LastSeen
 
 from stripe_subscription.stripe_api import stripe

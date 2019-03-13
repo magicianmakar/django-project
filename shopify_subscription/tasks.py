@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import arrow
-from app.celery import celery_app, CaptureFailure
+from app.celery_base import celery_app, CaptureFailure
 
 from shopify_subscription.models import BaremetricsCustomer
 from shopify_subscription.utils import BaremetricsRequest

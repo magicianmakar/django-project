@@ -1,6 +1,6 @@
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from app.celery import celery_app, CaptureFailure
+from app.celery_base import celery_app, CaptureFailure
 
 from leadgalaxy.models import ShopifyStore
 

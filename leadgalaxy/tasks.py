@@ -23,7 +23,7 @@ from django.utils import timezone
 from django.utils.text import slugify
 
 from raven.contrib.django.raven_compat.models import client as raven_client
-from app.celery import celery_app, CaptureFailure, retry_countdown, api_exceed_limits_countdown
+from app.celery_base import celery_app, CaptureFailure, retry_countdown, api_exceed_limits_countdown
 from shopified_core import permissions
 from shopified_core.utils import (
     safe_int,

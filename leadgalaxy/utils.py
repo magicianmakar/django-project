@@ -41,7 +41,7 @@ from django.template.defaultfilters import pluralize
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from app.celery import retry_countdown
+from app.celery_base import retry_countdown
 from shopified_core import permissions
 from shopified_core.utils import (
     safe_int,

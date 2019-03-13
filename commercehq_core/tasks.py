@@ -11,7 +11,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from unidecode import unidecode
 
-from app.celery import celery_app, CaptureFailure, retry_countdown
+from app.celery_base import celery_app, CaptureFailure, retry_countdown
 from shopified_core import utils
 from shopified_core import permissions
 

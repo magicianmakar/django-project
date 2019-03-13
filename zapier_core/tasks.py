@@ -5,7 +5,7 @@ import requests
 import urlparse
 
 from raven.contrib.django.raven_compat.models import client as raven_client
-from app.celery import celery_app, CaptureFailure, retry_countdown
+from app.celery_base import celery_app, CaptureFailure, retry_countdown
 
 from shopified_core.utils import http_exception_response
 

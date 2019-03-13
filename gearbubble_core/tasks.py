@@ -13,7 +13,7 @@ from django.template.defaultfilters import truncatewords
 from django.utils.text import slugify
 from django.core.cache import cache
 
-from app.celery import celery_app, CaptureFailure, retry_countdown
+from app.celery_base import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
 from shopified_core import utils
 
