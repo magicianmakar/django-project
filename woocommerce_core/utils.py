@@ -818,7 +818,7 @@ def get_product_data(store, product_ids=None):
     product_data_by_product_id = {}
     page = 1
     while page:
-        params = {'page': page, 'per_page': 100}
+        params = {'page': page, 'per_page': store.user.get_config('_woo_product_limit', 25)}
         if product_ids is not None:
             product_ids = [str(product_id) for product_id in product_ids]
             params['include'] = ','.join(product_ids)
