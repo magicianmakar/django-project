@@ -11,7 +11,7 @@ services:
     build: .
     container_name: dropified_celery
     command: >
-      bash -c 'source .env; celery -A app worker -Q celery,priority_high -O fair -l INFO';
+      bash -c 'source .env; celery -A app.celery_base worker -Q celery,priority_high -O fair -l INFO';
     volumes:
       - .:/opt/dropified
     depends_on:
