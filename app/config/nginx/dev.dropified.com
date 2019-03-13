@@ -1,5 +1,21 @@
 # Configuration for Development server
 
+upstream dropified_backend  {
+    server 127.0.0.1:8000;
+}
+
+upstream dropifiedhelper_backend  {
+    server shopified-helper-app.herokuapp.com;
+}
+
+upstream captchasolver_backend  {
+    server dropified-captcha.herokuapp.com;
+}
+
+upstream aliextractor_backend  {
+    server api.aliextractor.com;
+}
+
 server {
     listen 80;
     listen [::]:80;
@@ -71,7 +87,7 @@ server {
         error_log   /var/log/nginx/captcha.error;
 
         proxy_set_header Host dropified-captcha.herokuapp.com;
-        proxy_pass  http://dropified-captcha.herokuapp.com;
+        proxy_pass  http://captchasolver_backend;
     }
 
     ### Dropified Helper App Proxy
@@ -80,7 +96,7 @@ server {
         error_log   /var/log/nginx/helperapp.error.log;
 
         proxy_set_header Host shopified-helper-app.herokuapp.com;
-        proxy_pass  http://shopified-helper-app.herokuapp.com;
+        proxy_pass  http://dropifiedhelper_backend;
     }
 
     ### Aliextractor App Proxy
@@ -89,7 +105,7 @@ server {
         error_log   /var/log/nginx/aliextractor.error.log;
 
         proxy_set_header Host api.aliextractor.com;
-        proxy_pass  http://api.aliextractor.com;
+        proxy_pass  http://aliextractor_backend/;
     }
 
     ### Dropified App Proxy
@@ -98,6 +114,6 @@ server {
         rewrite /pages/view/what-websites-will-shopified-app-import-products-from /pages/11 break;
         rewrite /pages/what-websites-will-shopified-app-import-products-from /pages/11 break;
 
-        proxy_pass  http://127.0.0.1:8000;
+        proxy_pass  http://dropified_backend;
     }
 }
