@@ -84,7 +84,9 @@
             "plan": "heroku-redis",
             "as": "REDISCLOUD"
         },
-        "heroku-postgresql"
+        "heroku-postgresql",
+        "newrelic",
+        "papertrail"
     ],
     "buildpacks": [{
         "url": "heroku/nodejs"
