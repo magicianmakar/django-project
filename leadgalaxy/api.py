@@ -3098,6 +3098,7 @@ class ShopifyStoreApi(ApiBase):
             return self.api_error('Sub Users are not allowed to Export Orders', status=403)
 
         params = {
+            'date': data.get('date'),
             'query': data.get('query'),
             'tracking': data.get('tracking'),
             'fulfillment': data.get('fulfillment'),
