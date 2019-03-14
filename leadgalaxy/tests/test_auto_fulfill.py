@@ -305,7 +305,7 @@ class FulfillApiTestCase(BaseTestCase):
         })
 
         r = self.client.post('/api/order-fulfill', data)
-        self.assertEqual(r.status_code, 422)
+        self.assertEqual(r.status_code, 409)
         self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
 
     @tag('slow')
