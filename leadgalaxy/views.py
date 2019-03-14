@@ -16,6 +16,7 @@ from io import BytesIO
 import arrow
 import requests
 import jwt
+import texttable
 
 import simplejson as json
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -1009,6 +1010,7 @@ def webhook(request, provider, option):
         for user in User.objects.filter(is_staff=True):
             if request.POST['user_id'] in user.get_config('_slack_id', ''):
                 request_from = user
+                break
 
         try:
             assert request_from, 'Slack Support Staff Check'
@@ -1187,7 +1189,7 @@ def webhook(request, provider, option):
                 try:
                     profile = UserProfile.objects.get(user__email__iexact=args[1])
                 except UserProfile.DoesNotExist:
-                    return HttpResponse(':man-shrugging: Profile not found')
+                    return HttpResponse(':x: Profile not found')
 
                 tags = ' '.join(args[2:]).split(',')
                 if command == 'add':
@@ -1206,6 +1208,72 @@ def webhook(request, provider, option):
                     result = ':x: Unknown Command: {}'.format(command)
 
                 return HttpResponse(result)
+
+        elif request.POST['command'] == '/permission':
+            args = request.POST['text'].split(' ')
+            command = args[0]
+
+            if command == 'create':
+                if len(args) < 3:
+                    return HttpResponse(':x: Wrong number of arguments')
+
+                name = args[1]
+                if '.' in name:
+                    parts = name.split('.')
+                    if len(parts) != 2 or parts[-1] not in ['view', 'use']:
+                        return HttpResponse(':x: Permission {} is not correct'.format(name))
+                else:
+                    name = '{}.use'.format(name)
+
+                description = ' '.join(args[2:])
+
+                if AppPermission.objects.filter(name=name).exists():
+                    return HttpResponse(':x: Permission {} already exists'.format(name))
+
+                AppPermission.objects.create(name=name, description=description)
+
+                return HttpResponse('Permission {} successfully created'.format(name))
+
+            elif command == 'list':
+                table = texttable.Texttable(max_width=0)
+                table.set_deco(texttable.Texttable.HEADER)
+                table.header(['Name', 'Description', 'Plans', 'Bundles'])
+
+                for p in AppPermission.objects.all():
+                    table.add_row([p.name, p.description, p.groupplan_set.count(), p.featurebundle_set.count()])
+
+                return JsonResponse({
+                    'text': 'Permissions List:\n```\n{}\n```'.format(table.draw())
+                })
+
+            elif command == 'view':
+                name = args[1]
+                if not AppPermission.objects.filter(name=name).exists():
+                    return HttpResponse(':x: Permission {} does not exists'.format(name))
+
+                permission = AppPermission.objects.get(name=name)
+
+                plans_table = texttable.Texttable(max_width=0)
+                plans_table.set_deco(texttable.Texttable.HEADER)
+                plans_table.header(['ID', 'Title', 'Gateway'])
+                for p in permission.groupplan_set.all():
+                    plans_table.add_row([p.id, p.title, p.payment_gateway])
+
+                plans_perms = texttable.Texttable(max_width=0)
+                plans_perms.set_deco(texttable.Texttable.HEADER)
+                plans_perms.header(['ID', 'Title'])
+                for p in permission.featurebundle_set.all():
+                    plans_perms.add_row([p.id, p.title])
+
+                return JsonResponse({
+                    'text': 'Permission {} added to Plans:\n```{}```\nBundles:\n```{}```'.format(
+                        name,
+                        plans_table.draw() if permission.groupplan_set.count() else 'None',
+                        plans_perms.draw() if permission.featurebundle_set.count() else 'None')
+                })
+
+            else:
+                return HttpResponse(':x: Unknown Command: {} {}'.format(request.POST['command'], command))
 
         else:
             return HttpResponse(':x: Unknown Command: {}'.format(request.POST['command']))

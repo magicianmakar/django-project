@@ -21,7 +21,7 @@ from stripe_subscription.models import StripeCustomer
 from analytic_events.models import RegistrationEvent
 
 from leadgalaxy.views import get_product
-from leadgalaxy.models import ShopifyStore
+from leadgalaxy.models import ShopifyStore, AppPermission
 from leadgalaxy.tasks import delete_shopify_store
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
@@ -670,3 +670,73 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
 
         self.assertNotEquals(store, store.delete_request_at)
         self.assertEquals(orders.count(), 0)
+
+
+class SlackCommandWebhooksTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = f.UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.is_staff = True
+        self.user.save()
+
+        self.user.set_config('_slack_id', 'TEST')
+
+    def test_permission_create(self):
+        payload = {'command': '/permission', 'text': 'create feature.use New Future', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertTrue(AppPermission.objects.filter(name='feature.use').exists())
+        self.assertIn('successfully created', response.content)
+
+    def test_permission_create_wrong_args(self):
+        payload = {'command': '/permission', 'text': 'create test.use', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertIn('Wrong number', response.content)
+
+    def test_permission_create_wrong_name(self):
+        payload = {'command': '/permission', 'text': 'create new.test.use Awesome Feature', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertIn('is not correct', response.content)
+
+        payload = {'command': '/permission', 'text': 'create test.feature Awesome Feature', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertIn('is not correct', response.content)
+
+    def test_permission_create_wrong_existing(self):
+        payload = {'command': '/permission', 'text': 'create newtest.use Awesome Feature', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertIn('successfully created', response.content)
+
+        payload = {'command': '/permission', 'text': 'create newtest.use Awesome Feature', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertIn('already exists', response.content)
+
+    def test_permission_list(self):
+        payload = {'command': '/permission', 'text': 'create newtest.use Awesome Feature', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertIn('successfully created', response.content)
+
+        payload = {'command': '/permission', 'text': 'list', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertIn('Permissions List', response.content)
+        self.assertIn('newtest.use', response.content)
+
+    def test_permission_view(self):
+        payload = {'command': '/permission', 'text': 'create newtest.use Awesome Feature', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertIn('successfully created', response.content)
+
+        payload = {'command': '/permission', 'text': 'view newtest.use', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        self.assertIn('added to Plans:', response.content)
+        self.assertIn('newtest.use', response.content)
