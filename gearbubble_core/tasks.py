@@ -1,6 +1,9 @@
 import json
 import requests
 from unidecode import unidecode
+from os.path import join as path_join
+from tempfile import mktemp
+from zipfile import ZipFile
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 from pusher import Pusher
@@ -205,10 +208,6 @@ def product_update(product_id, data):
 
 @celery_app.task(bind=True, base=CaptureFailure)
 def create_image_zip(self, images, product_id):
-    from os.path import join as path_join
-    from tempfile import mktemp
-    from zipfile import ZipFile
-
     from leadgalaxy.utils import aws_s3_upload
 
     try:

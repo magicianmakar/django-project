@@ -17,8 +17,9 @@ import arrow
 import requests
 import jwt
 import texttable
-
 import simplejson as json
+from munch import Munch
+
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.contrib import messages
@@ -2394,8 +2395,6 @@ def acp_users_list(request):
 def acp_graph(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
-
-    from munch import Munch
 
     graph_type = request.GET.get('t', 'users')
 

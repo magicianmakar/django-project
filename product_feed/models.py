@@ -112,7 +112,5 @@ class GearBubbleFeedStatus(FeedStatusAbstract):
         verbose_name_plural = 'GearBubble Feed Statuses'
 
     def get_filename(self, revision=None):
-        import hashlib
-
         feed_hash = hashlib.md5('u{}/{}/{}'.format('gear', self.store.user.id, self.store.id)).hexdigest()
         return 'feeds/{}.xml'.format(feed_hash)

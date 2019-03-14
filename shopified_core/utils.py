@@ -19,6 +19,7 @@ from django.core.cache import cache, caches
 from django.contrib.auth.models import User
 from django.template import Context, Template
 from django.utils.crypto import get_random_string
+from django.urls import reverse
 
 import arrow
 import bleach
@@ -324,8 +325,6 @@ def unlock_account_email(username):
             user = User.objects.get(username__iexact=username)
     except:
         return False
-
-    from django.urls import reverse
 
     unlock_token = random_hash()
     if cache.get('unlock_email_{}'.format(hash_text(username.lower()))) is not None:

@@ -1,7 +1,8 @@
 import time
+import hashlib
+import uuid
 
 from django.db import models
-
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
 
@@ -142,16 +143,13 @@ class StripePlan(models.Model):
         return u"{} (${})".format(self.name, self.amount)
 
     def save(self, *args, **kwargs):
-        from hashlib import md5
-        import uuid
-
         if self.statement_descriptor:
             self.statement_descriptor = self.statement_descriptor.upper().strip()[:22]
         else:
             self.statement_descriptor = None
 
         if not self.stripe_id:
-            self.stripe_id = 'SA_{}'.format(md5(str(uuid.uuid4())).hexdigest()[:8])
+            self.stripe_id = 'SA_{}'.format(hashlib.md5(str(uuid.uuid4())).hexdigest()[:8])
 
             stripe.Plan.create(
                 amount=int(self.amount * 100),  # How much to charge in cents, we store it in dollars
@@ -242,8 +240,6 @@ class StripeSubscription(models.Model):
         return sub['status'] in ['trialing', 'active']
 
     def get_status(self):
-        import arrow
-
         sub = self.subscription
 
         status = {

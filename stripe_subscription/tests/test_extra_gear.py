@@ -1,3 +1,6 @@
+import arrow
+from django.core.cache import cache
+
 from lib.test import BaseTestCase
 
 from mock import MagicMock
@@ -147,7 +150,6 @@ class ExtraGearStoreTestCase(BaseTestCase):
         invoiced = utils.invoice_extra_stores()
         self.assertEqual(invoiced, 0, 'Invoice only once in a period')
 
-        import arrow
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=40)):
             invoiced = utils.invoice_extra_stores()
 
@@ -179,7 +181,6 @@ class ExtraGearStoreTestCase(BaseTestCase):
 
         self.assertEqual(utils.invoice_extra_stores(), 1, 'Invoice Active store')
 
-        import arrow
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=35)):
             extra_gear.store.is_active = False
             extra_gear.store.save()
@@ -210,7 +211,6 @@ class ExtraGearStoreTestCase(BaseTestCase):
         self.assertEqual(self.user.extragearstore_set.first().status, 'disabled')
         self.assertEqual(self.user.extragearstore_set.last().status, 'active')
 
-        import arrow
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=35)):
             extra_gear.is_active = False
             extra_gear.save()
@@ -258,7 +258,6 @@ class ExtraGearStoreTestCase(BaseTestCase):
         from stripe_subscription import utils
         utils.stripe.InvoiceItem.create = MagicMock(return_value=InvoiceItemMock())
 
-        from django.core.cache import cache
         cache.delete('user_extra_stores_ignored_{}'.format(self.user.id))
         cache.delete('user_invoice_checked_{}'.format(self.user.id))
         self.assertEqual(utils.invoice_extra_stores(), 10, 'Invoice Active store')
@@ -272,7 +271,6 @@ class ExtraGearStoreTestCase(BaseTestCase):
         self.assertEqual(self.user.profile.plan, plan)
 
         # Check if invoice will be generated in the next period
-        import arrow
         with patch.object(utils.arrow, 'utcnow', return_value=arrow.utcnow().replace(days=40)):
             cache.delete('user_extra_stores_ignored_{}'.format(self.user.id))
             cache.delete('user_invoice_checked_{}'.format(self.user.id))

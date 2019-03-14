@@ -1,6 +1,7 @@
 from django import template
 from django.utils.safestring import mark_safe
 from django.conf import settings
+from django.utils.html import escapejs
 
 from shopified_core.utils import decode_params, app_link as utils_app_link
 
@@ -8,6 +9,7 @@ import simplejson as json
 import re
 
 import arrow
+import markdown
 
 register = template.Library()
 
@@ -24,8 +26,6 @@ def app_link(*args, **kwargs):
 
 @register.simple_tag(takes_context=True)
 def date_humanize(context, date, html=True, relative=None):
-    import arrow
-
     date = arrow.get(date) if date else None
     if not date:
         return ''
@@ -75,8 +75,6 @@ def base64_decode(context, data):
 
 @register.simple_tag(takes_context=True)
 def json_dumps(context, data):
-    from django.utils.html import escapejs
-
     data = json.dumps(data)
     data = escapejs(data)
 
@@ -179,8 +177,6 @@ def plan_features(plan):
         return ('<i class="fa fa-fw fa-question-circle" qtip-tooltip="{}" qtip-my="bottom center"'
                 'qtip-at="top center" style="font-size:16px;color:#BBB"></i>').format(help)
 
-    import markdown
-
     features = markdown.markdown(plan.features, extensions=['markdown.extensions.nl2br'])
     features = re.sub(
         r'\|\|([^\|]+)\|\|',
@@ -204,8 +200,6 @@ def render_markdown(text, render_help=True):
 
         return ('<i class="fa fa-fw fa-question-circle" qtip-tooltip="{}" qtip-my="bottom center"'
                 'qtip-at="top center" style="font-size:16px;color:#BBB"></i>').format(help)
-
-    import markdown
 
     text = markdown.markdown(text, extensions=['markdown.extensions.nl2br'])
 

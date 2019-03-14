@@ -1,4 +1,7 @@
 import simplejson as json
+from os.path import join as path_join
+from tempfile import mktemp
+from zipfile import ZipFile
 
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
@@ -515,10 +518,6 @@ def product_update(product_id, data):
 
 @celery_app.task(bind=True, base=CaptureFailure)
 def create_image_zip(self, images, product_id):
-    from os.path import join as path_join
-    from tempfile import mktemp
-    from zipfile import ZipFile
-
     from leadgalaxy.utils import aws_s3_upload
 
     try:

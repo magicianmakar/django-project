@@ -1,3 +1,5 @@
+from bleach import clean
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.template.defaultfilters import slugify
@@ -49,8 +51,6 @@ class Article(models.Model):
         return PUBLISH_STAT[int(self.stat)][1]
 
     def text_title(self):
-        from bleach import clean
-
         return clean(self.title, tags=[], strip=True).strip()
 
     def save(self, **kwargs):

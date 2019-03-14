@@ -66,8 +66,6 @@ def sync_subscription(user):
 def eligible_for_trial_coupon(cus):
     ''' Check if the passed Customer is eligible for trial coupon '''
 
-    import arrow
-
     if len(cus['subscriptions']['data']):
         sub = cus['subscriptions']['data'][0]
         if sub['status'] == 'trialing':
@@ -76,8 +74,6 @@ def eligible_for_trial_coupon(cus):
 
 
 def trial_coupon_offer_end(cus):
-    import arrow
-
     if len(cus['subscriptions']['data']):
         sub = cus['subscriptions']['data'][0]
         if sub['status'] == 'trialing':

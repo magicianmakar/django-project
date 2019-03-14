@@ -1,4 +1,8 @@
+import arrow
+
 from django.core.exceptions import PermissionDenied
+from django.db.models import Q
+from django.core.cache import cache
 
 from leadgalaxy.models import ShopifyStore
 from commercehq_core.models import CommerceHQStore
@@ -199,10 +203,6 @@ def can_add_store(user):
 
 def can_add_product(user, ignore_daily_limit=False):
     """ Check if the user plan allow one more product saving """
-
-    import arrow
-    from django.db.models import Q
-    from django.core.cache import cache
 
     profile = user.profile
 

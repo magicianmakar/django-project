@@ -2029,7 +2029,6 @@ class ShopifyWebhook(models.Model):
         if not self.shopify_id:
             return
 
-        import requests
         endpoint = self.store.get_link('/admin/webhooks/{}.json'.format(self.shopify_id), api=True)
         try:
             requests.delete(endpoint)
