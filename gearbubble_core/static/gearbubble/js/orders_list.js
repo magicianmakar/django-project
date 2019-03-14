@@ -363,7 +363,7 @@ function addOrderSourceRequest(data_api, callback) {
         var error = getAjaxError(data);
         var api = $.extend({}, this.data_api, {forced: true});
 
-        if (error.indexOf('linked to an other Order') != -1) {
+        if (data.status == 409) {
             swal({
                     title: 'Duplicate Order ID',
                     text: error + '\nAre you sure you want to add it to this order too?',

@@ -2079,7 +2079,7 @@ class ShopifyStoreApi(ApiBase):
             ).values_list('order_id', flat=True)
 
             if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced') and not from_oberlo:
-                return self.api_error('Supplier order ID is linked to another order', status=422)
+                return self.api_error('Supplier order ID is linked to another order', status=409)
 
             while True:
                 try:

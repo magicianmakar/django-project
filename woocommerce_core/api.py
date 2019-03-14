@@ -756,7 +756,7 @@ class WooStoreApi(ApiBase):
         seen_source_orders = seen_source_orders.values_list('order_id', flat=True)
 
         if len(seen_source_orders) and int(order_id) not in seen_source_orders and not data.get('forced'):
-            return self.api_error('Supplier order ID is linked to another order', status=422)
+            return self.api_error('Supplier order ID is linked to another order', status=409)
 
         track, created = WooOrderTrack.objects.update_or_create(
             store=store,

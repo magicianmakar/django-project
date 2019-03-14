@@ -534,7 +534,7 @@ class CHQStoreApi(ApiBase):
             ).values_list('order_id', flat=True)
 
             if len(seem_source_orders) and int(order_id) not in seem_source_orders and not data.get('forced'):
-                return self.api_error('Supplier order ID is linked to another order', status=422)
+                return self.api_error('Supplier order ID is linked to another order', status=409)
 
             track, created = CommerceHQOrderTrack.objects.update_or_create(
                 store=store,
