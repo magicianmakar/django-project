@@ -1670,6 +1670,11 @@ def product_view(request, pid):
 
     aws = aws_s3_context()
 
+    token = jwt.encode({
+        'id': request.user.id,
+        'exp': arrow.utcnow().replace(hours=1).timestamp
+    }, settings.API_SECRECT_KEY, algorithm='HS256')
+
     return render(request, 'product_view.html', {
         'product': p,
         'board': board,
@@ -1680,7 +1685,8 @@ def product_view(request, pid):
         'aws_policy': aws['aws_policy'],
         'aws_signature': aws['aws_signature'],
         'page': 'product',
-        'breadcrumbs': breadcrumbs
+        'breadcrumbs': breadcrumbs,
+        'token': token
     })
 
 
@@ -2269,7 +2275,6 @@ def acp_users_list(request):
     else:
         if not request.user.is_superuser:
             users = User.objects.none()
-
         profiles = UserProfile.objects.all()
 
     charges = []
@@ -3057,25 +3062,36 @@ def upgrade_required(request):
     return render(request, 'upgrade.html')
 
 
-@login_required
 def save_image_s3(request):
     """Saves the image in img_url into S3 with the name img_name"""
+    request_token = request.GET.get('token')
+    user = None
+    if request_token:
+        decoded_token = jwt.decode(request_token,
+                                   settings.API_SECRECT_KEY,
+                                   algorithm='HS256')
+        user = User.objects.filter(pk=decoded_token.get('id')).first()  # Ensure None if doesn't exist
+    elif request.user.is_authenticated:
+        user = request.user
 
-    if 'advanced' in request.POST:
+    if user is None:
+        return HttpResponseRedirect(reverse('login'))
+
+    if 'advanced' in request.GET:
         # PhotoPea
-        if not request.user.can('pixlr_photo_editor.use'):
+        if not user.can('pixlr_photo_editor.use'):
             return render(request, 'upgrade.html')
 
-        # TODO: File size limit
-        image = request.FILES.get('image')
-        product_id = request.POST.get('product')
-        img_url = image.name
-        old_url = request.POST.get('old_url')
+        fp = StringIO.StringIO(request.body)
+        fp.read(2000)  # First 2000 bytes are json settings
 
-        fp = image
+        # TODO: File size limit
+        product_id = request.GET.get('product')
+        img_url = request.GET.get('url')
+        old_url = request.GET.get('old_url')
 
     elif 'clippingmagic' in request.POST:
-        if not request.user.can('clippingmagic.use'):
+        if not user.can('clippingmagic.use'):
             return render(request, 'upgrade.html')
 
         product_id = request.POST.get('product')
@@ -3086,21 +3102,21 @@ def save_image_s3(request):
 
     else:
         # Aviary
-        if not request.user.can('aviary_photo_editor.use'):
+        if not user.can('aviary_photo_editor.use'):
             return render(request, 'upgrade.html')
 
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
         old_url = request.POST.get('old_url')
 
-        if not utils.upload_from_url(img_url, request.user.profile.import_stores()):
+        if not utils.upload_from_url(img_url, user.profile.import_stores()):
             raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
 
         fp = StringIO.StringIO(requests.get(img_url).content)
 
     # Randomize filename in order to not overwrite an existing file
     img_name = utils.random_filename(img_url.split('/')[-1])
-    img_name = 'uploads/u%d/%s' % (request.user.id, img_name)
+    img_name = 'uploads/u%d/%s' % (user.id, img_name)
     mimetype = mimetypes.guess_type(img_url)[0]
 
     upload_url = utils.aws_s3_upload(
@@ -3114,8 +3130,8 @@ def save_image_s3(request):
         from commercehq_core.models import CommerceHQProduct, CommerceHQUserUpload
 
         product = CommerceHQProduct.objects.get(id=product_id)
-        permissions.user_can_edit(request.user, product)
-        CommerceHQUserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
+        permissions.user_can_edit(user, product)
+        CommerceHQUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
 
         if old_url and not old_url == upload_url:
             update_product_data_images(product, old_url, upload_url)
@@ -3124,9 +3140,9 @@ def save_image_s3(request):
         from woocommerce_core.models import WooProduct, WooUserUpload
 
         product = WooProduct.objects.get(id=product_id)
-        permissions.user_can_edit(request.user, product)
+        permissions.user_can_edit(user, product)
 
-        WooUserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
+        WooUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
 
         if old_url and not old_url == upload_url:
             update_product_data_images(product, old_url, upload_url)
@@ -3135,16 +3151,32 @@ def save_image_s3(request):
         from gearbubble_core.models import GearBubbleProduct, GearUserUpload
 
         product = GearBubbleProduct.objects.get(id=product_id)
-        permissions.user_can_edit(request.user, product)
-        GearUserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
+        permissions.user_can_edit(user, product)
+        GearUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
 
         if old_url and not old_url == upload_url:
             update_product_data_images(product, old_url, upload_url)
 
     else:
         product = ShopifyProduct.objects.get(id=product_id)
-        permissions.user_can_edit(request.user, product)
-        UserUpload.objects.create(user=request.user.models_user, product=product, url=upload_url[:510])
+        permissions.user_can_edit(user, product)
+        UserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
+
+    if 'advanced' in request.GET:
+        product.store.pusher_trigger('advanced-editor', {
+            'success': True,
+            'product': product_id,
+            'url': upload_url,
+            'image_id': request.GET.get('image_id'),
+        })
+
+        json_response = JsonResponse({
+            'message': 'Changes applied to image in Dropified',
+            'newSource': upload_url
+        })
+
+        json_response["Access-Control-Allow-Origin"] = "https://www.photopea.com"
+        return json_response
 
     return JsonResponse({
         'status': 'ok',
@@ -3976,7 +4008,6 @@ def orders_view(request):
                         if variant_id and mapped:
                             order_data['variant'] = mapped
                         else:
-
                             order_data['variant'] = variant_title.split('/') if variant_title else ''
 
                     if product and product.have_supplier():

@@ -1103,21 +1103,13 @@ function renderImages() {
         }
 
         if (config.advanced_photo_editor) {
-            var hash = UUIDjs.create().hex.split('-').join(''),
-                imageUrl = el;
+            var imageUrl = createPhotopeaURL(el, imageId);
 
-            if (!imageUrl.match(/shopifiedapp.+?\.s3\.amazonaws\.com/)) {
-                imageUrl = app_link(['api/ali/get-image'], {url: btoa(imageUrl)});
-            }
-            if (config.DEBUG) {
-                imageUrl = imageUrl.replace('http://dev.', 'https://app.');
-            }
             buttons.push($('<a>', {
                 'title': "Advanced Editor",
                 'class': "btn btn-warning btn-xs itooltip advanced-edit-photo",
                 'target': "_blank",
                 'href': imageUrl,
-                'data-hash': hash,
                 'html': '<i class="fa fa-picture-o"></i></a>'
             }));
         }
@@ -1137,13 +1129,6 @@ function renderImages() {
                 img.attr('id'),
                 img.attr('src')
             );
-        });
-
-        d.find('.advanced-edit-photo').on('click', function (e) {
-            e.preventDefault();
-            var imageId = $(this).parents('.var-image-block').find('img').attr('id');
-
-            PhotoPeaEditor.doLoad($(this).attr('href'), imageId);
         });
 
         d.find('.remove-background-image-editor').click(function(e) {

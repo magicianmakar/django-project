@@ -1,6 +1,7 @@
 import arrow
 import simplejson as json
 import requests
+import jwt
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -401,6 +402,11 @@ class ProductDetailView(DetailView):
             context['alert_config'] = json.loads(self.object.config)
         except:
             context['alert_config'] = {}
+
+        context['token'] = jwt.encode({
+            'id': self.request.user.id,
+            'exp': arrow.utcnow().replace(hours=1).timestamp
+        }, settings.API_SECRECT_KEY, algorithm='HS256')
 
         return context
 

@@ -1,6 +1,7 @@
 import json
 
 import arrow
+import jwt
 
 from django.conf import settings
 from django.contrib import messages
@@ -177,6 +178,11 @@ class ProductDetailView(DetailView):
             context['breadcrumbs'].insert(1, {'title': store_title, 'url': store_products})
 
         context.update(aws_s3_context())
+
+        context['token'] = jwt.encode({
+            'id': self.request.user.id,
+            'exp': arrow.utcnow().replace(hours=1).timestamp
+        }, settings.API_SECRECT_KEY, algorithm='HS256')
 
         return context
 

@@ -667,18 +667,6 @@
         </div>
     </div>
 </div>
-
-<div id="modal-photopea" class="modal fade" aria-hidden="true">
-    <div class="modal-dialog modal-lg" style="width: calc(100% - 60px);">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="embed-responsive embed-responsive-16by9">
-                    <iframe id="photopea" class="embed-responsive-item" src="" allowfullscreen></iframe>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 {% endblock %}
 
 {% block extracss %}
@@ -709,7 +697,6 @@
 <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/uuid-js/lib/uuid.js' %}"></script>
-<script type="text/javascript" src="{% static 'js/photopea.js' %}"></script>
 
 <!-- Load Feather code -->
 {% if request.is_secure %}
@@ -723,7 +710,7 @@
 var product = {% json_dumps product_data %};
 
 var config = {
-    DEBUG: {{ DEBUG|yesno:"true,false" }},
+    token: '{{ token }}',
     user_id: {{user.id}},
     product_id: {{product.id}},
     product_notes: '{{product.notes|default:''|escapejs}}',
@@ -891,6 +878,7 @@ $(function() {
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
     {% compress js %}
+    <script type="text/javascript" src="{% static 'js/photopea.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/product_detail.js' %}"></script>
