@@ -591,7 +591,7 @@ class OrderErrorsCheck:
             if found_errors > 0:
                 track.errors = found_errors
             else:
-                if track.errors > 0:
+                if track.errors and track.errors > 0:
                     # Clear previous errors
                     track.clear_errors(commit=False)
 
