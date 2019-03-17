@@ -149,7 +149,7 @@ class StripePlan(models.Model):
             self.statement_descriptor = None
 
         if not self.stripe_id:
-            self.stripe_id = 'SA_{}'.format(hashlib.md5(str(uuid.uuid4())).hexdigest()[:8])
+            self.stripe_id = 'SA_{}'.format(hashlib.md5(str(uuid.uuid4()).encode()).hexdigest()[:8])
 
             stripe.Plan.create(
                 amount=int(self.amount * 100),  # How much to charge in cents, we store it in dollars
