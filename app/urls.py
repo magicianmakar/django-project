@@ -12,7 +12,6 @@ urlpatterns = [
     url(r'^gear/', include('gearbubble_core.urls', 'gear')),
     url(r'^subscription/', include('stripe_subscription.urls')),
     url(r'^subscription/shopify/', include('shopify_subscription.urls')),
-    url(r'^(lifetime|monthly)/', include('plan_checkout.urls')),
     url(r'^marketing/', include('product_feed.urls')),
     url(r'^pages/', include('article.urls')),
     url(r'^accounts/', include('django.contrib.auth.urls')),
