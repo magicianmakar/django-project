@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations
 
 import zlib
+
 
 def convert_zlib_to_plain(apps, schema_editor):
     ShopifyProduct = apps.get_model("leadgalaxy", "ShopifyProduct")
@@ -21,8 +22,8 @@ def convert_zlib_to_plain(apps, schema_editor):
         product.save()
 
     if any([merged_products, empty_products]):
-        print '* Merged Products:', merged_products
-        print '* Empty Products:', empty_products
+        print('* Merged Products:', merged_products)
+        print('* Empty Products:', empty_products)
 
 
 class Migration(migrations.Migration):

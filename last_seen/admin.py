@@ -1,7 +1,7 @@
 
 from django.contrib import admin
 
-from models import LastSeen
+from .models import LastSeen
 
 
 class PlanListFilter(admin.SimpleListFilter):
@@ -12,7 +12,7 @@ class PlanListFilter(admin.SimpleListFilter):
         choices = []
         choices_count = {}
         qs = model_admin.get_queryset(request)
-        for k in request.GET.keys():
+        for k in list(request.GET.keys()):
             if len(k) > 1:
                 qs = qs.filter(**{k: request.GET[k]})
 

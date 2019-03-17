@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyproduct',
             name='parent_product',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name=b'Dupliacte of product', blank=True, to='leadgalaxy.ShopifyProduct', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name='Dupliacte of product', blank=True, to='leadgalaxy.ShopifyProduct', null=True),
         ),
         migrations.AlterField(
             model_name='shopifyproduct',

@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='GearBubbleStore',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('title', models.CharField(default=b'', max_length=300, blank=True)),
+                ('title', models.CharField(default='', max_length=300, blank=True)),
                 ('api_token', models.CharField(max_length=300)),
                 ('is_active', models.BooleanField(default=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),

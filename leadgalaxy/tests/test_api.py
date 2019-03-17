@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from mock import patch, Mock
 
-import factories as f
+from . import factories as f
 from lib.test import BaseTestCase
 
 
@@ -31,7 +31,7 @@ class ProductsApiTestCase(BaseTestCase):
         data = {'store': self.store.id, 'product': product.shopify_id}
 
         r = self.client.get('/api/find-products', data, content_type='application/json')
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
         json_response = json.loads(r.content)
         self.assertIsNotNone(json_response.get(str(product.shopify_id)))
 
@@ -44,7 +44,7 @@ class ProductsApiTestCase(BaseTestCase):
         data = {'store': self.store.id, 'aliexpress': supplier.source_id}
 
         r = self.client.get('/api/find-products', data)
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
         json_response = json.loads(r.content)
         self.assertIsNotNone(json_response.get(str(source_id)))
 
@@ -97,7 +97,7 @@ class SyncAliexpressTestCase(BaseTestCase):
 
     def get_request(self, url, data, response_status=200):
         r = self.client.get(url, data, content_type='application/json')
-        self.assertEquals(r.status_code, response_status)
+        self.assertEqual(r.status_code, response_status)
 
         return r
 
@@ -106,13 +106,13 @@ class SyncAliexpressTestCase(BaseTestCase):
 
         self.user_login(self.parent_user)
         response = self.get_request('/api/order-fulfill', data)
-        self.assertNotEquals(response.status_code, 402)
+        self.assertNotEqual(response.status_code, 402)
 
         self.client.logout()
 
         self.user_login(self.subuser)
         response = self.get_request('/api/order-fulfill', data)
-        self.assertNotEquals(response.status_code, 402)
+        self.assertNotEqual(response.status_code, 402)
 
     def test_subuser_order_unfulfilled_only_count(self):
         self.user_login(self.subuser)
@@ -127,7 +127,7 @@ class SyncAliexpressTestCase(BaseTestCase):
 
         response = self.get_request('/api/order-fulfill', data)
         json_response = json.loads(response.content)
-        self.assertEquals(json_response['pending'], 10)
+        self.assertEqual(json_response['pending'], 10)
 
     def test_order_all_only_count(self):
         self.user_login(self.parent_user)
@@ -142,7 +142,7 @@ class SyncAliexpressTestCase(BaseTestCase):
 
         response = self.get_request('/api/order-fulfill', data)
         json_response = json.loads(response.content)
-        self.assertEquals(json_response['pending'], 20)
+        self.assertEqual(json_response['pending'], 20)
 
     def test_last_week_orders_only(self):
         self.user_login(self.parent_user)
@@ -162,7 +162,7 @@ class SyncAliexpressTestCase(BaseTestCase):
 
         response = self.get_request('/api/order-fulfill', data)
         json_response = json.loads(response.content)
-        self.assertEquals(json_response['pending'], 6)
+        self.assertEqual(json_response['pending'], 6)
 
     def test_unfulfilled_only(self):
         self.user_login(self.parent_user)

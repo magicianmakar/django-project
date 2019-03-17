@@ -17,8 +17,8 @@ class Migration(migrations.Migration):
             name='ShopifySubscription',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('subscription_id', models.CharField(unique=True, max_length=255, verbose_name=b'Shopify Charge ID')),
-                ('status', models.CharField(max_length=64, null=True, verbose_name=b'Shopify Charge Status', blank=True)),
+                ('subscription_id', models.CharField(unique=True, max_length=255, verbose_name='Shopify Charge ID')),
+                ('status', models.CharField(max_length=64, null=True, verbose_name='Shopify Charge Status', blank=True)),
                 ('data', models.TextField(null=True, blank=True)),
                 ('activated_on', models.DateTimeField(null=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),

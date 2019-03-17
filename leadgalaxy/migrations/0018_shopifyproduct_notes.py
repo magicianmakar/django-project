@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifyproduct',
             name='notes',
-            field=models.TextField(default=b''),
+            field=models.TextField(default=''),
         ),
     ]

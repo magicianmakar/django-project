@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifysyncstatus',
             name='sync_status',
-            field=models.IntegerField(default=0, choices=[(0, b'Pending'), (1, b'Started'), (2, b'Completed'), (3, b'Unauthorized'), (4, b'Error'), (5, b'Disabled')]),
+            field=models.IntegerField(default=0, choices=[(0, 'Pending'), (1, 'Started'), (2, 'Completed'), (3, 'Unauthorized'), (4, 'Error'), (5, 'Disabled')]),
         ),
     ]

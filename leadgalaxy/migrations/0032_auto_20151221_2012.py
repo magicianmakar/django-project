@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations
+
 
 def convert_base64_to_zlib(apps, schema_editor):
     ShopifyProduct = apps.get_model("leadgalaxy", "ShopifyProduct")
@@ -15,7 +16,7 @@ def convert_base64_to_zlib(apps, schema_editor):
         merged_products += 1
 
     if merged_products:
-        print '* Merged Products:', merged_products
+        print('* Merged Products:', merged_products)
 
 
 class Migration(migrations.Migration):

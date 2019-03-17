@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sidebarlink',
             name='icon',
-            field=models.CharField(default=b'', max_length=20, blank=True),
+            field=models.CharField(default='', max_length=20, blank=True),
         ),
         migrations.AddField(
             model_name='sidebarlink',

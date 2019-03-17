@@ -29,6 +29,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifystore',
             name='version',
-            field=models.IntegerField(default=1, verbose_name=b'Store Version', choices=[(1, b'Private App'), (2, b'Shopify App')]),
+            field=models.IntegerField(default=1, verbose_name='Store Version', choices=[(1, 'Private App'), (2, 'Shopify App')]),
         ),
     ]

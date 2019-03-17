@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='sidebarlink',
             name='plans',
-            field=multiselectfield.db.fields.MultiSelectField(max_length=230, choices=[(b'3fd1d6a2ee2d8154874204a08b31575f', b'Beta Elite'), (b'64543a8eb189bae7f9abc580cfc00f76', b'Vip Elite'), (b'3eccff4f178db4b85ff7245373102aec', b'Elite'), (b'b17d8eacbb02bb907c2ccc854f7c282d', b'Team Shopify'), (b'55cb8a0ddbc9dacab8d99ac7ecaae00b', b'Pro'), (b'2877056b74f4683ee0cf9724b128e27b', b'Basic'), (b'606bd8eb8cb148c28c4c022a43f0432d', b'Free')]),
+            field=multiselectfield.db.fields.MultiSelectField(max_length=230, choices=[('3fd1d6a2ee2d8154874204a08b31575f', 'Beta Elite'), ('64543a8eb189bae7f9abc580cfc00f76', 'Vip Elite'), ('3eccff4f178db4b85ff7245373102aec', 'Elite'), ('b17d8eacbb02bb907c2ccc854f7c282d', 'Team Shopify'), ('55cb8a0ddbc9dacab8d99ac7ecaae00b', 'Pro'), ('2877056b74f4683ee0cf9724b128e27b', 'Basic'), ('606bd8eb8cb148c28c4c022a43f0432d', 'Free')]),
         ),
     ]

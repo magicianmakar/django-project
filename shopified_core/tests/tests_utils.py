@@ -1,13 +1,9 @@
-# -*- coding: utf-8 -*-
-import os
-
 from django.conf import settings
-from django.test import tag
 from lib.test import BaseTestCase
-from mock import patch, Mock
+from mock import Mock
 
 from collections import OrderedDict
-from django.core.cache import cache, caches
+from django.core.cache import caches
 from django.contrib.auth.models import User
 
 from shopified_core.utils import (
@@ -23,6 +19,7 @@ from shopified_core.utils import (
     extension_hash_text
 )
 
+from shopified_core.utils import base64_encode
 from shopified_core.shipping_helper import (
     country_from_code,
     get_counrties_list,
@@ -123,7 +120,6 @@ class UtilsTestCase(BaseTestCase):
         # self.assertEqual(country_code, '+1')
         self.assertEqual(phone_number, '0000000000')
 
-
     def test_chase_phone_numbers_by_chase(self):
         def get_config(name):
             conf = {'order_phone_number': '+1-2056577766'}
@@ -137,31 +133,31 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(phone_number, '2056577766')
 
     def test_hash_url_filename(self):
-        self.assertEqual('1205230341.jpg', hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high.jpg'))
+        self.assertEqual('1205230341.jpg', hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high.jpg')) # noqa
         self.assertEqual('1384416073.png', hash_url_filename('http://ebay.com/images/UNO-R3-MEGA328P-for-Arduino-Compatible.png?with=450&height=450'))
         self.assertEqual('-1523470574.jpg', hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high'))
         self.assertEqual('355713761.jpg', hash_url_filename('http://ebay.com/images/UNO-R3-MEGA328P-for-Arduino-Compatible/?with=450&height=450'))
         self.assertEqual('1384415896.jpg', hash_url_filename('http://ebay.com/images/UNO-R3-MEGA328P-for-Arduino-Compatible.php?with=450&height=450'))
 
-        self.assertEqual('677074431.jpg', hash_url_filename(r'https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-m%C3%A4nner-'
-                                                            r'digital-led-uhr-military-watch-armee-m%C3%A4nner-armbanduhr-50-mt-wasserdicht-relogio.jpg_50x50.jpg'))
+        self.assertEqual('677074431.jpg', hash_url_filename(r'https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-m%C3%A4nner-' # noqa
+                                                            r'digital-led-uhr-military-watch-armee-m%C3%A4nner-armbanduhr-50-mt-wasserdicht-relogio.jpg_50x50.jpg')) # noqa
 
         self.assertEqual(hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high.jpg'),
-                         hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high.jpg?with=450&height=450'))
+                         hash_url_filename('http://g04.a.alicdn.com/kf/HTB18QvDJFXXXXb2XXXQ/Belt-2015-new-arrival-men-which-high.jpg?with=450&height=450')) # noqa
 
     def test_hash_url_filename_unicode(self):
-        self.assertEqual('1786948925.jpg', hash_url_filename(u'https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-männer-'
-                                                             u'digital-led-uhr-military-watch-armee-männer-armbanduhr-50-mt-wasserdicht-relogio.jpg_50x50.jpg'))
+        self.assertEqual('1786948925.jpg', hash_url_filename('https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-männer-'
+                                                             'digital-led-uhr-military-watch-armee-männer-armbanduhr-50-mt-wasserdicht-relogio.jpg_50x50.jpg')) # noqa
 
-        self.assertEqual('-1460244430.jpg', hash_url_filename(u'https://ae01.alicdn.com/kf/HTB1dvTSHVXXXXX.XFXXq6xXFXXXB/Findking-marke-hohe-'
-                                                              u'qualität-7-inch-chef-küchenmesser-keramik-messer-gemüse-keramik-messer.jpg_640x640.jpg'))
+        self.assertEqual('-1460244430.jpg', hash_url_filename('https://ae01.alicdn.com/kf/HTB1dvTSHVXXXXX.XFXXq6xXFXXXB/Findking-marke-hohe-'
+                                                              'qualität-7-inch-chef-küchenmesser-keramik-messer-gemüse-keramik-messer.jpg_640x640.jpg')) # noqa
 
         self.assertEqual('677074431.jpg', hash_url_filename(r'https://ae01.alicdn.com/kf/HTB1o9lwPXXXXXbaXFXXq6xXFXXXR/Smael-marke-sportuhr-m'
                                                             r'%C3%A4nner-digital-led-uhr-military-watch-armee-m%C3%A4nner-armbanduhr-50-mt-'
                                                             r'wasserdicht-relogio.jpg_50x50.jpg'))
 
-        self.assertEqual(1628870894, extension_hash_text(u'New Orange'))
-        self.assertEqual(925698, extension_hash_text(u'灰色'))
+        self.assertEqual(1628870894, extension_hash_text('New Orange'))
+        self.assertEqual(925698, extension_hash_text('灰色'))
 
     def test_app_link(self):
         self.assertEqual(app_link(), settings.APP_URL)
@@ -198,9 +194,9 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(order_data_cache(1, '222', 444444), orders['order_1_222_444444'])
         self.assertEqual(order_data_cache(3, '222', 444444), None)
 
-        self.assertEqual(order_data_cache(1, 333, '*').values(), [orders['order_1_333_111111']])
+        self.assertEqual(list(order_data_cache(1, 333, '*').values()), [orders['order_1_333_111111']])
 
-        data = order_data_cache(1, 222, '*').values()
+        data = list(order_data_cache(1, 222, '*').values())
         self.assertEqual(len(data), 2)
         self.assertIn(data[0], [orders['order_1_222_333333'], orders['order_1_222_444444']])
         self.assertIn(data[1], [orders['order_1_222_333333'], orders['order_1_222_444444']])
@@ -295,20 +291,20 @@ class UtilsTestCase(BaseTestCase):
     def test_decode_params_str(self):
         s = 'test'
         self.assertEqual(decode_params(s), s)
-        self.assertEqual(decode_params(s.encode('base64')), s.encode('base64'))
+        self.assertEqual(decode_params(base64_encode(s)), base64_encode(s))
         self.assertEqual(decode_params(encode_params(s)), s)
 
-        self.assertEqual(decode_params('b:' + s.encode('base64')), s)
-        self.assertEqual(encode_params(s), 'b:' + s.encode('base64').strip())
+        self.assertEqual(decode_params('b:' + base64_encode(s)), s)
+        self.assertEqual(encode_params(s), 'b:' + base64_encode(s))
 
     def test_decode_params_email(self):
         email = 'smith@gmail.com'
-        self.assertEqual(decode_params(email.encode('base64')), email)
+        self.assertEqual(decode_params(base64_encode(email)), email)
 
     def test_decode_params_numbers(self):
         n = '9343'
         self.assertEqual(decode_params(n), n)
-        self.assertEqual(decode_params(n.encode('base64')), n.encode('base64'))
+        self.assertEqual(decode_params(base64_encode(n)), base64_encode(n))
         self.assertEqual(decode_params(encode_params(n)), n)
 
         self.assertEqual(decode_params('4624'), '4624')
@@ -317,7 +313,7 @@ class UtilsTestCase(BaseTestCase):
     def test_decode_params_names(self):
         s = 'John Smith'
         self.assertEqual(decode_params(s), s)
-        self.assertEqual(decode_params(s.encode('base64')), s.encode('base64'))
+        self.assertEqual(decode_params(base64_encode(s)), base64_encode(s))
         self.assertEqual(decode_params(encode_params(s)), s)
 
     def test_decode_params_random(self):
@@ -325,7 +321,7 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(decode_params(h), h)
 
         h = random_hash()
-        self.assertEqual(decode_params(h.encode('base64')), h.encode('base64'))
+        self.assertEqual(decode_params(base64_encode(h)), base64_encode(h))
 
         h = random_hash()
         self.assertEqual(decode_params(encode_params(h)), h)
@@ -359,7 +355,7 @@ class ShippingHelperFunctionsTestCase(BaseTestCase):
             'CA': 'Canada',
         }
 
-        for code, name in counrties.items():
+        for code, name in list(counrties.items()):
             self.assertEqual(country_from_code(code), name)
 
     def test_get_country_list(self):

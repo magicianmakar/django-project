@@ -20,6 +20,7 @@ from .models import (
     AliexpressFulfillmentCost,
     OtherCost
 )
+from functools import reduce
 
 # Note: Ignore this status: buyer_accept_goods_timeout, buyer_accept_goods
 ALIEXPRESS_CANCELLED_STATUS = [
@@ -55,11 +56,11 @@ def get_facebook_ads(facebook_access_id, store, verbosity=1):
     # Only selected accounts have a corresponding FacebookAccount model
     accounts = facebook_access.accounts.all()
     if verbosity > 1:
-        print 'Sync {} Facebook AdAccount'.format(len(accounts))
+        print('Sync {} Facebook AdAccount'.format(len(accounts)))
 
     for account in accounts:
         if verbosity > 1:
-            print '\tSync {} Facebook Campaigns'.format(len(account.campaigns.split(',')))
+            print('\tSync {} Facebook Campaigns'.format(len(account.campaigns.split(','))))
 
         # Return already formatted insights
         for insight in account.get_api_insights(verbosity=verbosity):
@@ -255,7 +256,7 @@ def get_profits(store, start, end, store_timezone=''):
                                  refunds_list=refunds,
                                  store_timezone=store_timezone)
 
-    return profits_data.values(), totals, details
+    return list(profits_data.values()), totals, details
 
 
 def get_costs_from_track(track, commit=False):
@@ -278,7 +279,7 @@ def get_costs_from_track(track, commit=False):
     }
 
     try:
-        data = json.loads(track.data.encode('utf-8')) if track.data else {}
+        data = json.loads(track.data) if track.data else {}
     except:
         return
 
@@ -286,7 +287,7 @@ def get_costs_from_track(track, commit=False):
             data.get('aliexpress').get('order_details').get('cost'):
 
         cost = data['aliexpress']['order_details']['cost']
-        if type(cost.get('total')) in [float, int, long]:
+        if type(cost.get('total')) in [float, int]:
             costs['total_cost'] = cost.get('total')
             costs['shipping_cost'] = cost.get('shipping')
             costs['products_cost'] = cost.get('products')
@@ -465,7 +466,7 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
             new_refunds[refunds_key]['refunded_products'] += refunded_products
 
     # Paginate profit details
-    profit_details = orders_map.values() + new_refunds.values()
+    profit_details = list(orders_map.values()) + list(new_refunds.values())
     profit_details = sorted(profit_details, key=lambda k: k['date'], reverse=True)
     paginator = SimplePaginator(profit_details, limit)
     page = min(max(1, page), paginator.num_pages)

@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='lastseen',
             name='module',
-            field=models.CharField(default=b'website', max_length=20),
+            field=models.CharField(default='website', max_length=20),
         ),
     ]

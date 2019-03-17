@@ -1,7 +1,7 @@
 import textwrap
-import urllib
 import json
 import re
+from urllib.parse import urlencode
 
 from pusher import Pusher
 from woocommerce import API
@@ -12,7 +12,7 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.urls import reverse
 
-from shopified_core.utils import get_domain, safe_str
+from shopified_core.utils import get_domain, safe_str, base64_encode
 from shopified_core.decorators import add_to_class
 
 
@@ -43,7 +43,7 @@ class WooStore(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_wcapi(self, timeout=30):
@@ -77,7 +77,7 @@ class WooStore(models.Model):
         return self.get_store_url() + '/wp-admin'
 
     def get_authorize_url(self, params):
-        return '{}/wc-auth/v1/authorize?{}'.format(self.get_store_url(), urllib.urlencode(params))
+        return '{}/wc-auth/v1/authorize?{}'.format(self.get_store_url(), urlencode(params))
 
     def get_suppliers(self):
         return self.woosupplier_set.all().order_by('-is_default')
@@ -146,17 +146,17 @@ class WooProduct(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         try:
             title = self.title
             if len(title) > 79:
-                return u'{}...'.format(textwrap.wrap(title, width=79)[0])
+                return '{}...'.format(textwrap.wrap(title, width=79)[0])
             elif title:
                 return title
             else:
-                return u'<WooProduct: %d>' % self.id
+                return '<WooProduct: %d>' % self.id
         except:
-            return u'<WooProduct: %d>' % self.id
+            return '<WooProduct: %d>' % self.id
 
     @property
     def parsed(self):
@@ -238,7 +238,7 @@ class WooProduct(models.Model):
         variants = []
         page = 1
         while page:
-            params = urllib.urlencode({'page': page, 'per_page': 100})
+            params = urlencode({'page': page, 'per_page': 100})
             path = 'products/{}/variations?{}'.format(self.source_id, params)
             r = self.store.wcapi.get(path)
             r.raise_for_status()
@@ -388,16 +388,16 @@ class WooProduct(models.Model):
 
         if for_extension and mapping:
             if name:
-                if type(mapping) in [str, unicode]:
+                if type(mapping) is str:
                     mapping = mapping.split(',')
             else:
-                for k, v in mapping.items():
+                for k, v in list(mapping.items()):
                     m = str(v) if type(v) is int else v
 
                     try:
                         m = json.loads(v)
                     except:
-                        if type(v) in [str, unicode]:
+                        if type(v) is str:
                             m = v.split(',')
 
                     mapping[k] = m
@@ -414,7 +414,7 @@ class WooProduct(models.Model):
             except:
                 current = {}
 
-            for k, v in mapping.items():
+            for k, v in list(mapping.items()):
                 current[k] = v
 
             mapping = current
@@ -459,7 +459,7 @@ class WooProduct(models.Model):
             except:
                 current = {}
 
-            for k, v in mapping.items():
+            for k, v in list(mapping.items()):
                 current[k] = v
 
             mapping = current
@@ -509,7 +509,7 @@ class WooProduct(models.Model):
                 else:
                     options = v['variant']
 
-                    options = map(lambda a: {'title': a}, options)
+                    options = [{'title': a} for a in options]
 
                 try:
                     if type(options) not in [list, dict]:
@@ -523,7 +523,7 @@ class WooProduct(models.Model):
                 variants_map[str(v['id'])] = options
                 seen_variants.append(str(v['id']))
 
-            for k in variants_map.keys():
+            for k in list(variants_map.keys()):
                 if k not in seen_variants:
                     del variants_map[k]
 
@@ -546,13 +546,13 @@ class WooSupplier(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.supplier_name:
             return self.supplier_name
         elif self.supplier_url:
             return self.supplier_url
         else:
-            return u'<WooSupplier: {}>'.format(self.id)
+            return '<WooSupplier: {}>'.format(self.id)
 
     def get_source_id(self):
         try:
@@ -574,9 +574,9 @@ class WooSupplier(models.Model):
         source_id = self.get_source_id()
         if source_id:
             if self.is_aliexpress:
-                return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
+                return 'https://www.aliexpress.com/item//{}.html'.format(source_id)
             if self.is_ebay:
-                return u'https://www.ebay.com/itm/{}'.format(source_id)
+                return 'https://www.ebay.com/itm/{}'.format(source_id)
 
         return self.product_url
 
@@ -599,7 +599,7 @@ class WooSupplier(models.Model):
                 else:
                     supplier_idx += 1
 
-            name = u'Supplier {}#{}'.format(self.supplier_type(), supplier_idx)
+            name = 'Supplier {}#{}'.format(self.supplier_type(), supplier_idx)
 
         return name
 
@@ -663,7 +663,7 @@ class WooOrderTrack(models.Model):
         super(WooOrderTrack, self).save(*args, **kwargs)
 
     def encoded(self):
-        return json.dumps(self.data).encode('base64')
+        return base64_encode(json.dumps(self.data))
 
     def get_tracking_link(self):
         aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
@@ -753,8 +753,8 @@ class WooOrderTrack(models.Model):
         else:
             return ALIEXPRESS_REJECTED_STATUS.get(safe_str(self.source_status_details).lower())
 
-    def __unicode__(self):
-        return u'{} | {}'.format(self.order_id, self.line_id)
+    def __str__(self):
+        return '{} | {}'.format(self.order_id, self.line_id)
 
 
 class WooBoard(models.Model):
@@ -771,7 +771,7 @@ class WooBoard(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def saved_count(self):
@@ -792,5 +792,5 @@ class WooUserUpload(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.url.replace('%2F', '/').split('/')[-1]

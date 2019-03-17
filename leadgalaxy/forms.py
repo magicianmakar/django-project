@@ -15,14 +15,14 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 
 class BsErrorList(ErrorList):
-    def __unicode__(self):
+    def __str__(self):
         return self.as_divs()
 
     def as_divs(self):
         if not self:
-            return u''
-        return u'%s' % ''.join([u'<div class="has-error"><label class="control-label" style="text-align: left">%s</label></div>' % e.rstrip('.')
-                                for e in self])
+            return ''
+        return '%s' % ''.join(['<div class="has-error"><label class="control-label" style="text-align: left">%s</label></div>'
+                               % e.rstrip('.') for e in self])
 
 
 class RegisterForm(forms.ModelForm):
@@ -65,8 +65,8 @@ class RegisterForm(forms.ModelForm):
             return unique_username(self.clean_email(), fullname=self.clean_fullname())
 
         except AssertionError as e:
-            raise forms.ValidationError(e.message)
-        except Exception as e:
+            raise forms.ValidationError(str(e))
+        except Exception:
             raven_client.captureException()
             raise forms.ValidationError('Username is already registred to an other account.')
 
@@ -117,7 +117,7 @@ class RegisterForm(forms.ModelForm):
 
         if len(fullname):
             user.first_name = fullname[0]
-            user.last_name = u' '.join(fullname[1:])
+            user.last_name = ' '.join(fullname[1:])
 
         user.username = username
         user.email = self.cleaned_data["email"]

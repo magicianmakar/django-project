@@ -24,7 +24,7 @@ class Command(DropifiedBaseCommand):
         self.stdout.write('Generate {} feeds'.format(len(statuses)))
 
         for status in statuses:
-            self.stdout.write(u'Store Feed: {}'.format(status.store.shop))
+            self.stdout.write('Store Feed: {}'.format(status.store.shop))
             generate_product_feed(status, nocache=True)
 
     def generate_chq_product_feeds(self):

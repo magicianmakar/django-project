@@ -14,41 +14,41 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='accesstoken',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date'),
+            field=models.DateTimeField(auto_now_add=True, verbose_name='Submission date'),
         ),
         migrations.AlterField(
             model_name='shopifyboard',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date'),
+            field=models.DateTimeField(auto_now_add=True, verbose_name='Submission date'),
         ),
         migrations.AlterField(
             model_name='shopifyorder',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date'),
+            field=models.DateTimeField(auto_now_add=True, verbose_name='Submission date'),
         ),
         migrations.AlterField(
             model_name='shopifyproduct',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date'),
+            field=models.DateTimeField(auto_now_add=True, verbose_name='Submission date'),
         ),
         migrations.AlterField(
             model_name='shopifyproductexport',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date'),
+            field=models.DateTimeField(auto_now_add=True, verbose_name='Submission date'),
         ),
         migrations.AlterField(
             model_name='shopifyproductexport',
             name='shopify_id',
-            field=models.BigIntegerField(default=0, verbose_name=b'Shopify Product ID'),
+            field=models.BigIntegerField(default=0, verbose_name='Shopify Product ID'),
         ),
         migrations.AlterField(
             model_name='shopifystore',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date'),
+            field=models.DateTimeField(auto_now_add=True, verbose_name='Submission date'),
         ),
         migrations.AlterField(
             model_name='userupload',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date'),
+            field=models.DateTimeField(auto_now_add=True, verbose_name='Submission date'),
         ),
     ]

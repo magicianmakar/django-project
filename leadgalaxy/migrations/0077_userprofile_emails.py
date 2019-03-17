@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='emails',
-            field=models.TextField(default=b'', null=True, verbose_name=b'Other Emails', blank=True),
+            field=models.TextField(default='', null=True, verbose_name='Other Emails', blank=True),
         ),
     ]

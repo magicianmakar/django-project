@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='gearbubbleordertrack',
             name='source_type',
-            field=models.CharField(blank=True, max_length=512, null=True, verbose_name=b'Source Type'),
+            field=models.CharField(blank=True, max_length=512, null=True, verbose_name='Source Type'),
         ),
     ]

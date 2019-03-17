@@ -1,5 +1,5 @@
 import csv
-from StringIO import StringIO
+from io import StringIO
 
 import requests_mock
 from django.test import tag
@@ -143,7 +143,7 @@ class OrderImportFetchOrdersTestCase(BaseTestCase):
 
             self.orders = self.api.find_orders(self.orders)
 
-            for name, order in self.orders.items():
+            for name, order in list(self.orders.items()):
                 self.assertTrue(order['shopify'] is not None)
 
                 for item in order['items']:

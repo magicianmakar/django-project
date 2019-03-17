@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='register_hash',
-            field=models.CharField(default=b'', max_length=50, blank=True),
+            field=models.CharField(default='', max_length=50, blank=True),
         ),
     ]

@@ -76,8 +76,8 @@ def intercom(request):
     }
 
     if request.user.is_authenticated and settings.INTERCOM_SECRET_KEY:
-        ctx['INTERCOM_USER_HASH'] = hmac.new(settings.INTERCOM_SECRET_KEY,
-                                             str(request.user.id),
+        ctx['INTERCOM_USER_HASH'] = hmac.new(settings.INTERCOM_SECRET_KEY.encode(),
+                                             str(request.user.id).encode(),
                                              hashlib.sha256).hexdigest()
 
     return ctx

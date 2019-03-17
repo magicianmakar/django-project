@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='locked',
-            field=models.BooleanField(default=False, verbose_name=b'Disable Direct Subscription'),
+            field=models.BooleanField(default=False, verbose_name='Disable Direct Subscription'),
         ),
     ]

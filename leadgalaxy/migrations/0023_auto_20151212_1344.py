@@ -15,8 +15,8 @@ class Migration(migrations.Migration):
             name='AppPermission',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('name', models.CharField(max_length=512, verbose_name=b'Permission')),
-                ('description', models.CharField(default=b'', max_length=512, verbose_name=b'Permission Description', blank=True)),
+                ('name', models.CharField(max_length=512, verbose_name='Permission')),
+                ('description', models.CharField(default='', max_length=512, verbose_name='Permission Description', blank=True)),
             ],
         ),
         migrations.AddField(

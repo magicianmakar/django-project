@@ -67,8 +67,8 @@ class LastSeen(models.Model):
     class Meta:
         ordering = ('-last_seen',)
 
-    def __unicode__(self):
-        return u"%s on %s" % (self.user, self.last_seen)
+    def __str__(self):
+        return "%s on %s" % (self.user, self.last_seen)
 
 
 def get_cache_key(module, user):

@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifyorder',
             name='source_id',
-            field=models.BigIntegerField(default=0, verbose_name=b'Source Product ID'),
+            field=models.BigIntegerField(default=0, verbose_name='Source Product ID'),
         ),
     ]

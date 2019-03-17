@@ -15,7 +15,7 @@ class Command(DropifiedBaseCommand):
         self.stdout.write('Change plan of expired profiles', self.style.HTTP_INFO)
         for profile in UserProfile.objects.filter(plan_expire_at__lte=timezone.now()):
             if profile.plan_after_expire:
-                self.stdout.write(u'Changing: {}'.format(profile.user.username))
+                self.stdout.write('Changing: {}'.format(profile.user.username))
                 self.profile_changed(profile, profile.plan, profile.plan_after_expire)
 
                 profile.plan = profile.plan_after_expire

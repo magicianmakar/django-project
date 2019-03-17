@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='wooproduct',
             name='parent_product',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name=b'Duplicate of product', blank=True, to='woocommerce_core.WooProduct', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name='Duplicate of product', blank=True, to='woocommerce_core.WooProduct', null=True),
         ),
         migrations.AlterField(
             model_name='wooproduct',

@@ -11,9 +11,9 @@ import mimetypes
 import re
 import shutil
 import tempfile
-import urlparse
 import copy
-from urllib import urlencode
+
+from urllib.parse import urlencode, urlsplit, parse_qs, urlunsplit, urlparse
 from hashlib import sha256
 from math import ceil
 
@@ -168,9 +168,9 @@ def apply_shared_registration(user, registration):
     registration.add_user(profile.user.id)
 
     if registration.plan:
-        print "REGISTRATIONS SHARED: Change user {} from '{}' to '{}'".format(user.email,
+        print("REGISTRATIONS SHARED: Change user {} from '{}' to '{}'".format(user.email,
                                                                               profile.plan.title,
-                                                                              registration.plan.title)
+                                                                              registration.plan.title))
 
         if usage['expire_in_days']:
             expire_date = timezone.now() + timezone.timedelta(days=usage['expire_in_days'])
@@ -182,9 +182,9 @@ def apply_shared_registration(user, registration):
         profile.save()
 
     elif registration.bundle:
-        print "REGISTRATIONS SHARED: Add Bundle '{}' to: {} ({})".format(registration.bundle.title,
+        print("REGISTRATIONS SHARED: Add Bundle '{}' to: {} ({})".format(registration.bundle.title,
                                                                          user.username,
-                                                                         user.email)
+                                                                         user.email))
 
         profile.bundles.add(registration.bundle)
 
@@ -218,7 +218,7 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
 
         if len(fullname):
             first_name = fullname[0]
-            last_name = u' '.join(fullname[1:])
+            last_name = ' '.join(fullname[1:])
 
     username = unique_username(email, fullname=fullname)
     password = get_random_string(12)
@@ -261,7 +261,7 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
             data = {
                 "user_id": user.id,
                 "email": user.email,
-                "name": u' '.join(fullname),
+                "name": ' '.join(fullname),
                 "signed_up_at": arrow.utcnow().timestamp,
                 "custom_attributes": {}
             }
@@ -300,7 +300,7 @@ def smart_board_by_product(user, product):
         'type': product.product_type,
     }
 
-    for k, v in product_info.items():
+    for k, v in list(product_info.items()):
         if v:
             product_info[k] = [i.lower().strip() for i in v.split(',')]
         else:
@@ -333,34 +333,34 @@ def smart_board_by_product(user, product):
 
 def format_data(data, title=True):
     text = ''
-    for k, v in data.items():
+    for k, v in list(data.items()):
         t = k
         if title:
             t = t.replace('_', ' ').title()
-        text = u'{}    {}: {}\n'.format(text, t, v)
+        text = '{}    {}: {}\n'.format(text, t, v)
 
-    return text.encode('utf-8')
+    return text
 
 
 def format_shopify_error(data):
     errors = data['errors']
 
-    if isinstance(errors, basestring):
+    if isinstance(errors, str):
         return errors
 
     msg = []
-    for k, v in errors.items():
+    for k, v in list(errors.items()):
         if type(v) is list:
-            error = u','.join(v)
+            error = ','.join(v)
         else:
             error = v
 
         if k == 'base':
             msg.append(error)
         else:
-            msg.append(u'{}: {}'.format(k, error))
+            msg.append('{}: {}'.format(k, error))
 
-    return u' | '.join(msg)
+    return ' | '.join(msg)
 
 
 def verify_shopify_permissions(store):
@@ -390,7 +390,7 @@ def verify_shopify_permissions(store):
 
 
 def verify_shopify_webhook(store, request, throw_excption=True):
-    api_data = request.body.encode()
+    api_data = request.body
     request_hash = request.META.get('HTTP_X_SHOPIFY_HMAC_SHA256')
 
     webhook_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), api_data, sha256).digest()
@@ -460,8 +460,8 @@ def wicked_report_add_user(request, user):
             'SourceID': user.id,
             'CreateDate': arrow.get(user.date_joined).format("YYYY-MM-DD HH:mm:ss"),
             'Email': user.email,
-            'FirstName': (user.first_name or '').encode('utf-8'),
-            'LastName': (user.last_name or '').encode('utf-8'),
+            'FirstName': (user.first_name or ''),
+            'LastName': (user.last_name or ''),
             'City': ipinfo.get('city'),
             'State': ipinfo.get('region'),
             'Country': country_from_code(ipinfo.get('country'), default=''),
@@ -806,7 +806,7 @@ def split_product(product, split_factor, store=None):
                         new_images.insert(0, img)
                 new_data['images'] = new_images
                 new_data['variants'] = [v1 for v1 in new_data['variants'] if v1['title'] != split_factor]
-                new_data['title'] = u'{}, {} - {}'.format(data['title'], active_variant['title'], v)
+                new_data['title'] = '{}, {} - {}'.format(data['title'], active_variant['title'], v)
 
                 clone.data = json.dumps(new_data)
 
@@ -886,7 +886,7 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
 
         pages = int(ceil(count / float(limit)))
         total = 0
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
             rep = get_shopify_products(store=store, page=page, limit=limit,
                                        title=title, product_type=product_type, fields=fields,
                                        all_products=False, session=requests.session())
@@ -944,7 +944,7 @@ def get_shopify_inventories(store, inventory_item_ids, sleep=None):
         count = len(inventory_item_ids)
 
         pages = int(ceil(count / float(limit)))
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
             start = limit * (page - 1)
             end = limit * page
             rep = get_shopify_inventories(store=store, inventory_item_ids=inventory_item_ids[start:end])
@@ -1098,7 +1098,7 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
             return
 
         pages = int(ceil(count / float(limit)))
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
             rep = get_shopify_orders(store=store, page=page, limit=limit,
                                      fields=fields, all_orders=False,
                                      extra_params=extra_params, session=requests.session(),
@@ -1164,7 +1164,7 @@ def add_shopify_order_note(store, order_id, new_note, current_note=False):
         note = current_note
 
     if note:
-        note = '{}\n{}'.format(note.encode('utf-8'), new_note.encode('utf-8'))
+        note = '{}\n{}'.format(note, new_note)
     else:
         note = new_note
 
@@ -1180,7 +1180,7 @@ def sync_shopify_products(store, products):
             product_map[i['qelem'].shopify_id] = i['qelem']
 
     if product_map:
-        for shopify_product in get_shopify_products(store, limit=100, product_ids=[str(j) for j in product_map.keys()]):
+        for shopify_product in get_shopify_products(store, limit=100, product_ids=[str(j) for j in list(product_map.keys())]):
             product = product_map[shopify_product['id']]
             if arrow.get(shopify_product['updated_at']).datetime > product.updated_at:
                 update_shopify_product.delay(
@@ -1232,16 +1232,16 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
 
     customer_address = {}
     shipping_address = order['shipping_address']
-    for k in shipping_address.keys():
-        if shipping_address[k] and type(shipping_address[k]) is unicode:
-            v = re.sub('\xc2\xb0 ?'.decode('utf-8'), r' ', shipping_address[k])
+    for k in list(shipping_address.keys()):
+        if shipping_address[k] and type(shipping_address[k]) is str:
+            v = re.sub('\xc2\xb0 ?', r' ', shipping_address[k])
             if german_umlauts:
-                v = re.sub(u'\u00e4', 'ae', v)
-                v = re.sub(u'\u00c4', 'AE', v)
-                v = re.sub(u'\u00d6', 'OE', v)
-                v = re.sub(u'\u00fc', 'ue', v)
-                v = re.sub(u'\u00dc', 'UE', v)
-                v = re.sub(u'\u00f6', 'oe', v)
+                v = re.sub('\u00e4', 'ae', v)
+                v = re.sub('\u00c4', 'AE', v)
+                v = re.sub('\u00d6', 'OE', v)
+                v = re.sub('\u00fc', 'ue', v)
+                v = re.sub('\u00dc', 'UE', v)
+                v = re.sub('\u00f6', 'oe', v)
 
             customer_address[k] = unidecode(v)
         else:
@@ -1306,7 +1306,7 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
     customer_address['name'] = ensure_title(customer_address['name'])
 
     if customer_address['company']:
-        customer_address['name'] = u'{} - {}'.format(customer_address['name'], customer_address['company'])
+        customer_address['name'] = '{} - {}'.format(customer_address['name'], customer_address['company'])
 
     if aliexpress_fix:
         valide, correction = valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city'])
@@ -1320,16 +1320,16 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
                         customer_address['province'] = province
 
                 if customer_province and customer_address['province'] == 'Other':
-                    customer_address['city'] = u'{}, {}'.format(customer_address['city'], customer_province)
+                    customer_address['city'] = '{}, {}'.format(customer_address['city'], customer_province)
 
             elif fix_aliexpress_city:
                 city = safe_str(customer_address['city']).strip().strip(',')
                 customer_address['city'] = 'Other'
 
                 if not safe_str(customer_address['address2']).strip():
-                    customer_address['address2'] = u'{},'.format(city)
+                    customer_address['address2'] = '{},'.format(city)
                 else:
-                    customer_address['address2'] = u'{}, {},'.format(customer_address['address2'].strip().strip(','), city)
+                    customer_address['address2'] = '{}, {},'.format(customer_address['address2'].strip().strip(','), city)
 
         elif correction:
             if 'province' in correction:
@@ -1348,8 +1348,8 @@ def shopify_link_images(store, product):
 
     mapping = {}
     mapping_idx = {}
-    for key, val in enumerate(product[u'images']):
-        var = re.findall('/v-(.+)__', val[u'src'])
+    for key, val in enumerate(product['images']):
+        var = re.findall('/v-(.+)__', val['src'])
 
         if len(var) != 1:
             continue
@@ -1360,7 +1360,7 @@ def shopify_link_images(store, product):
     if not len(mapping_idx):
         return None
 
-    for key, val in enumerate(product[u'variants']):
+    for key, val in enumerate(product['variants']):
         for option_title in [val['option1'], val['option2'], val['option3']]:
             if not option_title:
                 continue
@@ -1794,10 +1794,10 @@ def get_mapping_from_product(product):
     var_map = {}
 
     for v in product['variants']:
-        options = filter(lambda j: bool(j), [v['option1'], v['option2'], v['option3']])
+        options = [j for j in [v['option1'], v['option2'], v['option3']] if bool(j)]
 
         if len(options):
-            options = map(lambda j: {'title': j}, options)
+            options = [{'title': j} for j in options]
 
             var_map[str(v['id'])] = options
 
@@ -1830,13 +1830,13 @@ def product_changes_remap(changes):
 
 def object_dump(obj, desc=None):
     if desc:
-        print 'object_dump'
-        print '==========='
-        print desc, '=', json.dumps(obj, indent=4)
-        print '==========='
-        print
+        print('object_dump')
+        print('===========')
+        print(desc, '=', json.dumps(obj, indent=4))
+        print('===========')
+        print()
     else:
-        print json.dumps(obj, indent=4)
+        print(json.dumps(obj, indent=4))
 
 
 def jvzoo_verify_post(params):
@@ -1848,14 +1848,14 @@ def jvzoo_verify_post(params):
     if not settings.JVZOO_SECRET_KEY:
         raise Exception('JVZoo secret-key is not set.')
 
-    strparams = u""
+    strparams = ""
 
-    for key in iter(sorted(params.iterkeys())):
+    for key in iter(sorted(params.keys())):
         if key in ['cverify', 'secretkey']:
             continue
         strparams += params[key] + "|"
     strparams += settings.JVZOO_SECRET_KEY
-    sha = hashlib.sha1(strparams.encode('utf-8')).hexdigest().upper()
+    sha = hashlib.sha1(strparams.encode()).hexdigest().upper()
     assert params['cverify'] == sha[:8], 'Checksum verification failed. ({} <> {})'.format(params['cverify'], sha[:8])
 
 
@@ -1882,14 +1882,14 @@ def zaxaa_verify_post(params):
     if not settings.ZAXAA_API_SIGNATURE:
         raise Exception('Zaxaa secret-key is not set.')
 
-    strparams = u"{}{}{}{}".format(
+    strparams = "{}{}{}{}".format(
         params['seller_id'],
         settings.ZAXAA_API_SIGNATURE,
         params['trans_receipt'],
         params['trans_amount']
     ).upper()
 
-    post_hash = hashlib.md5(strparams.encode('utf-8')).hexdigest().upper()
+    post_hash = hashlib.md5(strparams.encode()).hexdigest().upper()
     assert params['hash_key'] == post_hash, 'Checksum verification failed. ({} <> {})'.format(params['hash_key'], post_hash)
 
 
@@ -1901,7 +1901,7 @@ def zaxaa_parse_post(params):
 
     return {
         'email': params['cust_email'],
-        'fullname': u'{} {}'.format(params['cust_firstname'], params['cust_lastname']),
+        'fullname': '{} {}'.format(params['cust_firstname'], params['cust_lastname']),
         'firstname': params['cust_firstname'],
         'lastname': params['cust_lastname'],
         'product_id': params['products[0][prod_number]'],
@@ -1915,28 +1915,23 @@ def set_url_query(url, param_name, param_value):
     Given a URL, set or replace a query parameter and return the modified URL.
     """
 
-    scheme, netloc, path, query_string, fragment = urlparse.urlsplit(url)
-    query_params = urlparse.parse_qs(query_string)
+    scheme, netloc, path, query_string, fragment = urlsplit(url)
+    query_params = parse_qs(query_string)
     query_params[param_name] = [param_value]
     new_query_string = urlencode(query_params, doseq=True)
-    return urlparse.urlunsplit((scheme, netloc, path, new_query_string, fragment))
+    return urlunsplit((scheme, netloc, path, new_query_string, fragment))
 
 
 def affiliate_link_set_query(url, name, value):
-    url = url.encode('utf-8')
-
-    if isinstance(value, basestring):
-        value = value.encode('utf-8')
-
     if '/deep_link.htm' in url:
-        dl_target_url = urlparse.parse_qs(urlparse.urlparse(url).query)['dl_target_url'].pop()
+        dl_target_url = parse_qs(urlparse(url).query)['dl_target_url'].pop()
         dl_target_url = set_url_query(dl_target_url, name, value)
 
         return set_url_query(url, 'dl_target_url', dl_target_url)
 
     elif 'alitems.com' in url:
         if name != 'ulp':
-            ulp = urlparse.parse_qs(urlparse.urlparse(url).query)['ulp'].pop()
+            ulp = parse_qs(urlparse(url).query)['ulp'].pop()
             ulp = set_url_query(ulp, name, value)
 
             return set_url_query(url, 'ulp', ulp)
@@ -1945,7 +1940,7 @@ def affiliate_link_set_query(url, name, value):
 
     elif 'rover.ebay.com' in url:
         if name != 'mpre':
-            ulp = urlparse.parse_qs(urlparse.urlparse(url).query)['mpre'].pop()
+            ulp = parse_qs(urlparse(url).query)['mpre'].pop()
             ulp = set_url_query(ulp, name, value)
 
             return set_url_query(url, 'mpre', ulp)
@@ -2110,7 +2105,7 @@ def get_shopify_products_filter(request, name=None, default=None):
         return val
     else:
         filters = {}
-        for name, val in request.user.profile.get_config().items():
+        for name, val in list(request.user.profile.get_config().items()):
             if name.startswith('_shopify_products_filter_'):
                 filters[name.replace('_shopify_products_filter_', '')] = val
 
@@ -2120,7 +2115,7 @@ def get_shopify_products_filter(request, name=None, default=None):
 def set_shopify_products_filter(user, filters, default=None):
     fields = ['category', 'status', 'title']
 
-    for name, val in filters.items():
+    for name, val in list(filters.items()):
         if name in fields:
             key = '_shopify_products_filter_{}'.format(name)
             user.set_config(key, val)
@@ -2137,7 +2132,7 @@ def get_orders_filter(request, name=None, default=None, checkbox=False):
         return val
     else:
         filters = {}
-        for name, val in request.user.profile.get_config().items():
+        for name, val in list(request.user.profile.get_config().items()):
             if name.startswith('_orders_filter_'):
                 filters[name.replace('_orders_filter_', '')] = val
 
@@ -2148,7 +2143,7 @@ def set_orders_filter(user, filters, default=None):
     fields = ['sort', 'status', 'fulfillment', 'financial',
               'desc', 'connected', 'awaiting_order']
 
-    for name, val in filters.items():
+    for name, val in list(filters.items()):
         if name in fields:
             key = '_orders_filter_{}'.format(name)
             user.set_config(key, val)
@@ -2215,7 +2210,7 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
 
         elif content:
             with gzip.open(tmp_file.name, 'wb') as gz_out:
-                gz_out.write(content.encode('utf-8'))
+                gz_out.write(content.encode())
 
         k.set_metadata('Content-Encoding', 'gzip')
         k.set_contents_from_filename(tmp_file.name)
@@ -2437,7 +2432,9 @@ class ShopifyOrderPaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
+        pages = list(range(max(1, self.current_page - 5), self.current_page))
+        pages.extend(list(range(self.current_page, min(page_count + 1, self.current_page + 5))))
+
         if 1 not in pages:
             pages = [1, None] + pages
 
@@ -2526,7 +2523,9 @@ class ProductsCollectionPaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
+        pages = list(range(max(1, self.current_page - 5), self.current_page))
+        pages.extend(list(range(self.current_page, min(page_count + 1, self.current_page + 5))))
+
         if 1 not in pages:
             pages = [1, None] + pages
 
@@ -2614,7 +2613,7 @@ class ShopifyOrderUpdater:
         note = '{} Order ID: {}\n{}'.format(source, source_id, url)
 
         if line_id:
-            note = u'{}\nOrder Line: #{}'.format(note, line_id)
+            note = '{}\nOrder Line: #{}'.format(note, line_id)
 
         self.add_note(note)
 
@@ -2628,7 +2627,7 @@ class ShopifyOrderUpdater:
         else:
             url = 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(source_id)
 
-        name = u'{} Order #{}'.format(source, source_id)
+        name = '{} Order #{}'.format(source, source_id)
 
         note_attribute = {'name': name, 'value': url}
 
@@ -2651,7 +2650,7 @@ class ShopifyOrderUpdater:
             order_data = {
                 'order': {
                     'id': int(self.order_id),
-                    'note': '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:5000]
+                    'note': '{}\n{}'.format(current_note, new_note).strip()[:5000]
                 }
             }
 
@@ -2731,7 +2730,7 @@ class ShopifyOrderUpdater:
         if 'attributes' in what:
             order_data['note_attributes'] = []
 
-        if len(order_data.keys()) > 1:
+        if len(list(order_data.keys())) > 1:
             rep = requests.put(
                 url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
                 json={'order': order_data}
@@ -2785,7 +2784,7 @@ class ProductCollections(object):
         return collections
 
     def link_product_collection(self, product, collections):
-        collections = map(int, collections)
+        collections = list(map(int, collections))
         response = requests.get(
             url=product.store.get_link(self.shopify_api_urls.get('product_collections').format(product.shopify_id), api=True)
         ).json()
@@ -2809,7 +2808,7 @@ class ProductCollections(object):
         self.update_product_collects_shopify_id(product)
 
     def unlink_product_collection(self, product, collections, selected):
-        selected = map(int, selected)
+        selected = list(map(int, selected))
         for collection in collections:
             if collection['collection_id'] not in selected:
                 requests.delete(product.store.get_link(
@@ -2857,7 +2856,7 @@ def format_queueable_orders(request, orders, current_page):
         else:
             line_times = {'all': line_times}
 
-        for _supplier, group_lines in line_times.items():
+        for _supplier, group_lines in list(line_times.items()):
             queue_order = {"cart": True, "items": [], "line_id": []}
 
             for line_item in group_lines:
@@ -2920,16 +2919,16 @@ def format_queueable_orders(request, orders, current_page):
                 queue_order['order_name'] = line_item['order_name']
                 queue_order['order_id'] = line_item['order_id']
 
-                queue_order['line_title'] = u'<ul style="padding:0px;overflow-x:hidden;">'
+                queue_order['line_title'] = '<ul style="padding:0px;overflow-x:hidden;">'
 
                 for line_item in queue_order['items'][:3]:
-                    queue_order['line_title'] += u'<li>&bull; {}</li>'.format(line_item['line_title'])
+                    queue_order['line_title'] += '<li>&bull; {}</li>'.format(line_item['line_title'])
 
                 count = len(queue_order['items']) - 3
                 if count > 0:
-                    queue_order['line_title'] += u'<li>&bull; Plus {} Product{}...</li>'.format(count, pluralize(count))
+                    queue_order['line_title'] += '<li>&bull; Plus {} Product{}...</li>'.format(count, pluralize(count))
 
-                queue_order['line_title'] += u'</ul>'
+                queue_order['line_title'] += '</ul>'
 
                 orders_result.append(queue_order)
 

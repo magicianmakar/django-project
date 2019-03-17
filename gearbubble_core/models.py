@@ -13,7 +13,7 @@ from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 from django.core.urlresolvers import reverse
 
-from shopified_core.utils import get_domain, safe_str
+from shopified_core.utils import get_domain, safe_str, base64_encode
 from shopified_core.decorators import add_to_class
 
 
@@ -42,7 +42,7 @@ class GearBubbleStore(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     mode = models.CharField(max_length=7, choices=MODE_CHOICES, default=LIVE)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def save(self, *args, **kwargs):
@@ -145,9 +145,9 @@ class GearBubbleProduct(models.Model):
 
         for variant in product_data.get('variants', []):
             options = GearBubbleProduct.get_variant_options(variant)
-            variant[u'options'] = options
-            variant[u'description'] = ', '.join(options)
-            variant[u'image'] = images_by_id.get(variant['image_id'], {})
+            variant['options'] = options
+            variant['description'] = ', '.join(options)
+            variant['image'] = images_by_id.get(variant['image_id'], {})
 
         return product_data
 
@@ -165,17 +165,17 @@ class GearBubbleProduct(models.Model):
 
         return options
 
-    def __unicode__(self):
+    def __str__(self):
         try:
             title = self.title
             if len(title) > 79:
-                return u'{}...'.format(textwrap.wrap(title, width=79)[0])
+                return '{}...'.format(textwrap.wrap(title, width=79)[0])
             elif title:
                 return title
             else:
-                return u'<GearBubbleProduct: %d>' % self.id
+                return '<GearBubbleProduct: %d>' % self.id
         except:
-            return u'<GearBubbleProduct: %d>' % self.id
+            return '<GearBubbleProduct: %d>' % self.id
 
     @property
     def parsed(self):
@@ -349,16 +349,16 @@ class GearBubbleProduct(models.Model):
 
         if for_extension and mapping:
             if name:
-                if type(mapping) in [str, unicode]:
+                if type(mapping) is str:
                     mapping = mapping.split(',')
             else:
-                for k, v in mapping.items():
+                for k, v in list(mapping.items()):
                     m = str(v) if type(v) is int else v
 
                     try:
                         m = json.loads(v)
                     except:
-                        if type(v) in [str, unicode]:
+                        if type(v) is str:
                             m = v.split(',')
 
                     mapping[k] = m
@@ -375,7 +375,7 @@ class GearBubbleProduct(models.Model):
             except:
                 current = {}
 
-            for k, v in mapping.items():
+            for k, v in list(mapping.items()):
                 current[k] = v
 
             mapping = current
@@ -450,7 +450,7 @@ class GearBubbleProduct(models.Model):
             except:
                 current = {}
 
-            for k, v in mapping.items():
+            for k, v in list(mapping.items()):
                 current[k] = v
 
             mapping = current
@@ -499,7 +499,7 @@ class GearBubbleProduct(models.Model):
                 else:
                     options = v['options']
 
-                    options = map(lambda a: {'title': a}, options)
+                    options = [{'title': a} for a in options]
 
                 try:
                     if type(options) not in [list, dict]:
@@ -513,7 +513,7 @@ class GearBubbleProduct(models.Model):
                 variants_map[str(v['id'])] = options
                 seen_variants.append(str(v['id']))
 
-            for k in variants_map.keys():
+            for k in list(variants_map.keys()):
                 if k not in seen_variants:
                     del variants_map[k]
 
@@ -536,13 +536,13 @@ class GearBubbleSupplier(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.supplier_name:
             return self.supplier_name
         elif self.supplier_url:
             return self.supplier_url
         else:
-            return u'<GearBubbleSupplier: {}>'.format(self.id)
+            return '<GearBubbleSupplier: {}>'.format(self.id)
 
     def get_source_id(self):
         try:
@@ -564,9 +564,9 @@ class GearBubbleSupplier(models.Model):
         source_id = self.get_source_id()
         if source_id:
             if self.is_aliexpress:
-                return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
+                return 'https://www.aliexpress.com/item//{}.html'.format(source_id)
             if self.is_ebay:
-                return u'https://www.ebay.com/itm/{}'.format(source_id)
+                return 'https://www.ebay.com/itm/{}'.format(source_id)
 
         return self.product_url
 
@@ -589,7 +589,7 @@ class GearBubbleSupplier(models.Model):
                 else:
                     supplier_idx += 1
 
-            name = u'Supplier {}#{}'.format(self.supplier_type(), supplier_idx)
+            name = 'Supplier {}#{}'.format(self.supplier_type(), supplier_idx)
 
         return name
 
@@ -626,7 +626,7 @@ class GearUserUpload(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.url.replace('%2F', '/').split('/')[-1]
 
 
@@ -644,7 +644,7 @@ class GearBubbleBoard(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def saved_count(self):
@@ -694,7 +694,7 @@ class GearBubbleOrderTrack(models.Model):
         super(GearBubbleOrderTrack, self).save(*args, **kwargs)
 
     def encoded(self):
-        return json.dumps(self.data).encode('base64')
+        return base64_encode(json.dumps(self.data))
 
     def get_tracking_link(self):
         aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
@@ -761,5 +761,5 @@ class GearBubbleOrderTrack(models.Model):
 
     get_source_status.admin_order_field = 'source_status'
 
-    def __unicode__(self):
-        return u'{} | {}'.format(self.order_id, self.line_id)
+    def __str__(self):
+        return '{} | {}'.format(self.order_id, self.line_id)

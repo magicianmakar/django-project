@@ -14,7 +14,7 @@ def merge_plans(apps, schema_editor):
                 plan = GroupPlan.objects.get(register_hash=i)
                 link.display_plans.add(plan)
             except:
-                print 'Warning: Hash not found', i
+                print('Warning: Hash not found', i)
 
 
 class Migration(migrations.Migration):

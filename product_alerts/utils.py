@@ -97,12 +97,12 @@ def monitor_product(product, stdout=None):
     """
     original_monitor_id = product.monitor_id
     if is_monitorable(product):
-        if original_monitor_id > 0:
+        if original_monitor_id and original_monitor_id > 0:
             # Update original monitor
             update_product_monitor(original_monitor_id, product.default_supplier)
             return
     else:
-        if original_monitor_id > 0:
+        if original_monitor_id and original_monitor_id > 0:
             # Delete original monitor
             delete_product_monitor(original_monitor_id)
             product.monitor_id = 0
@@ -178,7 +178,7 @@ def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=N
     if not sku:
         if variants is None:
             if len(variants_map) == 1:
-                return variants_map.keys()[0]
+                return list(variants_map.keys())[0]
             else:
                 return None
         elif len(variants) == 1:
@@ -189,7 +189,7 @@ def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=N
     options = parse_supplier_sku(sku)
     sku = ';'.join('{}:{}'.format(option['option_group'], option['option_id']) for option in options)
 
-    for variant_id, variant in variants_map.iteritems():
+    for variant_id, variant in variants_map.items():
         found = True
         ships_from_mapped = True if ships_from_id is None else False
         no_variant = False
@@ -298,12 +298,12 @@ def calculate_price(user, old_value, new_value, current_price, current_compare_a
             new_compare_at = round((current_compare_at * new_value) / old_value, 2)
 
     auto_margin_cents = safe_int(user.get_config('auto_margin_cents'), None)
-    if new_price is not None and auto_margin_cents >= 0:
+    if new_price is not None and auto_margin_cents is not None and auto_margin_cents >= 0:
         new_price = safe_float(str(int(new_price)) + '.' + ('0' if auto_margin_cents <= 9 else '') + str(auto_margin_cents))
         new_price = round(new_price, 2)
 
     auto_compare_at_cents = safe_int(user.get_config('auto_compare_at_cents'), None)
-    if new_compare_at is not None and auto_compare_at_cents >= 0:
+    if new_compare_at is not None and auto_compare_at_cents is not None and auto_compare_at_cents >= 0:
         new_compare_at = safe_float(str(int(new_compare_at)) + '.' + ('0' if auto_compare_at_cents <= 9 else '') + str(auto_compare_at_cents))
         new_compare_at = round(new_compare_at, 2)
 

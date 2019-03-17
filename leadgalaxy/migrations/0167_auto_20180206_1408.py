@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='pricemarkuprule',
             name='markup_type',
-            field=models.CharField(default=b'margin_percent', max_length=25, choices=[(b'margin_percent', b'Increase by percentage'), (b'margin_amount', b'Increase by amount'), (b'fixed_amount', b'Set to fixed amount')]),
+            field=models.CharField(default='margin_percent', max_length=25, choices=[('margin_percent', 'Increase by percentage'), ('margin_amount', 'Increase by amount'), ('fixed_amount', 'Set to fixed amount')]),
         ),
     ]

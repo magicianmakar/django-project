@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifyorder',
             name='items_count',
-            field=models.IntegerField(null=True, verbose_name=b'Item Lines count', blank=True),
+            field=models.IntegerField(null=True, verbose_name='Item Lines count', blank=True),
         ),
     ]

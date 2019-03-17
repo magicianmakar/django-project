@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from django.contrib import admin
 
 from .forms import TwilioAutomationForm
@@ -31,7 +29,7 @@ class TwilioAutomationAdmin(admin.ModelAdmin):
         return form
 
     def numbers(self, obj):
-        return u','.join([p.incoming_number for p in obj.phone.all()])
+        return ','.join([p.incoming_number for p in obj.phone.all()])
 
 
 @admin.register(TwilioPhoneNumber)
@@ -48,7 +46,7 @@ class TwilioStepAdmin(admin.ModelAdmin):
     raw_id_fields = ('automation',)
 
     def numbers(self, obj):
-        return u','.join([p.incoming_number for p in obj.automation.phone.all()])
+        return ','.join([p.incoming_number for p in obj.automation.phone.all()])
 
 
 @admin.register(TwilioUpload)

@@ -1,8 +1,6 @@
-from __future__ import absolute_import
-
 import json
 import requests
-import urlparse
+from urllib.parse import parse_qs, urlparse, urlunparse
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery_base import celery_app, CaptureFailure, retry_countdown
@@ -44,8 +42,8 @@ def deliver_hook_wrapper(target, payload, instance, hook):
     # then data needs to be checked to decide if the event is for specific product or not
     # https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
     payload = payload.get('data', {})
-    parsed = urlparse.urlparse(target)
-    params = urlparse.parse_qs(parsed.query)
+    parsed = urlparse(target)
+    params = parse_qs(parsed.query)
     if params.get('store_type') and params.get('store_type')[0] != payload.get('store_type'):
         return
     if params.get('store_id') and params.get('store_id')[0] != str(payload.get('store_id')):
@@ -55,6 +53,6 @@ def deliver_hook_wrapper(target, payload, instance, hook):
     if params.get('category') and params.get('category')[0] != str(payload.get('category')):
         return
     parsed = parsed._replace(query=None)
-    target = urlparse.urlunparse(parsed)
+    target = urlunparse(parsed)
 
     deliver_hook.apply_async(args=[target, payload, instance_id, hook.id])

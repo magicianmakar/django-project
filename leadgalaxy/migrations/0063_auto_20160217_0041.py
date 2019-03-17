@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifyorder',
             name='status_updated_at',
-            field=models.DateTimeField(default=datetime.datetime(2016, 2, 17, 0, 41, 24, 999112, tzinfo=utc), verbose_name=b'Last Status Update', auto_now_add=True),
+            field=models.DateTimeField(default=datetime.datetime(2016, 2, 17, 0, 41, 24, 999112, tzinfo=utc), verbose_name='Last Status Update', auto_now_add=True),
             preserve_default=False,
         ),
     ]

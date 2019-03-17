@@ -44,7 +44,7 @@ class Article(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_status(self):
@@ -131,7 +131,7 @@ class Comment(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     article = models.ForeignKey(Article, on_delete=models.CASCADE)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
 
@@ -142,5 +142,5 @@ class CommentVote(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Vote date')
     vote_value = models.IntegerField(verbose_name='Vore Value')
 
-    def __unicode__(self):
+    def __str__(self):
         return "%s: %s" % (('Up' if self.vote_value > 0 else 'Down'), self.article.title)

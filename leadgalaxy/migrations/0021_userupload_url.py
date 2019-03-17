@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userupload',
             name='url',
-            field=models.CharField(default=b'', max_length=512, verbose_name=b'Upload file URL', blank=True),
+            field=models.CharField(default='', max_length=512, verbose_name='Upload file URL', blank=True),
         ),
     ]

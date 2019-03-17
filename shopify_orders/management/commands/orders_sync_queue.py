@@ -32,7 +32,7 @@ class Command(DropifiedBaseCommand):
             for sync in ShopifySyncStatus.objects.all():
                 store = sync.store
 
-                self.write_success(u'Orders count for: {}'.format(store.title))
+                self.write_success('Orders count for: {}'.format(store.title))
 
                 try:
                     sync.orders_count = store.get_orders_count(all_orders=True)
@@ -42,7 +42,7 @@ class Command(DropifiedBaseCommand):
 
                 sync.save()
 
-            self.write_success(u'Total Orders: {}'.format(total_orders))
+            self.write_success('Total Orders: {}'.format(total_orders))
 
             return
 
@@ -52,7 +52,7 @@ class Command(DropifiedBaseCommand):
             except GroupPlan.DoesNotExist:
                 raise CommandError('Plan "%s" does not exist' % plan_id)
 
-            self.write_success(u'Sync Orders for plan: {}'.format(plan.title))
+            self.write_success('Sync Orders for plan: {}'.format(plan.title))
 
             stores = ShopifyStore.objects.filter(user__profile__plan=plan)
             self.stdout.write(self.style.HTTP_INFO('Stores count: %d' % stores.count()))
@@ -69,21 +69,21 @@ class Command(DropifiedBaseCommand):
             except ShopifyStore.DoesNotExist:
                 raise CommandError('Store "%s" does not exist' % store_id)
 
-            self.write_success(u'Sync Orders for store: {}'.format(store.title))
+            self.write_success('Sync Orders for store: {}'.format(store.title))
 
             self.handle_store(store)
 
         for permission in options['permission']:
             for p in AppPermission.objects.filter(name=permission):
                 for plan in p.groupplan_set.all():
-                    self.write_success(u'Sync Orders for Plan: {}'.format(plan.title))
+                    self.write_success('Sync Orders for Plan: {}'.format(plan.title))
 
                     for profile in plan.userprofile_set.select_related('user').all():
                         for store in profile.get_shopify_stores():
                             self.handle_store(store)
 
                 for bundle in p.featurebundle_set.all():
-                    self.write_success(u'Sync Orders for Bundle: {}'.format(bundle.title))
+                    self.write_success('Sync Orders for Bundle: {}'.format(bundle.title))
                     for profile in bundle.userprofile_set.select_related('user').all():
                         for store in profile.get_shopify_stores():
                             self.handle_store(store)
@@ -97,14 +97,14 @@ class Command(DropifiedBaseCommand):
         try:
             ShopifySyncStatus.objects.get(store=store, sync_type=self.sync_type)
         except ShopifySyncStatus.DoesNotExist:
-            self.write_success(u'Sync Store: {}'.format(store.title))
+            self.write_success('Sync Store: {}'.format(store.title))
             sync = ShopifySyncStatus(store=store, sync_type=self.sync_type)
 
             try:
                 sync.orders_count = store.get_orders_count(all_orders=True)
 
                 webhooks = utils.attach_webhooks(store)
-                self.write_success(u'    + Install {} webhooks'.format(len(webhooks)))
+                self.write_success('    + Install {} webhooks'.format(len(webhooks)))
 
                 self.queued_store.append(store.id)
             except:

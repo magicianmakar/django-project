@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import csv
 import logging
 import os
@@ -253,7 +252,7 @@ class ShopifyOrderExport():
                 'shipping_address': self.order_export.shipping_address_choices,
                 'line_items': self.order_export.line_fields_choices,
             },
-            'pages': range(1, max_pages),
+            'pages': list(range(1, max_pages)),
             'max_page': max_pages - 1,
             'count': count
         }
@@ -275,15 +274,15 @@ class ShopifyOrderExport():
         lines = []
         for order in orders:
             line = {'fields': {}, 'shipping_address': {}, 'line_items': []}
-            line['fields']['id'] = unicode(order['id']).encode("utf-8")
+            line['fields']['id'] = str(order['id'])
 
             if len(fields):
                 for field in fields:
-                    line['fields'][field[0]] = unicode(order[field[0]]).encode("utf-8")
+                    line['fields'][field[0]] = str(order[field[0]])
 
             if len(shipping_address) and 'shipping_address' in order:
                 for field in shipping_address:
-                    line['shipping_address'][field[0]] = unicode(order['shipping_address'][field[0]]).encode("utf-8")
+                    line['shipping_address'][field[0]] = str(order['shipping_address'][field[0]])
 
             if len(line_fields) and 'line_items' in order:
                 for line_item in order['line_items']:
@@ -292,7 +291,7 @@ class ShopifyOrderExport():
 
                     items = {}
                     for line_field in line_fields:
-                        items[line_field[0]] = unicode(line_item[line_field[0]]).encode("utf-8")
+                        items[line_field[0]] = str(line_item[line_field[0]])
 
                     items['id'] = line_item['id']
                     for fulfillment in order['fulfillments']:
@@ -338,12 +337,12 @@ class ShopifyOrderExport():
                 if len(fields):
                     write = True
                     for field in fields:
-                        line[field[1]] = unicode(order[field[0]]).encode("utf-8")
+                        line[field[1]] = str(order[field[0]])
 
                 if len(shipping_address) and 'shipping_address' in order:
                     write = True
                     for field in shipping_address:
-                        line['Shipping Address - %s' % field[1]] = unicode(order['shipping_address'][field[0]]).encode("utf-8")
+                        line['Shipping Address - %s' % field[1]] = str(order['shipping_address'][field[0]])
 
                 if write:
                     writer.writerow(line)
@@ -355,7 +354,7 @@ class ShopifyOrderExport():
 
                         line = {}
                         for line_field in line_fields:
-                            line['Line Field - %s' % line_field[1]] = unicode(line_item[line_field[0]]).encode("utf-8")
+                            line['Line Field - %s' % line_field[1]] = str(line_item[line_field[0]])
                         writer.writerow(line)
 
         url = self.send_to_s3()

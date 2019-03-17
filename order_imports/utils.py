@@ -203,7 +203,7 @@ class ShopifyOrderImport():
                 first = False
                 # Continue if there is no numbers on this row
                 row_length = len(row)
-                row_items = [row[item] for key, item in headers.items() if item < row_length]
+                row_items = [row[item] for key, item in list(headers.items()) if item < row_length]
                 if all([len(re.findall(r'\d', item)) == 0 for item in row_items]):
                     continue
 
@@ -216,7 +216,7 @@ class ShopifyOrderImport():
             if headers.get('identify_column') and headers.get('identify_column') < len(row):
                 data['identify'] = row[headers.get('identify_column')]
 
-            if row[headers.get('order_id')] in orders.keys():
+            if row[headers.get('order_id')] in list(orders.keys()):
                 orders[row[headers.get('order_id')]]['items'].append(data)
             else:
                 orders[row[headers.get('order_id')]] = {'items': [data], 'shopify': None, 'name': row[headers.get('order_id')]}
@@ -241,7 +241,7 @@ class ShopifyOrderImport():
 
                 tracking[key] = data
 
-        for key, data in tracking.iteritems():
+        for key, data in tracking.items():
             order_id = key.split('-')[0]
             url = '/admin/orders/{}/fulfillments.json'.format(order_id)
             response = self._post_response_from_url(url, data)

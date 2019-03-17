@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyordertrack',
             name='source_id',
-            field=models.CharField(default=b'', max_length=512, verbose_name=b'Source Order ID', blank=True),
+            field=models.CharField(default='', max_length=512, verbose_name='Source Order ID', blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyordertrack',
             name='source_tracking',
-            field=models.CharField(default=b'', max_length=128, verbose_name=b'Source Tracking Number', db_index=True, blank=True),
+            field=models.CharField(default='', max_length=128, verbose_name='Source Tracking Number', db_index=True, blank=True),
         ),
     ]

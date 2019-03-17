@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='WooStore',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('title', models.CharField(default=b'', max_length=300, blank=True)),
+                ('title', models.CharField(default='', max_length=300, blank=True)),
                 ('api_url', models.CharField(max_length=512)),
                 ('api_key', models.CharField(max_length=300)),
                 ('api_password', models.CharField(max_length=300)),

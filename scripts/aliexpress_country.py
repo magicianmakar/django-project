@@ -10,12 +10,12 @@ countries = ['AU', 'CL', 'ES', 'NL', 'UA', 'UK', 'NZ', 'US', 'CA', 'RU', 'ID', '
 
 data = {}
 for i in countries:
-    print '> Country:', i
+    print('> Country:', i)
     r = get('https://ilogisticsaddress.aliexpress.com/ajaxGetGlobalAddress.htm?country=%s' % i)
     provinces = json.loads(r.text.strip()[5:-1])
     data[i] = {}
 
-    print '>> Provinces:', len(provinces['address'])
+    print('>> Provinces:', len(provinces['address']))
     obar = tqdm(total=len(provinces['address']))
     for p in provinces['address']:
         data[i][p['n']] = []
@@ -35,8 +35,8 @@ for i in countries:
                 data[i][p['n']].append(c['n'])
     
     obar.close()
-    print
-    print
+    print()
+    print()
 
 data = json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
 out = open('app/data/shipping/aliexpress_countries.json', 'w')

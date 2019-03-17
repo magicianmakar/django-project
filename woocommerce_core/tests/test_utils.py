@@ -21,21 +21,21 @@ class WooListQueryTest(BaseTestCase):
     def test_must_call_api_once(self):
         with patch('woocommerce_core.models.API.get', return_value=self.response) as get:
             query = WooListQuery(self.store, 'test')
-            query.items()
-            query.items()
+            list(query.items())
+            list(query.items())
             get.assert_called_once()
 
     def test_must_call_api_again_if_params_are_updated(self):
         with patch('woocommerce_core.models.API.get', return_value=self.response) as get:
             query = WooListQuery(self.store, 'test')
-            query.items()
-            query.update_params({'per_page': 10, 'page': 7}).items()
+            list(query.items())
+            list(query.update_params({'per_page': 10, 'page': 7}).items())
             self.assertEqual(get.call_count, 2)
 
     def test_must_call_api_once_to_count_items(self):
         with patch('woocommerce_core.models.API.get', return_value=self.response) as get:
             query = WooListQuery(self.store, 'test')
-            query.items()
+            list(query.items())
             query.count()
             get.assert_called_once()
 
@@ -75,7 +75,7 @@ class WooCommerceAddressTest(BaseTestCase):
         }
 
     def test_must_return_address_even_if_all_values_are_empty_strings(self):
-        for value in woo_customer_address(self.order).values():
+        for value in list(woo_customer_address(self.order).values()):
             self.assertEqual(value, '')
 
 

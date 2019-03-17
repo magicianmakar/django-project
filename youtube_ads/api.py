@@ -57,7 +57,7 @@ class TubeHuntApi(ApiResponseMixin, View):
         if not video_id:
             return self.api_error('Video ID is required.')
 
-        if not isinstance(video_id, basestring):
+        if not isinstance(video_id, str):
             return self.api_error('Video ID is invalid.')
 
         try:

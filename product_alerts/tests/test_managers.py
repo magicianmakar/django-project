@@ -212,7 +212,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         old_value = price  # not used in global markup update method
 
         # create a markup rule
-        markup_rule = PriceMarkupRule.objects.create(
+        PriceMarkupRule.objects.create(
             user=self.user,
             name='',
             min_price=new_value - 1,
@@ -339,6 +339,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         response = webhook(request, 'price-monitor', None)
         self.assertEqual(response.status_code, 200)
         chq_product = product.retrieve()
+
         updated_variant = chq_product['variants'][0]
         updated_price = round(float(updated_variant['price']), 2)
 

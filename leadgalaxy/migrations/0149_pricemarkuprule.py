@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('max_price', models.FloatField(default=0.0)),
                 ('markup_value', models.FloatField(default=0.0)),
                 ('markup_compare_value', models.FloatField(default=0.0)),
-                ('markup_type', models.CharField(default=b'margin_percent', max_length=25, choices=[(b'margin_percent', b'Increase by pecenatge'), (b'margin_amount', b'Increase by amount'), (b'fixed_amount', b'Set to fixed amount')])),
+                ('markup_type', models.CharField(default='margin_percent', max_length=25, choices=[('margin_percent', 'Increase by pecenatge'), ('margin_amount', 'Increase by amount'), ('fixed_amount', 'Set to fixed amount')])),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),

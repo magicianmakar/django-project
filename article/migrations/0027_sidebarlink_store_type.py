@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sidebarlink',
             name='store_type',
-            field=models.CharField(default=b'default', max_length=50, choices=[(b'default', b'All Stores'), (b'shopify', b'Shopify'), (b'chq', b'CommerceHQ'), (b'woo', b'WooCommerce')]),
+            field=models.CharField(default='default', max_length=50, choices=[('default', 'All Stores'), ('shopify', 'Shopify'), ('chq', 'CommerceHQ'), ('woo', 'WooCommerce')]),
         ),
     ]

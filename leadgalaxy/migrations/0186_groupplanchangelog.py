@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             name='GroupPlanChangeLog',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('changed_at', models.DateTimeField(blank=True, null=True, verbose_name=b'When Plan Changed')),
+                ('changed_at', models.DateTimeField(blank=True, null=True, verbose_name='When Plan Changed')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('plan', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='leadgalaxy.GroupPlan')),

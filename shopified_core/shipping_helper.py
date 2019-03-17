@@ -68,7 +68,7 @@ ALIEXPRESS_UK_COUNTRIES = {
 
 
 def clean_name(name):
-    name = u'{}'.format(name.replace(u'-', u' ').lower().strip())
+    name = '{}'.format(name.replace('-', ' ').lower().strip())
     name = unidecode(name)
 
     return name
@@ -170,7 +170,7 @@ def get_uk_province(city, default=''):
 
     province = default
     found = provinces.get(city, default)
-    for country, cites in ALIEXPRESS_UK_COUNTRIES.items():
+    for country, cites in list(ALIEXPRESS_UK_COUNTRIES.items()):
         if (found and found.lower() in cites) or city.lower() in cites:
             province = country
             break
@@ -222,7 +222,7 @@ def get_fr_city_info(city, zip_code=None, orig_city=None):
         if len(zip_code_matchs) == 1:
             # Some zip code have more than one city, return only when one match is found
             return zip_code_matchs.pop()
-        elif len(set(map(lambda m: m['codeRegion'], zip_code_matchs))) == 1:
+        elif len(set([m['codeRegion'] for m in zip_code_matchs])) == 1:
             match = zip_code_matchs.pop()
             match['nom'] = orig_city or city
             return match
@@ -252,10 +252,10 @@ def fix_fr_address(shipping_address):
             if not shipping_address['address2'].strip():
                 shipping_address['address2'] = info['nom']
             else:
-                shipping_address['address2'] = u'{}, {}'.format(shipping_address['address2'].strip(), info['nom'])
+                shipping_address['address2'] = '{}, {}'.format(shipping_address['address2'].strip(), info['nom'])
 
         for i in ['province', 'city', 'address2']:
-            if type(shipping_address[i]) is unicode:
+            if type(shipping_address[i]) is str:
                 shipping_address[i] = unidecode(shipping_address[i])
 
         info['city'] = city
@@ -291,7 +291,7 @@ def valide_aliexpress_province(country, province, city, auto_correct=False):
 
         if aliexpress_countries.get(country_code):
             province_list = aliexpress_countries.get(country_code)
-            province_match = fuzzy_find_in_list(province_list.keys(), province, default=province) if auto_correct else province
+            province_match = fuzzy_find_in_list(list(province_list.keys()), province, default=province) if auto_correct else province
 
             if province_match and province_list and province_match.lower().strip() != province:
                 if auto_correct:
@@ -364,7 +364,7 @@ def load_countries():
 
 
 def get_counrties_list():
-    return load_countries().items()
+    return list(load_countries().items())
 
 
 def country_from_code(country_code, default=None):

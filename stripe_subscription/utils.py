@@ -112,13 +112,13 @@ def subscription_end_trial(user, raven_client, delete_on_error=False):
                 if delete_on_error:
                     sub.delete()
 
-                raise SubscriptionException('Subscription Error: {}'.format(e.message))
+                raise SubscriptionException('Subscription Error: {}'.format(str(e)))
 
             except stripe.error.InvalidRequestError as e:
                 if delete_on_error:
                     sub.delete()
 
-                message = e.message
+                message = str(e)
                 if 'This customer has no attached' in message:
                     message = 'You don\'t have any attached Credit Card'
 
@@ -283,7 +283,7 @@ def extra_store_invoice(store, extra=None):
         customer=store.user.stripe_customer.customer_id,
         amount=2700,
         currency="usd",
-        description=u"Additional {} Store: {}".format(extra._invoice_name, store.title)
+        description="Additional {} Store: {}".format(extra._invoice_name, store.title)
     )
 
     extra.status = 'active'
@@ -298,7 +298,7 @@ def extra_store_invoice(store, extra=None):
 
     extra.save()
 
-    invoice_item.description = u'{} ({} through {})'.format(
+    invoice_item.description = '{} ({} through {})'.format(
         invoice_item.description,
         arrow.get(extra.period_start).format('MM/DD'),
         arrow.get(extra.period_end).format('MM/DD'))
@@ -389,7 +389,7 @@ def process_webhook_event(request, event_id, raven_client):
                     cus.coupon = reg_coupon
                     cus.save()
 
-                customer.user.set_config('registration_discount', u':{}'.format(reg_coupon))
+                customer.user.set_config('registration_discount', ':{}'.format(reg_coupon))
             except:
                 raven_client.captureException(level='warning')
 

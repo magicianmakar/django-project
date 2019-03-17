@@ -24,18 +24,18 @@ class ShopifiedApiBase(ApiResponseMixin, View):
         self.loaded_api = {}
         self.supported_stores = []
 
-        for name, module in settings.DROPIFIED_API.items():
+        for name, module in list(settings.DROPIFIED_API.items()):
             self.loaded_api[name] = import_string(module)
             self.supported_stores.append(name)
 
             if not issubclass(self.loaded_api[name], ApiResponseMixin):
-                print 'WARNING: API Module', module, 'does not use ApiResponseMixin'
+                print('WARNING: API Module', module, 'does not use ApiResponseMixin')
 
     def dispatch(self, request, *args, **kwargs):
         if not hasattr(self, 'loaded_api'):
             self._load_api()
 
-        for k, v in self.default.items():
+        for k, v in list(self.default.items()):
             if not kwargs.get(k):
                 kwargs[k] = v
 
@@ -65,7 +65,7 @@ class ShopifiedApiBase(ApiResponseMixin, View):
             raise Exception("Unknown Store Type")
 
         except PermissionDenied as e:
-            reason = e.message if e.message else "You don't have permission to perform this action"
+            reason = str(e) if str(e) else "You don't have permission to perform this action"
             return self.api_error('Permission Denied: %s' % reason, status=403)
 
         except requests.Timeout:

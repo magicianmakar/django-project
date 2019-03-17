@@ -25,15 +25,23 @@ SHOPIFY_APP_URL = ''
 
 class InvoiceItemMock():
     def __init__(self, invoice_id='ii_1235467890'):
-        self.id = invoice_id
+        self._id = invoice_id
 
     @property
     def id(self):
-        return self.id
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        self._id = value
 
     @property
     def description(self):
         return ''
+
+    @description.setter
+    def description(self, value):
+        pass
 
     def save(self):
         pass
@@ -100,7 +108,7 @@ class ExtraCHQStoreTestCase(BaseTestCase):
         utils.stripe.InvoiceItem.create.assert_called_once_with(
             amount=2700, currency='usd',
             customer=self.customer.customer_id,
-            description=u'Additional CommerceHQ Store: {}'.format(extra_chq_store.title)
+            description='Additional CommerceHQ Store: {}'.format(extra_chq_store.title)
         )
 
         extra_chq = ExtraCHQStore.objects.get(store=extra_chq_store)
@@ -130,6 +138,10 @@ class ExtraCHQStoreTestCase(BaseTestCase):
             @property
             def description(self):
                 return ''
+
+            @description.setter
+            def description(self, value):
+                pass
 
             def get(self, idx):
                 return self.invoiceitems[idx]

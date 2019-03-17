@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='feedstatus',
             name='fb_access_at',
-            field=models.DateTimeField(null=True, verbose_name=b'Last Facebook Access', blank=True),
+            field=models.DateTimeField(null=True, verbose_name='Last Facebook Access', blank=True),
         ),
         migrations.AlterField(
             model_name='feedstatus',
             name='status',
-            field=models.IntegerField(default=0, choices=[(0, b'Pending'), (1, b'Generated'), (2, b'Generating')]),
+            field=models.IntegerField(default=0, choices=[(0, 'Pending'), (1, 'Generated'), (2, 'Generating')]),
         ),
     ]

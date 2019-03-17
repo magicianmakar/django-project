@@ -47,7 +47,7 @@ class PlanCheckoutView(TemplateView):
                 username=username,
                 email=email,
                 first_name=fullname[0],
-                last_name=u' '.join(fullname[1:]),
+                last_name=' '.join(fullname[1:]),
                 password=get_random_string(20))
 
             created = True
@@ -64,7 +64,7 @@ class PlanCheckoutView(TemplateView):
 
         except (stripe.error.CardError, stripe.error.InvalidRequestError) as e:
             raven_client.captureException(level='warning')
-            error = 'Credit Card Error: {}'.format(e.message)
+            error = 'Credit Card Error: {}'.format(str(e))
 
         except:
             raven_client.captureException()
@@ -143,7 +143,7 @@ class MonthlyCheckoutView(TemplateView):
                 username=username,
                 email=email,
                 first_name=fullname[0],
-                last_name=u' '.join(fullname[1:]),
+                last_name=' '.join(fullname[1:]),
                 password=get_random_string(20))
 
             created = True
@@ -169,7 +169,7 @@ class MonthlyCheckoutView(TemplateView):
                 except SubscriptionException as e:
                     StripeSubscription.objects.filter(subscription_id=sub.id).delete()
 
-                    error = e.message
+                    error = str(e)
 
                 except:
                     raven_client.captureException()
@@ -183,7 +183,7 @@ class MonthlyCheckoutView(TemplateView):
 
         except (stripe.error.CardError, stripe.error.InvalidRequestError) as e:
             raven_client.captureException(level='warning')
-            error = 'Credit Card Error: {}'.format(e.message)
+            error = 'Credit Card Error: {}'.format(str(e))
 
         except:
             raven_client.captureException()

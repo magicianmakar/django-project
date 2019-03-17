@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifystore',
             name='store_hash',
-            field=models.CharField(default=b'', unique=True, max_length=50, editable=False),
+            field=models.CharField(default='', unique=True, max_length=50, editable=False),
         ),
     ]

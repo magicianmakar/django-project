@@ -650,7 +650,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_chq_stores.add(self.store)
         data = {'store': self.store.id}
         r = self.client.post('/api/chq/save-for-later', data, **self.headers)
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
 
     @patch('commercehq_core.tasks.product_save', Mock(return_value=None))
     def test_subuser_cant_save_for_later_without_permission(self):
@@ -659,7 +659,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_chq_permissions.remove(permission)
         data = {'store': self.store.id}
         r = self.client.post('/api/chq/save-for-later', data, **self.headers)
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.tasks.product_export.apply_async', Mock(return_value=None))
     @patch('commercehq_core.api.permissions.user_can_view', Mock(return_value=True))
@@ -669,7 +669,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_chq_stores.add(self.store)
         data = {'store': self.store.id, 'product': product.id, 'publish': False}
         r = self.client.post('/api/chq/product-export', data, **self.headers)
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
 
     @patch('commercehq_core.tasks.product_export.apply_async', Mock(return_value=None))
     @patch('commercehq_core.api.permissions.user_can_view', Mock(return_value=True))
@@ -681,7 +681,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_chq_permissions.remove(permission)
         data = {'store': self.store.id, 'product': product.id, 'publish': False}
         r = self.client.post('/api/chq/product-export', data, **self.headers)
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
     @patch('commercehq_core.api.permissions.user_can_delete', Mock(return_value=True))
     def test_subuser_can_delete_products_with_permission(self):
@@ -690,7 +690,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_chq_stores.add(self.store)
         params = '?product={}'.format(product.id)
         r = self.client.delete('/api/chq/product' + params, **self.headers)
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
 
     @patch('commercehq_core.api.permissions.user_can_delete', Mock(return_value=True))
     def test_subuser_cant_delete_products_without_permission(self):
@@ -701,7 +701,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_chq_permissions.remove(permission)
         params = '?product={}'.format(product.id)
         r = self.client.delete('/api/chq/product' + params, **self.headers)
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
     def test_subuser_cant_fulfill_order_without_permission(self):
         self.user.profile.subuser_chq_stores.add(self.store)
@@ -709,7 +709,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_chq_permissions.remove(permission)
         data = {'store': self.store.id}
         r = self.client.post('/api/chq/order-fulfill', data, **self.headers)
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
     def test_subuser_cant_update_order_fulfillment_without_permission(self):
         self.user.profile.subuser_chq_stores.add(self.store)
@@ -717,4 +717,4 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_chq_permissions.remove(permission)
         data = {'store': self.store.id}
         r = self.client.post('/api/chq/order-fulfill-update', data, **self.headers)
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)

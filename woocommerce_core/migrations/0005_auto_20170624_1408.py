@@ -19,11 +19,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='wooproduct',
             name='shipping_map',
-            field=models.TextField(default=b'', null=True, blank=True),
+            field=models.TextField(default='', null=True, blank=True),
         ),
         migrations.AddField(
             model_name='wooproduct',
             name='supplier_map',
-            field=models.TextField(default=b'', null=True, blank=True),
+            field=models.TextField(default='', null=True, blank=True),
         ),
     ]

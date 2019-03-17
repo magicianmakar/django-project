@@ -92,7 +92,7 @@ class Command(DropifiedBaseCommand):
         for change in changes:
             manager = ProductChangeManager.initialize(change)
             changes_map = manager.changes_map()
-            for name, changes in changes_map.iteritems():
+            for name, changes in changes_map.items():
                 if user_changes_map.get(name):
                     user_changes_map[name].extend(changes)
 

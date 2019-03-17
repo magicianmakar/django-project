@@ -59,7 +59,7 @@ class Command(DropifiedBaseCommand):
                 counter['need_fulfill'] += 1
 
                 if utils.cached_order_line_fulfillment_status(order):
-                    self.write(u'Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
+                    self.write('Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
                     order.woocommerce_status = 'fulfilled'
                     order.save()
                     continue
@@ -131,7 +131,7 @@ class Command(DropifiedBaseCommand):
                     continue
 
                 elif e.response.status_code == 404:
-                    self.write(u'Not found #{} in [{}]'.format(order_track.order_id, store.title))
+                    self.write('Not found #{} in [{}]'.format(order_track.order_id, store.title))
                     order_track.delete()
 
                     return False

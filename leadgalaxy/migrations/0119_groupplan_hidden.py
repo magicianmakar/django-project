@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='hidden',
-            field=models.BooleanField(default=False, verbose_name=b'Hidden from users'),
+            field=models.BooleanField(default=False, verbose_name='Hidden from users'),
         ),
     ]

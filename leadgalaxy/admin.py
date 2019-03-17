@@ -178,7 +178,7 @@ class UserProfileAdmin(admin.ModelAdmin):
         return instance.user.date_joined
 
     def tz(self, instance):
-        return u'{} | {}'.format(instance.country, instance.timezone).strip(' |')
+        return '{} | {}'.format(instance.country, instance.timezone).strip(' |')
 
     def get_form(self, request, obj=None, **kwargs):
         self.instance = obj  # Capture instance before the form gets generated
@@ -299,7 +299,7 @@ class AdminEventAdmin(admin.ModelAdmin):
             elif data.get('query'):
                 return data.get('query')
             elif data.get('plan'):
-                return u'{} - {}'.format(data.get('plan'), data.get('email'))
+                return '{} - {}'.format(data.get('plan'), data.get('email'))
         except:
             pass
 

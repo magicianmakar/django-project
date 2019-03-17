@@ -174,7 +174,7 @@ def split_product(product, split_factor, store=None):
         variants = new_data.get('variants', [])
         new_data['variants'] = [v for v in variants if not v['title'] == split_factor]
 
-        hashes = [h for h, variant in variant_images.items() if variant == value]
+        hashes = [h for h, variant in list(variant_images.items()) if variant == value]
         new_data['images'] = [i for i in original_images if hash_url_filename(i) in hashes]
 
         new_product.update_data(new_data)
@@ -218,7 +218,7 @@ def get_chq_products(store, page=1, limit=50, all_products=False, product_ids=No
             return
 
         pages = int(ceil(count / float(limit)))
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
             response = get_chq_products(store=store, page=page, limit=limit, all_products=False)
             products = response.json()['items']
             for product in products:
@@ -311,8 +311,8 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
     customer_address = {}
     shipping_address = order['shipping_address']
 
-    for k in shipping_address.keys():
-        if shipping_address[k] and type(shipping_address[k]) is unicode:
+    for k in list(shipping_address.keys()):
+        if shipping_address[k] and type(shipping_address[k]) is str:
             customer_address[k] = unidecode(shipping_address[k])
         else:
             customer_address[k] = shipping_address[k]
@@ -371,7 +371,7 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
 
-    customer_address['name'] = u'{} {}'.format(customer_address['first_name'], customer_address['last_name'])
+    customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name'])
     # customer_address['name'] = utils.ensure_title(customer_address['name'])
 
     # if customer_address['company']:
@@ -390,16 +390,16 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
                         customer_address['province'] = province
 
                 if customer_province and customer_address['province'] == 'Other':
-                    customer_address['city'] = u'{}, {}'.format(customer_address['city'], customer_province)
+                    customer_address['city'] = '{}, {}'.format(customer_address['city'], customer_province)
 
             elif fix_aliexpress_city:
                 city = safe_str(customer_address['city']).strip().strip(',')
                 customer_address['city'] = 'Other'
 
                 if not safe_str(customer_address['address2']).strip():
-                    customer_address['address2'] = u'{},'.format(city)
+                    customer_address['address2'] = '{},'.format(city)
                 else:
-                    customer_address['address2'] = u'{}, {},'.format(customer_address['address2'].strip().strip(','), city)
+                    customer_address['address2'] = '{}, {},'.format(customer_address['address2'].strip().strip(','), city)
 
         elif correction:
             if 'province' in correction:
@@ -524,21 +524,21 @@ def format_chq_errors(e):
 
         if not errors:
             msg.append('Server Error')
-        elif isinstance(errors, basestring):
+        elif isinstance(errors, str):
             msg.append(errors)
         else:
-            for k, v in errors.items():
+            for k, v in list(errors.items()):
                 if type(v) is list:
-                    error = u','.join(v)
+                    error = ','.join(v)
                 else:
                     error = v
 
                 if k == 'base':
                     msg.append(error)
                 else:
-                    msg.append(u'{}: {}'.format(k, error))
+                    msg.append('{}: {}'.format(k, error))
 
-    return u' | '.join(msg)
+    return ' | '.join(msg)
 
 
 def store_shipping_carriers(store):
@@ -551,14 +551,14 @@ def store_shipping_carriers(store):
             {5: 'DHL US'}, {6: 'DHL Global'}, {7: 'Canada Post'}
         ]
 
-        return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
+        return [{'id': list(c.keys()).pop(), 'title': list(c.values()).pop()} for c in carriers]
 
 
 def set_orders_filter(user, filters, default=None):
     fields = ['sort', 'status', 'fulfillment', 'financial',
               'desc', 'connected', 'awaiting_order']
 
-    for name, val in filters.items():
+    for name, val in list(filters.items()):
         if name in fields:
             key = '_chq_orders_filter_{}'.format(name)
             user.set_config(key, val)
@@ -575,7 +575,7 @@ def get_orders_filter(request, name=None, default=None, checkbox=False):
         return val
     else:
         filters = {}
-        for name, val in request.user.profile.get_config().items():
+        for name, val in list(request.user.profile.get_config().items()):
             if name.startswith('_chq_orders_filter_'):
                 filters[name.replace('_chq_orders_filter_', '')] = val
 
@@ -650,7 +650,9 @@ class CommerceHQOrdersPaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page - 5), self.current_page) + range(self.current_page, min(page_count + 1, self.current_page + 5))
+        pages = list(range(max(1, self.current_page - 5), self.current_page))
+        pages.extend(list(range(self.current_page, min(page_count + 1, self.current_page + 5))))
+
         if 1 not in pages:
             pages = [1, None] + pages
 
@@ -692,13 +694,13 @@ class CommerceHQOrdersPaginator(Paginator):
 
         filters[self.query_field] = self.query
 
-        for k, v in filters.items():
+        for k, v in list(filters.items()):
             if not v or v == 'any':
                 del filters[k]
             elif ',' in v:
                 filters[k] = v.split(',')
 
-        for k, v in filters.items():
+        for k, v in list(filters.items()):
             if type(filters[k]) is list:
                 filters[k] = list(map((lambda x: safe_int(x)), filters[k]))
             elif k != 'email':
@@ -887,7 +889,7 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
 
     caches['orders'].set_many(cache_data, timeout=604800)
 
-    return cache_data.keys()
+    return list(cache_data.keys())
 
 
 def order_track_fulfillment(order_track, user_config=None):
@@ -1063,7 +1065,7 @@ class CHQOrderUpdater:
         note = '{} Order ID: {}\n{}'.format(source, source_id, url)
 
         if line_id:
-            note = u'{}\nOrder Line: #{}'.format(note, line_id)
+            note = '{}\nOrder Line: #{}'.format(note, line_id)
 
         self.add_note(note)
 
@@ -1079,9 +1081,9 @@ class CHQOrderUpdater:
                 order = get_chq_order(self.store, self.order_id)
                 current_note = order.get('notes', '') or ''
             if current_note:
-                new_note = '{}\n{}'.format(current_note.encode('utf-8'), new_note.encode('utf-8')).strip()[:5000]
+                new_note = '{}\n{}'.format(current_note, new_note).strip()[:5000]
             else:
-                new_note = '{}'.format(new_note.encode('utf-8')).strip()[:5000]
+                new_note = '{}'.format(new_note).strip()[:5000]
             set_chq_order_note(self.store, self.order_id, new_note)
 
     def delay_save(self, countdown=None):
@@ -1098,7 +1100,7 @@ class CHQOrderUpdater:
         if 'notes' in what:
             order_data['notes'] = ''
 
-        if len(order_data.keys()) > 1:
+        if len(list(order_data.keys())) > 1:
             order_url = self.store.get_api_url('orders', self.order_id, api=True)
             rep = self.store.request.patch(order_url, order_data)
 

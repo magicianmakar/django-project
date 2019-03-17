@@ -155,7 +155,7 @@ class Command(DropifiedBaseCommand):
                 elif e.response.status_code == 422:
                     if 'is already fulfilled' in rep.text:
                         # Mark as fulfilled but not auto-fulfilled
-                        self.write(u'Already fulfilled #{} in [{}]'.format(first_order.order_id, store.title))
+                        self.write('Already fulfilled #{} in [{}]'.format(first_order.order_id, store.title))
                         data['api'], fulfilled_line_ids = self.fix_api_line_items(first_order, data['api'], rep.json()['errors']['base'])
                         for order in data['orders']:
                             if order.line_id in fulfilled_line_ids:
@@ -170,14 +170,14 @@ class Command(DropifiedBaseCommand):
 
                     elif 'invalid for this fulfillment service' in rep.text:
                         # Using a different fulfillment_service (i.e: amazon_marketplace_web)
-                        self.write(u'Invalid for this fulfillment service #{} in [{}]'.format(first_order.order_id, store.title))
+                        self.write('Invalid for this fulfillment service #{} in [{}]'.format(first_order.order_id, store.title))
                         for order in data['orders']:
                             order.shopify_status = 'fulfilled'
                             order.save()
                         return False
 
                 elif e.response.status_code == 404:
-                    self.write(u'Not found #{} in [{}]'.format(first_order.order_id, store.title))
+                    self.write('Not found #{} in [{}]'.format(first_order.order_id, store.title))
                     for order in data['orders']:
                         order.delete()
 

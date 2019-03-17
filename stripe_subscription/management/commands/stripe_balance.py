@@ -12,7 +12,7 @@ class EmptyProgress:
         pass
 
     def write(self, s):
-        print s
+        print(s)
 
 
 class Command(DropifiedBaseCommand):

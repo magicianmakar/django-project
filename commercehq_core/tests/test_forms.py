@@ -1,4 +1,4 @@
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 from lib.test import BaseTestCase
 
@@ -28,4 +28,4 @@ class CommerceHQStoreFormTestCase(BaseTestCase):
         store.user = self.user
         store.save()
         o = urlparse(store.api_url)
-        self.assertEquals(o.scheme, 'https')
+        self.assertEqual(o.scheme, 'https')

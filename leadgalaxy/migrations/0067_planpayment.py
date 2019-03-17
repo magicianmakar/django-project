@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('provider', models.CharField(max_length=50)),
                 ('payment_id', models.CharField(max_length=120)),
-                ('data', models.TextField(default=b'', blank=True)),
+                ('data', models.TextField(default='', blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],

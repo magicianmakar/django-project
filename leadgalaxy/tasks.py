@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 import arrow
 import requests
@@ -124,7 +124,7 @@ def export_product(req_data, target, user_id):
             }
         except PermissionDenied as e:
             return {
-                'error': "Store: {}".format(e.message)
+                'error': "Store: {}".format(str(e))
             }
 
     original_url = parsed_data.get('original_url')
@@ -147,7 +147,7 @@ def export_product(req_data, target, user_id):
 
         except PermissionDenied as e:
             return {
-                'error': "Product: {}".format(e.message)
+                'error': "Product: {}".format(str(e))
             }
     try:
         import_store = get_domain(original_url)
@@ -244,7 +244,7 @@ def export_product(req_data, target, user_id):
                         mapped = utils.shopify_link_images(store, product_to_map)
                         if mapped:
                             r = mapped
-                    except Exception as e:
+                    except Exception:
                         raven_client.captureException()
 
                 del api_data
@@ -255,28 +255,28 @@ def export_product(req_data, target, user_id):
                 shopify_error = utils.format_shopify_error(rep)
 
                 if 'Invalid API key or access token' in shopify_error:
-                    print u'SHOPIFY EXPORT: {} - Store: {} - Link: {}'.format(
+                    print('SHOPIFY EXPORT: {} - Store: {} - Link: {}'.format(
                         shopify_error, store, store.get_link('/admin/products.json', api=True)
-                    ).encode('utf-8')
+                    ))
                 else:
-                    print u'SHOPIFY EXPORT: {} - Store: {} - Product: {}'.format(
-                        shopify_error, store, req_data.get('product')).encode('utf-8')
+                    print('SHOPIFY EXPORT: {} - Store: {} - Product: {}'.format(
+                        shopify_error, store, req_data.get('product')))
 
                 if 'requires write_products scope' in shopify_error:
-                    return {'error': (u'Shopify Error: {}\n\n'
+                    return {'error': ('Shopify Error: {}\n\n'
                                       'Please follow this instructions to resolve this issue:\n{}'
                                       ).format(shopify_error, app_link('pages/view/15'))}
                 elif 'handle: has already been taken' in shopify_error:
-                    return {'error': (u'Shopify Error: {}\n\n'
+                    return {'error': ('Shopify Error: {}\n\n'
                                       'Please Change your product title by adding or removing one or more words'
                                       ).format(shopify_error)}
                 elif 'Exceeded maximum number of variants allowed' in shopify_error:
-                    return {'error': (u'Shopify Error: {}\n\n'
+                    return {'error': ('Shopify Error: {}\n\n'
                                       'Please reduce the number of variants to 100 or less by '
                                       'removing some variant choices to meet Shopify\'s requirements.'
                                       ).format(shopify_error)}
                 else:
-                    return {'error': u'Shopify Error: {}'.format(shopify_error)}
+                    return {'error': 'Shopify Error: {}'.format(shopify_error)}
 
         except (JSONDecodeError, requests.exceptions.ConnectTimeout):
             raven_client.captureException(extra={
@@ -294,12 +294,12 @@ def export_product(req_data, target, user_id):
         except PermissionDenied as e:
             raven_client.captureException()
             return {
-                'error': "Product: {}".format(e.message)
+                'error': "Product: {}".format(str(e))
             }
 
         except:
             raven_client.captureException()
-            print 'WARNING: SHOPIFY EXPORT EXCEPTION:'
+            print('WARNING: SHOPIFY EXPORT EXCEPTION:')
 
             return {'error': 'Shopify API Error'}
 
@@ -355,7 +355,7 @@ def export_product(req_data, target, user_id):
                 except PermissionDenied as e:
                     raven_client.captureException()
                     return {
-                        'error': "Product: {}".format(e.message)
+                        'error': "Product: {}".format(str(e))
                     }
             else:
                 product = None
@@ -390,7 +390,7 @@ def export_product(req_data, target, user_id):
             except PermissionDenied as e:
                 raven_client.captureException()
                 return {
-                    'error': "Product: {}".format(e.message)
+                    'error': "Product: {}".format(str(e))
                 }
 
             product.update_data(data)
@@ -441,7 +441,7 @@ def export_product(req_data, target, user_id):
             except PermissionDenied as e:
                 raven_client.captureException()
                 return {
-                    'error': "Add Product: {}".format(e.message)
+                    'error': "Add Product: {}".format(str(e))
                 }
 
         utils.smart_board_by_product(user.models_user, product)
@@ -636,8 +636,8 @@ def sync_shopify_orders(self, store_id, elastic=False):
                 page += 1
 
             took = (arrow.now() - start_time).seconds
-            print 'Sync Need: {}, Total: {}, Imported: {}, Store: {}, Took: {}s'.format(
-                need_import, shopify_count, imported, store.shop, took)
+            print('Sync Need: {}, Total: {}, Imported: {}, Store: {}, Took: {}s'.format(
+                need_import, shopify_count, imported, store.shop, took))
 
     except Exception:
         raven_client.captureException()
@@ -939,12 +939,12 @@ def create_image_zip(self, images, product_id):
             with zipfile.ZipFile(filename, 'w') as images_zip:
                 for i, img_url in enumerate(images):
                     if img_url.startswith('//'):
-                        img_url = u'http:{}'.format(img_url)
+                        img_url = 'http:{}'.format(img_url)
 
-                    image_name = u'image-{}.{}'.format(i + 1, get_fileext_from_url(img_url, fallback='jpg'))
+                    image_name = 'image-{}.{}'.format(i + 1, get_fileext_from_url(img_url, fallback='jpg'))
                     images_zip.writestr(image_name, requests.get(img_url).content)
 
-            s3_path = os.path.join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
+            s3_path = os.path.join('product-downloads', str(product.id), '{}.zip'.format(slugify(unidecode(product.title))))
             url = utils.aws_s3_upload(s3_path, input_filename=filename)
 
             cache.set(cache_key, url, timeout=3600 * 24)
@@ -990,7 +990,7 @@ def sync_product_exclude(self, store_id, product_id):
 
         store = ShopifyStore.objects.get(id=store_id)
 
-        print 'PSync', store.title, product_id
+        print('PSync', store.title, product_id)
 
         filtered_map = store.shopifyproduct_set.filter(is_excluded=True).values_list('shopify_id', flat=True)
         es_search_enabled = order_utils.is_store_indexed(store=store)
@@ -1002,7 +1002,7 @@ def sync_product_exclude(self, store_id, product_id):
 
         orders_count = orders.count()
 
-        print 'PSync Orders', orders_count
+        print('PSync Orders', orders_count)
 
         start = 0
         steps = 5000

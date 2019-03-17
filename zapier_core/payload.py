@@ -4,7 +4,7 @@ from commercehq_core.models import CommerceHQOrderTrack
 
 def get_shopify_order_data(store, data):
     customer = data.get('customer', {})
-    customer_name = u'{} {}'.format(customer.get('first_name', ''), customer.get('last_name', '')).strip()
+    customer_name = '{} {}'.format(customer.get('first_name', ''), customer.get('last_name', '')).strip()
     billing_address = data.get('billing_address', {})
     shipping_address = data.get('shipping_address', {})
     line_items = []
@@ -69,7 +69,7 @@ def get_shopify_order_data(store, data):
 
 def get_chq_order_data(store, data):
     customer = data.get('customer', {})
-    customer_name = u'{} {}'.format(customer.get('first_name', ''), customer.get('last_name', '')).strip()
+    customer_name = '{} {}'.format(customer.get('first_name', ''), customer.get('last_name', '')).strip()
     address = data.get('address', {})
     billing_address = address.get('billing', {})
     shipping_address = address.get('shipping', {})

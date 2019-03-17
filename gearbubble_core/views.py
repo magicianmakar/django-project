@@ -317,7 +317,7 @@ class OrdersList(ListView):
         }
 
     def get_order_data_variant(self, line):
-        return [{'title': value} for value in line.get('variant_option', {}).values()]
+        return [{'title': value} for value in list(line.get('variant_option', {}).values())]
 
     def get_products_by_source_id(self, product_ids):
         products_by_source_id = {}
@@ -488,7 +488,7 @@ class OrderPlaceRedirectView(RedirectView):
         if not redirect_url:
             redirect_url = product
 
-        for k in self.request.GET.keys():
+        for k in list(self.request.GET.keys()):
             if k.startswith('SA') and k not in redirect_url and self.request.GET[k]:
                 redirect_url = affiliate_link_set_query(redirect_url, k, self.request.GET[k])
 
@@ -536,7 +536,7 @@ class OrdersTrackList(ListView):
             'update': 'status_updated_at',
         }
 
-        for k, v in order_map.items():
+        for k, v in list(order_map.items()):
             order_map['-' + k] = '-' + v
 
         sorting = self.request.GET.get('sort', '-update')
@@ -668,7 +668,7 @@ class ProductMappingView(DetailView):
 
     def get_variants_map(self, gearbubble_product, product, supplier):
         variants_map = product.get_variant_mapping(supplier=supplier)
-        variants_map = {key: json.loads(value) for key, value in variants_map.items()}
+        variants_map = {key: json.loads(value) for key, value in list(variants_map.items())}
 
         for variant in gearbubble_product.get('variants', []):
             options = GearBubbleProduct.get_variant_options(variant)

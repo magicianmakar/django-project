@@ -19,12 +19,12 @@ class Migration(migrations.Migration):
             name='ClippingMagic',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('api_id', models.CharField(default=b'', max_length=100, verbose_name=b'ClippingMagic API ID')),
-                ('api_secret', models.CharField(default=b'', max_length=255, verbose_name=b'ClippingMagic API Secret')),
+                ('api_id', models.CharField(default='', max_length=100, verbose_name='ClippingMagic API ID')),
+                ('api_secret', models.CharField(default='', max_length=255, verbose_name='ClippingMagic API Secret')),
                 ('allowed_images', models.IntegerField(default=-1)),
                 ('downloaded_images', models.IntegerField(default=0)),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Created date')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name=b'Last update')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Created date')),
+                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Last update')),
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='clippingmagic', to=settings.AUTH_USER_MODEL)),
             ],
             options={

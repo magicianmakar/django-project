@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='productchange',
             name='categories',
-            field=models.CharField(default=b'', max_length=512, null=True),
+            field=models.CharField(default='', max_length=512, null=True),
         ),
     ]

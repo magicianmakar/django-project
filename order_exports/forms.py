@@ -56,7 +56,7 @@ class OrderExportForm(forms.Form):
                 try:
                     self.validate_email_list(receiver)
                 except ValidationError as e:
-                    self.add_error('receiver', e.message)
+                    self.add_error('receiver', str(e))
 
             schedule = form_data.get('schedule')
             if not schedule:

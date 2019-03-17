@@ -1,4 +1,4 @@
-from Queue import Queue
+from queue import Queue
 from threading import Thread
 
 import requests
@@ -76,13 +76,13 @@ class Command(DropifiedBaseCommand):
                         self.stdout.write('* Ignore Plan: {}'.format(plan.title))
                         continue
 
-                    self.stdout.write(self.style.SUCCESS(u'Plan: {}'.format(plan.title)))
+                    self.stdout.write(self.style.SUCCESS('Plan: {}'.format(plan.title)))
 
                     for profile in plan.userprofile_set.select_related('user').all():
                         self.handle_user(profile.user, options)
 
                 for bundle in p.featurebundle_set.all():
-                    self.stdout.write(self.style.SUCCESS(u'Bundle: {}'.format(bundle.title)))
+                    self.stdout.write(self.style.SUCCESS('Bundle: {}'.format(bundle.title)))
 
                     for profile in bundle.userprofile_set.select_related('user').all():
                         self.handle_user(profile.user, options)
@@ -101,7 +101,7 @@ class Command(DropifiedBaseCommand):
         try:
             LastSeen.objects.when(user, 'website')
         except LastSeen.DoesNotExist:
-            self.stdout.write(u'Ignore inactive user: {}'.format(user.username))
+            self.stdout.write('Ignore inactive user: {}'.format(user.username))
             if options['remove-inactive']:
                 rep = requests.delete(
                     url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products'),
@@ -112,7 +112,7 @@ class Command(DropifiedBaseCommand):
                 rep.raise_for_status()
 
                 if not rep.text.startswith('0 '):
-                    self.write(u'\t{}'.format(rep.text))
+                    self.write('\t{}'.format(rep.text))
 
             return
 
@@ -130,17 +130,17 @@ class Command(DropifiedBaseCommand):
         products = products.filter(store__is_active=True)
 
         if user.id in self.ignored_users or user.get_config('_disbale_user_statistics'):
-            self.stdout.write(u'Ignore product for user: {}'.format(user.username))
+            self.stdout.write('Ignore product for user: {}'.format(user.username))
             return
 
         products_count = products.count()
 
         if products_count:
             if products_count > 10000:
-                self.stdout.write(u'Too many products ({}) for user: {}'.format(products_count, user.username))
+                self.stdout.write('Too many products ({}) for user: {}'.format(products_count, user.username))
                 return
 
-            self.stdout.write(u'Add {} products for user: {}'.format(products_count, user.username), self.style.HTTP_INFO)
+            self.stdout.write('Add {} products for user: {}'.format(products_count, user.username), self.style.HTTP_INFO)
 
             start = 0
             steps = 1000

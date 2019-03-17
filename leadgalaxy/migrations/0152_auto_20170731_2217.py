@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='groupplan',
             name='monthly_price',
-            field=models.DecimalField(null=True, verbose_name=b'Monthly Price(in USD)', max_digits=9, decimal_places=2, blank=True),
+            field=models.DecimalField(null=True, verbose_name='Monthly Price(in USD)', max_digits=9, decimal_places=2, blank=True),
         ),
     ]

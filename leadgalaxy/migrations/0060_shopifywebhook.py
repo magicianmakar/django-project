@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('topic', models.CharField(max_length=64)),
                 ('token', models.CharField(max_length=64)),
-                ('shopify_id', models.BigIntegerField(default=0, verbose_name=b'Webhook Shopify ID')),
+                ('shopify_id', models.BigIntegerField(default=0, verbose_name='Webhook Shopify ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE)),

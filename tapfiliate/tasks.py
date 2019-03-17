@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+
 
 from app.celery_base import celery_app, CaptureFailure
 

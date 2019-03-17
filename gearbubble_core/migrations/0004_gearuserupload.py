@@ -17,9 +17,9 @@ class Migration(migrations.Migration):
             name='GearUserUpload',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('url', models.CharField(default=b'', max_length=512, verbose_name=b'Upload file URL', blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name=b'Last update')),
+                ('url', models.CharField(default='', max_length=512, verbose_name='Upload file URL', blank=True)),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Submission date')),
+                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Last update')),
                 ('product', models.ForeignKey(to='gearbubble_core.GearBubbleProduct', null=True)),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],

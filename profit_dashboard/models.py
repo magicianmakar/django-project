@@ -47,7 +47,7 @@ class FacebookAccess(models.Model):
                 user = FBUser(fbid='me', api=self.api).api_get()
                 self.facebook_user_id = user.get('id')
 
-        except FacebookRequestError, e:
+        except FacebookRequestError as e:
             if e.api_error_code() == 190:  # (#190) Error validating access token
                 self.access_token = ''
                 self.expires_in = None
@@ -252,10 +252,10 @@ class FacebookAccount(models.Model):
                 campaign_insights[insight_key]['spend'] += float(insight[insight.Field.spend])
 
         if verbosity > 2:
-            for campaign_id, insights_length in campaign_insights_length.items():
-                print '\t\tCampaigns {} have {} Insights'.format(campaign_id, insights_length)
+            for campaign_id, insights_length in list(campaign_insights_length.items()):
+                print('\t\tCampaigns {} have {} Insights'.format(campaign_id, insights_length))
 
-        return campaign_insights.values()
+        return list(campaign_insights.values())
 
 
 class FacebookAdCost(models.Model):

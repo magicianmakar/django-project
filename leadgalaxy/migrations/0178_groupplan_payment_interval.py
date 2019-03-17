@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='payment_interval',
-            field=models.CharField(choices=[(b'monthly', b'Monthly'), (b'yearly', b'Yearly'), (b'lifetime', b'Lifetime')], default=b'', max_length=25),
+            field=models.CharField(choices=[('monthly', 'Monthly'), ('yearly', 'Yearly'), ('lifetime', 'Lifetime')], default='', max_length=25),
         ),
     ]

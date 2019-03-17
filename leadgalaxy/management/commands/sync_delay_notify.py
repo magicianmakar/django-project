@@ -60,7 +60,7 @@ class Command(DropifiedBaseCommand):
                         }
                     )
 
-                    self.write_success(u'Notified {} orders to {}'.format(delayed_orders_count, user.email))
+                    self.write_success('Notified {} orders to {}'.format(delayed_orders_count, user.email))
 
                 except:
                     raven_client.captureException()
@@ -89,4 +89,4 @@ class Command(DropifiedBaseCommand):
 
             req = requests.post("https://onesignal.com/api/v1/notifications", headers=header, data=json.dumps(payload))
             if req.status_code == 200:
-                self.write_success(u'Notified to {} users'.format(len(emails)))
+                self.write_success('Notified to {} users'.format(len(emails)))

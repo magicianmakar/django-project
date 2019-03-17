@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             name='AliexpressFulfillmentCost',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('source_id', models.CharField(default=b'', max_length=512, db_index=True, blank=True)),
+                ('source_id', models.CharField(default='', max_length=512, db_index=True, blank=True)),
                 ('date', models.DateField()),
                 ('shipping_cost', models.DecimalField(default=0, max_digits=9, decimal_places=2)),
                 ('products_cost', models.DecimalField(default=0, max_digits=9, decimal_places=2)),

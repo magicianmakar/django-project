@@ -1,11 +1,11 @@
 import hmac
-import base64
 
 from Crypto.Cipher import AES
 from hashlib import sha256
 
 from django.conf import settings
 from leadgalaxy.utils import aws_s3_get_key
+from shopified_core.utils import base64_encode, base64_decode
 
 
 def get_new_aes(user, email):
@@ -31,7 +31,7 @@ def save_aliexpress_password(user, email, password):
     key = aws_s3_get_key('a/{}'.format(key_name), bucket_name=settings.S3_SECRET_BUCKET, validate=False)
 
     password = aes.encrypt(password.encode())
-    password = base64.b64encode(password)
+    password = base64_encode(password)
 
     key.set_contents_from_string(password)
 
@@ -46,7 +46,7 @@ def get_aliexpress_password(user, email):
 
     if key:
         password = key.get_contents_as_string()
-        password = base64.decodestring(password)
+        password = base64_decode(password)
         password = aes.decrypt(password)
 
     return password

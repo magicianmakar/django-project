@@ -221,9 +221,9 @@ def get_variant_images(product, option):
     data = product.parsed
     product_images = data.get('images', [])
     variants_images = data.get('variants_images', {})
-    options = variants_images.values()
+    options = list(variants_images.values())
     if option in options:
-        hashed_images = [key for key, value in variants_images.items() if value == option]
+        hashed_images = [key for key, value in list(variants_images.items()) if value == option]
         for product_image in product_images:
             if hash_url_filename(product_image) in hashed_images:
                 variant_images.append(product_image)
@@ -289,7 +289,7 @@ def store_shipping_carriers(store):
         {8: 'Custom Provider'},
     ]
 
-    return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
+    return [{'id': list(c.keys()).pop(), 'title': list(c.values()).pop()} for c in carriers]
 
 
 def get_orders_from_store(store):
@@ -327,8 +327,8 @@ def gear_customer_address(order):
     customer_address['country'] = country_from_code(customer_address['country_code'], '')
     customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
 
-    for key in customer_address.keys():
-        if customer_address[key] is unicode:
+    for key in list(customer_address.keys()):
+        if customer_address[key] is str:
             customer_address[key] = unidecode(customer_address[key])
 
     if not customer_address.get('province'):
@@ -539,7 +539,7 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
 
     cache.set_many(cache_data, timeout=3600)
 
-    return cache_data.keys()
+    return list(cache_data.keys())
 
 
 def order_track_fulfillment(order_track, user_config=None):
@@ -720,7 +720,7 @@ class OrderListPaginator(Paginator):
         number = self.validate_number(number)
         params = {'page': number, 'limit': self.per_page}
         # `self.object_list` is an `OrderListQuery` instance
-        items = self.object_list.update_params(params).items()
+        items = list(self.object_list.update_params(params).items())
 
         return self._get_page(items, number, self)
 
@@ -749,7 +749,7 @@ class GearOrderUpdater:
         note = '{} Order ID: {}\n{}'.format(source, source_id, url)
 
         if line_id:
-            note = u'{}\nOrder Line: #{}'.format(note, line_id)
+            note = '{}\nOrder Line: #{}'.format(note, line_id)
 
         self.add_note(note)
 
@@ -759,7 +759,7 @@ class GearOrderUpdater:
 
     def _do_save_changes(self, add=True):
         if self.notes:
-            new_note = u'\n'.join(self.notes)
+            new_note = '\n'.join(self.notes)
             set_gear_order_note(self.store, self.order_id, new_note)
 
     def delay_save(self, countdown=None):

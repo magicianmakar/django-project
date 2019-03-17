@@ -32,7 +32,7 @@ class FeedStatusAbstract(models.Model):
     class Meta:
         abstract = True
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}'.format(self.store.title)
 
     def get_url(self, revision=None):

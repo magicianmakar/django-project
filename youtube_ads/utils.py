@@ -1,7 +1,7 @@
 import re
 import json
 from httplib2 import Http
-from urlparse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.shortcuts import reverse

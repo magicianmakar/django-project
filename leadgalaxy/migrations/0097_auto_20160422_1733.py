@@ -16,12 +16,12 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='planregistration',
             name='bundle',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name=b'Purchased Bundle', blank=True, to='leadgalaxy.FeatureBundle', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name='Purchased Bundle', blank=True, to='leadgalaxy.FeatureBundle', null=True),
         ),
         migrations.AlterField(
             model_name='planregistration',
             name='plan',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name=b'Purchased Plan', blank=True, to='leadgalaxy.GroupPlan', null=True),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.SET_NULL, verbose_name='Purchased Plan', blank=True, to='leadgalaxy.GroupPlan', null=True),
         ),
         migrations.AlterField(
             model_name='userprofile',
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userprofile',
             name='plan_after_expire',
-            field=models.ForeignKey(related_name='expire_plan', on_delete=django.db.models.deletion.SET_NULL, verbose_name=b'Plan to user after Expire Date', blank=True, to='leadgalaxy.GroupPlan', null=True),
+            field=models.ForeignKey(related_name='expire_plan', on_delete=django.db.models.deletion.SET_NULL, verbose_name='Plan to user after Expire Date', blank=True, to='leadgalaxy.GroupPlan', null=True),
         ),
         migrations.AlterField(
             model_name='userprofile',

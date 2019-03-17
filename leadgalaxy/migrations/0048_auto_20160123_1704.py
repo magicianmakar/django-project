@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 
-import uuid, md5
-
+import uuid
+from hashlib import md5
 
 def random_hash():
     token = str(uuid.uuid4())

@@ -15,11 +15,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='planregistration',
             name='bundle',
-            field=models.ForeignKey(verbose_name=b'Purchased Bundle', blank=True, to='leadgalaxy.FeatureBundle', null=True, on_delete=django.db.models.deletion.CASCADE),
+            field=models.ForeignKey(verbose_name='Purchased Bundle', blank=True, to='leadgalaxy.FeatureBundle', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AlterField(
             model_name='planregistration',
             name='plan',
-            field=models.ForeignKey(verbose_name=b'Purchased Plan', blank=True, to='leadgalaxy.GroupPlan', null=True, on_delete=django.db.models.deletion.CASCADE),
+            field=models.ForeignKey(verbose_name='Purchased Plan', blank=True, to='leadgalaxy.GroupPlan', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
     ]

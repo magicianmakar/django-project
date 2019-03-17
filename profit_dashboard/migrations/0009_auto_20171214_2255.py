@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='aliexpressfulfillmentcost',
             name='source_id',
-            field=models.CharField(default=b'', max_length=512, blank=True),
+            field=models.CharField(default='', max_length=512, blank=True),
         ),
         migrations.AlterIndexTogether(
             name='aliexpressfulfillmentcost',

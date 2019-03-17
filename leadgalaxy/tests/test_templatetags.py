@@ -93,8 +93,8 @@ class TagsTestCase(BaseTestCase):
 
     def test_money_format_euro(self):
         store = Mock()
-        store.currency_format = u"\u20ac {{amount}}"
-        self.assertEqual(template_helper.money_format(12.34, store), u'\u20ac 12.34')
+        store.currency_format = "\u20ac {{amount}}"
+        self.assertEqual(template_helper.money_format(12.34, store), '\u20ac 12.34')
 
     def test_money_format_amount_no_decimals(self):
         store = Mock()

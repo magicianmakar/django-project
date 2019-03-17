@@ -19,11 +19,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='article',
             name='stat',
-            field=models.IntegerField(default=0, verbose_name=b'Publish stat', choices=[(0, b'Published'), (1, b'Draft'), (2, b'Waitting review')]),
+            field=models.IntegerField(default=0, verbose_name='Publish stat', choices=[(0, 'Published'), (1, 'Draft'), (2, 'Waitting review')]),
         ),
         migrations.AlterField(
             model_name='comment',
             name='stat',
-            field=models.IntegerField(default=0, verbose_name=b'Publish stat', choices=[(0, b'Published'), (1, b'Draft'), (2, b'Waitting review')]),
+            field=models.IntegerField(default=0, verbose_name='Publish stat', choices=[(0, 'Published'), (1, 'Draft'), (2, 'Waitting review')]),
         ),
     ]

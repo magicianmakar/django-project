@@ -5,10 +5,10 @@ from django.conf import settings
 import os
 import re
 import time
-import urllib
+
 from math import ceil
 from tempfile import NamedTemporaryFile
-from urlparse import urlparse
+from urllib.parse import urlencode, urlparse
 
 from loxun import XmlWriter
 
@@ -67,7 +67,7 @@ class ProductFeed():
 
         self._add_element('title', self.info['name'])
         self._add_element('link', 'https://{}'.format(self.info['domain']))
-        self._add_element('description', u'{} Products Feed'.format(self.info['name']))
+        self._add_element('description', '{} Products Feed'.format(self.info['name']))
 
     def save(self):
         self.writer.endTag()
@@ -86,11 +86,11 @@ class ProductFeed():
             return
 
         if count > 5000:
-            print 'Ignore Feed for ', self.store.shop, 'with', count, 'Products'
+            print('Ignore Feed for ', self.store.shop, 'with', count, 'Products')
             return
 
         pages = int(ceil(count / float(limit)))
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
             products = get_shopify_products(store=self.store, page=page, limit=limit, all_products=False)
             for p in products:
                 self.add_product(p)
@@ -133,7 +133,7 @@ class ProductFeed():
             self._add_element('g:id', 'shopify_{}'.format(variant_id))
             self._add_element('g:item_group_id', '{}'.format(variant_id))
 
-        self._add_element('g:link', u'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
+        self._add_element('g:link', 'https://{domain}/products/{p[handle]}?variant={v[id]}'.format(domain=self.domain, p=product, v=variant))
         self._add_element('g:title', product.get('title'))
         self._add_element('g:description', self._clean_description(product))
         self._add_element('g:image_link', image)
@@ -204,7 +204,7 @@ class CommerceHQProductFeed():
 
         self._add_element('title', self.store.title)
         self._add_element('link', self.store.get_store_url())
-        self._add_element('description', u'{} Products Feed'.format(self.store.title))
+        self._add_element('description', '{} Products Feed'.format(self.store.title))
 
     def save(self):
         self.writer.endTag()
@@ -223,11 +223,11 @@ class CommerceHQProductFeed():
             return
 
         if count > 5000:
-            print 'Ignore Feed for CHQ', self.store.id, 'with', count, 'Products'
+            print('Ignore Feed for CHQ', self.store.id, 'with', count, 'Products')
             return
 
         pages = int(ceil(count / float(limit)))
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
             products = get_chq_products(store=self.store, page=page, limit=limit, all_products=False)
             for p in products:
                 self.add_product(p)
@@ -321,7 +321,7 @@ class WooProductFeed():
 
         self._add_element('title', self.store.title)
         self._add_element('link', self.store.get_store_url())
-        self._add_element('description', u'{} Products Feed'.format(self.store.title))
+        self._add_element('description', '{} Products Feed'.format(self.store.title))
 
     def save(self):
         self.writer.endTag()
@@ -340,7 +340,7 @@ class WooProductFeed():
             return
 
         pages = int(ceil(count / float(limit)))
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
             products = get_woo_products(store=self.store, page=page, limit=limit, all_products=False)
             for p in products:
                 self.add_product(p)
@@ -363,7 +363,7 @@ class WooProductFeed():
         variants = []
         page = 1
         while page:
-            params = urllib.urlencode({'page': page, 'per_page': 100})
+            params = urlencode({'page': page, 'per_page': 100})
             path = 'products/{}/variations?{}'.format(source_id, params)
             r = self.store.wcapi.get(path)
             r.raise_for_status()
@@ -447,7 +447,7 @@ class GearBubbleProductFeed(object):
         self.writer.startTag("channel")
         self._add_element('title', self.store.title)
         self._add_element('link', self.store.get_store_url())
-        self._add_element('description', u'{} Products Feed'.format(self.store.title))
+        self._add_element('description', '{} Products Feed'.format(self.store.title))
 
     def save(self):
         self.writer.endTag()

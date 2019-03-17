@@ -71,8 +71,8 @@ class MappingTestCase(BaseTestCase):
             }]
         })
 
-        self.assertEqual(map(lambda e: e['title'], self.product.get_variant_mapping('987654321')), ['Blue', 'S'])
-        self.assertEqual(map(lambda e: e['sku'], self.product.get_variant_mapping('987654321')), ['sku-1-12345', 'sku-2-12345'])
+        self.assertEqual([e['title'] for e in self.product.get_variant_mapping('987654321')], ['Blue', 'S'])
+        self.assertEqual([e['sku'] for e in self.product.get_variant_mapping('987654321')], ['sku-1-12345', 'sku-2-12345'])
 
     def test_mapping_with_dicts_saved_as_str(self):
         self.product.set_variant_mapping({
@@ -83,8 +83,8 @@ class MappingTestCase(BaseTestCase):
 
         mapping = self.product.get_variant_mapping(for_extension=True)
         self.assertEqual(len(mapping), 3)
-        self.assertNotEqual(set(map(lambda e: type(e), mapping.values())), {str, })
-        self.assertEqual(map(lambda e: e['title'], mapping['1708819218462']), ['black', 'M'])
+        self.assertNotEqual(set([type(e) for e in list(mapping.values())]), {str, })
+        self.assertEqual([e['title'] for e in mapping['1708819218462']], ['black', 'M'])
 
     def test_default_supplier_mapping(self):
         supplier1 = ProductSupplier.objects.create(

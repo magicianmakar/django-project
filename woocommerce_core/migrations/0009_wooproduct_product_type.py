@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='wooproduct',
             name='product_type',
-            field=models.CharField(default=b'', max_length=300, db_index=True, blank=True),
+            field=models.CharField(default='', max_length=300, db_index=True, blank=True),
         ),
     ]

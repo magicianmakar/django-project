@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifyorder',
             name='connected_items',
-            field=models.IntegerField(null=True, verbose_name=b'Item Lines with connect products', blank=True),
+            field=models.IntegerField(null=True, verbose_name='Item Lines with connect products', blank=True),
         ),
         migrations.AddField(
             model_name='shopifyorder',
             name='need_fulfillment',
-            field=models.IntegerField(null=True, verbose_name=b'Item Lines not ordered yet', blank=True),
+            field=models.IntegerField(null=True, verbose_name='Item Lines not ordered yet', blank=True),
         ),
     ]

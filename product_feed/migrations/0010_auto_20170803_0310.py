@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='commercehqfeedstatus',
             name='default_product_category',
-            field=models.CharField(default=b'', max_length=512, blank=True),
+            field=models.CharField(default='', max_length=512, blank=True),
         ),
         migrations.AddField(
             model_name='feedstatus',
             name='default_product_category',
-            field=models.CharField(default=b'', max_length=512, blank=True),
+            field=models.CharField(default='', max_length=512, blank=True),
         ),
     ]

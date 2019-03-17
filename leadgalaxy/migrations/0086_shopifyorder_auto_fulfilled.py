@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifyorder',
             name='auto_fulfilled',
-            field=models.BooleanField(default=False, verbose_name=b'Automatically fulfilled'),
+            field=models.BooleanField(default=False, verbose_name='Automatically fulfilled'),
         ),
     ]

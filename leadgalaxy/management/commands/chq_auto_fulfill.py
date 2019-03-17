@@ -127,7 +127,7 @@ class Command(DropifiedBaseCommand):
 
                 elif e.response.status_code == 422:
                     if 'shipped count of a product exceeds quantity' in e.response.text.lower():
-                        self.write(u'Already fulfilled #{} in [{}]'.format(order_track.order_id, store.title))
+                        self.write('Already fulfilled #{} in [{}]'.format(order_track.order_id, store.title))
                         order_track.commercehq_status = 'fulfilled'
                         order_track.save()
 
@@ -155,7 +155,7 @@ class Command(DropifiedBaseCommand):
                         return False
 
                 elif e.response.status_code == 404:
-                    self.write(u'Not found #{} in [{}]'.format(order_track.order_id, store.title))
+                    self.write('Not found #{} in [{}]'.format(order_track.order_id, store.title))
                     order_track.delete()
 
                     return False

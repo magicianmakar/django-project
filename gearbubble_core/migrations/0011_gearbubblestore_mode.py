@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='gearbubblestore',
             name='mode',
-            field=models.CharField(choices=[(b'staging', b'Staging'), (b'live', b'Live')], default=b'live', max_length=7),
+            field=models.CharField(choices=[('staging', 'Staging'), ('live', 'Live')], default='live', max_length=7),
         ),
     ]

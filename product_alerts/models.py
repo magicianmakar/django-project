@@ -39,8 +39,8 @@ class ProductChange(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     notified_at = models.DateTimeField(null=True, verbose_name='Email Notification Sate')
 
-    def __unicode__(self):
-        return u'{}'.format(self.id)
+    def __str__(self):
+        return '{}'.format(self.id)
 
     def orders_count(self, open=True):
         if self.store_type == 'shopify':
@@ -251,7 +251,7 @@ class ProductChange(models.Model):
         https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
         """
 
-        for category in settings.PRICE_MONITOR_EVENTS.keys():
+        for category in list(settings.PRICE_MONITOR_EVENTS.keys()):
             payload = self.to_alert(category)
             if payload is not None:
                 raw_hook_event.send(
@@ -308,7 +308,7 @@ class ProductChange(models.Model):
         return None
 
     def send_hook_event(self, product_data):
-        for category in settings.PRICE_MONITOR_EVENTS.keys():
+        for category in list(settings.PRICE_MONITOR_EVENTS.keys()):
             changes = self.get_data(category)
             for i, change in enumerate(changes):
                 payload = self.to_dict(product_data, category, i)
@@ -337,8 +337,8 @@ class ProductVariantPriceHistory(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
-        return u'{}'.format(self.id)
+    def __str__(self):
+        return '{}'.format(self.id)
 
     def add_price(self, new_price, old_price):
         try:

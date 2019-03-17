@@ -17,8 +17,8 @@ class TestLastSeenModel(BaseTestCase):
         user = User(username='testuser')
         ts = datetime.datetime(2013, 1, 1, 2, 3, 4)
         seen = LastSeen(user=user, last_seen=ts)
-        self.assertIn('testuser', unicode(seen))
-        self.assertIn('2013-01-01 02:03:04', unicode(seen))
+        self.assertIn('testuser', str(seen))
+        self.assertIn('2013-01-01 02:03:04', str(seen))
 
 
 class TestLastSeenManager(BaseTestCase):

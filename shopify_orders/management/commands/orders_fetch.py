@@ -29,7 +29,7 @@ class Command(DropifiedBaseCommand):
         for store in store_ids:
             store = ShopifyStore.objects.get(id=store)
 
-            self.write_success(u'Reset Store: {}'.format(store.title))
+            self.write_success('Reset Store: {}'.format(store.title))
 
             deleted = delete_store_orders(store)
 
@@ -97,19 +97,19 @@ class Command(DropifiedBaseCommand):
 
         shipping_method_filter = False
 
-        self.write_success(u'Import {} Order for: {}'.format(count, store.title))
+        self.write_success('Import {} Order for: {}'.format(count, store.title))
         if not count:
             return
 
         self.products_map = store.shopifyproduct_set.exclude(shopify_id=0) \
                                  .values_list('id', 'shopify_id') \
                                  .order_by('created_at')
-        self.products_map = dict(map(lambda a: (a[1], a[0]), self.products_map))
+        self.products_map = dict([(a[1], a[0]) for a in self.products_map])
 
         self.filtered_map = store.shopifyproduct_set.filter(is_excluded=True).values_list('shopify_id', flat=True)
 
         self.tracking_map = store.shopifyordertrack_set.values_list('id', 'line_id')
-        self.tracking_map = dict(map(lambda a: (a[1], a[0]), self.tracking_map))
+        self.tracking_map = dict([(a[1], a[0]) for a in self.tracking_map])
 
         self.imported_orders = []
         self.saved_orders = {}
@@ -120,7 +120,7 @@ class Command(DropifiedBaseCommand):
         import_start = time.time()
 
         pages = int(math.ceil(count / float(limit)))
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
             if count > 1000:
                 imported_count = len(self.imported_orders)
                 self.stdout.write('Page {} ({:0.2f}%) (Rate: {} - {:0.2f}s) (Imported: {})'.format(
@@ -150,7 +150,7 @@ class Command(DropifiedBaseCommand):
                 if rep.ok:
                     break
                 else:
-                    print 'Order Fetch Retry', tries, 'Page', page
+                    print('Order Fetch Retry', tries, 'Page', page)
                     tries -= 1
                     continue
 

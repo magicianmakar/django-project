@@ -15,10 +15,10 @@ class Migration(migrations.Migration):
             name='FeatureBundle',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('title', models.CharField(max_length=30, verbose_name=b'Bundle Title')),
-                ('slug', models.SlugField(unique=True, max_length=30, verbose_name=b'Bundle Slug')),
+                ('title', models.CharField(max_length=30, verbose_name='Bundle Title')),
+                ('slug', models.SlugField(unique=True, max_length=30, verbose_name='Bundle Slug')),
                 ('register_hash', models.CharField(unique=True, max_length=50)),
-                ('description', models.CharField(default=b'', max_length=512, blank=True)),
+                ('description', models.CharField(default='', max_length=512, blank=True)),
                 ('permissions', models.ManyToManyField(to='leadgalaxy.AppPermission', blank=True)),
             ],
         ),

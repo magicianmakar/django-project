@@ -1,7 +1,7 @@
-import urllib2
 import re
 import json
 import requests
+from urllib.parse import unquote
 
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import HttpResponse
@@ -59,7 +59,7 @@ def index(request):
     ]
 
     if request.GET.get('q') or request.GET.get('r'):
-        query = urllib2.unquote(request.GET.get('q', request.GET.get('r')))
+        query = unquote(request.GET.get('q', request.GET.get('r')))
 
         try:
             youtube = Youtube(request)
@@ -136,7 +136,7 @@ def channels(request):
     ]
 
     if request.GET.get('q'):
-        query = urllib2.unquote(request.GET.get('q'))
+        query = unquote(request.GET.get('q'))
         channel = re.findall('channel[:/]([^/?]+)', query)
         if len(channel):
             return redirect('{}?q=channel:{}'.format(reverse('youtube_ads.views.index'), channel[0]))

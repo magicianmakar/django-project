@@ -24,6 +24,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='orderexportfilter',
             name='product_title',
-            field=models.TextField(default=b'', null=True, blank=True),
+            field=models.TextField(default='', null=True, blank=True),
         ),
     ]

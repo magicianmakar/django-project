@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='extrastore',
             name='last_invoice',
-            field=models.CharField(default=b'Last Invoice Item', max_length=64, null=True, blank=True),
+            field=models.CharField(default='Last Invoice Item', max_length=64, null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='extrastore',
             name='status',
-            field=models.CharField(default=b'pending', max_length=64, null=True, blank=True),
+            field=models.CharField(default='pending', max_length=64, null=True, blank=True),
         ),
     ]

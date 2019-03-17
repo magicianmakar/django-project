@@ -82,7 +82,7 @@ class Command(DropifiedBaseCommand):
         changed, api_data = utils.order_track_fulfillment(order_track=order_track, user_config=user.get_config())
 
         if not changed:
-            self.write(u'Already fulfilled #{} in [{}]'.format(order_track.order_id, order_track.store.title))
+            self.write('Already fulfilled #{} in [{}]'.format(order_track.order_id, order_track.store.title))
             return True
 
         fulfilled = False
@@ -111,7 +111,7 @@ class Command(DropifiedBaseCommand):
                     continue
 
                 elif e.response.status_code == 404:
-                    self.write(u'Not found #{} in [{}]'.format(order_track.order_id, store.title))
+                    self.write('Not found #{} in [{}]'.format(order_track.order_id, store.title))
                     order_track.delete()
 
                     return False

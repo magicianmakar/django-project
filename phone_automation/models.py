@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-
 import json
-from urlparse import urlsplit
+
+from urllib.parse import urlsplit
 
 import boto.elastictranscoder
 
@@ -80,7 +79,7 @@ class TwilioStep(models.Model):
             'flow-block-dial': reverse('phone_automation_call_flow_dial'),
         }.get(self.block_type, reverse('phone_automation_call_flow_empty'))
 
-        raw_url += u'?step={}'.format(self.step)
+        raw_url += '?step={}'.format(self.step)
         return raw_url
 
     @cached_property
@@ -121,7 +120,7 @@ class TwilioUpload(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.url.replace('%2F', '/').split('/')[-1]
 
 

@@ -14,21 +14,21 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyorder',
             name='customer_email',
-            field=models.CharField(default=b'', max_length=256, null=True, blank=True),
+            field=models.CharField(default='', max_length=256, null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyorder',
             name='customer_name',
-            field=models.CharField(default=b'', max_length=256, null=True, blank=True),
+            field=models.CharField(default='', max_length=256, null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyorder',
             name='tags',
-            field=models.TextField(default=b'', null=True, blank=True),
+            field=models.TextField(default='', null=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyorderline',
             name='title',
-            field=models.TextField(default=b'', null=True, blank=True),
+            field=models.TextField(default='', null=True, blank=True),
         ),
     ]

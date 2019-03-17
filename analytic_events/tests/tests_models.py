@@ -17,7 +17,7 @@ from ..models import (
 class EventTestCase(BaseTestCase):
     def test_must_be_polymorphic(self):
         RegistrationEvent.objects.create(user=UserFactory())
-        self.assertEquals(Event.objects.count(), 1)
+        self.assertEqual(Event.objects.count(), 1)
 
 
 class RegistrationEventTestCase(BaseTestCase):

@@ -120,7 +120,7 @@ class PlanSelectionEvent(Event):
 
         data = json.dumps(data)
 
-        script = u'''<script>
+        script = '''<script>
             ga('send', 'event', {0});
             ga('clientTracker.send', 'event', {0});
             </script>'''.format(data)
@@ -129,7 +129,7 @@ class PlanSelectionEvent(Event):
 
         if self.user.get_config('monthly_ecom_jam'):
             if 'elite' in self.user.profile.plan.slug:
-                adword = u'''
+                adword = '''
                 <!-- Google Code for Monthly Elite Subscribers w/ eCom ($47/mo) Conversion Page -->
                 <script type="text/javascript">
                     /* <![CDATA[ */
@@ -150,7 +150,7 @@ class PlanSelectionEvent(Event):
                 </noscript>'''
 
             elif 'unlimited' in self.user.profile.plan.slug:
-                adword = u'''
+                adword = '''
                 <!-- Google Code for Monthly Unlimited Subscribers w/ eCom ($99/mo) Conversion Page -->
                 <script type="text/javascript">
                     /* <![CDATA[ */
@@ -171,7 +171,7 @@ class PlanSelectionEvent(Event):
                 </noscript>'''
         else:
             if 'elite' in self.user.profile.plan.slug:
-                adword = u'''
+                adword = '''
                 <!-- Google Code for Monthly Elite Subscribers ($47/mo) Conversion Page -->
                 <script type="text/javascript">
                     /* <![CDATA[ */
@@ -192,7 +192,7 @@ class PlanSelectionEvent(Event):
                 </noscript>'''
 
             elif 'unlimited' in self.user.profile.plan.slug:
-                adword = u'''
+                adword = '''
                 <!-- Google Code for Monthly Unlimited Subscribers ($99/mo) Conversion Page -->
                 <script type="text/javascript">
                     /* <![CDATA[ */
@@ -214,7 +214,7 @@ class PlanSelectionEvent(Event):
                 '''
 
         if adword:
-            script = u'''{}\n{}'''.format(script, adword)
+            script = '''{}\n{}'''.format(script, adword)
 
         return script
 

@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='sidebarlink',
             name='inherit_plan',
-            field=models.BooleanField(default=False, verbose_name=b'Show For Subuser If Parent Can See It'),
+            field=models.BooleanField(default=False, verbose_name='Show For Subuser If Parent Can See It'),
         ),
     ]

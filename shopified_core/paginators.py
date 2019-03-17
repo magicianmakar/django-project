@@ -16,8 +16,8 @@ class SimplePaginator(Paginator):
         """
         page_count = self.num_pages
 
-        pages = range(max(1, self.current_page - 5), self.current_page) + \
-            range(self.current_page, min(page_count + 1, self.current_page + 5))
+        pages = list(range(max(1, self.current_page - 5), self.current_page)) + \
+            list(range(self.current_page, min(page_count + 1, self.current_page + 5)))
 
         if 1 not in pages:
             pages = [1, None] + pages

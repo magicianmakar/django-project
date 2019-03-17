@@ -15,16 +15,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyordertrack',
             name='source_status_details',
-            field=models.CharField(blank=True, max_length=512, null=True, verbose_name=b'Source Status Details'),
+            field=models.CharField(blank=True, max_length=512, null=True, verbose_name='Source Status Details'),
         ),
         migrations.AlterField(
             model_name='shopifyproduct',
             name='product_type',
-            field=models.CharField(blank=True, default=b'', max_length=255),
+            field=models.CharField(blank=True, default='', max_length=255),
         ),
         migrations.AlterField(
             model_name='shopifyproduct',
             name='tag',
-            field=models.TextField(blank=True, default=b''),
+            field=models.TextField(blank=True, default=''),
         ),
     ]

@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifyordertrack',
             name='source_type',
-            field=models.CharField(max_length=512, null=True, verbose_name=b'Source Type', blank=True),
+            field=models.CharField(max_length=512, null=True, verbose_name='Source Type', blank=True),
         ),
     ]

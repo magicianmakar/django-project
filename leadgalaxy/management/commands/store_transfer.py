@@ -31,7 +31,7 @@ class Command(DropifiedBaseCommand):
 
         shop = re.findall(r'[^/@\.]+\.myshopify\.com', options['store'])
         if not shop:
-            self.write(u'Store {} not found'.format(shop))
+            self.write('Store {} not found'.format(shop))
             return
         else:
             shop = shop.pop()

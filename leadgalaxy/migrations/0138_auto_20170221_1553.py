@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='aliexpressproductchange',
             name='notified_at',
-            field=models.DateTimeField(null=True, verbose_name=b'Email Notification Sate'),
+            field=models.DateTimeField(null=True, verbose_name='Email Notification Sate'),
         ),
         migrations.AlterField(
             model_name='aliexpressproductchange',

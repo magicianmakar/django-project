@@ -16,7 +16,7 @@ from raven.contrib.celery import register_signal
 
 def setup_postgres_timeout(connection, **kwargs):
     if settings.CELERY_STATEMENT_TIMEOUT and connection.vendor == 'postgresql':
-        print 'Set Query timeout'
+        print('Set Query timeout')
         with connection.cursor() as cursor:
             cursor.execute('SET statement_timeout TO {};'.format(settings.CELERY_STATEMENT_TIMEOUT))
 

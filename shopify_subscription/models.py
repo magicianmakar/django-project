@@ -32,8 +32,8 @@ class ShopifySubscription(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
-        return u"{} {}".format(self.user.username, self.plan.title if self.plan else 'None')
+    def __str__(self):
+        return "{} {}".format(self.user.username, self.plan.title if self.plan else 'None')
 
     def retrieve(self, commit=True):
         if self.charge_type == 'recurring':

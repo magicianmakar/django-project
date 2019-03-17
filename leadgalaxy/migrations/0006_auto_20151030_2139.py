@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyproduct',
             name='shopify_id',
-            field=models.BigIntegerField(default=0, verbose_name=b'Shopif Product ID'),
+            field=models.BigIntegerField(default=0, verbose_name='Shopif Product ID'),
         ),
     ]

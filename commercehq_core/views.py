@@ -57,7 +57,7 @@ from .utils import (
     get_chq_product
 )
 
-import utils
+from . import utils
 
 from product_alerts.models import ProductChange
 from product_alerts.utils import variant_index_from_supplier_sku
@@ -461,7 +461,7 @@ class ProductMappingView(DetailView):
             if mapped:
                 options = mapped
             else:
-                options = map(lambda a: {'title': a}, v['variant'])
+                options = [{'title': a} for a in v['variant']]
 
             try:
                 if type(options) not in [list, dict]:
@@ -476,7 +476,7 @@ class ProductMappingView(DetailView):
             context['commercehq_product']['variants'][i]['default'] = options
             seen_variants.append(str(v['id']))
 
-        for k in variants_map.keys():
+        for k in list(variants_map.keys()):
             if k not in seen_variants:
                 del variants_map[k]
 
@@ -1143,7 +1143,7 @@ class OrderPlaceRedirectView(RedirectView):
         if not redirect_url:
             redirect_url = product
 
-        for k in self.request.GET.keys():
+        for k in list(self.request.GET.keys()):
             if k.startswith('SA') and k not in redirect_url and self.request.GET[k]:
                 redirect_url = affiliate_link_set_query(redirect_url, k, self.request.GET[k])
 
@@ -1198,7 +1198,7 @@ class OrdersTrackList(ListView):
             'update': 'status_updated_at',
         }
 
-        for k, v in order_map.items():
+        for k, v in list(order_map.items()):
             order_map['-' + k] = '-' + v
 
         sorting = self.request.GET.get('sort', '-update')

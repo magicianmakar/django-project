@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='aliexpressproductchange',
             name='seen',
-            field=models.BooleanField(default=False, verbose_name=b'User viewed the changes'),
+            field=models.BooleanField(default=False, verbose_name='User viewed the changes'),
         ),
         migrations.AlterField(
             model_name='aliexpressproductchange',
             name='hidden',
-            field=models.BooleanField(default=False, verbose_name=b'Archived change'),
+            field=models.BooleanField(default=False, verbose_name='Archived change'),
         ),
     ]

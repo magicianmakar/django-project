@@ -73,7 +73,7 @@ class Command(DropifiedBaseCommand):
         try:
             self.es.indices.get(index='shopify-order')
         except NotFoundError:
-            print 'Created Index...'
+            print('Created Index...')
             self.es.indices.create(index='shopify-order', body={
                 "mappings": {
                     "order": {

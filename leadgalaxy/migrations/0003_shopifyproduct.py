@@ -19,8 +19,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('data', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Submittion date')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name=b'Last update')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')),
+                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Last update')),
                 ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE)),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],

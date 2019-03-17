@@ -57,21 +57,21 @@ class StripeCustomerTestCase(BaseTestCase):
         customer.invoices
         customer.invoices
         customer.invoices
-        self.assertEquals(invoice_list.call_count, 2)
+        self.assertEqual(invoice_list.call_count, 2)
 
     @patch('stripe_subscription.models.stripe.Invoice.list')
     def test_invoices_must_fetch_all_invoices(self, invoice_list):
         invoice_list.side_effect = self.side_effect
         customer = f.StripeCustomerFactory(customer_id='test')
         customer.invoices
-        self.assertEquals(len(customer.invoices), 4)
+        self.assertEqual(len(customer.invoices), 4)
 
     @patch('stripe_subscription.models.stripe.Invoice.list')
     def test_invoices_must_make_multiple_calls_to_fetch_all(self, invoice_list):
         invoice_list.side_effect = self.side_effect
         customer = f.StripeCustomerFactory(customer_id='test')
         customer.invoices
-        self.assertEquals(invoice_list.call_count, 2)
+        self.assertEqual(invoice_list.call_count, 2)
 
     @patch('stripe_subscription.models.stripe.Invoice.list')
     def test_invoices_next_calls_must_start_after_last_invoice_id(self, invoice_list):
@@ -106,5 +106,5 @@ class StripeCustomerTestCase(BaseTestCase):
         )
         customer = f.StripeCustomerFactory(customer_id='test')
         customer.invoices
-        self.assertEquals(sleep.call_count, 1)
-        self.assertEquals(invoice_list.call_count, 2)
+        self.assertEqual(sleep.call_count, 1)
+        self.assertEqual(invoice_list.call_count, 2)

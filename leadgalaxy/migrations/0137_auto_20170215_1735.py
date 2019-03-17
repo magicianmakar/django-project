@@ -14,21 +14,21 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='auto_fulfill_limit',
-            field=models.IntegerField(default=-1, verbose_name=b'Auto Fulfill Limit'),
+            field=models.IntegerField(default=-1, verbose_name='Auto Fulfill Limit'),
         ),
         migrations.AlterField(
             model_name='groupplan',
             name='boards',
-            field=models.IntegerField(default=0, verbose_name=b'Boards Limit'),
+            field=models.IntegerField(default=0, verbose_name='Boards Limit'),
         ),
         migrations.AlterField(
             model_name='groupplan',
             name='products',
-            field=models.IntegerField(default=0, verbose_name=b'Products Limit'),
+            field=models.IntegerField(default=0, verbose_name='Products Limit'),
         ),
         migrations.AlterField(
             model_name='groupplan',
             name='stores',
-            field=models.IntegerField(default=0, verbose_name=b'Stores Limit'),
+            field=models.IntegerField(default=0, verbose_name='Stores Limit'),
         ),
     ]

@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='stripecustomer',
             name='customer_id',
-            field=models.CharField(max_length=255, null=True, verbose_name=b'Stripe Customer ID'),
+            field=models.CharField(max_length=255, null=True, verbose_name='Stripe Customer ID'),
         ),
     ]

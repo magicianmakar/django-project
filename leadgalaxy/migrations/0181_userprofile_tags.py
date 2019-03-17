@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='tags',
-            field=models.TextField(blank=True, null=True, verbose_name=b'User Tags'),
+            field=models.TextField(blank=True, null=True, verbose_name='User Tags'),
         ),
     ]

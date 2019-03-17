@@ -14,16 +14,16 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyorder',
             name='tags',
-            field=models.TextField(default=b'', null=True, db_index=True, blank=True),
+            field=models.TextField(default='', null=True, db_index=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyorderline',
             name='title',
-            field=models.TextField(default=b'', null=True, db_index=True, blank=True),
+            field=models.TextField(default='', null=True, db_index=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyorderline',
             name='variant_title',
-            field=models.TextField(default=b'', null=True, blank=True),
+            field=models.TextField(default='', null=True, blank=True),
         ),
     ]

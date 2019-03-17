@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='facebookaccount',
             name='campaigns',
-            field=models.TextField(default=b'', blank=True),
+            field=models.TextField(default='', blank=True),
         ),
         migrations.AddField(
             model_name='facebookaccount',
@@ -31,6 +31,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='facebookadcost',
             name='campaign_id',
-            field=models.CharField(default=b'', max_length=100, null=True),
+            field=models.CharField(default='', max_length=100, null=True),
         ),
     ]

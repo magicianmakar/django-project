@@ -1,17 +1,16 @@
-# -*- coding: utf-8 -*-
 import re
 import traceback
 
-import StringIO
-import base64
+import io
 import hmac
 import mimetypes
 import random
 import time
-import urllib
+
 import zlib
 from hashlib import sha1
 from io import BytesIO
+from urllib.parse import urlencode, quote_plus
 
 import arrow
 import requests
@@ -75,6 +74,8 @@ from shopified_core.utils import (
     aws_s3_context,
     encode_params,
     decode_params,
+    base64_encode,
+    base64_decode,
 )
 
 from shopify_orders.models import (
@@ -95,8 +96,8 @@ from product_alerts.utils import variant_index_from_supplier_sku, delete_product
 
 from profit_dashboard.models import FacebookAccess
 
-import tasks
-import utils
+from . import tasks
+from . import utils
 from .forms import (
     EmailAuthenticationForm,
     EmailForm,
@@ -125,6 +126,7 @@ from .models import (
     UserUpload,
 )
 from .templatetags.template_helper import money_format
+from functools import reduce
 
 
 @login_required
@@ -218,8 +220,8 @@ def webhook(request, provider, option):
                       from_email=settings.DEFAULT_FROM_EMAIL,
                       message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
                               traceback.format_exc(),
-                              utils.format_data(dict(request.GET.iteritems()), False),
-                              utils.format_data(dict(request.POST.iteritems()), False),
+                              utils.format_data(dict(iter(request.GET.items())), False),
+                              utils.format_data(dict(iter(request.POST.items())), False),
                               utils.format_data(request.META, False)))
 
             raise Http404('Error during proccess')
@@ -272,8 +274,8 @@ def webhook(request, provider, option):
                           from_email=settings.DEFAULT_FROM_EMAIL,
                           message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
                               traceback.format_exc(),
-                              utils.format_data(dict(request.GET.iteritems()), False),
-                              utils.format_data(dict(request.POST.iteritems()), False),
+                              utils.format_data(dict(iter(request.GET.items())), False),
+                              utils.format_data(dict(iter(request.POST.items())), False),
                               utils.format_data(request.META, False)))
 
                 raise Http404('Error during proccess')
@@ -318,7 +320,7 @@ def webhook(request, provider, option):
             elif request.method != 'POST':
                 raise Exception('Unexpected HTTP Method: {}'.request.method)
 
-            params = dict(request.POST.iteritems())
+            params = dict(iter(request.POST.items()))
 
             # verify and parse post
             utils.jvzoo_verify_post(params)
@@ -349,7 +351,7 @@ def webhook(request, provider, option):
 
                     try:
                         user = User.objects.get(email__iexact=data['email'])
-                        print 'WARNING: JVZOO SALE UPGARDING: {} to {}'.format(data['email'], plan.title)
+                        print('WARNING: JVZOO SALE UPGARDING: {} to {}'.format(data['email'], plan.title))
                     except User.DoesNotExist:
                         user = None
                     except Exception:
@@ -517,7 +519,7 @@ def webhook(request, provider, option):
         elif request.method != 'POST':
             raise Exception('Unexpected HTTP Method: {}'.request.method)
 
-        params = dict(request.POST.iteritems())
+        params = dict(iter(request.POST.items()))
 
         # verify and parse request
         utils.zaxaa_verify_post(params)
@@ -548,7 +550,7 @@ def webhook(request, provider, option):
 
                 try:
                     user = User.objects.get(email__iexact=data['email'])
-                    print 'WARNING: ZAXAA SALE UPGARDING: {} to {}'.format(data['email'], plan.title)
+                    print('WARNING: ZAXAA SALE UPGARDING: {} to {}'.format(data['email'], plan.title))
                 except User.DoesNotExist:
                     user = None
                 except Exception:
@@ -1029,7 +1031,7 @@ def webhook(request, provider, option):
                     'response_url': request.POST['response_url'],
                 }
 
-                print options
+                print(options)
 
             except:
                 return HttpResponse(":x: Invalid Command Format")
@@ -1149,20 +1151,20 @@ def webhook(request, provider, option):
                 return HttpResponse(':x: Number of arguments is not correct: {}'.format(request.POST['text']))
 
             count, models = access.delete()
-            return HttpResponse("Deleted {} Facebook Synced Accounts".format(models.get(u'profit_dashboard.FacebookAccess', 0)))
+            return HttpResponse("Deleted {} Facebook Synced Accounts".format(models.get('profit_dashboard.FacebookAccess', 0)))
 
         elif request.POST['command'] == '/dash-facebook-list':
             access_list = FacebookAccess.objects.select_related('store').filter(user__email=request.POST['text'])
             result = []
             for access in access_list:
-                accounts = u', '.join([a.account_name for a in access.accounts.all()])
-                result.append(u'Store: {} | Facebook: {} | Accounts: {}'.format(
+                accounts = ', '.join([a.account_name for a in access.accounts.all()])
+                result.append('Store: {} | Facebook: {} | Accounts: {}'.format(
                     access.store.shop,
                     access.facebook_user_id,
                     accounts
                 ))
 
-            return HttpResponse('Results:\n{}'.format(u'\n'.join(result if result else ['Not found'])))
+            return HttpResponse('Results:\n{}'.format('\n'.join(result if result else ['Not found'])))
 
         elif request.POST['command'] == '/user-tags':
             # Available Commands:
@@ -1179,13 +1181,13 @@ def webhook(request, provider, option):
 
                 result = []
                 for profile in profiles:
-                    result.append(u'{}|{}|{}'.format(
+                    result.append('{}|{}|{}'.format(
                         profile.user.email,
                         profile.user.get_full_name(),
                         profile.tags
                     ))
 
-                return HttpResponse('Results:\n{}'.format(u'\n'.join(result if result else ['Not found'])))
+                return HttpResponse('Results:\n{}'.format('\n'.join(result if result else ['Not found'])))
             else:
                 try:
                     profile = UserProfile.objects.get(user__email__iexact=args[1])
@@ -1770,7 +1772,7 @@ def product_mapping(request, product_id):
             if v.get('option3'):
                 options.append(v.get('option3'))
 
-            options = map(lambda a: {'title': a}, options)
+            options = [{'title': a} for a in options]
 
         try:
             if type(options) not in [list, dict]:
@@ -1786,7 +1788,7 @@ def product_mapping(request, product_id):
         shopify_product['variants'][i]['default'] = options
         seen_variants.append(str(v['id']))
 
-    for k in variants_map.keys():
+    for k in list(variants_map.keys()):
         if k not in seen_variants:
             del variants_map[k]
 
@@ -1996,7 +1998,7 @@ def bulk_edit(request, what):
 
         # get shopify products per a store
         products = []
-        for store_id in stores.keys():
+        for store_id in list(stores.keys()):
             store = stores[store_id]
             permissions.user_can_view(request.user, store)
             store_products = utils.get_shopify_products(
@@ -2007,7 +2009,7 @@ def bulk_edit(request, what):
                 product['store'] = store_id
                 products.append(product)
 
-        stores = stores.values()
+        stores = list(stores.values())
 
         breadcrumbs = [{'title': 'Products', 'url': '/product'}, 'Bulk Edit']
         if len(stores) == 1:
@@ -2169,7 +2171,7 @@ def get_shipping_info(request):
 
     if not request.user.is_authenticated:
         return HttpResponseRedirect('%s?%s' % (reverse('login'),
-                                               urllib.urlencode({'next': request.get_full_path()})))
+                                               urlencode({'next': request.get_full_path()})))
 
     if request.GET.get('chq'):
         product = get_object_or_404(CommerceHQProduct, id=request.GET.get('product'))
@@ -2289,7 +2291,7 @@ def acp_users_list(request):
         rep = requests.get('https://dashboard.stripe.com/v1/search', params={
             'count': 20,
             'include[]': 'total_count',
-            'query': u'is:customer {}'.format(users[0].email),
+            'query': 'is:customer {}'.format(users[0].email),
             'facets': 'true'
         }, headers={
             'authorization': 'Bearer {}'.format(settings.STRIPE_SECRET_KEY),
@@ -2330,8 +2332,8 @@ def acp_users_list(request):
                     'status': i.status,
                     'dispute': i.dispute,
                     'failure_message': i.failure_message,
-                    'amount': u'${:0.2f}'.format(i.amount / 100.0),
-                    'amount_refunded': u'${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
+                    'amount': '${:0.2f}'.format(i.amount / 100.0),
+                    'amount_refunded': '${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
                 }
 
                 if i.invoice:
@@ -2464,7 +2466,7 @@ def acp_graph(request):
                              tracking_fulfilled='updated_at__gt',
                              tracking_auto='updated_at__gt',
                              tracking_all='created_at__gt',
-                             shopify_orders='created_at__gt').iteritems():
+                             shopify_orders='created_at__gt').items():
             if key in data:
                 data[key] = data[key].filter(**{val: time_threshold})
 
@@ -2889,7 +2891,7 @@ def autocomplete(request, target):
             results = []
             for v in rep.json()['customers']:
                 results.append({
-                    'value': u'{} {} ({})'.format(v['first_name'] or '', v['last_name'] or '', v['email']).strip(),
+                    'value': '{} {} ({})'.format(v['first_name'] or '', v['last_name'] or '', v['email']).strip(),
                     'data': v['id'],
                 })
 
@@ -2907,7 +2909,7 @@ def upload_file_sign(request):
     if not request.user.can('image_uploader.use'):
         return JsonResponse({'error': 'You don\'t have access to this feature.'})
 
-    object_name = urllib.quote_plus(request.GET.get('file_name'))
+    object_name = quote_plus(request.GET.get('file_name'))
     mime_type = request.GET.get('file_type')
 
     if 'image' not in mime_type.lower():
@@ -2918,8 +2920,8 @@ def upload_file_sign(request):
 
     string_to_sign = "PUT\n\n%s\n%d\n%s\n/%s/%s" % (mime_type, expires, amz_headers, settings.AWS_STORAGE_BUCKET_NAME, object_name)
 
-    signature = base64.encodestring(hmac.new(settings.AWS_SECRET_ACCESS_KEY.encode(), string_to_sign.encode('utf8'), sha1).digest())
-    signature = urllib.quote_plus(signature.strip())
+    signature = base64_encode(hmac.new(settings.AWS_SECRET_ACCESS_KEY.encode(), string_to_sign.encode(), sha1).digest())
+    signature = quote_plus(signature.strip())
 
     url = 'https://%s.s3.amazonaws.com/%s' % (settings.AWS_STORAGE_BUCKET_NAME, object_name)
 
@@ -3082,7 +3084,7 @@ def save_image_s3(request):
         if not user.can('pixlr_photo_editor.use'):
             return render(request, 'upgrade.html')
 
-        fp = StringIO.StringIO(request.body)
+        fp = io.BytesIO(request.body)
         fp.read(2000)  # First 2000 bytes are json settings
 
         # TODO: File size limit
@@ -3097,7 +3099,7 @@ def save_image_s3(request):
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
         old_url = request.POST.get('old_url')
-        fp = StringIO.StringIO(requests.get(img_url).content)
+        fp = io.BytesIO(requests.get(img_url).content)
         img_url = '%s.png' % img_url
 
     else:
@@ -3112,7 +3114,7 @@ def save_image_s3(request):
         if not utils.upload_from_url(img_url, user.profile.import_stores()):
             raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
 
-        fp = StringIO.StringIO(requests.get(img_url).content)
+        fp = io.BytesIO(requests.get(img_url).content)
 
     # Randomize filename in order to not overwrite an existing file
     img_name = utils.random_filename(img_url.split('/')[-1])
@@ -3195,7 +3197,7 @@ def orders_view(request):
                 request.user = user
 
     except ApiLoginException:
-        return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, urllib.quote_plus(request.GET.urlencode())))
+        return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, quote_plus(request.GET.urlencode())))
 
     except:
         raven_client.captureException()
@@ -3340,7 +3342,7 @@ def orders_view(request):
         open_orders = store.get_orders_count(status, fulfillment, financial,
                                              query=safe_int(order_id, query),
                                              created_range=[created_at_start, created_at_end])
-        orders = xrange(0, open_orders)
+        orders = range(0, open_orders)
 
         paginator = utils.ShopifyOrderPaginator(orders, post_per_page)
         paginator.set_store(store)
@@ -3539,7 +3541,7 @@ def orders_view(request):
         matchs = es.search(index='shopify-order', doc_type='order', body=body)
         hits = matchs['hits']['hits']
         orders = ShopifyOrder.objects.filter(id__in=[i['_id'] for i in hits])
-        paginator = FakePaginator(xrange(0, matchs['hits']['total']), post_per_page)
+        paginator = FakePaginator(range(0, matchs['hits']['total']), post_per_page)
         paginator.set_orders(orders)
 
         page = min(max(1, page), paginator.num_pages)
@@ -3730,7 +3732,7 @@ def orders_view(request):
                         'breadcrumbs': breadcrumbs
                     })
 
-                cache.set(cache_key, zlib.compress(json.dumps(shopify_orders)), timeout=300)
+                cache.set(cache_key, zlib.compress(json.dumps(shopify_orders).encode()), timeout=300)
                 cache.delete('saved_orders_clear_{}'.format(store.id))
             else:
                 shopify_orders = json.loads(zlib.decompress(shopify_orders))
@@ -3995,10 +3997,10 @@ def orders_view(request):
                             if not prop['name'] or prop['name'].startswith('_'):
                                 continue
 
-                            item_note = u'{}{}: {}\n'.format(item_note, prop['name'], prop['value'])
+                            item_note = '{}{}: {}\n'.format(item_note, prop['name'], prop['value'])
 
                         if item_note:
-                            item_note = u'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
+                            item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
 
                             order_data['order']['item_note'] = item_note
                             order['line_items'][i]['item_note'] = item_note
@@ -4112,7 +4114,7 @@ def orders_track(request):
         'update': 'status_updated_at',
     }
 
-    for k, v in order_map.items():
+    for k, v in list(order_map.items()):
         order_map['-' + k] = '-' + v
 
     sorting = request.GET.get('sort', '-update')
@@ -4278,7 +4280,7 @@ def orders_place(request):
                 request.user = user
 
     except ApiLoginException:
-        return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, urllib.quote_plus(request.GET.urlencode())))
+        return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, quote_plus(request.GET.urlencode())))
 
     except:
         raven_client.captureException()
@@ -4336,7 +4338,7 @@ def orders_place(request):
     if not redirect_url:
         redirect_url = product
 
-    for k in request.GET.keys():
+    for k in list(request.GET.keys()):
         if k.startswith('SA') and k not in redirect_url and request.GET[k]:
             redirect_url = utils.affiliate_link_set_query(redirect_url, k, request.GET[k])
 
@@ -4390,7 +4392,7 @@ def orders_place(request):
         except ShopifyStore.DoesNotExist:
             raise Http404('Store not found')
 
-        for k in request.GET.keys():
+        for k in list(request.GET.keys()):
             if k == 'SAPlaceOrder':
                 event_data['data_id'] = request.GET[k]
 
@@ -4668,7 +4670,7 @@ def products_collections(request, collection):
         'sort': 'order'
     }
 
-    for k, v in filter_map.items():
+    for k, v in list(filter_map.items()):
         if request.GET.get(k):
             extra_filter[v] = request.GET.get(k)
 
@@ -4747,7 +4749,7 @@ def register(request, registration=None, subscribe_plan=None):
 
             reg_coupon = request.GET.get('cp')
             if reg_coupon:
-                new_user.set_config('registration_discount', Signer().unsign(base64.decodestring(reg_coupon)))
+                new_user.set_config('registration_discount', Signer().unsign(base64_decode(reg_coupon)))
 
             if subscribe_plan:
                 try:
@@ -4799,7 +4801,7 @@ def register(request, registration=None, subscribe_plan=None):
     reg_coupon = request.GET.get('cp')
     if reg_coupon:
         try:
-            reg_coupon = Signer().unsign(base64.decodestring(reg_coupon))
+            reg_coupon = Signer().unsign(base64_decode(reg_coupon))
             reg_coupon = stripe.Coupon.retrieve(reg_coupon)
             if reg_coupon.redeem_by <= arrow.utcnow().timestamp:
                 reg_coupon = None

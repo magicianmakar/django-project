@@ -14,16 +14,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='boards',
-            field=models.IntegerField(default=-2, help_text=b'-2: Default Plan/Bundles limit<br/>-1: Unlimited Boards'),
+            field=models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Boards'),
         ),
         migrations.AddField(
             model_name='userprofile',
             name='products',
-            field=models.IntegerField(default=-2, help_text=b'-2: Default Plan/Bundles limit<br/>-1: Unlimited Products'),
+            field=models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Products'),
         ),
         migrations.AddField(
             model_name='userprofile',
             name='stores',
-            field=models.IntegerField(default=-2, help_text=b'-2: Default Plan/Bundles limit<br/>-1: Unlimited Stores'),
+            field=models.IntegerField(default=-2, help_text='-2: Default Plan/Bundles limit<br/>-1: Unlimited Stores'),
         ),
     ]

@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='baremetricssubscription',
             name='status',
-            field=models.CharField(blank=True, max_length=64, null=True, verbose_name=b'Shopify Charge Status'),
+            field=models.CharField(blank=True, max_length=64, null=True, verbose_name='Shopify Charge Status'),
         ),
     ]

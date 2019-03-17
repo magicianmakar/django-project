@@ -150,7 +150,7 @@ class Command(DropifiedBaseCommand):
                 elif e.response.status_code == 422:
                     if 'is already fulfilled' in rep.text:
                         # Mark as fulfilled but not auto-fulfilled
-                        self.write(u'Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
+                        self.write('Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
                         order.shopify_status = 'fulfilled'
                         order.save()
 
@@ -159,7 +159,7 @@ class Command(DropifiedBaseCommand):
                         return False
 
                     elif 'This order has been canceled' in rep.text:
-                        self.write(u'Order has been canceled #{} in [{}]'.format(order.order_id, order.store.title))
+                        self.write('Order has been canceled #{} in [{}]'.format(order.order_id, order.store.title))
                         order.hidden = True
                         order.save()
 
@@ -169,7 +169,7 @@ class Command(DropifiedBaseCommand):
 
                     elif 'invalid for this fulfillment service' in rep.text:
                         # Using a different fulfillment_service (i.e: amazon_marketplace_web)
-                        self.write(u'Invalid for this fulfillment service #{} in [{}]'.format(order.order_id, order.store.title))
+                        self.write('Invalid for this fulfillment service #{} in [{}]'.format(order.order_id, order.store.title))
                         order.shopify_status = 'fulfilled'
                         order.save()
 
@@ -242,7 +242,7 @@ class Command(DropifiedBaseCommand):
                         if locations:
                             # We are trying locations one by one
                             location = locations.pop()
-                            self.write(u'Re-trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
+                            self.write('Re-trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
 
                             if not locations:
                                 # Make sure we don't escape the last location is len(locations) > 3
@@ -255,18 +255,18 @@ class Command(DropifiedBaseCommand):
 
                             trying_locations = True
 
-                            self.write(u'Trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
+                            self.write('Trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
 
                         if location:
                             api_data["fulfillment"]["location_id"] = location['id']
 
                             self.store_locations[order.store.id] = location['id']
-                            self.write(u'Change location to {} in #{} [{}]'.format(location['name'], order.order_id, order.store.shop))
+                            self.write('Change location to {} in #{} [{}]'.format(location['name'], order.order_id, order.store.shop))
 
-                            self.log_fulfill_error(order, u'Fulfill in location: {}'.format(location['name']), shopify_api=False)
+                            self.log_fulfill_error(order, 'Fulfill in location: {}'.format(location['name']), shopify_api=False)
 
                         else:
-                            raven_client.captureMessage(u'No location found', extra={'track': order.id, 'store': order.store.shop})
+                            raven_client.captureMessage('No location found', extra={'track': order.id, 'store': order.store.shop})
 
                             self.log_fulfill_error(order, 'No location found', shopify_api=False)
 
@@ -283,7 +283,7 @@ class Command(DropifiedBaseCommand):
 
                     self.log_fulfill_error(order, 'Order Not Found')
 
-                    self.write(u'Not found #{} in [{}]'.format(order.order_id, order.store.title))
+                    self.write('Not found #{} in [{}]'.format(order.order_id, order.store.title))
                     order.hidden = True
                     order.save()
 
@@ -336,7 +336,7 @@ class Command(DropifiedBaseCommand):
 
     def log_fulfill_error(self, order, msg, shopify_api=True):
         if shopify_api:
-            msg = u'Shopify API Error: {}'.format(msg)
+            msg = 'Shopify API Error: {}'.format(msg)
 
         ShopifyOrderLog.objects.update_order_log(
             store=order.store,

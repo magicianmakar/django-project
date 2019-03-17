@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='ips',
-            field=models.TextField(null=True, verbose_name=b'User IPs', blank=True),
+            field=models.TextField(null=True, verbose_name='User IPs', blank=True),
         ),
     ]

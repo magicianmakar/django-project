@@ -6,7 +6,7 @@ from django.core.cache import cache
 
 from mock import Mock, patch
 
-import factories as f
+from . import factories as f
 
 from leadgalaxy.tests.factories import UserFactory
 from analytic_events.models import SuccessfulPaymentEvent
@@ -27,9 +27,9 @@ class InvoicePayView(BaseTestCase):
 
     def test_must_be_ajax_only(self):
         r = self.client.post(reverse('invoice_pay', kwargs={'invoice_id': 'a'}))
-        self.assertEquals(r.status_code, 500)
+        self.assertEqual(r.status_code, 500)
         content = json.loads(r.content)
-        self.assertEquals(content['error'], 'Bad Request')
+        self.assertEqual(content['error'], 'Bad Request')
 
     @patch('stripe_subscription.models.stripe.Invoice.retrieve')
     @patch('stripe_subscription.models.User.is_recurring_customer')
@@ -37,7 +37,7 @@ class InvoicePayView(BaseTestCase):
         is_recurring_customer.return_value = False
         headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
         r = self.client.post(reverse('invoice_pay', kwargs={'invoice_id': 'a'}), **headers)
-        self.assertEquals(r.status_code, 404)
+        self.assertEqual(r.status_code, 404)
         self.assertFalse(retrieve.called)
 
     @patch('stripe_subscription.views.get_stripe_invoice')
@@ -48,7 +48,7 @@ class InvoicePayView(BaseTestCase):
         headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
         r = self.client.post(reverse('invoice_pay', kwargs={'invoice_id': 'a'}), **headers)
         self.assertTrue(get_stripe_invoice.called)
-        self.assertEquals(r.status_code, 404)
+        self.assertEqual(r.status_code, 404)
 
     @patch('stripe_subscription.views.get_stripe_invoice')
     @patch('stripe_subscription.models.User.is_recurring_customer')
@@ -60,7 +60,7 @@ class InvoicePayView(BaseTestCase):
         headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
         r = self.client.post(reverse('invoice_pay', kwargs={'invoice_id': 'a'}), **headers)
         self.assertTrue(get_stripe_invoice.called)
-        self.assertEquals(r.status_code, 404)
+        self.assertEqual(r.status_code, 404)
 
     @patch('stripe_subscription.views.get_stripe_invoice')
     @patch('stripe_subscription.models.User.is_recurring_customer')
@@ -73,7 +73,7 @@ class InvoicePayView(BaseTestCase):
         headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
         r = self.client.post(reverse('invoice_pay', kwargs={'invoice_id': 'a'}), **headers)
         self.assertTrue(get_stripe_invoice.called)
-        self.assertEquals(r.status_code, 500)
+        self.assertEqual(r.status_code, 500)
 
     @patch('stripe_subscription.views.get_stripe_invoice')
     @patch('stripe_subscription.models.User.is_recurring_customer')
@@ -86,7 +86,7 @@ class InvoicePayView(BaseTestCase):
         headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
         r = self.client.post(reverse('invoice_pay', kwargs={'invoice_id': 'a'}), **headers)
         self.assertTrue(get_stripe_invoice.called)
-        self.assertEquals(r.status_code, 500)
+        self.assertEqual(r.status_code, 500)
 
     @patch('stripe_subscription.views.refresh_invoice_cache')
     @patch('stripe_subscription.views.get_stripe_invoice')
@@ -103,4 +103,4 @@ class InvoicePayView(BaseTestCase):
         r = self.client.post(reverse('invoice_pay', kwargs={'invoice_id': 'a'}), **headers)
         self.assertTrue(get_stripe_invoice.called)
         self.assertTrue(refresh_invoice_cache.called)
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)

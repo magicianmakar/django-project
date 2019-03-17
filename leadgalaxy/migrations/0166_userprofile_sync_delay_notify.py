@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='sync_delay_notify',
-            field=models.IntegerField(default=0, null=True, verbose_name=b'Notify if no tracking number is found (days)', db_index=True),
+            field=models.IntegerField(default=0, null=True, verbose_name='Notify if no tracking number is found (days)', db_index=True),
         ),
     ]

@@ -11,14 +11,14 @@ import simplejson as json
 import requests
 import textwrap
 import hashlib
-import urlparse
+from urllib.parse import urlparse
 
 import arrow
 from pusher import Pusher
 
 from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
-from shopified_core.utils import safe_int, safe_str, get_domain, OrderErrors
+from shopified_core.utils import safe_int, safe_str, get_domain, base64_encode, OrderErrors
 from product_alerts.utils import monitor_product
 
 ENTITY_STATUS_CHOICES = (
@@ -160,7 +160,7 @@ class UserProfile(models.Model):
             return None
 
     def bundles_list(self):
-        return map(lambda b: b.replace('Bundle', '').strip(), self.bundles.all().values_list('title', flat=True))
+        return [b.replace('Bundle', '').strip() for b in self.bundles.all().values_list('title', flat=True)]
 
     def apply_registration(self, reg, verbose=False):
         if reg.plan is None and reg.bundle is None:
@@ -194,15 +194,15 @@ class UserProfile(models.Model):
                     self.plan_expire_at = expire.datetime
 
             if verbose and self.plan.id != reg.plan.id:
-                print "APPLY REGISTRATION: Change User {} ({}) from '{}' to '{}'".format(
-                    self.user.username, self.user.email, self.plan.title, reg.plan.title)
+                print("APPLY REGISTRATION: Change User {} ({}) from '{}' to '{}'".format(
+                    self.user.username, self.user.email, self.plan.title, reg.plan.title))
 
         if reg.bundle:
             self.bundles.add(reg.bundle)
 
             if verbose:
-                print "APPLY REGISTRATION: Add Bundle '{}' to: {} ({})".format(
-                    reg.bundle.title, self.user.username, self.user.email)
+                print("APPLY REGISTRATION: Add Bundle '{}' to: {} ({})".format(
+                    reg.bundle.title, self.user.username, self.user.email))
 
         self.save()
 
@@ -403,7 +403,7 @@ class UserProfile(models.Model):
 
     def del_config_values(self, key, startswith=False):
         data = self.get_config()
-        for name, val in data.items():
+        for name, val in list(data.items()):
             if key == name or (startswith and name.startswith(key)):
                 del data[name]
 
@@ -551,7 +551,7 @@ class UserCompany(models.Model):
     zip_code = models.CharField(max_length=100, blank=True, default='')
     vat = models.CharField(max_length=100, blank=True, default='')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -564,9 +564,9 @@ class SubuserPermission(models.Model):
         ordering = 'pk',
         unique_together = 'codename', 'store'
 
-    def __unicode__(self):
+    def __str__(self):
         if self.store:
-            return u'{} - {}'.format(self.store.title, self.codename)
+            return '{} - {}'.format(self.store.title, self.codename)
         else:
             return self.codename
 
@@ -580,7 +580,7 @@ class SubuserCHQPermission(models.Model):
         ordering = 'pk',
         unique_together = 'codename', 'store'
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} - {}'.format(self.store.title, self.codename)
 
 
@@ -593,7 +593,7 @@ class SubuserWooPermission(models.Model):
         ordering = 'pk',
         unique_together = 'codename', 'store'
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} - {}'.format(self.store.title, self.codename)
 
 
@@ -606,7 +606,7 @@ class SubuserGearPermission(models.Model):
         ordering = 'pk',
         unique_together = 'codename', 'store'
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} - {}'.format(self.store.title, self.codename)
 
 
@@ -621,7 +621,7 @@ def user_get_access_token(self):
         access_token = AccessToken.objects.filter(user=self).latest('created_at')
     except:
         token = get_random_string(32)
-        token = hashlib.md5(token).hexdigest()
+        token = hashlib.md5(token.encode()).hexdigest()
 
         access_token = AccessToken(user=self, token=token)
         access_token.save()
@@ -743,7 +743,7 @@ class ShopifyStore(models.Model):
 
         super(ShopifyStore, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_link(self, page=None, api=False):
@@ -987,7 +987,7 @@ class AccessToken(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.token
 
 
@@ -1029,17 +1029,17 @@ class ShopifyProduct(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         try:
             title = self.title
             if len(title) > 79:
-                return u'{}...'.format(textwrap.wrap(title, width=79)[0])
+                return '{}...'.format(textwrap.wrap(title, width=79)[0])
             elif title:
                 return title
             else:
-                return u'<ShopifyProduct: %d>' % self.id
+                return '<ShopifyProduct: %d>' % self.id
         except:
-            return u'<ShopifyProduct: %d>' % self.id
+            return '<ShopifyProduct: %d>' % self.id
 
     def get_original_data(self):
         if self.original_data_key:
@@ -1054,7 +1054,7 @@ class ShopifyProduct(models.Model):
             data_store.save()
         else:
             while True:
-                data_key = hashlib.md5(get_random_string(32)).hexdigest()
+                data_key = hashlib.md5(get_random_string(32).encode()).hexdigest()
 
                 try:
                     DataStore.objects.get(key=data_key)
@@ -1170,7 +1170,7 @@ class ShopifyProduct(models.Model):
         if url:
             # Extract domain name
             try:
-                domain = urlparse.urlparse(url).hostname
+                domain = urlparse(url).hostname
             except:
                 domain = None
 
@@ -1199,7 +1199,7 @@ class ShopifyProduct(models.Model):
             }
 
             if info.get('url').startswith('//'):
-                info['url'] = u'http:{}'.format(info['url'])
+                info['url'] = 'http:{}'.format(info['url'])
 
             return info
 
@@ -1235,7 +1235,7 @@ class ShopifyProduct(models.Model):
             except:
                 current = {}
 
-            for k, v in mapping.items():
+            for k, v in list(mapping.items()):
                 current[k] = v
 
             mapping = current
@@ -1282,16 +1282,16 @@ class ShopifyProduct(models.Model):
 
         if for_extension and mapping:
             if name:
-                if type(mapping) in [str, unicode]:
+                if type(mapping) is str:
                     mapping = mapping.split(',')
             else:
-                for k, v in mapping.items():
+                for k, v in list(mapping.items()):
                     m = str(v) if type(v) is int else v
 
                     try:
                         m = json.loads(v)
                     except:
-                        if type(v) in [str, unicode]:
+                        if type(v) is str:
                             m = v.split(',')
 
                     mapping[k] = m
@@ -1328,7 +1328,7 @@ class ShopifyProduct(models.Model):
                     if v.get('option3'):
                         options.append(v.get('option3'))
 
-                    options = map(lambda a: {'title': a}, options)
+                    options = [{'title': a} for a in options]
 
                 try:
                     if type(options) not in [list, dict]:
@@ -1342,7 +1342,7 @@ class ShopifyProduct(models.Model):
                 variants_map[str(v['id'])] = options
                 seen_variants.append(str(v['id']))
 
-            for k in variants_map.keys():
+            for k in list(variants_map.keys()):
                 if k not in seen_variants:
                     del variants_map[k]
 
@@ -1461,7 +1461,7 @@ class ShopifyProduct(models.Model):
             except:
                 current = {}
 
-            for k, v in mapping.items():
+            for k, v in list(mapping.items()):
                 current[k] = v
 
             mapping = current
@@ -1610,13 +1610,13 @@ class ProductSupplier(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         if self.supplier_name:
             return self.supplier_name
         elif self.supplier_url:
             return self.supplier_url
         else:
-            return u'<ProductSupplier: {}>'.format(self.id)
+            return '<ProductSupplier: {}>'.format(self.id)
 
     def get_source_id(self):
         try:
@@ -1638,9 +1638,9 @@ class ProductSupplier(models.Model):
         source_id = self.get_source_id()
         if source_id:
             if self.is_aliexpress:
-                return u'https://www.aliexpress.com/item//{}.html'.format(source_id)
+                return 'https://www.aliexpress.com/item//{}.html'.format(source_id)
             if self.is_ebay:
-                return u'https://www.ebay.com/itm/{}'.format(source_id)
+                return 'https://www.ebay.com/itm/{}'.format(source_id)
 
         return self.product_url
 
@@ -1663,7 +1663,7 @@ class ProductSupplier(models.Model):
                 else:
                     supplier_idx += 1
 
-            name = u'Supplier {}#{}'.format(self.supplier_type(), supplier_idx)
+            name = 'Supplier {}#{}'.format(self.supplier_type(), supplier_idx)
 
         return name
 
@@ -1708,8 +1708,8 @@ class ShopifyProductImage(models.Model):
 
     image = models.CharField(max_length=512, blank=True, default='')
 
-    def __unicode__(self):
-        return u'{} | {}'.format(self.product, self.variant)
+    def __str__(self):
+        return '{} | {}'.format(self.product, self.variant)
 
 
 class ShopifyOrderTrack(models.Model):
@@ -1755,7 +1755,7 @@ class ShopifyOrderTrack(models.Model):
                 source_tracking = []
                 end_reasons = []
 
-                for key, val in data.get('bundle').items():
+                for key, val in list(data.get('bundle').items()):
                     if val.get('source_status'):
                         status.append(val.get('source_status'))
 
@@ -1784,7 +1784,7 @@ class ShopifyOrderTrack(models.Model):
         super(ShopifyOrderTrack, self).save(*args, **kwargs)
 
     def encoded(self):
-        return json.dumps(self.data).encode('base64')
+        return base64_encode(json.dumps(self.data))
 
     def get_shopify_link(self):
         return self.store.get_link('/admin/orders/{}'.format(self.order_id))
@@ -1904,7 +1904,7 @@ class ShopifyOrderTrack(models.Model):
 
     def get_source_ids(self):
         if self.source_id:
-            return u', '.join(set([u'#{}'.format(i) for i in self.source_id.split(',')]))
+            return ', '.join(set(['#{}'.format(i) for i in self.source_id.split(',')]))
 
     def add_error(self, error, commit=False):
         try:
@@ -1962,8 +1962,8 @@ class ShopifyOrderTrack(models.Model):
 
         return list(set(data.get('errors', [])))
 
-    def __unicode__(self):
-        return u'{} | {}'.format(self.order_id, self.line_id)
+    def __str__(self):
+        return '{} | {}'.format(self.order_id, self.line_id)
 
 
 class ShopifyBoard(models.Model):
@@ -1980,7 +1980,7 @@ class ShopifyBoard(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def saved_count(self, request=None):
@@ -2020,7 +2020,7 @@ class ShopifyWebhook(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.token
 
     def detach(self):
@@ -2033,7 +2033,7 @@ class ShopifyWebhook(models.Model):
         try:
             requests.delete(endpoint)
         except Exception as e:
-            print 'WEBHOOK: detach excption', repr(e)
+            print('WEBHOOK: detach excption', repr(e))
             return None
 
 
@@ -2041,7 +2041,7 @@ class AppPermission(models.Model):
     name = models.CharField(max_length=512, verbose_name="Permission")
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
 
-    def __unicode__(self):
+    def __str__(self):
         return self.description
 
 
@@ -2049,8 +2049,8 @@ class ClippingMagicPlan(models.Model):
     allowed_credits = models.IntegerField(default=0)
     amount = models.IntegerField(default=0, verbose_name='In USD')
 
-    def __unicode__(self):
-        return u'{} / {}'.format(self.allowed_credits, self.amount)
+    def __str__(self):
+        return '{} / {}'.format(self.allowed_credits, self.amount)
 
 
 class ClippingMagic(models.Model):
@@ -2064,16 +2064,16 @@ class ClippingMagic(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
-        return u'{} / {} Credits'.format(self.user.username, self.remaining_credits)
+    def __str__(self):
+        return '{} / {} Credits'.format(self.user.username, self.remaining_credits)
 
 
 class CaptchaCreditPlan(models.Model):
     allowed_credits = models.IntegerField(default=0)
     amount = models.IntegerField(default=0, verbose_name='In USD')
 
-    def __unicode__(self):
-        return u'{} / {}'.format(self.allowed_credits, self.amount)
+    def __str__(self):
+        return '{} / {}'.format(self.allowed_credits, self.amount)
 
 
 class CaptchaCredit(models.Model):
@@ -2087,8 +2087,8 @@ class CaptchaCredit(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
-        return u'{} / {} Credits'.format(self.user.username, self.remaining_credits)
+    def __str__(self):
+        return '{} / {} Credits'.format(self.user.username, self.remaining_credits)
 
 
 class GroupPlan(models.Model):
@@ -2197,7 +2197,7 @@ class GroupPlan(models.Model):
     def large_badge_image(self):
         return self.badge_image.replace('_small.', '.')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
 
@@ -2232,7 +2232,7 @@ class FeatureBundle(models.Model):
     def get_description(self):
         return self.description if self.description else self.title
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
 
@@ -2247,7 +2247,7 @@ class UserUpload(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.url.replace('%2F', '/').split('/')[-1]
 
 
@@ -2325,13 +2325,13 @@ class PlanRegistration(models.Model):
         else:
             return None
 
-    def __unicode__(self):
+    def __str__(self):
         if self.plan:
-            return u'Plan: {}'.format(self.plan.title)
+            return 'Plan: {}'.format(self.plan.title)
         elif self.bundle:
-            return u'Bundle: {}'.format(self.bundle.title)
+            return 'Bundle: {}'.format(self.bundle.title)
         else:
-            return u'<PlanRegistration: {}>'.format(self.id)
+            return '<PlanRegistration: {}>'.format(self.id)
 
 
 class PlanPayment(models.Model):
@@ -2348,8 +2348,8 @@ class PlanPayment(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
-        return u'{} | {}'.format(self.provider, self.payment_id)
+    def __str__(self):
+        return '{} | {}'.format(self.provider, self.payment_id)
 
 
 class DescriptionTemplate(models.Model):
@@ -2357,7 +2357,7 @@ class DescriptionTemplate(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
 
@@ -2370,11 +2370,11 @@ class PriceMarkupRule(models.Model):
     markup_compare_value = models.FloatField(default=0.0)
     markup_type = models.CharField(max_length=25, choices=PRICE_MARKUP_TYPES, default=PRICE_MARKUP_TYPES[0][0])
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
-        name = u'{} for prices from {:0.2f} to {:0.2f}'.format(self.get_markup_type_display(), self.min_price, self.max_price)
+        name = '{} for prices from {:0.2f} to {:0.2f}'.format(self.get_markup_type_display(), self.min_price, self.max_price)
 
         if name != self.name:
             self.name = name

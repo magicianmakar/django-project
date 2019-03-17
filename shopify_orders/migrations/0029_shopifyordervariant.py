@@ -19,8 +19,8 @@ class Migration(migrations.Migration):
             name='ShopifyOrderVariant',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('order_id', models.BigIntegerField(verbose_name=b'Shopify Order ID')),
-                ('line_id', models.BigIntegerField(verbose_name=b'Shopify Line ID')),
+                ('order_id', models.BigIntegerField(verbose_name='Shopify Order ID')),
+                ('line_id', models.BigIntegerField(verbose_name='Shopify Line ID')),
                 ('variant_id', models.BigIntegerField()),
                 ('variant_title', models.TextField(null=True, blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),

@@ -210,7 +210,7 @@ class ProductFeeds(BaseTestCase):
         data = {'feed': feed.id}
         r = self.client.post('/marketing/feeds', data)
         self.assertEqual(r.status_code, 500)
-        self.assertIn('Missing parameters', r.content)
+        self.assertIn('Missing parameters', r.content.decode())
 
     def test_must_return_error_of_missing_parameters_for_chq_store(self):
         self.login()
@@ -219,7 +219,7 @@ class ProductFeeds(BaseTestCase):
         data = {'feed': feed.id}
         r = self.client.post('/marketing/feeds/chq', data)
         self.assertEqual(r.status_code, 500)
-        self.assertIn('Missing parameters', r.content)
+        self.assertIn('Missing parameters', r.content.decode())
 
     def test_must_return_error_of_missing_parameters_for_woo_store(self):
         self.login()
@@ -228,7 +228,7 @@ class ProductFeeds(BaseTestCase):
         data = {'feed': feed.id}
         r = self.client.post('/marketing/feeds/woo', data)
         self.assertEqual(r.status_code, 500)
-        self.assertIn('Missing parameters', r.content)
+        self.assertIn('Missing parameters', r.content.decode())
 
     def test_must_return_error_of_missing_parameters_for_gear_store(self):
         self.login()
@@ -237,62 +237,62 @@ class ProductFeeds(BaseTestCase):
         data = {'feed': feed.id}
         r = self.client.post('/marketing/feeds/gear', data)
         self.assertEqual(r.status_code, 500)
-        self.assertIn('Missing parameters', r.content)
+        self.assertIn('Missing parameters', r.content.decode())
 
     def test_must_return_feed_for_shopify_store(self):
         self.login()
         store = ShopifyStoreFactory(user=self.user)
-        feed = FeedStatusFactory(store=store)
+        feed = FeedStatusFactory(store=store)  # noqa
         r = self.client.get('/marketing/feeds')
         feeds = FeedStatus.objects.filter(store__user=self.user)
-        self.assertItemsEqual(feeds, r.context['feeds'])
+        self.assertEqual(list(feeds), r.context['feeds'])
 
     def test_must_return_feed_for_chq_store(self):
         self.login()
         store = CommerceHQStoreFactory(user=self.user)
-        feed = CommerceHQFeedStatusFactory(store=store)
+        feed = CommerceHQFeedStatusFactory(store=store) # noqa
         r = self.client.get('/marketing/feeds/chq')
         feeds = CommerceHQFeedStatus.objects.filter(store__user=self.user)
-        self.assertItemsEqual(feeds, r.context['feeds'])
+        self.assertEqual(list(feeds), r.context['feeds'])
 
     def test_must_return_feed_for_woo_store(self):
         self.login()
         store = WooStoreFactory(user=self.user)
-        feed = WooFeedStatusFactory(store=store)
+        feed = WooFeedStatusFactory(store=store) # noqa
         r = self.client.get('/marketing/feeds/woo')
         feeds = WooFeedStatus.objects.filter(store__user=self.user)
-        self.assertItemsEqual(feeds, r.context['feeds'])
+        self.assertEqual(list(feeds), r.context['feeds'])
 
     def test_must_return_feed_for_gear_store(self):
         self.login()
         store = GearBubbleStoreFactory(user=self.user)
-        feed = GearBubbleFeedStatusFactory(store=store)
+        feed = GearBubbleFeedStatusFactory(store=store) # noqa
         r = self.client.get('/marketing/feeds/gear')
         feeds = GearBubbleFeedStatus.objects.filter(store__user=self.user)
-        self.assertItemsEqual(feeds, r.context['feeds'])
+        self.assertEqual(list(feeds), r.context['feeds'])
 
     def test_must_show_upgrade_page_for_shopify_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
-        r = self.client.get('/marketing/feeds')
+        self.client.get('/marketing/feeds')
         self.assertTemplateUsed('upgrade.html')
 
     def test_must_show_upgrade_page_for_chq_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
-        r = self.client.get('/marketing/feeds/chq')
+        self.client.get('/marketing/feeds/chq')
         self.assertTemplateUsed('commercehq/upgrade.html')
 
     def test_must_show_upgrade_page_for_woo_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
-        r = self.client.get('/marketing/feeds/woo')
+        self.client.get('/marketing/feeds/woo')
         self.assertTemplateUsed('woocommerce/upgrade.html')
 
     def test_must_show_upgrade_page_for_gear_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
-        r = self.client.get('/marketing/feeds/gear')
+        self.client.get('/marketing/feeds/gear')
         self.assertTemplateUsed('gearbubble/upgrade.html')
 
 
@@ -384,7 +384,7 @@ class GetProductFeed(BaseTestCase):
         self.login()
         store = ShopifyStoreFactory(user=self.user)
         path = '/marketing/feeds/{}'.format(store.store_hash[:8])
-        r = self.client.get(path + '/9')
+        self.client.get(path + '/9')
         store.feedstatus.refresh_from_db()
         self.assertEqual(store.feedstatus.revision, 2)
 
@@ -394,7 +394,7 @@ class GetProductFeed(BaseTestCase):
         self.login()
         store = CommerceHQStoreFactory(user=self.user)
         path = '/marketing/feeds/chq/{}'.format(store.store_hash[:8])
-        r = self.client.get(path + '/9')
+        self.client.get(path + '/9')
         store.feedstatus.refresh_from_db()
         self.assertEqual(store.feedstatus.revision, 9)
 
@@ -404,7 +404,7 @@ class GetProductFeed(BaseTestCase):
         self.login()
         store = WooStoreFactory(user=self.user)
         path = '/marketing/feeds/woo/{}'.format(store.store_hash[:8])
-        r = self.client.get(path + '/9')
+        self.client.get(path + '/9')
         store.feedstatus.refresh_from_db()
         self.assertEqual(store.feedstatus.revision, 9)
 
@@ -414,7 +414,7 @@ class GetProductFeed(BaseTestCase):
         self.login()
         store = GearBubbleStoreFactory(user=self.user)
         path = '/marketing/feeds/gear/{}'.format(store.store_hash[:8])
-        r = self.client.get(path + '/9')
+        self.client.get(path + '/9')
         store.feedstatus.refresh_from_db()
         self.assertEqual(store.feedstatus.revision, 9)
 
@@ -426,7 +426,7 @@ class GetProductFeed(BaseTestCase):
         store = ShopifyStoreFactory(user=self.user)
         feed = FeedStatusFactory(fb_access_at=None, store=store)
         headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
-        r = self.client.get('/marketing/feeds/{}'.format(store.store_hash[:8]), **headers)
+        self.client.get('/marketing/feeds/{}'.format(store.store_hash[:8]), **headers)
         feed.refresh_from_db()
         self.assertIsNotNone(feed.fb_access_at)
 
@@ -437,7 +437,7 @@ class GetProductFeed(BaseTestCase):
         store = CommerceHQStoreFactory(user=self.user)
         feed = CommerceHQFeedStatusFactory(fb_access_at=None, store=store)
         headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
-        r = self.client.get('/marketing/feeds/chq/{}'.format(store.store_hash[:8]), **headers)
+        self.client.get('/marketing/feeds/chq/{}'.format(store.store_hash[:8]), **headers)
         feed.refresh_from_db()
         self.assertIsNotNone(feed.fb_access_at)
 
@@ -448,7 +448,7 @@ class GetProductFeed(BaseTestCase):
         store = WooStoreFactory(user=self.user)
         feed = WooFeedStatusFactory(fb_access_at=None, store=store)
         headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
-        r = self.client.get('/marketing/feeds/woo/{}'.format(store.store_hash[:8]), **headers)
+        self.client.get('/marketing/feeds/woo/{}'.format(store.store_hash[:8]), **headers)
         feed.refresh_from_db()
         self.assertIsNotNone(feed.fb_access_at)
 
@@ -459,7 +459,7 @@ class GetProductFeed(BaseTestCase):
         store = GearBubbleStoreFactory(user=self.user)
         feed = GearBubbleFeedStatusFactory(fb_access_at=None, store=store)
         headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
-        r = self.client.get('/marketing/feeds/gear/{}'.format(store.store_hash[:8]), **headers)
+        self.client.get('/marketing/feeds/gear/{}'.format(store.store_hash[:8]), **headers)
         feed.refresh_from_db()
         self.assertIsNotNone(feed.fb_access_at)
 
@@ -470,7 +470,7 @@ class GetProductFeed(BaseTestCase):
         self.login()
         store = ShopifyStoreFactory(user=self.user)
         path = '/marketing/feeds/{}'.format(store.store_hash[:8]) + '?nocache=1'
-        r = self.client.get(path)
+        self.client.get(path)
         generate_product_feed.assert_called_with(store.feedstatus, nocache=True, revision=1)
 
     @patch('product_feed.views.generate_chq_product_feed')
@@ -479,7 +479,7 @@ class GetProductFeed(BaseTestCase):
         self.login()
         store = CommerceHQStoreFactory(user=self.user)
         path = '/marketing/feeds/chq/{}'.format(store.store_hash[:8]) + '?nocache=1'
-        r = self.client.get(path)
+        self.client.get(path)
         generate_chq_product_feed.assert_called_with(store.feedstatus, nocache=True)
 
     @patch('product_feed.views.generate_woo_product_feed')
@@ -488,7 +488,7 @@ class GetProductFeed(BaseTestCase):
         self.login()
         store = WooStoreFactory(user=self.user)
         path = '/marketing/feeds/woo/{}'.format(store.store_hash[:8]) + '?nocache=1'
-        r = self.client.get(path)
+        self.client.get(path)
         generate_woo_product_feed.assert_called_with(store.feedstatus, nocache=True)
 
     @patch('product_feed.views.generate_gear_product_feed')
@@ -497,5 +497,5 @@ class GetProductFeed(BaseTestCase):
         self.login()
         store = GearBubbleStoreFactory(user=self.user)
         path = '/marketing/feeds/gear/{}'.format(store.store_hash[:8]) + '?nocache=1'
-        r = self.client.get(path)
+        self.client.get(path)
         generate_gear_product_feed.assert_called_with(store.feedstatus, nocache=True)

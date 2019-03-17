@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='orderexportquery',
             name='found_order_ids',
-            field=models.TextField(default=b''),
+            field=models.TextField(default=''),
         ),
         migrations.AddField(
             model_name='orderexportquery',
             name='found_vendors',
-            field=models.TextField(default=b''),
+            field=models.TextField(default=''),
         ),
     ]

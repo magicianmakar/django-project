@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyorder',
             name='country_code',
-            field=models.CharField(default=b'', max_length=32, null=True, blank=True),
+            field=models.CharField(default='', max_length=32, null=True, blank=True),
         ),
     ]

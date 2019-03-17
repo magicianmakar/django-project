@@ -1,7 +1,7 @@
 import json
 import re
 import itertools
-import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 import arrow
@@ -42,8 +42,8 @@ from .models import (
     GearBubbleOrderTrack,
 )
 
-import utils
-import tasks
+from . import utils
+from . import tasks
 
 
 class GearBubbleApi(ApiBase):
@@ -224,7 +224,7 @@ class GearBubbleApi(ApiBase):
             args = [store.id, product.id, user.id, publish]
             tasks.product_export.apply_async(args=args, countdown=0, expires=120)
         except ProductExportException as e:
-            return self.api_error(e.message)
+            return self.api_error(str(e))
         else:
             pusher = {'key': settings.PUSHER_KEY, 'channel': store.pusher_channel()}
             messages.info(request, 'Processing image(s). Refresh the page later to see image(s) (if any).')
@@ -250,7 +250,7 @@ class GearBubbleApi(ApiBase):
             return self.api_success()
 
         except ProductExportException as e:
-            return self.api_error(e.message)
+            return self.api_error(str(e))
 
     def delete_product(self, request, user, data):
         pk = safe_int(data.get('product'))
@@ -451,8 +451,8 @@ class GearBubbleApi(ApiBase):
             source_id.encode('ascii')
         except AssertionError as e:
             raven_client.captureMessage('Invalid supplier order ID')
-            return self.api_error(e.message, status=501)
-        except UnicodeEncodeError as e:
+            return self.api_error(str(e), status=501)
+        except UnicodeEncodeError:
             return self.api_error('Order ID is invalid', status=501)
 
         order_updater = utils.GearOrderUpdater(store, order_id)
@@ -860,7 +860,7 @@ class GearBubbleApi(ApiBase):
 
         if get_domain(supplier_url) == 'aliexpress':
             if '/deep_link.htm' in supplier_url.lower():
-                supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['dl_target_url'].pop()
+                supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
 
             if 's.aliexpress.com' in supplier_url.lower():
                 rep = requests.get(supplier_url, allow_redirects=False)
@@ -916,7 +916,7 @@ class GearBubbleApi(ApiBase):
         product = GearBubbleProduct.objects.get(id=product_id)
         permissions.user_can_edit(user, product)
         supplier = product.get_suppliers().get(id=supplier_id)
-        mapping = {key: value for key, value in data.items() if key not in ['product', 'supplier']}
+        mapping = {key: value for key, value in list(data.items()) if key not in ['product', 'supplier']}
         product.set_variant_mapping(mapping, supplier=supplier)
         product.save()
 

@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
                 ('order_id', models.BigIntegerField()),
                 ('variant_id', models.BigIntegerField()),
                 ('data', models.TextField()),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Submittion date')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')),
             ],
             options={
                 'ordering': ['-created_at'],

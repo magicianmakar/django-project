@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='shopify_app_store',
-            field=models.BooleanField(default=False, verbose_name=b'User Register from Shopify App Store'),
+            field=models.BooleanField(default=False, verbose_name='User Register from Shopify App Store'),
         ),
     ]

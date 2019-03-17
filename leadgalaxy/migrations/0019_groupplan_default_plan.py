@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='default_plan',
-            field=models.IntegerField(default=0, choices=[(0, b'No'), (1, b'Yes')]),
+            field=models.IntegerField(default=0, choices=[(0, 'No'), (1, 'Yes')]),
         ),
     ]

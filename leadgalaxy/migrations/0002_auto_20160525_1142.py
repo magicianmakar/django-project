@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyproduct',
             name='tag',
-            field=models.TextField(default=b'', db_index=True, blank=True),
+            field=models.TextField(default='', db_index=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyproduct',
             name='title',
-            field=models.TextField(default=b'', db_index=True, blank=True),
+            field=models.TextField(default='', db_index=True, blank=True),
         ),
     ]

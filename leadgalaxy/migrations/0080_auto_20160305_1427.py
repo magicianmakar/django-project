@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='groupplan',
             name='slug',
-            field=models.SlugField(unique=True, max_length=30, verbose_name=b'Plan Slug'),
+            field=models.SlugField(unique=True, max_length=30, verbose_name='Plan Slug'),
         ),
     ]

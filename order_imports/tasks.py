@@ -1,6 +1,3 @@
-from __future__ import absolute_import
-
-
 from django.contrib.auth.models import User
 from django.core.cache import cache
 
@@ -22,7 +19,7 @@ def import_orders(self, store_id, parsed_orders, file_index=0):
         data = api.find_orders(parsed_orders)
 
         cache.set('order_import_{}_{}'.format(file_index, store.pusher_channel()),
-                  data.values(),
+                  list(data.values()),
                   timeout=3600)
 
         store.pusher_trigger('order-import', {
@@ -50,7 +47,7 @@ def approve_imported_orders(self, user_id, data, pusher_store_id):
     pusher_store = stores.get(pk=pusher_store_id)
 
     try:
-        for store_id, items in data.items():
+        for store_id, items in list(data.items()):
             store = stores.get(pk=store_id)
             api = ShopifyOrderImport(store=store)
             api.send_tracking_number(items)

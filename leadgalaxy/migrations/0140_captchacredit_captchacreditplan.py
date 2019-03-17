@@ -18,8 +18,8 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('remaining_credits', models.BigIntegerField(default=0)),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Created date')),
-                ('updated_at', models.DateTimeField(auto_now=True, verbose_name=b'Last update')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Created date')),
+                ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Last update')),
                 ('user', models.OneToOneField(related_name='captchacredit', to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={
@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('allowed_credits', models.IntegerField(default=0)),
-                ('amount', models.IntegerField(default=0, verbose_name=b'In USD')),
+                ('amount', models.IntegerField(default=0, verbose_name='In USD')),
             ],
         ),
     ]

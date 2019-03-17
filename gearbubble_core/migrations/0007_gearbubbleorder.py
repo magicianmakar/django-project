@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('order_id', models.BigIntegerField()),
                 ('product_id', models.BigIntegerField()),
-                ('data', models.TextField(default=b'{}', blank=True)),
+                ('data', models.TextField(default='{}', blank=True)),
                 ('customer_name', models.CharField(max_length=512)),
                 ('customer_email', models.CharField(max_length=128)),
                 ('amount', models.FloatField()),

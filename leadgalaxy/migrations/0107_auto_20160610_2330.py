@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='notes',
-            field=models.TextField(null=True, verbose_name=b'Admin Notes', blank=True),
+            field=models.TextField(null=True, verbose_name='Admin Notes', blank=True),
         ),
         migrations.AddField(
             model_name='groupplan',
             name='payment_gateway',
-            field=models.CharField(default=b'jvzoo', max_length=25, choices=[(b'jvzoo', b'JVZoo'), (b'stripe', b'Stripe')]),
+            field=models.CharField(default='jvzoo', max_length=25, choices=[('jvzoo', 'JVZoo'), ('stripe', 'Stripe')]),
         ),
     ]

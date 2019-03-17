@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='features',
-            field=models.TextField(null=True, verbose_name=b'Features List', blank=True),
+            field=models.TextField(null=True, verbose_name='Features List', blank=True),
         ),
         migrations.AlterField(
             model_name='groupplan',
             name='description',
-            field=models.CharField(default=b'', max_length=512, verbose_name=b'Plan name visible to users', blank=True),
+            field=models.CharField(default='', max_length=512, verbose_name='Plan name visible to users', blank=True),
         ),
     ]

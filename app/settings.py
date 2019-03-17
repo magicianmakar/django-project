@@ -233,7 +233,7 @@ ITEMS_PER_PAGE = 24
 # Shopify App
 SHOPIFY_API_KEY = os.environ['SHOPIFY_API_KEY']
 SHOPIFY_API_SECRET = os.environ['SHOPIFY_API_SECRET']
-SHOPIFY_API_SCOPE = u','.join([
+SHOPIFY_API_SCOPE = ','.join([
     'write_content', 'write_products', 'write_customers',
     'write_orders', 'write_fulfillments', 'write_shipping', 'read_analytics',
     'write_inventory', 'read_locations', 'read_all_orders'

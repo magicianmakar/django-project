@@ -31,7 +31,7 @@ class Command(DropifiedBaseCommand):
             except GroupPlan.DoesNotExist:
                 raise CommandError('Plan "%s" does not exist' % plan_id)
 
-            self.write_success(u'{} webhooks for plan: {}'.format(action.title(), plan.title))
+            self.write_success('{} webhooks for plan: {}'.format(action.title(), plan.title))
 
             stores = ShopifyStore.objects.filter(user__profile__plan=plan)
             self.stdout.write(self.style.HTTP_INFO('Stores count: %d' % len(stores)))
@@ -41,14 +41,14 @@ class Command(DropifiedBaseCommand):
         for permission in options['permission']:
             for p in AppPermission.objects.filter(name=permission):
                 for plan in p.groupplan_set.all():
-                    self.write_success(u'{} webhooks for Plan: {}'.format(action.title(), plan.title))
+                    self.write_success('{} webhooks for Plan: {}'.format(action.title(), plan.title))
 
                     for profile in plan.userprofile_set.select_related('user').all():
                         for store in profile.get_shopify_stores():
                             self.handle_store(store, action, options['delete_on_detach'])
 
                 for bundle in p.featurebundle_set.all():
-                    self.write_success(u'{} webhooks for Bundle: {}'.format(action.title(), bundle.title))
+                    self.write_success('{} webhooks for Bundle: {}'.format(action.title(), bundle.title))
                     for profile in bundle.userprofile_set.select_related('user').all():
                         for store in profile.get_shopify_stores():
                             self.handle_store(store, action, options['delete_on_detach'])
@@ -59,14 +59,14 @@ class Command(DropifiedBaseCommand):
             except ShopifyStore.DoesNotExist:
                 raise CommandError('Store "%s" does not exist' % store_id)
 
-            self.write_success(u'{} webhooks for store: {}'.format(action.title(), store.title))
+            self.write_success('{} webhooks for store: {}'.format(action.title(), store.title))
 
             self.handle_store(store, action, options['delete_on_detach'])
 
     def handle_store(self, store, action, delete_on_detach):
         if action == 'attach':
             webhooks = utils.attach_webhooks(store)
-            self.write_success(u'    + {}: {}'.format(store.title, len(webhooks)))
+            self.write_success('    + {}: {}'.format(store.title, len(webhooks)))
         else:
             webhooks = utils.detach_webhooks(store, delete_on_detach)
-            self.write_success(u'    - {}'.format(store.title))
+            self.write_success('    - {}'.format(store.title))

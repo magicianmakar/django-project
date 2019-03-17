@@ -1,7 +1,6 @@
 import re
-import urllib
-import urlparse
 import json
+from urllib.parse import urlencode, parse_qs, urlparse
 
 import requests
 import arrow
@@ -29,15 +28,14 @@ from shopified_core.utils import (
     orders_update_limit,
     version_compare,
     order_phone_number,
-    encoded_dict,
     serializers_orders_track,
     CancelledOrderAlert
 )
 
 from .api_helper import WooApiHelper
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
-import tasks
-import utils
+from . import tasks
+from . import utils
 
 
 class WooStoreApi(ApiBase):
@@ -133,10 +131,10 @@ class WooStoreApi(ApiBase):
         permissions.user_can_add(user, store)
         store.save()
         return_url = request.build_absolute_uri(reverse('woo:index'))
-        return_url = urlparse.urlparse(return_url)._replace(scheme='https').geturl()
+        return_url = urlparse(return_url)._replace(scheme='https').geturl()
         callback_path = reverse('woo:callback_endpoint', kwargs={'store_hash': store.store_hash})
         callback_url = request.build_absolute_uri(callback_path)
-        callback_url = urlparse.urlparse(callback_url)._replace(scheme='https').geturl()
+        callback_url = urlparse(callback_url)._replace(scheme='https').geturl()
         params = {
             'app_name': 'Dropified',
             'scope': 'read_write',
@@ -267,7 +265,7 @@ class WooStoreApi(ApiBase):
                 params['search'] = data['query']
 
             try:
-                r = store.wcapi.get('products?{}'.format(urllib.urlencode(encoded_dict(params))))
+                r = store.wcapi.get('products?{}'.format(urlencode(params)))
                 r.raise_for_status()
             except HTTPError:
                 return self.api_error('WooCommerce API Error', status=500)
@@ -313,7 +311,7 @@ class WooStoreApi(ApiBase):
 
         if get_domain(supplier_url) == 'aliexpress':
             if '/deep_link.htm' in supplier_url.lower():
-                supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['dl_target_url'].pop()
+                supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
 
             if 's.aliexpress.com' in supplier_url.lower():
                 rep = requests.get(supplier_url, allow_redirects=False)
@@ -411,7 +409,7 @@ class WooStoreApi(ApiBase):
             args = [store.id, product.id, user.id, publish]
             tasks.product_export.apply_async(args=args, countdown=0, expires=120)
         except ProductExportException as e:
-            return self.api_error(e.message)
+            return self.api_error(str(e))
         else:
             pusher = {'key': settings.PUSHER_KEY, 'channel': store.pusher_channel()}
             return self.api_success({'pusher': pusher})
@@ -428,13 +426,13 @@ class WooStoreApi(ApiBase):
             return self.api_success()
 
         except ProductExportException as e:
-            return self.api_error(e.message)
+            return self.api_error(str(e))
 
     def post_variants_mapping(self, request, user, data):
         product = WooProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
         supplier = product.get_suppliers().get(id=data.get('supplier'))
-        mapping = {key: value for key, value in data.items() if key not in ['product', 'supplier']}
+        mapping = {key: value for key, value in list(data.items()) if key not in ['product', 'supplier']}
         product.set_variant_mapping(mapping, supplier=supplier)
         product.save()
 
@@ -731,8 +729,8 @@ class WooStoreApi(ApiBase):
             source_id.encode('ascii')
         except AssertionError as e:
             raven_client.captureMessage('Invalid supplier order ID')
-            return self.api_error(e.message, status=501)
-        except UnicodeEncodeError as e:
+            return self.api_error(str(e), status=501)
+        except UnicodeEncodeError:
             return self.api_error('Order ID is invalid', status=501)
 
         order_updater = utils.WooOrderUpdater(store, order_id)

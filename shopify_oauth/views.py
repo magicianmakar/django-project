@@ -40,7 +40,7 @@ def encoded_params_for_signature(params):
     excluding those that should be removed and joining with '&'
     """
     def encoded_pairs(params):
-        for k, v in params.iteritems():
+        for k, v in params.items():
             if k not in ['signature', 'hmac']:
                 # escape delimiters to avoid tampering
                 k = str(k).replace("%", "%25").replace("=", "%3D")
@@ -131,7 +131,7 @@ def index(request):
 
     if request.user.is_authenticated:
         if permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
-            messages.success(request, u'Welcome Back, {}'.format(request.user.first_name))
+            messages.success(request, 'Welcome Back, {}'.format(request.user.first_name))
             return HttpResponseRedirect('/')
         else:
             user_logout(request)
@@ -225,7 +225,7 @@ def callback(request):
         del request.session['shopify_reinstall']
 
         if not permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
-            messages.success(request, u'You don\'t have access to this store')
+            messages.success(request, 'You don\'t have access to this store')
             return HttpResponseRedirect('/')
 
         try:
@@ -240,7 +240,7 @@ def callback(request):
         except:
             raven_client.captureException(level='warning')
 
-        messages.success(request, u'Your store <b>{}</b> has been re-installed!'.format(store.title))
+        messages.success(request, 'Your store <b>{}</b> has been re-installed!'.format(store.title))
 
         return HttpResponseRedirect('/')
     else:
@@ -251,7 +251,7 @@ def callback(request):
             if user.is_authenticated:
                 if permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
                     store.update_token(token)
-                    messages.success(request, u'Welcome Back, {}'.format(user.first_name))
+                    messages.success(request, 'Welcome Back, {}'.format(user.first_name))
                     return HttpResponseRedirect('/')
             else:
                 # handle the Shopify redirect flow
@@ -344,7 +344,7 @@ def callback(request):
         store.update_token(token, shop=shop)
 
         if not permissions.user_can_add(user, store, raise_on_error=False):
-            messages.success(request, u'You don\'t authorization to add this store')
+            messages.success(request, 'You don\'t authorization to add this store')
             return HttpResponseRedirect('/')
 
         try:
@@ -369,9 +369,9 @@ def callback(request):
         attach_webhooks(store)
 
         if from_shopify_store:
-            messages.success(request, u'Please select a plan to start your free trial!'.format(store.title))
+            messages.success(request, 'Please select a plan to start your free trial!'.format(store.title))
             return HttpResponseRedirect('/user/profile#plan')
         else:
-            messages.success(request, u'Your store <b>{}</b> has been added!'.format(store.title))
+            messages.success(request, 'Your store <b>{}</b> has been added!'.format(store.title))
 
     return HttpResponseRedirect('/')

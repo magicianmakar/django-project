@@ -2,12 +2,12 @@ from mock import Mock
 
 from django import db
 
-from factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
+from .factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 
 from lib.test import BaseTestCase
 from leadgalaxy.models import *
 from leadgalaxy.utils import create_user_without_signals
-from factories import ShopifyProductFactory
+from .factories import ShopifyProductFactory
 
 
 class UserTestCase(BaseTestCase):

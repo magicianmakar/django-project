@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='extrastore',
             name='last_invoice',
-            field=models.CharField(max_length=64, null=True, verbose_name=b'Last Invoice Item', blank=True),
+            field=models.CharField(max_length=64, null=True, verbose_name='Last Invoice Item', blank=True),
         ),
     ]

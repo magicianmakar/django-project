@@ -15,16 +15,16 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='plan_description',
-            field=models.CharField(blank=True, max_length=512, null=True, verbose_name=b'Plan description in in Plans Page'),
+            field=models.CharField(blank=True, max_length=512, null=True, verbose_name='Plan description in in Plans Page'),
         ),
         migrations.AddField(
             model_name='groupplan',
             name='price_info',
-            field=models.CharField(blank=True, max_length=512, null=True, verbose_name=b'Price info in Plans Page'),
+            field=models.CharField(blank=True, max_length=512, null=True, verbose_name='Price info in Plans Page'),
         ),
         migrations.AddField(
             model_name='groupplan',
             name='retail_price_info',
-            field=models.CharField(blank=True, max_length=512, null=True, verbose_name=b'Retail Price info in Plans Page'),
+            field=models.CharField(blank=True, max_length=512, null=True, verbose_name='Retail Price info in Plans Page'),
         ),
     ]

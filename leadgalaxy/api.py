@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import re
 import traceback
-import urlparse
-import urllib2
+from functools import cmp_to_key
+from urllib.parse import parse_qs, urlparse
+from urllib.request import urlopen
 
 import arrow
 import requests
@@ -47,6 +46,7 @@ from shopified_core.utils import (
     add_http_schema,
     order_phone_number,
     serializers_orders_track,
+    base64_encode,
     CancelledOrderAlert
 )
 
@@ -61,8 +61,8 @@ from shopify_orders.models import (
 from product_alerts.models import ProductChange
 from product_alerts.utils import unmonitor_store
 
-import tasks
-import utils
+from . import tasks
+from . import utils
 from .api_helper import ShopifyApiHelper
 from .forms import (
     EmailForm,
@@ -200,7 +200,7 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success()
 
     def post_store_order(self, request, user, data):
-        for store, idx in data.iteritems():
+        for store, idx in list(data.items()):
             store = ShopifyStore.objects.get(id=store)
             permissions.user_can_edit(user, store)
 
@@ -319,7 +319,7 @@ class ShopifyStoreApi(ApiBase):
                 })
             else:
                 if type(data) is not dict:
-                    if isinstance(data, Exception) or isinstance(data, basestring):
+                    if isinstance(data, Exception) or isinstance(data, str):
                         data = {
                             'error': 'Export is taking too long'
                         }
@@ -472,7 +472,7 @@ class ShopifyStoreApi(ApiBase):
             res = requests.post(
                 api_url,
                 files={
-                    'image': urllib2.urlopen(add_http_schema(data.get('image_url')))
+                    'image': urlopen(add_http_schema(data.get('image_url')))
                 },
                 auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)
             ).json()
@@ -553,7 +553,7 @@ class ShopifyStoreApi(ApiBase):
             else:
                 raven_client.captureException()
 
-        except Exception as e:
+        except Exception:
             raven_client.captureException()
 
         return self.api_error("YouZign API Error")
@@ -646,7 +646,7 @@ class ShopifyStoreApi(ApiBase):
             charge.refund(amount=int(amount * 100))
         except stripe.error.InvalidRequestError as e:
             raven_client.captureException(level='warning')
-            return self.api_error(e.message)
+            return self.api_error(str(e))
 
         return self.api_success()
 
@@ -875,10 +875,10 @@ class ShopifyStoreApi(ApiBase):
                     else:
                         return 0
 
-                products = sorted(products, cmp=connected_cmp, reverse=True)
+                products = sorted(products, key=cmp_to_key(connected_cmp), reverse=True)
 
                 if data.get('hide_connected'):
-                    products = filter(lambda p: not p.get('connected'), products)
+                    products = [p for p in products if not p.get('connected')]
 
             return JsonResponse({
                 'products': products,
@@ -1107,7 +1107,7 @@ class ShopifyStoreApi(ApiBase):
         if product.shopify_id:
             shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
             shopify_variants = shopify_product['variants']
-            for option_value, splitted_product in splitted_products.iteritems():
+            for option_value, splitted_product in list(splitted_products.items()):
                 data = json.loads(splitted_product.data)
 
                 variants = []
@@ -1155,7 +1155,7 @@ class ShopifyStoreApi(ApiBase):
                 tasks.export_product.apply_async(args=[req_data, 'shopify', user.id], expires=60)
 
         return self.api_success({
-            'products_ids': [p.id for v, p in splitted_products.iteritems()]
+            'products_ids': [p.id for v, p in list(splitted_products.items())]
         })
 
     def post_product_exclude(self, request, user, data):
@@ -1227,9 +1227,9 @@ class ShopifyStoreApi(ApiBase):
         config['import'] = profile.import_stores()
 
         # Base64 encode the store import list
-        config['import'] = json.dumps(config['import']).encode('base64').replace('\n', '')
+        config['import'] = base64_encode(json.dumps(config['import']))
 
-        for k in config.keys():
+        for k in list(config.keys()):
             if (k.startswith('_') or k == 'access_token') and k not in data.get('name', ''):
                 del config[k]
 
@@ -1742,7 +1742,7 @@ class ShopifyStoreApi(ApiBase):
             ShopifyOrderVariant.objects.filter(store=store, order_id=data.get('order'), line_id=data.get('line')) \
                                        .delete()
 
-            order_updater.add_note(u'Variant reset to customer selection for line #{} by {}'.format(
+            order_updater.add_note('Variant reset to customer selection for line #{} by {}'.format(
                 data.get('line'), user.first_name or user.username))
         else:
             ShopifyOrderVariant.objects.update_or_create(
@@ -1755,7 +1755,7 @@ class ShopifyStoreApi(ApiBase):
                 }
             )
 
-            order_updater.add_note(u"Variant changed to '{}' for line #{} by {}".format(
+            order_updater.add_note("Variant changed to '{}' for line #{} by {}".format(
                 data.get('title'), data.get('line'), user.first_name or user.username))
 
         if data.get('remember_variant') == 'true':
@@ -2009,9 +2009,9 @@ class ShopifyStoreApi(ApiBase):
             else:
                 raven_client.captureException(level='warning', tags={'oberlo': from_oberlo, 'shop': store.shop})
 
-            return self.api_error(e.message, status=501)
+            return self.api_error(str(e), status=501)
 
-        except UnicodeEncodeError as e:
+        except UnicodeEncodeError:
             return self.api_error('Order ID is invalid', status=501)
 
         if not order_lines and order_line_sku:
@@ -2040,7 +2040,7 @@ class ShopifyStoreApi(ApiBase):
         if data.get('combined'):
             order_lines = order_lines.split(',')
             current_line = order_data_cache(store.id, order_id, order_lines[0])
-            for key, order_data in order_data_cache(store.id, order_id, '*').items():
+            for key, order_data in list(order_data_cache(store.id, order_id, '*').items()):
                 if current_line and str(order_data['line_id']) not in order_lines \
                         and str(order_data['source_id']) == str(current_line['source_id']) \
                         and not ShopifyOrderTrack.objects.filter(store=store, order_id=order_id, line_id=order_data['line_id']).exists():
@@ -2214,7 +2214,7 @@ class ShopifyStoreApi(ApiBase):
                 ShopifyOrderLog.objects.update_order_log(
                     store=track.store,
                     user=user,
-                    log=u'Delete Supplier Order ID (#{})'.format(track.source_id),
+                    log='Delete Supplier Order ID (#{})'.format(track.source_id),
                     level='warning',
                     icon='times',
                     order_id=track.order_id,
@@ -2339,7 +2339,7 @@ class ShopifyStoreApi(ApiBase):
         aliexpress_ids = [int(j) for j in aliexpress_ids]
         orders = {}
 
-        for chunk_ids in [aliexpress_ids[x:x + 100] for x in xrange(0, len(aliexpress_ids), 100)]:
+        for chunk_ids in [aliexpress_ids[x:x + 100] for x in range(0, len(aliexpress_ids), 100)]:
             # Proccess 100 max order at a time
 
             tracks = ShopifyOrderTrack.objects.filter(user=user.models_user) \
@@ -2359,7 +2359,7 @@ class ShopifyStoreApi(ApiBase):
 
                 tracks = []
 
-                for store, store_tracks in stores.iteritems():
+                for store, store_tracks in list(stores.items()):
                     permissions.user_can_view(user, store)
 
                     for track in utils.get_tracking_orders(store, store_tracks):
@@ -2375,13 +2375,13 @@ class ShopifyStoreApi(ApiBase):
 
                 if track.order:
                     shopify_summary = [
-                        u'Shopify Order: {}'.format(track.order['name']),
-                        u'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
-                        u'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
+                        'Shopify Order: {}'.format(track.order['name']),
+                        'Shopify Total Price: <b>{}</b>'.format(money_format(track.order['total_price'], track.store)),
+                        'Ordered <b>{}</b>'.format(arrow.get(track.order['created_at']).humanize())
                     ]
 
                     for line in track.order['line_items']:
-                        shopify_summary.append(u'<br><b>{}x {}</b> {} - {}'.format(
+                        shopify_summary.append('<br><b>{}x {}</b> {} - {}'.format(
                             line['quantity'],
                             money_format(line['price'], track.store),
                             truncatewords(line['title'], 10),
@@ -2599,8 +2599,8 @@ class ShopifyStoreApi(ApiBase):
             })
         else:
             errors = []
-            for key, val in form.errors.items():
-                errors.append(u'{} Field error:\n   {}'.format(key.title(), ' - '.join([k for k in val])))
+            for key, val in list(form.errors.items()):
+                errors.append('{} Field error:\n   {}'.format(key.title(), ' - '.join([k for k in val])))
 
             return self.api_error('\n\n'.join(errors), status=422)
 
@@ -2813,7 +2813,7 @@ class ShopifyStoreApi(ApiBase):
 
         if get_domain(supplier_url) == 'aliexpress':
             if '/deep_link.htm' in supplier_url.lower():
-                supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['dl_target_url'].pop()
+                supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
 
             if '//s.aliexpress.com' in supplier_url.lower():
                 rep = requests.get(supplier_url, allow_redirects=False)
@@ -2831,7 +2831,7 @@ class ShopifyStoreApi(ApiBase):
                         })
 
         elif get_domain(supplier_url) == 'alitems':
-            supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['ulp'].pop()
+            supplier_url = parse_qs(urlparse(supplier_url).query)['ulp'].pop()
 
         else:
             if 'app.oberlo.com/suppliers' not in supplier_url:

@@ -1,5 +1,3 @@
-# -*- coding:utf8 -*-
-
 from article.models import Article, ArticleTag, Comment, CommentVote, SidebarLink
 from django.contrib import admin
 

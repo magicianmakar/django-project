@@ -34,8 +34,8 @@ class StripeCustomer(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
-        return u"Customer: {}".format(self.user.username)
+    def __str__(self):
+        return "Customer: {}".format(self.user.username)
 
     def stripe_save(self, cus):
         cus = cus.save()
@@ -139,8 +139,8 @@ class StripePlan(models.Model):
     stripe_id = models.CharField(max_length=255, unique=True, editable=False, verbose_name='Stripe Plan ID')
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
-        return u"{} (${})".format(self.name, self.amount)
+    def __str__(self):
+        return "{} (${})".format(self.name, self.amount)
 
     def save(self, *args, **kwargs):
         if self.statement_descriptor:
@@ -190,8 +190,8 @@ class StripeSubscription(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
-        return u"{} {}".format(self.user.username, self.plan.title if self.plan else 'None')
+    def __str__(self):
+        return "{} {}".format(self.user.username, self.plan.title if self.plan else 'None')
 
     def retrieve(self, commit=True):
         return stripe.Subscription.retrieve(self.subscription_id)
@@ -278,8 +278,8 @@ class ExtraStore(models.Model):
 
     _invoice_name = 'Shopify'
 
-    def __unicode__(self):
-        return u"{}".format(self.store.title)
+    def __str__(self):
+        return "{}".format(self.store.title)
 
 
 class ExtraCHQStore(models.Model):
@@ -300,8 +300,8 @@ class ExtraCHQStore(models.Model):
 
     _invoice_name = 'CommerceHQ'
 
-    def __unicode__(self):
-        return u"{}".format(self.store.title)
+    def __str__(self):
+        return "{}".format(self.store.title)
 
 
 class ExtraWooStore(models.Model):
@@ -322,8 +322,8 @@ class ExtraWooStore(models.Model):
 
     _invoice_name = 'WooCommerce'
 
-    def __unicode__(self):
-        return u"{}".format(self.store.title)
+    def __str__(self):
+        return "{}".format(self.store.title)
 
 
 class ExtraGearStore(models.Model):
@@ -344,5 +344,5 @@ class ExtraGearStore(models.Model):
 
     _invoice_name = 'GearBubble'
 
-    def __unicode__(self):
-        return u"{}".format(self.store.title)
+    def __str__(self):
+        return "{}".format(self.store.title)

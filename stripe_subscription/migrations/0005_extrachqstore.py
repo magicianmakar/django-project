@@ -18,10 +18,10 @@ class Migration(migrations.Migration):
             name='ExtraCHQStore',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('status', models.CharField(default=b'pending', max_length=64, null=True, blank=True)),
+                ('status', models.CharField(default='pending', max_length=64, null=True, blank=True)),
                 ('period_start', models.DateTimeField(null=True)),
                 ('period_end', models.DateTimeField(null=True)),
-                ('last_invoice', models.CharField(max_length=64, null=True, verbose_name=b'Last Invoice Item', blank=True)),
+                ('last_invoice', models.CharField(max_length=64, null=True, verbose_name='Last Invoice Item', blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('store', models.ForeignKey(to='commercehq_core.CommerceHQStore', on_delete=django.db.models.deletion.CASCADE)),

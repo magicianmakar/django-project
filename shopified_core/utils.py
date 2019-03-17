@@ -5,12 +5,11 @@ import hashlib
 import time
 import hmac
 import mimetypes
-import urlparse
 import ctypes
 import simplejson as json
-from urllib import urlencode
 from functools import wraps
 from copy import deepcopy
+from urllib.parse import urlencode, urlparse
 
 from django.conf import settings
 from django.core import serializers
@@ -63,7 +62,7 @@ def safe_float(v, default=0.0):
 def safe_str(v, default=''):
     """ Always return a str object """
 
-    if isinstance(v, basestring):
+    if isinstance(v, str):
         return v
     else:
         return default
@@ -87,7 +86,7 @@ def dict_val(data, name, default=None):
 
 def list_chunks(l, n):
     """Yield successive n-sized chunks from l."""
-    for i in xrange(0, len(l), n):
+    for i in range(0, len(l), n):
         yield l[i:i + n]
 
 
@@ -101,18 +100,18 @@ def app_link(*args, **kwargs):
         app_link('orders/track', query=1001)
     """
 
-    path = u'/'.join([str(i) for i in args]).lstrip('/') if args else ''
+    path = '/'.join([str(i) for i in args]).lstrip('/') if args else ''
 
     if kwargs:
-        for k, v in kwargs.items():
+        for k, v in list(kwargs.items()):
             if type(v) is bool:
                 kwargs[k] = str(v).lower()
-            elif isinstance(v, basestring):
-                kwargs[k] = v.encode('utf-8')
+            elif isinstance(v, str):
+                kwargs[k] = v
 
-        path = u'{}?{}'.format(path, urlencode(kwargs))
+        path = '{}?{}'.format(path, urlencode(kwargs))
 
-    return u'{}/{}'.format(settings.APP_URL, path.lstrip('/')).rstrip('/')
+    return '{}/{}'.format(settings.APP_URL, path.lstrip('/')).rstrip('/')
 
 
 def remove_trailing_slash(t):
@@ -126,7 +125,7 @@ def url_join(*args):
 
 
 def hash_text(text):
-    return hashlib.md5(text).hexdigest()
+    return hashlib.md5(text.encode()).hexdigest()
 
 
 def hash_list(data, sep=''):
@@ -135,22 +134,36 @@ def hash_list(data, sep=''):
 
 def random_hash():
     token = get_random_string(32)
-    return hashlib.md5(token).hexdigest()
+    return hashlib.md5(token.encode()).hexdigest()
+
+
+def base64_encode(s):
+    if type(s) is str:
+        s = s.encode()
+
+    return base64.encodebytes(s).decode().replace('\n', '').strip()
+
+
+def base64_decode(s):
+    if type(s) is str:
+        s = s.encode()
+
+    return base64.decodebytes(s).decode()
 
 
 def encode_params(val):
     val = val or ''
-    return 'b:{}'.format(''.join(base64.encodestring(val).split('\n'))).strip()
+    return 'b:{}'.format(base64_encode(val))
 
 
 def decode_params(val):
     if val:
         if val.startswith('b:'):
-            return base64.decodestring(val[2:])
+            return base64_decode(val[2:])
 
         elif not safe_int(val):
             try:
-                r = base64.decodestring(val).decode('utf-8')
+                r = base64_decode(val)
                 if '@' in r:
                     # Return the encoded value only if we have @ char in the decode string
                     # This will help us prevent decoding numbers (ex: 4624) as valid base64 encoded strings
@@ -175,7 +188,7 @@ def all_possible_cases(arr, top=True):
             for i in arr[0]:
                 result.append('{}{}{}'.format(i, sep, c))
 
-        return map(lambda k: k.split(sep), result) if top else result
+        return [k.split(sep) for k in result] if top else result
 
 
 def get_domain(url, full=False):
@@ -183,9 +196,9 @@ def get_domain(url, full=False):
         return None
 
     if not url.startswith('http'):
-        url = u'http://{}'.format(url)
+        url = 'http://{}'.format(url)
 
-    hostname = urlparse.urlparse(url).hostname
+    hostname = urlparse(url).hostname
     if hostname is None:
         return hostname
 
@@ -197,7 +210,7 @@ def get_domain(url, full=False):
 
 def add_http_schema(url):
     if not url.startswith('http'):
-        return u'http://{}'.format(url.lstrip(':/'))
+        return 'http://{}'.format(url.lstrip(':/'))
     else:
         return url
 
@@ -207,7 +220,7 @@ def remove_link_query(link):
         return ''
 
     if not link.startswith('http'):
-        link = u'http://{}'.format(re.sub('^([:/]*)', r'', link))
+        link = 'http://{}'.format(re.sub('^([:/]*)', r'', link))
 
     return re.sub('([?#].*)$', r'', link)
 
@@ -268,7 +281,7 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_em
         email_html = email_html.replace('\n', '<br />')
     else:
         email_plain = bleach.clean(email_html, tags=[], strip=True).strip().split('\n')
-        email_plain = map(lambda l: l.strip(), email_plain)
+        email_plain = [l.strip() for l in email_plain]
         email_plain = '\n'.join(email_plain)
 
     if type(recipient) is not list:
@@ -372,10 +385,9 @@ def aws_s3_context():
     }
 
     policy_str = json.dumps(policy)
-    string_to_sign = base64.encodestring(policy_str).replace('\n', '')
+    string_to_sign = base64_encode(policy_str)
 
-    signature = base64.encodestring(
-        hmac.new(settings.AWS_SECRET_ACCESS_KEY.encode(), string_to_sign.encode('utf8'), hashlib.sha1).digest()).strip()
+    signature = base64_encode(hmac.new(settings.AWS_SECRET_ACCESS_KEY.encode(), string_to_sign.encode(), hashlib.sha1).digest())
 
     return {
         'aws_available': aws_available,
@@ -392,11 +404,15 @@ def clean_query_id(qid):
         return 0
 
 
+def compare(a, b):
+    return (a > b) - (a < b)
+
+
 def version_compare(left, right):
     def normalize(v):
         return [int(x) for x in re.sub(r'(\.0+)*$', '', v).split(".")]
 
-    return cmp(normalize(left), normalize(right))
+    return compare(normalize(left), normalize(right))
 
 
 def order_data_cache(*args, **kwargs):
@@ -497,7 +513,7 @@ def unique_username(username='user', fullname=None):
     n = 0
 
     if type(fullname) is list:
-        fullname = u' '.join(fullname).strip()
+        fullname = ' '.join(fullname).strip()
 
     if fullname:
         fullname = re.sub(r'[^a-zA-Z0-9_ -]', '', fullname).strip()
@@ -517,7 +533,7 @@ def unique_username(username='user', fullname=None):
 
     while User.objects.filter(username__iexact=new_username).exists():
         n += 1
-        new_username = u'{}{}'.format(username.strip()[:29], n)
+        new_username = '{}{}'.format(username.strip()[:29], n)
 
     return new_username
 
@@ -632,18 +648,6 @@ def http_excption_status_code(e):
         return e.response.status_code
     except:
         return -1
-
-
-def encoded_dict(in_dict):
-    out_dict = {}
-    for k, v in in_dict.iteritems():
-        if isinstance(v, unicode):
-            v = v.encode('utf8')
-        elif isinstance(v, str):
-            # Must be encoded in UTF-8
-            v.decode('utf8')
-        out_dict[k] = v
-    return out_dict
 
 
 def serializers_orders_fields():

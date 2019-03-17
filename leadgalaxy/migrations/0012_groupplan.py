@@ -17,8 +17,8 @@ class Migration(migrations.Migration):
             name='GroupPlan',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('title', models.CharField(default=b'', max_length=512, verbose_name=b'Plan Title', blank=True)),
-                ('montly_price', models.FloatField(default=0.0, verbose_name=b'Price Per Month')),
+                ('title', models.CharField(default='', max_length=512, verbose_name='Plan Title', blank=True)),
+                ('montly_price', models.FloatField(default=0.0, verbose_name='Price Per Month')),
                 ('stores', models.IntegerField(default=0)),
                 ('products', models.IntegerField(default=0)),
                 ('boards', models.IntegerField(default=0)),

@@ -1,4 +1,4 @@
-from models import user_seen
+from .models import user_seen
 from django.http import Http404
 
 from . import settings

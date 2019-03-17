@@ -1,8 +1,9 @@
 from django import template
-import urlparse
 from django.http import QueryDict
 from django.utils.safestring import mark_safe
 from django.urls import reverse
+
+from urllib.parse import urlparse, urlunparse
 
 register = template.Library()
 
@@ -47,8 +48,8 @@ def sort_icon(context, field, value):
 @register.simple_tag(takes_context=True)
 def url_toggle(context, field, values):
     url = context['request'].get_full_path()
-    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(url)
-    query_dict = QueryDict(query.encode('utf8')).copy()
+    (scheme, netloc, path, params, query, fragment) = urlparse(url)
+    query_dict = QueryDict(query).copy()
 
     values = values.split(',')
     try:
@@ -61,38 +62,38 @@ def url_toggle(context, field, values):
     query_dict[field] = values[index]
 
     query = query_dict.urlencode()
-    return urlparse.urlunparse((scheme, netloc, path, params, query, fragment))
+    return urlunparse((scheme, netloc, path, params, query, fragment))
 
 
 @register.simple_tag(takes_context=True)
 def url_replace(context, field, value):
     url = context['request'].get_full_path()
-    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(url)
-    query_dict = QueryDict(query.encode('utf8')).copy()
+    (scheme, netloc, path, params, query, fragment) = urlparse(url)
+    query_dict = QueryDict(query).copy()
     query_dict[field] = value
     query = query_dict.urlencode()
-    return urlparse.urlunparse((scheme, netloc, path, params, query, fragment))
+    return urlunparse((scheme, netloc, path, params, query, fragment))
 
 
 @register.simple_tag(takes_context=True)
 def url_multi_replace(context, **kwargs):
     url = context['request'].get_full_path()
-    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(url)
-    query_dict = QueryDict(query.encode('utf8')).copy()
+    (scheme, netloc, path, params, query, fragment) = urlparse(url)
+    query_dict = QueryDict(query).copy()
 
-    for k, v in kwargs.iteritems():
+    for k, v in kwargs.items():
         query_dict[k] = v
 
     query = query_dict.urlencode()
-    return urlparse.urlunparse((scheme, netloc, path, params, query, fragment))
+    return urlunparse((scheme, netloc, path, params, query, fragment))
 
 
 @register.simple_tag(takes_context=True)
 def url_path(context, new_path):
     ''' Change url path'''
     url = context['request'].get_full_path()
-    (scheme, netloc, path, params, query, fragment) = urlparse.urlparse(url)
-    return urlparse.urlunparse((scheme, netloc, new_path, params, query, fragment))
+    (scheme, netloc, path, params, query, fragment) = urlparse(url)
+    return urlunparse((scheme, netloc, new_path, params, query, fragment))
 
 
 @register.simple_tag(takes_context=True)

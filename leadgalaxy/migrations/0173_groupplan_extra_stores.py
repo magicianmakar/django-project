@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='extra_stores',
-            field=models.BooleanField(default=True, verbose_name=b'Support adding extra stores'),
+            field=models.BooleanField(default=True, verbose_name='Support adding extra stores'),
         ),
     ]

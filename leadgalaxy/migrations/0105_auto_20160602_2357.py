@@ -19,11 +19,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifyproductexport',
             name='supplier_name',
-            field=models.CharField(default=b'', max_length=512, null=True, blank=True),
+            field=models.CharField(default='', max_length=512, null=True, blank=True),
         ),
         migrations.AddField(
             model_name='shopifyproductexport',
             name='supplier_url',
-            field=models.CharField(default=b'', max_length=512, null=True, blank=True),
+            field=models.CharField(default='', max_length=512, null=True, blank=True),
         ),
     ]

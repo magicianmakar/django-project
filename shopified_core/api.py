@@ -23,7 +23,7 @@ from gearbubble_core.models import GearBubbleOrderTrack
 
 from .mixins import ApiResponseMixin
 
-import utils as core_utils
+from . import utils as core_utils
 
 
 class ShopifiedApi(ApiResponseMixin, View):

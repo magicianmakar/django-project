@@ -1,7 +1,9 @@
 import re
 import arrow
-import urlparse
+from urllib.parse import parse_qs, urlparse
+
 import simplejson as json
+from functools import cmp_to_key
 
 from django.conf import settings
 from django.core.cache import cache, caches
@@ -33,8 +35,8 @@ from shopified_core.utils import (
 from product_alerts.models import ProductChange
 from product_alerts.utils import unmonitor_store
 
-import tasks
-import utils
+from . import tasks
+from . import utils
 
 from .api_helper import CHQApiHelper
 from .models import (
@@ -122,7 +124,7 @@ class CHQStoreApi(ApiBase):
             })
 
         except ProductExportException as e:
-            return self.api_error(e.message)
+            return self.api_error(str(e))
 
     def post_product_update(self, request, user, data):
         try:
@@ -139,7 +141,7 @@ class CHQStoreApi(ApiBase):
             return self.api_success()
 
         except ProductExportException as e:
-            return self.api_error(e.message)
+            return self.api_error(str(e))
 
     def delete_product(self, request, user, data):
         try:
@@ -308,10 +310,10 @@ class CHQStoreApi(ApiBase):
                     else:
                         return 0
 
-                products = sorted(products, cmp=connected_cmp, reverse=True)
+                products = sorted(products, key=cmp_to_key(connected_cmp), reverse=True)
 
                 if data.get('hide_connected'):
-                    products = filter(lambda p: not p.get('connected'), products)
+                    products = [p for p in products if not p.get('connected')]
 
             return self.api_success({
                 'products': products,
@@ -486,9 +488,9 @@ class CHQStoreApi(ApiBase):
         except AssertionError as e:
             raven_client.captureException(level='warning')
 
-            return self.api_error(e.message, status=501)
+            return self.api_error(str(e), status=501)
 
-        except UnicodeEncodeError as e:
+        except UnicodeEncodeError:
             return self.api_error('Order ID is invalid', status=501)
 
         note_delay_key = 'chq_store_{}_order_{}'.format(store.id, order_id)
@@ -499,7 +501,7 @@ class CHQStoreApi(ApiBase):
         if data.get('combined'):
             order_lines = order_lines.split(',')
             current_line = order_data_cache(store.id, order_id, order_lines[0])
-            for key, order_data in order_data_cache(store.id, order_id, '*').items():
+            for key, order_data in list(order_data_cache(store.id, order_id, '*').items()):
                 if current_line and str(order_data['line_id']) not in order_lines \
                         and str(order_data['source_id']) == str(current_line['source_id']) \
                         and not CommerceHQOrderTrack.objects.filter(store=store, order_id=order_id, line_id=order_data['line_id']).exists():
@@ -1042,7 +1044,7 @@ class CHQStoreApi(ApiBase):
 
         if get_domain(supplier_url) == 'aliexpress':
             if '/deep_link.htm' in supplier_url.lower():
-                supplier_url = urlparse.parse_qs(urlparse.urlparse(supplier_url).query)['dl_target_url'].pop()
+                supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
 
             if '//s.aliexpress.com' in supplier_url.lower():
                 rep = requests.get(supplier_url, allow_redirects=False)

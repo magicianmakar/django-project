@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='groupplan',
             name='monthly_price',
-            field=models.DecimalField(null=True, verbose_name=b'Monthly Price(in USD)', max_digits=9, decimal_places=2),
+            field=models.DecimalField(null=True, verbose_name='Monthly Price(in USD)', max_digits=9, decimal_places=2),
         ),
         migrations.AlterField(
             model_name='groupplan',
             name='payment_gateway',
-            field=models.CharField(default=b'jvzoo', max_length=25, choices=[(b'jvzoo', b'JVZoo'), (b'stripe', b'Stripe'), (b'shopify', b'Shopify')]),
+            field=models.CharField(default='jvzoo', max_length=25, choices=[('jvzoo', 'JVZoo'), ('stripe', 'Stripe'), ('shopify', 'Shopify')]),
         ),
     ]

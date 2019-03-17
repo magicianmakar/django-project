@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='featurebundle',
             name='hidden_from_user',
-            field=models.BooleanField(default=False, verbose_name=b'Hide in User Profile'),
+            field=models.BooleanField(default=False, verbose_name='Hide in User Profile'),
         ),
     ]

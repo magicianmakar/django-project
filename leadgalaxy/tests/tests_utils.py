@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import re
 import random
 from mock import Mock
@@ -64,6 +62,7 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
     order_number = 31
     total_price = 100
     customer_id = 1
+    items_count = 1
     created_at = utils.timezone.now()
     updated_at = utils.timezone.now()
 
@@ -310,7 +309,8 @@ class FulfillmentTestCase(BaseTestCase):
         data = utils.order_track_fulfillment(order_track=track, user_config={'aftership_domain': {"1": 'uncommonnow'}})
         self.assertEqual(data['fulfillment']['tracking_numbers'], ["MA7565915257226HK", "MA7565915257227HK"])
         self.assertEqual(data['fulfillment']['tracking_company'], "Other")
-        self.assertEqual(data['fulfillment']['tracking_urls'], ['http://uncommonnow.aftership.com/MA7565915257226HK', 'http://uncommonnow.aftership.com/MA7565915257227HK'])
+        self.assertEqual(data['fulfillment']['tracking_urls'],
+                         ['http://uncommonnow.aftership.com/MA7565915257226HK', 'http://uncommonnow.aftership.com/MA7565915257227HK'])
 
         self.assertNotIn('tracking_url', data['fulfillment'])
         self.assertNotIn('tracking_number', data['fulfillment'])
@@ -671,8 +671,8 @@ class UtilsTestCase(BaseTestCase):
             'http://www.ebay.com/itm/131696353919')
 
         self.assertEqual(
-            remove_link_query('http://g03.a.alicdn.com/kf/HTB13OOBLFXXXXcoXpXXq6xXFXXXp/Vente-chaude-vinyle-amovible-stickers-muraux-t&ecirc;te-de-cheval-peintures-murales-salon-d&eacute;corative-animaux-accueil-autocollant.jpg'),
-            'http://g03.a.alicdn.com/kf/HTB13OOBLFXXXXcoXpXXq6xXFXXXp/Vente-chaude-vinyle-amovible-stickers-muraux-t&ecirc;te-de-cheval-peintures-murales-salon-d&eacute;corative-animaux-accueil-autocollant.jpg')
+            remove_link_query('http://g03.a.alicdn.com/kf/HTB13OOBLFXXXXcoXpXXq6xXFXXXp/Vente-chaude-vinyle-amovible-stickers-muraux-t&ecirc;te-de-cheval-peintures-murales-salon-d&eacute;corative-animaux-accueil-autocollant.jpg'), # noqa
+            'http://g03.a.alicdn.com/kf/HTB13OOBLFXXXXcoXpXXq6xXFXXXp/Vente-chaude-vinyle-amovible-stickers-muraux-t&ecirc;te-de-cheval-peintures-murales-salon-d&eacute;corative-animaux-accueil-autocollant.jpg') # noqa
 
         self.assertEqual(
             remove_link_query('www.aliexpress.com/store/1185416?spm=2114.10010108.0.627.LN13ZN'),
@@ -703,12 +703,12 @@ class UtilsTestCase(BaseTestCase):
 
         self.assertTrue(utils.upload_from_url('http://i.ebayimg.com/images/g/RHIAAOSwQaJXRBkE/s-l500.jpg'))
         self.assertTrue(utils.upload_from_url('http://shopifiedapp.s3.amazonaws.com/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png'))
-        self.assertTrue(utils.upload_from_url('http://%s.s3.amazonaws.com/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png' % settings.S3_UPLOADS_BUCKET))
-        self.assertTrue(utils.upload_from_url('http://%s.s3.amazonaws.com/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png' % settings.S3_STATIC_BUCKET))
+        self.assertTrue(utils.upload_from_url('http://%s.s3.amazonaws.com/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png' % settings.S3_UPLOADS_BUCKET)) # noqa
+        self.assertTrue(utils.upload_from_url('http://%s.s3.amazonaws.com/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png' % settings.S3_STATIC_BUCKET)) # noqa
         self.assertTrue(utils.upload_from_url('http://d2kadg5e284yn4.cloudfront.net/uploads/u1/d3d1aed3576999dca762cad33b31c79a.png'))
         self.assertTrue(utils.upload_from_url('https://betaimages.sunfrogshirts.com/m_1349black.jpg'))
         self.assertTrue(utils.upload_from_url('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg'))
-        self.assertTrue(utils.upload_from_url('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg?v=1452639314'))
+        self.assertTrue(utils.upload_from_url('https://cdn.shopify.com/s/files/1/1013/1174/products/Fashion-Metal---magnification-wholesale.jpeg?v=1452639314')) # noqa
         self.assertTrue(utils.upload_from_url('http://ecx.images-amazon.com/images/I/21iTIaYnSzL.jpg'))
         self.assertTrue(utils.upload_from_url('http://www.dhresource.com/0x0/f2/albu/g2/M00/DF/F1/rBVaGlUVIdWAIH4VAASbr7-6PiQ259.jpg'))
         self.assertTrue(utils.upload_from_url('http://i00.i.aliimg.com/img/pb/848/720/003/1003720848_179.jpg'))
@@ -758,7 +758,7 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(utils.ensure_title('james bond'), 'James Bond')
 
     def test_ensure_title_unicode(self):
-        self.assertEqual(utils.ensure_title(u'vari\xe9t\xe9'), u'vari\xe9t\xe9')
+        self.assertEqual(utils.ensure_title('vari\xe9t\xe9'), 'Vari\xe9t\xe9')
 
 
 class CustomerAddressTestCase(BaseTestCase):
@@ -777,7 +777,7 @@ class CustomerAddressTestCase(BaseTestCase):
                 "phone": "123456789",
                 "country_code": "US",
                 "company": "",
-                "address1": u"5th Ave üop",
+                "address1": "5th Ave üop",
             }
         }
 
@@ -788,14 +788,14 @@ class CustomerAddressTestCase(BaseTestCase):
         self.assertEqual(addr['address1'], '5th Ave ueop')
 
         vals = {
-            u"5TH AVE ÜOP": '5TH AVE UEOP',
-            u"5th Ave äop": '5th Ave aeop',
-            u"5TH AVE ÄOP": '5TH AVE AEOP',
-            u"5th Ave öop": '5th Ave oeop',
-            u"5TH AVE ÖOP": '5TH AVE OEOP',
+            "5TH AVE ÜOP": '5TH AVE UEOP',
+            "5th Ave äop": '5th Ave aeop',
+            "5TH AVE ÄOP": '5TH AVE AEOP',
+            "5th Ave öop": '5th Ave oeop',
+            "5TH AVE ÖOP": '5TH AVE OEOP',
         }
 
-        for k, v in vals.items():
+        for k, v in list(vals.items()):
             order['shipping_address']['address1'] = k
             order, addr = utils.shopify_customer_address(order, german_umlauts=True)
             self.assertEqual(addr['address1'], v)

@@ -53,7 +53,7 @@ def product_save(req_data, user_id):
             }
         except PermissionDenied as e:
             return {
-                'error': "Store: {}".format(e.message)
+                'error': "Store: {}".format(str(e))
             }
     else:
         store = user.profile.get_chq_stores().first()
@@ -94,7 +94,7 @@ def product_save(req_data, user_id):
         except PermissionDenied as e:
             raven_client.captureException()
             return {
-                'error': "Product: {}".format(e.message)
+                'error': "Product: {}".format(str(e))
             }
 
         product.update_data(data)
@@ -134,7 +134,7 @@ def product_save(req_data, user_id):
         except PermissionDenied as e:
             raven_client.captureException()
             return {
-                'error': "Add Product: {}".format(e.message)
+                'error': "Add Product: {}".format(str(e))
             }
 
     return {
@@ -176,7 +176,7 @@ def product_export(store_id, product_id, user_id, publish=None):
             p['variants_images'] = {}
             product.update_data({'variants_images': {}})
 
-        for h, var in p.get('variants_images', {}).items():
+        for h, var in list(p.get('variants_images', {}).items()):
             for idx, img in enumerate(p.get('images', [])):
                 if utils.hash_url_filename(img) == h:
                     variants_thmbs[var] = img
@@ -184,7 +184,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
                     have_variant_images = True
 
-        thumb_keys = thumbs_idx.values()
+        thumb_keys = list(thumbs_idx.values())
         variant_values = []
         for variant in p.get('variants', []):
             for value in variant.get('values', []):
@@ -528,10 +528,10 @@ def create_image_zip(self, images, product_id):
             for i, img_url in enumerate(images):
                 img_url = utils.add_http_schema(img_url)
 
-                image_name = u'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
+                image_name = 'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
                 images_zip.writestr(image_name, requests.get(img_url).content)
 
-        s3_path = path_join('product-downloads', str(product.id), u'{}.zip'.format(slugify(unidecode(product.title))))
+        s3_path = path_join('product-downloads', str(product.id), '{}.zip'.format(slugify(unidecode(product.title))))
         url = aws_s3_upload(s3_path, input_filename=filename)
 
         product.store.pusher_trigger('images-download', {

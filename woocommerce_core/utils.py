@@ -1,11 +1,11 @@
 import re
 import json
 import itertools
-import urllib
 import arrow
 import requests
 import copy
 
+from urllib.parse import urlencode
 from math import ceil
 from measurement.measures import Weight
 from decimal import Decimal, ROUND_HALF_UP
@@ -170,7 +170,7 @@ def get_image_id_by_hash(product_data):
 def create_variants_api_data(data, image_id_by_hash):
     variants = data.get('variants', [])
     variants_info = data.get('variants_info', {})
-    variants_images = data.get('variants_images', {}).items()
+    variants_images = list(data.get('variants_images', {}).items())
     variant_list = []
 
     titles, values = [], []
@@ -183,9 +183,9 @@ def create_variants_api_data(data, image_id_by_hash):
         api_data = {'attributes': []}
         descriptions = []
         options = []
-        for name, option in itertools.izip(titles, product):
+        for name, option in zip(titles, product):
             options.append(option)
-            descriptions.append(u'{}: {}'.format(name, option))
+            descriptions.append('{}: {}'.format(name, option))
             api_data['attributes'].append({'name': name, 'option': option})
             if 'image' not in api_data:
                 for image_hash, variant_option in variants_images:
@@ -404,12 +404,12 @@ def split_product(product, split_factor, store=None):
     for option in options:
         new_product = duplicate_product(product, product.store)
         new_data = {}
-        new_data['title'] = u'{} ({})'.format(title, option)
+        new_data['title'] = '{} ({})'.format(title, option)
 
         variants = new_product.parsed.get('variants', [])
         new_data['variants'] = [v for v in variants if not v['title'] == split_factor]
 
-        hashes = [h for h, variant in variant_images.items() if variant == option]
+        hashes = [h for h, variant in list(variant_images.items()) if variant == option]
         new_data['images'] = [i for i in images if hash_url_filename(i) in hashes]
 
         new_product.update_data(new_data)
@@ -457,7 +457,7 @@ def store_shipping_carriers(store):
         {8: 'Custom Provider'},
     ]
 
-    return map(lambda c: {'id': c.keys().pop(), 'title': c.values().pop()}, carriers)
+    return [{'id': list(c.keys()).pop(), 'title': list(c.values()).pop()} for c in carriers]
 
 
 def get_shipping_carrier_name(store, carrier_id):
@@ -494,11 +494,11 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
         order_ids = list(store_orders[store.id])
         include = ','.join(str(order_id) for order_id in order_ids)
 
-        for chunk_include in [include[x:x + 20] for x in xrange(0, len(include), 20)]:
+        for chunk_include in [include[x:x + 20] for x in range(0, len(include), 20)]:
             page = 1
             while page:
                 params = {'page': page, 'per_page': 100, 'include': chunk_include}
-                query_string = urllib.urlencode(params)
+                query_string = urlencode(params)
                 r = store.wcapi.get('orders?{}'.format(query_string))
                 r.raise_for_status()
 
@@ -518,7 +518,7 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
 
     cache.set_many(cache_data, timeout=3600)
 
-    return cache_data.keys()
+    return list(cache_data.keys())
 
 
 def cached_order_line_fulfillment_status(order_track):
@@ -575,7 +575,7 @@ def order_id_from_name(store, order_name, default=None):
     if not order_number:
         return default
 
-    r = store.wcapi.get('orders?{}'.format(urllib.urlencode({'search': order_name})))
+    r = store.wcapi.get('orders?{}'.format(urlencode({'search': order_name})))
 
     if r.ok:
         orders = r.json()
@@ -595,7 +595,7 @@ def get_tracking_products(store, tracker_orders, per_page=50):
         return tracker_orders
 
     params = {'include': ','.join(ids), 'per_page': per_page}
-    r = store.wcapi.get('products?{}'.format(urllib.urlencode(params)))
+    r = store.wcapi.get('products?{}'.format(urlencode(params)))
     r.raise_for_status()
 
     products = {}
@@ -636,7 +636,7 @@ def get_tracking_orders(store, tracker_orders, per_page=50):
         return tracker_orders
 
     params = {'include': ','.join(ids), 'per_page': per_page}
-    r = store.wcapi.get('orders?{}'.format(urllib.urlencode(params)))
+    r = store.wcapi.get('orders?{}'.format(urlencode(params)))
     r.raise_for_status()
 
     orders = {}
@@ -672,7 +672,7 @@ def get_woo_products_count(store):
 
 def get_woo_products(store, page=1, limit=50, all_products=False):
     if not all_products:
-        path = 'products?{}'.format(urllib.urlencode({'page': page, 'per_page': limit}))
+        path = 'products?{}'.format(urlencode({'page': page, 'per_page': limit}))
         r = store.wcapi.get(path)
         r.raise_for_status()
         for product in r.json():
@@ -685,7 +685,7 @@ def get_woo_products(store, page=1, limit=50, all_products=False):
             return
 
         pages = int(ceil(count / float(limit)))
-        for page in xrange(1, pages + 1):
+        for page in range(1, pages + 1):
             products = get_woo_products(store=store, page=page, limit=limit, all_products=False)
             for product in products:
                 yield product
@@ -695,8 +695,8 @@ def woo_customer_address(order, aliexpress_fix=False):
     customer_address = {}
     shipping_address = order['shipping'] if any(order['shipping'].values()) else order['billing']
 
-    for k in shipping_address.keys():
-        if shipping_address[k] and type(shipping_address[k]) is unicode:
+    for k in list(shipping_address.keys()):
+        if shipping_address[k] and type(shipping_address[k]) is str:
             customer_address[k] = unidecode(shipping_address[k])
         else:
             customer_address[k] = shipping_address[k]
@@ -708,10 +708,10 @@ def woo_customer_address(order, aliexpress_fix=False):
     customer_address['zip'] = customer_address.get('postcode')
 
     country = country_from_code(customer_address['country_code'], '')
-    customer_address['country'] = unidecode(country) if type(country) is unicode else country
+    customer_address['country'] = unidecode(country) if type(country) is str else country
 
     province = province_from_code(customer_address['country_code'], customer_address['province_code'])
-    customer_address['province'] = unidecode(province) if type(province) is unicode else province
+    customer_address['province'] = unidecode(province) if type(province) is str else province
 
     if not customer_address.get('province'):
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:
@@ -758,7 +758,7 @@ def woo_customer_address(order, aliexpress_fix=False):
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
 
-    customer_address['name'] = u'{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
+    customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
 
     if aliexpress_fix:
         valide, correction = valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city'])
@@ -823,7 +823,7 @@ def get_product_data(store, product_ids=None):
             product_ids = [str(product_id) for product_id in product_ids]
             params['include'] = ','.join(product_ids)
 
-        r = store.wcapi.get('products?{}'.format(urllib.urlencode(params)))
+        r = store.wcapi.get('products?{}'.format(urlencode(params)))
         r.raise_for_status()
         products = r.json()
 
@@ -874,7 +874,7 @@ class WooListQuery(object):
         return self._response is not None
 
     def get_response(self):
-        params = urllib.urlencode(self._params)
+        params = urlencode(self._params)
         endpoint = '{}?{}'.format(self._endpoint, params)
         self._response = self._store.wcapi.get(endpoint)
         self._response.raise_for_status()
@@ -900,7 +900,7 @@ class WooListPaginator(SimplePaginator):
         self.current_page = number
         params = {'page': number, 'per_page': self.per_page}
         # `self.object_list` is a `WooListQuery` instance
-        items = self.object_list.update_params(params).items()
+        items = list(self.object_list.update_params(params).items())
 
         return self._get_page(items, number, self)
 
@@ -929,7 +929,7 @@ class WooOrderUpdater:
         note = '{} Order ID: {}\n{}'.format(source, source_id, url)
 
         if line_id:
-            note = u'{}\nOrder Line: #{}'.format(note, line_id)
+            note = '{}\nOrder Line: #{}'.format(note, line_id)
 
         self.add_note(note)
 
@@ -939,7 +939,7 @@ class WooOrderUpdater:
 
     def _do_save_changes(self, add=True):
         if self.notes:
-            new_note = u'\n'.join(self.notes)
+            new_note = '\n'.join(self.notes)
             add_woo_order_note(self.store, self.order_id, new_note)
 
     def delay_save(self, countdown=None):

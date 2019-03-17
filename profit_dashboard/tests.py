@@ -7,10 +7,8 @@ from random import randint
 import factory
 import factory.fuzzy
 
-from django.conf import settings
 from django.test import tag
 from lib.test import BaseTestCase
-from django.test.utils import override_settings
 from django.utils import timezone
 from django.db.models import Sum
 from mock import patch, Mock
@@ -74,7 +72,8 @@ class FacebookAdCostsTestCase(BaseTestCase):
             "5UcAmKMR4z0T2lFNmhwSS6tWkXkifsMZA1aX2sYkBZBDZCqnbqIw8oCJgKn5ZBVC2jOHt" + \
             "zeTuuiBtBWNcc40zZCkn589nxHptuO54I3DoRLk8fqh5skJZA76mboZAAlYYUQDTAhIpc" + \
             "eYZA7JLHODWNEj6JDqhJfZB8y12ARYp7k6vOeB27h0ZD"
-        access = FacebookAccessFactory(store=self.store, user=self.user, access_token=self.access_token, expires_in=timezone.now() + timedelta(days=59))
+        access = FacebookAccessFactory(store=self.store, user=self.user, access_token=self.access_token,
+                                       expires_in=timezone.now() + timedelta(days=59))
 
         try:
             self.api = access.api
@@ -104,7 +103,7 @@ class FacebookAdCostsTestCase(BaseTestCase):
                 selected_campaigns = [c[Campaign.Field.id] for c in campaigns]
 
             get_facebook_ads(access.pk, self.store)
-        except FacebookRequestError, e:
+        except FacebookRequestError as e:
             if e.api_error_code() == 17:  # (#17) User request limit reached
                 account = FacebookAccountFactory(access=access, store=self.store)
                 FacebookAdCostFactory(account=account)
@@ -116,9 +115,10 @@ class FacebookAdCostsTestCase(BaseTestCase):
     def test_ad_costs_dict_has_right_keys(self):
         profits, totals, details = get_profits(self.store, timezone.now() - timedelta(days=30), timezone.now())
 
-        self.assertItemsEqual(
-            profits[0].keys(),
-            ['date_as_string', 'date_as_slug', 'week_day', 'empty', 'css_empty', 'revenue', 'fulfillment_cost', 'fulfillments_count', 'orders_count', 'ad_spend', 'other_costs', 'outcome', 'profit']
+        self.assertListEqual(
+            sorted(profits[0].keys()),
+            sorted('date_as_string,date_as_slug,week_day,empty,css_empty,revenue,fulfillment_cost,fulfillments_count,'
+                   'orders_count,ad_spend,other_costs,outcome,profit'.split(','))
         )
 
 
@@ -132,7 +132,7 @@ class RevenueTestCase(BaseTestCase):
         self.time = timezone.now()
         for i in range(10):
             o = ShopifyOrderFactory(store=self.store, created_at=self.time + timedelta(days=i))
-            o.financial_status='paid'
+            o.financial_status = 'paid'
             o.save()
 
         end = self.time + timedelta(9)
@@ -166,7 +166,7 @@ class FulfillmentCostTestCase(BaseTestCase):
             with patch('django.utils.timezone.now', Mock(return_value=time)):  # mock auto_now_add=True
                 amount = randint(100, 1000)
                 self.total += amount
-                track = f.ShopifyOrderTrackFactory(
+                f.ShopifyOrderTrackFactory(
                     store=self.store,
                     user=self.user,
                     source_id=uuid.uuid4().hex,

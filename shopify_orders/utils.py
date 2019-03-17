@@ -26,7 +26,7 @@ def str_max(text, max_len):
 
 
 def get_customer_name(customer):
-    return u'{} {}'.format(
+    return '{} {}'.format(
         customer.get('first_name', ''),
         customer.get('last_name', '')).strip()
 
@@ -560,31 +560,31 @@ class OrderErrorsCheck:
         erros_desc = []
         if contact_name and not self.compare_name(order.customer_name, contact_name):
             found_errors |= OrderErrors.NAME
-            erros_desc.append(u'Customer Error: ' + order.customer_name + u' <> ' + contact_name)
-            track.add_error(u"Customer is '{}' should be '{}'".format(contact_name, order.customer_name))
+            erros_desc.append('Customer Error: ' + order.customer_name + ' <> ' + contact_name)
+            track.add_error("Customer is '{}' should be '{}'".format(contact_name, order.customer_name))
 
         if city and not self.compare_city(order.city, city):
             found_errors |= OrderErrors.CITY
-            erros_desc.append(u'City Error: ' + order.city + u' <> ' + city)
-            track.add_error(u"City is '{}' should be '{}'".format(city, order.city))
+            erros_desc.append('City Error: ' + order.city + ' <> ' + city)
+            track.add_error("City is '{}' should be '{}'".format(city, order.city))
 
         shopiyf_country = country_from_code(order.country_code)
         if country and not self.compare_country(shopiyf_country, country):
             found_errors |= OrderErrors.COUNTRY
-            erros_desc.append(u'Country Error: ' + shopiyf_country + u' <> ' + country)
-            track.add_error(u"Country is '{}' should be '{}'".format(country, shopiyf_country))
+            erros_desc.append('Country Error: ' + shopiyf_country + ' <> ' + country)
+            track.add_error("Country is '{}' should be '{}'".format(country, shopiyf_country))
 
         if found_errors:
             self.errors += 1
 
             self.write(
                 track.store.title,
-                u'#{}'.format(order.order_number + 1000),
+                '#{}'.format(order.order_number + 1000),
                 track.source_id,
                 track.source_status,
                 arrow.get(order.created_at).humanize(),
                 order.total_price,
-                u'\n\t' + u'\n\t'.join(erros_desc)
+                '\n\t' + '\n\t'.join(erros_desc)
             )
 
         if commit:
@@ -621,7 +621,7 @@ class OrderErrorsCheck:
 
     def compare_country(self, first, second):
         if second == 'Puerto Rico':
-            second = u'United States'
+            second = 'United States'
 
         first = self.clean_name(first)
         second = self.clean_name(second)
@@ -636,4 +636,4 @@ class OrderErrorsCheck:
 
     def write(self, *args):
         if self.stdout:
-            self.stdout.write(u' | '.join([unicode(i) for i in args]))
+            self.stdout.write(' | '.join([str(i) for i in args]))

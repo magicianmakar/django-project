@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
+from django.db import migrations
 import json
+import requests
+
 
 def get_myshopify_link(user, default_store, link):
-    stores = [default_store,]
+    stores = [default_store]
     for i in user.shopifystore_set.all():
         if i not in stores:
             stores.append(i)
@@ -17,9 +19,10 @@ def get_myshopify_link(user, default_store, link):
         if len(r['products']) == 1:
             return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
 
-        print ' * Product not found in store: {}'.format(store.title)
+        print(' * Product not found in store: {}'.format(store.title))
 
     return None
+
 
 def get_product_original_info(product):
     data = json.loads(product.data)
@@ -39,6 +42,7 @@ def get_product_original_info(product):
         }
 
     return None
+
 
 def combine_names(apps, schema_editor):
     ShopifyProduct = apps.get_model("leadgalaxy", "ShopifyProduct")
@@ -75,9 +79,9 @@ def combine_names(apps, schema_editor):
             unexported_products += 1
 
     if any([merged_products, unexported_products, problematic_products]):
-        print '* Merged Products:', merged_products
-        print '* Unexported Products:', unexported_products
-        print '* Problematic Products:', problematic_products
+        print ('* Merged Products:', merged_products)
+        print ('* Unexported Products:', unexported_products)
+        print ('* Problematic Products:', problematic_products)
 
 
 class Migration(migrations.Migration):

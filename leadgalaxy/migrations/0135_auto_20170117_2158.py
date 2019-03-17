@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('allowed_credits', models.IntegerField(default=0)),
-                ('amount', models.IntegerField(default=0, verbose_name=b'In USD')),
+                ('amount', models.IntegerField(default=0, verbose_name='In USD')),
             ],
         ),
         migrations.RemoveField(

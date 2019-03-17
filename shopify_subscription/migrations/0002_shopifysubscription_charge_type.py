@@ -15,6 +15,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='shopifysubscription',
             name='charge_type',
-            field=models.CharField(choices=[(b'recurring', b'Recurring'), (b'single', b'Single Charge')], default=b'recurring', max_length=25),
+            field=models.CharField(choices=[('recurring', 'Recurring'), ('single', 'Single Charge')], default='recurring', max_length=25),
         ),
     ]

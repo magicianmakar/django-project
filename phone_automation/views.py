@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import json
 import mimetypes
 import re
@@ -193,7 +191,7 @@ def provision_release(request):
     twilio_phone_number = request.user.models_user.twilio_phone_number
     removal_avail_date = twilio_phone_number.created_at + timedelta(days=30)
     if not request.user.can('phone_automation_unlimited_phone_numbers.use') and timezone.now() < removal_avail_date:
-        messages.error(request, u'You can not remove this phone number until {}'.format(removal_avail_date.strftime("%b %d, %Y")))
+        messages.error(request, 'You can not remove this phone number until {}'.format(removal_avail_date.strftime("%b %d, %Y")))
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
     try:
@@ -236,7 +234,7 @@ def status_callback(request):
                 twilio_recording = TwilioRecording()
                 twilio_recording.twilio_log = twilio_log
                 twilio_recording.recording_sid = recording.sid
-                twilio_recording.recording_url = u"https://api.twilio.com/{}.mp3".format(recording.uri.rsplit('.json', 1)[0])
+                twilio_recording.recording_url = "https://api.twilio.com/{}.mp3".format(recording.uri.rsplit('.json', 1)[0])
                 twilio_metadata = json.dumps(recording._properties, default=JsonDatetimeConverter)
                 twilio_recording.twilio_metadata = twilio_metadata
                 twilio_recording.save()
@@ -285,8 +283,8 @@ def upload(request, twilio_phone_number_id):
 
     # Randomize filename in order to not overwrite an existing file
     ext = audio.name.split('.')[1:]
-    audio_name = u'{}-{}.{}'.format(twilio_phone_number_id, step, '.'.join(ext))
-    audio_name = u'uploads/u{}/phone/{}'.format(user.id, audio_name)
+    audio_name = '{}-{}.{}'.format(twilio_phone_number_id, step, '.'.join(ext))
+    audio_name = 'uploads/u{}/phone/{}'.format(user.id, audio_name)
     mimetype = mimetypes.guess_type(audio.name)[0]
 
     upload_url = aws_s3_upload(
@@ -352,7 +350,7 @@ def call_flow_menu(request):
     response = VoiceResponse()
 
     repeated = request.GET.get('repeated', 0)
-    action = u'{}?step={}&repeated={}'.format(reverse('phone_automation_call_flow_menu_options'), current_step.step, repeated)
+    action = '{}?step={}&repeated={}'.format(reverse('phone_automation_call_flow_menu_options'), current_step.step, repeated)
     gather = Gather(num_digits=1, action=action)
 
     if config.get('mp3'):
@@ -383,7 +381,7 @@ def call_flow_menu_options(request):
         repeated = safe_int(request.GET.get('repeated', 0))
         if repeat and repeated < 1:
             repeated += 1
-            response.redirect(u'{}&repeated={}'.format(current_step.url, repeated))
+            response.redirect('{}&repeated={}'.format(current_step.url, repeated))
         else:
             response.redirect(current_step.redirect)
 

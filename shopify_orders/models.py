@@ -33,8 +33,8 @@ class ShopifySyncStatus(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     elastic = models.BooleanField(default=False)
 
-    def __unicode__(self):
-        return u'{} / {}'.format(self.sync_type, self.store.title)
+    def __str__(self):
+        return '{} / {}'.format(self.sync_type, self.store.title)
 
     def add_pending_order(self, order_id, commit=True):
         try:
@@ -100,8 +100,8 @@ class ShopifyOrder(models.Model):
     closed_at = models.DateTimeField(null=True, blank=True)
     cancelled_at = models.DateTimeField(null=True, blank=True)
 
-    def __unicode__(self):
-        return u'#{} | {}'.format(self.order_number + 1000, self.store.title)
+    def __str__(self):
+        return '#{} | {}'.format(self.order_number + 1000, self.store.title)
 
     @property
     def is_cancelled(self):
@@ -128,8 +128,8 @@ class ShopifyOrderLine(models.Model):
     variant_id = models.BigIntegerField()
     variant_title = models.TextField(blank=True, null=True, default='')
 
-    def __unicode__(self):
-        return u'{}'.format(self.variant_title)
+    def __str__(self):
+        return '{}'.format(self.variant_title)
 
 
 class ShopifyOrderShippingLine(models.Model):
@@ -144,7 +144,7 @@ class ShopifyOrderShippingLine(models.Model):
     carrier_identifier = models.CharField(max_length=256, null=True, blank=True)
     requested_fulfillment_service_id = models.CharField(max_length=256, null=True, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
 
@@ -161,7 +161,7 @@ class ShopifyOrderVariant(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{}'.format(self.variant_title)
 
 
@@ -171,8 +171,8 @@ class ShopifyOrderRisk(models.Model):
     data = models.TextField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __unicode__(self):
-        return u'OrderRisk #{}'.format(self.order_id)
+    def __str__(self):
+        return 'OrderRisk #{}'.format(self.order_id)
 
     def get_data(self):
         try:
@@ -219,8 +219,8 @@ class ShopifyOrderLog(models.Model):
 
     objects = ShopifyOrderLogManager()
 
-    def __unicode__(self):
-        return u'Log: #{}'.format(self.order_id)
+    def __str__(self):
+        return 'Log: #{}'.format(self.order_id)
 
     def add_log(self, log, user, line_id=None, level=None, icon=None, commit=True):
         log_time = arrow.utcnow().timestamp
@@ -270,7 +270,7 @@ class ShopifyOrderLog(models.Model):
                 })
 
         if sort:
-            logs = sorted(logs, cmp=lambda a, b: cmp(a['time'], b['time']), reverse=bool(sort == 'desc'))
+            logs = sorted(logs, key=lambda a: a['time'], reverse=bool(sort == 'desc'))
 
         if pretty:
             from leadgalaxy.utils import get_shopify_order_line

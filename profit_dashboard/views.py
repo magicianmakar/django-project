@@ -335,7 +335,7 @@ def facebook_remove_account(request):
         # Remove account_id from FacebookAccess.account_ids
         account_ids = access.account_ids.split(',')
         current_account_id = account.first().account_id
-        account_ids = filter(lambda account_id: account_id != current_account_id, account_ids)
+        account_ids = [account_id for account_id in account_ids if account_id != current_account_id]
         access.account_ids = ','.join(account_ids)
         access.save()
 

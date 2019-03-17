@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyordertrack',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, verbose_name=b'Submission date', db_index=True),
+            field=models.DateTimeField(auto_now_add=True, verbose_name='Submission date', db_index=True),
         ),
     ]

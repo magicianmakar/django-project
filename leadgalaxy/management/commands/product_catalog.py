@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import arrow
 import time
 
@@ -82,19 +81,19 @@ class Command(DropifiedBaseCommand):
         self.show_catalog_for_store(store_title, product_catalogs)
 
         if date:
-            self.write(u'\nOver the past {}'.format(timesince(date)), self.style.WARNING)
+            self.write('\nOver the past {}'.format(timesince(date)), self.style.WARNING)
         else:
             self.write('\nSince the beginning of time', self.style.WARNING)
 
         elapsed = time.time() - start
         elapsed = '{:.2f} seconds'.format(elapsed) if elapsed < 60 else '{:.2f} minutes'.format(elapsed / 60)
-        self.write(u'\nTime elapsed: {}'.format(elapsed), self.style.ERROR)
+        self.write('\nTime elapsed: {}'.format(elapsed), self.style.ERROR)
 
     def show_catalog_for_store(self, store_title, product_catalogs):
         self.write('For store: {}'.format(store_title), self.style.WARNING)
-        for supplier_domain, line_items_count in product_catalogs.items():
+        for supplier_domain, line_items_count in list(product_catalogs.items()):
             if supplier_domain is None:
-                print supplier_domain
+                print(supplier_domain)
             self.write('{:3,} line items connected to {}'.format(
                 line_items_count,
                 supplier_domain.title()),

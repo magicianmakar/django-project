@@ -1,7 +1,7 @@
 from django.core.cache import cache
 
 from shopified_core.api_helper import ApiHelperBase
-import tasks
+from . import tasks
 
 
 class ShopifyApiHelper(ApiHelperBase):

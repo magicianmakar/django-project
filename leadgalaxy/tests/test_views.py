@@ -12,7 +12,7 @@ from django.conf import settings
 
 from mock import patch, Mock
 
-import factories as f
+from . import factories as f
 
 from lib.test import BaseTestCase
 from stripe_subscription.tests.factories import StripeCustomerFactory
@@ -25,6 +25,8 @@ from leadgalaxy.models import ShopifyStore, AppPermission
 from leadgalaxy.tasks import delete_shopify_store
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
+
+from shopified_core.utils import base64_encode
 
 
 class ProfileViewTestCase(BaseTestCase):
@@ -40,7 +42,7 @@ class ProfileViewTestCase(BaseTestCase):
     def test_get_invoices_is_not_called_on_initial_load(self, get_invoices):
         self.client.login(username=self.user.username, password=self.password)
         response = self.client.get(reverse('user_profile'))
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         self.assertFalse(get_invoices.called)
 
 
@@ -63,7 +65,7 @@ class ProfileInvoicesTestCase(BaseTestCase):
         kwargs = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
         self.client.get(reverse('user_profile_invoices'), **kwargs)
         self.client.get(reverse('user_profile_invoices'), **kwargs)
-        self.assertEquals(get_invoices.call_count, 1)
+        self.assertEqual(get_invoices.call_count, 1)
 
 
 class GetProductTestCase(BaseTestCase):
@@ -98,7 +100,7 @@ class GetProductTestCase(BaseTestCase):
         products = [item['qelem'] for item in items]
 
         self.assertIn(product, products)
-        self.assertEquals(len(products), 1)
+        self.assertEqual(len(products), 1)
 
     def test_products_can_be_filtered_by_title_base64(self):
         product = f.ShopifyProductFactory(
@@ -113,13 +115,13 @@ class GetProductTestCase(BaseTestCase):
         )
         request = Mock()
         request.user = self.user
-        request.GET = {'title': 'b:' + 'test'.encode('base64')}
+        request.GET = {'title': 'b:' + base64_encode(b'test')}
 
         items = get_product(request, filter_products=True)[0]
         products = [item['qelem'] for item in items]
 
         self.assertIn(product, products)
-        self.assertEquals(len(products), 1)
+        self.assertEqual(len(products), 1)
 
     def test_products_can_be_sorted_by_title(self):
         product1 = f.ShopifyProductFactory(
@@ -144,7 +146,7 @@ class GetProductTestCase(BaseTestCase):
         items = get_product(request, False, sort='-title')[0]
         products = [item['qelem'] for item in items]
 
-        self.assertEquals([product3, product2, product1], products)
+        self.assertEqual([product3, product2, product1], products)
 
     def test_products_can_be_sorted_by_price(self):
         product1 = f.ShopifyProductFactory(user=self.user, store=self.store, data=json.dumps({'price': 1.0}))
@@ -157,9 +159,9 @@ class GetProductTestCase(BaseTestCase):
         items = get_product(request, False, sort='-price')[0]
         products = [item['qelem'] for item in items]
 
-        self.assertEquals(
-            map(lambda p: float(p.price), [product3, product2, product1]),
-            map(lambda p: float(p.price), products)
+        self.assertEqual(
+            [float(p.price) for p in [product3, product2, product1]],
+            [float(p.price) for p in products]
         )
 
 
@@ -184,7 +186,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         data = json.dumps({'b': False, 'store': self.store.id})
         self.user.profile.subuser_stores.add(self.store)
         r = self.client.post('/api/save-for-later', data, content_type='application/json')
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
     @patch('shopified_core.mixins.ApiResponseMixin.get_user')
@@ -195,7 +197,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_permissions.remove(permission)
         data = json.dumps({'b': False, 'store': self.store.id})
         r = self.client.post('/api/save-for-later', data, content_type='application/json')
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
     @patch('leadgalaxy.utils.fix_product_url', Mock(return_value={}))
@@ -205,7 +207,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         data = json.dumps({'b': False, 'store': self.store.id})
         self.user.profile.subuser_stores.add(self.store)
         r = self.client.post('/api/shopify', data, content_type='application/json')
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
     @patch('shopified_core.mixins.ApiResponseMixin.get_user')
@@ -216,7 +218,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_permissions.remove(permission)
         data = json.dumps({'b': False, 'store': self.store.id})
         r = self.client.post('/api/shopify', data, content_type='application/json')
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
     @patch('leadgalaxy.utils.fix_product_url', Mock(return_value={}))
@@ -226,7 +228,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         data = json.dumps({'b': False, 'store': self.store.id})
         self.user.profile.subuser_stores.add(self.store)
         r = self.client.post('/api/shopify-update', data, content_type='application/json')
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
 
     @patch('leadgalaxy.tasks.export_product', Mock(return_value=None))
     @patch('shopified_core.mixins.ApiResponseMixin.get_user')
@@ -237,14 +239,14 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_permissions.remove(permission)
         data = json.dumps({'b': False, 'store': self.store.id})
         r = self.client.post('/api/shopify-update', data, content_type='application/json')
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
     def test_subuser_can_delete_product_with_permission(self):
         product = f.ShopifyProductFactory(store=self.store, user=self.parent_user)
         self.user.profile.subuser_stores.add(self.store)
         data = {'product': product.id}
         r = self.client.post('/api/product-delete', data)
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
 
     def test_subuser_cant_delete_product_without_permission(self):
         self.user.profile.subuser_stores.add(self.store)
@@ -253,9 +255,9 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         product = f.ShopifyProductFactory(store=self.store, user=self.parent_user)
         data = {'product': product.id}
         r = self.client.post('/api/product-delete', data)
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
         json_response = json.loads(r.content)
-        self.assertEquals(json_response['error'], self.error_message)
+        self.assertEqual(json_response['error'], self.error_message)
 
     @patch('leadgalaxy.models.ShopifyStore.pusher_trigger', Mock(return_value=None))
     @patch('leadgalaxy.utils.ShopifyOrderUpdater.delay_save', Mock(return_value=None))
@@ -263,7 +265,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_stores.add(self.store)
         data = {'store': self.store.id, 'order_id': '1', 'line_id': '1', 'aliexpress_order_id': '01234566789'}
         r = self.client.post('/api/order-fulfill', data)
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
 
     def test_subuser_cant_order_fulfill_without_permission(self):
         self.user.profile.subuser_stores.add(self.store)
@@ -271,7 +273,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_permissions.remove(permission)
         data = {'store': self.store.id, 'order_id': '1', 'line_id': '1', 'aliexpress_order_id': '01234566789'}
         r = self.client.post('/api/order-fulfill', data)
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
     @patch('leadgalaxy.views.utils.order_track_fulfillment', Mock(return_value=None))
     @patch('leadgalaxy.models.ShopifyStore.get_link', Mock(return_value=None))
@@ -285,7 +287,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_stores.add(self.store)
         data = {'fulfill-store': self.store.id, 'fulfill-line-id': 1, 'fulfill-order-id': 2}
         r = self.client.post('/api/fulfill-order', data)
-        self.assertEquals(r.status_code, 200)
+        self.assertEqual(r.status_code, 200)
 
     @patch('leadgalaxy.utils.ShopifyOrderUpdater.delay_save', Mock(return_value=None))
     def test_subuser_cant_fulfill_order_without_permission(self):
@@ -294,7 +296,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         self.user.profile.subuser_permissions.remove(permission)
         data = {'fulfill-store': self.store.id}
         r = self.client.post('/api/fulfill-order', data)
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
 
 class AutocompleteTestCase(BaseTestCase):
@@ -317,7 +319,7 @@ class AutocompleteTestCase(BaseTestCase):
             r = self.client.get('/autocomplete/supplier-name?store={}&query=tes'.format(self.store.id))
             content = json.loads(r.content)
             suggestion = content['suggestions'].pop()
-            self.assertEquals(suggestion['value'], supplier.supplier_name)
+            self.assertEqual(suggestion['value'], supplier.supplier_name)
         except NotImplementedError:
             pass
 
@@ -326,7 +328,7 @@ class AutocompleteTestCase(BaseTestCase):
         product = f.ShopifyProductFactory(store=store, user=store.user)
         f.ProductSupplierFactory(product=product, supplier_name='Test')
         r = self.client.get('/autocomplete/supplier-name?store={}&query=tes'.format(store.id))
-        self.assertEquals(r.status_code, 403)
+        self.assertEqual(r.status_code, 403)
 
 
 class AffiliateTestCase(BaseTestCase):
@@ -413,7 +415,7 @@ class AffiliateTestCase(BaseTestCase):
             r'item%2F-%2F32735736988.html'
         )
 
-        r = self.client.get('/orders/place', self.place_order_data)
+        self.client.get('/orders/place', self.place_order_data)
 
         affiliate_url.assert_called_with(
             self.user.get_config('aliexpress_affiliate_key'),
@@ -431,7 +433,7 @@ class AffiliateTestCase(BaseTestCase):
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 
-        r = self.client.get('/orders/place', self.place_order_data)
+        self.client.get('/orders/place', self.place_order_data)
 
         affiliate_url.assert_called_with(
             self.user.get_config('admitad_site_id'),
@@ -451,7 +453,7 @@ class AffiliateTestCase(BaseTestCase):
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 
-        r = self.client.get('/orders/place', self.place_order_data)
+        self.client.get('/orders/place', self.place_order_data)
 
         get_admitad_affiliate_url.assert_called_with(
             self.user.get_config('admitad_site_id'),
@@ -489,7 +491,6 @@ class AutoFulfillLimitsTestCase(BaseTestCase):
 
     @patch('django.contrib.messages.error')
     def test_plan_without_orders(self, messages):
-        plan = self.user.profile.plan
         self.plan.auto_fulfill_limit = 0
         self.plan.save()
 
@@ -503,7 +504,6 @@ class AutoFulfillLimitsTestCase(BaseTestCase):
 
     @patch('django.contrib.messages.error')
     def test_plan_order_within_limit(self, messages):
-        plan = self.user.profile.plan
         self.plan.auto_fulfill_limit = 10
         self.plan.save()
 
@@ -520,7 +520,6 @@ class AutoFulfillLimitsTestCase(BaseTestCase):
 
     @patch('django.contrib.messages.error')
     def test_plan_order_pass_limit(self, messages):
-        plan = self.user.profile.plan
         self.plan.auto_fulfill_limit = 10
         self.plan.save()
 
@@ -557,7 +556,7 @@ class RegisterTestCase(BaseTestCase):
 
     def test_events_are_removed_after_fire(self):
         self.client.post('/accounts/register', self.credentials, follow=True)
-        self.assertEquals(RegistrationEvent.objects.count(), 0)
+        self.assertEqual(RegistrationEvent.objects.count(), 0)
 
 
 def delete_shopify_store_callback(*args, **kwargs):
@@ -619,9 +618,9 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
             "customer": shopify_customer,
             "orders_to_redact": self.shopify_order_ids
         })
-        shopify_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), self.customer_payload, sha256).digest()
+        shopify_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), self.customer_payload.encode(), sha256).digest()
         self.customer_headers = {
-            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodestring(shopify_hash).strip()
+            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodebytes(shopify_hash).strip()
         }
 
         # Params for store delete webhook request
@@ -629,9 +628,9 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
             "shop_id": "shopify_shop_id",
             "shop_domain": self.store.get_shop(full_domain=True),
         })
-        shopify_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), self.store_payload, sha256).digest()
+        shopify_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), self.store_payload.encode(), sha256).digest()
         self.store_headers = {
-            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodestring(shopify_hash).strip()
+            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodebytes(shopify_hash).strip()
         }
 
     def test_not_from_shopify(self):
@@ -639,23 +638,23 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
                                     self.customer_payload,
                                     content_type="application/json")
 
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
         stores = ShopifyStore.objects.all()
         orders = ShopifyOrder.objects.all()
 
-        self.assertNotEquals(stores.count(), 0)
-        self.assertNotEquals(orders.count(), 0)
+        self.assertNotEqual(stores.count(), 0)
+        self.assertNotEqual(orders.count(), 0)
 
     def test_delete_customer(self):
         response = self.client.post('/webhook/gdpr-shopify/delete-customer',
                                     self.customer_payload,
                                     content_type="application/json",
                                     **self.customer_headers)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
         # Check if database orders are deleted
         orders = ShopifyOrder.objects.all()
-        self.assertEquals(orders.count(), 0)
+        self.assertEqual(orders.count(), 0)
 
     @mock.patch.object(delete_shopify_store, 'delay', side_effect=delete_shopify_store_callback)
     def test_delete_store(self, d):
@@ -663,13 +662,13 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
                                     self.store_payload,
                                     content_type="application/json",
                                     **self.store_headers)
-        self.assertEquals(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
         store = ShopifyStore.objects.get(id=self.store.id)
         orders = ShopifyOrder.objects.filter(store__delete_request_at=None)
 
-        self.assertNotEquals(store, store.delete_request_at)
-        self.assertEquals(orders.count(), 0)
+        self.assertNotEqual(store, store.delete_request_at)
+        self.assertEqual(orders.count(), 0)
 
 
 class SlackCommandWebhooksTestCase(BaseTestCase):
@@ -687,56 +686,56 @@ class SlackCommandWebhooksTestCase(BaseTestCase):
         response = self.client.post('/webhook/slack/command', payload)
 
         self.assertTrue(AppPermission.objects.filter(name='feature.use').exists())
-        self.assertIn('successfully created', response.content)
+        self.assertContains(response, 'successfully created')
 
     def test_permission_create_wrong_args(self):
         payload = {'command': '/permission', 'text': 'create test.use', 'user_id': 'TEST'}
         response = self.client.post('/webhook/slack/command', payload)
 
-        self.assertIn('Wrong number', response.content)
+        self.assertContains(response, 'Wrong number')
 
     def test_permission_create_wrong_name(self):
         payload = {'command': '/permission', 'text': 'create new.test.use Awesome Feature', 'user_id': 'TEST'}
         response = self.client.post('/webhook/slack/command', payload)
 
-        self.assertIn('is not correct', response.content)
+        self.assertContains(response, 'is not correct')
 
         payload = {'command': '/permission', 'text': 'create test.feature Awesome Feature', 'user_id': 'TEST'}
         response = self.client.post('/webhook/slack/command', payload)
 
-        self.assertIn('is not correct', response.content)
+        self.assertContains(response, 'is not correct')
 
     def test_permission_create_wrong_existing(self):
         payload = {'command': '/permission', 'text': 'create newtest.use Awesome Feature', 'user_id': 'TEST'}
         response = self.client.post('/webhook/slack/command', payload)
 
-        self.assertIn('successfully created', response.content)
+        self.assertContains(response, 'successfully created')
 
         payload = {'command': '/permission', 'text': 'create newtest.use Awesome Feature', 'user_id': 'TEST'}
         response = self.client.post('/webhook/slack/command', payload)
 
-        self.assertIn('already exists', response.content)
+        self.assertContains(response, 'already exists')
 
     def test_permission_list(self):
         payload = {'command': '/permission', 'text': 'create newtest.use Awesome Feature', 'user_id': 'TEST'}
         response = self.client.post('/webhook/slack/command', payload)
 
-        self.assertIn('successfully created', response.content)
+        self.assertContains(response, 'successfully created')
 
         payload = {'command': '/permission', 'text': 'list', 'user_id': 'TEST'}
         response = self.client.post('/webhook/slack/command', payload)
 
-        self.assertIn('Permissions List', response.content)
-        self.assertIn('newtest.use', response.content)
+        self.assertContains(response, 'Permissions List')
+        self.assertContains(response, 'newtest.use')
 
     def test_permission_view(self):
         payload = {'command': '/permission', 'text': 'create newtest.use Awesome Feature', 'user_id': 'TEST'}
         response = self.client.post('/webhook/slack/command', payload)
 
-        self.assertIn('successfully created', response.content)
+        self.assertContains(response, 'successfully created')
 
         payload = {'command': '/permission', 'text': 'view newtest.use', 'user_id': 'TEST'}
         response = self.client.post('/webhook/slack/command', payload)
 
-        self.assertIn('added to Plans:', response.content)
-        self.assertIn('newtest.use', response.content)
+        self.assertContains(response, 'added to Plans:')
+        self.assertContains(response, 'newtest.use')

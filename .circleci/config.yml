@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/ShopifiedApp/webapp
     docker:
-      - image: circleci/python:2.7
+      - image: circleci/python:3.6.7
         environment:
           DEBUG_APP: "TRUE"
 
@@ -71,11 +71,11 @@ jobs:
       - restore_cache:
           keys:
           # This branch if available
-          - v2-dep-{{ .Branch }}-
+          - v3.6-dep-{{ .Branch }}-
           # Default branch if not
-          - v2-dep-master-
+          - v3.6-dep-master-
           # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
-          - v2-dep-
+          - v3.6-dep-
 
       - run:
           name: Install Python Dependencies
@@ -91,17 +91,28 @@ jobs:
 
       # Save dependency cache
       - save_cache:
-          key: v2-dep-{{ .Branch }}-{{ epoch }}
+          key: v3.6-dep-{{ .Branch }}-{{ epoch }}
           paths:
           - app/static/libs/bower_components
+          - node_modules
           - venv
+
+      - run:
+          name: Common Issues
+          command: |
+            source venv/bin/activate
+            ./scripts/common_issues.sh
 
       - run:
           name: Django Tests
           command: |
             source venv/bin/activate
-            ./scripts/common_issues.sh
             coverage run ./manage.py test --noinput -v2
+
+      - run:
+          name: Coverage Report
+          command: |
+            source venv/bin/activate
             coverage report --skip-covered
             coverage html --skip-covered
 
@@ -110,6 +121,11 @@ jobs:
           command: |
             source venv/bin/activate
             python manage.py collectstatic --noinput --traceback 2>&1 | sed '/^Post-processed/d;/^Copying/d;/^$/d'
+
+      - run:
+          name: Django Compressor
+          command: |
+            source venv/bin/activate
             DEBUG_APP="FALSE" python manage.py compress
 
       - store_artifacts:

@@ -14,26 +14,26 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='shopifyorder',
             name='country_code',
-            field=models.CharField(default=b'', max_length=32, db_index=True, blank=True),
+            field=models.CharField(default='', max_length=32, db_index=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyorder',
             name='customer_email',
-            field=models.CharField(default=b'', max_length=256, null=True, db_index=True, blank=True),
+            field=models.CharField(default='', max_length=256, null=True, db_index=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyorder',
             name='customer_name',
-            field=models.CharField(default=b'', max_length=256, null=True, db_index=True, blank=True),
+            field=models.CharField(default='', max_length=256, null=True, db_index=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyorder',
             name='tags',
-            field=models.CharField(default=b'', max_length=256, null=True, db_index=True, blank=True),
+            field=models.CharField(default='', max_length=256, null=True, db_index=True, blank=True),
         ),
         migrations.AlterField(
             model_name='shopifyorderline',
             name='title',
-            field=models.CharField(default=b'', max_length=256, db_index=True, blank=True),
+            field=models.CharField(default='', max_length=256, db_index=True, blank=True),
         ),
     ]

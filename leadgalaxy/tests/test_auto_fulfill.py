@@ -1,6 +1,3 @@
-import os
-from StringIO import StringIO
-
 from django.utils import timezone
 from django.test import tag
 from django.core.management import call_command
@@ -17,7 +14,7 @@ import factory
 
 from mock import patch, Mock
 
-import factories as f
+from . import factories as f
 
 
 class ShopifyOrderTrackFactory(factory.django.DjangoModelFactory):
@@ -73,6 +70,7 @@ class ShopifyOrderFactory(factory.django.DjangoModelFactory):
     order_number = 31
     total_price = 100
     customer_id = 1
+    items_count = 1
     fulfillment_status = ''
     created_at = utils.timezone.now()
     updated_at = utils.timezone.now()
@@ -161,7 +159,7 @@ class AutoFulfillCombinedTestCase(BaseTestCase):
         tracks = []
         api_data = {'fulfillment': {
             'line_items': [],
-            'tracking_number': u'MA7565915257226HK',
+            'tracking_number': 'MA7565915257226HK',
             'tracking_company': 'USPS',
             'notify_customer': True,
             'location_id': self.store.get_primary_location()

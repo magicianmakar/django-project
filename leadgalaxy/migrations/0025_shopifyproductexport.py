@@ -16,9 +16,9 @@ class Migration(migrations.Migration):
             name='ShopifyProductExport',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('original_url', models.CharField(default=b'', max_length=512, blank=True)),
-                ('shopify_id', models.BigIntegerField(default=0, verbose_name=b'Shopif Product ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name=b'Submittion date')),
+                ('original_url', models.CharField(default='', max_length=512, blank=True)),
+                ('shopify_id', models.BigIntegerField(default=0, verbose_name='Shopif Product ID')),
+                ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')),
                 ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=django.db.models.deletion.CASCADE)),
             ],
             options={

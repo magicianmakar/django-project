@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import simplejson as json
 import re
 import uuid
@@ -128,7 +127,7 @@ class OrderExportVendor(models.Model):
     def generate_password(self):
         self.raw_password = uuid.uuid4().hex[:6]
 
-    def __unicode__(self):
+    def __str__(self):
         return '{} @{}'.format(self.owner, self.user)
 
 
@@ -150,7 +149,7 @@ class OrderExportFilter(models.Model):
     product_price_max = models.FloatField(null=True, blank=True)
     product_title = models.TextField(blank=True, null=True, default='')
 
-    def __unicode__(self):
+    def __str__(self):
         return '<OrderExportFilter {}>'.format(self.vendor)
 
 
@@ -206,7 +205,7 @@ class OrderExport(models.Model):
 
         super(OrderExport, self).__getattr__(name)
 
-    def __unicode__(self):
+    def __str__(self):
         return '<OrderExport {}>'.format(self.store.title)
 
     @cached_property
@@ -348,7 +347,7 @@ class OrderExportLog(models.Model):
     csv_url = models.CharField(max_length=512, blank=True, default='')
     type = models.CharField(max_length=100, choices=TYPE_CHOICES, default=SAMPLE)
 
-    def __unicode__(self):
+    def __str__(self):
         return '<OrderExportLog {}>'.format(self.id)
 
 

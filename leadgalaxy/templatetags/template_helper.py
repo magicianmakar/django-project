@@ -3,7 +3,7 @@ from django.utils.safestring import mark_safe
 from django.conf import settings
 from django.utils.html import escapejs
 
-from shopified_core.utils import decode_params, app_link as utils_app_link
+from shopified_core.utils import decode_params, app_link as utils_app_link, base64_encode
 
 import simplejson as json
 import re
@@ -60,16 +60,16 @@ def get_datetime(isodate):
 @register.simple_tag(takes_context=True)
 def encode_order(context, data, auto):
     data['auto'] = (auto == 'True')
-    return json.dumps(data).encode('base64').replace('\n', '')
+    return base64_encode(json.dumps(data))
 
 
 @register.simple_tag(takes_context=True)
-def base64_encode(context, data):
-    return data.encode('utf8').encode('base64').replace('\n', '')
+def tag_base64_encode(context, data, name='base64_encode'):
+    return base64_encode(data)
 
 
 @register.simple_tag(takes_context=True)
-def base64_decode(context, data):
+def base64_decode_params(context, data):
     return decode_params(data)
 
 
@@ -87,7 +87,7 @@ def remove_link_query(context, link):
         return ''
 
     if not link.startswith('http'):
-        link = u'http://{}'.format(link)
+        link = 'http://{}'.format(link)
 
     return re.sub('([?#].*)$', r'', link)
 

@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='facebookaccount',
             name='config',
-            field=models.CharField(default=b'selected', max_length=100, choices=[(b'include', b'Include Selected Campaign Only'), (b'include_and_new', b'Include Selected Campaign and newer ones'), (b'exclude', b'Exclude Selected Campaign')]),
+            field=models.CharField(default='selected', max_length=100, choices=[('include', 'Include Selected Campaign Only'), ('include_and_new', 'Include Selected Campaign and newer ones'), ('exclude', 'Exclude Selected Campaign')]),
         ),
     ]

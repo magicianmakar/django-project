@@ -56,18 +56,20 @@ class UtilTestCase(BaseTestCase):
         # "ships from" country for the shopify variant is China
         index = variant_index_from_supplier_sku(product, '14:1254#Sky Blue;5:361385#L;200007763:201336100#China', variants, '201336100', 'China')
         self.assertIsNotNone(index)
-        variant = variants[index]
+
         self.assertEqual(variants[index]['option1'], 'Sky Blue')
         self.assertEqual(variants[index]['option2'], 'L')
 
         # Couldn't find a variant mapped with Russian variants
-        index = variant_index_from_supplier_sku(product, '14:1254#Sky Blue;5:361385#L;200007763:201336103#Russian Federation', variants, '201336103', 'Russian Federation')
+        index = variant_index_from_supplier_sku(product, '14:1254#Sky Blue;5:361385#L;200007763:201336103#Russian Federation', variants, '201336103',
+                                                'Russian Federation')
         self.assertIsNone(index)
 
         supplier = ProductSupplier.objects.get(pk=8)
         product.set_default_supplier(supplier)
         # Sky Blue/L variant was mapped to a variant shipped from Russia
-        index = variant_index_from_supplier_sku(product, '14:1254#Sky Blue;5:361385#L;200007763:201336103#Russian Federation', variants, '201336103', 'Russian Federation')
+        index = variant_index_from_supplier_sku(product, '14:1254#Sky Blue;5:361385#L;200007763:201336103#Russian Federation', variants, '201336103',
+                                                'Russian Federation')
         self.assertIsNotNone(index)
         self.assertEqual(variants[index]['option1'], 'Sky Blue')
         self.assertEqual(variants[index]['option2'], 'L')

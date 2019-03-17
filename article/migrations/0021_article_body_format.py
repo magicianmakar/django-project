@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='article',
             name='body_format',
-            field=models.CharField(default=b'wysiwyg', max_length=64, verbose_name=b'Article format', choices=[(b'wysiwyg', b'WYSIWYG'), (b'markdown', b'Markdown')]),
+            field=models.CharField(default='wysiwyg', max_length=64, verbose_name='Article format', choices=[('wysiwyg', 'WYSIWYG'), ('markdown', 'Markdown')]),
         ),
     ]
