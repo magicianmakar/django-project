@@ -1411,7 +1411,7 @@ def update_shopify_product_vendor(store, product_shopify_id, vendor):
 
 
 def webhook_token(store_id):
-    return hashlib.md5('{}-{}'.format(store_id, settings.SECRET_KEY)).hexdigest()
+    return hashlib.md5('{}-{}'.format(store_id, settings.SECRET_KEY).encode()).hexdigest()
 
 
 def create_shopify_webhook(store, topic):

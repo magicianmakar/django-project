@@ -73,9 +73,9 @@ class FeedStatus(FeedStatusAbstract):
 
     def get_filename(self, revision=None):
         if revision == 3:
-            feed_hash = hashlib.md5('u{}/{}/{}'.format(self.store.user.id, self.store.id, revision)).hexdigest()
+            feed_hash = hashlib.md5('u{}/{}/{}'.format(self.store.user.id, self.store.id, revision).encode()).hexdigest()
         else:
-            feed_hash = hashlib.md5('u{}/{}'.format(self.store.user.id, self.store.id)).hexdigest()
+            feed_hash = hashlib.md5('u{}/{}'.format(self.store.user.id, self.store.id).encode()).hexdigest()
 
         return 'feeds/{}.xml'.format(feed_hash)
 
@@ -88,7 +88,7 @@ class CommerceHQFeedStatus(FeedStatusAbstract):
         verbose_name_plural = 'Commerce HQ Feed Statuses'
 
     def get_filename(self, revision=None):
-        feed_hash = hashlib.md5('u{}/{}/{}'.format('chq', self.store.user.id, self.store.id)).hexdigest()
+        feed_hash = hashlib.md5('u{}/{}/{}'.format('chq', self.store.user.id, self.store.id).encode()).hexdigest()
         return 'feeds/{}.xml'.format(feed_hash)
 
 
@@ -100,7 +100,7 @@ class WooFeedStatus(FeedStatusAbstract):
         verbose_name_plural = 'WooCommerce Feed Statuses'
 
     def get_filename(self, revision=None):
-        feed_hash = hashlib.md5('u{}/{}/{}'.format('woo', self.store.user.id, self.store.id)).hexdigest()
+        feed_hash = hashlib.md5('u{}/{}/{}'.format('woo', self.store.user.id, self.store.id).encode()).hexdigest()
         return 'feeds/{}.xml'.format(feed_hash)
 
 
@@ -112,5 +112,5 @@ class GearBubbleFeedStatus(FeedStatusAbstract):
         verbose_name_plural = 'GearBubble Feed Statuses'
 
     def get_filename(self, revision=None):
-        feed_hash = hashlib.md5('u{}/{}/{}'.format('gear', self.store.user.id, self.store.id)).hexdigest()
+        feed_hash = hashlib.md5('u{}/{}/{}'.format('gear', self.store.user.id, self.store.id).encode()).hexdigest()
         return 'feeds/{}.xml'.format(feed_hash)
