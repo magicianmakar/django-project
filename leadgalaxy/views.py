@@ -722,7 +722,7 @@ def webhook(request, provider, option):
 
             elif topic == 'products/delete':
                 # Remove from Price Monitor Service
-                if product.monitor_id > 0:
+                if product.monitor_id and product.monitor_id > 0:
                     try:
                         delete_product_monitor(product.monitor_id)
                     except:
@@ -1598,7 +1598,7 @@ def product_view(request, pid):
 
     last_check = None
     try:
-        if product.monitor_id > 0:
+        if product.monitor_id and product.monitor_id > 0:
             cache_key = 'product_last_check_{}'.format(product.id)
             last_check = cache.get(cache_key)
 
