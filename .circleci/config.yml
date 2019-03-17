@@ -65,6 +65,7 @@ jobs:
       - run:
           name: Static Code Checks
           command: |
+              flake8 --version
               flake8 --show-source
 
       # Restore the dependency cache

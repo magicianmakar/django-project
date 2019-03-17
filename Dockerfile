@@ -1,4 +1,4 @@
-FROM python:2.7.15
+FROM python:3.6.7
 ENV PYTHONUNBUFFERED 1
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     gettext \
     nodejs \
     postgresql-client
-RUN pip install pip==19.0.3
+RUN pip install -U pip
 WORKDIR /opt/dropified
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
