@@ -1289,7 +1289,7 @@ def webhook(request, provider, option):
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None, load_boards=False):
     products = []
     paginator = None
-    page = request.GET.get('page', 1)
+    page = safe_int(request.GET.get('page'), 1)
     models_user = request.user.models_user
     user = request.user
     user_stores = request.user.profile.get_shopify_stores(flat=True)
@@ -1344,7 +1344,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
 
     paginator = SimplePaginator(res, post_per_page)
 
-    page = min(max(1, safe_int(page)), paginator.num_pages)
+    page = min(max(1, page), paginator.num_pages)
     page = paginator.page(page)
     res = page
 
@@ -4654,7 +4654,7 @@ def bundles_bonus(request, bundle_id):
 @login_required
 def products_collections(request, collection):
     post_per_page = settings.ITEMS_PER_PAGE
-    page = request.GET.get('page', 1)
+    page = safe_int(request.GET.get('page'), 1)
     page = max(1, page)
 
     paginator = utils.ProductsCollectionPaginator([], post_per_page)
