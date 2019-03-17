@@ -620,7 +620,7 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
         })
         shopify_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), self.customer_payload.encode(), sha256).digest()
         self.customer_headers = {
-            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodebytes(shopify_hash).strip()
+            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodebytes(shopify_hash).strip().decode()
         }
 
         # Params for store delete webhook request
@@ -630,7 +630,7 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
         })
         shopify_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), self.store_payload.encode(), sha256).digest()
         self.store_headers = {
-            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodebytes(shopify_hash).strip()
+            'HTTP_X_SHOPIFY_HMAC_SHA256': base64.encodebytes(shopify_hash).strip().decode()
         }
 
     def test_not_from_shopify(self):
