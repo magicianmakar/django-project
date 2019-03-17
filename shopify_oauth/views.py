@@ -60,11 +60,12 @@ def verify_hmac_signature(request):
 
 
 def shop_username(shop):
-    name = shop.lower().strip().encode()
+    name = shop.lower().strip()
     if len(name) <= 30:
         return name
     else:
-        return hmac.new(settings.SHOPIFY_API_SECRET.encode(), name, hashlib.sha256).hexdigest()[:30]
+        encoded_name = hmac.new(settings.SHOPIFY_API_SECRET.encode(), name.encode(), hashlib.sha256).hexdigest()
+        return encoded_name[:30]
 
 
 def have_subusers(user):
