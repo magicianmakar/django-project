@@ -193,10 +193,6 @@ DATABASE_ROUTERS = [
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_PROXY_PROTOCOL', 'https')
 
 SECURE_SSL_REDIRECT = not DEBUG and not os.environ.get('DISABLE_SSL_REDIRECT')
-SECURE_REDIRECT_EXEMPT = [
-    '^webhook/',
-    '^marketing/feeds/',
-]
 
 STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
