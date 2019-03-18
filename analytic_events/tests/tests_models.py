@@ -1,6 +1,3 @@
-from django.contrib.sessions.backends.db import SessionStore
-from django.contrib.sessions.models import Session
-
 from leadgalaxy.tests.factories import UserFactory
 
 from lib.test import BaseTestCase

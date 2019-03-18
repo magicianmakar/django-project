@@ -8,4 +8,3 @@ class StripeCustomerFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'stripe_subscription.StripeCustomer'
-

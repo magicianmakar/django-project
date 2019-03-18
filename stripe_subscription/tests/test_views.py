@@ -9,7 +9,6 @@ from mock import Mock, patch
 from . import factories as f
 
 from leadgalaxy.tests.factories import UserFactory
-from analytic_events.models import SuccessfulPaymentEvent
 
 
 class InvoicePayView(BaseTestCase):

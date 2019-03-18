@@ -1,13 +1,19 @@
 from mock import Mock
 
-from django import db
-
 from .factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 
 from lib.test import BaseTestCase
-from leadgalaxy.models import *
 from leadgalaxy.utils import create_user_without_signals
 from .factories import ShopifyProductFactory
+from leadgalaxy.models import (
+    DataStore,
+    GroupPlan,
+    SUBUSER_PERMISSIONS,
+    SUBUSER_STORE_PERMISSIONS,
+    SubuserPermission,
+    User,
+    add_to_class,
+)
 
 
 class UserTestCase(BaseTestCase):
@@ -119,5 +125,3 @@ class ShopifyProductTestCase(BaseTestCase):
         product.set_original_data(data)
         data_store = DataStore.objects.using('store_db').first()
         self.assertEqual(data_store.key, product.original_data_key)
-
-

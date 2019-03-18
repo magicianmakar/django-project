@@ -56,7 +56,6 @@ class UtilTestCase(BaseTestCase):
         # "ships from" country for the shopify variant is China
         index = variant_index_from_supplier_sku(product, '14:1254#Sky Blue;5:361385#L;200007763:201336100#China', variants, '201336100', 'China')
         self.assertIsNotNone(index)
-
         self.assertEqual(variants[index]['option1'], 'Sky Blue')
         self.assertEqual(variants[index]['option2'], 'L')
 

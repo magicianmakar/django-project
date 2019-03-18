@@ -2,7 +2,7 @@ from lib.test import BaseTestCase
 from django.utils import timezone
 from django.db.models import Max
 
-from shopify_orders.models import *
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 from leadgalaxy.tests.factories import ShopifyProductFactory
 import factory
 
@@ -87,7 +87,7 @@ class UtilsTestCase(BaseTestCase):
         values = orders.values_list('order_id', 'connected')
         self.assertEqual(len(values), 2)
         self.assertTrue(2456789123 in [i[0] for i in values])
-        self.assertEqual(orders.count(),  2)
+        self.assertEqual(orders.count(), 2)
 
         ShopifyOrder.objects.all().delete()
 
@@ -99,4 +99,4 @@ class UtilsTestCase(BaseTestCase):
 
         values = orders.values_list('order_id', 'connected')
         self.assertEqual(len(values), 0)
-        self.assertEqual(orders.count(),  0)
+        self.assertEqual(orders.count(), 0)

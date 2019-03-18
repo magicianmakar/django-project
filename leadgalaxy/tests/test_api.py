@@ -27,7 +27,6 @@ class ProductsApiTestCase(BaseTestCase):
     def test_find_products_by_shopify_ids(self, get_api_user):
         get_api_user.return_value = self.user
         product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
-        supplier = f.ProductSupplierFactory(store=self.store, product=product, supplier_name='Test')
         data = {'store': self.store.id, 'product': product.shopify_id}
 
         r = self.client.get('/api/find-products', data, content_type='application/json')
@@ -40,7 +39,8 @@ class ProductsApiTestCase(BaseTestCase):
         get_api_user.return_value = self.user
         source_id = 123
         product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
-        supplier = f.ProductSupplierFactory(store=self.store, product=product, supplier_name='Test', product_url='aliexpress.com/{}.html'.format(source_id))
+        product_url = 'aliexpress.com/{}.html'.format(source_id)
+        supplier = f.ProductSupplierFactory(store=self.store, product=product, supplier_name='Test', product_url=product_url)
         data = {'store': self.store.id, 'aliexpress': supplier.source_id}
 
         r = self.client.get('/api/find-products', data)
@@ -72,7 +72,7 @@ class SyncAliexpressTestCase(BaseTestCase):
 
         created_at = timezone.now()
         for i in range(10):
-            with patch('django.utils.timezone.now', Mock(return_value=created_at - timedelta(days=3*i))):  # mock auto_now_add=True
+            with patch('django.utils.timezone.now', Mock(return_value=created_at - timedelta(days=3 * i))):  # mock auto_now_add=True
                 # Unfulfilled
                 f.ShopifyOrderTrackFactory(user=self.parent_user,
                                            store=self.store)

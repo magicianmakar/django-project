@@ -2,9 +2,8 @@ import json
 import traceback
 
 from mock import patch, Mock
-from requests.exceptions import HTTPError
 
-from django.core.cache import cache, caches
+from django.core.cache import caches
 from django.test import tag
 
 from lib.test import BaseTestCase
@@ -288,7 +287,6 @@ class OrdersTestCase(BaseTestCase):
     def test_order_notes(self):
         try:
             order_id = 1016
-            line_id = 9309669834
 
             store = self.store
             order = utils.get_chq_order(store, order_id)

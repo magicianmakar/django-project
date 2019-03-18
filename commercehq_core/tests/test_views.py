@@ -212,7 +212,7 @@ class StoreDeleteTestCase(BaseTestCase):
 
     def test_user_must_be_able_to_delete_own_store(self):
         self.client.login(username=self.user.username, password=self.password)
-        r = self.client.delete(self.path, **self.headers)
+        self.client.delete(self.path, **self.headers)
         count = self.user.commercehqstore_set.filter(is_active=True).count()
         self.assertEqual(count, 0)
 
@@ -314,7 +314,7 @@ class BoardCreateTestCase(BaseTestCase):
     @patch('commercehq_core.api.permissions.can_add_board', Mock(return_value=(True, True, True)))
     def test_must_add_board_to_user(self):
         self.login()
-        r = self.client.post(self.path, self.data, **self.headers)
+        self.client.post(self.path, self.data, **self.headers)
         board = CommerceHQBoard.objects.get(title=self.data['title'])
         self.assertEqual(board.user, self.user)
 
@@ -415,7 +415,7 @@ class BoardEmptyTestCase(BaseTestCase):
 
     def test_user_must_be_able_to_empty_own_board(self):
         self.client.login(username=self.user.username, password=self.password)
-        r = self.client.post(self.path, data={'board_id': self.board.pk}, **self.headers)
+        self.client.post(self.path, data={'board_id': self.board.pk}, **self.headers)
         count = self.board.products.count()
         self.assertEqual(count, 0)
 

@@ -1,4 +1,3 @@
-import traceback
 import mock
 import simplejson as json
 from mock import patch, ANY

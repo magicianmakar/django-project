@@ -167,7 +167,7 @@ class ProductSupplierTestCase(BaseTestCase):
         supplier = ProductSupplier.objects.create(
             store=self.store,
             product=self.product,
-            product_url="https://www.ebay.com/itm/SanDisk-1GB-SD-Memory-Card-Secure-Digital/401613226743?epid=1480667342&hash=item5d820382f7:rk:1:pf:0"
+            product_url="https://www.ebay.com/itm/SanDisk-1GB-SD-Memory-Card-Secure-Digital/401613226743?epid=1480667342&hash=item5d820382f7:rk:1:pf:0" # noqa
         )
 
         self.assertTrue(supplier.is_ebay)
@@ -176,7 +176,7 @@ class ProductSupplierTestCase(BaseTestCase):
         supplier = ProductSupplier.objects.create(
             store=self.store,
             product=self.product,
-            product_url="https://www.ebay.com/itm/SanDisk-1GB-SD-Memory-Card-Secure-Digital/401613226743?epid=1480667342&hash=item5d820382f7:rk:1:pf:0"
+            product_url="https://www.ebay.com/itm/SanDisk-1GB-SD-Memory-Card-Secure-Digital/401613226743?epid=1480667342&hash=item5d820382f7:rk:1:pf:0" # noqa
         )
 
         self.assertEqual(supplier.get_source_id(), 401613226743)

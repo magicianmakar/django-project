@@ -115,8 +115,7 @@ class TubeHuntApiTest(BaseTestCase):
         video_list.add_videos('a;b;c')
         video_list.save()
         values = video_list.pk, 'b', 'c'
-        r = self.client.delete('/api/tubehunt/list-videos?list_id={}&video_ids[]={}&video_ids[]={}'.format(*values))
+        self.client.delete('/api/tubehunt/list-videos?list_id={}&video_ids[]={}&video_ids[]={}'.format(*values))
         video_list.refresh_from_db()
         self.assertNotIn('b', video_list.get_videos())
         self.assertNotIn('c', video_list.get_videos())
-

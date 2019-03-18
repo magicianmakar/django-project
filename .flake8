@@ -10,7 +10,6 @@ exclude =
     app/templates,
     node_modules,
     migrations,
-    tests,
     tests.py,
     scripts,
     patches,

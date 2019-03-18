@@ -98,8 +98,7 @@ class StripeCustomerTestCase(BaseTestCase):
 
     @patch('stripe_subscription.models.time.sleep')
     @patch('stripe_subscription.models.stripe.Invoice.list')
-    def test_invoices_must_sleep_and_wait_for_rate_limit_errors(
-                self, invoice_list, sleep):
+    def test_invoices_must_sleep_and_wait_for_rate_limit_errors(self, invoice_list, sleep):
         invoice_list.side_effect = (
             stripe.error.RateLimitError('Too many requests made'),
             Mock(data=[], has_more=False)
