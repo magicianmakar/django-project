@@ -314,7 +314,8 @@ def call_flow(request):
     total_duration_month_limit = get_month_limit(phone.user)
 
     # if monthly limmit reached, reject the call
-    if total_duration_month_limit and total_duration > total_duration_month_limit:
+    if total_duration_month_limit and total_duration \
+            and total_duration > total_duration_month_limit:
         response.reject()
     else:
         try:
