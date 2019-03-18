@@ -314,7 +314,7 @@ class ShopifyOrderExport():
         url = ''
         vendor = slugify(self.order_export.filters.vendor.strip())
 
-        with open(self.file_path, 'wr') as csv_file:
+        with open(self.file_path, 'w') as csv_file:
             fields = self.order_export.fields_choices
             fieldnames = self._get_fieldnames(fields)
 
@@ -502,7 +502,7 @@ class ShopifyTrackOrderExport():
         start = 0
         steps = 1000
 
-        with open(self.file_path, 'wr') as csv_file:
+        with open(self.file_path, 'w') as csv_file:
             fieldnames = ['Shopify Order', 'Shopify Item', 'Supplier Order ID', 'Tracking Number']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
