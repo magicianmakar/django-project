@@ -4,7 +4,7 @@
 # Setup development environment
 
 The following apps are required for Dropified:
-- Python 2.7.11 or higher
+- Python 3.6
 - Python Pip
 - PostgreSQL 9.5
 - Redis Server 3.0
@@ -24,7 +24,7 @@ sudo pip install autoenv
 Then install the required modules:
 ```
 cd dropified-webapp
-virtualenv venv
+virtualenv venv # add "-p python3" if necessary 
 source venv/bin/activate
 pip install -r requirements.txt
 ```
@@ -85,14 +85,16 @@ python manage.py createsuperuser
 
 ### Autoenv
 Each time we enter dropified-webapp folder, `autoenv` will run the `.env` file, that will give us access to the following aliases:
-```
-dj-run: Run web application server
-dj-migrate: Run django Migrations on both databases
-dj-makemigrations: python manage.py makemigrations
-dj-shell: python manage.py shell
-dj-celery: Run Celery worker
-dj-push: Run flake8 and push changes if flake8 doesn't raise any warnings
-```
+
+|Command|Description|
+|--|--|
+|dj-run|Run web application server|
+|dj-celery|Run Celery worker|
+|dj-migrate|Run django Migrations on both databases|
+|dj-makemigrations|python manage.py makemigrations|
+|dj-shell|python manage.py shell_plus|
+|dj-push|Run flake8 and push changes if flake8 doesn't raise any warnings|
+
 
 ### Docker based dev environment
 You will need to install the following dependencies for this:
