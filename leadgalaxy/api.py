@@ -1858,7 +1858,7 @@ class ShopifyStoreApi(ApiBase):
         try:
             LastSeen.objects.when(user.models_user, 'website')
         except:
-            return self.api_error('User Not Logged In', status=429)
+            return self.api_error('User is not active', status=429)
 
         orders = []
         created_at_start = None
@@ -1890,8 +1890,10 @@ class ShopifyStoreApi(ApiBase):
 
             tz = timezone.localtime(timezone.now()).strftime(' %z')
             created_at_start = arrow.get(created_at_start + tz, r'MM/DD/YYYY Z').datetime
-            created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
-            created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
+
+            if created_at_end:
+                created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
+                created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
 
             if created_at_start >= created_at_max:
                 created_at_max = created_at_start

@@ -2,14 +2,18 @@ import json
 import uuid
 from datetime import timedelta
 
+import arrow
+from munch import Munch
+from mock import patch, Mock
+
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
-
-from mock import patch, Mock
+from django.core.cache import caches
 
 from . import factories as f
 from lib.test import BaseTestCase
+from shopified_core.utils import order_data_cache
 
 
 class ProductsApiTestCase(BaseTestCase):
@@ -47,6 +51,256 @@ class ProductsApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         json_response = json.loads(r.content)
         self.assertIsNotNone(json_response.get(str(source_id)))
+
+    @patch('leadgalaxy.tasks.update_shopify_product')
+    @patch('leadgalaxy.tasks.update_product_connection.delay')
+    def test_post_product_connect(self, update_product_connection, update_shopify_product):
+        product = f.ShopifyProductFactory(
+            store=self.store, user=self.user, shopify_id=12345678,
+            data='''{"store": {
+                "name": "Suplier 1",
+                "url": "https://www.aliexpress.com/item//12345467890.html"
+            }}''')
+
+        data = {'product': product.id, 'store': self.store.id, 'shopify': 12345670001}
+        r = self.client.post('/api/shopify/product-connect', data)
+        self.assertEqual(r.status_code, 200)
+
+        product.refresh_from_db()
+        self.assertEqual(product.shopify_id, data['shopify'])
+
+        update_product_connection.assert_called_with(self.store.id, data['shopify'])
+        update_shopify_product.assert_called_with(self.store.id, data['shopify'], product_id=product.id)
+
+    @patch('leadgalaxy.utils.duplicate_product')
+    def test_post_product_duplicate(self, duplicate_product):
+        duplicate_product_id = 1111222
+        duplicate_product.return_value = Munch({'id': duplicate_product_id})
+        product = f.ShopifyProductFactory(
+            store=self.store, user=self.user, shopify_id=12345678,
+            data='''{"store": {
+                "name": "Suplier 1",
+                "url": "https://www.aliexpress.com/item//12345467890.html"
+            }}''')
+
+        data = {'product': product.id}
+        r = self.client.post('/api/shopify/product-duplicate', data)
+        self.assertEqual(r.status_code, 200)
+
+        self.assertEqual(r.json()['product']['id'], duplicate_product_id)
+        self.assertEqual(r.json()['product']['url'], f'/product/{duplicate_product_id}')
+
+        duplicate_product.assert_called_with(product)
+
+    @patch('leadgalaxy.utils.set_shopify_order_note')
+    def test_post_order_note(self, set_shopify_order_note):
+        order_id = '123456789'
+        note = 'Test Note'
+        data = {'store': self.store.id, 'order_id': order_id, 'note': note}
+
+        r = self.client.post('/api/shopify/order-note', data)
+        self.assertEqual(r.status_code, 200)
+
+        set_shopify_order_note.assert_called_with(self.store, order_id, note)
+
+    @patch('leadgalaxy.tasks.create_image_zip.apply_async')
+    def test_get_product_image_download(self, create_image_zip):
+        product = f.ShopifyProductFactory(
+            store=self.store, user=self.user, shopify_id=12345678,
+            data='''{"store": {
+                "name": "Suplier 1",
+                "url": "https://www.aliexpress.com/item//12345467890.html"
+            }}''')
+
+        data = {'product': product.id}
+
+        r = self.client.get('/api/shopify/product-image-download', data)
+        self.assertEqual(r.status_code, 422)
+        self.assertIn(r.json()['error'], 'Product doesn\'t have any images')
+
+        create_image_zip.assert_not_called()
+
+        images = ["http://www.aliexpress.com/image/1.png"]
+        product = f.ShopifyProductFactory(
+            store=self.store, user=self.user, shopify_id=12345678,
+            data=json.dumps({"images": images}))
+
+        data = {'product': product.id}
+        r = self.client.get('/api/shopify/product-image-download', data)
+        self.assertEqual(r.status_code, 200)
+
+        create_image_zip.assert_called_with(args=[images, product.id], countdown=5)
+
+    def test_get_order_data(self):
+        store_id, order_id, line_id = self.store.id, 1233, 55466677
+        order_key = f'{store_id}_{order_id}_{line_id}'
+
+        data = {
+            "id": order_key,
+            "quantity": 1,
+            "shipping_address": {
+                "first_name": "Red",
+                "address1": "5541 Great Road ",
+                "phone": "922481541",
+                "city": "Moody",
+                "zip": "35004",
+                "province": "Alabama",
+                "country": "United States",
+                "last_name": "Smin",
+                "address2": "",
+                "company": "",
+                "name": "Red Smin",
+                "country_code": "US",
+                "province_code": "AL"
+            },
+            "order_id": order_id,
+            "line_id": line_id,
+            "product_id": 686,
+            "source_id": 32846904328,
+            "supplier_id": 1405349,
+            "supplier_type": "aliexpress",
+            "total": 26.98,
+            "store": store_id,
+            "order": {
+                "phone": "922481541",
+                "note": "Do not put invoice or advertisement.",
+                "epacket": True,
+                "auto_mark": True,
+                "phoneCountry": "+1"
+            },
+            "products": [],
+            "is_bundle": False,
+            "variant": [
+                {
+                    "sku": "sku-1-193",
+                    "title": "black"
+                },
+                {
+                    "sku": "sku-2-201336106",
+                    "title": "United States"
+                }
+            ],
+            "ordered": False,
+            "fast_checkout": True,
+            "solve": False
+        }
+
+        data.update({
+            'id': order_key,
+            'order_id': order_id,
+            'line_id': line_id,
+            'store': store_id,
+        })
+
+        caches['orders'].set(f'order_{order_key}', data)
+        self.assertIsNotNone(caches['orders'].get(f'order_{order_key}'))
+        self.assertIsNotNone(order_data_cache(f'order_{order_key}'))
+        self.assertIsNotNone(order_data_cache(f'{order_key}'))
+        self.assertIsNotNone(order_data_cache(self.store.id, order_id, line_id))
+
+        # Store not found
+        r = self.client.get('/api/shopify/order-data', {'order': f'444{order_key}'})
+        self.assertEqual(r.status_code, 404)
+        self.assertIn('Store not found', str(r.content))
+
+        # Order not found
+        r = self.client.get('/api/shopify/order-data', {'order': f'{order_key}5455'})
+        self.assertEqual(r.status_code, 404)
+        self.assertIn('Not found:', str(r.content))
+
+        # Key order prefix is present
+        r = self.client.get('/api/shopify/order-data', {'order': f'order_{order_key}'})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(json.dumps(r.json(), indent=2), json.dumps(data, indent=2))
+
+        # Key prefix removed (default)
+        r = self.client.get('/api/shopify/order-data', {'order': f'{order_key}'})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json(), data)
+        self.assertFalse(r.json()['ordered'])
+
+        # Test aliexpress_country_code_map
+        data['shipping_address']['country_code'] = 'GB'
+        caches['orders'].set(f'order_{order_key}', data)
+
+        r = self.client.get('/api/shopify/order-data', {'order': f'{order_key}'})
+        self.assertEqual(r.status_code, 200)
+        self.assertNotEqual(r.json()['shipping_address']['country_code'], data['shipping_address']['country_code'])
+        self.assertEqual(r.json()['shipping_address']['country_code'], 'UK')
+
+        # Order Track exist
+        f.ShopifyOrderTrackFactory(user=self.user, store=self.store, order_id=order_id, line_id=line_id)
+
+        r = self.client.get('/api/shopify/order-data', {'order': f'{order_key}'})
+        ordered = r.json()['ordered']
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(type(ordered), dict)
+        self.assertIn('time', ordered)
+        self.assertIn('link', ordered)
+
+    def test_post_variants_mapping(self):
+        product = f.ShopifyProductFactory(
+            store=self.store, user=self.user, shopify_id=12345678,
+            data='''{"store": {
+                "name": "Suplier 1",
+                "url": "https://www.aliexpress.com/item//12345467890.html"
+            }}''')
+
+        supplier = f.ProductSupplierFactory(product=product)
+
+        var_id = '18395643215934'
+        data = {
+            'product': product.id,
+            'supplier': supplier.id,
+            var_id: '[{"title":"China","sku":"sku-1-201336100"}]',
+        }
+
+        r = self.client.post('/api/shopify/variants-mapping', data)
+        self.assertEqual(r.status_code, 200)
+
+        product.refresh_from_db()
+        self.assertEqual(product.get_variant_mapping(var_id), json.loads(data[var_id]))
+        self.assertEqual(product.get_variant_mapping(var_id, for_extension=True), json.loads(data[var_id]))
+
+    def test_get_order_fulfill_active(self):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='orders.use', description=''))
+
+        r = self.client.get('/api/shopify/order-fulfill', {})
+        self.assertEqual(r.status_code, 429)
+        self.assertEqual(r.json()['error'], 'User is not active')
+
+    @patch('last_seen.models.LastSeen.objects.when', Mock(return_value=True))
+    def test_get_order_fulfill(self):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='orders.use', description=''))
+
+        f.ShopifyOrderTrackFactory(store=self.store, user=self.user, order_id=12345, line_id=777777)
+        track = f.ShopifyOrderTrackFactory(store=self.store, user=self.user, order_id=12346, line_id=777778)
+        track.created_at = arrow.utcnow().replace(days=-2).datetime
+        track.save()
+
+        r = self.client.get('/api/shopify/order-fulfill', {})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.json()), 2)
+
+        r = self.client.get('/api/shopify/order-fulfill', {'count_only': 'true'})
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(r.json()['pending'], 2)
+
+        track = f.ShopifyOrderTrackFactory(store=self.store, user=self.user, order_id=12347, line_id=777779)
+        track.created_at = arrow.utcnow().replace(days=-3).datetime
+        track.save()
+
+        r = self.client.get('/api/shopify/order-fulfill', {})
+        self.assertEqual(len(r.json()), 3)
+
+        date = arrow.utcnow().replace(days=-2).datetime
+        r = self.client.get('/api/shopify/order-fulfill', {'created_at': f'{date:%m/%d/%Y-}'})
+        self.assertEqual(len(r.json()), 2)
+
+        from_date, to_date = arrow.utcnow().replace(days=-3).datetime, arrow.utcnow().replace(days=-3).datetime
+        r = self.client.get('/api/shopify/order-fulfill', {'created_at': f'{from_date:%m/%d/%Y}-{to_date:%m/%d/%Y}'})
+        self.assertEqual(len(r.json()), 1)
+        self.assertEqual(r.json()[0]['id'], track.id)
 
 
 # Fix for last_seen cache
