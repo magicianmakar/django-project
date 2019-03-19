@@ -3,7 +3,7 @@ from tqdm import tqdm
 
 from shopified_core.management import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
-from shopify_orders.utils import is_store_synced, get_elastic
+from shopify_orders.utils import is_store_synced, is_store_sync_enabled, get_elastic
 from leadgalaxy.models import ShopifyStore
 from shopify_orders.utils import delete_store_orders
 
@@ -18,6 +18,8 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--user', dest='user', action='append', type=int, help='User Stores to index')
         parser.add_argument('--days', dest='days', action='store', type=int, help='Index order in the least number of days')
         parser.add_argument('--reset', dest='reset', action='store_true', help='Delete Store indexed orders before indexing')
+        parser.add_argument('--dry-run', dest='dry_run', action='store_true', help='Show what will be indexed')
+        parser.add_argument('--store-progress', dest='store_progress', action='store_true', help='Show stores indexing progress')
 
     def start_command(self, *args, **options):
         stores = ShopifyStore.objects.filter(is_active=True, shopifysyncstatus__sync_status__in=[2, 5])
@@ -32,15 +34,35 @@ class Command(DropifiedBaseCommand):
 
         self.set_mappings()
 
-        stores_bar = tqdm(total=stores.count())
+        if options['store_progress']:
+            stores_bar = tqdm(total=stores.count())
 
         for store in stores:
-            stores_bar.update(1)
+            if options['store_progress']:
+                stores_bar.update(1)
+
             if not is_store_synced(store):
+                self.write(f'Store {store.shop} is not synced')
+                continue
+
+            if not is_store_sync_enabled(store):
+                self.write(f'Store {store.shop} sync is not enabled')
                 continue
 
             if options.get('reset'):
-                delete_store_orders(store, db=False, es=True)
+                self.write(f'Reset Store {store.shop} index')
+
+                if not options['dry_run']:
+                    delete_store_orders(store, db=False, es=True)
+
+            elif ShopifySyncStatus.objects.filter(store=store, elastic=True).exists():
+                self.write(f'Store {store.shop} is already indexed')
+                continue
+
+            if options['dry_run']:
+                orders_count = store.get_orders_count(all_orders=True)
+                self.write(f'Store {store.shop} with {orders_count:,} orders will be indexed')
+                continue
 
             orders = ShopifyOrder.objects.prefetch_related('shopifyorderline_set').filter(store_id=store.id)
 
@@ -49,7 +71,7 @@ class Command(DropifiedBaseCommand):
 
             orders_count = orders.count()
 
-            orders_bar = tqdm(desc=store.title, total=orders_count)
+            orders_bar = tqdm(desc=store.shop, total=orders_count)
             for ok, item in streaming_bulk(self.es, self.get_orders_iterator(orders, orders_count)):
                 orders_bar.update(1)
 
@@ -57,7 +79,8 @@ class Command(DropifiedBaseCommand):
 
             orders_bar.close()
 
-        stores_bar.close()
+        if options['store_progress']:
+            stores_bar.close()
 
     def get_orders_iterator(self, orders, count):
         start = 0
