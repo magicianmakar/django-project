@@ -161,36 +161,14 @@ class ProductsApiTestCase(BaseTestCase):
             "supplier_type": "aliexpress",
             "total": 26.98,
             "store": store_id,
-            "order": {
-                "phone": "922481541",
-                "note": "Do not put invoice or advertisement.",
-                "epacket": True,
-                "auto_mark": True,
-                "phoneCountry": "+1"
-            },
+            "order": {"phone": "922481541", "note": "Do not put invoice.", "epacket": True, "auto_mark": True, "phoneCountry": "+1"},
             "products": [],
             "is_bundle": False,
-            "variant": [
-                {
-                    "sku": "sku-1-193",
-                    "title": "black"
-                },
-                {
-                    "sku": "sku-2-201336106",
-                    "title": "United States"
-                }
-            ],
+            "variant": [{"sku": "sku-1-193", "title": "black"}, {"sku": "sku-2-201336106", "title": "United States"}],
             "ordered": False,
             "fast_checkout": True,
             "solve": False
         }
-
-        data.update({
-            'id': order_key,
-            'order_id': order_id,
-            'line_id': line_id,
-            'store': store_id,
-        })
 
         caches['orders'].set(f'order_{order_key}', data)
         self.assertIsNotNone(caches['orders'].get(f'order_{order_key}'))
@@ -261,6 +239,72 @@ class ProductsApiTestCase(BaseTestCase):
         product.refresh_from_db()
         self.assertEqual(product.get_variant_mapping(var_id), json.loads(data[var_id]))
         self.assertEqual(product.get_variant_mapping(var_id, for_extension=True), json.loads(data[var_id]))
+
+    def test_post_suppliers_mapping(self):
+        product = f.ShopifyProductFactory(
+            store=self.store, user=self.user, shopify_id=12345678,
+            data='''{"store": {
+                "name": "Suplier 1",
+                "url": "https://www.aliexpress.com/item//12345467890.html"
+            }}''')
+
+        supplier1 = f.ProductSupplierFactory(product=product)
+        supplier2 = f.ProductSupplierFactory(product=product)
+
+        product.set_default_supplier(supplier1)
+
+        var_ids = ['18401388822590', '18401388888126', '18401388855358']
+        data = {
+            f'config': 'default',
+            f'product': product.id,
+            f'shipping_{supplier1.id}_{var_ids[0]}': '[{"country":"FR","method":"FEDEX_IE","country_name":"France","method_name":"Fedex IE ($51.38)"},{"country":"US","method":"EMS","country_name":"United States","method_name":"EMS ($32.14)"}]', # noqa
+            f'shipping_{supplier1.id}_{var_ids[1]}': '[{"country":"CA","method":"EMS","country_name":"Canada","method_name":"EMS ($37.49)"}]', # noqa
+            f'shipping_{supplier1.id}_{var_ids[2]}': '[{"country_name":"United States","country":"US","method_name":"Fedex IE ($40.53)","method":"FEDEX_IE"}]', # noqa
+            f'{var_ids[0]}': '{"supplier":' f'{supplier1.id}' ',"shipping":[{"country":"FR","method":"FEDEX_IE","country_name":"France","method_name":"Fedex IE ($51.38)"},{"country":"US","method":"EMS","country_name":"United States","method_name":"EMS ($32.14)"}]}', # noqa
+            f'{var_ids[1]}': '{"supplier":' f'{supplier1.id}' ',"shipping":[{"country":"CA","method":"EMS","country_name":"Canada","method_name":"EMS ($37.49)"}]}', # noqa
+            f'{var_ids[2]}': '{"supplier":' f'{supplier1.id}' ',"shipping":[{"country_name":"United States","country":"US","method_name":"Fedex IE ($40.53)","method":"FEDEX_IE"}]}', # noqa
+            f'variant_{supplier1.id}_{var_ids[0]}': '[{"sku":"sku-1-173","title":"blue"},{"sku":"sku-2-201336106","title":"United States"}]',
+            f'variant_{supplier1.id}_{var_ids[1]}': '[{"sku":"sku-1-366","title":"yellow"},{"sku":"sku-2-201336106","title":"United States"}]',
+            f'variant_{supplier1.id}_{var_ids[2]}': '[{"sku":"sku-1-193","title":"black"},{"sku":"sku-2-201336106","title":"United States"}]',
+            f'variant_{supplier2.id}_{var_ids[0]}': '[{"sku":"sku-1-201336100","title":"China"},{"sku":"sku-2-193","title":"black"},{"sku":"sku-3-100006192","title":"2"},{"sku":"sku-4-203221828","title":"Player Sets"}]', # noqa
+            f'variant_{supplier2.id}_{var_ids[1]}': '[{"sku":"sku-1-201336100","title":"China"},{"sku":"sku-2-193","title":"black"},{"sku":"sku-3-100006192","title":"2"},{"sku":"sku-4-203221828","title":"Player Sets"}]', # noqa
+            f'variant_{supplier2.id}_{var_ids[2]}': '[{"sku":"sku-1-201336100","title":"China"},{"sku":"sku-2-193","title":"black"},{"sku":"sku-3-100006192","title":"2"},{"sku":"sku-4-203221828","title":"Player Sets"}]', # noqa
+        }
+
+        r = self.client.post('/api/shopify/suppliers-mapping', data)
+        self.assertEqual(r.status_code, 200)
+
+        product.refresh_from_db()
+        supplier1.refresh_from_db()
+        supplier2.refresh_from_db()
+
+        self.assertEqual(product.get_variant_mapping(var_ids[0], supplier=supplier1), json.loads(data[f'variant_{supplier1.id}_{var_ids[0]}']))
+        self.assertEqual(product.get_variant_mapping(var_ids[1], supplier=supplier1), json.loads(data[f'variant_{supplier1.id}_{var_ids[1]}']))
+        self.assertEqual(product.get_variant_mapping(var_ids[2], supplier=supplier1), json.loads(data[f'variant_{supplier1.id}_{var_ids[2]}']))
+
+        self.assertEqual(product.get_variant_mapping(var_ids[0], supplier=supplier2), json.loads(data[f'variant_{supplier2.id}_{var_ids[0]}']))
+        self.assertEqual(product.get_variant_mapping(var_ids[1], supplier=supplier2), json.loads(data[f'variant_{supplier2.id}_{var_ids[1]}']))
+        self.assertEqual(product.get_variant_mapping(var_ids[2], supplier=supplier2), json.loads(data[f'variant_{supplier2.id}_{var_ids[2]}']))
+
+        shipping = product.get_shipping_for_variant(supplier_id=supplier1.id, variant_id=var_ids[0], country_code='MA')
+        self.assertIsNone(shipping)
+
+        shipping = product.get_shipping_for_variant(supplier_id=supplier1.id, variant_id=var_ids[0], country_code='FR')
+        self.assertEqual(shipping['country'], 'FR')
+        self.assertEqual(shipping['method'], 'FEDEX_IE')
+
+        shipping = product.get_shipping_for_variant(supplier_id=supplier1.id, variant_id=var_ids[0], country_code='US')
+        self.assertEqual(shipping['country'], 'US')
+        self.assertEqual(shipping['method'], 'EMS')
+
+        shipping = product.get_shipping_for_variant(supplier_id=supplier1.id, variant_id=var_ids[1], country_code='CA')
+        self.assertEqual(shipping['country'], 'CA')
+        self.assertEqual(shipping['method'], 'EMS')
+        self.assertEqual(shipping['method_name'], 'EMS ($37.49)')
+
+        shipping = product.get_shipping_for_variant(supplier_id=supplier1.id, variant_id=var_ids[2], country_code='US')
+        self.assertEqual(shipping['country'], 'US')
+        self.assertEqual(shipping['method'], 'FEDEX_IE')
 
     def test_get_order_fulfill_active(self):
         self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='orders.use', description=''))
