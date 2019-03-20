@@ -14,6 +14,7 @@ from elasticsearch.helpers import streaming_bulk
 class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
+        parser.add_argument('--create', dest='create', action='store_true', help='Create Elasticsearch Index if it doesn\'t exist')
         parser.add_argument('--store', dest='store', action='append', type=int, help='Store Orders to index')
         parser.add_argument('--user', dest='user', action='append', type=int, help='User Stores to index')
         parser.add_argument('--days', dest='days', action='store', type=int, help='Index order in the least number of days')
@@ -32,7 +33,9 @@ class Command(DropifiedBaseCommand):
 
         self.es = get_elastic()
 
-        self.set_mappings()
+        if options['create']:
+            self.set_mappings()
+            return
 
         if options['store_progress']:
             stores_bar = tqdm(total=stores.count())
@@ -47,7 +50,8 @@ class Command(DropifiedBaseCommand):
 
             if not is_store_sync_enabled(store):
                 self.write(f'Store {store.shop} sync is not enabled')
-                continue
+                if not options['dry_run']:
+                    continue
 
             if options.get('reset'):
                 self.write(f'Reset Store {store.shop} index')
@@ -95,6 +99,8 @@ class Command(DropifiedBaseCommand):
     def set_mappings(self):
         try:
             self.es.indices.get(index='shopify-order')
+            self.write('Index already exists')
+
         except NotFoundError:
             print('Created Index...')
             self.es.indices.create(index='shopify-order', body={
