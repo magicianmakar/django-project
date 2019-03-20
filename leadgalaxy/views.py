@@ -1292,7 +1292,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
     page = safe_int(request.GET.get('page'), 1)
     models_user = request.user.models_user
     user = request.user
-    user_stores = request.user.profile.get_shopify_stores(flat=True)
+    user_stores = list(request.user.profile.get_shopify_stores(flat=True))
     res = ShopifyProduct.objects.select_related('store') \
                                 .defer('variants_map', 'shipping_map', 'notes') \
                                 .filter(user=models_user) \

@@ -1912,7 +1912,7 @@ class ShopifyStoreApi(ApiBase):
             order_tracks = order_tracks.filter(id__in=order_ids.split(','))
 
         if user.is_subuser:
-            order_tracks = order_tracks.filter(store__in=user.profile.get_shopify_stores(flat=True))
+            order_tracks = order_tracks.filter(store__in=list(user.profile.get_shopify_stores(flat=True)))
 
         if data.get('store'):
             order_tracks = order_tracks.filter(store=data.get('store'))
