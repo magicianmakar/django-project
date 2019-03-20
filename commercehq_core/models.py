@@ -339,12 +339,14 @@ class CommerceHQProduct(models.Model):
         self.mapping_config = config
         self.save()
 
-    def set_suppliers_mapping(self, mapping):
+    def set_suppliers_mapping(self, mapping, commit=True):
         if type(mapping) is not str:
             mapping = json.dumps(mapping)
 
         self.supplier_map = mapping
-        self.save()
+
+        if commit:
+            self.save()
 
     def get_suppliers_mapping(self, name=None, default=None):
         mapping = {}
@@ -424,7 +426,7 @@ class CommerceHQProduct(models.Model):
 
         return None
 
-    def set_shipping_mapping(self, mapping, update=True):
+    def set_shipping_mapping(self, mapping, update=True, commit=True):
         if update:
             try:
                 current = json.loads(self.shipping_map)
@@ -440,7 +442,9 @@ class CommerceHQProduct(models.Model):
             mapping = json.dumps(mapping)
 
         self.shipping_map = mapping
-        self.save()
+
+        if commit:
+            self.save()
 
     def get_shipping_mapping(self, supplier=None, variant=None, default=None):
         mapping = {}
@@ -465,7 +469,7 @@ class CommerceHQProduct(models.Model):
 
         return mapping
 
-    def set_variant_mapping(self, mapping, supplier=None, update=False):
+    def set_variant_mapping(self, mapping, supplier=None, update=False, commit=True):
         if supplier is None:
             supplier = self.default_supplier
 
@@ -485,10 +489,12 @@ class CommerceHQProduct(models.Model):
 
         if supplier:
             supplier.variants_map = mapping
-            supplier.save()
+            if commit:
+                supplier.save()
         else:
             self.variants_map = mapping
-            self.save()
+            if commit:
+                self.save()
 
     def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None, mapping_supplier=False):
         mapping = {}

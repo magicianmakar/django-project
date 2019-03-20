@@ -1815,7 +1815,7 @@ class ShopifyStoreApi(ApiBase):
                     suppliers_cache[supplier_id] = supplier
                     var_mapping = {variant_id: data[k]}
 
-                    product.set_variant_mapping(var_mapping, supplier=supplier, update=True)
+                    product.set_variant_mapping(var_mapping, supplier=supplier, update=True, commit=False)
 
                 elif k == 'config':
                     product.set_mapping_config({'supplier': data[k]})
@@ -1833,9 +1833,13 @@ class ShopifyStoreApi(ApiBase):
                 elif k != 'product':  # Save the variant -> supplier mapping
                     mapping[k] = json.loads(data[k])
 
-            product.set_suppliers_mapping(mapping)
-            product.set_shipping_mapping(shipping_map)
-            product.save()
+            product.set_suppliers_mapping(mapping, commit=False)
+            product.set_shipping_mapping(shipping_map, commit=False)
+
+        product.save()
+
+        for i in suppliers_cache.values():
+            i.save()
 
         return self.api_success()
 
