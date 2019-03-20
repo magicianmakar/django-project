@@ -10,7 +10,10 @@ class LastSeenMiddleware(object):
         has been last seen
     """
 
-    def process_request(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
         if request.path.startswith('/admin/') and not request.user.is_superuser \
                 and not request.user.is_staff \
                 and not request.session.get('is_hijacked_user'):
@@ -36,4 +39,4 @@ class LastSeenMiddleware(object):
                 from raven.contrib.django.raven_compat.models import client as raven_client
                 raven_client.captureException(level='warning')
 
-        return None
+        return self.get_response(request)

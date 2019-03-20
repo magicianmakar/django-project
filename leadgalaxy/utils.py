@@ -2325,7 +2325,10 @@ def update_shopify_product_data(store, product_shopify_id, api_product):
 # Helper Classes
 class TimezoneMiddleware(object):
 
-    def process_request(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
         tzname = request.session.get('django_timezone')
         if not tzname:
             if request.user.is_authenticated:
@@ -2337,17 +2340,27 @@ class TimezoneMiddleware(object):
         else:
             timezone.deactivate()
 
+        return self.get_response(request)
+
 
 class UserIpSaverMiddleware(object):
 
-    def process_request(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
         if request.user.is_authenticated and not request.session.get('is_hijacked_user'):
             save_user_ip(request)
+
+        return self.get_response(request)
 
 
 class UserEmailEncodeMiddleware(object):
 
-    def process_request(self, request):
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
         if request.method == 'GET':
             if request.GET.get('f') and request.GET.get('title'):
                 if self.need_encoding(request, 'title'):
@@ -2357,6 +2370,8 @@ class UserEmailEncodeMiddleware(object):
                 for p in ['query_order', 'query', 'query_customer']:
                     if request.GET.get(p) and self.need_encoding(request, p):
                         return self.encode_param(request, p)
+
+        return self.get_response(request)
 
     def need_encoding(self, request, name):
         value = request.GET.get(name)

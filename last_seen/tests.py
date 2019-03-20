@@ -216,13 +216,13 @@ class TestClearInterval(BaseTestCase):
 
 class TestMiddleware(BaseTestCase):
 
-    middleware = middleware.LastSeenMiddleware()
+    middleware = middleware.LastSeenMiddleware(mock.Mock())
 
     @mock.patch('last_seen.middleware.user_seen')
     def test_process_request(self, user_seen):
         request = mock.Mock()
         request.user.is_authenticated.return_value = False
-        self.middleware.process_request(request)
+        self.middleware(request)
         self.assertFalse(user_seen.called)
 
     @mock.patch('last_seen.middleware.user_seen')
@@ -232,5 +232,5 @@ class TestMiddleware(BaseTestCase):
         request.session = {}
         request.user.is_authenticated.return_value = True
         request.user.is_subuser = False
-        self.middleware.process_request(request)
+        self.middleware(request)
         user_seen.assert_called_with(request.user.models_user, module=None)
