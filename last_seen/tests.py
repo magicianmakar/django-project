@@ -211,7 +211,7 @@ class TestClearInterval(BaseTestCase):
 
 class TestMiddleware(BaseTestCase):
 
-    middleware = middleware.LastSeenMiddleware(mock.Mock())
+    middleware = middleware.LastSeenMiddleware(Mock())
 
     @patch('last_seen.middleware.user_seen')
     def test_process_request(self, user_seen):
