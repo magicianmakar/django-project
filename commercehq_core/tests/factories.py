@@ -32,6 +32,14 @@ class CommerceHQProductFactory(factory.DjangoModelFactory):
         model = 'commercehq_core.CommerceHQProduct'
 
 
+class CommerceHQSupplierFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('commercehq_core.tests.factories.CommerceHQStoreFactory')
+    product = factory.SubFactory('commercehq_core.tests.factories.CommerceHQProductFactory')
+
+    class Meta:
+        model = 'commercehq_core.CommerceHQSupplier'
+
+
 class CommerceHQOrderTrackFactory(factory.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     order_id = factory.fuzzy.FuzzyInteger(999)

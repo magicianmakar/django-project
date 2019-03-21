@@ -350,6 +350,7 @@ class CHQStoreApi(ApiBase):
             product.store = store
             product.source_id = source_id
 
+            product.save()
             product.sync()
 
         return self.api_success()
@@ -409,7 +410,12 @@ class CHQStoreApi(ApiBase):
         # Get Orders marked as Ordered
 
         orders = []
+        created_at_start = None
+        created_at_end = None
+        created_at_max = arrow.now().replace(days=-30).datetime  # Always update orders that are max. 30 days old
 
+        order_ids = data.get('ids')
+        created_at = data.get('created_at')
         all_orders = data.get('all') == 'true'
         unfulfilled_only = data.get('unfulfilled_only') != 'false'
 
@@ -420,6 +426,25 @@ class CHQStoreApi(ApiBase):
         if unfulfilled_only:
             order_tracks = order_tracks.filter(source_tracking='') \
                                        .exclude(source_status='FINISH')
+
+        if created_at:
+            created_at_start, created_at_end = created_at.split('-')
+
+            tz = timezone.localtime(timezone.now()).strftime(' %z')
+            created_at_start = arrow.get(created_at_start + tz, r'MM/DD/YYYY Z').datetime
+
+            if created_at_end:
+                created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
+                created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
+
+            if created_at_start >= created_at_max:
+                created_at_max = created_at_start
+
+            if created_at_end:
+                order_tracks = order_tracks.filter(created_at__lte=created_at_end)
+
+        if not order_ids:
+            order_tracks = order_tracks.filter(created_at__gte=created_at_max)
 
         if user.is_subuser:
             order_tracks = order_tracks.filter(store__in=user.profile.get_chq_stores(flat=True))
