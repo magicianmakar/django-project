@@ -1,5 +1,6 @@
+from unittest.mock import patch
+
 import simplejson as json
-import mock
 import requests
 
 from django.test import RequestFactory, tag
@@ -70,7 +71,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(result, 0)
 
     @tag('slow')
-    @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
+    @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_price_change(self, manage):
         self.user.profile.config = json.dumps({"alert_price_change": "update"})
         self.user.profile.save()
@@ -126,7 +127,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(history.new_price, new_value)
 
     @tag('slow')
-    @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
+    @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_price_change_global_markup(self, manage):
         auto_margin = 50
         auto_compare_at = 100
@@ -185,7 +186,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(history.new_price, new_value)
 
     @tag('slow')
-    @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
+    @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_price_change_custom_markup(self, manage):
         auto_margin = 50
         auto_compare_at = 100
@@ -254,7 +255,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(history.new_price, new_value)
 
     @tag('slow')
-    @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
+    @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_quantity_change(self, manage):
         self.user.profile.config = json.dumps({"alert_quantity_change": "update"})
         self.user.profile.save()
@@ -295,7 +296,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(updated_quantity, quantity)
 
     @tag('slow')
-    @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
+    @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_chq_price_change(self, manage):
         self.user.profile.config = json.dumps({"alert_price_change": "update"})
         self.user.profile.save()

@@ -1,6 +1,6 @@
 import re
 import random
-from mock import Mock
+from unittest.mock import Mock
 import json
 from django.conf import settings
 from django.test import tag

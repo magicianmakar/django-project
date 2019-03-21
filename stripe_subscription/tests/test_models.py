@@ -2,7 +2,7 @@ import datetime
 from decimal import Decimal
 
 import stripe.error
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from lib.test import BaseTestCase
 

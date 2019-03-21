@@ -1,6 +1,6 @@
 import json
 
-from mock import patch
+from unittest.mock import patch
 
 from lib.test import BaseTestCase
 from django.http import JsonResponse

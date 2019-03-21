@@ -3,8 +3,8 @@ from django.core.cache import cache
 
 from lib.test import BaseTestCase
 
-from mock import MagicMock
-from mock import patch
+from unittest.mock import MagicMock
+from unittest.mock import patch
 
 from shopified_core import permissions
 

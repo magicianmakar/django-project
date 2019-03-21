@@ -11,7 +11,7 @@ from django.test import tag
 from lib.test import BaseTestCase
 from django.utils import timezone
 from django.db.models import Sum
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 
 from facebookads.adobjects.user import User as FBUser
 from facebookads.adobjects.campaign import Campaign

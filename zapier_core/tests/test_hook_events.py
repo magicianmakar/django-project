@@ -1,6 +1,5 @@
-import mock
+from unittest.mock import patch, ANY
 import simplejson as json
-from mock import patch, ANY
 
 from django.test import RequestFactory, tag
 from django.contrib.auth.models import User
@@ -36,7 +35,7 @@ class HookEventsTestCase(BaseTestCase):
 
 class HookEventsDeliverTest(HookEventsTestCase):
     @tag('slow')
-    @mock.patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
+    @patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
     @patch('requests.post')
     def test_deliver_hook(self, requests_post, deliver):
         hook = Hook.objects.create(
@@ -55,7 +54,7 @@ class HookEventsDeliverTest(HookEventsTestCase):
 
 
 class HookEventsDeliverAlertTest(HookEventsTestCase):
-    @mock.patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
+    @patch.object(deliver_hook, 'apply_async', side_effect=deliver_hook_callback)
     @patch('requests.post')
     def test_deliver_hook_alert(self, requests_post, deliver):
         hook = Hook.objects.create(
@@ -74,7 +73,7 @@ class HookEventsDeliverAlertTest(HookEventsTestCase):
 
 class HookEventsPriceChangeTest(HookEventsTestCase):
     @tag('slow')
-    @mock.patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
+    @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     @patch('zapier_core.tasks.deliver_hook.apply_async')
     def test_variant_price_changed(self, deliver_hook, manage):
         hook = Hook.objects.create(

@@ -2,7 +2,6 @@ import json
 import base64
 import hmac
 import urllib3
-import mock
 from hashlib import sha256
 
 from django.urls import reverse
@@ -10,7 +9,7 @@ from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.conf import settings
 
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 
 from . import factories as f
 
@@ -656,7 +655,7 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
         orders = ShopifyOrder.objects.all()
         self.assertEqual(orders.count(), 0)
 
-    @mock.patch.object(delete_shopify_store, 'delay', side_effect=delete_shopify_store_callback)
+    @patch.object(delete_shopify_store, 'delay', side_effect=delete_shopify_store_callback)
     def test_delete_store(self, d):
         response = self.client.post('/webhook/gdpr-shopify/delete-store',
                                     self.store_payload,

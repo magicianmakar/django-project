@@ -1,7 +1,7 @@
 import json
 import traceback
 
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 
 from django.core.cache import caches
 from django.test import tag

@@ -1,6 +1,6 @@
 from django.conf import settings
 from lib.test import BaseTestCase
-from mock import Mock
+from unittest.mock import Mock
 
 from collections import OrderedDict
 from django.core.cache import caches

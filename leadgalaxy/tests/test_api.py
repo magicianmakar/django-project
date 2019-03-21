@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import arrow
 from munch import Munch
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 
 from django.test import override_settings
 from django.urls import reverse

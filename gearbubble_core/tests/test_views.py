@@ -1,6 +1,6 @@
 import json
 
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 
 from django.core.urlresolvers import reverse
 

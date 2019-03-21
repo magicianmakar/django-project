@@ -4,7 +4,7 @@ from lib.test import BaseTestCase
 from django.urls import reverse
 from django.core.cache import cache
 
-from mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from . import factories as f
 

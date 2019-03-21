@@ -12,7 +12,7 @@ from leadgalaxy.models import (
 
 import factory
 
-from mock import patch, Mock
+from unittest.mock import patch, Mock
 
 from . import factories as f
 
