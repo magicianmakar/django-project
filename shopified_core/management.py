@@ -16,7 +16,7 @@ class DropifiedBaseCommand(BaseCommand):
                 'command': sys.argv[-1]
             }).raise_for_status()
 
-        except requests.exceptions.HTTPError:
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError):
             management_command = sys.argv[1] if len(sys.argv) > 1 else ''
             if not settings.DEBUG and management_command != 'test':
                 self.stderr.write('Web app is not available %s' % sys.argv[-1])

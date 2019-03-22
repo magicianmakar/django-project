@@ -102,6 +102,7 @@ class AutoFulfillTestCase(BaseTestCase):
         self.store = ShopifyStoreFactory()
 
     @tag('slow')
+    @patch('requests.head', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill.Command.fulfill_order')
     def test_fulfill_tracked_order(self, fulfill_order):
@@ -119,6 +120,7 @@ class AutoFulfillTestCase(BaseTestCase):
         fulfill_order.assert_called_with(track)
 
     @tag('slow')
+    @patch('requests.head', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill.Command.fulfill_order')
     def test_fulfill_ignore_no_tracking_number(self, fulfill_order):
@@ -151,6 +153,7 @@ class AutoFulfillCombinedTestCase(BaseTestCase):
         self.store.save()
 
     @tag('slow')
+    @patch('requests.head', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.fulfill_order')
     def test_fulfill_tracked_order(self, fulfill_order):
@@ -197,6 +200,7 @@ class AutoFulfillCombinedTestCase(BaseTestCase):
         fulfill_order.assert_called_with(data)
 
     @tag('slow')
+    @patch('requests.head', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.requests.post')
     def test_fulfill_tracked_line(self, request_post):
@@ -223,6 +227,7 @@ class AutoFulfillCombinedTestCase(BaseTestCase):
         self.assertEqual(line.fulfillment_status, 'fulfilled')
 
     @tag('slow')
+    @patch('requests.head', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.write', Mock())
     @patch('leadgalaxy.management.commands.auto_fulfill_combine.Command.get_fulfillment_data')
     def test_prepare_fulfillment_data(self, get_fulfillment_data):
@@ -268,7 +273,6 @@ class FulfillApiTestCase(BaseTestCase):
 
         r = self.client.post('/api/order-fulfill', data)
         self.assertEqual(r.status_code, 200)
-        # print r.content
 
         self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
 
@@ -292,7 +296,6 @@ class FulfillApiTestCase(BaseTestCase):
 
         r = self.client.post('/api/order-fulfill', data)
         self.assertEqual(r.status_code, 200)
-        # print r.content
 
         self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
 
@@ -317,7 +320,6 @@ class FulfillApiTestCase(BaseTestCase):
 
         r = self.client.post('/api/order-fulfill', data)
         self.assertEqual(r.status_code, 200)
-        # print r.content
 
         self.assertEqual(ShopifyOrderTrack.objects.count(), 1)
 
