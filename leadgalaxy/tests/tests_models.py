@@ -1,19 +1,22 @@
 from unittest.mock import Mock
 
+import arrow
+
 from .factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 
 from lib.test import BaseTestCase
 from leadgalaxy.utils import create_user_without_signals
-from .factories import ShopifyProductFactory
+from shopified_core.decorators import add_to_class
+from shopify_orders.models import MAX_LOGS, ShopifyOrderLog
 from leadgalaxy.models import (
-    DataStore,
-    GroupPlan,
     SUBUSER_PERMISSIONS,
     SUBUSER_STORE_PERMISSIONS,
+    DataStore,
+    GroupPlan,
     SubuserPermission,
     User,
-    add_to_class,
 )
+from .factories import ShopifyProductFactory, ShopifyOrderLogFactory
 
 
 class UserTestCase(BaseTestCase):
@@ -125,3 +128,48 @@ class ShopifyProductTestCase(BaseTestCase):
         product.set_original_data(data)
         data_store = DataStore.objects.using('store_db').first()
         self.assertEqual(data_store.key, product.original_data_key)
+
+
+class ShopifyOrderLogTestCase(BaseTestCase):
+    def test_create_log(self):
+        log = ShopifyOrderLogFactory()
+
+        log2 = ShopifyOrderLog.objects.create(store=log.store, order_id=log.order_id)
+        self.assertIsNotNone(log2.update_count)
+        self.assertEqual(log2.update_count, 0)
+
+    def test_add_log(self):
+        log = ShopifyOrderLogFactory()
+        self.assertTrue(log.order_id)
+        self.assertTrue(log.store.id)
+
+        data = {
+            "order_id": log.order_id,
+            "line_id": 77788885,
+            "store": log.store,
+            "user": log.store.user,
+            "log": 'Manually Fulfilled in Shopify',
+            'log_time': arrow.utcnow().timestamp
+        }
+
+        log = ShopifyOrderLog.objects.update_order_log(**data)
+        self.assertEqual(len(log.get_logs()), 1)
+
+        # Adds duplicate entries
+        log = ShopifyOrderLog.objects.update_order_log(**data)
+        self.assertEqual(len(log.get_logs()), 2)
+
+        # max number of entries is MAX_LOGS
+        tries = 100
+        for i in range(1, tries):
+            data['log'] = f'Order Number is: {i}'
+            data['log_time'] += 1
+            log = ShopifyOrderLog.objects.update_order_log(**data)
+
+            self.assertEqual(len(log.get_logs()), min(2 + i, MAX_LOGS))
+
+        for i in range(1, MAX_LOGS):
+            self.assertEqual(f'Order Number is: {tries - i}', log.get_logs()[i - 1]['log'])
+
+        self.assertLessEqual(len(log.get_logs()), MAX_LOGS)
+        self.assertGreaterEqual(log.update_count, 100)

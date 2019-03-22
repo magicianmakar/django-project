@@ -20,6 +20,8 @@ SYNC_STATUS = (
     (6, 'Reset'),
 )
 
+MAX_LOGS = 20
+
 
 class ShopifySyncStatus(models.Model):
     store = models.ForeignKey(ShopifyStore, on_delete=models.CASCADE)
@@ -212,7 +214,8 @@ class ShopifyOrderLog(models.Model):
     store = models.ForeignKey(ShopifyStore)
     order_id = models.BigIntegerField()
     logs = models.TextField(blank=True, null=True)
-    seen = models.IntegerField(default=0, null=True, blank=True,)
+    seen = models.IntegerField(default=0, null=True, blank=True)
+    update_count = models.IntegerField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -222,10 +225,22 @@ class ShopifyOrderLog(models.Model):
     def __str__(self):
         return 'Log: #{}'.format(self.order_id)
 
-    def add_log(self, log, user, line_id=None, level=None, icon=None, commit=True):
-        log_time = arrow.utcnow().timestamp
+    def save(self, *args, **kwargs):
+        if self.update_count is None:
+            self.update_count = 0
 
-        logs = self.get_logs(sort=False)
+        super().save(*args, **kwargs)
+
+    def add_log(self, log, user, line_id=None, level=None, icon=None, log_time=None, commit=True):
+        if log_time is None:
+            log_time = arrow.utcnow().timestamp
+
+        logs = self.get_logs(sort='desc')
+        if not self.update_count:
+            self.update_count = len(logs)
+
+        logs = logs[:MAX_LOGS - 1]
+
         log = {
             'time': log_time,
             'log': log,
@@ -249,6 +264,8 @@ class ShopifyOrderLog(models.Model):
             self.seen = 2
         else:
             self.seen = max(self.seen, 1)
+
+        self.update_count = (self.update_count + 1) if self.update_count else 1
 
         if commit:
             self.save()

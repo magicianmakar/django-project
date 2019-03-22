@@ -120,3 +120,11 @@ class ShopifyOrderFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'shopify_orders.ShopifyOrder'
+
+
+class ShopifyOrderLogFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
+    order_id = factory.fuzzy.FuzzyInteger(99999999)
+
+    class Meta:
+        model = 'shopify_orders.ShopifyOrderLog'
