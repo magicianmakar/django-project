@@ -20,7 +20,7 @@ def subscription_plan(request):
     user = request.user
 
     if user.profile.get_shopify_stores().count() != 1:
-        return JsonResponse({'error': 'Please make sure you\'ve added your store'}, status=403)
+        return JsonResponse({'error': 'Please make sure you\'ve added your store'}, status=422)
 
     try:
         plan_id = request.POST.get('plan', request.GET.get('plan'))
@@ -29,9 +29,11 @@ def subscription_plan(request):
         return JsonResponse({'error': 'Selected plan not found'}, status=404)
 
     if not plan.is_shopify():
-        return JsonResponse({'error': 'Plan is not valid'}, status=403)
+        return JsonResponse({'error': 'Plan is not valid'}, status=422)
 
     store = user.profile.get_shopify_stores().first()
+    is_shopify_staff = store.get_info['plan_name'] == 'staff'
+    extra_description = '' if not is_shopify_staff else '- Shopify Staff 50% Discount'
 
     if plan.is_free:
         for charge in store.shopify.RecurringApplicationCharge.find():
@@ -46,23 +48,31 @@ def subscription_plan(request):
         try:
             if plan.payment_interval != 'yearly':
                 charge_type = 'recurring'
+                price = plan.monthly_price
+                if is_shopify_staff:
+                    price = price / 2
+
                 charge = store.shopify.RecurringApplicationCharge.create({
                     "test": settings.DEBUG,
-                    "name": 'Dropified {}'.format(plan.title),
-                    "price": plan.monthly_price,
+                    "name": f'Dropified {plan.title} {extra_description}'.strip(),
+                    "price": price,
+                    "capped_amount": price,
                     "trial_days": plan.trial_days,
-                    "capped_amount": plan.monthly_price,
                     "terms": "Dropified Monthly Subscription",
                     "return_url": app_link(reverse(subscription_activated))
                 })
             else:
                 charge_type = 'single'
+                price = plan.monthly_price * 12
+                if is_shopify_staff:
+                    price = price / 2
+
                 charge = store.shopify.ApplicationCharge.create({
                     "test": settings.DEBUG,
-                    "name": 'Dropified {}'.format(plan.title),
-                    "price": plan.monthly_price * 12,
+                    "name": f'Dropified {plan.title} {extra_description}'.strip(),
+                    "price": price,
+                    "capped_amount": price,
                     "trial_days": plan.trial_days,
-                    "capped_amount": plan.monthly_price * 12,
                     "terms": "Dropified Yearly Subscription",
                     "return_url": app_link(reverse(subscription_activated))
                 })

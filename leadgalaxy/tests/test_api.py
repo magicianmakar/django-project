@@ -179,12 +179,12 @@ class ProductsApiTestCase(BaseTestCase):
         # Store not found
         r = self.client.get('/api/shopify/order-data', {'order': f'444{order_key}'})
         self.assertEqual(r.status_code, 404)
-        self.assertIn('Store not found', r.content.encode())
+        self.assertIn('Store not found', r.content.decode())
 
         # Order not found
         r = self.client.get('/api/shopify/order-data', {'order': f'{order_key}5455'})
         self.assertEqual(r.status_code, 404)
-        self.assertIn('Not found:', r.content.encode())
+        self.assertIn('Not found:', r.content.decode())
 
         # Key order prefix is present
         r = self.client.get('/api/shopify/order-data', {'order': f'order_{order_key}'})

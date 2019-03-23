@@ -56,7 +56,7 @@ class ProductSupplierFactory(factory.DjangoModelFactory):
 
 class ShopifyStoreFactory(factory.DjangoModelFactory):
     title = factory.fuzzy.FuzzyText()
-    api_url = factory.fuzzy.FuzzyText(prefix='https://', suffix='.myshopify.com')
+    api_url = factory.fuzzy.FuzzyText(prefix='https://:123456789abcdef@', suffix='.myshopify.com')
     shop = factory.fuzzy.FuzzyText()
     access_token = factory.fuzzy.FuzzyText()
     scope = factory.fuzzy.FuzzyText()
@@ -76,6 +76,7 @@ class GroupPlanFactory(factory.DjangoModelFactory):
     products = factory.fuzzy.FuzzyInteger(999)
     boards = factory.fuzzy.FuzzyInteger(999)
     register_hash = factory.fuzzy.FuzzyText(length=50)
+    slug = factory.fuzzy.FuzzyText(length=10)
     default_plan = 1
 
     class Meta:
