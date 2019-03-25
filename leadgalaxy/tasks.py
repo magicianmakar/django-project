@@ -40,8 +40,6 @@ from shopified_core.utils import (
 )
 from shopified_core.paginators import SimplePaginator
 
-from unidecode import unidecode
-
 from leadgalaxy.models import (
     ProductSupplier,
     ShopifyBoard,
@@ -944,8 +942,12 @@ def create_image_zip(self, images, product_id):
                     image_name = 'image-{}.{}'.format(i + 1, get_fileext_from_url(img_url, fallback='jpg'))
                     images_zip.writestr(image_name, requests.get(img_url).content)
 
-            s3_path = os.path.join('product-downloads', str(product.id), '{}.zip'.format(slugify(unidecode(product.title))))
-            url = utils.aws_s3_upload(s3_path, input_filename=filename)
+            product_filename = 'product-images.zip'
+            if slugify(product.title):
+                product_filename = f'{slugify(product.title)[:100]}-images.zip'
+
+            s3_path = f'product-downloads/{product.id}/{product_filename}'
+            url = utils.aws_s3_upload(s3_path, input_filename=filename, mimetype='application/zip')
 
             cache.set(cache_key, url, timeout=3600 * 24)
 

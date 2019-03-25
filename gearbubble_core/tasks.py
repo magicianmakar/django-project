@@ -1,7 +1,5 @@
 import json
 import requests
-from unidecode import unidecode
-from os.path import join as path_join
 from tempfile import mktemp
 from zipfile import ZipFile
 
@@ -219,8 +217,12 @@ def create_image_zip(self, images, product_id):
                 image_name = 'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
                 images_zip.writestr(image_name, requests.get(img_url, verify=not settings.DEBUG).content)
 
-        s3_path = path_join('product-downloads', str(product.id), '{}.zip'.format(slugify(unidecode(product.title))))
-        url = aws_s3_upload(s3_path, input_filename=filename)
+        product_filename = 'product-images.zip'
+        if slugify(product.title):
+            product_filename = f'{slugify(product.title)[:100]}-images.zip'
+
+        s3_path = f'product-downloads/{product.id}/{product_filename}'
+        url = aws_s3_upload(s3_path, input_filename=filename, mimetype='application/zip')
 
         product.store.pusher_trigger('images-download', {
             'success': True,
