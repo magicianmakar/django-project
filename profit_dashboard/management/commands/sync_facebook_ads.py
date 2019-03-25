@@ -4,7 +4,7 @@ from django.utils import timezone
 from django.db.models import Q
 from tqdm import tqdm
 from raven.contrib.django.raven_compat.models import client as raven_client
-from facebookads.exceptions import FacebookRequestError
+from facebook_business.exceptions import FacebookRequestError
 
 from shopified_core.management import DropifiedBaseCommand
 from profit_dashboard.models import FacebookAccess

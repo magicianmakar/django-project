@@ -13,9 +13,9 @@ from django.utils import timezone
 from django.db.models import Sum
 from unittest.mock import patch, Mock
 
-from facebookads.adobjects.user import User as FBUser
-from facebookads.adobjects.campaign import Campaign
-from facebookads.exceptions import FacebookRequestError
+from facebook_business.adobjects.user import User as FBUser
+from facebook_business.adobjects.campaign import Campaign
+from facebook_business.exceptions import FacebookRequestError
 
 from leadgalaxy.tests import factories as f
 from shopify_orders.models import ShopifyOrder

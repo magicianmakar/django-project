@@ -12,11 +12,11 @@ from django.utils import timezone
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from facebookads.api import FacebookAdsApi
-from facebookads.adobjects.user import User as FBUser
-from facebookads.adobjects.adaccount import AdAccount
-from facebookads.adobjects.adreportrun import AdReportRun
-from facebookads.exceptions import FacebookRequestError
+from facebook_business.api import FacebookAdsApi
+from facebook_business.adobjects.user import User as FBUser
+from facebook_business.adobjects.adaccount import AdAccount
+from facebook_business.adobjects.adreportrun import AdReportRun
+from facebook_business.exceptions import FacebookRequestError
 
 from leadgalaxy.models import ShopifyStore
 
@@ -232,7 +232,7 @@ class FacebookAccount(models.Model):
 
         # Get insights 500 at a time
         insights = job.get_result(params={'limit': 500})
-        # :insights facebookads.api.Cursor: Iterates over all insights, not only 500
+        # :insights facebook_business.api.Cursor: Iterates over all insights, not only 500
         for insight in insights:
             campaign_id = insight[insight.Field.campaign_id]
             if verbosity > 2:
