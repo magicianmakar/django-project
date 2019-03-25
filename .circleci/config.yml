@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/ShopifiedApp/webapp
     docker:
-      - image: circleci/python:3.6.7
+      - image: circleci/python:3.6.8
         environment:
           DEBUG_APP: "TRUE"
 
