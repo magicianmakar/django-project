@@ -1,3 +1,4 @@
+import base64
 import hmac
 
 from Crypto.Cipher import AES
@@ -5,7 +6,7 @@ from hashlib import sha256
 
 from django.conf import settings
 from leadgalaxy.utils import aws_s3_get_key
-from shopified_core.utils import base64_encode, base64_decode
+from shopified_core.utils import base64_encode
 
 
 def get_new_aes(user, email):
@@ -46,10 +47,10 @@ def get_aliexpress_password(user, email):
 
     if key:
         password = key.get_contents_as_string()
-        password = base64_decode(password)
+        password = base64.decodebytes(password)
         password = aes.decrypt(password)
 
-    return password
+    return password.decode()
 
 
 def delete_aliexpress_password(user, email):
