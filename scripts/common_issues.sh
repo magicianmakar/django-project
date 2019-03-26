@@ -18,6 +18,7 @@ if [ ! "$?" == "0" ]; then
 fi
 
 echo '[+] Missing models in Django Admin'
+DJANGO_ADMIN_ERROR=""
 for i in */models.py; do
     app_name="$(dirname $i)"
     admins_file="$(dirname $i)/admin.py"
@@ -57,5 +58,11 @@ for i in */models.py; do
         echo "    Generate with:"
         echo "    ./manage.py admin_generator -r 0 $app_name $missing >> $admins_file"
         echo
+
+        DJANGO_ADMIN_ERROR="1"
     fi
 done
+
+if [ -n "$DJANGO_ADMIN_ERROR" ]; then
+    exit -2
+fi
