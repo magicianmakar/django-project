@@ -188,3 +188,31 @@ ul.shipping-method {
 .price-trends .price-down {
     color: #ed5565;
 }
+@media (max-width: 768px) {
+    #page-wrapper {
+        padding: 0;
+    }
+    .wrapper-content {
+        padding: 0;
+    }
+
+    .orders {
+        margin: 0;
+    }
+    .orders .order {
+        border: 0;
+        margin: 15px 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .xs-text-left {
+        text-align: left;
+    }
+    .xs-text-right {
+        text-align: right;
+    }
+    .xs-m-t {
+        margin-top: 5px;
+    }
+}
