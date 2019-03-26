@@ -655,9 +655,13 @@ class WooStoreApi(ApiBase):
             raise self.api_error('Not found', status=404)
 
         # Get Orders marked as Ordered
-
         orders = []
+        created_at_start = None
+        created_at_end = None
+        created_at_max = arrow.now().replace(days=-30).datetime  # Always update orders that are max. 30 days old
 
+        order_ids = data.get('ids')
+        created_at = data.get('created_at')
         all_orders = data.get('all') == 'true'
         unfulfilled_only = data.get('unfulfilled_only') != 'false'
 
@@ -668,6 +672,25 @@ class WooStoreApi(ApiBase):
         if unfulfilled_only:
             woocommerce_orders = woocommerce_orders.filter(source_tracking='') \
                                                    .exclude(source_status='FINISH')
+
+        if created_at:
+            created_at_start, created_at_end = created_at.split('-')
+
+            tz = timezone.localtime(timezone.now()).strftime(' %z')
+            created_at_start = arrow.get(created_at_start + tz, r'MM/DD/YYYY Z').datetime
+
+            if created_at_end:
+                created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
+                created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
+
+            if created_at_start >= created_at_max:
+                created_at_max = created_at_start
+
+            if created_at_end:
+                woocommerce_orders = woocommerce_orders.filter(created_at__lte=created_at_end)
+
+        if not order_ids:
+            woocommerce_orders = woocommerce_orders.filter(created_at__gte=created_at_max)
 
         if user.is_subuser:
             woocommerce_orders = woocommerce_orders.filter(store__in=user.profile.get_woo_stores(flat=True))
