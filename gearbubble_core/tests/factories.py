@@ -12,6 +12,24 @@ class GearBubbleStoreFactory(factory.DjangoModelFactory):
         model = 'gearbubble_core.GearBubbleStore'
 
 
+class GearBubbleProductFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleStoreFactory')
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    title = factory.fuzzy.FuzzyText()
+    product_type = factory.fuzzy.FuzzyText()
+
+    class Meta:
+        model = 'gearbubble_core.GearBubbleProduct'
+
+
+class GearBubbleSupplierFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleStoreFactory')
+    product = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleProductFactory')
+
+    class Meta:
+        model = 'gearbubble_core.GearBubbleSupplier'
+
+
 class GearBubbleOrderTrackFactory(factory.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory('gearbubble_core.tests.factories.GearBubbleStoreFactory')

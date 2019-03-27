@@ -20,3 +20,21 @@ class WooProductFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'woocommerce_core.WooProduct'
+
+
+class WooSupplierFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('woocommerce_core.tests.factories.WooStoreFactory')
+    product = factory.SubFactory('woocommerce_core.tests.factories.WooProductFactory')
+
+    class Meta:
+        model = 'woocommerce_core.WooSupplier'
+
+
+class WooOrderTrackFactory(factory.DjangoModelFactory):
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    store = factory.SubFactory('woocommerce_core.tests.factories.WooStoreFactory')
+    order_id = factory.fuzzy.FuzzyInteger(1000)
+    line_id = factory.fuzzy.FuzzyInteger(1000)
+
+    class Meta:
+        model = 'woocommerce_core.WooOrderTrack'
