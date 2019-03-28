@@ -13,6 +13,15 @@ class WooStoreFactory(factory.DjangoModelFactory):
         model = 'woocommerce_core.WooStore'
 
 
+class WooBoardFactory(factory.DjangoModelFactory):
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    title = factory.fuzzy.FuzzyText()
+    config = '{}'
+
+    class Meta:
+        model = 'woocommerce_core.WooBoard'
+
+
 class WooProductFactory(factory.DjangoModelFactory):
     store = factory.SubFactory('woocommerce_core.tests.factories.WooStoreFactory')
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')

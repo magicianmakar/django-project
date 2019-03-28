@@ -346,6 +346,17 @@ class ProductsApiTestCase(BaseTestCase):
         self.assertEqual(len(r.json()), 1)
         self.assertEqual(r.json()[0]['id'], track.id)
 
+    def test_delete_board_products(self):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = f.ShopifyBoardFactory(user=self.user)
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
+        board.products.add(product)
+        data = {'products[]': [product.id], 'board': board.id}
+        r = self.client.post('/api/shopify/product-remove-board', data)
+        self.assertEqual(r.status_code, 200)
+        count = board.products.count()
+        self.assertEqual(count, 0)
+
 
 # Fix for last_seen cache
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})

@@ -1047,3 +1047,14 @@ class ApiTestCase(BaseTestCase):
         r = self.client.get('/api/chq/order-fulfill', {'created_at': f'{from_date:%m/%d/%Y}-{to_date:%m/%d/%Y}'})
         self.assertEqual(len(r.json()), 1)
         self.assertEqual(r.json()[0]['id'], track.id)
+
+    def test_delete_board_products(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = CommerceHQBoardFactory(user=self.user)
+        product = CommerceHQProductFactory(store=self.store, user=self.user)
+        board.products.add(product)
+        params = '?products[]={}&board_id={}'.format(product.id, board.id)
+        r = self.client.delete('/api/chq/board-products' + params)
+        self.assertEqual(r.status_code, 200)
+        count = board.products.count()
+        self.assertEqual(count, 0)
