@@ -1095,6 +1095,7 @@ class ApiTestCase(BaseTestCase):
         product.save()
         params = '?product={}&supplier={}'.format(product.id, supplier1.id)
         r = self.client.delete('/api/chq/supplier' + params)
+        self.assertEqual(r.status_code, 200)
         count = product.commercehqsupplier_set.count()
         self.assertEqual(count, 1)
         product.refresh_from_db()
@@ -1103,7 +1104,23 @@ class ApiTestCase(BaseTestCase):
     def test_post_supplier_default(self):
         product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
         supplier = CommerceHQSupplierFactory(product=product)
-        data = {'product':product.id, 'export': supplier.id}
+        data = {'product': product.id, 'export': supplier.id}
         r = self.client.post('/api/chq/supplier-default', data)
+        self.assertEqual(r.status_code, 200)
         product.refresh_from_db()
         self.assertEqual(product.default_supplier, supplier)
+
+    def test_post_supplier(self):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        data = {
+            'product': product.id,
+            'original-link': '123',
+            'supplier-link': '123',
+            'supplier-name': 'test'
+        }
+        r = self.client.post('/api/chq/supplier', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        count = product.commercehqsupplier_set.count()
+        self.assertEqual(count, 1)
+        self.assertIsNotNone(product.default_supplier)

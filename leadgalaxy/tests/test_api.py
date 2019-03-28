@@ -400,6 +400,7 @@ class ProductsApiTestCase(BaseTestCase):
         product.save()
         params = '?product={}&export={}'.format(product.id, supplier1.id)
         r = self.client.delete('/api/shopify/product-metadata' + params)
+        self.assertEqual(r.status_code, 200)
         count = product.productsupplier_set.count()
         self.assertEqual(count, 1)
         product.refresh_from_db()
@@ -414,10 +415,30 @@ class ProductsApiTestCase(BaseTestCase):
         supplier = f.ProductSupplierFactory(product=product)
         data = {'product': product.id, 'export': supplier.id}
         r = self.client.post('/api/shopify/product-metadata-default', data)
+        self.assertEqual(r.status_code, 200)
         product.refresh_from_db()
         self.assertEqual(product.default_supplier, supplier)
         update_shopify_product_vendor.assert_called_with(product.store, product.shopify_id, product.default_supplier.supplier_name)
         sync_shopify_product_quantities.assert_called_with(args=[product.id])
+
+    @patch('leadgalaxy.utils.update_shopify_product_vendor')
+    def test_post_product_metadata(self, update_shopify_product_vendor):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='product_metadata.use', description=''))
+        self.user.set_config('update_product_vendor', True)
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
+        data = {
+            'product': product.id,
+            'original-link': '123',
+            'supplier-link': '123',
+            'supplier-name': 'test'
+        }
+        r = self.client.post('/api/shopify/product-metadata', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        count = product.productsupplier_set.count()
+        self.assertEqual(count, 1)
+        self.assertIsNotNone(product.default_supplier)
+        update_shopify_product_vendor.assert_called_with(product.store, product.shopify_id, product.default_supplier.supplier_name)
 
 
 # Fix for last_seen cache

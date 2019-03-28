@@ -614,6 +614,7 @@ class ApiTestCase(BaseTestCase):
         product.save()
         params = '?product={}&supplier={}'.format(product.id, supplier1.id)
         r = self.client.delete('/api/gear/supplier' + params)
+        self.assertEqual(r.status_code, 200)
         count = product.gearbubblesupplier_set.count()
         self.assertEqual(count, 1)
         product.refresh_from_db()
@@ -622,7 +623,23 @@ class ApiTestCase(BaseTestCase):
     def test_post_supplier_default(self):
         product = GearBubbleProductFactory(store=self.store, user=self.user, source_id=12345678)
         supplier = GearBubbleSupplierFactory(product=product)
-        data = {'product':product.id, 'export': supplier.id}
+        data = {'product': product.id, 'export': supplier.id}
         r = self.client.post('/api/gear/supplier-default', data)
+        self.assertEqual(r.status_code, 200)
         product.refresh_from_db()
         self.assertEqual(product.default_supplier, supplier)
+
+    def test_post_supplier(self):
+        product = GearBubbleProductFactory(store=self.store, user=self.user, source_id=12345678)
+        data = {
+            'product': product.id,
+            'original-link': '123',
+            'supplier-link': '123',
+            'supplier-name': 'test'
+        }
+        r = self.client.post('/api/gear/supplier', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        count = product.gearbubblesupplier_set.count()
+        self.assertEqual(count, 1)
+        self.assertIsNotNone(product.default_supplier)
