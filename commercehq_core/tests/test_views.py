@@ -1086,3 +1086,16 @@ class ApiTestCase(BaseTestCase):
         self.store.refresh_from_db()
         self.assertEqual(self.store.is_active, False)
         unmonitor_store.assert_called_with(self.store)
+
+    def test_delete_supplier(self):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier1 = CommerceHQSupplierFactory(product=product)
+        supplier2 = CommerceHQSupplierFactory(product=product)
+        product.default_supplier = supplier1
+        product.save()
+        params = '?product={}&supplier={}'.format(product.id, supplier1.id)
+        r = self.client.delete('/api/chq/supplier' + params)
+        count = product.commercehqsupplier_set.count()
+        self.assertEqual(count, 1)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier2)

@@ -818,3 +818,16 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         self.store.refresh_from_db()
         self.assertEqual(self.store.is_active, False)
+
+    def test_delete_supplier(self):
+        product = WooProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier1 = WooSupplierFactory(product=product)
+        supplier2 = WooSupplierFactory(product=product)
+        product.default_supplier = supplier1
+        product.save()
+        params = '?product={}&supplier={}'.format(product.id, supplier1.id)
+        r = self.client.delete('/api/woo/supplier' + params)
+        count = product.woosupplier_set.count()
+        self.assertEqual(count, 1)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier2)

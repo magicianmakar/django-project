@@ -392,6 +392,19 @@ class ProductsApiTestCase(BaseTestCase):
         unmonitor_store.assert_called_with(self.store)
         detach_webhooks.assert_called_with(self.store, delete_too=True)
 
+    def test_delete_product_metadata(self):
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier1 = f.ProductSupplierFactory(product=product)
+        supplier2 = f.ProductSupplierFactory(product=product)
+        product.default_supplier = supplier1
+        product.save()
+        params = '?product={}&export={}'.format(product.id, supplier1.id)
+        r = self.client.delete('/api/shopify/product-metadata' + params)
+        count = product.productsupplier_set.count()
+        self.assertEqual(count, 1)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier2)
+
 
 # Fix for last_seen cache
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
