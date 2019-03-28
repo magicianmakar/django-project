@@ -1076,3 +1076,13 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         count = self.user.commercehqproduct_set.count()
         self.assertEqual(count, 0)
+
+    @patch('commercehq_core.api.unmonitor_store')
+    def test_delete_store(self, unmonitor_store):
+        self.assertEqual(self.store.is_active, True)
+        params = '?store_id={}'.format(self.store.id)
+        r = self.client.delete('/api/chq/store' + params)
+        self.assertEqual(r.status_code, 200)
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.is_active, False)
+        unmonitor_store.assert_called_with(self.store)

@@ -377,6 +377,21 @@ class ProductsApiTestCase(BaseTestCase):
         self.assertEqual(count, 0)
         update_product_connection.assert_called_with(self.store.id, product.shopify_id)
 
+    @patch('leadgalaxy.api.unmonitor_store')
+    @patch('leadgalaxy.utils.detach_webhooks')
+    @patch('requests.delete')
+    def test_post_delete_store(self, mock_delete, detach_webhooks, unmonitor_store):
+        self.store.version = 2
+        self.store.save()
+        data = {'store': self.store.id}
+        r = self.client.post('/api/delete-store', data)
+        self.assertEqual(r.status_code, 200)
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.is_active, False)
+        mock_delete.assert_called_once()
+        unmonitor_store.assert_called_with(self.store)
+        detach_webhooks.assert_called_with(self.store, delete_too=True)
+
 
 # Fix for last_seen cache
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})

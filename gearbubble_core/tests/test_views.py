@@ -597,3 +597,11 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         count = self.user.gearbubbleproduct_set.count()
         self.assertEqual(count, 0)
+
+    def test_delete_store(self):
+        self.assertEqual(self.store.is_active, True)
+        params = '?id={}'.format(self.store.id)
+        r = self.client.delete('/api/gear/store' + params)
+        self.assertEqual(r.status_code, 200)
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.is_active, False)
