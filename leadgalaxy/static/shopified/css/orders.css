@@ -188,6 +188,14 @@ ul.shipping-method {
 .price-trends .price-down {
     color: #ed5565;
 }
+.filter-row .form-control[disabled] {
+    background-color: #fff;
+}
+
+.filter-row .select2-container--default.select2-container--disabled .select2-selection--multiple {
+    background-color: #fff;
+}
+
 @media (max-width: 768px) {
     #page-wrapper {
         padding: 0;

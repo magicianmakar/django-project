@@ -138,11 +138,7 @@ $(".filter-form").submit(function() {
             (el.name == 'financial' && el.value == user_filter.financial));
 
         return ret;
-    }).attr("disabled", "disabled").css('background-color', '#fff');
-
-    setTimeout(function() {
-        items.removeAttr('disabled');
-    }, 100);
+    }).attr("disabled", "disabled");
 
     return true; // ensure form still submits
 });
