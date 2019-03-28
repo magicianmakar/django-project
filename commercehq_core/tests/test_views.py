@@ -1099,3 +1099,11 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(count, 1)
         product.refresh_from_db()
         self.assertEqual(product.default_supplier, supplier2)
+
+    def test_post_supplier_default(self):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier = CommerceHQSupplierFactory(product=product)
+        data = {'product':product.id, 'export': supplier.id}
+        r = self.client.post('/api/chq/supplier-default', data)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier)

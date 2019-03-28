@@ -405,6 +405,20 @@ class ProductsApiTestCase(BaseTestCase):
         product.refresh_from_db()
         self.assertEqual(product.default_supplier, supplier2)
 
+    @patch('leadgalaxy.tasks.sync_shopify_product_quantities.apply_async')
+    @patch('leadgalaxy.utils.update_shopify_product_vendor')
+    def test_post_product_metadata_default(self, update_shopify_product_vendor, sync_shopify_product_quantities):
+        self.user.set_config('supplier_change_inventory_sync', True)
+        self.user.set_config('update_product_vendor', True)
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
+        supplier = f.ProductSupplierFactory(product=product)
+        data = {'product': product.id, 'export': supplier.id}
+        r = self.client.post('/api/shopify/product-metadata-default', data)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier)
+        update_shopify_product_vendor.assert_called_with(product.store, product.shopify_id, product.default_supplier.supplier_name)
+        sync_shopify_product_quantities.assert_called_with(args=[product.id])
+
 
 # Fix for last_seen cache
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
