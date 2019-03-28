@@ -801,3 +801,12 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         count = self.user.wooboard_set.count()
         self.assertEqual(count, 0)
+
+    def test_delete_product(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='delete_products.sub', description=''))
+        product = WooProductFactory(store=self.store, user=self.user)
+        params = '?product={}'.format(product.id)
+        r = self.client.delete('/api/woo/product' + params)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.wooproduct_set.count()
+        self.assertEqual(count, 0)

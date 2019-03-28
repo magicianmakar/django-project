@@ -366,6 +366,17 @@ class ProductsApiTestCase(BaseTestCase):
         count = self.user.shopifyboard_set.count()
         self.assertEqual(count, 0)
 
+    @patch('leadgalaxy.tasks.update_product_connection.delay')
+    def test_post_product_delete(self, update_product_connection):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='delete_products.sub', description=''))
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
+        data = {'product': product.id}
+        r = self.client.post('/api/shopify/product-delete', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.shopifyproduct_set.count()
+        self.assertEqual(count, 0)
+        update_product_connection.assert_called_with(self.store.id, product.shopify_id)
+
 
 # Fix for last_seen cache
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
