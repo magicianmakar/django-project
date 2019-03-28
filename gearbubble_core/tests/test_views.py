@@ -579,3 +579,12 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         count = board.products.count()
         self.assertEqual(count, 0)
+
+    def test_delete_board(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = GearBubbleBoardFactory(user=self.user)
+        params = '?board_id={}'.format(board.id)
+        r = self.client.delete('/api/gear/board' + params)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.gearbubbleboard_set.count()
+        self.assertEqual(count, 0)

@@ -346,7 +346,7 @@ class ProductsApiTestCase(BaseTestCase):
         self.assertEqual(len(r.json()), 1)
         self.assertEqual(r.json()[0]['id'], track.id)
 
-    def test_delete_board_products(self):
+    def test_post_product_remove_board(self):
         self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='edit_product_boards.sub', description=''))
         board = f.ShopifyBoardFactory(user=self.user)
         product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
@@ -355,6 +355,15 @@ class ProductsApiTestCase(BaseTestCase):
         r = self.client.post('/api/shopify/product-remove-board', data)
         self.assertEqual(r.status_code, 200)
         count = board.products.count()
+        self.assertEqual(count, 0)
+
+    def test_post_board_delete(self):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = f.ShopifyBoardFactory(user=self.user)
+        data = {'board': board.id}
+        r = self.client.post('/api/shopify/board-delete', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.shopifyboard_set.count()
         self.assertEqual(count, 0)
 
 
