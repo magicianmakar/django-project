@@ -697,3 +697,11 @@ class ApiTestCase(BaseTestCase):
         product_update.assert_called_with(args=(product.id, product_data), countdown=0, expires=60)
         get_effect_on_current_images.assert_called_once()
         sync.assert_called_once()
+
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
+    def test_post_store_add(self):
+        data = {'title': 'Test Store', 'api_token': 'https://gearstore.com'}
+        r = self.client.post('/api/gear/store-add', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.gearbubblestore_set.count()
+        self.assertEqual(count, 2)

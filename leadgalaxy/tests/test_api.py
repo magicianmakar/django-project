@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import arrow
 from munch import Munch
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, PropertyMock
 
 from django.test import override_settings
 from django.urls import reverse
@@ -439,6 +439,13 @@ class ProductsApiTestCase(BaseTestCase):
         self.assertEqual(count, 1)
         self.assertIsNotNone(product.default_supplier)
         update_shopify_product_vendor.assert_called_with(product.store, product.shopify_id, product.default_supplier.supplier_name)
+
+    @patch('leadgalaxy.models.ShopifyStore.get_info', new_callable=PropertyMock)
+    def test_get_store_verify(self, get_info):
+        get_info.return_value = {'name': 'Test Shopify Store'}
+        r = self.client.get('/api/store-verify', {'store': self.store.id})
+        get_info.assert_called_once()
+        self.assertEqual(r.status_code, 200)
 
 
 # Fix for last_seen cache

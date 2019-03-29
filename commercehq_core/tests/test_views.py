@@ -1174,3 +1174,22 @@ class ApiTestCase(BaseTestCase):
         r = self.client.post('/api/chq/product-update', data)
         self.assertEqual(r.status_code, 200)
         product_update.assert_called_with(args=[product.id, product_data], countdown=0, expires=60)
+
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
+    def test_post_store_add(self):
+        data = {
+            'title': 'Dropified Test App',
+            'api_url': 'http://chq-shopified-test.commercehqtesting.com/admin',
+            'api_key': 'gsycAdWxbv56CAQFNWVkN53sLxnzcSEF',
+            'api_password': 'euld-IWsmA1SkT5dved51decAcrXoz6n'
+        }
+        r = self.client.post('/api/chq/store-add', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.commercehqstore_set.count()
+        self.assertEqual(count, 2)
+
+    @patch('requests.sessions.Session.get')
+    def test_get_store_verify(self, mock_get):
+        r = self.client.get('/api/chq/store-verify', {'store': self.store.id})
+        mock_get.assert_called_once()
+        self.assertEqual(r.status_code, 200)

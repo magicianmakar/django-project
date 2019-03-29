@@ -906,3 +906,22 @@ class ApiTestCase(BaseTestCase):
         r = self.client.post('/api/woo/product-update', data)
         self.assertEqual(r.status_code, 200)
         product_update.assert_called_with(args=(product.id, product_data), countdown=0, expires=60)
+
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
+    def test_post_store_add(self):
+        data = {
+            'title': 'Test Store',
+            'api_url': 'https://woostore.com',
+            'api_key': 'ck_323fce33402a70913e4cdbbdffa14bdb1cfb9a50',
+            'api_password': 'cs_e32287eb90192ab2476015f9a69a30bb015dbdaf'
+        }
+        r = self.client.post('/api/woo/store-add', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.woostore_set.count()
+        self.assertEqual(count, 2)
+
+    @patch('woocommerce_core.models.API.get')
+    def test_get_store_verify(self, get_wcapi):
+        r = self.client.get('/api/woo/store-verify', {'store': self.store.id})
+        self.assertEqual(r.status_code, 200)
+        get_wcapi.assert_called_once()
