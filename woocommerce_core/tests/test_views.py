@@ -17,6 +17,7 @@ from leadgalaxy.tests.factories import (
 )
 
 from .factories import (
+    WooBoardFactory,
     WooOrderTrackFactory,
     WooProductFactory,
     WooStoreFactory,
@@ -780,3 +781,147 @@ class ApiTestCase(BaseTestCase):
         r = self.client.get('/api/woo/order-fulfill', {'created_at': f'{from_date:%m/%d/%Y}-{to_date:%m/%d/%Y}'})
         self.assertEqual(len(r.json()), 1)
         self.assertEqual(r.json()[0]['id'], track.id)
+
+    def test_delete_board_products(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = WooBoardFactory(user=self.user)
+        product = WooProductFactory(store=self.store, user=self.user)
+        board.products.add(product)
+        params = '?products[]={}&board_id={}'.format(product.id, board.id)
+        r = self.client.delete('/api/woo/board-products' + params)
+        self.assertEqual(r.status_code, 200)
+        count = board.products.count()
+        self.assertEqual(count, 0)
+
+    def test_delete_board(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = WooBoardFactory(user=self.user)
+        params = '?board_id={}'.format(board.id)
+        r = self.client.delete('/api/woo/board' + params)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.wooboard_set.count()
+        self.assertEqual(count, 0)
+
+    def test_delete_product(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='delete_products.sub', description=''))
+        product = WooProductFactory(store=self.store, user=self.user)
+        params = '?product={}'.format(product.id)
+        r = self.client.delete('/api/woo/product' + params)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.wooproduct_set.count()
+        self.assertEqual(count, 0)
+
+    def test_delete_store(self):
+        self.assertEqual(self.store.is_active, True)
+        params = '?id={}'.format(self.store.id)
+        r = self.client.delete('/api/woo/store' + params)
+        self.assertEqual(r.status_code, 200)
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.is_active, False)
+
+    def test_delete_supplier(self):
+        product = WooProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier1 = WooSupplierFactory(product=product)
+        supplier2 = WooSupplierFactory(product=product)
+        product.default_supplier = supplier1
+        product.save()
+        params = '?product={}&supplier={}'.format(product.id, supplier1.id)
+        r = self.client.delete('/api/woo/supplier' + params)
+        self.assertEqual(r.status_code, 200)
+        count = product.woosupplier_set.count()
+        self.assertEqual(count, 1)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier2)
+
+    def test_post_supplier_default(self):
+        product = WooProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier = WooSupplierFactory(product=product)
+        data = {'product': product.id, 'export': supplier.id}
+        r = self.client.post('/api/woo/supplier-default', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier)
+
+    def test_post_supplier(self):
+        product = WooProductFactory(store=self.store, user=self.user, source_id=12345678)
+        data = {
+            'product': product.id,
+            'original-link': '123',
+            'supplier-link': '123',
+            'supplier-name': 'test'
+        }
+        r = self.client.post('/api/woo/supplier', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        count = product.woosupplier_set.count()
+        self.assertEqual(count, 1)
+        self.assertIsNotNone(product.default_supplier)
+
+    @patch('woocommerce_core.tasks.product_export.apply_async')
+    def test_post_product_export(self, product_export):
+        product = WooProductFactory(store=self.store, user=self.user, source_id=12345678)
+        data = {
+            'store': self.store.id,
+            'product': product.id,
+            'publish': 'true',
+        }
+        r = self.client.post('/api/woo/product-export', data)
+        self.assertEqual(r.status_code, 200)
+        args = [self.store.id, product.id, self.user.id, True]
+        product_export.assert_called_with(args=args, countdown=0, expires=120)
+
+    @patch('woocommerce_core.tasks.product_save')
+    def test_post_product_save(self, product_save):
+        product_save.return_value = {}
+        data = {
+            'store': self.store.id,
+            'data': json.dumps({
+                'original_url': 'http://test.com',
+                'title': 'Test Product',
+                'store': {
+                    'name': 'Test Store',
+                    'url': 'http://teststore.com',
+                },
+            }),
+        }
+        r = self.client.post('/api/woo/product-save', data)
+        self.assertEqual(r.status_code, 200)
+        product_save.assert_called_once()
+
+    @patch('woocommerce_core.tasks.product_update.apply_async')
+    def test_post_product_update(self, product_update):
+        product = WooProductFactory(store=self.store, user=self.user, source_id=12345678)
+        product_data = {
+            'original_url': 'http://test.com',
+            'title': 'Test Product',
+            'store': {
+                'name': 'Test Store',
+                'url': 'http://teststore.com',
+            },
+        }
+        data = {
+            'product': product.id,
+            'data': json.dumps(product_data),
+        }
+        r = self.client.post('/api/woo/product-update', data)
+        self.assertEqual(r.status_code, 200)
+        product_update.assert_called_with(args=(product.id, product_data), countdown=0, expires=60)
+
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
+    def test_post_store_add(self):
+        data = {
+            'title': 'Test Store',
+            'api_url': 'https://woostore.com',
+            'api_key': 'ck_323fce33402a70913e4cdbbdffa14bdb1cfb9a50',
+            'api_password': 'cs_e32287eb90192ab2476015f9a69a30bb015dbdaf'
+        }
+        r = self.client.post('/api/woo/store-add', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.woostore_set.count()
+        self.assertEqual(count, 2)
+
+    @patch('woocommerce_core.models.API.get')
+    def test_get_store_verify(self, get_wcapi):
+        r = self.client.get('/api/woo/store-verify', {'store': self.store.id})
+        self.assertEqual(r.status_code, 200)
+        get_wcapi.assert_called_once()

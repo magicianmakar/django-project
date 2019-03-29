@@ -1047,3 +1047,149 @@ class ApiTestCase(BaseTestCase):
         r = self.client.get('/api/chq/order-fulfill', {'created_at': f'{from_date:%m/%d/%Y}-{to_date:%m/%d/%Y}'})
         self.assertEqual(len(r.json()), 1)
         self.assertEqual(r.json()[0]['id'], track.id)
+
+    def test_delete_board_products(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = CommerceHQBoardFactory(user=self.user)
+        product = CommerceHQProductFactory(store=self.store, user=self.user)
+        board.products.add(product)
+        params = '?products[]={}&board_id={}'.format(product.id, board.id)
+        r = self.client.delete('/api/chq/board-products' + params)
+        self.assertEqual(r.status_code, 200)
+        count = board.products.count()
+        self.assertEqual(count, 0)
+
+    def test_delete_board(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = CommerceHQBoardFactory(user=self.user)
+        params = '?board_id={}'.format(board.id)
+        r = self.client.delete('/api/chq/board' + params)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.commercehqboard_set.count()
+        self.assertEqual(count, 0)
+
+    def test_delete_product(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='delete_products.sub', description=''))
+        product = CommerceHQProductFactory(store=self.store, user=self.user)
+        params = '?product={}'.format(product.id)
+        r = self.client.delete('/api/chq/product' + params)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.commercehqproduct_set.count()
+        self.assertEqual(count, 0)
+
+    @patch('commercehq_core.api.unmonitor_store')
+    def test_delete_store(self, unmonitor_store):
+        self.assertEqual(self.store.is_active, True)
+        params = '?store_id={}'.format(self.store.id)
+        r = self.client.delete('/api/chq/store' + params)
+        self.assertEqual(r.status_code, 200)
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.is_active, False)
+        unmonitor_store.assert_called_with(self.store)
+
+    def test_delete_supplier(self):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier1 = CommerceHQSupplierFactory(product=product)
+        supplier2 = CommerceHQSupplierFactory(product=product)
+        product.default_supplier = supplier1
+        product.save()
+        params = '?product={}&supplier={}'.format(product.id, supplier1.id)
+        r = self.client.delete('/api/chq/supplier' + params)
+        self.assertEqual(r.status_code, 200)
+        count = product.commercehqsupplier_set.count()
+        self.assertEqual(count, 1)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier2)
+
+    def test_post_supplier_default(self):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier = CommerceHQSupplierFactory(product=product)
+        data = {'product': product.id, 'export': supplier.id}
+        r = self.client.post('/api/chq/supplier-default', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier)
+
+    def test_post_supplier(self):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        data = {
+            'product': product.id,
+            'original-link': '123',
+            'supplier-link': '123',
+            'supplier-name': 'test'
+        }
+        r = self.client.post('/api/chq/supplier', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        count = product.commercehqsupplier_set.count()
+        self.assertEqual(count, 1)
+        self.assertIsNotNone(product.default_supplier)
+
+    @patch('commercehq_core.tasks.product_export.apply_async')
+    def test_post_product_export(self, product_export):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        data = {
+            'store': self.store.id,
+            'product': product.id,
+            'publish': 'true',
+        }
+        r = self.client.post('/api/chq/product-export', data)
+        self.assertEqual(r.status_code, 200)
+        args = [str(self.store.id), str(product.id), self.user.id, data['publish']]
+        product_export.assert_called_with(args=args, countdown=0, expires=120)
+
+    @patch('commercehq_core.tasks.product_save')
+    def test_post_product_save(self, product_save):
+        product_save.return_value = {}
+        data = {
+            'store': self.store.id,
+            'data': json.dumps({
+                'original_url': 'http://test.com',
+                'title': 'Test Product',
+                'store': {
+                    'name': 'Test Store',
+                    'url': 'http://teststore.com',
+                },
+            }),
+        }
+        r = self.client.post('/api/chq/product-save', data)
+        self.assertEqual(r.status_code, 200)
+        product_save.assert_called_once()
+
+    @patch('commercehq_core.tasks.product_update.apply_async')
+    def test_post_product_update(self, product_update):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        product_data = {
+            'original_url': 'http://test.com',
+            'title': 'Test Product',
+            'store': {
+                'name': 'Test Store',
+                'url': 'http://teststore.com',
+            },
+        }
+        data = {
+            'product': product.id,
+            'data': json.dumps(product_data),
+        }
+        r = self.client.post('/api/chq/product-update', data)
+        self.assertEqual(r.status_code, 200)
+        product_update.assert_called_with(args=[product.id, product_data], countdown=0, expires=60)
+
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
+    def test_post_store_add(self):
+        data = {
+            'title': 'Dropified Test App',
+            'api_url': 'http://chq-shopified-test.commercehqtesting.com/admin',
+            'api_key': 'gsycAdWxbv56CAQFNWVkN53sLxnzcSEF',
+            'api_password': 'euld-IWsmA1SkT5dved51decAcrXoz6n'
+        }
+        r = self.client.post('/api/chq/store-add', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.commercehqstore_set.count()
+        self.assertEqual(count, 2)
+
+    @patch('requests.sessions.Session.get')
+    def test_get_store_verify(self, mock_get):
+        r = self.client.get('/api/chq/store-verify', {'store': self.store.id})
+        mock_get.assert_called_once()
+        self.assertEqual(r.status_code, 200)

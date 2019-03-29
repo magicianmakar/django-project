@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import arrow
 from munch import Munch
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, PropertyMock
 
 from django.test import override_settings
 from django.urls import reverse
@@ -345,6 +345,107 @@ class ProductsApiTestCase(BaseTestCase):
         r = self.client.get('/api/shopify/order-fulfill', {'created_at': f'{from_date:%m/%d/%Y}-{to_date:%m/%d/%Y}'})
         self.assertEqual(len(r.json()), 1)
         self.assertEqual(r.json()[0]['id'], track.id)
+
+    def test_post_product_remove_board(self):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = f.ShopifyBoardFactory(user=self.user)
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
+        board.products.add(product)
+        data = {'products[]': [product.id], 'board': board.id}
+        r = self.client.post('/api/shopify/product-remove-board', data)
+        self.assertEqual(r.status_code, 200)
+        count = board.products.count()
+        self.assertEqual(count, 0)
+
+    def test_post_board_delete(self):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = f.ShopifyBoardFactory(user=self.user)
+        data = {'board': board.id}
+        r = self.client.post('/api/shopify/board-delete', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.shopifyboard_set.count()
+        self.assertEqual(count, 0)
+
+    @patch('leadgalaxy.tasks.update_product_connection.delay')
+    def test_post_product_delete(self, update_product_connection):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='delete_products.sub', description=''))
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
+        data = {'product': product.id}
+        r = self.client.post('/api/shopify/product-delete', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.shopifyproduct_set.count()
+        self.assertEqual(count, 0)
+        update_product_connection.assert_called_with(self.store.id, product.shopify_id)
+
+    @patch('leadgalaxy.api.unmonitor_store')
+    @patch('leadgalaxy.utils.detach_webhooks')
+    @patch('requests.delete')
+    def test_post_delete_store(self, mock_delete, detach_webhooks, unmonitor_store):
+        self.store.version = 2
+        self.store.save()
+        data = {'store': self.store.id}
+        r = self.client.post('/api/delete-store', data)
+        self.assertEqual(r.status_code, 200)
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.is_active, False)
+        mock_delete.assert_called_once()
+        unmonitor_store.assert_called_with(self.store)
+        detach_webhooks.assert_called_with(self.store, delete_too=True)
+
+    def test_delete_product_metadata(self):
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier1 = f.ProductSupplierFactory(product=product)
+        supplier2 = f.ProductSupplierFactory(product=product)
+        product.default_supplier = supplier1
+        product.save()
+        params = '?product={}&export={}'.format(product.id, supplier1.id)
+        r = self.client.delete('/api/shopify/product-metadata' + params)
+        self.assertEqual(r.status_code, 200)
+        count = product.productsupplier_set.count()
+        self.assertEqual(count, 1)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier2)
+
+    @patch('leadgalaxy.tasks.sync_shopify_product_quantities.apply_async')
+    @patch('leadgalaxy.utils.update_shopify_product_vendor')
+    def test_post_product_metadata_default(self, update_shopify_product_vendor, sync_shopify_product_quantities):
+        self.user.set_config('supplier_change_inventory_sync', True)
+        self.user.set_config('update_product_vendor', True)
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
+        supplier = f.ProductSupplierFactory(product=product)
+        data = {'product': product.id, 'export': supplier.id}
+        r = self.client.post('/api/shopify/product-metadata-default', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier)
+        update_shopify_product_vendor.assert_called_with(product.store, product.shopify_id, product.default_supplier.supplier_name)
+        sync_shopify_product_quantities.assert_called_with(args=[product.id])
+
+    @patch('leadgalaxy.utils.update_shopify_product_vendor')
+    def test_post_product_metadata(self, update_shopify_product_vendor):
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='product_metadata.use', description=''))
+        self.user.set_config('update_product_vendor', True)
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
+        data = {
+            'product': product.id,
+            'original-link': '123',
+            'supplier-link': '123',
+            'supplier-name': 'test'
+        }
+        r = self.client.post('/api/shopify/product-metadata', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        count = product.productsupplier_set.count()
+        self.assertEqual(count, 1)
+        self.assertIsNotNone(product.default_supplier)
+        update_shopify_product_vendor.assert_called_with(product.store, product.shopify_id, product.default_supplier.supplier_name)
+
+    @patch('leadgalaxy.models.ShopifyStore.get_info', new_callable=PropertyMock)
+    def test_get_store_verify(self, get_info):
+        get_info.return_value = {'name': 'Test Shopify Store'}
+        r = self.client.get('/api/store-verify', {'store': self.store.id})
+        get_info.assert_called_once()
+        self.assertEqual(r.status_code, 200)
 
 
 # Fix for last_seen cache

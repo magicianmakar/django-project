@@ -16,6 +16,7 @@ from leadgalaxy.tests.factories import (
 )
 
 from .factories import (
+    GearBubbleBoardFactory,
     GearBubbleOrderTrackFactory,
     GearBubbleProductFactory,
     GearBubbleStoreFactory,
@@ -567,3 +568,140 @@ class ApiTestCase(BaseTestCase):
         r = self.client.get('/api/gear/order-fulfill', {'created_at': f'{from_date:%m/%d/%Y}-{to_date:%m/%d/%Y}'})
         self.assertEqual(len(r.json()), 1)
         self.assertEqual(r.json()[0]['id'], track.id)
+
+    def test_delete_board_products(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = GearBubbleBoardFactory(user=self.user)
+        product = GearBubbleProductFactory(store=self.store, user=self.user)
+        board.products.add(product)
+        params = '?products[]={}&board_id={}'.format(product.id, board.id)
+        r = self.client.delete('/api/gear/board-products' + params)
+        self.assertEqual(r.status_code, 200)
+        count = board.products.count()
+        self.assertEqual(count, 0)
+
+    def test_delete_board(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='edit_product_boards.sub', description=''))
+        board = GearBubbleBoardFactory(user=self.user)
+        params = '?board_id={}'.format(board.id)
+        r = self.client.delete('/api/gear/board' + params)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.gearbubbleboard_set.count()
+        self.assertEqual(count, 0)
+
+    def test_delete_product(self):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='delete_products.sub', description=''))
+        product = GearBubbleProductFactory(store=self.store, user=self.user)
+        params = '?product={}'.format(product.id)
+        r = self.client.delete('/api/gear/product' + params)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.gearbubbleproduct_set.count()
+        self.assertEqual(count, 0)
+
+    def test_delete_store(self):
+        self.assertEqual(self.store.is_active, True)
+        params = '?id={}'.format(self.store.id)
+        r = self.client.delete('/api/gear/store' + params)
+        self.assertEqual(r.status_code, 200)
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.is_active, False)
+
+    def test_delete_supplier(self):
+        product = GearBubbleProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier1 = GearBubbleSupplierFactory(product=product)
+        supplier2 = GearBubbleSupplierFactory(product=product)
+        product.default_supplier = supplier1
+        product.save()
+        params = '?product={}&supplier={}'.format(product.id, supplier1.id)
+        r = self.client.delete('/api/gear/supplier' + params)
+        self.assertEqual(r.status_code, 200)
+        count = product.gearbubblesupplier_set.count()
+        self.assertEqual(count, 1)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier2)
+
+    def test_post_supplier_default(self):
+        product = GearBubbleProductFactory(store=self.store, user=self.user, source_id=12345678)
+        supplier = GearBubbleSupplierFactory(product=product)
+        data = {'product': product.id, 'export': supplier.id}
+        r = self.client.post('/api/gear/supplier-default', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        self.assertEqual(product.default_supplier, supplier)
+
+    def test_post_supplier(self):
+        product = GearBubbleProductFactory(store=self.store, user=self.user, source_id=12345678)
+        data = {
+            'product': product.id,
+            'original-link': '123',
+            'supplier-link': '123',
+            'supplier-name': 'test'
+        }
+        r = self.client.post('/api/gear/supplier', data)
+        self.assertEqual(r.status_code, 200)
+        product.refresh_from_db()
+        count = product.gearbubblesupplier_set.count()
+        self.assertEqual(count, 1)
+        self.assertIsNotNone(product.default_supplier)
+
+    @patch('gearbubble_core.tasks.product_export.apply_async')
+    def test_post_product_export(self, product_export):
+        product = GearBubbleProductFactory(store=self.store, user=self.user, source_id=12345678)
+        data = {
+            'store': self.store.id,
+            'product': product.id,
+            'publish': 'true',
+        }
+        r = self.client.post('/api/gear/product-export', data)
+        self.assertEqual(r.status_code, 200)
+        args = [self.store.id, product.id, self.user.id, True]
+        product_export.assert_called_with(args=args, countdown=0, expires=120)
+
+    @patch('gearbubble_core.tasks.product_save')
+    def test_post_product_save(self, product_save):
+        product_save.return_value = {}
+        data = {
+            'store': self.store.id,
+            'data': json.dumps({
+                'original_url': 'http://test.com',
+                'title': 'Test Product',
+                'store': {
+                    'name': 'Test Store',
+                    'url': 'http://teststore.com',
+                },
+            }),
+        }
+        r = self.client.post('/api/gear/product-save', data)
+        self.assertEqual(r.status_code, 200)
+        product_save.assert_called_once()
+
+    @patch('gearbubble_core.tasks.product_update.apply_async')
+    @patch('gearbubble_core.utils.get_effect_on_current_images')
+    @patch('gearbubble_core.models.GearBubbleProduct.sync')
+    def test_post_product_update(self, sync, get_effect_on_current_images, product_update):
+        product = GearBubbleProductFactory(store=self.store, user=self.user, source_id=12345678)
+        product_data = {
+            'original_url': 'http://test.com',
+            'title': 'Test Product',
+            'store': {
+                'name': 'Test Store',
+                'url': 'http://teststore.com',
+            },
+        }
+        data = {
+            'product': product.id,
+            'data': json.dumps(product_data),
+        }
+        r = self.client.post('/api/gear/product-update', data)
+        self.assertEqual(r.status_code, 200)
+        product_update.assert_called_with(args=(product.id, product_data), countdown=0, expires=60)
+        get_effect_on_current_images.assert_called_once()
+        sync.assert_called_once()
+
+    @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
+    def test_post_store_add(self):
+        data = {'title': 'Test Store', 'api_token': 'https://gearstore.com'}
+        r = self.client.post('/api/gear/store-add', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.gearbubblestore_set.count()
+        self.assertEqual(count, 2)
