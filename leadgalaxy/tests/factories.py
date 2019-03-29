@@ -123,6 +123,18 @@ class ShopifyOrderFactory(factory.DjangoModelFactory):
         model = 'shopify_orders.ShopifyOrder'
 
 
+class ShopifyOrderLineFactory(factory.DjangoModelFactory):
+    order = factory.SubFactory('leadgalaxy.tests.factories.ShopifyOrderFactory')
+    line_id = factory.fuzzy.FuzzyInteger(99999999)
+    shopify_product = factory.fuzzy.FuzzyInteger(99999999)
+    price = factory.fuzzy.FuzzyFloat(1000.0)
+    quantity = factory.fuzzy.FuzzyInteger(99)
+    variant_id = factory.fuzzy.FuzzyInteger(99999999)
+
+    class Meta:
+        model = 'shopify_orders.ShopifyOrderLine'
+
+
 class ShopifyOrderLogFactory(factory.DjangoModelFactory):
     store = factory.SubFactory('leadgalaxy.tests.factories.ShopifyStoreFactory')
     order_id = factory.fuzzy.FuzzyInteger(99999999)

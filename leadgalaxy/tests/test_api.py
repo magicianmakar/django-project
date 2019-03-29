@@ -346,6 +346,161 @@ class ProductsApiTestCase(BaseTestCase):
         self.assertEqual(len(r.json()), 1)
         self.assertEqual(r.json()[0]['id'], track.id)
 
+    @patch('leadgalaxy.tasks.update_shopify_order.apply_async')
+    def test_delete_order_fulfill(self, update_shopify_order):
+        track = f.ShopifyOrderTrackFactory(user=self.user, store=self.store)
+        order = f.ShopifyOrderFactory(user=self.user, store=self.store, order_id=track.order_id, need_fulfillment=0)
+        line = f.ShopifyOrderLineFactory(order=order)
+        line.track = track
+        line.save()
+
+        r = self.client.delete(f'/api/shopify/order-fulfill?order_id={track.order_id}&line_id={track.line_id}')
+        self.assertEqual(r.status_code, 200)
+
+        # ShopifyOrderLog created
+        self.assertEqual(self.store.shopifyorderlog_set.count(), 1)
+
+        # OrderTrack doesn't exist
+        self.assertFalse(self.store.shopifyordertrack_set.exists())
+
+        # ShopifyOrder
+        update_shopify_order.assert_called_with(args=[self.store.id, track.order_id], kwargs={'from_webhook': False})
+        # order.refresh_from_db()
+        # self.assertEqual(order.need_fulfillment, 1)
+
+        # Empty search params
+        r = self.client.delete('/api/shopify/order-fulfill')
+        self.assertEqual(r.status_code, 404)
+
+    @patch('leadgalaxy.models.ShopifyStore.get_link', Mock(return_value=''))
+    @patch('leadgalaxy.models.ShopifyStore.get_primary_location', Mock(return_value=1))
+    @patch('leadgalaxy.api.requests')
+    def test_post_fulfill_order(self, requests_mock):
+        requests_mock.post = Mock(return_value=Mock(raise_for_status=Mock(return_value=None)))
+
+        track = f.ShopifyOrderTrackFactory(user=self.user, store=self.store)
+        data = {
+            'fulfill-store': self.store.id,
+            'fulfill-line-id': track.line_id,
+            'fulfill-order-id': track.order_id,
+            'fulfill-traking-number': 123,
+            'fulfill-location-id': 1
+        }
+
+        r = self.client.post('/api/shopify/fulfill-order', data)
+        self.assertEqual(r.status_code, 200)
+        # Call Shopify once
+        requests_mock.post.assert_called_once()
+
+        # ShopifyOrderLog created
+        self.assertEqual(self.store.shopifyorderlog_set.count(), 1)
+
+        # Already fulfilled
+        requests_mock.post = Mock(return_value=Mock(
+            raise_for_status=Mock(side_effect=Exception()),
+            text='is already fulfilled'
+        ))
+        r = self.client.post('/api/shopify/fulfill-order', data)
+
+        self.assertEqual(r.status_code, 500)
+        self.assertNotIn('Internal Server Error', r.json().get('error'))
+
+    @patch('leadgalaxy.utils.get_shopify_order_line')
+    def test_post_order_fulfill(self, get_shopify_order_line):
+        track = f.ShopifyOrderTrackFactory(user=self.user, store=self.store)
+        data = {
+            'store': self.store.id,
+            'order_id': track.order_id,
+            'line_id': track.line_id,
+            'line_sku': '',
+            'aliexpress_order_id': '123',
+            'source_type': 'aliexpress',
+        }
+
+        r = self.client.post('/api/shopify/order-fulfill', data)
+        self.assertEqual(r.status_code, 200)
+
+        # ShopifyOrderTrack updated
+        track.refresh_from_db()
+        self.assertEqual(track.source_id, data['aliexpress_order_id'])
+        self.assertEqual(track.source_type, data['source_type'])
+
+        # ShopifyOrderLog created
+        self.assertEqual(self.store.shopifyorderlog_set.count(), 1)
+
+        # Search line id by sku
+        get_shopify_order_line.return_value = {'id': track.line_id, 'fulfillment_status': 'fulfilled'}
+        r = self.client.post('/api/shopify/order-fulfill', {**data, 'line_sku': '123', 'line_id': ''}, HTTP_REFERER='https://oberlo.com')
+
+        self.assertEqual(r.status_code, 200)
+        get_shopify_order_line.assert_called_once()
+
+        track.refresh_from_db()
+        self.assertEqual(track.shopify_status, 'fulfilled')
+        self.assertEqual(track.source_id, data['aliexpress_order_id'])
+        self.assertEqual(track.source_type, data['source_type'])
+
+        # Wrong source id
+        r = self.client.post('/api/shopify/order-fulfill', {
+            **data,
+            'aliexpress_order_id': 'https://trade.aliexpress.com/order_detail.htm?orderId=123'
+        })
+
+        self.assertEqual(r.status_code, 501)
+        self.assertIn('should not be a link', r.json().get('error'))
+
+        # Prevent from Oberlo
+        r = self.client.post('/api/shopify/order-fulfill', {**data, 'aliexpress_order_id': ''}, HTTP_REFERER='https://oberlo.com')
+
+        self.assertEqual(r.status_code, 202)
+        self.assertIn('Nothing to import', r.json().get('message'))
+
+    @patch('shopified_core.permissions.can_add_product')
+    def test_post_import_product(self, can_add_product_mock):
+        product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
+        data = {
+            'store': self.store.id,
+            'product': product.shopify_id,
+            'supplier': 'https://www.aliexpress.com/item/~/32961038442.html',
+        }
+
+        can_add_product_mock.return_value = [False, 1, 1]
+        r = self.client.post('/api/shopify/import-product', data)
+        self.assertEqual(r.status_code, 401)
+        can_add_product_mock.return_value = [True, 1, 1]
+
+        r = self.client.post('/api/shopify/import-product', data)
+        product.refresh_from_db()
+        self.assertTrue(product.have_supplier())
+
+        r = self.client.post('/api/shopify/import-product', data)
+        self.assertEqual(r.status_code, 422)
+        self.assertIn('connected', r.json().get('error'))
+
+    def test_post_order_fulfill_update(self):
+        track = f.ShopifyOrderTrackFactory(user=self.user, store=self.store)
+        data = {
+            'store': self.store.id,
+            'order': track.id,
+            'source_id': '123',
+            'tracking_number': '123',
+            'status': 'PLACE_ORDER_SUCCESS',
+            'end_reason': 'buyer_accept_goods'
+        }
+
+        r = self.client.post('/api/shopify/order-fulfill-update', data)
+        self.assertEqual(r.status_code, 200)
+        track.refresh_from_db()
+        self.assertEqual(track.source_tracking, data['tracking_number'])
+        self.assertEqual(self.store.shopifyorderlog_set.count(), 1)
+
+        r = self.client.post('/api/shopify/order-fulfill-update', {**data, 'bundle': {'source_id': '123'}})
+        self.assertEqual(r.status_code, 200)
+        track.refresh_from_db()
+        track_data = json.loads(track.data)
+        self.assertEqual(track_data['bundle']['123']['source_status'], data['status'])
+        self.assertEqual(track_data['bundle']['123']['source_tracking'], data['tracking_number'])
+
     def test_post_product_remove_board(self):
         self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='edit_product_boards.sub', description=''))
         board = f.ShopifyBoardFactory(user=self.user)

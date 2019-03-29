@@ -782,6 +782,162 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(len(r.json()), 1)
         self.assertEqual(r.json()[0]['id'], track.id)
 
+    def test_delete_order_fulfill(self):
+        track = WooOrderTrackFactory(user=self.user, store=self.store, product_id=123)
+
+        r = self.client.delete(f'/api/woo/order-fulfill?order_id={track.order_id}&line_id={track.line_id}')
+        self.assertEqual(r.status_code, 200)
+
+        # OrderTrack doesn't exist
+        self.assertFalse(self.store.wooordertrack_set.exists())
+
+        # Empty search params
+        r = self.client.delete('/api/woo/order-fulfill')
+        self.assertEqual(r.status_code, 404)
+
+        r = self.client.delete('/api/woo/order-fulfill?order_id=1&line_id=1')
+        self.assertEqual(r.status_code, 404)
+
+    @patch('woocommerce_core.utils.update_order_status')
+    @patch('woocommerce_core.utils.get_shipping_carrier_name')
+    @patch('woocommerce_core.models.WooStore.wcapi')
+    def test_post_fulfill_order(self, wcapi_mock, get_shipping_carrier_name_mock, update_order_status_mock):
+        track = WooOrderTrackFactory(user=self.user, store=self.store, product_id=123)
+        data = {
+            'fulfill-store': self.store.id,
+            'fulfill-line-id': track.line_id,
+            'fulfill-order-id': track.order_id,
+            'fulfill-product-id': track.product_id,
+            'fulfill-traking-number': 123,
+            'fulfill-location-id': 1,
+            'fulfill-tracking-link': 'https://www.ups.com/track?loc=en_US&tracknum=1223423413'
+        }
+
+        # Wrong tracking url
+        get_shipping_carrier_name_mock.return_value = 'Custom Provider'
+        r = self.client.post('/api/woo/fulfill-order', {**data, 'fulfill-tracking-link': 'htps://www.ups.com'})
+        self.assertEqual(r.status_code, 500)
+        self.assertIn('valid URL', r.json()['error'])
+
+        # Incorrect shipping provider
+        get_shipping_carrier_name_mock.return_value = None
+        r = self.client.post('/api/woo/fulfill-order', data)
+        self.assertEqual(r.status_code, 500)
+        self.assertIn('Invalid shipping provider', r.json()['error'])
+
+        # Items remaining fulfillment
+        get_shipping_carrier_name_mock.return_value = 'Custom Provider'
+        wcapi_mock.put = Mock(return_value=Mock(ok=True, json=Mock(return_value={
+            'line_items': [{
+                'meta_data': [{'key': 'Fulfillment Status', 'value': 'Unfulfilled'}]
+            }]
+        })))
+
+        r = self.client.post('/api/woo/fulfill-order', data)
+        self.assertEqual(r.status_code, 200)
+        update_order_status_mock.assert_not_called()
+
+        # All items fulfilled
+        wcapi_mock.put = Mock(return_value=Mock(ok=True, json=Mock(return_value={
+            'line_items': [{
+                'meta_data': [{'key': 'Fulfillment Status', 'value': 'Fulfilled'}]
+            }]
+        })))
+
+        r = self.client.post('/api/woo/fulfill-order', data)
+        self.assertEqual(r.status_code, 200)
+        update_order_status_mock.assert_called_with(self.store, track.order_id, 'completed')
+
+    @patch('woocommerce_core.utils.WooOrderUpdater.delay_save', Mock(return_value=None))
+    @patch('woocommerce_core.utils.update_order_status', Mock(return_value=None))
+    @patch('woocommerce_core.models.WooStore.wcapi')
+    def test_post_order_fulfill(self, wcapi_mock):
+        track = WooOrderTrackFactory(user=self.user, store=self.store, product_id=123)
+
+        data = {
+            'store': self.store.id,
+            'order_id': track.order_id,
+            'line_id': track.line_id,
+            'line_sku': '',
+            'aliexpress_order_id': '123',
+            'source_type': 'aliexpress',
+        }
+
+        wcapi_mock.get = Mock(return_value=Mock(ok=True, json=Mock(return_value={
+            'line_items': [{
+                'id': track.line_id, 'product_id': 123
+            }]
+        })))
+
+        # Missing line_id
+        r = self.client.post('/api/woo/order-fulfill', {**data, 'line_id': ''})
+        self.assertEqual(r.status_code, 500)
+        self.assertIn('input is missing', r.json()['error'])
+
+        # Missing order_id
+        r = self.client.post('/api/woo/order-fulfill', {**data, 'aliexpress_order_id': ''})
+        self.assertEqual(r.status_code, 501)
+        self.assertIn('empty', r.json()['error'].lower())
+
+        r = self.client.post('/api/woo/order-fulfill', data)
+        self.assertEqual(r.status_code, 200)
+
+        track.refresh_from_db()
+        self.assertEqual(track.source_id, data['aliexpress_order_id'])
+        self.assertEqual(track.source_type, data['source_type'])
+
+        # Already fulfilled
+        r = self.client.post('/api/woo/order-fulfill', {**data, 'aliexpress_order_id': '1'})
+
+        self.assertEqual(r.status_code, 422)
+        self.assertIn('already', r.json().get('error'))
+
+    @patch('woocommerce_core.models.WooProduct.sync')
+    @patch('shopified_core.permissions.can_add_product')
+    def test_post_import_product(self, can_add_product_mock, sync_mock):
+        source_id = 12345678
+        data = {
+            'store': self.store.id,
+            'product': source_id,
+            'supplier': 'https://www.aliexpress.com/item/~/32961038442.html',
+        }
+
+        can_add_product_mock.return_value = [False, 1, 1]
+        r = self.client.post('/api/woo/import-product', data)
+        self.assertEqual(r.status_code, 401)
+        can_add_product_mock.return_value = [True, 1, 1]
+
+        r = self.client.post('/api/woo/import-product', data)
+        self.assertEqual(r.status_code, 200)
+        product = WooProduct.objects.get(id=r.json()['product'])
+        self.assertEqual(product.source_id, source_id)
+        self.assertTrue(product.has_supplier())
+
+        r = self.client.post('/api/woo/import-product', data)
+        self.assertEqual(r.status_code, 422)
+        self.assertIn('connected', r.json().get('error'))
+
+    @patch('shopified_core.utils.CancelledOrderAlert.send_email', Mock(return_value=None))
+    def test_post_order_fulfill_update(self):
+        track = WooOrderTrackFactory(user=self.user, store=self.store, product_id=123)
+        data = {
+            'store': self.store.id,
+            'order': track.id,
+            'source_id': '123',
+            'tracking_number': '123',
+            'status': 'PLACE_ORDER_SUCCESS',
+            'end_reason': 'buyer_accept_goods',
+            'order_details': json.dumps({})
+        }
+
+        r = self.client.post('/api/woo/order-fulfill-update', data)
+        track.refresh_from_db()
+        track_data = json.loads(track.data)
+
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(track.source_tracking, data['tracking_number'])
+        self.assertEqual(track_data['aliexpress']['end_reason'], data['end_reason'])
+
     def test_delete_board_products(self):
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='edit_product_boards.sub', description=''))
         board = WooBoardFactory(user=self.user)

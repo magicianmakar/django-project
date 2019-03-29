@@ -861,7 +861,7 @@ class WooStoreApi(ApiBase):
         return self.api_success()
 
     def delete_order_fulfill(self, request, user, data):
-        order_id, line_id = int(data.get('order_id')), int(data.get('line_id'))
+        order_id, line_id = safe_int(data.get('order_id')), safe_int(data.get('line_id'))
         orders = WooOrderTrack.objects.filter(user=user.models_user,
                                               order_id=order_id,
                                               line_id=line_id)
