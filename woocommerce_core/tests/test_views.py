@@ -856,3 +856,34 @@ class ApiTestCase(BaseTestCase):
         count = product.woosupplier_set.count()
         self.assertEqual(count, 1)
         self.assertIsNotNone(product.default_supplier)
+
+    @patch('woocommerce_core.tasks.product_export.apply_async')
+    def test_post_product_export(self, product_export):
+        product = WooProductFactory(store=self.store, user=self.user, source_id=12345678)
+        data = {
+            'store': self.store.id,
+            'product': product.id,
+            'publish': 'true',
+        }
+        r = self.client.post('/api/woo/product-export', data)
+        self.assertEqual(r.status_code, 200)
+        args = [self.store.id, product.id, self.user.id, True]
+        product_export.assert_called_with(args=args, countdown=0, expires=120)
+
+    @patch('woocommerce_core.tasks.product_save')
+    def test_post_product_save(self, product_save):
+        product_save.return_value = {}
+        data = {
+            'store': self.store.id,
+            'data': json.dumps({
+                'original_url': 'http://test.com',
+                'title': 'Test Product',
+                'store': {
+                    'name': 'Test Store',
+                    'url': 'http://teststore.com',
+                },
+            }),
+        }
+        r = self.client.post('/api/woo/product-save', data)
+        self.assertEqual(r.status_code, 200)
+        product_save.assert_called_once()
