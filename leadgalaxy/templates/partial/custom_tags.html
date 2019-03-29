@@ -40,6 +40,8 @@
                 {% cache 1800 all_stores_count user.id %}
                 stores_count: {{user.profile.get_shopify_stores.count}},
                 chq_count: {{user.profile.get_chq_stores.count}},
+                woo_count: {{user.profile.get_woo_stores.count}},
+                gear_count: {{user.profile.get_gear_stores.count}},
                 {% endcache %}
 
                 {% cache 604800 total_orders user.id %}
