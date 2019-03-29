@@ -1155,3 +1155,22 @@ class ApiTestCase(BaseTestCase):
         r = self.client.post('/api/chq/product-save', data)
         self.assertEqual(r.status_code, 200)
         product_save.assert_called_once()
+
+    @patch('commercehq_core.tasks.product_update.apply_async')
+    def test_post_product_update(self, product_update):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        product_data = {
+            'original_url': 'http://test.com',
+            'title': 'Test Product',
+            'store': {
+                'name': 'Test Store',
+                'url': 'http://teststore.com',
+            },
+        }
+        data = {
+            'product': product.id,
+            'data': json.dumps(product_data),
+        }
+        r = self.client.post('/api/chq/product-update', data)
+        self.assertEqual(r.status_code, 200)
+        product_update.assert_called_with(args=[product.id, product_data], countdown=0, expires=60)
