@@ -1191,8 +1191,19 @@ def webhook(request, provider, option):
             else:
                 try:
                     profile = UserProfile.objects.get(user__email__iexact=args[1])
+
                 except UserProfile.DoesNotExist:
-                    return HttpResponse(':x: Profile not found')
+                    profile = UserProfile.objects.filter(user_id=args[1])
+                    if profile.exists():
+                        profile = profile.first()
+                    else:
+                        return HttpResponse(':x: Profile not found')
+
+                except UserProfile.MultipleObjectsReturned:
+                    profiles = UserProfile.objects.filter(user__email__iexact=args[1])
+                    return HttpResponse(':x: More than one account with the same email was found, '
+                                        + 'Use one of the following User IDs instead:\n{}'.format(
+                                            '\n'.join([f'{profile.user.id} - {profile.user.username}' for profile in profiles])))
 
                 tags = ' '.join(args[2:]).split(',')
                 if command == 'add':
