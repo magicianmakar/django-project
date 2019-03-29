@@ -246,7 +246,7 @@
             function(isConfirmed) {
                 if (isConfirmed) {
                     $.ajax({
-                        url: '/api/subuser-delete',
+                        url: '/api/subusers/delete',
                         type: 'POST',
                         data: {
                             subuser: subuser_id,
@@ -284,7 +284,7 @@
             function(isConfirmed) {
                 if (isConfirmed) {
                     $.ajax({
-                        url: '/api/subuser-invite?' + $.param({invite: invite_id}),
+                        url: '/api/subusers/invite?' + $.param({invite: invite_id}),
                         type: 'DELETE',
                         success: function(data) {
                             swal.close();
@@ -326,7 +326,7 @@
                 }
 
                 $.ajax({
-                    url: '/api/subuser-invite',
+                    url: '/api/subusers/invite',
                     type: 'POST',
                     data: {
                         'email': inputValue

@@ -105,7 +105,7 @@ window.OrderExport = {
                 data = list.find('li').map(function(key, value) {
                     return $(value).attr('data-id');
                 }).get();
-                
+
                 wrapper.siblings('.output').val(window.JSON.stringify(data));
             });
 
@@ -120,7 +120,7 @@ window.OrderExport = {
             data = list.find('li').map(function(key, value) {
                 return $(value).attr('data-id');
             }).get();
-            
+
             wrapper.siblings('.output').val(window.JSON.stringify(data));
         });
     },
@@ -137,7 +137,7 @@ window.OrderExport = {
             data = $(this).find('li').map(function(key, value) {
                 return $(value).attr('data-id');
             }).get();
-            
+
             output.val(window.JSON.stringify(data));
         });
 
@@ -148,7 +148,7 @@ window.OrderExport = {
             data = list.find('li').map(function(key, value) {
                 return $(value).attr('data-id');
             }).get();
-            
+
             output.val(window.JSON.stringify(data));
         };
 
@@ -274,7 +274,7 @@ window.OrderExport = {
                 $('[name="vendor_email"]').val('');
             }
         });
-        
+
         $('[name="vendor_username"]').on('keyup', function() {
             if ($(this).val() !== '') {
                 $('[name="vendor_user"]').val('');
@@ -361,7 +361,7 @@ window.OrderExport = {
                 }
 
                 $.ajax({
-                    url: '/api/subuser-invite',
+                    url: '/api/subusers/invite',
                     type: 'POST',
                     data: {
                         'email': inputValue
@@ -682,7 +682,7 @@ window.OrderExport = {
                     priceMin = $('[name="product_price_min"]').val(),
                     priceMax = $('[name="product_price_max"]').val(),
                     products = window.OrderExport.foundProducts.data;
-                
+
                 if (titles.length == 0 && priceMin == '' && priceMax == '' && products.length == 0) {
                     $('#product-filters-description').parents('.alert.alert-success').addClass('hidden');
                     this.empty = true;

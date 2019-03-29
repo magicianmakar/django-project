@@ -134,6 +134,7 @@ DROPIFIED_API = {
     'gear': 'gearbubble_core.api.GearBubbleApi',
     'woo': 'woocommerce_core.api.WooStoreApi',
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
+    'subusers': 'subusers.api.SubusersApi',
 }
 
 # Database

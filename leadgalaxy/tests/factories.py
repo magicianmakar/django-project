@@ -1,6 +1,8 @@
 import datetime
-from django.utils import timezone
+
 from django.contrib.auth.models import User
+from django.utils import timezone
+from django.utils.text import slugify
 
 import factory
 import factory.fuzzy
@@ -141,3 +143,34 @@ class ShopifyOrderLogFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'shopify_orders.ShopifyOrderLog'
+
+
+class FeatureBundleFactory(factory.DjangoModelFactory):
+    title = factory.fuzzy.FuzzyText()
+    slug = factory.lazy_attribute(lambda b: slugify(b.title))
+    register_hash = factory.fuzzy.FuzzyText()
+
+    @factory.post_generation
+    def permissions(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for permission in extracted:
+                self.permissions.add(permission)
+
+    class Meta:
+        model = 'leadgalaxy.FeatureBundle'
+
+
+class PlanRegistrationFactory(factory.DjangoModelFactory):
+    plan = factory.SubFactory('leadgalaxy.tests.factories.GroupPlanFactory')
+    bundle = factory.SubFactory('leadgalaxy.tests.factories.FeatureBundleFactory')
+
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    sender = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+    email = factory.LazyAttribute(lambda o: '%s@example.org' % o.user.username)
+    register_hash = factory.fuzzy.FuzzyText()
+
+    class Meta:
+        model = 'leadgalaxy.PlanRegistration'
