@@ -321,8 +321,8 @@ def export_product(req_data, target, user_id):
                             store=store,
                             product=product,
                             product_url=original_url[:512],
-                            supplier_name=supplier.get('name'),
-                            supplier_url=supplier.get('url'),
+                            supplier_name=supplier.get('name') if supplier else '',
+                            supplier_url=supplier.get('url') if supplier else '',
                             variants_map=variants_mapping,
                             is_default=True
                         )

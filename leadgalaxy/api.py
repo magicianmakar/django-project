@@ -920,8 +920,8 @@ class ShopifyStoreApi(ApiBase):
                     store=product.store,
                     product=product,
                     product_url=product.get_original_info().get('url', ''),
-                    supplier_name=supplier.get('name'),
-                    supplier_url=supplier.get('url'),
+                    supplier_name=supplier.get('name') if supplier else '',
+                    supplier_url=supplier.get('url') if supplier else '',
                     is_default=True
                 )
 
@@ -1781,8 +1781,8 @@ class ShopifyStoreApi(ApiBase):
                 store=product.store,
                 product=product,
                 product_url=product.get_original_info().get('url', ''),
-                supplier_name=supplier.get('name'),
-                supplier_url=supplier.get('url'),
+                supplier_name=supplier.get('name') if supplier else '',
+                supplier_url=supplier.get('url') if supplier else '',
                 is_default=True
             )
 
