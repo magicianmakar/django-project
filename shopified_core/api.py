@@ -181,14 +181,15 @@ class ShopifiedApi(ApiResponseMixin, View):
         # Shopify
         store_ids = list(user.profile.get_shopify_stores(flat=True))
         if store_ids:
-            order_tracks = ShopifyOrderTrack.objects.filter(store__in=store_ids) \
-                                                    .filter(created_at__gte=since) \
-                                                    .filter(source_tracking='') \
-                                                    .filter(shopify_status='') \
-                                                    .exclude(source_status='FINISH') \
-                                                    .filter(hidden=False) \
-                                                    .only(*core_utils.serializers_orders_fields()) \
-                                                    .order_by('created_at')
+            order_tracks = core_utils.using_replica(ShopifyOrderTrack) \
+                .filter(store__in=store_ids) \
+                .filter(created_at__gte=since) \
+                .filter(source_tracking='') \
+                .filter(shopify_status='') \
+                .exclude(source_status='FINISH') \
+                .filter(hidden=False) \
+                .only(*core_utils.serializers_orders_fields()) \
+                .order_by('created_at')
 
             if data.get('store'):
                 order_tracks = order_tracks.filter(store=data.get('store'))
@@ -198,13 +199,14 @@ class ShopifiedApi(ApiResponseMixin, View):
         # CommerceHQ
         store_ids = list(user.profile.get_chq_stores(flat=True))
         if store_ids:
-            order_tracks = CommerceHQOrderTrack.objects.filter(store__in=store_ids) \
-                                                       .filter(created_at__gte=since) \
-                                                       .filter(source_tracking='') \
-                                                       .exclude(source_status='FINISH') \
-                                                       .filter(hidden=False) \
-                                                       .defer('data') \
-                                                       .order_by('created_at')
+            order_tracks = core_utils.using_replica(CommerceHQOrderTrack) \
+                .filter(store__in=store_ids) \
+                .filter(created_at__gte=since) \
+                .filter(source_tracking='') \
+                .exclude(source_status='FINISH') \
+                .filter(hidden=False) \
+                .defer('data') \
+                .order_by('created_at')
 
             if data.get('store'):
                 order_tracks = order_tracks.filter(store=data.get('store'))
@@ -214,13 +216,14 @@ class ShopifiedApi(ApiResponseMixin, View):
         # WooCommerce
         store_ids = list(user.profile.get_woo_stores(flat=True))
         if store_ids:
-            order_tracks = WooOrderTrack.objects.filter(store__in=store_ids) \
-                                                .filter(created_at__gte=since) \
-                                                .filter(source_tracking='') \
-                                                .exclude(source_status='FINISH') \
-                                                .filter(hidden=False) \
-                                                .defer('data') \
-                                                .order_by('created_at')
+            order_tracks = core_utils.using_replica(WooOrderTrack) \
+                .filter(store__in=store_ids) \
+                .filter(created_at__gte=since) \
+                .filter(source_tracking='') \
+                .exclude(source_status='FINISH') \
+                .filter(hidden=False) \
+                .defer('data') \
+                .order_by('created_at')
 
             if data.get('store'):
                 order_tracks = order_tracks.filter(store=data.get('store'))
@@ -230,13 +233,14 @@ class ShopifiedApi(ApiResponseMixin, View):
         # GearBubble
         store_ids = list(user.profile.get_gear_stores(flat=True))
         if store_ids:
-            order_tracks = GearBubbleOrderTrack.objects.filter(store__in=store_ids) \
-                                                       .filter(created_at__gte=since) \
-                                                       .filter(source_tracking='') \
-                                                       .exclude(source_status='FINISH') \
-                                                       .filter(hidden=False) \
-                                                       .defer('data') \
-                                                       .order_by('created_at')
+            order_tracks = core_utils.using_replica(GearBubbleOrderTrack) \
+                .filter(store__in=store_ids) \
+                .filter(created_at__gte=since) \
+                .filter(source_tracking='') \
+                .exclude(source_status='FINISH') \
+                .filter(hidden=False) \
+                .defer('data') \
+                .order_by('created_at')
 
             if data.get('store'):
                 order_tracks = order_tracks.filter(store=data.get('store'))

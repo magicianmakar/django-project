@@ -650,6 +650,13 @@ def http_excption_status_code(e):
         return -1
 
 
+def using_replica(m, use_replica=True):
+    if use_replica and settings.READ_REPLICA:
+        return m.objects.using(settings.READ_REPLICA)
+    else:
+        return m.objects
+
+
 def serializers_orders_fields():
     return ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_type', 'source_tracking', 'created_at', 'updated_at']
 

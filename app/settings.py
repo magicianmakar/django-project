@@ -185,6 +185,16 @@ if os.environ.get('DATA_STORE_DATABASE_URL'):
     DATABASES['store_db'] = dj_database_url.parse(os.environ['DATA_STORE_DATABASE_URL'])
     DATABASES['store_db']['ENGINE'] = 'django_postgrespool'
 
+READ_REPLICA = None
+if os.environ.get('REPLICA_DATABASE_URL'):
+    replica_url = os.environ['REPLICA_DATABASE_URL']
+    if os.environ.get(replica_url):
+        # Database URL is stored in an other env. variable
+        replica_url = os.environ[replica_url]
+
+    READ_REPLICA = 'replica'
+    DATABASES[READ_REPLICA] = dj_database_url.parse()
+
 DATABASE_ROUTERS = [
     'data_store.routers.DataStoreRouter',
 ]

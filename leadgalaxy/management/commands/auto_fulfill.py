@@ -8,7 +8,7 @@ import requests
 from tqdm import tqdm
 from simplejson import JSONDecodeError
 
-from shopified_core.utils import http_exception_response
+from shopified_core.utils import http_exception_response, using_replica
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
 from shopify_orders.models import ShopifyOrderLog
@@ -35,20 +35,22 @@ class Command(DropifiedBaseCommand):
             help='Maximuim task uptime (minutes)')
 
         parser.add_argument('--progress', dest='progress', action='store_true', help='Shopw Reset Progress')
+        parser.add_argument('--replica', dest='replica', action='store_true', help='Use Replica database if available')
 
     def start_command(self, *args, **options):
         fulfill_store = options.get('store')
         fulfill_max = options.get('max')
         uptime = options.get('uptime')
 
-        orders = ShopifyOrderTrack.objects.filter(shopify_status='') \
-                                          .exclude(source_tracking='') \
-                                          .filter(hidden=False) \
-                                          .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
-                                          .filter(store__is_active=True) \
-                                          .filter(store__auto_fulfill='enable') \
-                                          .defer('data') \
-                                          .order_by('created_at')
+        orders = using_replica(ShopifyOrderTrack, options['replica']) \
+            .filter(shopify_status='') \
+            .exclude(source_tracking='') \
+            .filter(hidden=False) \
+            .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
+            .filter(store__is_active=True) \
+            .filter(store__auto_fulfill='enable') \
+            .defer('data') \
+            .order_by('created_at')
 
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
