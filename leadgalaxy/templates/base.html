@@ -22,7 +22,25 @@
     <link rel="shortcut icon"  href="{% static 'favicon.png' %}">
     <link rel="icon" href="{% static 'favicon.png' %}" >
 
-    <title>{% block title %}Dropified{% endblock %}</title>
+    <title>
+        {% block title %}
+            {% for item in breadcrumbs %}
+
+                {% if not forloop.first %} · {% endif %}
+
+                {% if item.url %}
+                    {{item.title|truncatewords:10}}
+                {% else %}
+                    {{item|truncatewords:10}}
+                {% endif %}
+            {% endfor %}
+
+            {% if breadcrumbs %} | {% endif %}
+
+            Dropified
+
+        {% endblock %}
+    </title>
 
     <style name="FontAwesome">
         @font-face {
@@ -161,9 +179,9 @@
                 <ol class="breadcrumb">
                     {% for item in breadcrumbs %}
                         {% if item.url %}
-                        <li><a href="{{item.url}}">{{item.title|safe|truncatewords:10}}</a></li>
+                        <li {% if forloop.last%}class="active"{% endif %}><a href="{{item.url}}">{{item.title|safe|truncatewords:10}}</a></li>
                         {% else %}
-                        <li class="active"><strong>{{item|safe|truncatewords:10}}</strong></li>
+                        <li {% if forloop.last%}class="active"{% endif %}>{{item|safe|truncatewords:10}}</li>
                         {% endif %}
                     {% endfor %}
                 </ol>

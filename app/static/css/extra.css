@@ -18,6 +18,9 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     -o-transition: inherit !important;
 
 }
+.breadcrumb > .active {
+    font-weight: bold;
+}
 
 #hijacked-warning {
   z-index: 1000000;
