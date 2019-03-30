@@ -1037,9 +1037,9 @@ class ShopifyProduct(models.Model):
             elif title:
                 return title
             else:
-                return '<ShopifyProduct: %d>' % self.id
+                return '<ShopifyProduct: {}'.format(self.id)
         except:
-            return '<ShopifyProduct: %d>' % self.id
+            return '<ShopifyProduct: {}'.format(self.id)
 
     def get_original_data(self):
         if self.original_data_key:

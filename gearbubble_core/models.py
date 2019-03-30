@@ -173,9 +173,9 @@ class GearBubbleProduct(models.Model):
             elif title:
                 return title
             else:
-                return '<GearBubbleProduct: %d>' % self.id
+                return '<GearBubbleProduct: {}'.format(self.id)
         except:
-            return '<GearBubbleProduct: %d>' % self.id
+            return '<GearBubbleProduct: {}'.format(self.id)
 
     @property
     def parsed(self):

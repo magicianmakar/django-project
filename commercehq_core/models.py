@@ -165,9 +165,9 @@ class CommerceHQProduct(models.Model):
             elif title:
                 return title
             else:
-                return '<CommerceHQProduct: %d>' % self.id
+                return '<CommerceHQProduct: {}'.format(self.id)
         except:
-            return '<CommerceHQProduct: %d>' % self.id
+            return '<CommerceHQProduct: {}'.format(self.id)
 
     def save(self, *args, **kwargs):
         data = json.loads(self.data)
