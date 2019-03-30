@@ -252,7 +252,9 @@ def update_line_export(store, shopify_id):
 
     product = store.shopifyproduct_set.filter(shopify_id=shopify_id).first()
     seen_orders = []
-    for order in ShopifyOrder.objects.filter(store=store, shopifyorderline__shopify_product=shopify_id):  # TODO: Index shopify_product column
+    # TODO: Index shopify_product column
+    # TODO: Limit to last 30 days
+    for order in ShopifyOrder.objects.filter(store=store, shopifyorderline__shopify_product=shopify_id):
         if order.id not in seen_orders:
             seen_orders.append(order.id)
         else:
@@ -274,6 +276,7 @@ def update_line_export(store, shopify_id):
             ShopifyOrder.objects.filter(id=order.id).update(connected_items=connected_items)
 
             if update_elastic:
+                # TODO: Make this a single elastic query?
                 update_elasticsearch_shopify_order(order)
 
 
