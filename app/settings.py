@@ -193,7 +193,7 @@ if os.environ.get('REPLICA_DATABASE_URL'):
         replica_url = os.environ[replica_url]
 
     READ_REPLICA = 'replica'
-    DATABASES[READ_REPLICA] = dj_database_url.parse()
+    DATABASES[READ_REPLICA] = dj_database_url.parse(replica_url)
 
 DATABASE_ROUTERS = [
     'data_store.routers.DataStoreRouter',
