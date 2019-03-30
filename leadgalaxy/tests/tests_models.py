@@ -7,6 +7,7 @@ from .factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 from lib.test import BaseTestCase
 from leadgalaxy.utils import create_user_without_signals
 from shopified_core.decorators import add_to_class
+from shopified_core.utils import using_store_db
 from shopify_orders.models import MAX_LOGS, ShopifyOrderLog
 from leadgalaxy.models import (
     SUBUSER_PERMISSIONS,
@@ -113,7 +114,7 @@ class UserProfileTestCase(BaseTestCase):
 
 class ShopifyProductTestCase(BaseTestCase):
     def tearDown(self):
-        DataStore.objects.all().delete()
+        using_store_db(DataStore).all().delete()
 
     def test_can_set_original_data_to_data_store(self):
         data = '{}'
@@ -126,7 +127,7 @@ class ShopifyProductTestCase(BaseTestCase):
         data = '{}'
         product = ShopifyProductFactory()
         product.set_original_data(data)
-        data_store = DataStore.objects.using('store_db').first()
+        data_store = using_store_db(DataStore).first()
         self.assertEqual(data_store.key, product.original_data_key)
 
 

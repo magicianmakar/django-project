@@ -657,6 +657,13 @@ def using_replica(m, use_replica=True):
         return m.objects
 
 
+def using_store_db(m):
+    if settings.STORE_DATABASE:
+        return m.objects.using(settings.STORE_DATABASE)
+    else:
+        return m.objects
+
+
 def serializers_orders_fields():
     return ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_type', 'source_tracking', 'created_at', 'updated_at']
 

@@ -6,10 +6,6 @@ if [ ! "$DISABLE_COLLECTSTATIC" ]; then
 
     echo ' * Run python manage.py migrate --noinput'
     python manage.py migrate --noinput
-
-    echo ' * Run manage.py migrate --database store_db --noinput'
-    python manage.py migrate --database store_db --noinput
-
 else
-    echo " *** NOTE *** Escape Running:\n    > python manage.py compress\n    > python manage.py migrate --noinput"
+    echo "\n*** NOTE ***\nEscape Running compress and migrate commands\n*** NOTE ***"
 fi

@@ -18,7 +18,7 @@ from pusher import Pusher
 
 from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
-from shopified_core.utils import safe_int, safe_str, get_domain, base64_encode, OrderErrors
+from shopified_core.utils import safe_int, safe_str, get_domain, base64_encode, using_store_db, OrderErrors
 from product_alerts.utils import monitor_product
 
 ENTITY_STATUS_CHOICES = (
@@ -1043,13 +1043,13 @@ class ShopifyProduct(models.Model):
 
     def get_original_data(self):
         if self.original_data_key:
-            data_store = DataStore.objects.get(key=self.original_data_key)
+            data_store = using_store_db(DataStore).get(key=self.original_data_key)
             return data_store.data
         return getattr(self, 'original_data', '{}')
 
     def set_original_data(self, value, clear_original=False, commit=True):
         if self.original_data_key:
-            data_store = DataStore.objects.get(key=self.original_data_key)
+            data_store = using_store_db(DataStore).get(key=self.original_data_key)
             data_store.data = value
             data_store.save()
         else:
@@ -1057,12 +1057,12 @@ class ShopifyProduct(models.Model):
                 data_key = hashlib.md5(get_random_string(32).encode()).hexdigest()
 
                 try:
-                    DataStore.objects.get(key=data_key)
+                    using_store_db(DataStore).get(key=data_key)
                     continue  # Retry an other key
 
                 except DataStore.DoesNotExist:
                     # the key is unique
-                    DataStore.objects.create(key=data_key, data=value)
+                    using_store_db(DataStore).create(key=data_key, data=value)
 
                     self.original_data_key = data_key
 

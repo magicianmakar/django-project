@@ -35,7 +35,6 @@ create the databases as well:
 
 ```
 createdb --host=localhost -U postgres -O postgres -E utf8 -T template0 shopified
-createdb --host=localhost -U postgres -O postgres -E utf8 -T template0 shopified-store
 ```
 
 Run the migrations:
@@ -109,7 +108,6 @@ docker-compose build
 Add the following lines to `.env.dev`:
 ```
 export DATABASE_URL=postgres://postgres:@db:5432/shopified
-export DATA_STORE_DATABASE_URL=postgres://postgres:@db:5432/shopified-store
 export REDISCLOUD_URL="redis://redis:6379"
 export REDISCLOUD_CACHE="redis://redis:6379"
 export REDISCLOUD_ORDERS="redis://redis:6379"

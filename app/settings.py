@@ -144,10 +144,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     },
-    'store_db': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'store_db.sqlite3'),
-    }
 }
 
 DATABASE_STATEMENT_TIMEOUT = os.environ.get('DATABASE_STATEMENT_TIMEOUT')
@@ -181,9 +177,16 @@ if os.environ.get('DATABASE_URL'):
     DATABASES['default'] = dj_database_url.config()
     DATABASES['default']['ENGINE'] = 'django_postgrespool'
 
+STORE_DATABASE = None
 if os.environ.get('DATA_STORE_DATABASE_URL'):
-    DATABASES['store_db'] = dj_database_url.parse(os.environ['DATA_STORE_DATABASE_URL'])
-    DATABASES['store_db']['ENGINE'] = 'django_postgrespool'
+    store_db_url = os.environ['DATA_STORE_DATABASE_URL']
+    if os.environ.get(store_db_url):
+        # Database URL is stored in an other env. variable
+        store_db_url = os.environ[store_db_url]
+
+    STORE_DATABASE = 'store_db'
+    DATABASES[STORE_DATABASE] = dj_database_url.parse(store_db_url)
+    DATABASES[STORE_DATABASE]['ENGINE'] = 'django_postgrespool'
 
 READ_REPLICA = None
 if os.environ.get('REPLICA_DATABASE_URL'):
@@ -194,10 +197,6 @@ if os.environ.get('REPLICA_DATABASE_URL'):
 
     READ_REPLICA = 'replica'
     DATABASES[READ_REPLICA] = dj_database_url.parse(replica_url)
-
-DATABASE_ROUTERS = [
-    'data_store.routers.DataStoreRouter',
-]
 
 # Honor the 'X-Forwarded-Proto' header for request.is_secure()
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_PROXY_PROTOCOL', 'https')
