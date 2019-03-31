@@ -2964,14 +2964,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success({'task': task.id})
 
-    def post_product_price_trends(self, request, user, data):
-        store = ShopifyStore.objects.get(id=data.get('store'))
-        permissions.user_can_view(user, store)
-
-        task = tasks.product_price_trends.apply_async(args=[store.id, data.get('product_variants')], expires=120)
-
-        return self.api_success({'task': task.id})
-
     def get_search_shopify_products(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))

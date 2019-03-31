@@ -1250,6 +1250,7 @@ def shopify_orders_risk(self, store, order_ids):
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def product_price_trends(self, store_id, product_variants):
+    # TODO: Remove this unused task
     store = ShopifyStore.objects.get(id=store_id)
     trends = []
 

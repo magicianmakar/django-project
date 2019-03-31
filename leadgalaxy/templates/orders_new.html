@@ -971,8 +971,6 @@
         awaiting_order: "{{ user_filter.awaiting_order|default:'false' }}",
     };
 
-    var product_variants = {% json_dumps product_variants %};
-
     var sub_conf = {
         key: "{% app_setting 'PUSHER_KEY' %}",
         channel: "{{store.pusher_channel}}",

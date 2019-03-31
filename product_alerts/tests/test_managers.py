@@ -12,7 +12,7 @@ from leadgalaxy.views import webhook
 from leadgalaxy.tasks import manage_product_change
 from leadgalaxy import utils
 from commercehq_core.models import CommerceHQProduct
-from product_alerts.models import ProductChange, ProductVariantPriceHistory
+from product_alerts.models import ProductChange
 from product_alerts.managers import ProductChangeManager
 
 
@@ -120,12 +120,6 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(updated_price, round((old_price * new_value) / old_value, 2))
         self.assertEqual(updated_compare_price, round((old_compare_price * new_value) / old_value, 2))
 
-        # check if price history was added
-        history = ProductVariantPriceHistory.objects.filter(shopify_product=product, variant_id=shopify_product['variants'][0]['id']).first()
-        self.assertIsNotNone(history)
-        self.assertEqual(history.old_price, old_value)
-        self.assertEqual(history.new_price, new_value)
-
     @tag('slow')
     @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_shopify_price_change_global_markup(self, manage):
@@ -178,12 +172,6 @@ class ProductChangeManagerTestCase(BaseTestCase):
         new_compare_price = float(str(int(new_value * (100 + auto_compare_at) / 100.0)) + '.' + str(auto_compare_at_cents))
         self.assertEqual(updated_price, new_price)
         self.assertEqual(updated_compare_price, new_compare_price)
-
-        # check if price history was added
-        history = ProductVariantPriceHistory.objects.filter(shopify_product=product, variant_id=shopify_product['variants'][0]['id']).first()
-        self.assertIsNotNone(history)
-        self.assertEqual(history.old_price, old_value)
-        self.assertEqual(history.new_price, new_value)
 
     @tag('slow')
     @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
@@ -247,12 +235,6 @@ class ProductChangeManagerTestCase(BaseTestCase):
         new_compare_price = float(str(int(new_value + auto_compare_at)) + '.' + str(auto_compare_at_cents))
         self.assertEqual(updated_price, new_price)
         self.assertEqual(updated_compare_price, new_compare_price)
-
-        # check if price history was added
-        history = ProductVariantPriceHistory.objects.filter(shopify_product=product, variant_id=shopify_product['variants'][0]['id']).first()
-        self.assertIsNotNone(history)
-        self.assertEqual(history.old_price, old_value)
-        self.assertEqual(history.new_price, new_value)
 
     @tag('slow')
     @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
@@ -346,8 +328,3 @@ class ProductChangeManagerTestCase(BaseTestCase):
 
         # check if price was updated back and preserved the margin
         self.assertEqual(updated_price, round(old_price * new_value / old_value, 2))
-        # check if price history was added
-        history = ProductVariantPriceHistory.objects.filter(chq_product=product, variant_id=chq_product['variants'][0]['id']).first()
-        self.assertIsNotNone(history)
-        self.assertEqual(history.old_price, old_value)
-        self.assertEqual(history.new_price, new_value)

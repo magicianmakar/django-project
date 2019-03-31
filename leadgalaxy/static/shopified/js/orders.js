@@ -1,6 +1,6 @@
 /* global $, toastr, swal, displayAjaxError, cleanUrlPatch */
 
-(function(user_filter, sub_conf, product_variants) {
+(function(user_filter, sub_conf) {
 'use strict';
 
 var placed_order_interval = {};
@@ -1296,24 +1296,6 @@ function pusherSub() {
         }
     });
 
-    channel.bind('product-price-trends', function(data) {
-        if (sub_conf.product_price_trends_task && sub_conf.product_price_trends_task == data.task) {
-            for (var i = 0; i < data.trends.length; i++) {
-                var item = data.trends[i];
-                var target = $('.price-trends[data-product=' + item.product + '][data-variant=' + item.variant + ']');
-                $(target).find('a').attr('href', '/product/' + item.product + '#alerts');
-
-                if (item.trend == 'asc') {
-                    $(target).find('i').addClass('fa-caret-up price-up');
-                } else if (item.trend == 'desc') {
-                    $(target).find('i').addClass('fa-caret-down price-down');
-                }
-
-                $(target).show();
-            }
-        }
-    });
-
     channel.bind('order-status-update', function(data) {
         $.each(data.orders, function(i, order) {
             var orderEl = $('.order[order-id="' + order.order_id + '"]');
@@ -1369,24 +1351,6 @@ function pusherSub() {
                 },
                 error: function(data) {
                     displayAjaxError('Failed to Get Order Risks', data);
-                }
-            });
-        }
-
-        if (product_variants.length) {
-            $.ajax({
-                url: '/api/product-price-trends',
-                type: 'POST',
-                data: JSON.stringify({
-                    'store': sub_conf.store,
-                    'product_variants': product_variants,
-                }),
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                success: function(data) {
-                    sub_conf.product_price_trends_task = data.task;
-                },
-                error: function(data) {
                 }
             });
         }
@@ -1765,4 +1729,4 @@ $(function () {
     }, 3500 * 1000);
 
 });
-})(user_filter, sub_conf, product_variants);
+})(user_filter, sub_conf);

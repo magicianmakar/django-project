@@ -7,7 +7,6 @@ from shopified_core.utils import app_link, safe_float, http_exception_response
 from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index_from_supplier_sku, calculate_price
-from product_alerts.models import ProductVariantPriceHistory
 from zapier_core.utils import user_have_hooks
 
 
@@ -376,13 +375,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
                 })
 
     def add_price_history(self, variant_id, variant_change):
-        history, created = ProductVariantPriceHistory.objects.get_or_create(
-            user=self.product.user,
-            shopify_product=self.product,
-            variant_id=variant_id
-        )
-
-        history.add_price(variant_change.get('new_value'), variant_change.get('old_value'))
+        pass
 
 
 class CommerceHQProductChangeManager(ProductChangeManager):
@@ -524,10 +517,4 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                 raven_client.captureException(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
-        history, created = ProductVariantPriceHistory.objects.get_or_create(
-            user=self.product.user,
-            chq_product=self.product,
-            variant_id=variant_id
-        )
-
-        history.add_price(variant_change.get('new_value'), variant_change.get('old_value'))
+        pass
