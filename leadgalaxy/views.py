@@ -1285,7 +1285,25 @@ def webhook(request, provider, option):
                         plans_table.draw() if permission.groupplan_set.count() else 'None',
                         plans_perms.draw() if permission.featurebundle_set.count() else 'None')
                 })
+            #
+        elif request.POST['command'] == '/affiliate':
+            args = request.POST['text'].split(' ')
+            command = args[0]
 
+            if command in ['disable', 'enable']:
+                if len(args) != 2:
+                    return HttpResponse(':x: Wrong number of arguments')
+
+                user_id = args[1]
+
+                if safe_int(user_id):
+                    user = User.objects.get(id=user_id)
+                else:
+                    user = User.objects.get(email__iexact=user_id)
+
+                user.set_config('_disable_affiliate', command == 'disable')
+
+                return HttpResponse(f'Affiliate {command}d for {user_id}')
             else:
                 return HttpResponse(':x: Unknown Command: {} {}'.format(request.POST['command'], command))
 

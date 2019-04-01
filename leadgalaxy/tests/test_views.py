@@ -672,7 +672,7 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
 
 class SlackCommandWebhooksTestCase(BaseTestCase):
     def setUp(self):
-        self.user = f.UserFactory(username='test')
+        self.user = f.UserFactory(username='test', email='test@@dropified.com')
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.is_staff = True
@@ -738,3 +738,20 @@ class SlackCommandWebhooksTestCase(BaseTestCase):
 
         self.assertContains(response, 'added to Plans:')
         self.assertContains(response, 'newtest.use')
+
+    def test_user_disable_affiliate_command(self):
+        payload = {'command': '/affiliate', 'text': 'disable test@@dropified.com', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        user = User.objects.get(id=self.user.id)
+
+        self.assertTrue(user.get_config('_disable_affiliate'))
+        self.assertContains(response, 'disabled')
+
+        payload = {'command': '/affiliate', 'text': f'enable {self.user.id}', 'user_id': 'TEST'}
+        response = self.client.post('/webhook/slack/command', payload)
+
+        user = User.objects.get(id=self.user.id)
+
+        self.assertFalse(user.get_config('_disable_affiliate'))
+        self.assertContains(response, 'enabled')
