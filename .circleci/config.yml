@@ -18,7 +18,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: FEODm/7gDu+R2ZT8XXUN5l7cvnNBFIOKFT4yxDdZ
 
           S3_CUSTOM_DOMAIN: d1ohstt056kdjc.cloudfront.net
-          S3_BUCKET_NAME: shopifiedapp-assets-dev-789552
+          S3_BUCKET_NAME: dropified-assets-dev-ci
           S3_PRODUCT_FEED_BUCKET: shopifiedapp-feeds-dev-789552
           S3_UPLOADS_BUCKET: shopifiedapp-uploads-dev-789552
 
