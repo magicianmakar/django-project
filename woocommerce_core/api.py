@@ -3,7 +3,6 @@ import json
 from urllib.parse import urlencode, parse_qs, urlparse
 
 import requests
-import arrow
 
 from requests.exceptions import HTTPError
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -11,24 +10,17 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.urls import reverse
-from django.core.cache import cache
 from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
-from django.db.models import F
 
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
-from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.utils import (
     safe_int,
     get_domain,
     remove_link_query,
-    orders_update_limit,
-    version_compare,
-    order_phone_number,
-    serializers_orders_track,
     CancelledOrderAlert
 )
 
@@ -39,9 +31,12 @@ from . import utils
 
 
 class WooStoreApi(ApiBase):
+    store_label = 'WooCommerce'
+    store_slug = 'woo'
     board_model = WooBoard
     product_model = WooProduct
     order_track_model = WooOrderTrack
+    store_model = WooStore
     helper = WooApiHelper()
 
     def validate_store_data(self, data):
@@ -237,19 +232,6 @@ class WooStoreApi(ApiBase):
         except:
             return self.api_error('API credentials are not correct\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
 
-    def post_product_save(self, request, user, data):
-        store_id = safe_int(data.get('store'))
-        if store_id:
-            store = WooStore.objects.get(pk=store_id)
-            if not user.can('save_for_later.sub', store):
-                raise PermissionDenied()
-
-        return self.api_success(tasks.product_save(data, user.id))
-
-    def post_save_for_later(self, request, user, data):
-        # Backward compatibly with Shopify save for later
-        return self.post_product_save(request, user, data)
-
     def post_woocommerce_products(self, request, user, data):
         store = safe_int(data.get('store'))
         if not store:
@@ -428,54 +410,6 @@ class WooStoreApi(ApiBase):
         except ProductExportException as e:
             return self.api_error(str(e))
 
-    def post_variants_mapping(self, request, user, data):
-        product = WooProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-        supplier = product.get_suppliers().get(id=data.get('supplier'))
-        mapping = {key: value for key, value in list(data.items()) if key not in ['product', 'supplier']}
-        product.set_variant_mapping(mapping, supplier=supplier)
-        product.save()
-
-        return self.api_success()
-
-    def post_suppliers_mapping(self, request, user, data):
-        product = WooProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        suppliers_cache = {}
-
-        mapping = {}
-        shipping_map = {}
-
-        with transaction.atomic():
-            for k in data:
-                if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
-                    shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
-                elif k.startswith('variant_'):  # Save the varinat mapping for supplier+variant
-                    supplier_id, variant_id = k.replace('variant_', '').split('_')
-                    supplier = suppliers_cache.get(supplier_id, product.get_suppliers().get(id=supplier_id))
-
-                    suppliers_cache[supplier_id] = supplier
-                    var_mapping = {variant_id: data[k]}
-
-                    product.set_variant_mapping(var_mapping, supplier=supplier, update=True, commit=False)
-
-                elif k == 'config':
-                    product.set_mapping_config({'supplier': data[k]})
-
-                elif k != 'product':  # Save the variant -> supplier mapping
-                    mapping[k] = json.loads(data[k])
-
-            product.set_suppliers_mapping(mapping, commit=False)
-            product.set_shipping_mapping(shipping_map, commit=False)
-
-        product.save()
-
-        for i in suppliers_cache.values():
-            i.save()
-
-        return self.api_success()
-
     def post_supplier(self, request, user, data):
         product = WooProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
@@ -560,43 +494,6 @@ class WooStoreApi(ApiBase):
 
         return self.api_success()
 
-    def get_product_image_download(self, request, user, data):
-        try:
-            product = WooProduct.objects.get(id=safe_int(data.get('product')))
-            permissions.user_can_view(user, product)
-
-        except WooProduct.DoesNotExist:
-            return self.api_error('Product not found', status=404)
-
-        images = product.parsed.get('images')
-        if not images:
-            return self.api_error('Product doesn\'t have any images', status=422)
-
-        tasks.create_image_zip.delay(images, product.id)
-
-        return self.api_success()
-
-    def post_product_duplicate(self, request, user, data):
-        pk = safe_int(data.get('product'))
-        product = WooProduct.objects.get(pk=pk)
-        permissions.user_can_view(user, product)
-        duplicate_product = utils.duplicate_product(product)
-
-        return self.api_success({
-            'product': {
-                'id': duplicate_product.id,
-                'url': reverse('woo:product_detail', args=[duplicate_product.id])
-            }
-        })
-
-    def post_product_split_variants(self, request, user, data):
-        product = WooProduct.objects.get(id=data.get('product'))
-        split_factor = data.get('split_factor')
-        permissions.user_can_view(user, product)
-        splitted_products = utils.split_product(product, split_factor)
-
-        return self.api_success({'products_ids': [p.id for p in splitted_products]})
-
     def post_fulfill_order(self, request, user, data):
         try:
             store = WooStore.objects.get(id=data.get('fulfill-store'))
@@ -649,86 +546,6 @@ class WooStoreApi(ApiBase):
             utils.update_order_status(store, order_id, 'completed')
 
         return self.api_success()
-
-    def get_order_fulfill(self, request, user, data):
-        if int(data.get('count', 0)) >= 30:
-            raise self.api_error('Not found', status=404)
-
-        # Get Orders marked as Ordered
-        orders = []
-        created_at_start = None
-        created_at_end = None
-        created_at_max = arrow.now().replace(days=-30).datetime  # Always update orders that are max. 30 days old
-
-        order_ids = data.get('ids')
-        created_at = data.get('created_at')
-        all_orders = data.get('all') == 'true'
-        unfulfilled_only = data.get('unfulfilled_only') != 'false'
-
-        woocommerce_orders = WooOrderTrack.objects.filter(user=user.models_user, hidden=False) \
-                                                  .defer('data') \
-                                                  .order_by('updated_at')
-
-        if unfulfilled_only:
-            woocommerce_orders = woocommerce_orders.filter(source_tracking='') \
-                                                   .exclude(source_status='FINISH')
-
-        if created_at:
-            created_at_start, created_at_end = created_at.split('-')
-
-            tz = timezone.localtime(timezone.now()).strftime(' %z')
-            created_at_start = arrow.get(created_at_start + tz, r'MM/DD/YYYY Z').datetime
-
-            if created_at_end:
-                created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
-                created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
-
-            if created_at_start >= created_at_max:
-                created_at_max = created_at_start
-
-            if created_at_end:
-                woocommerce_orders = woocommerce_orders.filter(created_at__lte=created_at_end)
-
-        if not order_ids:
-            woocommerce_orders = woocommerce_orders.filter(created_at__gte=created_at_max)
-
-        if user.is_subuser:
-            woocommerce_orders = woocommerce_orders.filter(store__in=user.profile.get_woo_stores(flat=True))
-
-        if data.get('store'):
-            woocommerce_orders = woocommerce_orders.filter(store=data.get('store'))
-
-        if not data.get('order_id') and not data.get('line_id') and not all_orders:
-            limit_key = 'order_fulfill_limit_%d' % user.models_user.id
-            limit = cache.get(limit_key)
-
-            if limit is None:
-                limit = orders_update_limit(orders_count=woocommerce_orders.count())
-
-                if limit != 20:
-                    cache.set(limit_key, limit, timeout=3600)
-
-            if data.get('forced') == 'true':
-                limit = limit * 2
-
-            woocommerce_orders = woocommerce_orders[:limit]
-
-        elif data.get('all') == 'true':
-            woocommerce_orders = woocommerce_orders.order_by('created_at')
-
-        if data.get('order_id') and data.get('line_id'):
-            woocommerce_orders = woocommerce_orders.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
-
-        if data.get('count_only') == 'true':
-            return self.api_success({'pending': woocommerce_orders.count()})
-
-        orders.extend(serializers_orders_track(woocommerce_orders, 'woo', humanize=all_orders))
-
-        if not data.get('order_id') and not data.get('line_id'):
-            WooOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
-                                 .update(check_count=F('check_count') + 1, updated_at=timezone.now())
-
-        return self.api_success(orders, safe=False)
 
     def post_order_fulfill(self, request, user, data):
         try:
@@ -895,27 +712,6 @@ class WooStoreApi(ApiBase):
             board.delete()
             return self.api_success()
 
-    def delete_board_products(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        try:
-            pk = safe_int(data.get('board_id'))
-            board = WooBoard.objects.get(pk=pk)
-        except WooBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-        else:
-            permissions.user_can_edit(user, board)
-
-        for p in data.getlist('products[]'):
-            pk = safe_int(p)
-            product = WooProduct.objects.filter(pk=pk).first()
-            if product:
-                permissions.user_can_edit(user, product)
-                board.products.remove(product)
-
-        return self.api_success()
-
     def delete_supplier(self, request, user, data):
         product = WooProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
@@ -937,74 +733,6 @@ class WooStoreApi(ApiBase):
 
         return self.api_success()
 
-    def get_order_data(self, request, user, data):
-        version = request.META.get('HTTP_X_EXTENSION_VERSION')
-        if version:
-            required = None
-
-            if version_compare(version, '1.25.6') < 0:
-                required = '1.25.6'
-            elif version_compare(version, '1.26.0') == 0:
-                required = '1.26.1'
-
-            if required:
-                raven_client.captureMessage(
-                    'Extension Update Required',
-                    level='warning',
-                    extra={'current': version, 'required': required})
-
-                return self.api_error('Please Update The Extension To Version %s or Higher' % required, status=501)
-
-        order_key = data.get('order')
-
-        if not order_key.startswith('woo_order_'):
-            order_key = 'woo_order_{}'.format(order_key)
-
-        store_type, prefix, store, order, line = order_key.split('_')
-
-        try:
-            store = WooStore.objects.get(id=int(store))
-        except WooStore.DoesNotExist:
-            return self.api_error('Store not found', status=404)
-
-        permissions.user_can_view(user, store)
-
-        order = utils.order_data_cache(order_key)
-        if order:
-            if not order['shipping_address'].get('address2'):
-                order['shipping_address']['address2'] = ''
-
-            order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
-
-            order['ordered'] = False
-            order['fast_checkout'] = user.get_config('_fast_checkout', True)
-            order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
-
-            phone = order['order']['phone']
-
-            if type(phone) is dict:
-                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
-                order['order']['phone'] = phone_number
-                order['order']['phoneCountry'] = phone_country
-
-            try:
-                order_id, line_id = order['order_id'], order['line_id']
-                track = WooOrderTrack.objects.get(store=store, order_id=order_id, line_id=line_id)
-
-                order['ordered'] = {
-                    'time': arrow.get(track.created_at).humanize(),
-                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id']))
-                }
-
-            except WooOrderTrack.DoesNotExist:
-                pass
-            except:
-                raven_client.captureException()
-
-            return self.api_success(order)
-        else:
-            return self.api_error('Not found: {}'.format(data.get('order')), status=404)
-
     def get_order_notes(self, request, user, data):
         store = WooStore.objects.get(id=data['store'])
         permissions.user_can_view(user, store)
@@ -1014,49 +742,3 @@ class WooStoreApi(ApiBase):
             tasks.get_latest_order_note_task.apply_async(args=[store.id, order_id], expires=120)
 
         return self.api_success({})
-
-    def post_order_note(self, request, user, data):
-        store = WooStore.objects.get(id=data.get('store'))
-        permissions.user_can_view(user, store)
-        order_id = safe_int(data['order_id'])
-        note = data['note']
-
-        if note == utils.get_latest_order_note(store, order_id):
-            return self.api_success()
-
-        if utils.add_woo_order_note(store, order_id, note):
-            return self.api_success()
-        else:
-            return self.api_error('WooCommerce API Error', status=500)
-
-    def post_product_connect(self, request, user, data):
-        product = WooProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        store = WooStore.objects.get(id=data.get('store'))
-        permissions.user_can_view(user, store)
-
-        source_id = safe_int(data.get('woocommerce'))
-
-        if source_id != product.source_id or product.store != store:
-            connected_to = WooProduct.objects.filter(
-                store=store,
-                source_id=source_id
-            )
-
-            if connected_to.exists():
-                return self.api_error(
-                    '\n'.join(
-                        ['The selected Product is already connected to:\n']
-                        + [request.build_absolute_uri('/woo/product/{}'.format(i))
-                            for i in connected_to.values_list('id', flat=True)]),
-                    status=500)
-
-            product.store = store
-            product.source_id = source_id
-
-            product.save()
-
-            product.sync()
-
-        return self.api_success()

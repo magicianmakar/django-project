@@ -14,10 +14,9 @@ from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
-from django.db import transaction
-from django.db.models import F, Q
+from django.db.models import Q
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect, Http404
+from django.http import HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.template.defaultfilters import truncatewords
@@ -25,14 +24,13 @@ from django.utils import timezone
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery_base import celery_app
-from last_seen.models import LastSeen
 
 from stripe_subscription.stripe_api import stripe
 
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.encryption import save_aliexpress_password, delete_aliexpress_password
-from shopified_core.shipping_helper import get_counrties_list, fix_fr_address, aliexpress_country_code_map
+from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     safe_int,
     safe_float,
@@ -41,11 +39,7 @@ from shopified_core.utils import (
     remove_link_query,
     send_email_from_template,
     order_data_cache,
-    orders_update_limit,
-    hash_url_filename,
     add_http_schema,
-    order_phone_number,
-    serializers_orders_track,
     base64_encode,
     CancelledOrderAlert
 )
@@ -91,9 +85,12 @@ from .templatetags.template_helper import shopify_image_thumb, money_format
 
 
 class ShopifyStoreApi(ApiBase):
+    store_label = 'Shopify'
+    store_slug = 'shopify'
     board_model = ShopifyBoard
     product_model = ShopifyProduct
     order_track_model = ShopifyOrderTrack
+    store_model = ShopifyStore
     helper = ShopifyApiHelper()
 
     def post_delete_store(self, request, user, data):
@@ -281,9 +278,11 @@ class ShopifyStoreApi(ApiBase):
         return self.post_shopify(request, user, data)
 
     def post_save_for_later(self, request, user, data):
+        # DEPRECATE: user pusher-based product save
         return self.post_shopify(request, user, data)
 
     def get_export_product(self, request, user, data):
+        # DEPRECATE: user pusher-based product save
         task = tasks.export_product.AsyncResult(data.get('id'))
         count = safe_int(data.get('count'))
 
@@ -390,21 +389,8 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success({'ids': ids})
 
     def post_product_remove_board(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        board = ShopifyBoard.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
-
-        for p in data.getlist('products[]'):
-            product = ShopifyProduct.objects.get(id=p)
-            permissions.user_can_edit(user, product)
-
-            board.products.remove(product)
-
-        board.save()
-
-        return self.api_success()
+        # DEPRECATED
+        return self.delete_board_products(request, user, data)
 
     def post_board_delete(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
@@ -887,55 +873,6 @@ class ShopifyStoreApi(ApiBase):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-    def post_product_connect(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        store = ShopifyStore.objects.get(id=data.get('store'))
-        permissions.user_can_view(user, store)
-
-        shopify_id = safe_int(data.get('shopify'))
-
-        if shopify_id != product.shopify_id or product.store != store:
-            connected_to = ShopifyProduct.objects.filter(
-                store=store,
-                shopify_id=shopify_id
-            )
-
-            if connected_to.exists():
-                return self.api_error(
-                    '\n'.join(
-                        ['The selected Product is already connected to:\n']
-                        + [request.build_absolute_uri('/product/{}'.format(i))
-                            for i in connected_to.values_list('id', flat=True)]),
-                    status=500)
-
-            product.store = store
-            product.shopify_id = shopify_id
-
-            # Add a supplier if there is no default one
-            if not product.default_supplier:
-                supplier = product.get_supplier_info()
-                supplier = ProductSupplier.objects.create(
-                    store=product.store,
-                    product=product,
-                    product_url=product.get_original_info().get('url', ''),
-                    supplier_name=supplier.get('name') if supplier else '',
-                    supplier_url=supplier.get('url') if supplier else '',
-                    is_default=True
-                )
-
-                product.set_default_supplier(supplier)
-
-            product.save()
-
-            cache.delete('export_product_{}_{}'.format(product.store.id, shopify_id))
-            tasks.update_product_connection.delay(product.store.id, shopify_id)
-
-            tasks.update_shopify_product(product.store.id, shopify_id, product_id=product.id)
-
-        return self.api_success()
-
     def post_product_metadata(self, request, user, data):
         if not user.can('product_metadata.use'):
             return self.api_error('Your current plan doesn\'t have this feature.', status=500)
@@ -1075,86 +1012,11 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def post_product_duplicate(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_view(user, product)
-
-        duplicate_product = utils.duplicate_product(product)
-
-        return self.api_success({
-            'product': {
-                'id': duplicate_product.id,
-                'url': reverse('product_view', args=[duplicate_product.id])
-            }
-        })
-
     def post_product_randomize_image_names(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
         task = tasks.product_randomize_image_names.apply_async(args=[product.id], expires=120)
         return self.api_success({'id': str(task.id)})
-
-    def post_product_split_variants(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        split_factor = data.get('split_factor')
-        permissions.user_can_view(user, product)
-
-        splitted_products, active_variant_idx = utils.split_product(product, split_factor)
-
-        # if current product is connected, automatically connect splitted products.
-        if product.shopify_id:
-            shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
-            shopify_variants = shopify_product['variants']
-            for option_value, splitted_product in list(splitted_products.items()):
-                data = json.loads(splitted_product.data)
-
-                variants = []
-                for v in shopify_variants:
-                    if v.get('option{}'.format(active_variant_idx), None) == option_value:
-                        v.pop('id', None)
-                        v.pop('image_id', None)
-
-                        # shift options
-                        option_idx = active_variant_idx
-                        while v.get('option{}'.format(option_idx + 1), None):
-                            v['option{}'.format(option_idx)] = v['option{}'.format(option_idx + 1)]
-                            option_idx += 1
-                        v.pop('option{}'.format(option_idx), None)
-
-                        variants.append(v)
-
-                images = []
-                for i in data['images']:
-                    img = {'src': i}
-                    img_filename = hash_url_filename(i)
-                    if data['variants_images'] and img_filename in data['variants_images']:
-                        img['filename'] = 'v-{}__{}'.format(data['variants_images'][img_filename], img_filename)
-
-                    images.append(img)
-
-                req_data = {
-                    'product': splitted_product.id,
-                    'store': splitted_product.store_id,
-                    'data': json.dumps({
-                        'product': {
-                            'title': data['title'],
-                            'body_html': data['description'],
-                            'product_type': data['type'],
-                            'vendor': data['vendor'],
-                            'published': data['published'],
-                            'tags': data['tags'],
-                            'variants': variants,
-                            'options': [{'name': v['title'], 'values': v['values']} for v in data['variants']],
-                            'images': images
-                        }
-                    })
-                }
-
-                tasks.export_product.apply_async(args=[req_data, 'shopify', user.id], expires=60)
-
-        return self.api_success({
-            'products_ids': [p.id for v, p in list(splitted_products.items())]
-        })
 
     def post_product_exclude(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
@@ -1617,68 +1479,6 @@ class ShopifyStoreApi(ApiBase):
             return self.api_error('Track not found', status=404)
         return self.api_success()
 
-    def get_order_data(self, request, user, data):
-        order_key = data.get('order')
-
-        if not order_key.startswith('order_'):
-            order_key = 'order_{}'.format(order_key)
-
-        prefix, store, order, line = order_key.split('_')
-
-        try:
-            store = ShopifyStore.objects.get(id=store)
-            permissions.user_can_view(user, store)
-        except ShopifyStore.DoesNotExist:
-            return self.api_error('Store not found', status=404)
-
-        order = order_data_cache(order_key)
-        if order:
-            if user.models_user.get_config('_static_shipping_address'):
-                order['shipping_address'] = user.models_user.get_config('_static_shipping_address')
-
-            if not order['shipping_address'].get('address2'):
-                order['shipping_address']['address2'] = ''
-
-            if user.models_user.get_config('_fr_address_fix'):
-                if order['shipping_address']['country_code'] == 'FR':
-                    order['shipping_address'] = fix_fr_address(order['shipping_address'])
-
-            order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
-
-            order['ordered'] = False
-            order['fast_checkout'] = user.get_config('_fast_checkout', True)
-            order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
-
-            phone = order['order']['phone']
-            if type(phone) is dict:
-                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
-                order['order']['phone'] = phone_number
-                order['order']['phoneCountry'] = phone_country
-
-            if user.models_user.get_config('_aliexpress_telephone_workarround'):
-                order['order']['telephone_workarround'] = True
-
-            try:
-                track = ShopifyOrderTrack.objects.get(
-                    store=store,
-                    order_id=order['order_id'],
-                    line_id=order['line_id']
-                )
-
-                order['ordered'] = {
-                    'time': arrow.get(track.created_at).humanize(),
-                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id']))
-                }
-
-            except ShopifyOrderTrack.DoesNotExist:
-                pass
-            except:
-                raven_client.captureException()
-
-            return JsonResponse(order, safe=False)
-        else:
-            return self.api_error('Not found: {}'.format(data.get('order')), status=404)
-
     def get_product_variant_image(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
@@ -1764,83 +1564,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def post_variants_mapping(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        supplier = product.productsupplier_set.get(id=data.get('supplier'))
-
-        mapping = {}
-        for k in data:
-            if k != 'product' and k != 'supplier':
-                mapping[k] = data[k]
-
-        if not product.default_supplier:
-            supplier = product.get_supplier_info()
-            product.default_supplier = ProductSupplier.objects.create(
-                store=product.store,
-                product=product,
-                product_url=product.get_original_info().get('url', ''),
-                supplier_name=supplier.get('name') if supplier else '',
-                supplier_url=supplier.get('url') if supplier else '',
-                is_default=True
-            )
-
-            supplier = product.default_supplier
-
-        product.set_variant_mapping(mapping, supplier=supplier)
-        product.save()
-
-        return self.api_success()
-
-    def post_suppliers_mapping(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        suppliers_cache = {}
-
-        mapping = {}
-        shipping_map = {}
-
-        with transaction.atomic():
-            for k in data:
-                if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
-                    shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
-                elif k.startswith('variant_'):  # Save the varinat mapping for supplier+variant
-                    supplier_id, variant_id = k.replace('variant_', '').split('_')
-                    supplier = suppliers_cache.get(supplier_id, product.productsupplier_set.get(id=supplier_id))
-
-                    suppliers_cache[supplier_id] = supplier
-                    var_mapping = {variant_id: data[k]}
-
-                    product.set_variant_mapping(var_mapping, supplier=supplier, update=True, commit=False)
-
-                elif k == 'config':
-                    product.set_mapping_config({'supplier': data[k]})
-
-                    try:
-                        if user.models_user.get_config('update_product_vendor') \
-                                and product.default_supplier \
-                                and product.shopify_id \
-                                and safe_int(data[k]):
-                            supplier = ProductSupplier.objects.get(id=data[k])
-                            utils.update_shopify_product_vendor(product.store, product.shopify_id, supplier.supplier_name)
-                    except:
-                        raven_client.captureException()
-
-                elif k != 'product':  # Save the variant -> supplier mapping
-                    mapping[k] = json.loads(data[k])
-
-            product.set_suppliers_mapping(mapping, commit=False)
-            product.set_shipping_mapping(shipping_map, commit=False)
-
-        product.save()
-
-        for i in suppliers_cache.values():
-            i.save()
-
-        return self.api_success()
-
     def post_bundles_mapping(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
@@ -1849,106 +1572,6 @@ class ShopifyStoreApi(ApiBase):
         product.save()
 
         return self.api_success()
-
-    def get_order_fulfill(self, request, user, data):
-        if int(data.get('count', 0)) >= 30:
-            raise Http404('Not found')
-
-        if not user.can('orders.use'):
-            return self.api_error('Order is not included in your account', status=402)
-
-        try:
-            LastSeen.objects.when(user.models_user, 'website')
-        except:
-            return self.api_error('User is not active', status=429)
-
-        orders = []
-        created_at_start = None
-        created_at_end = None
-        created_at_max = arrow.now().replace(days=-30).datetime  # Always update orders that are max. 30 days old
-
-        order_ids = data.get('ids')
-        created_at = data.get('created_at')  # Format: %m/%d/%Y-%m/%d/%Y
-        unfulfilled_only = data.get('unfulfilled_only') != 'false' and not order_ids
-        all_orders = data.get('all') == 'true' or order_ids
-        sync_all_orders = cache.get('_sync_all_orders') and data.get('forced') == 'false'
-        sync_all_orders_key = 'user_sync_all_orders_{}'.format(user.id)
-
-        if sync_all_orders:
-            if cache.get(sync_all_orders_key):
-                return self.api_success(orders, safe=False, status=202)
-            else:
-                cache.set(sync_all_orders_key, True, timeout=7200)
-
-        order_tracks = ShopifyOrderTrack.objects.filter(user=user.models_user)
-
-        if unfulfilled_only:
-            order_tracks = order_tracks.filter(source_tracking='') \
-                                       .filter(shopify_status='') \
-                                       .exclude(source_status='FINISH')
-
-        if created_at:
-            created_at_start, created_at_end = created_at.split('-')
-
-            tz = timezone.localtime(timezone.now()).strftime(' %z')
-            created_at_start = arrow.get(created_at_start + tz, r'MM/DD/YYYY Z').datetime
-
-            if created_at_end:
-                created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
-                created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
-
-            if created_at_start >= created_at_max:
-                created_at_max = created_at_start
-
-            if created_at_end:
-                order_tracks = order_tracks.filter(created_at__lte=created_at_end)
-
-        if not order_ids:
-            order_tracks = order_tracks.filter(created_at__gte=created_at_max)
-
-        order_tracks = order_tracks.filter(hidden=False) \
-                                   .defer('data') \
-                                   .order_by('updated_at')
-
-        if order_ids:
-            order_tracks = order_tracks.filter(id__in=order_ids.split(','))
-
-        if user.is_subuser:
-            order_tracks = order_tracks.filter(store__in=list(user.profile.get_shopify_stores(flat=True)))
-
-        if data.get('store'):
-            order_tracks = order_tracks.filter(store=data.get('store'))
-
-        if not data.get('order_id') and not data.get('line_id') and not all_orders and not sync_all_orders:
-            limit_key = 'order_fulfill_limit_%d' % user.models_user.id
-            limit = cache.get(limit_key)
-
-            if limit is None:
-                limit = orders_update_limit(orders_count=order_tracks.count())
-
-                cache.set(limit_key, limit, timeout=3600 * 12)
-
-            if data.get('forced') == 'true':
-                limit = limit * 2
-
-            order_tracks = order_tracks[:limit]
-
-        elif data.get('all') == 'true' or sync_all_orders:
-            order_tracks = order_tracks.order_by('created_at')
-
-        if data.get('order_id') and data.get('line_id'):
-            order_tracks = order_tracks.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
-
-        if data.get('count_only') == 'true':
-            return self.api_success({'pending': order_tracks.count()})
-
-        orders.extend(serializers_orders_track(order_tracks, 'shopify', humanize=all_orders))
-
-        if not data.get('order_id') and not data.get('line_id'):
-            ShopifyOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
-                                     .update(check_count=F('check_count') + 1, updated_at=timezone.now())
-
-        return self.api_success(orders, safe=False)
 
     def post_order_place(self, request, user, data):
         try:
@@ -2422,16 +2045,6 @@ class ShopifyStoreApi(ApiBase):
         permissions.user_can_view(user, store)
 
         if utils.add_shopify_order_note(store, data.get('order_id'), data.get('note')):
-            return self.api_success()
-        else:
-            return self.api_error('Shopify API Error', status=500)
-
-    def post_order_note(self, request, user, data):
-        # Change the Order note
-        store = ShopifyStore.objects.get(id=data.get('store'))
-        permissions.user_can_view(user, store)
-
-        if utils.set_shopify_order_note(store, data.get('order_id'), data['note']):
             return self.api_success()
         else:
             return self.api_error('Shopify API Error', status=500)
@@ -2921,22 +2534,6 @@ class ShopifyStoreApi(ApiBase):
         rule.delete()
 
         return self.get_markup_rules(request, user, {})
-
-    def get_product_image_download(self, request, user, data):
-        try:
-            product = ShopifyProduct.objects.get(id=data.get('product'))
-            permissions.user_can_view(user, product)
-
-        except ShopifyProduct.DoesNotExist:
-            return self.api_error('Product not found', status=404)
-
-        images = json.loads(product.data).get('images')
-        if not images:
-            return self.api_error('Product doesn\'t have any images', status=422)
-
-        tasks.create_image_zip.apply_async(args=[images, product.id], countdown=5)
-
-        return self.api_success()
 
     def post_calculate_sales(self, request, user, data):
         if not user.is_superuser:

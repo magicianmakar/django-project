@@ -7,13 +7,10 @@
 var currentBoardBox = null;
 
 function deletFromBoard(board_id, products, products_el) {
+    var param = {products: products, board_id: board_id}
     $.ajax({
-        url: '/api/product-remove-board',
-        type: 'POST',
-        data: {
-            products: products,
-            board: board_id
-        },
+        url: '/api/board-products' + '?' + $.param(param),
+        type: 'DELETE',
         success: function(data) {
             if ('status' in data && data.status == 'ok') {
                 $.each(products_el, function(j, elc) {

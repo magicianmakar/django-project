@@ -16,7 +16,7 @@ from django.db.models import Q
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
-from django.core.cache import cache, caches
+from django.core.cache import cache
 from django.utils import timezone
 
 from shopified_core import permissions
@@ -27,7 +27,8 @@ from shopified_core.utils import (
     decode_params,
     http_exception_response,
     get_top_most_commons,
-    get_first_valid_option
+    get_first_valid_option,
+    order_data_cache
 )
 from shopified_core.shipping_helper import (
     load_uk_provincess,
@@ -767,20 +768,6 @@ def woo_customer_address(order, aliexpress_fix=False):
                 customer_address['province'] = 'Other'
 
     return customer_address
-
-
-def order_data_cache(*args, **kwargs):
-    order_key = '_'.join([str(i) for i in args])
-
-    if not order_key.startswith('woo_order_'):
-        order_key = 'woo_order_{}'.format(order_key)
-
-    if '*' in order_key:
-        data = caches['orders'].get_many(caches['orders'].keys(order_key))
-    else:
-        data = caches['orders'].get(order_key)
-
-    return data
 
 
 def get_latest_order_note(store, order_id):

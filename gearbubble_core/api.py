@@ -1,19 +1,15 @@
 import json
 import re
-import itertools
 from urllib.parse import parse_qs, urlparse
 
 import requests
-import arrow
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.utils.decorators import method_decorator
 from django.conf import settings
 from django.utils import timezone
-from django.core.urlresolvers import reverse
 from django.core.exceptions import PermissionDenied
-from django.db.models import F
 from django.core.cache import cache
 from django.db import transaction
 from django.contrib import messages
@@ -21,15 +17,10 @@ from django.contrib import messages
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
-from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.decorators import HasSubuserPermission, restrict_subuser_access
 from shopified_core.utils import (
     safe_int,
     remove_link_query,
-    version_compare,
-    order_phone_number,
-    orders_update_limit,
-    serializers_orders_track,
     get_domain,
 )
 
@@ -47,9 +38,12 @@ from . import tasks
 
 
 class GearBubbleApi(ApiBase):
+    store_label = 'GearBubble'
+    store_slug = 'gear'
     board_model = GearBubbleBoard
     product_model = GearBubbleProduct
     order_track_model = GearBubbleOrderTrack
+    store_model = GearBubbleStore
     helper = GearBubbleApiHelper()
 
     def validate_store_data(self, data):
@@ -182,19 +176,6 @@ class GearBubbleApi(ApiBase):
         store.save()
 
         return self.api_success()
-
-    def post_save_for_later(self, request, user, data):
-        return self.post_product_save(request, user, data)
-
-    def post_product_save(self, request, user, data):
-        store_id = safe_int(data.get('store'))
-
-        if store_id:
-            store = GearBubbleStore.objects.get(pk=store_id)
-            if not user.can('save_for_later.sub', store):
-                raise PermissionDenied()
-
-        return self.api_success(tasks.product_save(data, user.id))
 
     def post_product_export(self, request, user, data):
         store_id = safe_int(data.get('store'))
@@ -340,46 +321,6 @@ class GearBubbleApi(ApiBase):
 
         return self.api_success()
 
-    def get_product_image_download(self, request, user, data):
-        product_id = safe_int(data.get('product'))
-
-        try:
-            product = GearBubbleProduct.objects.get(id=product_id)
-            permissions.user_can_view(user, product)
-
-        except GearBubbleProduct.DoesNotExist:
-            return self.api_error('Product not found', status=404)
-
-        images = product.parsed.get('images')
-        if not images:
-            return self.api_error('Product doesn\'t have any images', status=422)
-
-        tasks.create_image_zip.delay(images, product.id)
-
-        return self.api_success()
-
-    def post_product_duplicate(self, request, user, data):
-        product_id = safe_int(data.get('product'))
-        product = GearBubbleProduct.objects.get(pk=product_id)
-        permissions.user_can_view(user, product)
-        duplicate_product = utils.duplicate_product(product)
-
-        return self.api_success({
-            'product': {
-                'id': duplicate_product.id,
-                'url': reverse('gear:product_detail', args=[duplicate_product.id])
-            }
-        })
-
-    def post_product_split_variants(self, request, user, data):
-        product_id = safe_int(data.get('product'))
-        product = GearBubbleProduct.objects.get(id=product_id)
-        split_factor = data.get('split_factor')
-        permissions.user_can_view(user, product)
-        splitted_products = utils.split_product(product, split_factor)
-
-        return self.api_success({'products_ids': [p.id for p in splitted_products]})
-
     def post_supplier_default(self, request, user, data):
         product = GearBubbleProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
@@ -404,26 +345,6 @@ class GearBubbleApi(ApiBase):
 
         permissions.user_can_delete(user, board)
         board.delete()
-
-        return self.api_success()
-
-    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
-    def delete_board_products(self, request, user, data):
-        board_id = safe_int(data.get('board_id'))
-
-        try:
-            board = GearBubbleBoard.objects.get(pk=board_id)
-        except GearBubbleBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        permissions.user_can_edit(user, board)
-        product_ids = [safe_int(pk) for pk in data.getlist('products[]')]
-        products = GearBubbleProduct.objects.filter(pk__in=product_ids)
-
-        for product in products:
-            permissions.user_can_edit(user, product)
-
-        board.products.remove(*products)
 
         return self.api_success()
 
@@ -553,164 +474,6 @@ class GearBubbleApi(ApiBase):
 
         return self.api_success()
 
-    def get_order_data(self, request, user, data):
-        version = request.META.get('HTTP_X_EXTENSION_VERSION')
-        if version:
-            required = None
-
-            if version_compare(version, '1.25.6') < 0:
-                required = '1.25.6'
-            elif version_compare(version, '1.26.0') == 0:
-                required = '1.26.1'
-
-            if required:
-                raven_client.captureMessage(
-                    'Extension Update Required',
-                    level='warning',
-                    extra={'current': version, 'required': required})
-
-                return self.api_error('Please Update The Extension To Version %s or Higher' % required, status=501)
-
-        order_key = data.get('order')
-
-        if not order_key.startswith('gear_order_'):
-            order_key = 'gear_order_{}'.format(order_key)
-
-        store_type, prefix, store, order, line = order_key.split('_')
-
-        try:
-            store = GearBubbleStore.objects.get(id=int(store))
-        except GearBubbleStore.DoesNotExist:
-            return self.api_error('Store not found', status=404)
-
-        permissions.user_can_view(user, store)
-
-        order = utils.order_data_cache(order_key)
-        if order:
-            if not order['shipping_address'].get('address2'):
-                order['shipping_address']['address2'] = ''
-
-            order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
-
-            order['ordered'] = False
-            order['fast_checkout'] = user.get_config('_fast_checkout', True)
-            order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
-
-            phone = order['order']['phone']
-
-            if type(phone) is dict:
-                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
-                order['order']['phone'] = phone_number
-                order['order']['phoneCountry'] = phone_country
-
-            name = order['shipping_address'].get('name', '').split(' ')
-            order['shipping_address']['first_name'] = name[0]
-            order['shipping_address']['last_name'] = ' '.join(name[1:])
-
-            try:
-                order_id, line_id = order['order_id'], order['line_id']
-                track = GearBubbleOrderTrack.objects.get(store=store, order_id=order_id, line_id=line_id)
-
-                order['ordered'] = {
-                    'time': arrow.get(track.created_at).humanize(),
-                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id']))
-                }
-
-            except GearBubbleOrderTrack.DoesNotExist:
-                pass
-            except:
-                raven_client.captureException()
-
-            return self.api_success(order)
-        else:
-            return self.api_error('Not found: {}'.format(data.get('order')), status=404)
-
-    def get_order_fulfill(self, request, user, data):
-        if int(data.get('count', 0)) >= 30:
-            raise self.api_error('Not found', status=404)
-
-        # Get Orders marked as Ordered
-        orders = []
-        created_at_start = None
-        created_at_end = None
-        created_at_max = arrow.now().replace(days=-30).datetime  # Always update orders that are max. 30 days old
-
-        order_ids = data.get('ids')
-        created_at = data.get('created_at')
-        all_orders = data.get('all') == 'true'
-        unfulfilled_only = data.get('unfulfilled_only') != 'false'
-
-        user = user.models_user
-        gearbubble_tracks = GearBubbleOrderTrack.objects.filter(user=user, hidden=False)
-        gearbubble_tracks = gearbubble_tracks.defer('data')
-        gearbubble_tracks = gearbubble_tracks.order_by('updated_at')
-
-        if unfulfilled_only:
-            gearbubble_tracks = gearbubble_tracks.filter(source_tracking='')
-            gearbubble_tracks = gearbubble_tracks.exclude(source_status='FINISH')
-
-        if created_at:
-            created_at_start, created_at_end = created_at.split('-')
-
-            tz = timezone.localtime(timezone.now()).strftime(' %z')
-            created_at_start = arrow.get(created_at_start + tz, r'MM/DD/YYYY Z').datetime
-
-            if created_at_end:
-                created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
-                created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
-
-            if created_at_start >= created_at_max:
-                created_at_max = created_at_start
-
-            if created_at_end:
-                gearbubble_tracks = gearbubble_tracks.filter(created_at__lte=created_at_end)
-
-        if not order_ids:
-            gearbubble_tracks = gearbubble_tracks.filter(created_at__gte=created_at_max)
-
-        if user.is_subuser:
-            stores = user.profile.get_gear_stores(flat=True)
-            gearbubble_tracks = gearbubble_tracks.filter(store__in=stores)
-
-        if data.get('store'):
-            gearbubble_tracks = gearbubble_tracks.filter(store=data.get('store'))
-
-        if not data.get('order_id') and not data.get('line_id') and not all_orders:
-            limit_key = 'order_fulfill_limit_%d' % user.models_user.id
-            limit = cache.get(limit_key)
-
-            if limit is None:
-                limit = orders_update_limit(orders_count=gearbubble_tracks.count())
-
-                if limit != 20:
-                    cache.set(limit_key, limit, timeout=3600)
-
-            if data.get('forced') == 'true':
-                limit = limit * 2
-
-            gearbubble_tracks = gearbubble_tracks[:limit]
-
-        elif data.get('all') == 'true':
-            gearbubble_tracks = gearbubble_tracks.order_by('created_at')
-
-        if data.get('order_id') and data.get('line_id'):
-            gearbubble_tracks = gearbubble_tracks.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
-
-        if data.get('count_only') == 'true':
-            return self.api_success({'pending': gearbubble_tracks.count()})
-
-        orders.extend(serializers_orders_track(gearbubble_tracks, 'gear', humanize=all_orders))
-
-        if not data.get('order_id') and not data.get('line_id'):
-            ids = [i['id'] for i in orders]
-            user = user.models_user
-            check_count = F('check_count') + 1
-            now = timezone.now()
-            GearBubbleOrderTrack.objects.filter(user=user, id__in=ids) \
-                                        .update(check_count=check_count, updated_at=now)
-
-        return self.api_success(orders, safe=False)
-
     def post_order_fulfill_update(self, request, user, data):
         if data.get('store'):
             try:
@@ -796,38 +559,6 @@ class GearBubbleApi(ApiBase):
 
         except GearBubbleStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
-
-    def post_product_connect(self, request, user, data):
-        product_id = safe_int(data.get('product'))
-        product = GearBubbleProduct.objects.get(id=product_id)
-        permissions.user_can_edit(user, product)
-        store_id = safe_int(data.get('store'))
-        store = GearBubbleStore.objects.get(id=store_id)
-        permissions.user_can_view(user, store)
-        source_id = safe_int(data.get('gearbubble'))
-
-        if not source_id == product.source_id or not product.store == store:
-            connected_to = GearBubbleProduct.objects.filter(store=store, source_id=source_id)
-
-            if connected_to.exists():
-                error_message = ['The selected product is already connected to:\n']
-                pks = connected_to.values_list('pk', flat=True)
-                links = []
-
-                for pk in pks:
-                    path = reverse('gear:product_detail', args=[pk])
-                    links.append(request.build_absolute_uri(path))
-
-                error_message = itertools.chain(error_message, links)
-                error_message = '\n'.join(error_message)
-
-                return self.api_error(error_message, status=500)
-
-            product.store = store
-            product.source_id = source_id
-            product.sync()
-
-        return self.api_success()
 
     def post_variant_image(self, request, user, data):
         store_id = safe_int(data.get('store'))
@@ -935,66 +666,3 @@ class GearBubbleApi(ApiBase):
             product.sync()
 
         return self.api_success({'product': product.id})
-
-    def post_variants_mapping(self, request, user, data):
-        product_id = safe_int(data.get('product'))
-        supplier_id = safe_int(data.get('supplier'))
-        product = GearBubbleProduct.objects.get(id=product_id)
-        permissions.user_can_edit(user, product)
-        supplier = product.get_suppliers().get(id=supplier_id)
-        mapping = {key: value for key, value in list(data.items()) if key not in ['product', 'supplier']}
-        product.set_variant_mapping(mapping, supplier=supplier)
-        product.save()
-
-        return self.api_success()
-
-    def post_suppliers_mapping(self, request, user, data):
-        product_id = safe_int(data.get('product'))
-        product = GearBubbleProduct.objects.get(id=product_id)
-        permissions.user_can_edit(user, product)
-        suppliers_cache = {}
-        mapping = {}
-        shipping_map = {}
-
-        with transaction.atomic():
-            for k in data:
-                if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
-                    shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
-                elif k.startswith('variant_'):  # Save the varinat mapping for supplier+variant
-                    supplier_id, variant_id = k.replace('variant_', '').split('_')
-                    supplier = suppliers_cache.get(supplier_id, product.get_suppliers().get(id=supplier_id))
-
-                    suppliers_cache[supplier_id] = supplier
-                    var_mapping = {variant_id: data[k]}
-
-                    product.set_variant_mapping(var_mapping, supplier=supplier, update=True, commit=False)
-
-                elif k == 'config':
-                    product.set_mapping_config({'supplier': data[k]})
-
-                elif k != 'product':  # Save the variant -> supplier mapping
-                    mapping[k] = json.loads(data[k])
-
-            product.set_suppliers_mapping(mapping, commit=False)
-            product.set_shipping_mapping(shipping_map, commit=False)
-
-        product.save()
-
-        for i in suppliers_cache.values():
-            i.save()
-
-        return self.api_success()
-
-    def post_order_note(self, request, user, data):
-        store_id = safe_int(data.get('store'))
-        store = GearBubbleStore.objects.get(id=store_id)
-        permissions.user_can_view(user, store)
-
-        note = data.get('note')
-        if note is None:
-            return self.api_error('Note required')
-
-        if utils.set_gear_order_note(store, safe_int(data['order_id']), note):
-            return self.api_success()
-        else:
-            return self.api_error('GearBubble API Error', status=500)

@@ -11,7 +11,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.db import transaction
-from django.core.cache import cache, caches
+from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 
@@ -317,7 +317,12 @@ def get_shipping_carrier_name(store, carrier_id):
 
 def gear_customer_address(order):
     customer_address = {}
-    customer_address['name'] = order.get('name', '')
+
+    name = order.get('name', '').split(' ')
+
+    customer_address['name'] = name
+    customer_address['first_name'] = name[0]
+    customer_address['last_name'] = ' '.join(name[1:])
     customer_address['address1'] = order.get('address1', '')
     customer_address['address2'] = order.get('address2', '')
     customer_address['city'] = order.get('city', '')
@@ -377,20 +382,6 @@ def gear_customer_address(order):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
 
     return customer_address
-
-
-def order_data_cache(*args, **kwargs):
-    order_key = '_'.join([str(i) for i in args])
-
-    if not order_key.startswith('gear_order_'):
-        order_key = 'gear_order_{}'.format(order_key)
-
-    if '*' in order_key:
-        data = caches['orders'].get_many(caches['orders'].keys(order_key))
-    else:
-        data = caches['orders'].get(order_key)
-
-    return data
 
 
 def order_id_from_name(store, order_name, default=None):

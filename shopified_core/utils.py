@@ -415,11 +415,18 @@ def version_compare(left, right):
     return compare(normalize(left), normalize(right))
 
 
-def order_data_cache(*args, **kwargs):
+def order_data_cache_key(*args, prefix='order'):
     order_key = '_'.join([str(i) for i in args])
 
-    if not order_key.startswith('order_'):
-        order_key = 'order_{}'.format(order_key)
+    if not order_key.count('order_'):
+        prefix = prefix.strip('_')
+        order_key = f'{prefix}_{order_key}'
+
+    return order_key
+
+
+def order_data_cache(*args, prefix='order'):
+    order_key = order_data_cache_key(*args, prefix=prefix)
 
     if '*' in order_key:
         data = caches['orders'].get_many(caches['orders'].keys(order_key))

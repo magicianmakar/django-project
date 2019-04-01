@@ -180,6 +180,14 @@ class UtilsTestCase(BaseTestCase):
             'order_1_333_111111': {
                 'id': '1_333_111111',
                 'product': 5
+            },
+            'woo_order_1_3_111222333': {
+                'id': '1_3_111222333',
+                'product': 5
+            },
+            'gear_order_10_30_136622333': {
+                'id': '10_30_136622333',
+                'product': 5
             }
         }
 
@@ -190,6 +198,12 @@ class UtilsTestCase(BaseTestCase):
 
         self.assertEqual(order_data_cache('1_333_111111'), orders['order_1_333_111111'])
         self.assertEqual(order_data_cache('order_1_333_111111'), orders['order_1_333_111111'])
+
+        self.assertEqual(order_data_cache('woo_order', 1, 3, 111222333), orders['woo_order_1_3_111222333'])
+        self.assertEqual(order_data_cache('woo_order_1_3_111222333'), orders['woo_order_1_3_111222333'])
+
+        self.assertEqual(order_data_cache('gear_order', 10, 30, 136622333), orders['gear_order_10_30_136622333'])
+        self.assertEqual(order_data_cache('gear_order_10_30_136622333'), orders['gear_order_10_30_136622333'])
 
         self.assertEqual(order_data_cache(1, '222', 444444), orders['order_1_222_444444'])
         self.assertEqual(order_data_cache(3, '222', 444444), None)

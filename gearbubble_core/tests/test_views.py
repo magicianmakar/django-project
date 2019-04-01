@@ -8,7 +8,7 @@ from lib.test import BaseTestCase
 from django.core.urlresolvers import reverse
 from django.core.cache import caches
 
-from ..utils import order_data_cache
+from shopified_core.utils import order_data_cache
 from leadgalaxy.tests.factories import (
     UserFactory,
     GroupPlanFactory,
@@ -315,7 +315,7 @@ class ApiTestCase(BaseTestCase):
 
     @patch('gearbubble_core.utils.set_gear_order_note')
     def test_post_order_note(self, set_gear_order_note):
-        order_id = 123456789
+        order_id = '123456789'
         note = 'Test Note'
         data = {'store': self.store.id, 'order_id': order_id, 'note': note}
 
@@ -394,8 +394,8 @@ class ApiTestCase(BaseTestCase):
         caches['orders'].set(f'gear_order_{order_key}', data)
         self.assertIsNotNone(caches['orders'].get(f'gear_order_{order_key}'))
         self.assertIsNotNone(order_data_cache(f'gear_order_{order_key}'))
-        self.assertIsNotNone(order_data_cache(f'{order_key}'))
-        self.assertIsNotNone(order_data_cache(self.store.id, order_id, line_id))
+        self.assertIsNotNone(order_data_cache(f'{order_key}', prefix='gear_order_'))
+        self.assertIsNotNone(order_data_cache(self.store.id, order_id, line_id, prefix='gear_order_'))
 
         # Store not found
         r = self.client.get('/api/gear/order-data', {'order': f'444{order_key}'})

@@ -4,7 +4,6 @@ from requests import get
 from tqdm import tqdm
 
 import json
-import sys
 
 countries = ['AU', 'CL', 'ES', 'NL', 'UA', 'UK', 'NZ', 'US', 'CA', 'RU', 'ID', 'TH', 'PL']
 
@@ -27,13 +26,13 @@ for i in countries:
         }
 
         obar.update(1)
-        
+
         if p['needChildren']:
             r = get('https://ilogisticsaddress.aliexpress.com/ajaxGetGlobalAddress.htm?country=%s&province=%s' % (i, p['id']))
             cities = json.loads(r.text.strip()[5:-1])
             for c in cities['address']:
                 data[i][p['n']].append(c['n'])
-    
+
     obar.close()
     print()
     print()

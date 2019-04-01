@@ -1,5 +1,4 @@
 import re
-import arrow
 from urllib.parse import parse_qs, urlparse
 
 import simplejson as json
@@ -7,9 +6,6 @@ from functools import cmp_to_key
 
 from django.conf import settings
 from django.core.cache import cache, caches
-from django.urls import reverse
-from django.db import transaction
-from django.db.models import F
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
@@ -20,16 +16,11 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
-from shopified_core.shipping_helper import aliexpress_country_code_map
 from shopified_core.utils import (
     safe_int,
     get_domain,
     remove_link_query,
-    version_compare,
     order_data_cache,
-    orders_update_limit,
-    order_phone_number,
-    serializers_orders_track,
     CancelledOrderAlert
 )
 from product_alerts.models import ProductChange
@@ -49,9 +40,12 @@ from .models import (
 
 
 class CHQStoreApi(ApiBase):
+    store_label = 'CommerceHQ'
+    store_slug = 'chq'
     board_model = CommerceHQBoard
     product_model = CommerceHQProduct
     order_track_model = CommerceHQOrderTrack
+    store_model = CommerceHQStore
     helper = CHQApiHelper()
 
     def post_alert_archive(self, request, user, data):
@@ -89,19 +83,6 @@ class CHQStoreApi(ApiBase):
     def post_save_orders_filter(self, request, user, data):
         utils.set_orders_filter(user, data)
         return self.api_success()
-
-    def post_product_save(self, request, user, data):
-        return self.api_success(tasks.product_save(data, user.id))
-
-    def post_save_for_later(self, request, user, data):
-        store_id = safe_int(data.get('store'))
-        if store_id:
-            store = CommerceHQStore.objects.get(pk=store_id)
-            if not user.can('save_for_later.sub', store):
-                raise PermissionDenied()
-
-        # Backward compatibly with Shopify save for later
-        return self.post_product_save(request, user, data)
 
     def post_product_export(self, request, user, data):
         try:
@@ -324,50 +305,6 @@ class CHQStoreApi(ApiBase):
         except CommerceHQStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-    def post_product_connect(self, request, user, data):
-        product = CommerceHQProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        store = CommerceHQStore.objects.get(id=data.get('store'))
-        permissions.user_can_view(user, store)
-
-        source_id = safe_int(data.get('shopify'))
-
-        if source_id != product.source_id or product.store != store:
-            connected_to = CommerceHQProduct.objects.filter(
-                store=store,
-                source_id=source_id
-            )
-
-            if connected_to.exists():
-                return self.api_error(
-                    '\n'.join(
-                        ['The selected Product is already connected to:\n']
-                        + [request.build_absolute_uri('/chq/product/{}'.format(i))
-                            for i in connected_to.values_list('id', flat=True)]),
-                    status=500)
-
-            product.store = store
-            product.source_id = source_id
-
-            product.save()
-            product.sync()
-
-        return self.api_success()
-
-    def post_product_duplicate(self, request, user, data):
-        product = CommerceHQProduct.objects.get(id=data.get('product'))
-        permissions.user_can_view(user, product)
-
-        duplicate_product = utils.duplicate_product(product)
-
-        return self.api_success({
-            'product': {
-                'id': duplicate_product.id,
-                'url': reverse('chq:product_detail', kwargs={'pk': duplicate_product.id})
-            }
-        })
-
     def post_product_config(self, request, user, data):
         if not user.can('price_changes.use'):
             raise PermissionDenied()
@@ -402,87 +339,6 @@ class CHQStoreApi(ApiBase):
         product.save()
 
         return self.api_success()
-
-    def get_order_fulfill(self, request, user, data):
-        if int(data.get('count', 0)) >= 30:
-            raise self.api_error('Not found', status=404)
-
-        # Get Orders marked as Ordered
-
-        orders = []
-        created_at_start = None
-        created_at_end = None
-        created_at_max = arrow.now().replace(days=-30).datetime  # Always update orders that are max. 30 days old
-
-        order_ids = data.get('ids')
-        created_at = data.get('created_at')
-        all_orders = data.get('all') == 'true'
-        unfulfilled_only = data.get('unfulfilled_only') != 'false'
-
-        order_tracks = CommerceHQOrderTrack.objects.filter(user=user.models_user, hidden=False) \
-                                                   .defer('data') \
-                                                   .order_by('updated_at')
-
-        if unfulfilled_only:
-            order_tracks = order_tracks.filter(source_tracking='') \
-                                       .exclude(source_status='FINISH')
-
-        if created_at:
-            created_at_start, created_at_end = created_at.split('-')
-
-            tz = timezone.localtime(timezone.now()).strftime(' %z')
-            created_at_start = arrow.get(created_at_start + tz, r'MM/DD/YYYY Z').datetime
-
-            if created_at_end:
-                created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
-                created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
-
-            if created_at_start >= created_at_max:
-                created_at_max = created_at_start
-
-            if created_at_end:
-                order_tracks = order_tracks.filter(created_at__lte=created_at_end)
-
-        if not order_ids:
-            order_tracks = order_tracks.filter(created_at__gte=created_at_max)
-
-        if user.is_subuser:
-            order_tracks = order_tracks.filter(store__in=user.profile.get_chq_stores(flat=True))
-
-        if data.get('store'):
-            order_tracks = order_tracks.filter(store=data.get('store'))
-
-        if not data.get('order_id') and not data.get('line_id') and not all_orders:
-            limit_key = 'order_fulfill_limit_%d' % user.models_user.id
-            limit = cache.get(limit_key)
-
-            if limit is None:
-                limit = orders_update_limit(orders_count=order_tracks.count())
-
-                if limit != 20:
-                    cache.set(limit_key, limit, timeout=3600)
-
-            if data.get('forced') == 'true':
-                limit = limit * 2
-
-            order_tracks = order_tracks[:limit]
-
-        elif data.get('all') == 'true':
-            order_tracks = order_tracks.order_by('created_at')
-
-        if data.get('order_id') and data.get('line_id'):
-            order_tracks = order_tracks.filter(order_id=data.get('order_id'), line_id=data.get('line_id'))
-
-        if data.get('count_only') == 'true':
-            return self.api_success({'pending': order_tracks.count()})
-
-        orders.extend(serializers_orders_track(order_tracks, 'chq', humanize=all_orders))
-
-        if not data.get('order_id') and not data.get('line_id'):
-            CommerceHQOrderTrack.objects.filter(user=user.models_user, id__in=[i['id'] for i in orders]) \
-                                        .update(check_count=F('check_count') + 1, updated_at=timezone.now())
-
-        return self.api_success(orders, safe=False)
 
     def post_order_fulfill(self, request, user, data):
         try:
@@ -790,109 +646,8 @@ class CHQStoreApi(ApiBase):
             return self.api_error('Board not found.', status=404)
 
     def post_product_remove_board(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-
-        board = CommerceHQBoard.objects.get(id=data.get('board'))
-        permissions.user_can_edit(user, board)
-
-        for p in data.getlist('products[]'):
-            product = CommerceHQProduct.objects.get(id=p)
-            permissions.user_can_edit(user, product)
-
-            board.products.remove(product)
-
-        board.save()
-
-        return self.api_success()
-
-    def delete_board_products(self, request, user, data):
-        if not user.can('edit_product_boards.sub'):
-            raise PermissionDenied()
-        try:
-            pk = safe_int(data.get('board_id'))
-            board = CommerceHQBoard.objects.get(pk=pk)
-            permissions.user_can_edit(user, board)
-        except CommerceHQBoard.DoesNotExist:
-            return self.api_error('Board not found.', status=404)
-
-        for p in data.getlist('products[]'):
-            pk = safe_int(p)
-            product = CommerceHQProduct.objects.filter(pk=pk).first()
-            if product:
-                permissions.user_can_edit(user, product)
-                board.products.remove(product)
-
-        return self.api_success()
-
-    def get_order_data(self, request, user, data):
-        version = request.META.get('HTTP_X_EXTENSION_VERSION')
-        if version:
-            required = None
-
-            if version_compare(version, '1.25.6') < 0:
-                required = '1.25.6'
-            elif version_compare(version, '1.26.0') == 0:
-                required = '1.26.1'
-
-            if required:
-                raven_client.captureMessage(
-                    'Extension Update Required',
-                    level='warning',
-                    extra={'current': version, 'required': required})
-
-                return self.api_error('Please Update The Extension To Version %s or Higher' % required, status=501)
-
-        order_key = data.get('order')
-
-        if not order_key.startswith('order_'):
-            order_key = 'order_{}'.format(order_key)
-
-        prefix, store, order, line = order_key.split('_')
-
-        try:
-            store = CommerceHQStore.objects.get(id=store)
-            permissions.user_can_view(user, store)
-        except CommerceHQStore.DoesNotExist:
-            return self.api_error('Store not found', status=404)
-
-        order = order_data_cache(order_key)
-        if order:
-            if not order['shipping_address'].get('address2'):
-                order['shipping_address']['address2'] = ''
-
-            order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
-
-            order['ordered'] = False
-            order['fast_checkout'] = user.get_config('_fast_checkout', True)
-            order['solve'] = user.models_user.get_config('aliexpress_captcha', False)
-
-            phone = order['order']['phone']
-            if type(phone) is dict:
-                phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
-                order['order']['phone'] = phone_number
-                order['order']['phoneCountry'] = phone_country
-
-            try:
-                track = CommerceHQOrderTrack.objects.get(
-                    store=store,
-                    order_id=order['order_id'],
-                    line_id=order['line_id']
-                )
-
-                order['ordered'] = {
-                    'time': arrow.get(track.created_at).humanize(),
-                    'link': request.build_absolute_uri('/orders/track?hidden=2&query={}'.format(order['order_id']))
-                }
-
-            except CommerceHQOrderTrack.DoesNotExist:
-                pass
-            except:
-                raven_client.captureException()
-
-            return self.api_success(order)
-        else:
-            return self.api_error('Not found: {}'.format(data.get('order')), status=404)
+        # DEPRECATED
+        return self.delete_board_products(request, user, data)
 
     def post_order_fulfill_update(self, request, user, data):
         if data.get('store'):
@@ -1115,105 +870,3 @@ class CHQStoreApi(ApiBase):
         product.sync()
 
         return self.api_success({'product': product.id})
-
-    def post_variants_mapping(self, request, user, data):
-        product = CommerceHQProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        supplier = product.get_suppliers().get(id=data.get('supplier'))
-
-        mapping = {}
-        for k in data:
-            if k != 'product' and k != 'supplier':
-                mapping[k] = data[k]
-
-        if not product.default_supplier:
-            supplier = product.get_supplier_info()
-            product.default_supplier = CommerceHQSupplier.objects.create(
-                store=product.store,
-                product=product,
-                product_url=product.get_original_info().get('url', ''),
-                supplier_name=supplier.get('name') if supplier else '',
-                supplier_url=supplier.get('url') if supplier else '',
-                is_default=True
-            )
-
-            supplier = product.default_supplier
-
-        product.set_variant_mapping(mapping, supplier=supplier)
-        product.save()
-
-        return self.api_success()
-
-    def post_suppliers_mapping(self, request, user, data):
-        product = CommerceHQProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        suppliers_cache = {}
-
-        mapping = {}
-        shipping_map = {}
-
-        with transaction.atomic():
-            for k in data:
-                if k.startswith('shipping_'):  # Save the shipping mapping for this supplier
-                    shipping_map[k.replace('shipping_', '')] = json.loads(data[k])
-                elif k.startswith('variant_'):  # Save the varinat mapping for supplier+variant
-                    supplier_id, variant_id = k.replace('variant_', '').split('_')
-                    supplier = suppliers_cache.get(supplier_id, product.get_suppliers().get(id=supplier_id))
-
-                    suppliers_cache[supplier_id] = supplier
-                    var_mapping = {variant_id: data[k]}
-
-                    product.set_variant_mapping(var_mapping, supplier=supplier, update=True, commit=False)
-
-                elif k == 'config':
-                    product.set_mapping_config({'supplier': data[k]})
-
-                elif k != 'product':  # Save the variant -> supplier mapping
-                    mapping[k] = json.loads(data[k])
-
-            product.set_suppliers_mapping(mapping, commit=False)
-            product.set_shipping_mapping(shipping_map, commit=False)
-
-        product.save()
-
-        for i in suppliers_cache.values():
-            i.save()
-
-        return self.api_success()
-
-    def get_product_image_download(self, request, user, data):
-        try:
-            product = CommerceHQProduct.objects.get(id=data.get('product'))
-            permissions.user_can_view(user, product)
-
-        except CommerceHQProduct.DoesNotExist:
-            return self.api_error('Product not found', status=404)
-
-        images = json.loads(product.data).get('images')
-        if not images:
-            return self.api_error('Product doesn\'t have any images', status=422)
-
-        tasks.create_image_zip.apply_async(args=[images, product.id], countdown=5)
-
-        return self.api_success()
-
-    def post_order_note(self, request, user, data):
-        store = CommerceHQStore.objects.get(id=data.get('store'))
-        permissions.user_can_view(user, store)
-
-        if utils.set_chq_order_note(store, data.get('order_id'), data['note']):
-            return self.api_success()
-        else:
-            return self.api_error('CommerceHQ API Error', status=500)
-
-    def post_product_split_variants(self, request, user, data):
-        product = CommerceHQProduct.objects.get(id=data.get('product'))
-        split_factor = data.get('split_factor')
-        permissions.user_can_view(user, product)
-        splitted_products = utils.split_product(product, split_factor)
-
-        return self.api_success({
-            'products_ids': [p.id for p in splitted_products]
-        })
