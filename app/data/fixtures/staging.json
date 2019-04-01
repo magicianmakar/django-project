@@ -4512,6 +4512,62 @@
         ]
     }
 }, {
+  "model": "leadgalaxy.groupplan",
+  "pk": 48,
+  "fields": {
+    "title": "Premier Yearly 60DC",
+    "slug": "premier-yearly-60dc",
+    "register_hash": "db96ad689e4db85ee00f8f25904486d1",
+    "stores": 0,
+    "products": 0,
+    "boards": 0,
+    "extra_stores": true,
+    "auto_fulfill_limit": -1,
+    "badge_image": "",
+    "description": "",
+    "notes": "",
+    "features": "",
+    "monthly_price": null,
+    "trial_days": 0,
+    "plan_description": null,
+    "price_info": null,
+    "retail_price_info": null,
+    "default_plan": 0,
+    "payment_gateway": "stripe",
+    "payment_interval": "yearly",
+    "hidden": false,
+    "locked": false,
+    "permissions": []
+  }
+}, {
+  "model": "leadgalaxy.groupplan",
+  "pk": 49,
+  "fields": {
+    "title": "Paused Plan",
+    "slug": "paused-plan",
+    "register_hash": "4a07d9ca9ff3d8948eb60379ecd19a3b",
+    "stores": -1,
+    "products": 0,
+    "boards": 0,
+    "extra_stores": false,
+    "auto_fulfill_limit": 0,
+    "badge_image": "",
+    "description": "",
+    "notes": "",
+    "features": "",
+    "monthly_price": "12.00",
+    "trial_days": 0,
+    "plan_description": null,
+    "price_info": null,
+    "retail_price_info": null,
+    "default_plan": 0,
+    "payment_gateway": "stripe",
+    "payment_interval": "monthly",
+    "hidden": true,
+    "locked": true,
+    "permissions": []
+  }
+}, {
     "model": "leadgalaxy.apppermission",
     "pk": 1,
     "fields": {
@@ -5699,4 +5755,36 @@
         "stripe_id": "SA_TEST_77d970ae",
         "created_at": "2018-10-09T22:21:20.413Z"
     }
+}, {
+  "model": "stripe_subscription.stripeplan",
+  "pk": 24,
+  "fields": {
+    "name": "Premier Yearly 60DC",
+    "plan": 48,
+    "amount": "799.00",
+    "currency": "usd",
+    "retail_amount": "0.00",
+    "interval": "year",
+    "interval_count": 1,
+    "trial_period_days": 1,
+    "statement_descriptor": null,
+    "stripe_id": "SA_eebe8d78",
+    "created_at": "2019-01-31T14:53:57.902Z"
+  }
+}, {
+  "model": "stripe_subscription.stripeplan",
+  "pk": 25,
+  "fields": {
+    "name": "Paused Plan",
+    "plan": 49,
+    "amount": "12.00",
+    "currency": "usd",
+    "retail_amount": "0.00",
+    "interval": "month",
+    "interval_count": 1,
+    "trial_period_days": 0,
+    "statement_descriptor": "PAUSED PLAN",
+    "stripe_id": "SA_dd09d34f",
+    "created_at": "2019-02-01T17:35:42.721Z"
+  }
 }]
