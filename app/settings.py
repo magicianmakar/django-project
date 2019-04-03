@@ -266,6 +266,8 @@ S3_SECRET_BUCKET = os.environ.get('S3_SECRET_BUCKET', S3_STATIC_BUCKET)
 
 AWS_STORAGE_BUCKET_NAME = S3_STATIC_BUCKET  # Default bucket
 
+USE_WHITENOISE = os.environ.get('USE_WHITENOISE')
+
 # Django Storage
 if not DEBUG:
     AWS_S3_SECURE_URLS = False
@@ -287,11 +289,12 @@ if not DEBUG:
     STATICFILES_LOCATION = 'static'
     MEDIAFILES_LOCATION = 'media'
 
-    STATICFILES_STORAGE = 'app.storage.CachedS3BotoStorage'
-    DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
-    STATIC_URL = "//%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, STATICFILES_LOCATION)
+    if not USE_WHITENOISE:
+        STATICFILES_STORAGE = 'app.storage.CachedS3BotoStorage'
+        DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
+        STATIC_URL = "//%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, STATICFILES_LOCATION)
 
-    COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
+        COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
 
 # Django Compressor
 COMPRESS_ENABLED = not DEBUG
