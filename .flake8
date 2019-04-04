@@ -12,5 +12,4 @@ exclude =
     migrations,
     tests.py,
     scripts,
-    patches,
-    __init__.py
+    patches
