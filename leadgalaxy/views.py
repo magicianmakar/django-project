@@ -3785,8 +3785,11 @@ def orders_view(request):
 
     orders_sync_check_key = 'store_orders_sync_check_{}'.format(store.id)
     if store_sync_enabled and cache.get(orders_sync_check_key) is None:
-        tasks.sync_shopify_orders.apply_async(args=[store.id], kwargs={'elastic': es_search_enabled})
         cache.set(orders_sync_check_key, True, timeout=43200)
+        tasks.sync_shopify_orders.apply_async(
+            args=[store.id],
+            kwargs={'elastic': es_search_enabled},
+            expires=600)
 
     products_cache = {}
     auto_orders = models_user.can('auto_order.use')
