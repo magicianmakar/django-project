@@ -2403,8 +2403,8 @@ def acp_users_list(request):
         if subscribtions and registrations:
             messages.warning(request, 'You have to cancel monthly subscription if the user is on Lifetime plan')
 
-    plans = GroupPlan.objects.all()
-    bundles = FeatureBundle.objects.all()
+    plans = GroupPlan.objects.all().order_by('-id')
+    bundles = FeatureBundle.objects.all().order_by('-id')
 
     return render(request, 'acp/users_list.html', {
         'q': q,
