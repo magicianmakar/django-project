@@ -45,6 +45,12 @@
 
             {% if item.order_data_id and item.supplier.support_auto_fulfill %}
             <li class="divider"></li>
+                {% if aliexpress_mobile_order %}
+                <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
+                        data-href="{% app_link 'orders/place' supplier=item.supplier.id SAPlaceOrder=item.order_data_id m=1 %}"
+                       >Mobile Order</a></li>
+                {% endif %}
+
             <li><a class="place-order-btn queue-order-btn" href="#" order-id="{{order.id}}" line-id="{{item.id}}"
                     data-href="{% app_link 'chq/orders/place' supplier=item.supplier.id SAPlaceOrder=item.order_data_id SAStep=True %}"
                    >Step By Step Order</a></li>

@@ -709,6 +709,7 @@ class OrdersList(ListView):
 
         context.update(self.filter_data)
 
+        context['aliexpress_mobile_order'] = self.request.user.models_user.can('aliexpress_mobile_order.use')
         context['order_debug'] = self.request.session.get('is_hijacked_user') or \
             (self.request.user.is_superuser and self.request.GET.get('debug')) or \
             self.request.user.get_config('_orders_debug') or settings.DEBUG

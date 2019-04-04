@@ -3274,6 +3274,7 @@ def orders_view(request):
     german_umlauts = models_user.get_config('_use_german_umlauts', False)
     show_actual_supplier = models_user.get_config('_show_actual_supplier', False) or models_user.id in [883, 21064, 24767]
     order_risk_all_getaways = models_user.get_config('_order_risk_all_getaways', False)
+    aliexpress_mobile_order = models_user.can('aliexpress_mobile_order.use')
 
     if user_version and latest_release \
             and version_compare(user_version, latest_release) < 0 \
@@ -4109,6 +4110,7 @@ def orders_view(request):
         'show_actual_supplier': show_actual_supplier,
         'use_relative_dates': use_relative_dates,
         'order_risk_all_getaways': order_risk_all_getaways,
+        'aliexpress_mobile_order': aliexpress_mobile_order,
         'order_debug': order_debug,
         'use_fulfillbox': bool(settings.FULFILLBOX_API_URL and models_user.can('fulfillbox.use')),
         'page': 'orders',
@@ -4329,6 +4331,9 @@ def orders_place(request):
 
     if not product:
         return Http404("Product or Order not set")
+
+    if request.GET.get('m'):
+        product = product.replace('www.aliexpress.com', 'm.aliexpress.com')
 
     ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(request.user.models_user)
     admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user.models_user)
