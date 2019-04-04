@@ -75,7 +75,8 @@ INSTALLED_APPS = (
     'woocommerce_core',
     'gearbubble_core',
     'zapier_core',
-    'phone_automation'
+    'phone_automation',
+    'funnels',
 )
 
 MIDDLEWARE = (
