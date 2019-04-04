@@ -4312,6 +4312,9 @@ def orders_place(request):
 
     disable_affiliate = request.user.get_config('_disable_affiliate', False)
 
+    if request.GET.get('nff'):
+        disable_affiliate = True
+
     if request.GET.get('supplier'):
         supplier = ProductSupplier.objects.get(id=request.GET['supplier'])
         permissions.user_can_view(request.user, supplier.product)
