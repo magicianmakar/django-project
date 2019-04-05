@@ -1100,6 +1100,9 @@ class OrderPlaceRedirectView(RedirectView):
         if not product:
             return Http404("Product or Order not set")
 
+        if self.request.GET.get('m'):
+            product = product.replace('www.aliexpress.com', 'm.aliexpress.com')
+
         from leadgalaxy.utils import (
             get_aliexpress_credentials,
             get_admitad_credentials,
