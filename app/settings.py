@@ -21,6 +21,7 @@ SECRET_KEY = 'i+acxn5(akgsn!sr4^qgf(^m&*@+g1@u^t@=8s@axc41ml*f=s'
 
 API_SECRECT_KEY = os.environ.get('API_SECRECT_KEY', 'TEST')
 ENCRYPTION_SECRECT_KEY = os.environ.get('ENCRYPTION_SECRECT_KEY', 'TEST')
+SSO_SECRET_KEY = os.environ.get('SSO_SECRET_KEY', 'TEST')
 
 DEBUG = (os.environ.get('DEBUG_APP') == 'TRUE')
 
@@ -70,6 +71,7 @@ INSTALLED_APPS = (
     'subusers',
     'tapfiliate',
     'youtube_ads',
+    'sso_core',
 
     'commercehq_core',
     'woocommerce_core',

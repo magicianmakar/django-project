@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^zapier/', include('zapier_core.urls')),
     url(r'^tubehunt/', include('youtube_ads.urls')),
     url(r'^callflex/', include('phone_automation.urls')),
+    url(r'^sso/', include('sso_core.urls')),
     url(r'^admin/', admin.site.urls),
 ]
 
