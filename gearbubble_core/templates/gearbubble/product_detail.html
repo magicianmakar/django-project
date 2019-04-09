@@ -530,6 +530,7 @@
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
 
 {% compress css %}
+<link href="{% static 'css/trix.css' %}" rel="stylesheet">
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 <link href="{% static 'gearbubble/css/product_detail.css' %}" rel="stylesheet">
 {% endcompress %}
@@ -734,6 +735,7 @@ $(function() {
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
     {% compress js %}
+    <script type="text/javascript" src="{% static 'js/trix.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/photopea.js' %}"></script>
     <script type="text/javascript" src="{% static 'gearbubble/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'gearbubble/js/gearbubble_product_selector.js' %}"></script>

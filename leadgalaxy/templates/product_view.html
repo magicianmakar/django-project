@@ -1046,6 +1046,7 @@
 {% compress css %}
 <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+<link href="{% static 'css/trix.css' %}" rel="stylesheet">
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 <link href="{% static 'shopified/css/product_view.css' %}" rel="stylesheet">
 
@@ -1272,7 +1273,8 @@ $(function() {
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
     {% compress js %}
-    <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/trix.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/photopea.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
