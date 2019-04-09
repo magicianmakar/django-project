@@ -18,6 +18,8 @@ function shopifyProductSearch (e) {
         }
     }
 
+    var connectedOnly = $('#modal-shopify-product').prop('connected');
+
     $.ajax({
         url: api_url('shopify-products'),
         type: 'POST',
@@ -25,7 +27,7 @@ function shopifyProductSearch (e) {
             store: store,
             query: query,
             page: $(this).prop('page'),
-            connected: $('#modal-shopify-product').prop('connected'),
+            connected: connectedOnly,
             hide_connected: $('#modal-shopify-product .hide-connected-product').prop('checked') ? 'true' : ''
         },
         context: {
@@ -42,7 +44,7 @@ function shopifyProductSearch (e) {
             $.each(data.products, function () {
                 var el = $(product_template({
                     product: this,
-                    connected_only: $('#modal-shopify-product').prop('connected')
+                    connected_only: connectedOnly
                 }));
 
                 $('a.shopify-product', el).click(function (e) {
@@ -76,7 +78,7 @@ function shopifyProductSearch (e) {
             if($.fn.hasOwnProperty('bootstrapTooltip')) {
                 $("[title]", productsContainer).bootstrapTooltip();
             } else {
-                $("[title]", productsContainer).tooltip('loading');
+                $("[title]", productsContainer).tooltip();
             }
         },
         error: function (data) {
