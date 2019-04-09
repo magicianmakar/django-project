@@ -9,6 +9,8 @@ from commercehq_core.models import CommerceHQStore
 from woocommerce_core.models import WooStore
 from gearbubble_core.models import GearBubbleStore
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 
 def get_object_user(obj):
     if hasattr(obj, 'user'):
@@ -239,15 +241,9 @@ def can_add_product(user, ignore_daily_limit=False):
 
         day_count = cache.get(limit_key)
         if day_count is None:
-            start, end = now.span('day')
-            day_count = profile.user.shopifyproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
-            day_count += profile.user.commercehqproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
-            day_count += profile.user.wooproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
-            day_count += profile.user.gearbubbleproduct_set.filter(created_at__gte=start.datetime, created_at__lte=end.datetime).count()
+            day_count = 0
 
         if day_count + 1 > profile.get_config_value('_daily_products_limit', 2000):
-            from raven.contrib.django.raven_compat.models import client as raven_client
-
             if day_count % 10 == 0 and day_count <= 3000:
                 raven_client.captureMessage('Daily limit reached', extra={'user': user.email, 'day_count': day_count})
 
