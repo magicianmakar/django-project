@@ -3,6 +3,7 @@
 {% load static %}
 {% load cache %}
 {% load template_helper %}
+{% load url_tools %}
 
 {% block main-container %}
 
@@ -65,24 +66,37 @@
                                         {{item.profile.subuser_parent.username}}</a>
                                 {% endif %}
                             </td>
+                            {% with product_count=request.GET.pcount %}
                             <td style=" white-space:nowrap">
                                 <ul style="padding:0;margin:0">
                                     <li style="list-style:none">{{item.profile.get_shopify_stores.count}} Stores</li>
-                                    <li style="list-style:none">{{item.shopifyproduct_set.count}} Products</li>
+
+                                    {% if product_count %}
+                                        <li style="list-style:none">{{item.shopifyproduct_set.count}} Products</li>
+                                    {% else %}
+                                        <a href="{% url_replace 'pcount' 1 %}">Show Products Count</a>
+                                    {% endif %}
                                 </ul>
                             </td>
                             <td style=" white-space:nowrap">
                                 <ul style="padding:0;margin:0">
                                     <li style="list-style:none">{{item.profile.get_chq_stores.count}} Stores</li>
-                                    <li style="list-style:none">{{item.commercehqproduct_set.count}} Products</li>
+
+                                    {% if product_count %}
+                                        <li style="list-style:none">{{item.commercehqproduct_set.count}} Products</li>
+                                    {% endif %}
                                 </ul>
                             </td>
                             <td style=" white-space:nowrap">
                                 <ul style="padding:0;margin:0">
                                     <li style="list-style:none">{{item.profile.get_woo_stores.count}} Stores</li>
-                                    <li style="list-style:none">{{item.wooproduct_set.count}} Products</li>
+
+                                    {% if product_count %}
+                                        <li style="list-style:none">{{item.wooproduct_set.count}} Products</li>
+                                    {% endif %}
                                 </ul>
                             </td>
+                            {% endwith %}
                             <td>
                                 <ul style="padding:0;margin:0">
                                     {% for bundle in item.profile.bundles.all %}

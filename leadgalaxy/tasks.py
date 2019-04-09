@@ -1142,17 +1142,25 @@ def calculate_user_statistics(self, user_id):
         if user.get_config('_disbale_user_statistics'):
             return
 
+        total_products_count = 0
         stores = user.profile.get_shopify_stores()
 
         stores_data = []
         for store in stores:
-            stores_data.append({
+            info = {
                 'id': store.id,
                 'products_connected': store.connected_count(),
                 'products_saved': store.saved_count(),
-            })
+            }
+
+            stores_data.append(info)
+
+            total_products_count += info['products_connected'] + info['products_saved']
 
         cache.set('user_statistics_{}'.format(user_id), stores_data, timeout=3600)
+
+        if total_products_count > 10000:
+            user.set_config('_disbale_user_statistics', True)
 
         pusher = Pusher(
             app_id=settings.PUSHER_APP_ID,
