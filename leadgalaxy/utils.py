@@ -1481,21 +1481,17 @@ def check_webhooks(store):
     except:
         return
 
+    have_http = False
     for hook in webhooks:
         if hook['address'].startswith('https://'):
-            data = {
-                "webhook": {
-                    "id": hook['id'],
-                    "address": hook['address'].replace('http://', 'https://')
-                }
-            }
+            have_http = True
+            break
 
-            r = requests.put(
-                url=endpoint,
-                data=data)
+    if have_http:
+        raven_client.captureMessage('HTTP Webhook Detected', level='info', tags={'store': store.shop})
 
-            if not r.ok:
-                raven_client.captureMessage('Webhook Update Error', extra=data, tags={'store': store.shop})
+    detach_webhooks(store, delete_too=True)
+    attach_webhooks(store)
 
 
 def detach_webhooks(store, delete_too=False):
