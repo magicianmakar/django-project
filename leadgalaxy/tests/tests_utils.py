@@ -897,7 +897,7 @@ class ShippingHelperTestCase(BaseTestCase):
 
         self.assertFalse(support_other_in_province('Spain'))
 
-        for country in ['gb', 'Russia', 'nl', 'netherlands', 'cl', 'chile', 'ua', 'ukraine', 'nz', 'new zealand']:
+        for country in ['gb', 'Russia', 'nl', 'netherlands', 'cl', 'chile', 'ua', 'ukraine', 'nz', 'new zealand', 'fr', 'france']:
             self.assertTrue(support_other_in_province(country))
 
     def test_shopify_customer_address(self):
@@ -960,6 +960,20 @@ class ShippingHelperTestCase(BaseTestCase):
         self.assertEqual(customer_address['province'], 'Madrid')
         self.assertEqual(customer_address['city'], 'Other')
         self.assertEqual(customer_address['address2'], 'Not Found,')
+
+    def test_shopify_address_france_match(self):
+        order = self.get_order(country='France', country_code='FR', province='Corse', city="Corse-du-Sud")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Corse')
+        self.assertEqual(customer_address['city'], 'Corse-du-Sud')
+
+    def test_shopify_address_france_unmatch(self):
+        order = self.get_order(country='France', country_code='FR', province='NoProvince', city="NoCity")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['province'], 'Other')
+        self.assertEqual(customer_address['city'], 'NoCity, NoProvince')
 
     def test_shopify_address_uk(self):
         order = self.get_order(country='United Kingdom', country_code='UK', province='England', city="North Yorkshire", zip="WC1B3DG")

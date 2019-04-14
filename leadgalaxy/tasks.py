@@ -1,5 +1,3 @@
-
-
 import arrow
 import requests
 import time

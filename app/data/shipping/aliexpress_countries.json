@@ -365,6 +365,7 @@
       "Talagante",
       "Other"
     ],
+    "Nuble": [],
     "Other": [],
     "Tarapaca": [
       "Alto Hospicio",
@@ -8691,6 +8692,166 @@
       "Other"
     ]
   },
+  "FR": {
+    "Auvergne-Rhone-Alpes": [
+      "Ain",
+      "Allier",
+      "Ardeche",
+      "Cantal",
+      "Drome",
+      "Haute-Loire",
+      "Haute-Savoie",
+      "Isere",
+      "Loire",
+      "Puy-de-Dome",
+      "Rhone",
+      "Savoie",
+      "Other"
+    ],
+    "Bourgogne-Franche-Comte": [
+      "Cote-d'Or",
+      "Doubs",
+      "Haute-Saone",
+      "Jura",
+      "Nievre",
+      "Saone-et-Loire",
+      "Territoire de Belfort",
+      "Yonne",
+      "Other"
+    ],
+    "Bretagne": [
+      "Cotes-d'Armor",
+      "Finistere",
+      "Ille-et-Vilaine",
+      "Morbihan",
+      "Other"
+    ],
+    "Centre-Val de Loire": [
+      "Cher",
+      "Eure-et-Loir",
+      "Indre",
+      "Indre-et-Loire",
+      "Loir-et-Cher",
+      "Loiret",
+      "Other"
+    ],
+    "Clipperton": [],
+    "Corse": [
+      "Corse-du-Sud",
+      "Haute-Corse",
+      "Other"
+    ],
+    "Grand Est": [
+      "Ardennes",
+      "Aube",
+      "Bas-Rhin",
+      "Haut-Rhin",
+      "Haute-Marne",
+      "Marne",
+      "Meurthe-et-Moselle",
+      "Meuse",
+      "Moselle",
+      "Vosges",
+      "Other"
+    ],
+    "Guadeloupe": [
+      "Guadeloupe",
+      "Other"
+    ],
+    "Guyane": [
+      "Guyane",
+      "Other"
+    ],
+    "Hauts-de-France": [
+      "Aisne",
+      "Nord",
+      "Oise",
+      "Pas-de-Calais",
+      "Somme",
+      "Other"
+    ],
+    "Ile-de-France": [
+      "Essonne",
+      "Hauts-de-Seine",
+      "Paris",
+      "Seine-Saint-Denis",
+      "Seine-et-Marne",
+      "Val-d'Oise",
+      "Val-de-Marne",
+      "Yvelines",
+      "Other"
+    ],
+    "Iles Eparses": [],
+    "La Reunion": [
+      "La Reunion",
+      "Other"
+    ],
+    "Martinique": [
+      "Martinique",
+      "Other"
+    ],
+    "Mayotte": [
+      "Mayotte",
+      "Other"
+    ],
+    "Normandie": [
+      "Calvados",
+      "Eure",
+      "Manche",
+      "Orne",
+      "Seine-Maritime",
+      "Other"
+    ],
+    "Nouvelle-Aquitaine": [
+      "Charente",
+      "Charente-Maritime",
+      "Correze",
+      "Creuse",
+      "Deux-Sevres",
+      "Dordogne",
+      "Gironde",
+      "Haute-Vienne",
+      "Landes",
+      "Lot-et-Garonne",
+      "Pyrenees-Atlantiques",
+      "Vienne",
+      "Other"
+    ],
+    "Occitanie": [
+      "Ariege",
+      "Aude",
+      "Aveyron",
+      "Gard",
+      "Gers",
+      "Haute-Garonne",
+      "Hautes-Pyrenees",
+      "Herault",
+      "Lot",
+      "Lozere",
+      "Pyrenees-Orientales",
+      "Tarn",
+      "Tarn-et-Garonne",
+      "Other"
+    ],
+    "Other": [],
+    "Pays de la Loire": [
+      "Loire-Atlantique",
+      "Maine-et-Loire",
+      "Mayenne",
+      "Sarthe",
+      "Vendee",
+      "Other"
+    ],
+    "Provence-Alpes-Cote d'Azur": [
+      "Alpes-Maritimes",
+      "Alpes-de-Haute-Provence",
+      "Bouches-du-Rhone",
+      "Hautes-Alpes",
+      "Var",
+      "Vaucluse",
+      "Other"
+    ]
+  },
   "ID": {
     "Aceh": [
       "Banda Aceh",
@@ -9378,18 +9539,17 @@
     "Groningen": [
       "Appingedam",
       "Bedum",
-      "Bellingwedde",
       "De Marne",
       "Delfzijl",
       "Eemsmond",
       "Groningen",
       "Grootegast",
       "Haren",
-      "Hoogezand-Sappemeer",
       "Leek",
       "Loppersum",
       "Marum",
       "Menterwolde",
+      "Midden-Groningen",
       "Oldambt",
       "Pekela",
       "Reiderland",
@@ -9399,6 +9559,7 @@
       "Ten Boer",
       "Veendam",
       "Vlagtwedde",
+      "Westerwolde",
       "Winschoten",
       "Winsum",
       "Zuidhorn",
@@ -9530,13 +9691,13 @@
       "Beverwijk",
       "Blaricum",
       "Bloemendaal",
-      "Bussum",
       "Castricum",
       "Den Helder",
       "Diemen",
       "Drechterland",
       "Edam-Volendam",
       "Enkhuizen",
+      "Gooise Meren",
       "Haarlem",
       "Haarlemmerliede en Spaarnwoude",
       "Haarlemmermeer",
@@ -9609,7 +9770,6 @@
       "Abcoude",
       "Amersfoort",
       "Baarn",
-      "Breukelen",
       "Bunnik",
       "Bunschoten",
       "De Bilt",
@@ -9627,10 +9787,11 @@
       "Renswoude",
       "Rhenen",
       "Soest",
+      "Stichtse Vecht",
       "Utrecht",
       "Utrechtse Heuvelrug",
       "Veenendaal",
-      "Vianen",
+      "Vijfheerenlanden",
       "Wijk bij Duurstede",
       "Woerden",
       "Woudenberg",
@@ -9694,7 +9855,7 @@
       "Maassluis",
       "Middelharnis",
       "Midden-Delfland",
-      "Molenwaard",
+      "Molenlanden",
       "Moordrecht",
       "Nederlek",
       "Nieuw-Lekkerland",
