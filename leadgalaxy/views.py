@@ -4330,15 +4330,15 @@ def orders_place(request):
     if request.GET.get('nff'):
         disable_affiliate = True
 
-    # Temporarily disable eBay affiliate
-    if supplier.is_ebay:
-        disable_affiliate = False
-
     if request.GET.get('supplier'):
         supplier = ProductSupplier.objects.get(id=request.GET['supplier'])
         permissions.user_can_view(request.user, supplier.product)
 
         product = supplier.short_product_url()
+
+        # Temporarily disable eBay affiliate
+        if supplier.is_ebay:
+            disable_affiliate = False
 
     elif request.GET.get('product'):
         product = request.GET['product']
