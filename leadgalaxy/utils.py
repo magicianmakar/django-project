@@ -1425,16 +1425,18 @@ def create_shopify_webhook(store, topic):
         }
     }
 
+    rep = requests.post(endpoint, json=data)
+
     try:
-        rep = requests.post(endpoint, json=data)
         webhook_id = rep.json()['webhook']['id']
 
         webhook = ShopifyWebhook(store=store, token=token, topic=topic, shopify_id=webhook_id)
         webhook.save()
 
         return webhook
-    except:
-        raven_client.captureException()
+
+    except Exception as e:
+        raven_client.captureException(extra=http_exception_response(e))
         return None
 
 
@@ -1481,21 +1483,17 @@ def check_webhooks(store):
     except:
         return
 
+    have_http = False
     for hook in webhooks:
         if hook['address'].startswith('https://'):
-            data = {
-                "webhook": {
-                    "id": hook['id'],
-                    "address": hook['address'].replace('http://', 'https://')
-                }
-            }
+            have_http = True
+            break
 
-            r = requests.put(
-                url=endpoint,
-                data=data)
+    if have_http:
+        raven_client.captureMessage('HTTP Webhook Detected', level='info', tags={'store': store.shop})
 
-            if not r.ok:
-                raven_client.captureMessage('Webhook Update Error', extra=data, tags={'store': store.shop})
+    detach_webhooks(store, delete_too=True)
+    attach_webhooks(store)
 
 
 def detach_webhooks(store, delete_too=False):
