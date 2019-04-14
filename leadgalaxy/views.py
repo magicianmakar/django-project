@@ -689,12 +689,12 @@ def webhook(request, provider, option):
                     token, utils.webhook_token(store.id)))
 
             if not request.is_secure():
-                if cache.get(f'webhook_update2_{store.id}') is None:
+                if cache.get(f'webhook_update_{store.id}') is None:
                     try:
-                        raven_client.captureMessage('Update Webhooks', level='info', tags={'store': store.shop})
+                        raven_client.captureMessage('Update Webhooks', tags={'store': store.shop})
 
                         utils.check_webhooks(store)
-                        cache.set(f'webhook_update2_{store.id}', True, timeout=500)
+                        cache.set(f'webhook_update_{store.id}', True, timeout=500)
                     except:
                         raven_client.captureException(level='warning')
 
