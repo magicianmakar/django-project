@@ -688,6 +688,16 @@ def webhook(request, provider, option):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
 
+            if not request.is_secure():
+                if cache.get(f'webhook_update_{store.id}') is None:
+                    try:
+                        raven_client.captureMessage('Update Webhooks', tags={'store': store.shop})
+
+                        utils.check_webhooks(store)
+                        cache.set(f'webhook_update_{store.id}', True, timeout=500)
+                    except:
+                        raven_client.captureException(level='warning')
+
             if 'products' in topic:
                 # Shopify send a JSON POST request
                 shopify_product = json.loads(request.body)

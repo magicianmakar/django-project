@@ -1473,6 +1473,31 @@ def attach_webhooks(store):
     return webhooks
 
 
+def check_webhooks(store):
+    endpoint = store.get_link('/admin/webhooks.json', api=True)
+
+    try:
+        webhooks = requests.get(endpoint).json()['webhooks']
+    except:
+        return
+
+    for hook in webhooks:
+        if hook['address'].startswith('https://'):
+            data = {
+                "webhook": {
+                    "id": hook['id'],
+                    "address": hook['address'].replace('http://', 'https://')
+                }
+            }
+
+            r = requests.put(
+                url=endpoint,
+                data=data)
+
+            if not r.ok:
+                raven_client.captureMessage('Webhook Update Error', extra=data, tags={'store': store.shop})
+
+
 def detach_webhooks(store, delete_too=False):
     if settings.DEBUG:
         return
