@@ -691,8 +691,6 @@ def webhook(request, provider, option):
             if not request.is_secure():
                 if cache.get(f'webhook_update2_{store.id}') is None:
                     try:
-                        raven_client.captureMessage('Update Webhooks', level='info', tags={'store': store.shop})
-
                         utils.check_webhooks(store)
                         cache.set(f'webhook_update2_{store.id}', True, timeout=500)
                     except:
