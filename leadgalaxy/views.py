@@ -4336,7 +4336,7 @@ def orders_place(request):
 
         # Temporarily disable eBay affiliate
         if supplier.is_ebay:
-            disable_affiliate = False
+            disable_affiliate = True
 
     elif request.GET.get('product'):
         product = request.GET['product']
