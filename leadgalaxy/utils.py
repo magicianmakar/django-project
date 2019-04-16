@@ -1485,7 +1485,7 @@ def check_webhooks(store):
 
     have_http = False
     for hook in webhooks:
-        if hook['address'].startswith('https://'):
+        if not hook['address'].startswith('https://'):
             have_http = True
             break
 
