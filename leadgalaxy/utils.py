@@ -1492,8 +1492,8 @@ def check_webhooks(store):
     if have_http:
         raven_client.captureMessage('HTTP Webhook Detected', level='info', tags={'store': store.shop})
 
-    detach_webhooks(store, delete_too=True)
-    attach_webhooks(store)
+        detach_webhooks(store, delete_too=True)
+        attach_webhooks(store)
 
 
 def detach_webhooks(store, delete_too=False):
