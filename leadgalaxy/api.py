@@ -1200,6 +1200,7 @@ class ShopifyStoreApi(ApiBase):
         if form_webapp:
             bool_config += [
                 'aliexpress_captcha',
+                'aliexpress_edit_address',
                 'validate_tracking_number',
                 'aliexpress_as_notes',
                 'aliexpress_as_order_tag',
