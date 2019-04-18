@@ -1234,7 +1234,7 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
     shipping_address = order['shipping_address']
     for k in list(shipping_address.keys()):
         if shipping_address[k] and type(shipping_address[k]) is str:
-            v = re.sub('\xc2\xb0 ?', r' ', shipping_address[k])
+            v = re.sub(' ?\xc2?[\xb0\xba] ?', r' ', shipping_address[k])
             if german_umlauts:
                 v = re.sub('\u00e4', 'ae', v)
                 v = re.sub('\u00c4', 'AE', v)

@@ -953,6 +953,21 @@ class ShippingHelperTestCase(BaseTestCase):
         self.assertEqual(customer_address['province'], 'Madrid')
         self.assertEqual(customer_address['city'], 'Batres')
 
+        order = self.get_order(country='SPAIN', country_code='ES', province='Madrid', city="Batres", address="55 BIS 1°A")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['address'], '55 BIS 1 A')
+
+        order = self.get_order(country='SPAIN', country_code='ES', province='Madrid', city="Batres", address="55 BIS A° 1")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['address'], '55 BIS A 1')
+
+        order = self.get_order(country='SPAIN', country_code='ES', province='Madrid', city="Batres", address="55 BIS \xc2\xba1")
+        order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
+
+        self.assertEqual(customer_address['address'], '55 BIS 1')
+
     def test_shopify_address_spain_unmatch(self):
         order = self.get_order(country='Spain', country_code='ES', province='Madrid', city="Not Found")
         order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
