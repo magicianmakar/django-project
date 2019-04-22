@@ -296,9 +296,8 @@ class ApiBase(ApiResponseMixin, View):
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
 
-            if user.models_user.get_config('_fr_address_fix'):
-                if order['shipping_address']['country_code'] == 'FR':
-                    order['shipping_address'] = fix_fr_address(order['shipping_address'])
+            if order['shipping_address']['country_code'] == 'FR':
+                order['shipping_address'] = fix_fr_address(order['shipping_address'])
 
             order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
 
