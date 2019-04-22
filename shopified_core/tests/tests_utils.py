@@ -1,11 +1,14 @@
+import os
+
 from django.conf import settings
+from django.core.cache import cache, caches
+from django.contrib.auth.models import User
+from django.test import tag
+
 from lib.test import BaseTestCase
 from unittest.mock import Mock
 
 from collections import OrderedDict
-from django.core.cache import caches
-from django.contrib.auth.models import User
-
 from shopified_core.utils import (
     app_link,
     url_join,
@@ -23,6 +26,7 @@ from shopified_core.utils import base64_encode
 from shopified_core.shipping_helper import (
     country_from_code,
     get_counrties_list,
+    fix_fr_address,
     aliexpress_country_code_map,
 )
 
@@ -388,3 +392,166 @@ class ShippingHelperFunctionsTestCase(BaseTestCase):
         self.assertEqual(aliexpress_country_code_map('GB'), 'UK')
         self.assertEqual(aliexpress_country_code_map('ME'), 'MNE')
         self.assertEqual(aliexpress_country_code_map('US'), 'US')
+
+
+class FranceAddressFixTestCase(BaseTestCase):
+    def setUp(self):
+        cache.delete_pattern('fr_city_*')
+
+    def get_address(self, **kwargs):
+        shipping_address = {
+            "province": "Paris",
+            "city": "Paris",
+            "zip": "75019",
+
+            "address1": "Allee Anne-de-Beaujeu N365",
+            "address2": "",
+
+            "first_name": "Anna",
+            "last_name": "Smith",
+            "name": "Anna Smith",
+            "province_code": None,
+            "phone": "85549863",
+            "country_code": "FR",
+            "country": "France",
+            "company": ""
+        }
+
+        shipping_address.update(kwargs)
+        return shipping_address
+
+    def get_file_content(self, name):
+        return open(os.path.join(settings.BASE_DIR, 'shopified_core/tests/data', name)).read().decode('utf8')
+
+    # @requests_mock.Mocker()
+    @tag('slow')
+    def test_fix_fr_address(self):
+        # m.get('https://geo.api.gouv.fr/communes', text=self.get_file_content('data1.json'))
+
+        shipping_address = self.get_address(
+            province="Paris",
+            city="Paris",
+            zip="75019",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Ile-de-France')
+        self.assertEqual(fixed_address['city'], 'Paris')
+        self.assertEqual(fixed_address['address2'], '')
+
+    @tag('slow')
+    def test_fix_fr_address_zip_match(self):
+
+        shipping_address = self.get_address(
+            province="Bourgogne",
+            city="nice",
+            zip="6300",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Provence-Alpes-Cote d\'Azur')
+        self.assertEqual(fixed_address['city'], 'Alpes-Maritimes')
+        self.assertEqual(fixed_address['address2'], 'Nice')
+
+    @tag('slow')
+    def test_fix_fr_address_paris_arrondissement(self):
+        shipping_address = self.get_address(
+            province="Paris",
+            city="Paris-11E-Arrondissement",
+            zip="75011",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Ile-de-France')
+        self.assertEqual(fixed_address['city'], 'Paris')
+        self.assertEqual(fixed_address['address2'], '')
+
+    @tag('slow')
+    def test_fix_fr_address_zip_code_in_city_name(self):
+
+        shipping_address = self.get_address(
+            province="Hauts",
+            city="59400 - CAMBRAI",
+            zip="59400",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Hauts-de-France')
+        self.assertEqual(fixed_address['city'], 'Nord')
+        self.assertEqual(fixed_address['address2'], 'Cambrai')
+
+    # @requests_mock.Mocker()
+    @tag('slow')
+    def test_fix_fr_address_multi_occurence(self):
+        # m.get('https://geo.api.gouv.fr/communes', text=self.get_file_content('data2.json'))
+        shipping_address = self.get_address(
+            province="",
+            city="courtomer",
+            zip="77390",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Ile-de-France')
+        self.assertEqual(fixed_address['city'], 'Seine-et-Marne')
+        self.assertEqual(fixed_address['address2'], 'Courtomer')
+
+    # @requests_mock.Mocker()
+    @tag('slow')
+    def test_fix_fr_address_short_common_names(self):
+        # m.get('https://geo.api.gouv.fr/communes', text=self.get_file_content('data3.json'))
+
+        shipping_address = self.get_address(
+            province="",
+            city="Fontaine",
+            zip="71150",
+            address1="Allee Anne-de-Beaujeu N365",
+            address2="5eme Etage N55",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Bourgogne-Franche-Comte')
+        self.assertEqual(fixed_address['city'], 'Saone-et-Loire')
+        self.assertEqual(fixed_address['address1'], 'Allee Anne-de-Beaujeu N365')
+        self.assertEqual(fixed_address['address2'], '5eme Etage N55, Fontaines')
+
+    @tag('slow')
+    def test_fix_fr_address_same_zip_and_region(self):
+
+        shipping_address = self.get_address(
+            province="",
+            city="Villeneuve d'Ornon",
+            zip="33140",
+            address1="40 rue de Fontenelle",
+            address2="Res les 4 platanes Bat E 54",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Nouvelle-Aquitaine')
+        self.assertEqual(fixed_address['city'], 'Gironde')
+        self.assertEqual(fixed_address['address1'], '40 rue de Fontenelle')
+        self.assertEqual(fixed_address['address2'], 'Res les 4 platanes Bat E 54, Villeneuve d\'Ornon')
+
+    @tag('slow')
+    def test_fix_fr_address_same_zip_and_region2(self):
+
+        shipping_address = self.get_address(
+            province="",
+            city="st cricq",
+            zip="32430",
+            address1="40 rue de Fontenelle",
+            address2="",
+        )
+
+        fixed_address = fix_fr_address(shipping_address)
+
+        self.assertEqual(fixed_address['province'], 'Occitanie')
+        self.assertEqual(fixed_address['city'], 'Gers')
+        self.assertEqual(fixed_address['address1'], '40 rue de Fontenelle')
+        self.assertEqual(fixed_address['address2'], 'st cricq')
