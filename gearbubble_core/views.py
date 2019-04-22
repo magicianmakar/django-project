@@ -429,11 +429,20 @@ class OrderPlaceRedirectView(RedirectView):
         product = None
         supplier = None
 
+        disable_affiliate = self.request.user.get_config('_disable_affiliate', False)
+
+        if self.request.GET.get('nff'):
+            disable_affiliate = True
+
         if self.request.GET.get('supplier'):
             supplier = GearBubbleSupplier.objects.get(id=self.request.GET['supplier'])
             permissions.user_can_view(self.request.user, supplier.product)
 
             product = supplier.short_product_url()
+
+            # Temporarily disable eBay affiliate
+            if supplier.is_ebay:
+                disable_affiliate = False
 
         elif self.request.GET.get('product'):
             product = self.request.GET['product']
@@ -455,11 +464,6 @@ class OrderPlaceRedirectView(RedirectView):
 
         ali_api_key, ali_tracking_id, user_ali_credentials = get_aliexpress_credentials(self.request.user.models_user)
         admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
-
-        disable_affiliate = self.request.user.get_config('_disable_affiliate', False)
-
-        if self.request.GET.get('nff'):
-            disable_affiliate = True
 
         redirect_url = False
         if not disable_affiliate:
