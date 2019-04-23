@@ -425,8 +425,16 @@ def process_webhook_event(request, event_id, raven_client):
                         StripeSubscription.objects.filter(user=user).delete()
 
                     else:
-                        raven_client.captureException()
-                        return HttpResponse('Cloud Not Register User')
+                        try:
+                            customer = StripeCustomer.objects.create(
+                                customer_id=sub.customer,
+                                user=user
+                            )
+
+                            customer.refresh()
+                        except:
+                            raven_client.captureException()
+                            return HttpResponse('Cloud Not Register User')
             else:
                 return HttpResponse('Customer Not Found')
 
