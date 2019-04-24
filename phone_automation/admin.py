@@ -37,6 +37,7 @@ class TwilioPhoneNumberAdmin(admin.ModelAdmin):
     list_display = ('incoming_number', 'status', 'twilio_sid', 'created_at')
     search_fields = ('user__email', 'incoming_number')
     raw_id_fields = ('user', 'automation')
+    readonly_fields = ('last_two_month_usage', )
 
 
 @admin.register(TwilioStep)
@@ -58,7 +59,7 @@ class TwilioUploadAdmin(admin.ModelAdmin):
 
 @admin.register(TwilioLog)
 class TwilioLogAdmin(admin.ModelAdmin):
-    list_display = ('direction', 'from_number', 'call_duration', 'call_sid', 'call_status', 'log_type')
+    list_display = ('created_at', 'direction', 'from_number', 'call_duration', 'call_sid', 'call_status', 'log_type')
     search_fields = ('user__email', 'from_number')
     raw_id_fields = ('user',)
 
