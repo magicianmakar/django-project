@@ -1,3 +1,5 @@
+import arrow
+import calendar
 import json
 
 from urllib.parse import urlsplit
@@ -107,6 +109,26 @@ class TwilioPhoneNumber(models.Model):
 
     def __str__(self):
         return self.incoming_number
+
+    def last_two_month_usage(self):
+        # TODO: for multiple numbers, change query from User to TwilioPhoneNumber
+        date_start = arrow.get('2018-12-10').replace(day=1, months=-1).datetime
+        queryset = self.user.twilio_logs.filter(
+            log_type='status-callback',
+            created_at__gte=date_start
+        ).extra({
+            'date_key': 'EXTRACT(MONTH FROM created_at)'
+        }).values('date_key').annotate(
+            seconds=models.Sum('call_duration')
+        ).order_by('date_key')
+
+        monthly_totals = []
+        for row in queryset:
+            month = calendar.month_name[int(row.get('date_key'))]
+            seconds = row.get('seconds')
+            monthly_totals.append(f'{month}: {seconds} seconds')
+
+        return ' - '.join(monthly_totals)
 
 
 class TwilioUpload(models.Model):
