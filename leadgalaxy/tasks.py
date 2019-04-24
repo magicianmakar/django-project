@@ -1157,7 +1157,7 @@ def calculate_user_statistics(self, user_id):
 
         cache.set('user_statistics_{}'.format(user_id), stores_data, timeout=3600)
 
-        if total_products_count > 10000:
+        if total_products_count > 10000 and user.get_config('_disbale_user_statistics') is not False:
             user.set_config('_disbale_user_statistics', True)
 
         pusher = Pusher(
