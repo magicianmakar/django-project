@@ -26,7 +26,7 @@ from shopified_core.utils import (
     orders_update_limit,
     serializers_orders_track,
 )
-from shopified_core.shipping_helper import aliexpress_country_code_map, fix_fr_address
+from shopified_core.shipping_helper import aliexpress_country_code_map
 
 from shopified_core.decorators import HasSubuserPermission
 
@@ -295,9 +295,6 @@ class ApiBase(ApiResponseMixin, View):
 
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
-
-            if order['shipping_address']['country_code'] == 'FR':
-                order['shipping_address'] = fix_fr_address(order['shipping_address'])
 
             order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
 
