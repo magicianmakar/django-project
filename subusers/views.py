@@ -44,6 +44,7 @@ def subusers(request):
         'sub_users': sub_users,
         'invitation': invitation,
         'page': 'subusers',
+        'selected_menu': 'account:subusers',
         'breadcrumbs': ['Account', 'Sub Users'],
     })
 
@@ -78,6 +79,7 @@ def subusers_perms(request, user_id):
         'subuser': user,
         'form': form,
         'page': 'subusers',
+        'selected_menu': 'account:subusers',
         'breadcrumbs': ['Account', 'Sub Users'],
     })
 
@@ -112,6 +114,7 @@ def subuser_perms_edit(request, user_id):
         'form': form,
         'breadcrumbs': breadcrumbs,
         'page': 'subusers',
+        'selected_menu': 'account:subusers',
     }
 
     return render(request, 'subusers/perms_edit.html', context)
@@ -152,6 +155,7 @@ def subuser_store_permissions(request, user_id, store_id):
         'form': form,
         'breadcrumbs': breadcrumbs,
         'page': 'subusers',
+        'selected_menu': 'account:subusers',
     }
 
     return render(request, 'subusers/store_permissions.html', context)
@@ -196,6 +200,7 @@ def subuser_chq_store_permissions(request, user_id, store_id):
         'form': form,
         'breadcrumbs': breadcrumbs,
         'page': 'subusers',
+        'selected_menu': 'account:subusers',
     }
 
     return render(request, 'subusers/chq_store_permissions.html', context)
@@ -240,6 +245,7 @@ def subuser_woo_store_permissions(request, user_id, store_id):
         'form': form,
         'breadcrumbs': breadcrumbs,
         'page': 'subusers',
+        'selected_menu': 'account:subusers',
     }
 
     return render(request, 'subusers/woo_store_permissions.html', context)
@@ -284,6 +290,7 @@ def subuser_gear_store_permissions(request, user_id, store_id):
         'form': form,
         'breadcrumbs': breadcrumbs,
         'page': 'subusers',
+        'selected_menu': 'account:subusers',
     }
 
     return render(request, 'subusers/gear_store_permissions.html', context)

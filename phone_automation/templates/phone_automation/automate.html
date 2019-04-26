@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends template_config.base|default:'base.html' %}
 
 {% load static %}
 {% load compress %}
@@ -53,10 +53,10 @@
         var nodeCount = {{ automation.last_step|default:0 }};
         var data = {{ automation.json_data|default:"[]"|safe }};
         var save = {
-            url: "{% url 'phone_automation_save_automation' twilio_phone_number_id=twilio_phone_number.pk %}",
-            redirect: "{% url 'phone_automation_index' %}"
+            url: "{% url template_config.url.namespace|add:'phone_automation_save_automation' twilio_phone_number_id=twilio_phone_number.pk %}",
+            redirect: "{% url template_config.url.namespace|add:'phone_automation_index' %}"
         };
-        var uploadUrl = "{% url 'phone_automation_upload' twilio_phone_number_id=twilio_phone_number.pk %}";
+        var uploadUrl = "{% url template_config.url.namespace|add:'phone_automation_upload' twilio_phone_number_id=twilio_phone_number.pk %}";
     </script>
 
     {% compress js %}

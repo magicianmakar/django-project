@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends template_config.base|default:'base.html' %}
 {% load static %}
 {% block main-container %}
 <div class="row">
@@ -25,7 +25,7 @@
                 <tbody>
                     {% for item in lists %}
                     <tr>
-                        <td><a class="" href="{% url 'youtube_ads.views.list_detail' item.id %}">{{item.title}}</a></td>
+                        <td><a class="" href="{% url template_config.url.namespace|add:'youtube_ads.views.list_detail' item.id %}">{{item.title}}</a></td>
                         <td style="text-align: center;">{{item.count_videos}}</td>
                         <td><a class="btn btn-danger btn-xs del-list" href="" list-id="{{item.id}}">Delete</a></td>
                     </tr>

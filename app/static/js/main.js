@@ -4,6 +4,26 @@
 var taskIntervals = {};
 var taskCallsCount = {};
 
+function isExtensionReady() {
+    var $deferred = $.Deferred();
+
+    var timerId = setInterval(function() {
+        if (typeof window.extensionSendMessage === 'function') {
+            $deferred.resolve();
+            clearInterval(timerId);
+        }
+    }, 1000);
+
+    setTimeout(function() {
+        if (typeof window.extensionSendMessage !== 'function') {
+            $deferred.reject();
+            clearInterval(timerId);
+        }
+    }, 5000);
+
+    return $deferred.promise();
+}
+
 function renderSupplierInfo(product_url, parent) {
     if ((/aliexpress.com/i).test(product_url)) {
         var product_id = product_url.match(/[\/_]([0-9]+)\.html/);
@@ -892,6 +912,29 @@ $('.tos-update .close-btn').click(function (e) {
     });
 });
 
+$('#switch-menu-layout').click(function (e) {
+    e.preventDefault();
+    var value = '';
+    if ($(this).attr('data-active')) {
+        value = Math.floor(Date.now() / 1000);
+    }
+    $.ajax({
+        url: '/api/user-config',
+        type: 'POST',
+        data: {
+            'single': true,
+            'name': '_new-menu-active',
+            'value': value,
+        },
+        success: function (data) {
+            $('.new-menu').remove();
+            window.location.reload();
+        },
+        error: function (data) {
+            displayAjaxError('Error', data);
+        }
+    });
+});
 
 $('.dropified-challenge .close-btn').click(function (e) {
     $.ajax({

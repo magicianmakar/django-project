@@ -1,8 +1,11 @@
 import datetime
 from decimal import Decimal
 
+import arrow
 import stripe.error
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, PropertyMock
+
+from django.utils import timezone
 
 from lib.test import BaseTestCase
 
@@ -107,3 +110,62 @@ class StripeCustomerTestCase(BaseTestCase):
         customer.invoices
         self.assertEqual(sleep.call_count, 1)
         self.assertEqual(invoice_list.call_count, 2)
+
+    @patch('leadgalaxy.models.GroupPlan.stripe_plan')
+    def test_current_subcription_returns_current_stripe_subscription(self, stripe_plan):
+        stripe_id = 'testId'
+        subscription = Mock()
+        subscription.plan = Mock(id=stripe_id)
+        subscriptions = [subscription]
+        stripe_plan.stripe_id = stripe_id
+        stripe_customer = f.StripeCustomerFactory()
+        stripe_customer.retrieve = Mock(return_value={'subscriptions': {'data': subscriptions}})
+        self.assertEquals(stripe_customer.current_subscription.id, subscription.id)
+
+    def test_returns_true_if_current_subscription_is_on_trial(self):
+        target = 'stripe_subscription.models.StripeCustomer.current_subscription'
+        with patch(target, new_callable=PropertyMock) as current_subscription:
+            current_subscription.return_value = {'status': 'trialing'}
+            stripe_customer = f.StripeCustomerFactory()
+            self.assertTrue(stripe_customer.on_trial)
+
+    def test_returns_false_if_current_subscription_is_on_trial(self):
+        target = 'stripe_subscription.models.StripeCustomer.current_subscription'
+        with patch(target, new_callable=PropertyMock) as current_subscription:
+            current_subscription.return_value = {'status': 'nottrialing'}
+            stripe_customer = f.StripeCustomerFactory()
+            self.assertFalse(stripe_customer.on_trial)
+
+    def test_trial_days_left_is_zero_if_not_on_trial(self):
+        target = 'stripe_subscription.models.StripeCustomer.current_subscription'
+        with patch(target, new_callable=PropertyMock) as current_subscription:
+            current_subscription.return_value = {'status': 'nottrialing'}
+            stripe_customer = f.StripeCustomerFactory()
+            self.assertEquals(stripe_customer.trial_days_left, 0)
+
+    def test_trial_days_left_is_zero_if_no_current_subscription(self):
+        target = 'stripe_subscription.models.StripeCustomer.current_subscription'
+        with patch(target, new_callable=PropertyMock) as current_subscription:
+            current_subscription.return_value = None
+            stripe_customer = f.StripeCustomerFactory()
+            self.assertEquals(stripe_customer.trial_days_left, 0)
+
+    def test_returns_trial_days_left(self):
+        target = 'stripe_subscription.models.StripeCustomer.current_subscription'
+        with patch(target, new_callable=PropertyMock) as current_subscription:
+            trial_days = 5
+            trial_end = timezone.now() + datetime.timedelta(days=trial_days)
+            trial_end = arrow.get(trial_end).timestamp
+            current_subscription.return_value = {'status': 'trialing', 'trial_end': trial_end}
+            stripe_customer = f.StripeCustomerFactory()
+            self.assertEquals(stripe_customer.trial_days_left, trial_days - 1)
+
+    def test_returns_floor_value_of_trial_days_left(self):
+        target = 'stripe_subscription.models.StripeCustomer.current_subscription'
+        with patch(target, new_callable=PropertyMock) as current_subscription:
+            trial_days = 5
+            trial_end = timezone.now() + datetime.timedelta(days=trial_days, hours=1)
+            trial_end = arrow.get(trial_end).timestamp
+            current_subscription.return_value = {'status': 'trialing', 'trial_end': trial_end}
+            stripe_customer = f.StripeCustomerFactory()
+            self.assertEquals(stripe_customer.trial_days_left, trial_days)

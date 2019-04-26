@@ -35,3 +35,42 @@ class HasSubuserPermission(object):
                 raise PermissionDenied()
             return func(request, *args, **kwargs)
         return _func
+
+
+# Weak reference
+class WeakList(list):
+    pass
+
+
+upsell_page_permissions = WeakList()
+upsell_pages = WeakList()
+
+
+def use_upsell_for(permission, selected_menu):
+    """
+    Args
+        permission: only .view permissions like orders.view, place_orders.view, etc
+        selected_menu: menu string from main_nav file
+    """
+    if permission.endswith('.view'):
+        upsell_page_permissions.append(permission)
+        upsell_pages.append(selected_menu)
+
+    def decorator(func):
+        def wrapper(request, *args, **kwargs):
+            use_perm = permission.replace('.view', '.use')
+            if not request.user.is_subuser and not request.user.can(use_perm):
+                from article.views import content, Article
+                from shopified_core.utils import slugify_menu
+                try:
+                    slug_article = slugify_menu(selected_menu)
+                    article = Article.objects.get(slug=slug_article)
+                    if article.stat == 0:
+                        return content(request, slug_article=slug_article)
+
+                except Article.DoesNotExist:
+                    pass
+
+            return func(request, *args, **kwargs)
+        return wrapper
+    return decorator

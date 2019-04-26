@@ -89,6 +89,7 @@ class StoresList(ListView):
         context['extra_stores'] = can_add and is_stripe and stores_count >= total_allowed and total_allowed != -1
         context['user_statistics'] = cache.get('gear_user_statistics_{}'.format(self.request.user.id))
         context['breadcrumbs'] = ['Stores']
+        context['selected_menu'] = 'account:stores'
 
         return context
 
@@ -112,6 +113,7 @@ class ProductsList(ListView):
         context = super(ProductsList, self).get_context_data(**kwargs)
 
         context['breadcrumbs'] = [{'title': 'Products', 'url': reverse('gear:products_list')}]
+        context['selected_menu'] = 'products:all'
 
         if self.request.GET.get('store', 'n') == 'n':
             context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('gear:products_list') + '?store=n'})
@@ -149,6 +151,7 @@ class ProductDetailView(DetailView):
         context['product_data'] = self.object.parsed
         context['default_qty'] = settings.GEARBUBBLE_DEFAULT_QTY
         context['breadcrumbs'] = [{'title': 'Products', 'url': products_path}, self.object.title]
+        context['selected_menu'] = 'products:all'
 
         if self.object.store:
             store_title = self.object.store.title
@@ -184,6 +187,7 @@ class BoardsList(ListView):
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)
         context['breadcrumbs'] = ['Boards']
+        context['selected_menu'] = 'products:boards'
 
         return context
 
@@ -221,6 +225,7 @@ class BoardDetailView(DetailView):
         context['products'] = page
         context['current_page'] = page
         context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('gear:boards_list')}, self.object.title]
+        context['selected_menu'] = 'products:boards'
 
         return context
 
@@ -273,6 +278,7 @@ class OrdersList(ListView):
             {'title': 'Orders', 'url': self.url},
             {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)},
         ]
+        context['selected_menu'] = 'orders:all'
 
         return context
 
@@ -609,6 +615,7 @@ class OrdersTrackList(ListView):
             {'title': 'Tracking', 'url': reverse('gear:orders_track')},
             {'title': store.title, 'url': '{}?store={}'.format(reverse('gear:orders_list'), store.id)},
         ]
+        context['selected_menu'] = 'orders:tracking'
 
         return context
 
@@ -647,6 +654,7 @@ class VariantsEditView(DetailView):
         context['page'] = 'product'
         url = reverse('gear:products_list')
         context['breadcrumbs'] = [{'title': 'Products', 'url': url}, 'Edit Variants']
+        context['selected_menu'] = 'products:all'
 
         return context
 
@@ -695,6 +703,7 @@ class ProductMappingView(DetailView):
         context['product_suppliers'] = self.get_product_suppliers(product)
         context['current_supplier'] = current_supplier = self.get_current_supplier(product)
         context['variants_map'] = self.get_variants_map(gearbubble_product, product, current_supplier)
+        context['selected_menu'] = 'products:all'
 
         return context
 
@@ -751,6 +760,7 @@ class MappingSupplierView(DetailView):
             {'title': product.title, 'url': reverse('gear:product_detail', args=[product.id])},
             'Advanced Mapping'
         ]
+        context['selected_menu'] = 'products:all'
 
         self.add_supplier_info(gearbubble_product.get('variants', []), suppliers_map)
 

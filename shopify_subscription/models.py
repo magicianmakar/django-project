@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.functional import cached_property
+from django.utils import timezone
 
 import arrow
 import simplejson as json
@@ -68,6 +70,22 @@ class ShopifySubscription(models.Model):
     def is_active(self):
         sub = self.subscription
         return sub['status'] in ['accepted', 'active']
+
+    @cached_property
+    def on_trial(self):
+        if self.trial_days_left is not None:
+            return not self.trial_days_left < 0
+        return False
+
+    @cached_property
+    def trial_days_left(self):
+        self.refresh()
+        # Note: The `trial_ends_on` date is not a datetime value so it's
+        # impossible to know when exactly the trial ends on that day
+        trial_ends_on = self.subscription.get('trial_ends_on')
+        if trial_ends_on:
+            delta = arrow.get(trial_ends_on).date() - timezone.now().date()
+            return delta.days
 
     def get_status(self):
         sub = self.subscription

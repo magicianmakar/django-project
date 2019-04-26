@@ -1,10 +1,12 @@
 import time
 import hashlib
 import uuid
+import math
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
+from django.utils import timezone
 
 import simplejson as json
 import arrow
@@ -116,6 +118,34 @@ class StripeCustomer(models.Model):
 
     def get_charges(self):
         return stripe.Charge.list(limit=10, customer=self.customer_id).data
+
+    @cached_property
+    def current_subscription(self):
+        stripe_customer = self.retrieve()
+        subscriptions = stripe_customer['subscriptions']['data']
+        plan_stripe_id = self.user.profile.plan.stripe_plan.stripe_id
+
+        for subscription in subscriptions:
+            if subscription.plan.id == plan_stripe_id:
+                return subscription
+
+    @cached_property
+    def on_trial(self):
+        if self.current_subscription:
+            return self.current_subscription['status'] == 'trialing'
+        return False
+
+    @cached_property
+    def trial_days_left(self):
+        if self.current_subscription and self.on_trial:
+            trial_end = self.current_subscription['trial_end']
+            now = timezone.now()
+            delta = arrow.get(trial_end) - arrow.get(now)
+            # A 14-day trial would start as 13 days because the moment
+            # the trial starts there would be less than 14 days left
+            days_left = int(math.floor(delta.total_seconds() / (60 * 60 * 24)))
+            return days_left
+        return 0
 
 
 class StripePlan(models.Model):

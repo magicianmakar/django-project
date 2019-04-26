@@ -20,6 +20,7 @@ from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
 from shopified_core.utils import safe_int, safe_str, get_domain, base64_encode, using_store_db, OrderErrors
 from product_alerts.utils import monitor_product
+from shopified_core.decorators import upsell_page_permissions
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -335,6 +336,10 @@ class UserProfile(models.Model):
                 if i not in perms:
                     perms.append(i)
 
+        for i in upsell_page_permissions:
+            if i not in perms:
+                perms.append(i)
+
         return perms
 
     def import_stores(self):
@@ -485,6 +490,49 @@ class UserProfile(models.Model):
 
     def from_shopify_app_store(self):
         return bool(self.shopify_app_store or self.get_config_value('shopify_app_store') or self.plan.payment_gateway == 'shopify')
+
+    def get_current_shopify_subscription(self):
+        for shopifysubscription in self.user.shopifysubscription_set.all():
+            if shopifysubscription.plan and shopifysubscription.plan.id == self.plan.id:
+                return shopifysubscription
+
+    @cached_property
+    def on_trial(self):
+        cache_key = 'user_on_trial_{}'.format(self.user.id)
+        on_trial = cache.get(cache_key)
+
+        if on_trial is None:
+            on_trial = False
+
+            if self.plan.payment_gateway == 'shopify':
+                subscription = self.get_current_shopify_subscription()
+                on_trial = subscription.on_trial if subscription else False
+
+            if self.plan.payment_gateway == 'stripe':
+                on_trial = self.user.stripe_customer.on_trial
+
+            cache.set(cache_key, on_trial, 60)
+
+        return on_trial
+
+    @cached_property
+    def trial_days_left(self):
+        cache_key = 'user_trial_days_left_{}'.format(self.user.id)
+        trial_days_left = cache.get(cache_key)
+
+        if trial_days_left is None:
+            trial_days_left = 0
+
+            if self.plan.payment_gateway == 'shopify':
+                subscription = self.get_current_shopify_subscription()
+                trial_days_left = subscription.trial_days_left if subscription else 0
+
+            if self.plan.payment_gateway == 'stripe':
+                trial_days_left = self.user.stripe_customer.trial_days_left
+
+            cache.set(cache_key, trial_days_left, 60)
+
+        return trial_days_left
 
     def sync_tags(self):
         """ Send current user tags to Intercom and Baremetrics """
@@ -2116,6 +2164,7 @@ class GroupPlan(models.Model):
     trial_days = models.IntegerField(default=0)
 
     plan_description = models.CharField(max_length=512, blank=True, null=True, verbose_name='Plan description in in Plans Page')
+    dashboard_description = models.CharField(max_length=512, blank=True, null=True, verbose_name='Plan description on dashboard page')
     price_info = models.CharField(max_length=512, blank=True, null=True, verbose_name='Price info in Plans Page')
     retail_price_info = models.CharField(max_length=512, blank=True, null=True, verbose_name='Retail Price info in Plans Page')
 
@@ -2410,6 +2459,20 @@ def user_models_user(self):
         return self
     else:
         return self.profile.subuser_parent
+
+
+class DashboardVideo(models.Model):
+    url = models.TextField()
+    title = models.CharField(max_length=255, blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f'{self.title} | {self.url}'
+
+    class Meta:
+        ordering = 'display_order',
 
 
 User.add_to_class("is_subuser", cached_property(user_is_subsuser))

@@ -60,7 +60,7 @@ def get_product_feed(request, *args, **kwargs):
 
 def shopify_product_feeds(request):
     if not request.user.can('product_feeds.use'):
-        return render(request, 'upgrade.html')
+        return render(request, 'upgrade.html', {'selected_menu': 'tools:product_feeds'})
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
         if request.method == 'GET':
@@ -134,6 +134,7 @@ def shopify_product_feeds(request):
         'feeds': feeds,
         'now': timezone.now(),
         'page': 'product_feeds',
+        'selected_menu': 'tools:product_feeds',
         'breadcrumbs': ['Marketing', 'Product Feeds']
     })
 
@@ -219,6 +220,7 @@ def chq_product_feeds(request):
         'feeds': feeds,
         'now': timezone.now(),
         'page': 'product_feeds',
+        'selected_menu': 'tools:product_feeds',
         'breadcrumbs': ['Marketing', 'Product Feeds']
     })
 
@@ -307,6 +309,7 @@ def woo_product_feeds(request):
         'feeds': feeds,
         'now': timezone.now(),
         'page': 'product_feeds',
+        'selected_menu': 'tools:product_feeds',
         'breadcrumbs': ['Marketing', 'Product Feeds']
     })
 
@@ -395,6 +398,7 @@ def gear_product_feeds(request):
         'feeds': feeds,
         'now': timezone.now(),
         'page': 'product_feeds',
+        'selected_menu': 'tools:product_feeds',
         'breadcrumbs': ['Marketing', 'Product Feeds']
     })
 

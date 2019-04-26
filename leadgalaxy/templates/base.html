@@ -108,10 +108,15 @@
     {% endif %}
 
     {% block main-nav %}
-        {% include 'main_nav.html' %}
+        {% if new_menu_active %}
+            {% include 'main_nav_new.html' %}
+        {% else %}
+            {% include 'main_nav.html' %}
+        {% endif %}
     {% endblock %}
 
    <div id="page-wrapper" class="gray-bg">
+        {% block nav %}
         <div class="row border-bottom page-search-nav">
             <nav class="navbar navbar-static-top white-bg" role="navigation" style="margin-bottom: 0">
                 <div class="navbar-header">
@@ -121,6 +126,27 @@
                     {% endblock search-form %}
                 </div>
                 <ul class="nav navbar-top-links navbar-right">
+                    <li>
+                        <span>
+                            {% if new_menu_active %}
+                            <a href="#" id="switch-menu-layout">
+                                Switch to old layout
+                            </a>
+                            {% else %}
+                            <a href="#" id="switch-menu-layout" data-active="true">
+                                Switch to new layout
+                            </a>
+                            {% endif %}
+                        </span>
+                    </li>
+
+                    {% if selected_menu and selected_menu in upsell_pages and request.user.is_staff %}
+                    <li>
+                        <span>
+                            <a href="{% url 'article-content-page' slug_article=selected_menu|slugify_menu %}" id="edit-upsell" class="btn btn-primary">See Upsell Page</a>
+                        </span>
+                    </li>
+                    {% endif %}
                     <li>
                         <span class="m-r-sm text-muted welcome-message">
                             {% if request.user.is_authenticated %}
@@ -171,6 +197,9 @@
 
             </nav>
         </div>
+        {% endblock nav %}
+        {% block welcome-area %}{% endblock welcome-area %}
+        {% block breadcrumb-area %}
         <div class="row wrapper border-bottom white-bg page-heading">
             <div class="col-lg-10">
                 <h2>{% block page-title %}{% endblock %}</h2>
@@ -188,6 +217,7 @@
             </div>
             <div class="col-lg-2"></div>
         </div>
+        {% endblock breadcrumb-area %}
 
       <div class="wrapper wrapper-content">
         {% if messages %}

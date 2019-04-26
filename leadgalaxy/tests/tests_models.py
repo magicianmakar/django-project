@@ -1,6 +1,8 @@
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import arrow
+
+from django.core.cache import cache
 
 from .factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 
@@ -18,6 +20,9 @@ from leadgalaxy.models import (
     User,
 )
 from .factories import ShopifyProductFactory, ShopifyOrderLogFactory
+
+from stripe_subscription.models import StripeCustomer
+from stripe_subscription.tests.factories import StripeCustomerFactory
 
 
 class UserTestCase(BaseTestCase):
@@ -87,6 +92,9 @@ class ShopifyStoreTestCase(BaseTestCase):
 
 
 class UserProfileTestCase(BaseTestCase):
+    def tearDown(self):
+        cache.clear()
+
     def test_subusers_must_have_all_store_permissions_when_assigned_a_store(self):
         parent_user = UserFactory()
         store = ShopifyStoreFactory(user=parent_user)
@@ -110,6 +118,68 @@ class UserProfileTestCase(BaseTestCase):
         permissions_count = user.profile.subuser_permissions.count()
         if SubuserPermission.objects.count():
             self.assertEqual(permissions_count, len(SUBUSER_PERMISSIONS))
+
+    def test_user_on_trial_default_is_false(self):
+        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        user.profile.plan = GroupPlanFactory(payment_gateway='new')
+        user.profile.save()
+        self.assertFalse(user.profile.on_trial)
+
+    def test_shopify_user_on_trial_if_subscription_on_trial(self):
+        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        user.profile.plan = GroupPlanFactory(payment_gateway='shopify')
+        user.profile.save()
+        subscription = Mock(on_trial=True)
+        user.profile.get_current_shopify_subscription = Mock(return_value=subscription)
+        self.assertTrue(user.profile.on_trial)
+
+    def test_shopify_user_not_on_trial_if_subscription_not_on_trial(self):
+        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        user.profile.plan = GroupPlanFactory(payment_gateway='shopify')
+        user.profile.save()
+        subscription = Mock(on_trial=False)
+        user.profile.get_current_shopify_subscription = Mock(return_value=subscription)
+        self.assertFalse(user.profile.on_trial)
+
+    @patch('stripe_subscription.models.StripeCustomer.on_trial', PropertyMock(return_value=True))
+    def test_stripe_user_on_trial_if_subscription_on_trial(self):
+        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        user.profile.plan = GroupPlanFactory(payment_gateway='stripe')
+        user.profile.save()
+        user.stripe_customer = StripeCustomerFactory()
+        self.assertTrue(user.profile.on_trial)
+
+    @patch('stripe_subscription.models.StripeCustomer.on_trial', PropertyMock(return_value=False))
+    def test_stripe_user_not_on_trial_if_subscription_not_on_trial(self):
+        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        user.profile.plan = GroupPlanFactory(payment_gateway='stripe')
+        user.profile.save()
+        user.stripe_customer = StripeCustomerFactory()
+        self.assertFalse(user.profile.on_trial)
+
+    def test_user_trial_days_left_default_is_zero(self):
+        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        user.profile.plan = GroupPlanFactory(payment_gateway='new')
+        user.profile.save()
+        self.assertEquals(user.profile.trial_days_left, 0)
+
+    def test_shopify_user_trial_days_left(self):
+        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        user.profile.plan = GroupPlanFactory(payment_gateway='shopify')
+        user.profile.save()
+        trial_days_left = 14
+        subscription = Mock(trial_days_left=trial_days_left)
+        user.profile.get_current_shopify_subscription = Mock(return_value=subscription)
+        self.assertEquals(user.profile.trial_days_left, trial_days_left)
+
+    def test_stripe_user_trial_days_left(self):
+        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        user.profile.plan = GroupPlanFactory(payment_gateway='stripe')
+        user.profile.save()
+        trial_days_left = 14
+        with patch.object(StripeCustomer, 'trial_days_left', PropertyMock(return_value=trial_days_left)):
+            user.stripe_customer = StripeCustomerFactory()
+            self.assertEquals(user.profile.trial_days_left, trial_days_left)
 
 
 class ShopifyProductTestCase(BaseTestCase):

@@ -23,26 +23,6 @@
                      .not('#only_text_reviews')
                      .on('change', updateReviewsForm);
 
-    function isExtensionReady() {
-        var $deferred = $.Deferred();
-
-        var timerId = setInterval(function() {
-            if (typeof window.extensionSendMessage === 'function') {
-                $deferred.resolve();
-                clearInterval(timerId);
-            }
-        }, 1000);
-
-        setTimeout(function() {
-            if (typeof window.extensionSendMessage !== 'function') {
-                $deferred.reject();
-                clearInterval(timerId);
-            }
-        }, 5000);
-
-        return $deferred.promise();
-    }
-
     function updateReviewsForm() {
         disableForm();
         window.extensionSendMessage({
