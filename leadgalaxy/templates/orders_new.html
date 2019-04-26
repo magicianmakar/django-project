@@ -442,45 +442,76 @@
                             <div class="details container-fluid">
                                 <div class="row shipping-info">
                                     <div class="col-md-3" style="padding-left:5px">
-                                        {{order.shipping_address.first_name|default:''}} {{order.shipping_address.last_name|default:''}}
-                                        {% if order.shipping_address.company %}
-                                            - {{order.shipping_address.company}}
-                                        {% endif %}
-                                        <br>
-                                        {{order.shipping_address.address1}}<br>
+
+                                        <p class="m-n">
+                                            <span class="itooltip" title="Customer Name" data-placement="auto right">
+                                                {{order.shipping_address.first_name|default:''}} {{order.shipping_address.last_name|default:''}}
+                                                {% if order.shipping_address.company %}
+                                                    - {{order.shipping_address.company}}
+                                                {% endif %}
+                                            </span>
+                                        </p>
+
+                                        <p class="m-n">
+                                            <span class="itooltip" title="Address" data-placement="auto right">
+                                                {{order.shipping_address.address1}}
+                                            </span>
+                                        </p>
 
                                         {% if order.shipping_address.address2 %}
-                                        {{order.shipping_address.address2}}<br>
+                                        <p class="m-n" data-placement="auto right">
+                                            <span class="itooltip" title="Address (second line)" data-placement="auto right">
+                                                {{order.shipping_address.address2}}
+                                            </span>
+                                        </p>
                                         {% endif %}
 
-                                        {{order.shipping_address.city}},
-                                            {{order.shipping_address.province_code|default:''}}
-                                            {{order.shipping_address.zip}}
+                                        <p class="m-n" >
+                                            <span class="itooltip" title="City" data-placement="auto right">
+                                                {{order.shipping_address.city}},
+                                            </span>
 
-                                        {% if order.shipping_address.phone %}
-                                        <br> {{order.shipping_address.phone}}
-                                        {% endif %}
+                                            {% if order.corrections.city %}
+                                            <span class="pull-right itooltip" data-html="true"
+                                                title="City changed from <b style=color:#ff9090>{{order.shipping_address.city}}</b> to
+                                                       <b style=color:#90ffaf>{{order.corrections.city.title}}</b> to match with Aliexpress">
+                                                Changed to <b>{{order.corrections.city.title}}</b>
+                                            </span>
+                                            {% endif %}
+                                        </p>
 
-                                        <br> <b>{{order.shipping_address.country}}</b>
+                                        <p class="m-n">
+                                            <span class="itooltip" title="Province" data-placement="auto right">
+                                                {{order.shipping_address.province|default:'N/A'}},
+                                            </span>
 
-                                        {% if order.corrections %}
-                                            {% for key, val in order.corrections.items %}
-                                                <p class="pull-right m-n">
-                                                    {{key|title}}
-                                                    Changed to
-                                                    <b>{{val|title}}</b>
-                                                </p>
-                                            {% endfor %}
-                                        {% endif %}
+                                            {% if order.corrections.province %}
+                                            <span class="pull-right itooltip" data-html="true"
+                                                title="Province changed from <b style=color:#ff9090>{{order.shipping_address.province}}</b> to
+                                                       <b style=color:#90ffaf>{{order.corrections.province.title}}</b> to match with Aliexpress">
+                                                Changed to <b>{{order.corrections.province.title}}</b>
+                                            </span>
+                                            {% endif %}
+                                        </p>
+
+                                        <p class="m-n">
+                                            <span class="itooltip" title="Zip code &amp; Country" data-placement="auto right">
+                                                {{order.shipping_address.zip}},
+                                                <b>{{order.shipping_address.country}}</b>
+                                            </span>
+                                        </p>
                                     </div>
                                     <div class="col-md-1 hidden-xs">
                                         {% if order.shipping_address.country_code %}
-                                        <img class="itooltip" style="width: 16px" title="{{order.shipping_address.country}}" src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.shipping_address.country_code|lower}}.svg">
-                                        <br />
+                                        <img class="itooltip m-r-xs" style="width: 16px" title="{{order.shipping_address.country}}" src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.shipping_address.country_code|lower}}.svg">
                                         {% endif %}
 
                                         {% if order.customer.email %}
-                                        <a href="mailto:{{order.customer.email}}" class="itooltip" title="Send Email To The Customer"> <i class="fa fa-envelope-o fa-lg"></i></a>
+                                        <a href="mailto:{{order.customer.email}}" class="itooltip m-r-xs" title="Send Email To The Customer"> <i class="fa fa-envelope-o fa-lg"></i></a>
+                                        {% endif %}
+
+                                        {% if order.shipping_address.phone %}
+                                        <a href="tel:{{order.shipping_address.phone}}" class="itooltip " title="Call Customer"> <i class="fa fa-phone fa-lg"></i></a>
                                         {% endif %}
                                     </div>
                                     <div class="col-md-2 xs-text-right">
