@@ -25,7 +25,7 @@ def extra_bundles(request):
         not request.path.startswith('/pages/') and \
         arrow.get('2017-08-27').datetime < request.user.date_joined
 
-    dropified_challenge = not request.user.get_config('_dropified-challenge')
+    dropified_challenge = request.user.get_config('__dropified-challenge')
     new_menu_active = request.user.get_config('_new-menu-active')
 
     return {

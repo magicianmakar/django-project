@@ -1228,7 +1228,10 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
         order['shipping_address'] = order['customer'].get('default_address')
 
     if not order.get('shipping_address'):
-        return order, None
+        if return_corrections:
+            return order, None, {}
+        else:
+            return order, None
 
     customer_address = {}
     shipping_address = order['shipping_address']
