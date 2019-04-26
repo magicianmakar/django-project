@@ -1,3 +1,5 @@
+from django.contrib.auth.models import User
+
 from django.utils import timezone
 
 import arrow
@@ -11,6 +13,10 @@ from stripe_subscription.utils import invoice_extra_stores
 
 class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
+        # Disable affilaites
+        for u in User.objects.filter(profile__config__contains="_disable_affiliate"):
+            u.set_config('_disable_affiliate', False)
+
         # Expired plans
         self.stdout.write('Change plan of expired profiles', self.style.HTTP_INFO)
         for profile in UserProfile.objects.filter(plan_expire_at__lte=timezone.now()):
