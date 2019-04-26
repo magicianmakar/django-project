@@ -3995,11 +3995,12 @@ def orders_view(request):
 
             products_cache[el['product_id']] = product
 
-            order, customer_address = utils.shopify_customer_address(
+            order, customer_address, order['corrections'] = utils.shopify_customer_address(
                 order=order,
                 aliexpress_fix=fix_aliexpress_address and supplier and supplier.is_aliexpress,
                 fix_aliexpress_city=fix_aliexpress_city,
-                german_umlauts=german_umlauts)
+                german_umlauts=german_umlauts,
+                return_corrections=True)
 
             if auto_orders and customer_address and not order['pending_payment']:
                 try:

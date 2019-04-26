@@ -1,4 +1,5 @@
 import os
+import re
 import simplejson as json
 import requests
 
@@ -288,6 +289,10 @@ def valide_aliexpress_province(country, province, city, auto_correct=False):
 
     country_code = normalize_country_code(country)
     correction = {}
+
+    if auto_correct and city.startswith('st.'):
+        city = re.sub(r'^st\. +', 'saint', city)
+        correction['city'] = city
 
     if country_code:
         aliexpress_countries = load_aliexpress_countries()

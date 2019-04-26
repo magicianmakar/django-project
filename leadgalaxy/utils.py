@@ -1222,7 +1222,7 @@ def fix_order_variants(store, order, product):
                     product.set_real_variant(line['variant_id'], match['id'])
 
 
-def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_aliexpress_city=False):
+def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_aliexpress_city=False, return_corrections=False):
     if 'shipping_address' not in order \
             and order.get('customer') and order.get('customer').get('default_address'):
         order['shipping_address'] = order['customer'].get('default_address')
@@ -1308,8 +1308,14 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
     if customer_address['company']:
         customer_address['name'] = '{} - {}'.format(customer_address['name'], customer_address['company'])
 
+    correction = {}
     if aliexpress_fix:
-        valide, correction = valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city'])
+        valide, correction = valide_aliexpress_province(
+            customer_address['country'],
+            customer_address['province'],
+            customer_address['city'],
+            auto_correct=True)
+
         if not valide:
             if support_other_in_province(customer_address['country']):
                 customer_address['province'] = 'Other'
@@ -1338,7 +1344,10 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
             if 'city' in correction:
                 customer_address['city'] = correction['city'].title()
 
-    return order, customer_address
+    if return_corrections:
+        return order, customer_address, correction
+    else:
+        return order, customer_address
 
 
 def shopify_link_images(store, product):

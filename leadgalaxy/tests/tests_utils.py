@@ -871,6 +871,11 @@ class ShippingHelperTestCase(BaseTestCase):
         self.assertEqual(correction['city'], 'blackpool')
         self.assertTrue(valide)
 
+        valide, correction = valide_aliexpress_province('united Kingdom', 'Englaand', 'City Bristol', auto_correct=True)
+        self.assertEqual(correction['province'], 'england')
+        self.assertEqual(correction['city'], 'city of bristol')
+        self.assertTrue(valide)
+
         valide, correction = valide_aliexpress_province('United States', 'Alabama', 'besmer', auto_correct=True)
         self.assertEqual(correction['city'], 'bessemer')
         self.assertTrue(valide)
@@ -887,6 +892,23 @@ class ShippingHelperTestCase(BaseTestCase):
         valide, correction = valide_aliexpress_province('Spain', 'ACoruna', 'aBana', auto_correct=True)
         self.assertEqual(correction['province'], 'a coruna')
         self.assertEqual(correction['city'], 'a bana')
+        self.assertTrue(valide)
+
+        valide, correction = valide_aliexpress_province('United States', 'Missouri', 'st. louis', auto_correct=True)
+        self.assertNotIn('province', correction)
+        self.assertEqual(correction['city'], 'saint louis')
+        self.assertTrue(valide)
+
+        valide, correction = valide_aliexpress_province('United States', 'Missouri', 'St louis', auto_correct=True)
+        self.assertNotIn('province', correction)
+        self.assertEqual(correction['city'], 'saint louis')
+        self.assertTrue(valide)
+
+        valide, correction = valide_aliexpress_province('United States', 'nevda', 'almo', auto_correct=True)
+        self.assertIn('province', correction)
+        self.assertIn('city', correction)
+        self.assertEqual(correction['province'], 'nevada')
+        self.assertEqual(correction['city'], 'alamo')
         self.assertTrue(valide)
 
     def test_support_other_in_province(self):
@@ -1002,11 +1024,23 @@ class ShippingHelperTestCase(BaseTestCase):
         self.assertEqual(customer_address['province'], 'Other')
         self.assertEqual(customer_address['city'], 'Not Found, England')
 
-        order = self.get_order(country='UNITED KINGDOM', country_code='GB', province='Xngland', city="North Yorkshire")
+    def test_shopify_address_uk_unmatch2(self):
+        order = self.get_order(country='UNITED KINGDOM', country_code='GB', province='Xngnd', city="North Yorkshire")
         order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
 
         self.assertEqual(customer_address['province'], 'Other')
-        self.assertEqual(customer_address['city'], 'North Yorkshire, Xngland')
+        self.assertEqual(customer_address['city'], 'North Yorkshire, Xngnd')
+
+    def test_shopify_address_uk_unmatch3(self):
+        order = self.get_order(country='UNITED KINGDOM', country_code='GB', province='Englaand', city="City Bristol")
+        order, customer_address, corrections = utils.shopify_customer_address(
+            order, aliexpress_fix=True, fix_aliexpress_city=True, return_corrections=True)
+
+        self.assertIn('city', corrections)
+        self.assertIn('province', corrections)
+
+        self.assertEqual(customer_address['province'], 'England')
+        self.assertEqual(customer_address['city'], 'City Of Bristol')
 
     def test_shopify_customer_us(self):
         order = self.get_order(province='Alabama', city='alexander city')
@@ -1017,19 +1051,20 @@ class ShippingHelperTestCase(BaseTestCase):
         self.assertEqual(customer_address['address2'], '')
 
     def test_shopify_customer_us_unmatch(self):
-        order = self.get_order(province='Alabama', city='alexand city')
+        order = self.get_order(province='Alabama', city='alxxansity')
         order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
 
         self.assertEqual(customer_address['province'], 'Alabama')
         self.assertEqual(customer_address['city'], 'Other')
-        self.assertEqual(customer_address['address2'], 'alexand city,')
+        self.assertEqual(customer_address['address2'], 'alxxansity,')
 
-        order = self.get_order(province='Texas', city='Yants', address2='2nd Apt. N 555,  ')
+    def test_shopify_customer_us_unmatch2(self):
+        order = self.get_order(province='Texas', city='xts', address2='2nd Apt. N 555,  ')
         order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
 
         self.assertEqual(customer_address['province'], 'Texas')
         self.assertEqual(customer_address['city'], 'Other')
-        self.assertEqual(customer_address['address2'], '2nd Apt. N 555, Yants,')
+        self.assertEqual(customer_address['address2'], '2nd Apt. N 555, xts,')
 
     def test_shopify_customer_il_zip_padding(self):
         order = self.get_order(country_code='IL', country='Israel', zip="55966")

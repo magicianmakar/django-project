@@ -462,6 +462,16 @@
                                         {% endif %}
 
                                         <br> <b>{{order.shipping_address.country}}</b>
+
+                                        {% if order.corrections %}
+                                            {% for key, val in order.corrections.items %}
+                                                <p class="pull-right m-n">
+                                                    {{key|title}}
+                                                    Changed to
+                                                    <b>{{val|title}}</b>
+                                                </p>
+                                            {% endfor %}
+                                        {% endif %}
                                     </div>
                                     <div class="col-md-1 hidden-xs">
                                         {% if order.shipping_address.country_code %}
