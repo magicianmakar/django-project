@@ -53,6 +53,7 @@ INSTALLED_APPS = (
     'test_without_migrations',
     'last_seen',
     'polymorphic',
+    'adminsortable2',
 
     'article',
     'leadgalaxy',
@@ -72,6 +73,7 @@ INSTALLED_APPS = (
     'tapfiliate',
     'youtube_ads',
     'sso_core',
+    'goals',
 
     'commercehq_core',
     'woocommerce_core',
@@ -138,6 +140,7 @@ DROPIFIED_API = {
     'woo': 'woocommerce_core.api.WooStoreApi',
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
     'subusers': 'subusers.api.SubusersApi',
+    'goals': 'goals.api.GoalsApi',
 }
 
 # Database

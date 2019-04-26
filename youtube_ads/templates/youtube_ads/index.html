@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends template_config.base|default:'base.html' %}
 {% load static %}
 {% block main-container %}
 {% if not videos %}
@@ -15,7 +15,7 @@
                 </h5>
                 <div class="ibox-tools">
                     {% if user.is_superuser %}
-                    <a href="{% url 'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
+                    <a href="{% url template_config.url.namespace|add:'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
                     {% endif %}
                     <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                     <!--<a class="close-link"><i class="fa fa-times"></i></a>-->
@@ -131,7 +131,7 @@
                                         <p>
                                             Channel:&nbsp;
                                             <a href="https://www.youtube.com/channel/{{item.snippet.channelId}}" title="Visit {{item.snippet.channelTitle}} Channel" target="_blank">{{item.snippet.channelTitle}}</a>&nbsp;
-                                            <a href="{% url 'youtube_ads.views.index' %}?r=channel:{{item.snippet.channelId}}"><span class="label label-info">Find Videos</span></a>&nbsp;
+                                            <a href="{% url template_config.url.namespace|add:'youtube_ads.views.index' %}?r=channel:{{item.snippet.channelId}}"><span class="label label-info">Find Videos</span></a>&nbsp;
                                             <a href="{{item.url}}"><span class="label label-info">View on YouTube</span></a>
                                         </p>
                                     </div>
@@ -152,7 +152,7 @@
                             <td>{{item.statistics.dislikeCount}}</td>
                             <td>{{item.statistics.commentCount}}</td>
                             <td>
-                                <a href="{% url 'youtube_ads.views.index' %}?r={{item.id}}"><span class="label label-info">Related Videos</span></a>
+                                <a href="{% url template_config.url.namespace|add:'youtube_ads.views.index' %}?r={{item.id}}"><span class="label label-info">Related Videos</span></a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -164,12 +164,12 @@
                             <ul class="pager">
                                 {% if search_prev %}
                                 <li class="previous">
-                                    <a href="{% url 'youtube_ads.views.index' %}?{% if request.GET.r %}&r={{request.GET.r}}{% endif %}{% if request.GET.q %}&q={{request.GET.q}}{% endif %}{% if request.GET.type %}&type={{request.GET.ads}}{% endif %}&page={{ search_prev }}&offset={{ offset_prev }}&op={{ offset_prev }}">← Back </a>
+                                    <a href="{% url template_config.url.namespace|add:'youtube_ads.views.index' %}?{% if request.GET.r %}&r={{request.GET.r}}{% endif %}{% if request.GET.q %}&q={{request.GET.q}}{% endif %}{% if request.GET.type %}&type={{request.GET.ads}}{% endif %}&page={{ search_prev }}&offset={{ offset_prev }}&op={{ offset_prev }}">← Back </a>
                                 </li>
                                 {% endif %}
                                 {% if search_next %}
                                 <li class="next">
-                                    <a href="{% url 'youtube_ads.views.index' %}?{% if request.GET.r %}&r={{request.GET.r}}{% endif %}{% if request.GET.q %}&q={{request.GET.q}}{% endif %}{% if request.GET.type %}&type={{request.GET.ads}}{% endif %}&page={{ search_next }}&offset={{ offset_next }}&op={{ offset_prev }}">Next →</a>
+                                    <a href="{% url template_config.url.namespace|add:'youtube_ads.views.index' %}?{% if request.GET.r %}&r={{request.GET.r}}{% endif %}{% if request.GET.q %}&q={{request.GET.q}}{% endif %}{% if request.GET.type %}&type={{request.GET.ads}}{% endif %}&page={{ search_next }}&offset={{ offset_next }}&op={{ offset_prev }}">Next →</a>
                                 </li>
                                 {% endif %}
                             </ul>

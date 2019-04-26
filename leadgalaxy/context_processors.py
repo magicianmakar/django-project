@@ -7,6 +7,7 @@ from django.conf import settings
 import arrow
 
 from shopified_core.permissions import can_add_store
+from shopified_core.decorators import upsell_pages
 
 
 def extra_bundles(request):
@@ -25,11 +26,14 @@ def extra_bundles(request):
         arrow.get('2017-08-27').datetime < request.user.date_joined
 
     dropified_challenge = not request.user.get_config('_dropified-challenge')
+    new_menu_active = request.user.get_config('_new-menu-active')
 
     return {
         'tos_update': tos_update,
         'tos_accept': tos_accept,
-        'dropified_challenge': dropified_challenge
+        'dropified_challenge': dropified_challenge,
+        'new_menu_active': new_menu_active,
+        'upsell_pages': upsell_pages
     }
 
 

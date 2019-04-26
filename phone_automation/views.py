@@ -78,6 +78,7 @@ def index(request):
 
     return render(request, 'phone_automation/index.html', {
         'page': 'phone_automation',
+        'selected_menu': 'tools:phone_automation',
         'twilio_phone_number': twilio_phone_number,
         'twilio_logs': latest_twilio_logs,
         'twilio_stats': twilio_stats,
@@ -104,6 +105,7 @@ def call_logs(request):
 
     return render(request, 'phone_automation/call_logs.html', {
         'page': 'phone_automation',
+        'selected_menu': 'tools:phone_automation',
         'twilio_phone_number': twilio_phone_number,
         'twilio_logs': twilio_logs,
         'twilio_stats': twilio_stats,
@@ -171,6 +173,7 @@ def provision(request):
 
     return render(request, 'phone_automation/provision.html', {
         'page': 'phone_automation',
+        'selected_menu': 'tools:phone_automation',
         'show_filter': show_filter,
         'twilio_phone_numbers_pool': twilio_phone_numbers_pool,
         'breadcrumbs': [{'title': 'CallFlex', 'url': reverse('phone_automation_index')}, 'Setup Incoming Phone #'],
@@ -271,6 +274,7 @@ def automate(request, twilio_phone_number_id):
         'twilio_phone_number': twilio_phone_number,
         'automation': twilio_phone_number.automation,
         'page': 'phone_automation',
+        'selected_menu': 'tools:phone_automation',
         'breadcrumbs': [{'title': 'CallFlex', 'url': reverse('phone_automation_index')}, 'Automate'],
     })
 

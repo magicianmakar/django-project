@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends template_config.base|default:'base.html' %}
 
 {% load static %}
 
@@ -11,7 +11,7 @@
                         <h5>Channel Search</h5>
                         <div class="ibox-tools">
                             {% if user.is_superuser %}
-                            <a href="{% url 'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
+                            <a href="{% url template_config.url.namespace|add:'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
                             {% endif %}
                             <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                             <!--<a class="close-link"><i class="fa fa-times"></i></a>-->
@@ -93,7 +93,7 @@
                                           <div class="media-body">
                                             <h4 class="media-heading"><a class="" href="{{item.url}}" target="_blank">{{item.title}}</a></h4>
                                             <p>
-                                                <a href="{% url 'youtube_ads.views.index' %}?r=channel:{{item.id}}" title="View all videos from {{item.title}} Channel"><span class="label label-primary">Channel videos</span></a>
+                                                <a href="{% url template_config.url.namespace|add:'youtube_ads.views.index' %}?r=channel:{{item.id}}" title="View all videos from {{item.title}} Channel"><span class="label label-primary">Channel videos</span></a>
                                             </p>
 
                                           </div>

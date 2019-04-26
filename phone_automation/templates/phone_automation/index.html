@@ -28,9 +28,9 @@
                         <div class="col-md-6 text-right">
 
                             {% if twilio_phone_number.automation is None %}
-                                <a id="config-flow" type="button" href="{% url 'phone_automation_automate' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-default setup-automation blink-button" >Call Flow is not set - Set Up Now</a>
+                                <a id="config-flow" type="button" href="{% url template_config.url.namespace|add:'phone_automation_automate' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-default setup-automation blink-button" >Call Flow is not set - Set Up Now</a>
                             {% else %}
-                                <a id="config-flow" type="button" href="{% url 'phone_automation_automate' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-default setup-automation" >Setup Call Flow</a>
+                                <a id="config-flow" type="button" href="{% url template_config.url.namespace|add:'phone_automation_automate' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-default setup-automation" >Setup Call Flow</a>
                             {% endif %}
 
                             {%  if sms_allowed %}
@@ -116,7 +116,7 @@
                             <div class="ibox-title row">
                                 <div class="col-md-10"><h3>Recent Calls</h3></div>
                                 <div class="col-md-2 text-right">
-                                    <a id="call-logs" type="button" href="{% url 'phone_automation_call_logs' %}" class="btn btn-default remove-provision" >View all Calls</a>
+                                    <a id="call-logs" type="button" href="{% url template_config.url.namespace|add:'phone_automation_call_logs' %}" class="btn btn-default remove-provision" >View all Calls</a>
                                 </div>
                             </div>
                             <div class="ibox-content">

@@ -9,6 +9,7 @@ $(function () {
     if (getQueryVariable('plan')) {
         $('.plan-tab a').trigger('click');
     } else if (getQueryVariable('billing')) {
+
         $('.billing-tab a').trigger('click');
     }
 
@@ -45,6 +46,8 @@ $(function () {
         search_contains: true,
         width: '250px'
     });
+
+    checkSelectedMenu(window.location.hash);
 });
 
 $('#country').change(function (e) {
@@ -286,4 +289,28 @@ $('#renew_clippingmagic, #renew_captchacredit').click(function() {
             });
         }
     });
+});
+
+function checkSelectedMenu(selectedMenu) {
+    selectedMenu = selectedMenu.replace('#', '');
+    console.log(selectedMenu);
+    $('.profile-submenus').removeClass('active');
+    if (selectedMenu == 'billing') {
+        $('#profile-billing').addClass('active');
+        $('.billing-tab a').trigger('click');
+    } else if (selectedMenu == 'plan') {
+        $('#profile-plans').addClass('active');
+        $('.plan-tab a').trigger('click');
+    } else if (selectedMenu == 'invoices') {
+        $('#profile-invoices').addClass('active');
+        $('.invoices-tab a').trigger('click');
+    } else {
+        $('#menu-profile').addClass('active');
+    }
+}
+
+$('.profile-submenus').on('click', function() {
+    setTimeout(function() {
+        checkSelectedMenu(window.location.hash);
+    }, 1);
 });

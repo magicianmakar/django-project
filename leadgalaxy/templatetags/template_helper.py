@@ -3,7 +3,12 @@ from django.utils.safestring import mark_safe
 from django.conf import settings
 from django.utils.html import escapejs
 
-from shopified_core.utils import decode_params, app_link as utils_app_link, base64_encode
+from shopified_core.utils import (
+    decode_params,
+    app_link as utils_app_link,
+    base64_encode,
+    slugify_menu,
+)
 
 import simplejson as json
 import re
@@ -315,3 +320,6 @@ def force_https(url):
         url = url[0]
 
     return re.sub(r'https?://', '//', url)
+
+
+register.filter(slugify_menu)

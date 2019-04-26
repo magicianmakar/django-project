@@ -27,6 +27,7 @@ from leadgalaxy.models import (
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
 from stripe_subscription.stripe_api import stripe
+from goals.models import Goal, UserGoalRelationship
 
 
 @receiver(post_save, sender=UserProfile)
@@ -187,3 +188,10 @@ def delete_aliexpress_fulfillment_cost(sender, instance, **kwargs):
         order_id=instance.order_id,
         source_id=instance.source_id
     ).delete()
+
+
+@receiver(post_save, sender=User)
+def add_goals_to_new_user(sender, instance, created, **kwargs):
+    if created:
+        for goal in Goal.objects.all():
+            UserGoalRelationship.objects.create(user=instance, goal=goal)

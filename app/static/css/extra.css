@@ -462,3 +462,9 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     height: 100%;
     border: 0 none;
 }
+
+#edit-upsell {
+    padding: 6px 16px;
+    min-height: auto;
+    font-size: 13px;
+}

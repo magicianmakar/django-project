@@ -16,6 +16,7 @@ from leadgalaxy import utils
 from shopified_core.utils import safe_int
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.utils import is_store_synced
+from shopified_core.decorators import use_upsell_for
 from .utils import (
     get_profits,
     calculate_profits,
@@ -32,11 +33,15 @@ from .models import (
 from .tasks import fetch_facebook_insights
 
 
+@use_upsell_for('profit_dashboard.view', 'business:profit_dashboard')
 @login_required
 def index(request):
     if not request.user.can('profit_dashboard.use'):
         if not request.user.is_subuser:
-            return render(request, 'profit_dashboard/upsell.html', {'page': 'profit_dashboard'})
+            return render(request, 'profit_dashboard/upsell.html', {
+                'page': 'profit_dashboard',
+                'selected_menu': 'business:profit_dashboard',
+            })
         else:
             raise PermissionDenied()
 
@@ -47,6 +52,7 @@ def index(request):
 
     context = {
         'page': 'profit_dashboard',
+        'selected_menu': 'business:profit_dashboard',
         'store': store,
         'user_facebook_permission': settings.FACEBOOK_APP_ID,
         'initial_date': INITIAL_DATE.isoformat(),

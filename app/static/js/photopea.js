@@ -31,6 +31,8 @@
                 "formats": ["jpg"]
             },
             "environment": {
+                "theme": 2,
+                "vmode": 0,
                 "localsave": true,
                 "script": "app.activeDocument.resizeCanvas(90,80,AnchorPosition.TOPLEFT);"
             }

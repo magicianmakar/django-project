@@ -1,30 +1,24 @@
-{% extends "base.html" %}
+{% extends template_config.base|default:'base.html' %}
 {% load static %}
 {% load widget_tweaks %}
 
 {% block title %}Add Page{% endblock %}
-
-{% block main-nav %}
-    {% if request.app == "chq" %}
-        {% include 'commercehq/main_nav.html' with url_name=request.resolver_match.view_name %}
-    {% elif request.app == "woo" %}
-        {% include 'woocommerce/main_nav.html' with url_name=request.resolver_match.view_name %}
-    {% else %}
-        {% include 'main_nav.html' %}
-    {% endif %}
-{% endblock main-nav %}
 
 {% block main-container %}
 
 <form method="post" class="well-box form" role="form">
  {% csrf_token %}
 
+    {% if not article or article.show_header %}
     <div class="row form-group {% if form.title.errors %}has-error has-feedback{% endif %}">
         <label class="control-label" for="title">{{ form.title.errors|striptags }}</label>
         <div class="col-xs-12 col-sm-8 col-md-8">
             {% render_field form.title class+="form-control input-lg" placeholder="Page Title" %}
      </div>
     </div>
+    {% else %}
+    <input type="hidden" name="title" value="{{ article.title }}">
+    {% endif %}
 
     <div class="form-group {% if form.body.errors %}has-error has-feedback{% endif %}">
         <label class="control-label" for="body">{{ form.body.errors|striptags }}</label>
@@ -33,6 +27,7 @@
         </div>
     </div>
 
+    {% if not article or article.show_header %}
     <div class="form-group {% if form.body.errors %}has-error has-feedback{% endif %}">
         <label class="control-label" for="body">{{ form.body.errors|striptags }}</label>
         <label class="" for="tags">Tags</label>
@@ -40,6 +35,8 @@
             {% render_field form.tags class+="form-control input-md tag-it" placeholder="Tags" %}
         </div>
     </div>
+    {% endif %}
+
     <div class="form-group {% if form.body.errors %}has-error has-feedback{% endif %}">
         <label class="control-label" for="stat">{{ form.stat.errors|striptags }}</label>
         <label class="" for="stat">Publish Status</label>

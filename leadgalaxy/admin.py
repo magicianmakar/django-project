@@ -1,4 +1,5 @@
 import simplejson as json
+from adminsortable2.admin import SortableAdminMixin
 from django import forms
 from django.contrib import admin
 from django.urls import reverse
@@ -31,7 +32,8 @@ from .models import (
     SubuserWooPermission,
     UserCompany,
     UserProfile,
-    UserUpload
+    UserUpload,
+    DashboardVideo,
 )
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
@@ -338,6 +340,12 @@ class SubuserGearPermissionAdmin(admin.ModelAdmin):
     list_display = ('id', 'codename', 'name', 'store')
     raw_id_fields = ('store',)
     search_fields = ('name',)
+
+
+@admin.register(DashboardVideo)
+class DashboardVideoAdmin(SortableAdminMixin, admin.ModelAdmin):
+    list_display = ('url', 'title')
+    search_fields = ('url', 'title')
 
 
 admin.site.register(ClippingMagicPlan)

@@ -1,7 +1,8 @@
-from django.conf.urls import url
+from django.conf.urls import url, include
 
 import commercehq_core.views
 import subusers.views
+import leadgalaxy.views
 
 urlpatterns = [
     url(r'^$', commercehq_core.views.StoresList.as_view(), name='index'),
@@ -35,4 +36,15 @@ urlpatterns = [
         subusers.views.subuser_woo_store_permissions, name='subuser_woo_store_permissions'),
     url(r'^subusers/gear-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
         subusers.views.subuser_gear_store_permissions, name='subuser_gear_store_permissions'),
+
+    url(r'^user/profile$', leadgalaxy.views.user_profile, name='user_profile'),
+    url(r'^user/unlock/(?P<token>[a-z0-9]+)$', leadgalaxy.views.user_unlock, name='user_unlock'),
+    url(r'^user/invoices/(?P<invoice_id>[\w-]+)$', leadgalaxy.views.user_invoices, name='user_invoices'),
+    url(r'^user/invoices/(?P<invoice_id>[\w-]+)/download$', leadgalaxy.views.user_invoices_download, name='user_invoices_download'),
+    url(r'^user/profile/invoices$', leadgalaxy.views.user_profile_invoices, name='user_profile_invoices'),
+    url(r'^products/collections/(?P<collection>[a-z]+)$', leadgalaxy.views.products_collections, name='products_collections'),
+
+    url(r'^callflex/', include('phone_automation.urls')),
+    url(r'^tubehunt/', include('youtube_ads.urls')),
+    url(r'^pages/', include('article.urls')),
 ]

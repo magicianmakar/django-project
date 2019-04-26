@@ -46,6 +46,7 @@ from django.views.decorators.http import require_http_methods
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
+from shopified_core.decorators import use_upsell_for
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopified_core.mixins import ApiResponseMixin
@@ -96,6 +97,8 @@ from product_alerts.utils import variant_index_from_supplier_sku, delete_product
 
 from profit_dashboard.models import FacebookAccess
 
+from goals.utils import update_completed_steps, get_dashboard_user_goals
+
 from . import tasks
 from . import utils
 from .forms import (
@@ -124,6 +127,7 @@ from .models import (
     ShopifyStore,
     UserProfile,
     UserUpload,
+    DashboardVideo,
 )
 from .templatetags.template_helper import money_format
 from functools import reduce
@@ -177,8 +181,22 @@ def index_view(request):
         'templates': templates,
         'markup_rules': markup_rules,
         'page': 'index',
+        'selected_menu': 'account:stores',
         'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
         'breadcrumbs': ['Stores']
+    })
+
+
+@login_required
+def dashboard(request):
+    update_completed_steps(request.user)
+    user_goals = get_dashboard_user_goals(request.user)
+    videos = DashboardVideo.objects.filter(is_active=True)[:4]
+
+    return render(request, 'dashboard.html', {
+        'user_goals': user_goals,
+        'videos': videos,
+        'selected_menu': 'business:overview'
     })
 
 
@@ -1544,6 +1562,7 @@ def products_list(request, tpl='grid'):
         'products': products,
         'store': store,
         'page': 'product',
+        'selected_menu': 'products:all',
         'breadcrumbs': breadcrumbs
     })
 
@@ -1584,6 +1603,7 @@ def shopify_migration(request):
         'user_filter': utils.get_shopify_products_filter(request),
         'items_per_page_list': [10, 50, 100],
         'page': 'shopify_migration',
+        'selected_menu': 'products:migration',
         'breadcrumbs': breadcrumbs,
         'ppp': ppp,
         'current_page': page
@@ -1724,6 +1744,7 @@ def product_view(request, pid):
         'aws_policy': aws['aws_policy'],
         'aws_signature': aws['aws_signature'],
         'page': 'product',
+        'selected_menu': 'products:all',
         'breadcrumbs': breadcrumbs,
         'token': token
     })
@@ -1753,6 +1774,7 @@ def variants_edit(request, store_id, pid):
         'product': product,
         'api_url': store.get_link(),
         'page': 'product',
+        'selected_menu': 'products:all',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Edit Variants']
     })
 
@@ -1847,6 +1869,7 @@ def product_mapping(request, product_id):
         'product_suppliers': product_suppliers,
         'current_supplier': current_supplier,
         'page': 'product',
+        'selected_menu': 'products:all',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/product?store={}'.format(product.store.id)},
@@ -1918,6 +1941,7 @@ def mapping_supplier(request, product_id):
         'mapping_config': mapping_config,
         'countries': get_counrties_list(),
         'page': 'product',
+        'selected_menu': 'products:all',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/product/?store={}'.format(product.store.id)},
@@ -1974,6 +1998,7 @@ def mapping_bundle(request, product_id):
         'shopify_product': shopify_product,
         'bundle_mapping': bundle_mapping,
         'page': 'product',
+        'selected_menu': 'products:all',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/product?store={}'.format(product.store.id)},
@@ -2008,6 +2033,7 @@ def bulk_edit(request, what):
             'current_page': page,
             'filter_products': args['filter_products'],
             'page': 'bulk',
+            'selected_menu': 'products:bulk-edit',
             'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit', 'Saved']
         })
 
@@ -2056,6 +2082,7 @@ def bulk_edit(request, what):
             'products': products,
             'stores': stores,
             'page': 'bulk',
+            'selected_menu': 'products:bulk-edit',
             'breadcrumbs': breadcrumbs
         })
 
@@ -2087,6 +2114,7 @@ def boards_list(request):
         'count': boards_count,
         'paginator': paginator,
         'page': 'boards',
+        'selected_menu': 'products:boards',
         'breadcrumbs': ['Boards']
     })
 
@@ -2122,6 +2150,7 @@ def boards(request, board_id):
         'current_page': page,
         'searchable': True,
         'page': 'boards',
+        'selected_menu': 'products:boards',
         'breadcrumbs': [{'title': 'Boards', 'url': reverse(boards_list)}, board['title']]
     })
 
@@ -3078,6 +3107,7 @@ def user_profile(request):
         'affiliate': affiliate,
         'example_dates': [arrow.utcnow().replace(days=-2).format('MM/DD/YYYY'), arrow.utcnow().replace(days=-2).humanize()],
         'page': 'user_profile',
+        'selected_menu': 'account:profile',
         'breadcrumbs': ['Profile']
     })
 
@@ -3223,6 +3253,7 @@ def save_image_s3(request):
     })
 
 
+@use_upsell_for('orders.view', 'orders:all')
 def orders_view(request):
     try:
         if not request.user.is_authenticated:
@@ -3240,7 +3271,7 @@ def orders_view(request):
         raven_client.captureException()
 
     if not request.user.can('orders.use'):
-        return render(request, 'upgrade.html')
+        return render(request, 'upgrade.html', {'selected_menu': 'orders:all', })
 
     all_orders = []
     store = None
@@ -3767,6 +3798,7 @@ def orders_view(request):
                         'store': store,
                         'api_error': api_error,
                         'page': 'orders',
+                        'selected_menu': 'orders:all',
                         'breadcrumbs': breadcrumbs
                     })
 
@@ -4126,6 +4158,7 @@ def orders_view(request):
         'order_debug': order_debug,
         'use_fulfillbox': bool(settings.FULFILLBOX_API_URL and models_user.can('fulfillbox.use')),
         'page': 'orders',
+        'selected_menu': 'orders:all',
         'breadcrumbs': breadcrumbs
     })
 
@@ -4133,7 +4166,7 @@ def orders_view(request):
 @login_required
 def orders_track(request):
     if not request.user.can('orders.use'):
-        return render(request, 'upgrade.html')
+        return render(request, 'upgrade.html', {'selected_menu': 'orders:tracking', })
 
     try:
         assert not request.is_ajax(), 'AJAX Request Detected - Orders Track'
@@ -4301,6 +4334,7 @@ def orders_track(request):
         'reason': source_reason,
         'rejected_status': ALIEXPRESS_REJECTED_STATUS,
         'page': 'orders_track',
+        'selected_menu': 'orders:tracking',
         'breadcrumbs': [{'title': 'Orders', 'url': '/orders'}, 'Tracking', store.title]
     })
 
@@ -4517,7 +4551,7 @@ def locate(request, what):
 @login_required
 def product_alerts(request):
     if not request.user.can('price_changes.use'):
-        return render(request, 'upgrade.html')
+        return render(request, 'upgrade.html', {'selected_menu': 'products:alerts'})
 
     show_hidden = True if request.GET.get('hidden') else False
 
@@ -4657,7 +4691,8 @@ def product_alerts(request):
         'store': store,
         'category': category,
         'product_type': product_type,
-        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts']
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
+        'selected_menu': 'products:alerts',
     })
 
 
@@ -4728,6 +4763,7 @@ def products_collections(request, collection):
         'products': page.object_list,
         'paginator': paginator,
         'current_page': page,
+        'selected_menu': 'source:collections-us',
 
         'page': 'products_collections',
         'breadcrumbs': ['Products', 'Collections', 'US']

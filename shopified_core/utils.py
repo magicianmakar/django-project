@@ -792,3 +792,7 @@ def get_first_valid_option(most_commons, valid_options):
     for option, count in most_commons:
         if option in valid_options:
             return option
+
+
+def slugify_menu(selected_menu):
+    return selected_menu.replace(':', '-').replace('_', '-')

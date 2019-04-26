@@ -1,7 +1,11 @@
 {% extends "base.html" %}
 
 {% block main-nav %}
-    {% include 'commercehq/main_nav.html' with url_name=request.resolver_match.view_name %}
+    {% if new_menu_active %}
+        {% include 'commercehq/main_nav_new.html' with url_name=request.resolver_match.view_name %}
+    {% else %}
+        {% include 'commercehq/main_nav.html' with url_name=request.resolver_match.view_name %}
+    {% endif %}
 {% endblock main-nav %}
 
 {% block search-form %}
