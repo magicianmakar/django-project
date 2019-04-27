@@ -46,7 +46,6 @@ from django.views.decorators.http import require_http_methods
 from analytic_events.models import RegistrationEvent
 
 from shopified_core import permissions
-from shopified_core.decorators import use_upsell_for
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopified_core.mixins import ApiResponseMixin
@@ -3253,7 +3252,6 @@ def save_image_s3(request):
     })
 
 
-@use_upsell_for('orders.view', 'orders:all')
 def orders_view(request):
     try:
         if not request.user.is_authenticated:
