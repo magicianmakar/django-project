@@ -33,8 +33,8 @@ from .models import (
 from .tasks import fetch_facebook_insights
 
 
-@use_upsell_for('profit_dashboard.view', 'business:profit_dashboard')
 @login_required
+@use_upsell_for('profit_dashboard.view', 'business:profit_dashboard')
 def index(request):
     if not request.user.can('profit_dashboard.use'):
         if not request.user.is_subuser:
