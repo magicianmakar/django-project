@@ -2162,6 +2162,23 @@ def get_shipping_info(request):
     if request.GET.get('gear'):
         from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier
 
+    request_url = request.GET.get('url')
+    if request_url:
+        cache_key = f'aliexpress_shipping_cache.{hash_text(request_url)}'
+        data = cache.get(cache_key)
+        if data is None:
+            res = requests.get(
+                url=request_url,
+                headers={
+                    "referer": "https://shoppingcart.aliexpress.com/orders.htm?aeOrderFrom=main_shopcart",
+                })
+
+            data = res.text
+            if res.ok and '"success":false' not in data:
+                cache.set(cache_key, data, timeout=3600)
+
+        return HttpResponse(data, content_type='text/javascript;charset=utf-8')
+
     item_id = request.GET.get('id')
     product = request.GET.get('product')
     supplier = request.GET.get('supplier')
