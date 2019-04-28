@@ -151,7 +151,7 @@ def load_aliexpress_countries():
         return aliexpress_countries
 
     data_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'shipping', 'aliexpress_countries.json')
-    aliexpress_countries = json.loads(open(data_file).read().lower())
+    aliexpress_countries = json.loads(open(data_file).read())
 
     return aliexpress_countries
 
@@ -179,7 +179,7 @@ def get_uk_province(city, default=''):
             province = country
             break
 
-    valide, correction = valide_aliexpress_province('UK', province, city)
+    valide, correction = valide_aliexpress_province('UK', province, city, auto_correct=True)
     if not province or not valide:
         province = 'Other'
     elif correction:
@@ -282,10 +282,23 @@ def fuzzy_find_in_list(options, value, default=None):
     return default
 
 
+def find_in_list(items, value):
+    if type(items) is dict:
+        for key, val in items.items():
+            if key.upper() == value.upper():
+                return val
+
+    for i in items:
+        if i.upper() == value.upper():
+            return i
+
+    return None
+
+
 def valide_aliexpress_province(country, province, city, auto_correct=False):
-    country = country.lower().strip() if country else ''
-    province = province.lower().strip() if province else ''
-    city = city.lower().strip() if city else ''
+    country = country.strip() if country else ''
+    province = province.strip() if province else ''
+    city = city.strip() if city else ''
 
     country_code = normalize_country_code(country)
     correction = {}
@@ -297,24 +310,24 @@ def valide_aliexpress_province(country, province, city, auto_correct=False):
     if country_code:
         aliexpress_countries = load_aliexpress_countries()
 
-        if aliexpress_countries.get(country_code):
-            province_list = aliexpress_countries.get(country_code)
+        province_list = find_in_list(aliexpress_countries, country_code)
+        if province_list:
             province_match = fuzzy_find_in_list(list(province_list.keys()), province, default=province) if auto_correct else province
 
-            if province_match and province_list and province_match.lower().strip() != province:
+            if province_match and province_list and province_match != province:
                 if auto_correct:
                     correction['province'] = province_match
                 else:
                     return False, correction
 
-            city_list = province_list.get(province_match)
+            city_list = find_in_list(province_list, province_match)
             if type(city_list) is list and not len(city_list):
                 # Province have a field for city
                 return True, correction
 
             if auto_correct:
                 city_match = fuzzy_find_in_list(city_list, city, default=None)
-                if city_match and city and city_match and city_match.lower().strip() != city:
+                if city_match and city and city_match and city_match != city:
                     correction['city'] = city_match
             else:
                 city_match = city_list and city in city_list
@@ -336,8 +349,9 @@ def support_other_in_province(country):
     if country_code:
         aliexpress_countries = load_aliexpress_countries()
 
-        if aliexpress_countries.get(country_code):
-            return "other" in aliexpress_countries.get(country_code)
+        province_list = find_in_list(aliexpress_countries, country_code)
+        if province_list:
+            return "Other" in province_list
 
     return False
 

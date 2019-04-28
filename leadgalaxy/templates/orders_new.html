@@ -471,11 +471,11 @@
                                                 {{order.shipping_address.city}},
                                             </span>
 
-                                            {% if order.corrections.city %}
+                                            {% if order.corrections.city and order.corrections.city.lower != order.shipping_address.city.lower %}
                                             <span class="pull-right itooltip" data-html="true"
                                                 title="City changed from <b style=color:#ff9090>{{order.shipping_address.city}}</b> to
-                                                       <b style=color:#90ffaf>{{order.corrections.city.title}}</b> to match with Aliexpress">
-                                                Changed to <b>{{order.corrections.city.title}}</b>
+                                                       <b style=color:#90ffaf>{{order.corrections.city}}</b> to match with Aliexpress">
+                                                Changed to <b>{{order.corrections.city}}</b>
                                             </span>
                                             {% endif %}
                                         </p>
@@ -485,11 +485,11 @@
                                                 {{order.shipping_address.province|default:'N/A'}},
                                             </span>
 
-                                            {% if order.corrections.province %}
+                                            {% if order.corrections.province and order.corrections.province.lower != order.shipping_address.province.lower %}
                                             <span class="pull-right itooltip" data-html="true"
                                                 title="Province changed from <b style=color:#ff9090>{{order.shipping_address.province}}</b> to
-                                                       <b style=color:#90ffaf>{{order.corrections.province.title}}</b> to match with Aliexpress">
-                                                Changed to <b>{{order.corrections.province.title}}</b>
+                                                       <b style=color:#90ffaf>{{order.corrections.province}}</b> to match with Aliexpress">
+                                                Changed to <b>{{order.corrections.province}}</b>
                                             </span>
                                             {% endif %}
                                         </p>

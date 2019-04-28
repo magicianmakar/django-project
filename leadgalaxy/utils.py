@@ -1343,10 +1343,10 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
 
         elif correction:
             if 'province' in correction:
-                customer_address['province'] = correction['province'].title()
+                customer_address['province'] = correction['province']
 
             if 'city' in correction:
-                customer_address['city'] = correction['city'].title()
+                customer_address['city'] = correction['city']
 
     if return_corrections:
         return order, customer_address, correction
