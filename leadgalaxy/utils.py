@@ -67,6 +67,7 @@ from shopified_core.utils import (
 from leadgalaxy.models import (
     GroupPlan,
     PlanRegistration,
+    ShopifyOrderTrack,
     ShopifyBoard,
     ShopifyProduct,
     ShopifyProductImage,
@@ -1562,7 +1563,7 @@ def get_tracking_orders(store, tracker_orders):
 
             if manual_fulfillement and tracked.shopify_status != fulfillment_status:
                 tracked.shopify_status = fulfillment_status
-                tracked.save()
+                ShopifyOrderTrack.objects.filter(id=tracked.id).update(shopify_status=fulfillment_status)
 
         new_tracker_orders.append(tracked)
 

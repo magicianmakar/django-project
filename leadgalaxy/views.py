@@ -76,6 +76,7 @@ from shopified_core.utils import (
     decode_params,
     base64_encode,
     base64_decode,
+    using_replica,
 )
 
 from shopify_orders.models import (
@@ -4253,7 +4254,7 @@ def orders_track(request):
         messages.warning(request, "You don't have access to this store orders")
         return HttpResponseRedirect('/')
 
-    orders = ShopifyOrderTrack.objects.select_related('store').filter(user=request.user.models_user, store=store).defer('data')
+    orders = using_replica(ShopifyOrderTrack).select_related('store').filter(user=request.user.models_user, store=store).defer('data')
 
     if query:
         order_id = shopify_orders_utils.order_id_from_name(store, query)
