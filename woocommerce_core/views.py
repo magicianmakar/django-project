@@ -800,7 +800,7 @@ class OrderPlaceRedirectView(RedirectView):
 
             # Temporarily disable eBay affiliate
             if supplier.is_ebay:
-                disable_affiliate = False
+                disable_affiliate = True
 
         elif self.request.GET.get('product'):
             product = self.request.GET['product']
