@@ -75,7 +75,7 @@ from leadgalaxy.models import (
     ShopifyWebhook,
     UserProfile,
 )
-from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province, support_other_in_province
+from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province, support_other_in_province, fix_br_address
 from shopify_orders.models import ShopifyOrderLine
 
 
@@ -1283,6 +1283,9 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
     if customer_address['country_code'] == 'FR':
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip']).strip().rjust(5, '0')
+
+    if customer_address['country_code'] == 'BR':
+        customer_address = fix_br_address(customer_address)
 
     if customer_address['country_code'] == 'IL':
         if customer_address.get('zip'):
