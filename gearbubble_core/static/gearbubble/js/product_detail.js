@@ -904,7 +904,8 @@ function renderImages() {
             buttons.push($('<button>', {
                 'title': "Simple Editor",
                 'class': "btn btn-primary btn-xs itooltip edit-photo",
-                'html': '<i class="fa fa-edit"></i>'
+                'html': '<i class="fa fa-edit"></i>',
+                'data-image-id': i
             }));
         }
 
@@ -929,12 +930,8 @@ function renderImages() {
         d.find('.image-delete').click(imageClicked);
 
         d.find('.edit-photo').click(function (e) {
-            var img = $(this).parents('.var-image-block').find('img');
-
-            launchEditor(
-                img.attr('id'),
-                img.attr('src')
-            );
+            var image = $(this).parents('.var-image-block').find('img')[0];
+            launchEditor(image);
         });
 
         d.find('.remove-background-image-editor').click(function(e) {
@@ -966,11 +963,7 @@ function renderImages() {
 
 function launchEditor(id, src) {
     if (config.photo_editor !== null) {
-        config.feather_editor.launch({
-            image: id,
-            url: src
-        });
-        return false;
+        feather_editor.launch({'image': image});
     } else {
         swal('Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
     }
