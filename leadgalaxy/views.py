@@ -3194,11 +3194,7 @@ def save_image_s3(request):
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
         old_url = request.POST.get('old_url')
-
-        if not utils.upload_from_url(img_url, user.profile.import_stores()):
-            raven_client.captureMessage('Upload from URL', level='warning', extra={'url': img_url})
-
-        fp = io.BytesIO(requests.get(img_url).content)
+        fp = request.FILES.get('image')
 
     # Randomize filename in order to not overwrite an existing file
     img_name = utils.random_filename(img_url.split('/')[-1])

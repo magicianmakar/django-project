@@ -26,6 +26,7 @@ from shopified_core.utils import base64_encode
 from shopified_core.shipping_helper import (
     country_from_code,
     get_counrties_list,
+    fix_br_address,
     fix_fr_address,
     aliexpress_country_code_map,
 )
@@ -365,6 +366,15 @@ class UtilsTestCase(BaseTestCase):
 
 
 class ShippingHelperFunctionsTestCase(BaseTestCase):
+
+    def test_fix_br_address(self):
+        shipping_address = {'zip': '12345000'}
+        modified_address = fix_br_address(shipping_address)
+        self.assertEqual(modified_address['zip'], '12345-000')
+
+        shipping_address = {'zip': '12345-000'}
+        modified_address = fix_br_address(shipping_address)
+        self.assertEqual(modified_address['zip'], '12345-000')
 
     def test_get_country_from_code(self):
         counrties = {

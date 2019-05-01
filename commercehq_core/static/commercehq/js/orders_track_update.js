@@ -344,6 +344,14 @@
         $('.refresh-page-btn').show();
     }
 
+    setupDateRangePicker('#created_at_daterange', 'input[name="created_at_daterange"]');
+    setupDateRangePicker('#date', 'input[name="date"]');
+
+    $('#created_at_daterange').data('daterangepicker').setStartDate(moment().subtract(30, 'days').format('MM/DD/YYYY'));
+    $('#created_at_daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));
+    $('#created_at_daterange').trigger('apply.daterangepicker', $('#created_at_daterange').data('daterangepicker'));
+    $('input[name="created_at_daterange"]').on('change', syncTrackedOrders);
+
     $(function () {
         setTimeout(loadConfig, 500);
     });

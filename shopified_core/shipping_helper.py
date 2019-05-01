@@ -270,6 +270,17 @@ def fix_fr_address(shipping_address):
     return shipping_address
 
 
+def fix_br_address(customer_address):
+    if customer_address.get('zip'):
+        zip_code = customer_address['zip']
+        if '-' not in zip_code:
+            zip_code = re.sub(r'^(\d{5}).*?(\d{3})$', r'\1-\2', zip_code)
+            zip_code = zip_code.strip().rjust(5, '0')
+            customer_address['zip'] = zip_code
+
+    return customer_address
+
+
 def fuzzy_find_in_list(options, value, default=None):
     if options and value:
         f = FuzzySet(options)

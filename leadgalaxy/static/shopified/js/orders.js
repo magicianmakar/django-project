@@ -1007,7 +1007,7 @@ $('.order-bundle').click(function(e) {
             });
         });
 
-        if (order.items.length > 1) {
+        if (order.items.length > 0) {
             order.order_data = order.items[0].order_data.replace(/_[^_]+$/, '');
             order.order_name = order.items[0].order_name;
             order.order_id = order.items[0].order_id;

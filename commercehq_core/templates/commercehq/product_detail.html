@@ -696,15 +696,9 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 
 <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/csdk/4.x/js/editor.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/uuid-js/lib/uuid.js' %}"></script>
-
-<!-- Load Feather code -->
-{% if request.is_secure %}
-<script type="text/javascript" src="https://dme0ih8comzn4.cloudfront.net/imaging/v3/editor.js"></script>
-{% else %}
-<script type="text/javascript" src="http://feather.aviary.com/imaging/v2/editor.js"></script>
-{% endif %}
 
 <script type="text/javascript">
 
@@ -823,55 +817,6 @@ $(function() {
     });
     {% endif %}
 
-    {% if request.user|can:'aviary_photo_editor.use' %}
-
-    config.feather_editor = new Aviary.Feather({
-        apiKey: '220489e3e16f4691bc88d1ef81e05a8b',
-        theme: 'dark',
-        tools: 'all',
-        enableCORS: true,
-        onSave: function(imageID, newURL) {
-            var img = document.getElementById(imageID);
-            var oldURL = img.src;
-            img.src = newURL;
-
-            config.feather_editor.disableControls();
-            config.feather_editor.showWaitIndicator();
-
-            $.ajax({
-                url: '/upload/save_image_s3',
-                type: 'POST',
-                data: {
-                    'url': newURL,
-                    'old_url': oldURL,
-                    'product': config.product_id,
-                    'chq': 1,
-                },
-                context: {'img': img, 'imageID': imageID},
-                success: function (data) {
-                    if (data.status == 'ok') {
-                        this.img.src = data.url;
-                        product.images[parseInt($('#'+this.imageID).attr('image-id'))] = data.url;
-                        config.feather_editor.close();
-                    } else {
-                        displayAjaxError('Image Editor', data);
-                    }
-                },
-                error: function(data) {
-                    displayAjaxError('Image Editor', data);
-                },
-                complete: function() {
-                    config.feather_editor.enableControls();
-                    config.feather_editor.hideWaitIndicator();
-                }
-            });
-        },
-        onError: function(errorObj) {
-            alert(errorObj.message);
-        }
-    });
-    {% endif %}
-
     $('.original-description').css('overflow', 'auto');
 });
 
@@ -881,6 +826,7 @@ $(function() {
     {% compress js %}
     <script type="text/javascript" src="{% static 'js/trix.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/photopea.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/aviary.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/product_detail.js' %}"></script>
