@@ -8,6 +8,7 @@ from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index_from_supplier_sku, calculate_price
 from zapier_core.utils import user_have_hooks
+from product_alerts.models import ProductVariantPriceHistory
 
 
 class ProductChangeManager():
@@ -18,6 +19,8 @@ class ProductChangeManager():
             manager = ShopifyProductChangeManager(product_change)
         elif product_change.store_type == 'chq':
             manager = CommerceHQProductChangeManager(product_change)
+        elif product_change.store_type == 'gkart':
+            manager = GrooveKartProductChangeManager(product_change)
         return manager
 
     def __init__(self, product_change):
@@ -375,7 +378,14 @@ class ShopifyProductChangeManager(ProductChangeManager):
                 })
 
     def add_price_history(self, variant_id, variant_change):
-        pass
+        history, created = ProductVariantPriceHistory.objects.get_or_create(
+            user=self.user,
+            shopify_product=self.product,
+            variant_id=variant_id
+        )
+        new_value = variant_change.get('new_value')
+        old_value = variant_change.get('old_value')
+        history.add_price(new_value, old_value)
 
 
 class CommerceHQProductChangeManager(ProductChangeManager):
@@ -517,4 +527,131 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                 raven_client.captureException(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
+        history, created = ProductVariantPriceHistory.objects.get_or_create(
+            user=self.user,
+            chq_product=self.product,
+            variant_id=variant_id
+        )
+        new_value = variant_change.get('new_value')
+        old_value = variant_change.get('old_value')
+        history.add_price(new_value, old_value)
+
+
+class GrooveKartProductChangeManager(ProductChangeManager):
+    def get_product_data(self):
+        return self.product.retrieve()
+
+    def handle_product_disappear(self, product_data):
+        if self.config['product_disappears'] == 'unpublish':
+            self.product_data_changed = True
+            # TODO
+        elif self.config['product_disappears'] == 'zero_quantity':
+            # GrooveKart doesn't support quantity management
+            pass
+
+        return product_data
+
+    def handle_product_appear(self, product_data):
+        if self.config['product_disappears'] == 'unpublish':
+            self.product_data_changed = True
+            # TODO
+        elif self.config['product_disappears'] == 'zero_quantity':
+            # GrooveKart doesn't support quantity management
+            pass
+
+        return product_data
+
+    def handle_variant_price_change(self, product_data, variant_change):
+        # TODO
+        idx = self.get_variant(product_data, variant_change)
+        if idx is not None:
+            variant_id = product_data['variants'][idx]['id']
+            self.add_price_history(variant_id, variant_change)
+
+        new_value = variant_change.get('new_value')
+        old_value = variant_change.get('old_value')
+
+        if self.config['price_change'] == 'update':
+            if idx is not None:
+                current_price = safe_float(product_data['variants'][idx]['price'])
+                current_compare_at_price = safe_float(product_data['variants'][idx].get('compare_price'))
+
+                new_price, new_compare_at_price = calculate_price(
+                    self.user,
+                    old_value,
+                    new_value,
+                    current_price,
+                    current_compare_at_price,
+                    self.config['price_update_method'],
+                    self.markup_rules
+                )
+                if new_price:
+                    if self.config['price_update_for_increase']:
+                        if new_price > current_price:
+                            self.product_data_changed = True
+                            product_data['variants'][idx]['price'] = new_price
+                            product_data['variants'][idx]['compare_price'] = new_compare_at_price
+                    else:
+                        self.product_data_changed = True
+                        product_data['variants'][idx]['price'] = new_price
+                        product_data['variants'][idx]['compare_price'] = new_compare_at_price
+            elif product_data.get('is_multi') is False:
+                current_price = safe_float(product_data['price'])
+                current_compare_at_price = safe_float(product_data.get('compare_price'))
+
+                new_price, new_compare_at_price = calculate_price(
+                    self.user,
+                    old_value,
+                    new_value,
+                    current_price,
+                    current_compare_at_price,
+                    self.config['price_update_method'],
+                    self.markup_rules
+                )
+                if new_price:
+                    if self.config['price_update_for_increase']:
+                        if new_price > current_price:
+                            self.product_data_changed = True
+                            product_data['price'] = new_price
+                            product_data['compare_price'] = new_compare_at_price
+                    else:
+                        self.product_data_changed = True
+                        product_data['price'] = new_price
+                        product_data['compare_price'] = new_compare_at_price
+
+        return product_data
+
+    def handle_variant_quantity_change(self, product_data, variant_change):
+        # GrooveKart doesn't support quantity management
+        return product_data
+
+    def handle_variant_added(self, product_data, variant_change):
+        # TODO: Handle this case (Add setting, update logic...)
+        # This case is not covered with a setting
+        return product_data
+
+    def handle_variant_removed(self, product_data, variant_change):
+        if self.config['variant_disappears'] == 'remove':
+            idx = self.get_variant(product_data, variant_change)
+            if idx is not None:
+                self.product_data_changed = True
+                # TODO
+        elif self.config['variant_disappears'] == 'zero_quantity':
+            # GrooveKart doesn't support quantity management
+            pass
+
+        return product_data
+
+    def update_product(self, product_data):
+        # TODO
         pass
+
+    def add_price_history(self, variant_id, variant_change):
+        history, created = ProductVariantPriceHistory.objects.get_or_create(
+            user=self.user,
+            gkart_product=self.product,
+            variant_id=variant_id
+        )
+        new_value = variant_change.get('new_value')
+        old_value = variant_change.get('old_value')
+        history.add_price(new_value, old_value)

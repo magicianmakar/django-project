@@ -77,3 +77,6 @@ class ApiHelperBase:
 
     def set_product_default_supplier(self, product, supplier):
         raise NotImplementedError('Set Product Default Supplier')
+
+    def filter_productchange_by_store(self, store):
+        pass

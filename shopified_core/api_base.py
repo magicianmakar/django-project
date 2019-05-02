@@ -12,6 +12,7 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.shortcuts import get_object_or_404
 
 from last_seen.models import LastSeen
 
@@ -29,6 +30,8 @@ from shopified_core.utils import (
 from shopified_core.shipping_helper import aliexpress_country_code_map
 
 from shopified_core.decorators import HasSubuserPermission
+
+from product_alerts.models import ProductChange
 
 
 class ApiBase(ApiResponseMixin, View):
@@ -602,5 +605,72 @@ class ApiBase(ApiResponseMixin, View):
         for product in products:
             permissions.user_can_edit(user, product)
             board.products.remove(product)
+
+        return self.api_success()
+
+    def post_alert_archive(self, request, user, data):
+        try:
+            if data.get('all') == '1':
+                store = self.store_model.objects.get(id=data.get('store'))
+                permissions.user_can_view(user, store)
+
+                self.helper.filter_productchange_by_store(store).update(hidden=1)
+
+            else:
+                alert = ProductChange.objects.get(id=data.get('alert'))
+                permissions.user_can_edit(user, alert)
+
+                alert.hidden = 1
+                alert.save()
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        return self.api_success()
+
+    def post_alert_delete(self, request, user, data):
+        try:
+            store = self.store_model.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+            self.helper.filter_productchange_by_store(store).delete()
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        return self.api_success()
+
+    def post_product_config(self, request, user, data):
+        if not user.can('price_changes.use'):
+            raise PermissionDenied()
+
+        product = data.get('product')
+        if product:
+            product = get_object_or_404(self.product_model, id=product)
+            permissions.user_can_edit(request.user, product)
+        else:
+            return self.api_error('Product not found', status=404)
+
+        try:
+            config = json.loads(product.config)
+        except:
+            config = {}
+
+        for key in data:
+            if key == 'product':
+                continue
+            config[key] = data[key]
+
+        bool_config = ['price_update_for_increase']
+        for key in bool_config:
+            config[key] = (key in data)
+
+        # remove values if update is not selected
+        if config['alert_price_change'] != 'update':
+            config['price_update_method'] = ''
+            config['price_update_for_increase'] = ''
+
+        product.config = json.dumps(config)
+        product.save()
 
         return self.api_success()

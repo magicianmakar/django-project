@@ -10,6 +10,7 @@ from rest_hooks.signals import raw_hook_event
 from shopified_core.utils import app_link
 from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
+from groovekart_core.models import GrooveKartProduct
 from .utils import parse_supplier_sku, variant_index_from_supplier_sku
 from leadgalaxy.templatetags.template_helper import price_diff, money_format
 
@@ -28,6 +29,7 @@ class ProductChange(models.Model):
     user = models.ForeignKey(User, null=True, on_delete=models.CASCADE)
     shopify_product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
     chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE)
+    gkart_product = models.ForeignKey(GrooveKartProduct, null=True, on_delete=models.CASCADE)
     store_type = models.CharField(max_length=255, blank=True, default='shopify')
     data = models.TextField(blank=True, default='')
     hidden = models.BooleanField(default=False, verbose_name='Archived change')
@@ -57,6 +59,8 @@ class ProductChange(models.Model):
             return self.shopify_product
         if self.store_type == 'chq':
             return self.chq_product
+        if self.store_type == 'gkart':
+            return self.gkart_product
         return None
 
     @property
@@ -65,6 +69,8 @@ class ProductChange(models.Model):
             return app_link('product', self.product.id)
         if self.store_type == 'chq':
             return app_link('chq/product', self.product.id)
+        if self.store_type == 'gkart':
+            return app_link('gkart/product', self.product.id)
         return None
 
     def get_data(self, category=None):
@@ -324,11 +330,12 @@ class ProductChange(models.Model):
 class ProductVariantPriceHistory(models.Model):
     class Meta:
         ordering = ['-updated_at']
-        index_together = [['shopify_product', 'variant_id'], ['chq_product', 'variant_id']]
+        index_together = [['shopify_product', 'variant_id'], ['chq_product', 'variant_id'], ['gkart_product', 'variant_id']]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=False)
     shopify_product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE, db_index=False)
     chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE, db_index=False)
+    gkart_product = models.ForeignKey(GrooveKartProduct, null=True, on_delete=models.CASCADE)
     variant_id = models.BigIntegerField(null=True, verbose_name='Source Variant ID')
     data = models.TextField(null=True, blank=True)
     old_price = models.FloatField(null=True)

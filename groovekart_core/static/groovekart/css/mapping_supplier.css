@@ -1,0 +1,68 @@
+.table > tbody > tr > td {
+  vertical-align: middle; }
+
+td.variant-image .thumb {
+  width: 50px; }
+
+.mapping-preview {
+  display: flex;
+  align-items: center; }
+  .mapping-preview .edit-btn {
+    padding: 20px 10px; }
+  .mapping-preview .preview-display {
+    display: flex;
+    align-items: center; }
+  .mapping-preview .preview-display-block {
+    display: block; }
+    .mapping-preview .preview-display-block .badge {
+      cursor: help;
+      margin-top: 5px;
+      margin-left: 5px;
+      background-color: #fff;
+      border: 1px solid #ddd; }
+  .mapping-preview .select-var-mapping:hover, .mapping-preview .change-shipping-rules:hover {
+    cursor: pointer; }
+  .mapping-preview .preview-display:hover, .mapping-preview .preview-display-block:hover {
+    cursor: pointer; }
+    .mapping-preview .preview-display:hover .variant-title, .mapping-preview .preview-display-block:hover .variant-title {
+      color: #6c9fcb; }
+
+#modal-shipping-methods .shipping-methods-container .shipping-rule .rule-arrow {
+  padding: 6px 0 0 0;
+  margin: 0; }
+#modal-shipping-methods .shipping-methods-container .shipping-rule .delete-btn {
+  cursor: pointer;
+  margin: 0;
+  padding: 0; }
+
+#modal-variant-select .variants-container .variant {
+  padding: 5px 10px; }
+
+.option-item {
+  display: inline-block; }
+  .option-item .option-item-select {
+    align-items: center;
+    background-color: #fff;
+    border-radius: 3px;
+    border: 1px solid #cccccc;
+    cursor: pointer;
+    display: flex;
+    margin-right: 10px;
+    min-height: 30px;
+    min-width: 55px;
+    padding: 2px 5px; }
+    .option-item .option-item-select .variant-select {
+      margin: 0 5px 0; }
+    .option-item .option-item-select .variant-title {
+      font-weight: 600; }
+    .option-item .option-item-select img {
+      display: inline-block;
+      margin-right: 5px;
+      max-height: 35px;
+      max-width: 35px; }
+
+.supplier-config td {
+  padding-top: 25px !important; }
+  .supplier-config td .supplier-config-select {
+    width: auto;
+    max-width: 200px; }

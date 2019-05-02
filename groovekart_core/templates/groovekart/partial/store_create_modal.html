@@ -1,0 +1,51 @@
+<div id="store-create-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-8 b-r">
+                        <h3 class="m-t-none m-b">Add GrooveKart Store</h3>
+                        <form id="store-create-form" method="post" role="form">
+                            <div class="form-group">
+                                <label>Title</label>
+                                <input type="text" id="store_title" name="title" placeholder="Store name" class="form-control" />
+                            </div>
+                            <div class="form-group">
+                                <label>Store URL</label>
+                                <input type="url" id="store_api_url" name="api_url" placeholder="https://your-shop-url.com" class="form-control" required />
+                            </div>
+                            <div class="form-group">
+                                <label>API Key</label>
+                                <input type="password" id="store_api_key" name="api_key" class="form-control" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Auth Token</label>
+                                <input type="text" id="store_api_token" name="api_token" class="form-control" required />
+                            </div>
+                            <div>
+                                <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Add store</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-sm-4"><h4>Need Help?</h4>
+                        <p class="xwell">
+                            How To Connect Your GrooveKart Store:
+                            <ol>
+                                <li>Go to the login page and enter credentials of your store: https://my.groovekart.com/</li>
+                                <li>Select "Enter Back Office" option for your GrooveKart Store and you will be redirected to back office of your store.</li>
+                                <li>After successful login to store back office, select App Manager link under APPS section in left menu.</li>
+                                <li>After page is loaded, go the bottom of the page look for "Dropified API Credentials" app.</li>
+                                <li>Once app is located on the page, click on the "red color" button to activate the app.</li>
+                                <li>Upon successful activation of app, you will see the API Key and Auth Token in the app box right above the activation button.</li>
+                                <li>Copy and paste the API Key and Auth Token into their respective fields in Dropified.</li>
+                            </ol>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

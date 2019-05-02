@@ -53,6 +53,7 @@ from shopified_core.exceptions import ApiLoginException
 
 from shopify_orders import utils as shopify_orders_utils
 from commercehq_core.models import CommerceHQProduct
+from groovekart_core.models import GrooveKartProduct
 from product_alerts.models import ProductChange
 from stripe_subscription.stripe_api import stripe
 from shopify_subscription.tasks import cancel_baremetrics_subscriptions
@@ -1005,6 +1006,11 @@ def webhook(request, provider, option):
                 product = CommerceHQProduct.objects.get(id=product_id)
             except CommerceHQProduct.DoesNotExist:
                 return JsonResponse({'error': 'Product Not Found'}, status=404)
+        elif dropified_type == 'gkart':
+            try:
+                product = GrooveKartProduct.objects.get(id=product_id)
+            except GrooveKartProduct.DoesNotExist:
+                return JsonResponse({'error': 'Product Not Found'}, status=404)
         else:
             return JsonResponse({'error': 'Unknown Product Type'}, status=500)
 
@@ -1017,6 +1023,7 @@ def webhook(request, provider, option):
                 store_type=dropified_type,
                 shopify_product=product if dropified_type == 'shopify' else None,
                 chq_product=product if dropified_type == 'chq' else None,
+                gkart_product=product if dropified_type == 'gkart' else None,
                 user=product.user,
                 data=request.body,
             )
@@ -2162,6 +2169,8 @@ def get_shipping_info(request):
         from woocommerce_core.models import WooProduct, WooSupplier
     if request.GET.get('gear'):
         from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier
+    if request.GET.get('gkart'):
+        from groovekart_core.models import GrooveKartProduct, GrooveKartSupplier
 
     request_url = request.GET.get('url')
     if request_url:
@@ -2220,6 +2229,15 @@ def get_shipping_info(request):
             else:
                 supplier = GearBubbleSupplier.objects.get(id=supplier)
 
+        elif request.GET.get('gkart'):
+
+            if int(supplier) == 0:
+                product = GrooveKartProduct.objects.get(id=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = GrooveKartSupplier.objects.get(id=supplier)
+
         else:
 
             if int(supplier) == 0:
@@ -2262,6 +2280,8 @@ def get_shipping_info(request):
         product = get_object_or_404(WooProduct, id=request.GET.get('product'))
     elif request.GET.get('gear'):
         product = get_object_or_404(GearBubbleProduct, id=request.GET.get('product'))
+    elif request.GET.get('gkart'):
+        product = get_object_or_404(GrooveKartProduct, id=request.GET.get('product'))
     else:
         product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
 

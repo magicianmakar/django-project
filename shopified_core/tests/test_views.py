@@ -7,6 +7,7 @@ from django.http import JsonResponse
 
 from leadgalaxy.tests.factories import UserFactory
 from gearbubble_core.tests.factories import GearBubbleStoreFactory, GearBubbleOrderTrackFactory
+from groovekart_core.tests.factories import GrooveKartStoreFactory, GrooveKartOrderTrackFactory
 
 
 class GetAllStoresTest(BaseTestCase):
@@ -72,5 +73,18 @@ class GetAllOrdersSyncTest(BaseTestCase):
         orders = json.loads(r.content)['orders']
         order = orders.pop()
         self.assertEqual(order['store_type'], 'gear')
+        self.assertEqual(order['order_id'], track.order_id)
+        self.assertEqual(order['line_id'], track.line_id)
+
+    def test_must_include_groovekart_order_tracks(self):
+        store = GrooveKartStoreFactory(user=self.user)
+        track = GrooveKartOrderTrackFactory(user=self.user, store=store)
+        self.user.is_superuser = True
+        self.user.save()
+        self.login()
+        r = self.client.get('/api/orders-sync')
+        orders = json.loads(r.content)['orders']
+        order = orders.pop()
+        self.assertEqual(order['store_type'], 'gkart')
         self.assertEqual(order['order_id'], track.order_id)
         self.assertEqual(order['line_id'], track.line_id)

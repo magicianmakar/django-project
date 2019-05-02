@@ -1,0 +1,163 @@
+{% if user_facebook_permission %}
+
+<div class="panel-group" id="facebook-connections">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h5 class="panel-title">
+        <a data-toggle="collapse"
+           data-parent="#facebook-connections"
+           href="#collapse-facebook-connections"
+           {% if show_facebook_connection %}
+           aria-expanded="true" class=""
+           {% else %}
+           aria-expanded="false" class="collapsed"
+           {% endif %}
+        >
+          Facebook Connections (Ad Costs)
+          <span class="collapse-link pull-right">
+            {% if show_facebook_connection %}
+            <i class="fa fa-chevron-up"></i>
+            {% else %}
+            <i class="fa fa-chevron-down"></i>
+            {% endif %}
+          </span>
+        </a>
+      </h5>
+    </div>
+    <div id="collapse-facebook-connections"
+         {% if show_facebook_connection %}
+         aria-expanded="true" class="panel-collapse collapse in" style=""
+         {% else %}
+         aria-expanded="false" class="panel-collapse collapse" style=""
+         {% endif %}
+    >
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-md-12" id="connect-facebook">
+            <p class="pull-left" style="line-height: 28px;">For loading Ad Costs data please</p>
+            <fb:login-button class="fb-login-button" scope="ads_read" onlogin="FacebookProfitDashboard.checkLoginState();" data-max-rows="1" data-size="medium" data-button-type="continue_with" data-show-faces="false" data-auto-logout-link="false" data-use-continue-as="false">
+            </fb:login-button>
+          </div>
+          <div class="col-md-12" id="loading-facebook" style="display: none;">
+            <div class="sk-spinner sk-spinner-wave pull-left">
+                <div class="sk-rect1"></div>
+                <div class="sk-rect2"></div>
+                <div class="sk-rect3"></div>
+                <div class="sk-rect4"></div>
+                <div class="sk-rect5"></div>
+            </div>
+            <p style="line-height: 30px;">Loading Ad Costs from facebook insights</p>
+          </div>
+          <div class="col-md-12" id="facebook-logged-in">
+            <p class="pull-left" style="line-height: 35px;">You are connected to facebook.</p>
+            <form id="facebook-sync" method="post" action="" class="pull-left">
+              <input type="hidden" name="store" value="{{ store.id }}">
+              <input type="hidden" name="store_type" value="{{ store_type }}">
+              <input type="hidden" name="fb_access_token" value="">
+              <input type="hidden" name="fb_expires_in" value="">
+              <input type="hidden" name="fb_user_id" value="">
+              {% if need_setup %}
+              <a href="#" id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Ad Account</a>
+              {% else %}
+              <button type="submit" class="btn btn-primary btn-xs">Sync Again</button>
+              <a href="#" id="fb-ad-setup" class="btn btn-success btn-xs m-l">Setup Another Ad Account</a>
+              {% endif %}
+              <a href="#" id="facebook-user-logout" class="btn btn-danger btn-xs m-l" title="Log out from Profit Dashboard APP">Disconnect</a>
+            </form>
+          </div>
+          <br>
+          <div class="col-md-12" id="facebook-logged-in">
+            {% if accounts %}
+            <h4>Accounts Synced</h4>
+            {% for account in accounts %}
+            <div class="facebook-account">
+              <p>
+                {{ account.account_name }}
+                <i> - last time synced at:</i>
+                {{ account.last_sync|date:"m/d/Y" }}
+              </p>
+              <a href="#" class="btn btn-danger btn-xs m-l fb-ad-remove" data-id="{{ account.pk }}" data-facebook-user="{{ account.access.facebook_user_id }}">× Remove</a>
+            </div>
+            {% endfor %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div id="fb-account-select-modal" class="modal fade facebook-modal" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Facebbok Ad Accounts</h4>
+      </div>
+
+      <div class="modal-body">
+      </div>
+
+      <div class="modal-footer" style="overflow:auto">
+        <button type="button" class="btn btn-info" id="fb-account-selected">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="fb-campaign-select-modal" class="modal fade facebook-modal" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Facebbok Ad Campaigns</h4>
+      </div>
+
+      <div class="modal-body" style="overflow:auto">
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-info" id="fb-campaign-selected">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% verbatim %}
+<script id="fb-account-list" type="text/x-handlebars-template">
+  <p>Please Select a Facebook Ad Account:</p>
+  <ul class="list-group" style="overflow:auto;max-height:400px;">
+    {{#each accounts}}
+    <li class="list-group-item" data-name="{{this.name}}">
+      <label>
+        <input type="radio" name="account" value="{{this.id}}"> {{this.name}}
+      </label>
+    </li>
+    {{/each}}
+  </ul>
+</script>
+
+<script id="fb-campaign-list" type="text/x-handlebars-template">
+  <p>Please Select Facebook Campaigns: <a href="#" class="select-all-btn pull-right">Select All</a></p>
+  <select name="config" class="form-control">
+    {{#each config_options}}
+    <option class="form-control" value="{{this.key}}" {{this.selected}}>{{this.value}}</option>
+    {{/each}}
+  </select>
+  <br>
+  <ul class="list-group" style="overflow:auto;max-height:400px;">
+    {{#each campaigns}}
+    <li class="list-group-item">
+      <label>
+        <input type="checkbox" name="campaign" value="{{this.id}}" {{ this.checked }}>
+        <span class="facebook-campaign-title">{{this.name}}</span>
+        <span class="badge badge-white">{{this.created_time}}</span>
+        <span class="badge badge-white">{{this.status}}</span>
+      </label>
+    </li>
+    {{/each}}
+  </ul>
+</script>
+{% endverbatim %}
+{% endif %}

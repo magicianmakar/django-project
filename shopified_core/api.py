@@ -20,6 +20,7 @@ from leadgalaxy.models import ShopifyOrderTrack
 from commercehq_core.models import CommerceHQOrderTrack
 from woocommerce_core.models import WooOrderTrack
 from gearbubble_core.models import GearBubbleOrderTrack
+from groovekart_core.models import GrooveKartOrderTrack
 
 from .mixins import ApiResponseMixin
 
@@ -246,6 +247,23 @@ class ShopifiedApi(ApiResponseMixin, View):
                 order_tracks = order_tracks.filter(store=data.get('store'))
 
             orders.extend(core_utils.serializers_orders_track(order_tracks, 'gear'))
+
+        # GrooveKart
+        store_ids = list(user.profile.get_gkart_stores(flat=True))
+        if store_ids:
+            order_tracks = core_utils.using_replica(GrooveKartOrderTrack) \
+                .filter(store__in=store_ids) \
+                .filter(created_at__gte=since) \
+                .filter(source_tracking='') \
+                .exclude(source_status='FINISH') \
+                .filter(hidden=False) \
+                .defer('data') \
+                .order_by('created_at')
+
+            if data.get('store'):
+                order_tracks = order_tracks.filter(store=data.get('store'))
+
+            orders.extend(core_utils.serializers_orders_track(order_tracks, 'gkart'))
 
         return self.api_success({
             'orders': orders,

@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^chq/', include('commercehq_core.urls', 'chq')),
     url(r'^woo/', include('woocommerce_core.urls', 'woo')),
     url(r'^gear/', include('gearbubble_core.urls', 'gear')),
+    url(r'^gkart/', include('groovekart_core.urls', 'gkart')),
     url(r'^subscription/', include('stripe_subscription.urls')),
     url(r'^subscription/shopify/', include('shopify_subscription.urls')),
     url(r'^marketing/', include('product_feed.urls')),
@@ -24,6 +25,7 @@ urlpatterns = [
     url(r'^tubehunt/', include('youtube_ads.urls')),
     url(r'^callflex/', include('phone_automation.urls')),
     url(r'^sso/', include('sso_core.urls')),
+    url(r'^profits/', include('profits.urls', 'profits')),
     url(r'^admin/', admin.site.urls),
 ]
 

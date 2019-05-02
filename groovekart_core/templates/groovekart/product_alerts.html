@@ -1,0 +1,331 @@
+{% extends "base_groovekart_core.html" %}
+
+{% load static %}
+{% load compress %}
+{% load template_helper %}
+
+{% block title %}Alerts{% endblock %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+         <div class="tabs-container">
+            <ul class="nav nav-tabs">
+            {% if not request.GET.store %}
+                {% for item in user.profile.get_gkart_stores %}
+                    {% if forloop.first %}
+                        <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                    {% else %}
+                        <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+            {% else %}
+                {% for item in user.profile.get_gkart_stores %}
+                    {% if item.id|stringformat:"i" == request.GET.store %}
+                        <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+                    {% else %}
+                        <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            </ul>
+            <div class="tab-content">
+                <div id="tab-1" class="tab-pane active">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-8 filter-col">
+                                <form id="filter-form" class="form-inline" method="get">
+                                    <input type="hidden" name="store" value="{{request.GET.store}}">
+                                    <input type="hidden" name="hidden" value="{{request.GET.hidden}}">
+                                    <label for="selected-actions" class="filter-col-item">Category:</label>
+                                    <select class="form-control filter-col-item" name="category">
+                                        <option value=""></option>
+                                        <option {% if category == "product:offline" %} selected {% endif %} value="product:offline">Availability</option>
+                                        <option {% if category == "variant:quantity" %} selected {% endif %} value="variant:quantity">Quantity</option>
+                                        <option {% if category == "variant:price" %} selected {% endif %} value="variant:price">Price</option>
+                                        <option {% if category == "variant:var_added" %} selected {% endif %} value="variant:var_added">Variant Added</option>
+                                        <option {% if category == "variant:var_removed" %} selected {% endif %} value="variant:var_removed">Variant Removed</option>
+                                    </select>
+                                    <label for="selected-actions" class="filter-col-item">Product Type:</label>
+                                    <input name="product_type" type="text" class="form-control filter-col-item" value="{{product_type}}" placeholder="">
+                                    <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>
+                                </form>
+                            </div>
+                            <div class="col-md-4 text-right">
+                            {% if show_hidden %}
+                                <a href="{% url 'gkart:product_alerts' %}?store={{ request.GET.store }}" class="btn btn-rounded btn-outline btn-sm expand-btn btn-default btn-reverse active">Archived Alerts</a>
+                            {% else %}
+                                <a href="{% url 'gkart:product_alerts' %}?hidden=1&store={{ request.GET.store }}" class="btn btn-rounded btn-outline btn-sm expand-btn btn-default">Archived Alerts</a>
+                            {% endif %}
+                                <a data-toggle="dropdown" href="#" aria-expanded="false" class="dropdown-toggle btn btn-circle btn-outline btn-sm expand-btn btn-default"><i class="fa fa-cog"></i></a>
+                                <ul class="dropdown-menu dropdown-user">
+                                    <li>
+                                        <a store-id="{{store.id}}" id="archive-all-alerts" href="#">Archive All Alerts</a>
+                                    </li>
+                                    <li>
+                                        <a store-id="{{store.id}}" id="delete-all-alerts" href="#">Delete All Alerts</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        <table class="table alert-table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Description</th>
+                                    <th>Date</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in product_changes %}
+                                    {% for change in item.changes.product.offline %}
+                                        {% if forloop.first %}
+                                        <tr class="header" alert-id="{{item.id}}">
+                                            <td class="category">Availability</td>
+                                            <td class="details-toggle">
+                                                {% if not change.new_value %}
+                                                    Product
+                                                    <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a>
+                                                    Is now <b style="color:green">Online</b>
+                                                {% else %}
+                                                    Product
+                                                    <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a>
+                                                    Is now <b style="color:red">Offline</b>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{item.qelem.updated_at|date}}</td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" gkart-link="{{item.gkart_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
+                                        </tr>
+                                        <tr class="details" alert-id="{{item.id}}">
+                                        {% endif %}
+                                        {% if forloop.last %}
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% for change in item.changes.variants.price %}
+                                        {% if forloop.first %}
+                                        <tr class="header" alert-id="{{item.id}}" >
+                                            <td class="category">Price</td>
+                                            <td class="details-toggle">The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
+                                            <td>{{item.qelem.updated_at|date}}</td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" gkart-link="{{item.gkart_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
+                                        </tr>
+                                        <tr class="details" alert-id="{{item.id}}">
+                                            <td class="well" colspan="4">
+                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-2"></div>
+                                                    <div class="col-md-2"><b>Old Price</b></div>
+                                                    <div class="col-md-2"><b>New Price</b></div>
+                                                    <div class="col-md-2"><b>GrooveKart</b></div>
+                                                </div>
+
+                                        {% endif %}
+                                                <div class="row">
+                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.sku_readable}}</div>
+                                                    <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
+                                                    <div class="col-md-2">{% money_format change.old_value store %}</div>
+                                                    <div class="col-md-2">{% money_format change.new_value store %}</div>
+                                                    <div class="col-md-2">
+                                                    {% if change.gkart_value_label %}
+                                                    {{ change.gkart_value_label }}
+                                                    {% else %}
+                                                    {% money_format change.gkart_value store %}
+                                                    {% endif %}
+                                                    </div>
+                                                </div>
+                                        {% if forloop.last %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% for change in item.changes.variants.quantity %}
+                                        {% if forloop.first %}
+                                        <tr class="header" alert-id="{{item.id}}" >
+                                            <td class="category">Quantity</td>
+                                            <td class="details-toggle">The <b>Quantity</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a> has changed</td>
+                                            <td>{{item.qelem.updated_at|date}}</td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" gkart-link="{{item.gkart_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
+                                        </tr>
+                                        <tr class="details" alert-id="{{item.id}}">
+                                            <td class="well" colspan="4">
+                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-2"></div>
+                                                    <div class="col-md-2"><b>Old Quantity</b></div>
+                                                    <div class="col-md-2"><b>New Quantity</b></div>
+                                                    <div class="col-md-2"><b>GrooveKart</b></div>
+                                                </div>
+
+                                        {% endif %}
+                                                <div class="row">
+                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.sku_readable}}</div>
+                                                    <div class="col-md-2">{% price_diff change.old_value change.new_value True %}</div>
+                                                    <div class="col-md-2">{{change.old_value}}</div>
+                                                    <div class="col-md-2">{{change.new_value}}</div>
+                                                    <div class="col-md-2">{{change.gkart_value}}</div>
+                                                </div>
+                                        {% if forloop.last %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {# New Variants #}
+                                    {% for change in item.changes.variants.var_added %}
+                                        {% if forloop.first %}
+                                        <tr class="header" alert-id="{{item.id}}" >
+                                            <td class="category">New Variant</td>
+                                            <td class="details-toggle">A <b>new variant</b> has been added to <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a></td>
+                                            <td>{{item.qelem.updated_at|date}}</td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" gkart-link="{{item.gkart_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
+                                        </tr>
+                                        <tr class="details" alert-id="{{item.id}}">
+                                            <td class="well" colspan="4">
+                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-2"></div>
+                                                </div>
+
+                                        {% endif %}
+                                                <div class="row">
+                                                    <div class="col-md-offset-1 col-md-3 var-name" style="color:green">
+                                                        {{change.sku_readable}}
+                                                    </div>
+                                                    <div class="col-md-2"></div>
+                                                </div>
+                                        {% if forloop.last %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {# Removed Product Variants #}
+                                    {% for change in item.changes.variants.var_removed %}
+                                        {% if forloop.first %}
+                                        <tr class="header" alert-id="{{item.id}}" >
+                                            <td class="category">Removed Variant</td>
+                                            <td class="details-toggle">A variant has been removed from <a href="{{item.qelem.product.get_original_info.url}}" target="_blank" class="itooltip" title="{{item.qelem.product.get_product}}">{{item.qelem.product.get_product|truncatewords:5}}</a></td>
+                                            <td>{{item.qelem.updated_at|date}}</td>
+                                            <td>
+                                                <a class="btn btn-default btn-outline btn-xs view-details" href="#">View Details</a>
+                                                <a class="btn btn-success btn-outline btn-xs open-product-in" product-id="{{item.product.id}}" gkart-link="{{item.gkart_link|default:''}}" original-link="{{item.original_link}}" href="#">Open Product</a>
+
+                                                <a class="btn btn-primary btn-outline btn-xs archive-alert" alert-id="{{item.id}}" href="#">Archive</a>
+                                            </td>
+                                        </tr>
+                                        <tr class="details" alert-id="{{item.id}}">
+                                            <td class="well" colspan="4">
+                                                <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-2"></div>
+                                                </div>
+
+                                        {% endif %}
+                                                <div class="row">
+                                                    <div class="col-md-offset-1 col-md-3 var-name" style="color:red">
+                                                        {{change.sku_readable}}
+                                                    </div>
+                                                    <div class="col-md-2"></div>
+                                                </div>
+                                        {% if forloop.last %}
+                                            </td>
+                                        </tr>
+                                        {% endif %}
+
+                                    {% endfor %}
+                                {% empty %}
+                                    <tr>
+                                        <td class="text-center" colspan="4">
+                                            <i>No alerts to display at this time</i>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        {% include "partial/paginator.html" %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+    tbody tr.header {
+        height: 50px !important;
+    }
+
+    tbody tr td {
+        vertical-align: middle !important;
+    }
+
+    tr td.category {
+        font-weight: bold;
+    }
+
+    .details {
+        display: none;
+    }
+
+    .var-name {
+        text-align: right;
+    }
+
+    {% if request.GET.hidden %}
+    .archive-alert {
+        display:none;
+    }
+    {% endif %}
+
+    .filter-col {
+        display: flex;
+        align-items: center;
+    }
+
+    .filter-col .filter-col-item {
+        margin-right: 5px;
+    }
+
+    .filter-col select {
+        padding-top: 2px;
+        display: inline-block;
+        width: 191px;
+    }
+</style>
+{% endblock %}
+
+{% block extrajs %}
+{% compress js %}
+<script type="text/javascript" src="{% static 'groovekart/js/product_alerts.js' %}"></script>
+{% endcompress %}
+{% endblock %}

@@ -12,6 +12,7 @@ from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import url_join
 from leadgalaxy.models import AppPermission, GroupPlan, ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
+from groovekart_core.models import GrooveKartProduct
 from product_alerts.utils import monitor_product
 from last_seen.models import LastSeen
 
@@ -118,6 +119,7 @@ class Command(DropifiedBaseCommand):
 
         self.handle_products(user, CommerceHQProduct.objects.filter(user=user))
         self.handle_products(user, ShopifyProduct.objects.filter(user=user))
+        self.handle_products(user, GrooveKartProduct.objects.filter(user=user))
 
     def handle_products(self, user, products):
         products = products.filter(Q(monitor_id=0) | Q(monitor_id=None))
@@ -125,6 +127,8 @@ class Command(DropifiedBaseCommand):
         if products.model.__name__ == 'ShopifyProduct':
             products = products.exclude(shopify_id=0)
         elif products.model.__name__ == 'CommerceHQProduct':
+            products = products.exclude(source_id=0)
+        elif products.model.__name__ == 'GrooveKartProduct':
             products = products.exclude(source_id=0)
 
         products = products.filter(store__is_active=True)

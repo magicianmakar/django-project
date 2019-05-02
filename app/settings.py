@@ -69,6 +69,7 @@ INSTALLED_APPS = (
     'order_exports',
     'order_imports',
     'profit_dashboard',
+    'profits',
     'subusers',
     'tapfiliate',
     'youtube_ads',
@@ -78,6 +79,7 @@ INSTALLED_APPS = (
     'commercehq_core',
     'woocommerce_core',
     'gearbubble_core',
+    'groovekart_core',
     'zapier_core',
     'phone_automation',
     'funnels',
@@ -138,9 +140,11 @@ DROPIFIED_API = {
     'chq': 'commercehq_core.api.CHQStoreApi',
     'gear': 'gearbubble_core.api.GearBubbleApi',
     'woo': 'woocommerce_core.api.WooStoreApi',
+    'gkart': 'groovekart_core.api.GrooveKartApi',
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
     'subusers': 'subusers.api.SubusersApi',
     'goals': 'goals.api.GoalsApi',
+    'profits': 'profits.api.ProfitsApi',
 }
 
 # Database

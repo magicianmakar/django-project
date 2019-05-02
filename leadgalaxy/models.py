@@ -52,7 +52,7 @@ SUBUSER_PERMISSIONS = (
     ('edit_product_boards', 'Edit product boards'),
     ('view_help_and_support', 'View help and support'),
     ('view_bonus_training', 'View bonus training'),
-    ('view_profit_dashboard', 'View profit dashboard')
+    ('view_profit_dashboard', 'View profit dashboard'),
 )
 
 SUBUSER_STORE_PERMISSIONS = (
@@ -87,6 +87,14 @@ SUBUSER_GEAR_STORE_PERMISSIONS = (
     ('view_alerts', 'View alerts'),
 )
 
+SUBUSER_GKART_STORE_PERMISSIONS = (
+    ('save_for_later', 'Save products for later'),
+    ('send_to_gear', 'Send products to GearBubble'),
+    ('delete_products', 'Delete products'),
+    ('place_orders', 'Place orders'),
+    ('view_alerts', 'View alerts'),
+    ('view_profit_dashboard', 'View profit dashboard'),
+)
 
 PRICE_MARKUP_TYPES = (
     ('margin_percent', 'Increase by percentage'),
@@ -111,6 +119,7 @@ class UserProfile(models.Model):
     subuser_chq_stores = models.ManyToManyField('commercehq_core.CommerceHQStore', blank=True, related_name='subuser_chq_stores')
     subuser_woo_stores = models.ManyToManyField('woocommerce_core.WooStore', blank=True, related_name='subuser_woo_stores')
     subuser_gear_stores = models.ManyToManyField('gearbubble_core.GearBubbleStore', blank=True, related_name='subuser_gear_stores')
+    subuser_gkart_stores = models.ManyToManyField('groovekart_core.GrooveKartStore', blank=True, related_name='subuser_gkart_stores')
 
     stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
@@ -137,6 +146,7 @@ class UserProfile(models.Model):
     subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
     subuser_woo_permissions = models.ManyToManyField('SubuserWooPermission', blank=True)
     subuser_gear_permissions = models.ManyToManyField('SubuserGearPermission', blank=True)
+    subuser_gkart_permissions = models.ManyToManyField('SubuserGKartPermission', blank=True)
 
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title if self.plan else 'None')
@@ -317,12 +327,24 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_gkart_stores(self, flat=False):
+        if self.is_subuser:
+            stores = self.subuser_gkart_stores.filter(is_active=True)
+        else:
+            stores = self.user.groovekartstore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
+
     def get_stores_count(self):
         return sum([
             self.get_shopify_stores().count(),
             self.get_chq_stores().count(),
             self.get_woo_stores().count(),
             self.get_gear_stores().count(),
+            self.get_gkart_stores().count(),
         ])
 
     def get_new_alerts(self):
@@ -472,6 +494,12 @@ class UserProfile(models.Model):
             return False
 
         return self.subuser_gear_permissions.filter(codename=codename, store=store).exists()
+
+    def has_subuser_gkart_permission(self, codename, store):
+        if not self.subuser_gkart_stores.filter(pk=store.id).exists():
+            return False
+
+        return self.subuser_gkart_permissions.filter(codename=codename, store=store).exists()
 
     def add_ip(self, ip):
         if not ip:
@@ -649,6 +677,19 @@ class SubuserGearPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
     store = models.ForeignKey('gearbubble_core.GearBubbleStore', related_name='subuser_gear_permissions')
+
+    class Meta:
+        ordering = 'pk',
+        unique_together = 'codename', 'store'
+
+    def __str__(self):
+        return '{} - {}'.format(self.store.title, self.codename)
+
+
+class SubuserGKartPermission(models.Model):
+    codename = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
+    store = models.ForeignKey('groovekart_core.GrooveKartStore', related_name='subuser_gkart_permissions')
 
     class Meta:
         ordering = 'pk',

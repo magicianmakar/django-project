@@ -294,3 +294,47 @@ def subuser_gear_store_permissions(request, user_id, store_id):
     }
 
     return render(request, 'subusers/gear_store_permissions.html', context)
+
+
+@transaction.atomic
+@login_required
+def subuser_gkart_store_permissions(request, user_id, store_id):
+    store = request.user.groovekartstore_set.filter(pk=store_id).first()
+    if not store:
+        raise Http404
+
+    subuser = get_object_or_404(User,
+                                pk=user_id,
+                                profile__subuser_parent=request.user,
+                                profile__subuser_gkart_stores__pk=store_id)
+
+    subuser_gear_permissions = subuser.profile.subuser_gkart_permissions.filter(store=store)
+    initial = {'permissions': subuser_gear_permissions, 'store': store}
+
+    if request.method == 'POST':
+        form = SubuserGearPermissionsForm(request.POST, initial=initial)
+        if form.is_valid():
+            new_permissions = form.cleaned_data['permissions']
+            subuser.profile.subuser_gear_permissions.remove(*subuser_gear_permissions)
+            subuser.profile.subuser_gear_permissions.add(*new_permissions)
+            messages.success(request, 'Subuser permissions successfully updated')
+            return redirect('{}subuser_gear_store_permissions'.format(get_namespace(request)), user_id, store_id)
+    else:
+        form = SubuserGearPermissionsForm(initial=initial)
+
+    breadcrumbs = [
+        'Account',
+        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(get_namespace(request)))},
+        subuser.username,
+        {'title': 'Permissions', 'url': reverse('{}subuser_perms_edit'.format(get_namespace(request)), args=(user_id,))},
+        store.title,
+    ]
+
+    context = {
+        'subuser': subuser,
+        'form': form,
+        'breadcrumbs': breadcrumbs,
+        'page': 'subusers',
+    }
+
+    return render(request, 'subusers/gear_store_permissions.html', context)

@@ -8,6 +8,7 @@ from leadgalaxy.models import ShopifyStore
 from commercehq_core.models import CommerceHQStore
 from woocommerce_core.models import WooStore
 from gearbubble_core.models import GearBubbleStore
+from groovekart_core.models import GrooveKartStore
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -39,7 +40,8 @@ def user_can_add(user, obj, raise_on_error=True):
         if isinstance(obj, ShopifyStore) or \
                 isinstance(obj, CommerceHQStore) or \
                 isinstance(obj, WooStore) or \
-                isinstance(obj, GearBubbleStore):
+                isinstance(obj, GearBubbleStore) or \
+                isinstance(obj, GrooveKartStore):
             return raise_or_return_result("Sub-User can not add new stores", raise_on_error=raise_on_error)
 
         can = obj_user == user.profile.subuser_parent
@@ -59,6 +61,8 @@ def user_can_add(user, obj, raise_on_error=True):
                     stores = user.profile.get_woo_stores(flat=True)
                 elif isinstance(store, GearBubbleStore):
                     stores = user.profile.get_gear_stores(flat=True)
+                elif isinstance(store, GrooveKartStore):
+                    stores = user.profile.get_gkart_stores(flat=True)
                 else:
                     return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
 

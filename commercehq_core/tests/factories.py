@@ -47,3 +47,10 @@ class CommerceHQOrderTrackFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'commercehq_core.CommerceHQOrderTrack'
+
+
+class ProductChangeFactory(factory.DjangoModelFactory):
+    chq_product = factory.SubFactory('commercehq_core.tests.factories.CommerceHQProductFactory')
+
+    class Meta:
+        model = 'product_alerts.ProductChange'

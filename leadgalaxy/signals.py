@@ -18,10 +18,12 @@ from leadgalaxy.models import (
     SubuserCHQPermission,
     SubuserWooPermission,
     SubuserGearPermission,
+    SubuserGKartPermission,
     SUBUSER_STORE_PERMISSIONS,
     SUBUSER_CHQ_STORE_PERMISSIONS,
     SUBUSER_WOO_STORE_PERMISSIONS,
     SUBUSER_GEAR_STORE_PERMISSIONS,
+    SUBUSER_GKART_STORE_PERMISSIONS,
 )
 
 from profit_dashboard.models import AliexpressFulfillmentCost
@@ -169,6 +171,22 @@ def add_gear_store_permissions_to_subuser(sender, instance, pk_set, action, **kw
         for store in stores:
             permissions = store.subuser_gear_permissions.all()
             instance.subuser_gear_permissions.add(*permissions)
+
+
+@receiver(post_save, sender='groovekart_core.GrooveKartStore')
+def add_gkart_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        for codename, name in SUBUSER_GKART_STORE_PERMISSIONS:
+            SubuserGKartPermission.objects.create(store=instance, codename=codename, name=name)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_gkart_stores.through)
+def add_gkart_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.groovekartstore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_gkart_permissions.all()
+            instance.subuser_gkart_permissions.add(*permissions)
 
 
 @receiver(post_save, sender=ShopifyOrderTrack, dispatch_uid='sync_aliexpress_fulfillment_cost')

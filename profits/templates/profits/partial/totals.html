@@ -1,0 +1,65 @@
+{% load template_helper %}
+
+<div class="col-lg-4 expandable">
+  <div class="well">
+    <h3><span>Profit</span></h3>
+    <div class="totals-detail">
+      <span class="totals-profit main-value">
+        {% money_format totals.profit store True %}
+      </span>
+      <dl class="dl-horizontal">
+        <dt>Revenue</dt>
+        <dd id="total-revenue">{% money_format totals.revenue store True %}</dd>
+        <dt>Refunds</dt>
+        <dd id="total-refunds">{% money_format totals.refunds store True %}</dd>
+        <dt>Fulfillment Costs</dt>
+        <dd id="totals-fulfillment-cost">{% money_format totals.fulfillment_cost store True %}</dd>
+        <dt>Ads Spend</dt>
+        <dd>{% money_format totals.ads_spend store True %}</dd>
+        <dt>Other Costs</dt>
+        <dd id="totals-other-costs">{% money_format totals.other_costs store True %}</dd>
+      </dl>
+      <hr>
+      <dl class="dl-horizontal">
+        <dt>Profit</dt>
+        <dd class="totals-profit">{% money_format totals.profit store True %}</dd>
+        <dt>Profit Margin</dt>
+        <dd id="totals-profit-margin">{{ totals.profit_margin }}</dd>
+      </dl>
+    </div>
+    <canvas id="amounts-chart-mini" height="100"></canvas>
+  </div>
+</div>
+<div class="col-lg-4 expandable">
+  <div class="well">
+    <h3><span>Orders</span></h3>
+    <div class="totals-detail">
+      <span class="main-value">{{ totals.orders_count }}</span>
+      <dl class="dl-horizontal">
+        <dt>Orders per day</dt>
+        <dd>{{ totals.orders_per_day }}</dd>
+        <dt>Fulfillments</dt>
+        <dd>{{ totals.fulfillments_count }}</dd>
+        <dt>Fulfillments per day</dt>
+        <dd>{{ totals.fulfillments_per_day }}</dd>
+      </dl>
+    </div>
+    <canvas id="counts-chart-mini" height="100"></canvas>
+  </div>
+</div>
+<div class="col-lg-4 expandable">
+  <div class="well">
+    <h3><span>Average Order</span></h3>
+    <div class="totals-detail">
+      <dl class="dl-horizontal">
+        <dt>Revenue</dt>
+        <dd id="average-total-revenue">{% money_format totals.average_revenue store True %}</dd>
+        <dt>Profit</dt>
+        <dd id="average-totals-profit" data-original-amount="{{ totals.profit|default:'0'|floatformat:2 }}">
+          {% money_format totals.average_profit store True %}
+        </dd>
+      </dl>
+    </div>
+    <canvas id="averages-chart-mini" height="100"></canvas>
+  </div>
+</div>

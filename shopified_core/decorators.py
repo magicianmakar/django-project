@@ -24,7 +24,7 @@ def restrict_subuser_access(func):
     return _func
 
 
-class HasSubuserPermission(object):
+class HasSubuserPermission:
     """Checks if the request user has a specified non-store-specific subuser permission"""
     def __init__(self, subuser_permission):
         self._subuser_permission = subuser_permission
@@ -74,3 +74,19 @@ def use_upsell_for(permission, selected_menu):
             return func(request, *args, **kwargs)
         return wrapper
     return decorator
+
+
+class PlatformPermissionRequired:
+    platforms = ['shopify', 'commercehq', 'woocommerce', 'gearbubble', 'groovekart']
+
+    def __init__(self, platform):
+        self._platform = platform
+
+    def __call__(self, func):
+        def _func(request, *args, **kwargs):
+            if self._platform not in PlatformPermissionRequired.platforms:
+                raise NotImplementedError("Platform doesn't exist")
+            if not request.user.can(f'{self._platform}.use'):
+                raise PermissionDenied()
+            return func(request, *args, **kwargs)
+        return _func

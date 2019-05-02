@@ -26,10 +26,11 @@ from .models import (
     ShopifyProductImage,
     ShopifyStore,
     ShopifyWebhook,
-    SubuserCHQPermission,
-    SubuserGearPermission,
     SubuserPermission,
+    SubuserCHQPermission,
     SubuserWooPermission,
+    SubuserGearPermission,
+    SubuserGKartPermission,
     UserCompany,
     UserProfile,
     UserUpload,
@@ -346,6 +347,13 @@ class SubuserGearPermissionAdmin(admin.ModelAdmin):
 class DashboardVideoAdmin(SortableAdminMixin, admin.ModelAdmin):
     list_display = ('url', 'title')
     search_fields = ('url', 'title')
+
+
+@admin.register(SubuserGKartPermission)
+class SubuserGKartPermissionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'codename', 'name', 'store')
+    raw_id_fields = ('store',)
+    search_fields = ('name',)
 
 
 admin.site.register(ClippingMagicPlan)

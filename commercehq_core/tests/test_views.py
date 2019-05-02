@@ -23,6 +23,7 @@ from .factories import (
     CommerceHQProductFactory,
     CommerceHQStoreFactory,
     CommerceHQSupplierFactory,
+    ProductChangeFactory,
 )
 from ..models import CommerceHQStore, CommerceHQBoard, CommerceHQProduct
 
@@ -1374,3 +1375,43 @@ class ApiTestCase(BaseTestCase):
         r = self.client.get('/api/chq/store-verify', {'store': self.store.id})
         mock_get.assert_called_once()
         self.assertEqual(r.status_code, 200)
+
+    def test_post_alert_archive(self):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        product_change1 = ProductChangeFactory(chq_product=product, user=self.user)
+        product_change2 = ProductChangeFactory(chq_product=product, user=self.user)
+        self.assertEqual(product_change1.hidden, False)
+        self.assertEqual(product_change2.hidden, False)
+
+        data = {
+            'alert': product_change1.id,
+        }
+        r = self.client.post('/api/chq/alert-archive', data)
+        self.assertEqual(r.status_code, 200)
+        product_change1.refresh_from_db()
+        product_change2.refresh_from_db()
+        self.assertEqual(product_change1.hidden, True)
+        self.assertEqual(product_change2.hidden, False)
+
+        data = {
+            'store': self.store.id,
+            'all': 1,
+        }
+        r = self.client.post('/api/chq/alert-archive', data)
+        self.assertEqual(r.status_code, 200)
+        product_change2.refresh_from_db()
+        self.assertEqual(product_change2.hidden, True)
+
+    def test_post_alert_delete(self):
+        product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
+        ProductChangeFactory(chq_product=product, user=self.user)
+        count = self.user.productchange_set.count()
+        self.assertEqual(count, 1)
+
+        data = {
+            'store': self.store.id,
+        }
+        r = self.client.post('/api/chq/alert-delete', data)
+        self.assertEqual(r.status_code, 200)
+        count = self.user.productchange_set.count()
+        self.assertEqual(count, 0)

@@ -174,3 +174,10 @@ class PlanRegistrationFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'leadgalaxy.PlanRegistration'
+
+
+class ProductChangeFactory(factory.DjangoModelFactory):
+    shopify_product = factory.SubFactory('leadgalaxy.tests.factories.ShopifyProductFactory')
+
+    class Meta:
+        model = 'product_alerts.ProductChange'

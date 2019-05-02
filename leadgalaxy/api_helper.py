@@ -8,6 +8,7 @@ from shopified_core.utils import hash_url_filename, order_data_cache_key
 from .models import ProductSupplier
 from . import tasks
 from . import utils
+from product_alerts.models import ProductChange
 
 
 class ShopifyApiHelper(ApiHelperBase):
@@ -129,3 +130,6 @@ class ShopifyApiHelper(ApiHelperBase):
             return product.default_supplier
 
         return supplier
+
+    def filter_productchange_by_store(self, store):
+        return ProductChange.objects.filter(shopify_product__store=store)

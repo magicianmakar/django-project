@@ -5,6 +5,7 @@ from shopified_core.utils import order_data_cache_key
 from .models import CommerceHQSupplier
 from . import tasks
 from . import utils
+from product_alerts.models import ProductChange
 
 
 class CHQApiHelper(ApiHelperBase):
@@ -60,3 +61,6 @@ class CHQApiHelper(ApiHelperBase):
             return product.default_supplier
 
         return supplier
+
+    def filter_productchange_by_store(self, store):
+        return ProductChange.objects.filter(chq_product__store=store)

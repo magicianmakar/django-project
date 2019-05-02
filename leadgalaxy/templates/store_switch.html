@@ -12,6 +12,8 @@
                 WooCommerce
             {% elif request.resolver_match.kwargs.store_type == 'gear' %}
                 GearBubble
+            {% elif request.resolver_match.kwargs.store_type == 'gkart' %}
+                GrooveKart
             {% else %}
                 Shopify
             {% endif %}
@@ -21,6 +23,8 @@
             WooCommerce
         {% elif request.resolver_match.namespace == 'gear' %}
             GearBubble
+        {% elif request.resolver_match.namespace == 'gkart' %}
+            GrooveKart
         {% else %}
         {% endif %}
         <span class="caret"></span>
@@ -61,6 +65,16 @@
             {% else %}
                 <a href="{% url 'gear:index' %}">
             {% endif %}GearBubble</a>
+        </li>
+        {% endif %}
+
+        {% if user|can:'groovekart.use' %}
+        <li>
+            {% if gkart_view_name %}
+                <a href="{% url gkart_view_name %}">
+            {% else %}
+                <a href="{% url 'gkart:index' %}">
+            {% endif %}GrooveKart</a>
         </li>
         {% endif %}
     </ul>

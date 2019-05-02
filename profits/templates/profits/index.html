@@ -1,0 +1,132 @@
+{% extends base_template %}
+
+{% load staticfiles %}
+{% load perms_helper %}
+{% load compress %}
+{% load template_helper %}
+{% load url_tools %}
+
+{% block main-container %}
+
+<div class="tabs-container">
+  <ul class="nav nav-tabs">
+    {% for item in stores %}
+      {% if store == item or item.id|stringformat:"i" == request.GET.store %}
+        <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
+      {% else %}
+        <li class=""><a href="{% url store_type|add:':profits' %}?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+
+  <div class="tab-content">
+    <div id="tab-1" class="tab-pane active">
+      <div class="panel-body">
+        {% if api_error %}
+            <p class="text-center">Error: {{api_error}}</p>
+            <p class="text-center">Please Try again in a few seconds by reloading the page.</p>
+        {% else %}
+        {% include 'profits/partial/facebook.html' %}
+        <br>
+
+        <form class="form-inline" method="get">
+          <input type="hidden" name="store" value="{{ store.id }}">
+          <div class="form-group" id="profit-range">
+
+            <div id="date" class="form-control">
+                <i class="fa fa-calendar m-r-xs"></i>
+                <span></span>
+                <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+            </div>
+            <input type="hidden" type="text" name="date_range" value="{{ start }}-{{ end }}" />
+          </div>
+          <button type="submit" class="btn btn-success">Filter</button>
+
+          <div class="form-group pull-right">
+            <ul id="data-view" class="top-controls pull-right data-view">
+              <li><a href="javascript:;" class="btn active btn-success daily" data-time="daily">Daily</a></li>
+              <li><a href="javascript:;" class="btn btn-default weekly" data-time="weekly">Weekly</a></li>
+              <!-- <li><a href="#" class="btn btn-default monthly" data-time="monthly">Monthly</a></li> -->
+            </ul>
+          </div>
+        </form>
+
+        <div id="top-controls-menu">
+          <ul class="nav nav-tabs clients-list">
+              <li class="active"><a data-toggle="tab" href="#tab-data-table" data-top-controls="#data-view"><i class="fa fa-table"></i> Table</a></li>
+              <li class=""><a data-toggle="tab" href="#tab-charts" data-top-controls="#data-view"><i class="fa fa-line-chart"></i> Charts</a></li>
+              <li class=""><a data-toggle="tab" href="#tab-details" data-top-controls="#details-view"><i class="fa fa-line-chart"></i> Details</a></li>
+          </ul>
+          <div class="tab-content">
+              <div id="tab-data-table" class="tab-pane active clients-list">
+                {% include 'profits/partial/totals.html' %}
+                {% include 'profits/partial/table.html' %}
+              </div>
+              <div id="tab-charts" class="tab-pane">
+                <br>
+                {% include 'profits/partial/chart.html' %}
+              </div>
+              <div id="tab-details" class="tab-pane">
+                <br>
+                {% include 'profits/partial/details.html' %}
+              </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+{% compress css %}
+  <!-- Font awesome loaded just before bootstrap-daterangepicker to load correct icons -->
+  <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+  <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+  <link href="{% static 'profit/index.css' %}" rel="stylesheet">
+{% endcompress %}
+{% endblock %}
+
+{% block extrajs %}
+  <script type="text/javascript">
+    var config = {
+      store_id: {{ store.pk }},
+      store_type: '{{ store_type }}',
+      initialDate: '{{ initial_date }}',
+      facebook: {
+        {% if user_facebook_permission %}
+        appId: "{% app_setting 'FACEBOOK_APP_ID' %}",
+        {% else %}
+        appId: null,
+        {% endif %}
+        showPanel: {{ show_facebook_connection|yesno:"true,false" }}
+      },
+      sub_conf: {
+        key: "{% app_setting 'PUSHER_KEY' %}",
+        channel: "{{ store.pusher_channel }}",
+      },
+      currencySign: "{% money_format None store %}",
+      currencyFormat: "{{ store.currency_format|default:'' }}"
+    };
+
+    var profits = {
+      data: {{ profits_json|safe }},
+      totalCosts: {{ totals.outcome|default:"0"|floatformat:2 }},
+      otherCosts: {{ totals.other_costs|default:"0"|floatformat:2 }},
+      totalProfits: {{ totals.profit|default:'0'|floatformat:2 }}
+    };
+  </script>
+
+  <script src="//js.pusher.com/3.2/pusher.min.js"></script>
+
+{% compress js %}
+  <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+  <script src="{% static 'libs/bower_components/chart.js/dist/Chart.bundle.js' %}"></script>
+  <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
+  <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+  <script src="{% static 'profits/js/index.js' %}"></script>
+{% endcompress %}
+
+  <script src="//connect.facebook.net/en_US/sdk.js" id="facebook-jssdk"></script>
+{% endblock %}
