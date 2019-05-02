@@ -92,7 +92,7 @@ function disconnect(product_id) {
         type: "warning",
         showCancelButton: true,
         closeOnCancel: true,
-        closeOnConfirm: false,
+        closeOnConfirm: true,
         confirmButtonColor: "#DD6B55",
         confirmButtonText: "Disconnect",
         cancelButtonText: "Cancel"
