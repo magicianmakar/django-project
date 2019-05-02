@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 import json
 
-countries = ['AU', 'CL', 'ES', 'NL', 'UA', 'UK', 'NZ', 'US', 'CA', 'RU', 'ID', 'TH', 'PL', 'FR']
+countries = ['AU', 'CL', 'ES', 'NL', 'UA', 'UK', 'NZ', 'US', 'CA', 'RU', 'ID', 'TH', 'PL', 'FR', 'IT', 'TR', 'BR']
 
 data = {}
 for i in countries:
