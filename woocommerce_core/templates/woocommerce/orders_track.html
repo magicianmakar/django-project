@@ -245,6 +245,8 @@
 {% endblock %}
 
 {% block extracss %}
+{% compress css %}
+<link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <style type="text/css">
     .icheckbox_square-blue {
         position: initial !important;
@@ -257,12 +259,16 @@
         left: 15px;
     }
 </style>
+{% endcompress %}
 {% endblock %}
 
 {% block extrajs %}
 
 {% compress js %}
+    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'js/daterangepicker.js' %}" type="text/javascript"></script>
     <script src="{% static 'woocommerce/js/orders_track.js' %}" type="text/javascript"></script>
     <script src="{% static 'woocommerce/js/orders_track_update.js' %}" type="text/javascript"></script>
 {% endcompress %}

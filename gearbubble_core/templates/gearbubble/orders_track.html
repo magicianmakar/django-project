@@ -265,11 +265,13 @@
 {% include 'gearbubble/partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
 {% endcache %}
 
-{% include 'gearbubble/partial/tracking_update_modal.html' with store=store only %}
+{% include 'partial/tracking_update_modal.html' with store=store only %}
 
 {% endblock %}
 
 {% block extracss %}
+{% compress css %}
+<link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <style type="text/css">
     .icheckbox_square-blue {
         position: initial !important;
@@ -282,12 +284,16 @@
         left: 15px;
     }
 </style>
+{% endcompress %}
 {% endblock %}
 
 {% block extrajs %}
 
 {% compress js %}
+    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'js/daterangepicker.js' %}" type="text/javascript"></script>
     <script src="{% static 'gearbubble/js/orders_track.js' %}" type="text/javascript"></script>
     <script src="{% static 'gearbubble/js/orders_track_update.js' %}" type="text/javascript"></script>
 {% endcompress %}
