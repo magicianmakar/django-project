@@ -818,6 +818,7 @@ $('.add-supplier-info-btn').click(function (e) {
                 vendor_name: $('.product-supplier-name').val(),
                 vendor_url: $('.product-supplier-link').val(),
                 product: $('#modal-supplier-link').prop('shopify-product'),
+                from: 'orders'
             },
         }).done(function (data) {
             toastr.success('Product is Connected!', 'Product Connect');
