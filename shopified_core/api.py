@@ -285,3 +285,24 @@ class ShopifiedApi(ApiResponseMixin, View):
         return self.api_success({
             'password': get_aliexpress_password(user, aliexpress_email)
         })
+
+    def get_can(self, request, user, data):
+        if not user.is_authenticated:
+            return self.api_error('Logging is required', status=403)
+        else:
+            perm = request.GET.get('perm')
+            if user.can(perm):
+                try:
+                    plan = {'plan_id': user.profile.plan.id,
+                            'slug': user.profile.plan.slug,
+                            'title': user.profile.plan.title}
+                except:
+                    plan = None
+                return JsonResponse({
+                    'user_id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'plan': plan
+                })
+            else:
+                return self.api_error('Permission denied', status=403)
