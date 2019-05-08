@@ -1,0 +1,99 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+{% load perms_helper %}
+{% load widget_tweaks %}
+{% load template_helper %}
+{% block main-container %}
+
+
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+
+                 <h5>AliExtractor
+
+                 </h5>
+
+            </div>
+
+            <div class="ibox-content">
+                    <img  src="https://1v24v42xu6u225v91t24165z-wpengine.netdna-ssl.com/wp-content/uploads/2018/10/AliExtractor-Logo.png" alt="Aliextractor"/>
+                <h2>AliExtractor </h2>
+                <p>The #1 Tool For AliExpress Product Research</p>
+                <p>Stop wasting time on product research and start finding hot selling products. All Dropified users get AliExtractor for FREE ($29/mo. value)!</p>
+                <p>
+                    <iframe width="560" height="315" src="https://www.youtube.com/embed/bwRjHchEvSY" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                </p>
+                <p>
+                    <a class="btn btn-info" href="https://chrome.google.com/webstore/detail/aliextractor/hhopcjpinbkkodkckglbhodepblakcle?hl=en-US&authuser=3" target="_blank">Get AliExtractor Google Chrome Extension</a>
+
+                </p>
+                <p>&nbsp;</p>
+                <p>Have questions? Check our
+                    <a href="http://help.dropified.com/aliextractor" target="_blank">AliExtractor Help Portal</a>
+                    </p>
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+{% block extracss %}
+    <style>
+        .widget {padding: 10px 15px;}
+        .widget h2 {font-size: 20px !important; margin-top: 0;}
+        .setup-automation {margin-right:10px;}
+        .phone-nummber-cont {margin-bottom:20px;}
+        .sms-command {color:#1ab394;}
+
+        .blink-button {
+          -webkit-border-radius: 3px;
+          border-radius: 3px;
+
+          -webkit-animation: glowing 1500ms infinite;
+          -moz-animation: glowing 1500ms infinite;
+          -o-animation: glowing 1500ms infinite;
+          animation: glowing 1500ms infinite;
+        }
+        @-webkit-keyframes glowing {
+          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
+          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
+          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
+        }
+
+        @-moz-keyframes glowing {
+          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
+          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
+          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
+        }
+
+        @-o-keyframes glowing {
+          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
+          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
+          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
+        }
+
+        @keyframes glowing {
+          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
+          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
+          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
+        }
+    </style>
+
+{% endblock %}
+
+{% block extrajs %}
+
+{% endblock %}

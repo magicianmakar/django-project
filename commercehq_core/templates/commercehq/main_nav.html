@@ -132,6 +132,16 @@
             </li>
             {% endif %}
 
+            {% if user|can:'aliextractor.use'  %}
+                <li {% if 'aliextractor_index' in page %}class="active"{% endif %}>
+                    <a href="{% url 'aliextractor_index' %}">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span class="nav-label">AliExtractor</span> &nbsp;
+                        <span class="label  label-default float-right">NEW</span>
+                    </a>
+                </li>
+            {% endif %}
+
             <li>
                 <a id="product-update-fx" href="#">
                     <i class="fa fa-lightbulb-o"></i>
