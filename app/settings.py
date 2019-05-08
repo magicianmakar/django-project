@@ -83,6 +83,7 @@ INSTALLED_APPS = (
     'zapier_core',
     'phone_automation',
     'funnels',
+    'aliextractor'
 )
 
 MIDDLEWARE = (

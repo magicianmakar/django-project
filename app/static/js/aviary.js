@@ -1,3 +1,24 @@
+function launchEditor(image) {
+    if (config.photo_editor !== null) {
+        var imageUrl = image.src;
+        if (!imageUrl.match(/shopifiedapp.+?\.s3\.amazonaws\.com/)) {
+            imageUrl = app_link(['api/ali/get-image'], {
+                url: btoa(imageUrl)
+            });
+            imageUrl = imageUrl.replace('http://dev', 'https://app');  // Make it work in dev
+        }
+
+        // Maintain current image source
+        var editorImage = new Image();
+        editorImage.setAttribute('src', imageUrl);
+        editorImage.setAttribute('image-id', image.getAttribute('image-id'));
+
+        feather_editor.launch({'image': editorImage});
+    } else {
+        swal('Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
+    }
+}
+
 var feather_editor = new Aviary.Feather({
     apiKey: 'f94fd6b3b91f5e3c52aec692de8919cf',
     theme: 'dark',
@@ -31,7 +52,7 @@ window.asi = function(img, blob, imageBytes, type) {
 
     var storeType = window.location.href.match('(chq|woo|gear|gkart)');
     if (storeType) {
-        formData.append(storeType[0], 1);
+        fd.append(storeType[0], 1);
     }
 
     $.ajax({

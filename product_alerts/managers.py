@@ -52,6 +52,8 @@ class ProductChangeManager():
             self.config['price_change'] = 'update'
             self.config['price_update_for_increase'] = True
 
+        self.groovekart_changes = []
+
     def get_config(self, name, default='notify'):
         value = self.product.get_config().get(name)
         if not value:
@@ -182,6 +184,13 @@ class ProductChangeManager():
                 'title': self.product.title,
                 'url': app_link('chq/product', self.product.id),
                 'target_url': self.product.commercehq_url,
+            }
+        elif self.product_change.store_type == 'gkart':
+            common_data = {
+                'images': [self.product.get_image()],
+                'title': self.product.title,
+                'url': app_link('gkart/product', self.product.id),
+                'target_url': self.product.groovekart_url,
             }
 
         if self.product_changes:
@@ -395,6 +404,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
     def handle_product_disappear(self, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
+            product_data['published'] = False
             product_data['is_draft'] = True
         elif self.config['product_disappears'] == 'zero_quantity':
             # TODO: set quantity to zero
@@ -405,6 +415,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
     def handle_product_appear(self, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
+            product_data['published'] = True
             product_data['is_draft'] = False
         elif self.config['product_disappears'] == 'zero_quantity':
             pass
@@ -462,10 +473,12 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                         if new_price > current_price:
                             self.product_data_changed = True
                             product_data['price'] = new_price
+                            product_data['compare_at_price'] = new_compare_at_price
                             product_data['compare_price'] = new_compare_at_price
                     else:
                         self.product_data_changed = True
                         product_data['price'] = new_price
+                        product_data['compare_at_price'] = new_compare_at_price
                         product_data['compare_price'] = new_compare_at_price
 
         return product_data
@@ -544,7 +557,17 @@ class GrooveKartProductChangeManager(ProductChangeManager):
     def handle_product_disappear(self, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
-            # TODO
+            product_data['published'] = False
+            self.groovekart_changes.append({
+                'api_url': 'products.json',
+                'api_data': {
+                    'product': {
+                        'id': self.product.source_id,
+                        'action': 'product_status',
+                        'active': False,
+                    }
+                }
+            })
         elif self.config['product_disappears'] == 'zero_quantity':
             # GrooveKart doesn't support quantity management
             pass
@@ -554,7 +577,17 @@ class GrooveKartProductChangeManager(ProductChangeManager):
     def handle_product_appear(self, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
-            # TODO
+            product_data['published'] = True
+            self.groovekart_changes.append({
+                'api_url': 'products.json',
+                'api_data': {
+                    'product': {
+                        'id': self.product.source_id,
+                        'action': 'product_status',
+                        'active': True,
+                    }
+                }
+            })
         elif self.config['product_disappears'] == 'zero_quantity':
             # GrooveKart doesn't support quantity management
             pass
@@ -562,10 +595,9 @@ class GrooveKartProductChangeManager(ProductChangeManager):
         return product_data
 
     def handle_variant_price_change(self, product_data, variant_change):
-        # TODO
         idx = self.get_variant(product_data, variant_change)
         if idx is not None:
-            variant_id = product_data['variants'][idx]['id']
+            variant_id = product_data['variants'][idx]['id_product_variant']
             self.add_price_history(variant_id, variant_change)
 
         new_value = variant_change.get('new_value')
@@ -574,7 +606,7 @@ class GrooveKartProductChangeManager(ProductChangeManager):
         if self.config['price_change'] == 'update':
             if idx is not None:
                 current_price = safe_float(product_data['variants'][idx]['price'])
-                current_compare_at_price = safe_float(product_data['variants'][idx].get('compare_price'))
+                current_compare_at_price = safe_float(product_data['variants'][idx].get('compare_at_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -591,13 +623,43 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                             self.product_data_changed = True
                             product_data['variants'][idx]['price'] = new_price
                             product_data['variants'][idx]['compare_price'] = new_compare_at_price
+                            product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+                            self.groovekart_changes.append({
+                                'api_url': 'variants.json',
+                                'api_data': {
+                                    'action': 'update',
+                                    'product_id': self.product.source_id,
+                                    'variants': [
+                                        {
+                                            'id': product_data['variants'][idx]['id_product_variant'],
+                                            'price': new_price,
+                                            'compare_at_price': new_compare_at_price
+                                        }
+                                    ],
+                                }
+                            })
                     else:
                         self.product_data_changed = True
                         product_data['variants'][idx]['price'] = new_price
                         product_data['variants'][idx]['compare_price'] = new_compare_at_price
-            elif product_data.get('is_multi') is False:
+                        product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+                        self.groovekart_changes.append({
+                            'api_url': 'variants.json',
+                            'api_data': {
+                                'action': 'update',
+                                'product_id': self.product.source_id,
+                                'variants': [
+                                    {
+                                        'id': product_data['variants'][idx]['id_product_variant'],
+                                        'price': new_price,
+                                        'compare_at_price': new_compare_at_price
+                                    }
+                                ],
+                            }
+                        })
+            elif len(product_data.get('variants', [])) == 0:
                 current_price = safe_float(product_data['price'])
-                current_compare_at_price = safe_float(product_data.get('compare_price'))
+                current_compare_at_price = safe_float(product_data.get('compare_default_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -613,11 +675,35 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                         if new_price > current_price:
                             self.product_data_changed = True
                             product_data['price'] = new_price
-                            product_data['compare_price'] = new_compare_at_price
+                            product_data['compare_at_price'] = new_compare_at_price
+                            product_data['compare_default_price'] = new_compare_at_price
+                            self.groovekart_changes.append({
+                                'api_url': 'products.json',
+                                'api_data': {
+                                    'product': {
+                                        'action': 'update_product',
+                                        'id': self.product.source_id,
+                                        'price': new_price,
+                                        'compare_default_price': new_compare_at_price,
+                                    },
+                                }
+                            })
                     else:
                         self.product_data_changed = True
                         product_data['price'] = new_price
-                        product_data['compare_price'] = new_compare_at_price
+                        product_data['compare_at_price'] = new_compare_at_price
+                        product_data['compare_default_price'] = new_compare_at_price
+                        self.groovekart_changes.append({
+                            'api_url': 'products.json',
+                            'api_data': {
+                                'product': {
+                                    'action': 'update_product',
+                                    'id': self.product.source_id,
+                                    'price': new_price,
+                                    'compare_default_price': new_compare_at_price,
+                                },
+                            }
+                        })
 
         return product_data
 
@@ -634,8 +720,9 @@ class GrooveKartProductChangeManager(ProductChangeManager):
         if self.config['variant_disappears'] == 'remove':
             idx = self.get_variant(product_data, variant_change)
             if idx is not None:
-                self.product_data_changed = True
+                # self.product_data_changed = True
                 # TODO
+                pass
         elif self.config['variant_disappears'] == 'zero_quantity':
             # GrooveKart doesn't support quantity management
             pass
@@ -643,8 +730,25 @@ class GrooveKartProductChangeManager(ProductChangeManager):
         return product_data
 
     def update_product(self, product_data):
-        # TODO
-        pass
+        store = self.product.store
+        try:
+            for groovekart_change in self.groovekart_changes:
+                api_endpoint = store.get_api_url(groovekart_change['api_url'])
+                r = store.request.post(api_endpoint, json=groovekart_change['api_data'])
+                r.raise_for_status()
+            self.product.update_data(product_data)
+
+        except Exception as e:
+            if r.status_code not in [401, 402, 403, 404, 429]:
+                raven_client.captureMessage(extra={
+                    'rep': r.text,
+                    'data': product_data,
+                }, tags={
+                    'product': self.product.id,
+                    'store': self.product.store,
+                })
+            else:
+                raven_client.captureException(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
         history, created = ProductVariantPriceHistory.objects.get_or_create(

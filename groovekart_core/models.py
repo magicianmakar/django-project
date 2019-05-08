@@ -196,7 +196,6 @@ class GrooveKartProduct(models.Model):
 
     def sync(self):
         product_data = self.retrieve()
-        # assert False, json.dumps(product_data, indent=4)
         product_variants = product_data.get('variants', [])
         self.update_data({'title': product_data.get('title', product_data.get('product_title'))})
         self.update_data({'price': f'{float(product_data["price"]):,.2f}'})
@@ -293,6 +292,18 @@ class GrooveKartProduct(models.Model):
 
         self.mapping_config = config
         self.save()
+
+    def get_supplier_for_variant(self, variant_id):
+        config = self.get_mapping_config()
+        mapping = self.get_suppliers_mapping(name=variant_id)
+
+        if not variant_id or not mapping or config.get('supplier') == 'default':
+            return self.default_supplier
+
+        try:
+            return self.groovekartsupplier_set.get(id=mapping['supplier'])
+        except:
+            return self.default_supplier
 
     def get_variant_mapping(self, name=None, default=None, for_extension=False, supplier=None, mapping_supplier=False):
         mapping = {}
@@ -443,6 +454,9 @@ class GrooveKartProduct(models.Model):
 
         if commit:
             self.save()
+
+    def get_image(self):
+        return self.parsed.get('cover_image', '')
 
     def get_original_info(self):
         if self.has_supplier:
@@ -608,6 +622,21 @@ class GrooveKartSupplier(models.Model):
                 pass
 
         super(GrooveKartSupplier, self).save(*args, **kwargs)
+
+
+class GrooveKartUserUpload(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User)
+    product = models.ForeignKey('GrooveKartProduct', null=True)
+    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __str__(self):
+        return self.url.replace('%2F', '/').split('/')[-1]
 
 
 class GrooveKartBoard(models.Model):

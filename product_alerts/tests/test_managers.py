@@ -12,6 +12,7 @@ from leadgalaxy.views import webhook
 from leadgalaxy.tasks import manage_product_change
 from leadgalaxy import utils
 from commercehq_core.models import CommerceHQProduct
+from groovekart_core.models import GrooveKartProduct
 from product_alerts.models import ProductChange
 from product_alerts.managers import ProductChangeManager
 
@@ -45,8 +46,23 @@ class ProductChangeManagerTestCase(BaseTestCase):
         result = manager.apply_changes()
         self.assertEqual(result['is_draft'], True)
 
+    @tag('slow')
+    def test_gkart_product_disappears(self):
+        self.user.profile.config = json.dumps({"alert_product_disappears": "unpublish"})
+        self.user.profile.save()
+        product_change = ProductChange.objects.get(pk=5)
+        manager = ProductChangeManager.initialize(product_change)
+        result = manager.apply_changes()
+        self.assertEqual(result['published'], False)
+
     def test_changes_map(self):
         product_change = ProductChange.objects.get(pk=1)
+        manager = ProductChangeManager.initialize(product_change)
+        changes_map = manager.changes_map()
+        self.assertEqual(len(changes_map['availability']), 1)
+
+    def test_changes_map_gkart(self):
+        product_change = ProductChange.objects.get(pk=6)
         manager = ProductChangeManager.initialize(product_change)
         changes_map = manager.changes_map()
         self.assertEqual(len(changes_map['availability']), 1)
@@ -65,6 +81,14 @@ class ProductChangeManagerTestCase(BaseTestCase):
     @tag('slow')
     def test_get_chq_variant(self):
         product_change = ProductChange.objects.get(pk=4)
+        manager = ProductChangeManager.initialize(product_change)
+        product_data = product_change.product.retrieve()
+        result = manager.get_variant(product_data, manager.variant_changes[0])
+        self.assertEqual(result, 0)
+
+    @tag('slow')
+    def test_get_gkart_variant(self):
+        product_change = ProductChange.objects.get(pk=6)
         manager = ProductChangeManager.initialize(product_change)
         product_data = product_change.product.retrieve()
         result = manager.get_variant(product_data, manager.variant_changes[0])
@@ -324,6 +348,114 @@ class ProductChangeManagerTestCase(BaseTestCase):
         chq_product = product.retrieve()
 
         updated_variant = chq_product['variants'][0]
+        updated_price = round(float(updated_variant['price']), 2)
+
+        # check if price was updated back and preserved the margin
+        self.assertEqual(updated_price, round(old_price * new_value / old_value, 2))
+
+    @tag('slow')
+    @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
+    def test_webhook_gkart_price_change_no_variant(self, manage):
+        self.user.profile.config = json.dumps({"alert_price_change": "update"})
+        self.user.profile.save()
+
+        product_changes = []
+        product = GrooveKartProduct.objects.get(pk=16)
+        gkart_product = product.retrieve()
+
+        price = round(float(gkart_product['price']), 2)
+
+        # Reset price to a reasonable amount
+        price = 100.0 if price < 0.02 else price
+
+        # update price
+        old_price = round(price - (price / 2.0), 2)
+        api_endpoint = product.store.get_api_url('products.json')
+        r = product.store.request.post(api_endpoint, json={
+            'product': {
+                'action': 'update_product',
+                'id': product.source_id,
+                'price': old_price,
+                'compare_default_price': old_price,
+            },
+        })
+        self.assertTrue(r.ok)
+
+        new_value = round(price / 3.0, 2)
+        old_value = round(old_price / 3.0, 2)
+        product_changes.append({
+            'level': 'variant',
+            'name': 'price',
+            'new_value': new_value,
+            'old_value': old_value,
+        })
+        request = self.factory.post(
+            '/webhook/price-monitor/product?product={}&dropified_type=gkart'.format(product.id),
+            data=json.dumps(product_changes),
+            content_type='application/json'
+        )
+        response = webhook(request, 'price-monitor', None)
+        self.assertEqual(response.status_code, 200)
+        gkart_product = product.retrieve()
+
+        updated_price = round(float(gkart_product['price']), 2)
+
+        # check if price was updated back and preserved the margin
+        self.assertEqual(updated_price, round(old_price * new_value / old_value, 2))
+
+    @tag('slow')
+    @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
+    def test_webhook_gkart_price_change(self, manage):
+        self.user.profile.config = json.dumps({"alert_price_change": "update"})
+        self.user.profile.save()
+
+        product_changes = []
+        product = GrooveKartProduct.objects.get(pk=17)
+        gkart_product = product.retrieve()
+        variant = gkart_product['variants'][0]
+        if 'price' not in variant:
+            return
+
+        price = round(float(variant['price']), 2)
+
+        # Reset price to a reasonable amount
+        price = 100.0 if price < 0.02 else price
+
+        # update price
+        old_price = round(price - (price / 2.0), 2)
+        api_endpoint = product.store.get_api_url('variants.json')
+        r = product.store.request.post(api_endpoint, json={
+            'action': 'update',
+            'product_id': product.source_id,
+            'variants': [
+                {
+                    'id': variant['id_product_variant'],
+                    'price': old_price,
+                    'compare_at_price': old_price
+                }
+            ]
+        })
+        self.assertTrue(r.ok)
+
+        new_value = round(price / 3.0, 2)
+        old_value = round(old_price / 3.0, 2)
+        product_changes.append({
+            'level': 'variant',
+            'name': 'price',
+            'sku': '200000182:193#Single Len DVR;200009160:100018900#DVR with 16G TF card',
+            'new_value': new_value,
+            'old_value': old_value,
+        })
+        request = self.factory.post(
+            '/webhook/price-monitor/product?product={}&dropified_type=gkart'.format(product.id),
+            data=json.dumps(product_changes),
+            content_type='application/json'
+        )
+        response = webhook(request, 'price-monitor', None)
+        self.assertEqual(response.status_code, 200)
+        gkart_product = product.retrieve()
+
+        updated_variant = gkart_product['variants'][0]
         updated_price = round(float(updated_variant['price']), 2)
 
         # check if price was updated back and preserved the margin

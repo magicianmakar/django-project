@@ -242,7 +242,11 @@ def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=N
 
     if found_variant_id is not None:
         for idx, variant in enumerate(variants):
+            # Shopify / CHQ
             if variant.get('id') == safe_int(found_variant_id):
+                return idx
+            # GrooveKart
+            if variant.get('id_product_variant') == found_variant_id:
                 return idx
     else:
         for idx, variant in enumerate(variants):
