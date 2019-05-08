@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     gettext \
     nodejs \
     postgresql-client
-RUN pip install -U pip
+# We should give exact version to make caching work in a predictable manner.
+RUN pip install pip==19.1.1
 WORKDIR /opt/dropified
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
