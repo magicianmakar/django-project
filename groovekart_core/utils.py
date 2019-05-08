@@ -1,6 +1,8 @@
+import copy
 import json
 import re
 from unidecode import unidecode
+from collections import Counter
 
 from django.core.cache import cache
 from django.db.models import Q
@@ -10,7 +12,14 @@ from django.shortcuts import get_object_or_404
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core import permissions
-from shopified_core.utils import safe_int, safe_float, decode_params
+from shopified_core.utils import (
+    safe_int,
+    safe_float,
+    decode_params,
+    hash_url_filename,
+    get_top_most_commons,
+    get_first_valid_option,
+)
 from shopified_core.shipping_helper import (
     load_uk_provincess,
     province_from_code
@@ -355,6 +364,94 @@ class OrderListQuery(object):
         self._params.update(update)
 
         return self
+
+
+def map_images(product, product_data):
+    variants_images = {}
+    image_options_map = {}
+    product_data_images = product_data.get('images', [])[:]
+    images = [img['url'] for img in product_data_images]
+    variants = product_data.get('variants', [])
+    valid_options = [variant['variant_name'] for variant in variants]
+
+    for variant in variants:
+        src = product_data.get('cover_image')
+
+        if variant.get('image'):
+            image_id = variant['image']['id']
+            for product_data_image in product_data_images:
+                if product_data_image['id'] == image_id:
+                    src = product_data_image['url']
+                    break
+
+        if not src:
+            continue
+
+        hash_src = hash_url_filename(src)
+        variant_option = variant['variant_name']
+        image_options_map.setdefault(hash_src, []).append(variant_option)
+        options = image_options_map.get(hash_src, [])
+        most_commons = Counter(options).most_common()
+
+        # Most common attributes associated with the image
+        if most_commons:
+            top_most_commons = get_top_most_commons(most_commons)
+            if len(top_most_commons) == 1:
+                # Sets the image to its most popular option
+                option, count = top_most_commons[0]
+                variants_images[hash_src] = option
+            else:
+                # In case of a tie, assigns the first valid option
+                variants_images[hash_src] = get_first_valid_option(top_most_commons, valid_options)
+
+        if src not in images:
+            images.append(src)
+
+    product.update_data({'images': images})
+    product.update_data({'variants_images': variants_images})
+
+
+def map_variants(product, product_data):
+    variants_map = {}
+
+    for variant in product_data.get('variants', []):
+        variants_map.setdefault(variant['group_name'], []).append(variant['variant_name'])
+
+    variants = [{'title': title, 'values': values} for title, values in variants_map.items()]
+
+    product.update_data({'variants': variants})
+
+
+def disconnect_data(product):
+    product_data = product.retrieve()
+    map_images(product, product_data)
+    map_variants(product, product_data)
+    data = product.parsed
+    product.data = json.dumps(data)
+
+    return product
+
+
+def duplicate_product(product, store=None):
+    parent_product = GrooveKartProduct.objects.get(id=product.id)
+    product = copy.deepcopy(parent_product)
+    product.parent_product = parent_product
+    product = disconnect_data(product) if product.is_connected else product
+    product.pk = None
+    product.source_id = 0
+    product.store = store
+    product.save()
+
+    for supplier in parent_product.groovekartsupplier_set.all():
+        supplier.pk = None
+        supplier.product = product
+        supplier.store = product.store
+        supplier.save()
+
+        if supplier.is_default:
+            product.set_default_supplier(supplier, commit=True)
+
+    return product
 
 
 class OrderListPaginator(Paginator):

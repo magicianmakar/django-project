@@ -393,17 +393,14 @@
                             <i class="fa fa-plus"></i>
                             Add Supplier
                         </a>
-                    </div>
-                    {% comment %}
-                    {% if product.is_connected %}
-                        <div class="col-xs-5 text-right" style="padding: 0">
-                        <a class="btn btn-success btn-outline" href="{% url 'gkart:product_mapping' product.id %}" target="_blank">
+
+                        {% if product.is_connected %}
+                        <a class="btn btn-success btn-outline m-l" href="{% url 'gkart:product_mapping' product.id %}" target="_blank">
                             Variants Mapping
                             <i class="fa fa-external-link"></i>
                         </a>
-                        </div>
-                    {% endif %}
-                    {% endcomment %}
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -756,11 +753,22 @@
         </div>
     </div>
 </div>
+
+<div id="blueimp-gallery" class="blueimp-gallery">
+    <div class="slides"></div>
+    <h3 class="title"></h3>
+    <a class="prev">‹</a>
+    <a class="next">›</a>
+    <a class="close">×</a>
+    <a class="play-pause"></a>
+    <ol class="indicator"></ol>
+</div>
 {% endblock %}
 
 {% block extracss %}
 <link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/blueimp-gallery/2.33.0/css/blueimp-gallery.min.css" rel="stylesheet" />
 
 {% compress css %}
 <link href="{% static 'css/trix.css' %}" rel="stylesheet">
@@ -784,12 +792,7 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 
-<script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'libs/bower_components/uuid-js/lib/uuid.js' %}"></script>
-
-<!-- Load Feather code -->
-<script type="text/javascript" src="https://dme0ih8comzn4.cloudfront.net/imaging/v3/editor.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/blueimp-gallery/2.33.0/js/blueimp-gallery.min.js"></script>
 
 <script type="text/javascript">
 
@@ -908,55 +911,6 @@ $(function() {
     });
     {% endif %}
 
-    {% if request.user|can:'aviary_photo_editor.use' %}
-
-    config.feather_editor = new Aviary.Feather({
-        apiKey: '220489e3e16f4691bc88d1ef81e05a8b',
-        theme: 'dark',
-        tools: 'all',
-        enableCORS: true,
-        onSave: function(imageID, newURL) {
-            var img = document.getElementById(imageID);
-            var oldURL = img.src;
-            img.src = newURL;
-
-            config.feather_editor.disableControls();
-            config.feather_editor.showWaitIndicator();
-
-            $.ajax({
-                url: '/upload/save_image_s3',
-                type: 'POST',
-                data: {
-                    'url': newURL,
-                    'old_url': oldURL,
-                    'product': config.product_id,
-                    'gkart': 1
-                },
-                context: {'img': img, 'imageID': imageID},
-                success: function (data) {
-                    if (data.status == 'ok') {
-                        this.img.src = data.url;
-                        product.images[parseInt($('#'+this.imageID).attr('image-id'))] = data.url;
-                        config.feather_editor.close();
-                    } else {
-                        displayAjaxError('Image Editor', data);
-                    }
-                },
-                error: function(data) {
-                    displayAjaxError('Image Editor', data);
-                },
-                complete: function() {
-                    config.feather_editor.enableControls();
-                    config.feather_editor.hideWaitIndicator();
-                }
-            });
-        },
-        onError: function(errorObj) {
-            alert(errorObj.message);
-        }
-    });
-    {% endif %}
-
     $('.original-description').css('overflow', 'auto');
 });
 
@@ -964,7 +918,13 @@ $(function() {
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
     {% compress js %}
+    <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/csdk/4.x/js/editor.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/uuid-js/lib/uuid.js' %}"></script>
+
     <script type="text/javascript" src="{% static 'js/trix.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/aviary.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/photopea.js' %}"></script>
     <script type="text/javascript" src="{% static 'groovekart/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'groovekart/js/groovekart_product_selector.js' %}"></script>

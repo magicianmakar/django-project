@@ -5,6 +5,7 @@ from .models import (
     GrooveKartStore,
     GrooveKartProduct,
     GrooveKartSupplier,
+    GrooveKartUserUpload,
     GrooveKartBoard,
     GrooveKartOrderTrack,
 )
@@ -74,6 +75,21 @@ class GrooveKartSupplierAdmin(admin.ModelAdmin):
     )
     list_filter = ('is_default', 'created_at', 'updated_at')
     raw_id_fields = ('store', 'product')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(GrooveKartUserUpload)
+class GrooveKartUserUploadAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'product',
+        'url',
+        'created_at',
+        'updated_at',
+    )
+    list_filter = ('created_at', 'updated_at')
+    raw_id_fields = ('user', 'product')
     date_hierarchy = 'created_at'
 
 

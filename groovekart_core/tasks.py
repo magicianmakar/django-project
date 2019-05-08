@@ -179,6 +179,7 @@ def product_export(store_id, product_id, user_id):
                         'image': {'src': image, 'position': index},
                     }
                 }
+
                 # The API only allows images to be uploaded one at a time
                 r = store.request.post(endpoint, json=api_data)
                 r.raise_for_status()
@@ -231,10 +232,11 @@ def product_export(store_id, product_id, user_id):
                     if variant_id not in variants_mapping:
                         variants_mapping[variant_id] = []
 
-                    variants_mapping[variant_id].append({'title': variant.get('variant_name')})
+                    for variant_title in GrooveKartProduct.get_variant_options(variant):
+                        variants_mapping[variant_id].append({'title': variant_title})
 
                 for variant_id in variants_mapping:
-                    variants_mapping[variant_id] = json.dump(variants_mapping[variant_id])
+                    variants_mapping[variant_id] = json.dumps(variants_mapping[variant_id])
 
                 product.default_supplier.variants_map = json.dumps(variants_mapping)
                 product.default_supplier.save()
@@ -249,7 +251,7 @@ def product_export(store_id, product_id, user_id):
         r = store.request.post(endpoint, json=api_data)
         r.raise_for_status()
 
-        # Update variant image_hash
+        # Update variant images by hash
         if product_data.get('variants_images') and api_images:
             image_id_by_hash = {}
             for image in api_images:
@@ -333,10 +335,13 @@ def product_update(product_id, data):
         r = store.request.post(variants_endpoint, json=api_data)
         r.raise_for_status()
 
-        product_data = product.parsed
-        images = product_data.get('images', [])
+        images = data.get('images', [])
         if images:
-            for index, image in enumerate(images):
+            for index, image in enumerate(images.values()):
+                # TODO: This endpoint currently only add images
+                if 'groovekart.com' in image:
+                    continue
+
                 api_data = {
                     'product': {
                         'id': product.source_id,

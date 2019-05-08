@@ -24,7 +24,7 @@
     border: 1px solid #ccc;
     padding: 5px;
     width: 100px;
-    cursor: pointer;
+    cursor: zoom-in;
 }
 
 .var-image:hover, .add-var-image:hover {

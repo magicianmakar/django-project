@@ -121,8 +121,14 @@ def product_alerts(request):
     try:
         if len(products):
             products = get_gkart_products(store=store, product_ids=products)
-            for p in products:
-                product_variants[str(p['id'])] = p
+            if isinstance(products, dict):
+                for i, product in products.items():
+                    if isinstance(product, dict) and product.get('id'):
+                        product_variants[str(product['id'])] = product
+            else:
+                for product in products:
+                    if isinstance(product, dict) and product.get('id'):
+                        product_variants[str(product['id'])] = product
     except:
         raven_client.captureException()
 
@@ -136,29 +142,25 @@ def product_alerts(request):
         change['gkart_link'] = i.product.groovekart_url
         change['original_link'] = i.product.get_original_info().get('url')
         p = product_variants.get(str(i.product.get_gkart_id()), {})
-        variants = p.get('variants', None)
+        variants = p.get('variants', [])
         for c in change['changes']['variants']['quantity']:
-            if variants is not None:
+            if len(variants) > 0:
                 index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
                 if index is not None:
                     c['gkart_value'] = "Unmanaged"
                 else:
                     c['gkart_value'] = "Not Found"
-            elif p.get('is_multi') is False:
-                c['gkart_value'] = "Unmanaged"
             else:
-                c['gkart_value'] = "Not Found"
+                c['gkart_value'] = "Unmanaged"
         for c in change['changes']['variants']['price']:
-            if variants is not None:
+            if len(variants) > 0:
                 index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
                 if index is not None:
                     c['gkart_value'] = variants[index]['price']
                 else:
                     c['gkart_value_label'] = "Not Found"
-            elif p.get('is_multi') is False:
-                c['gkart_value'] = p['price']
             else:
-                c['gkart_value_label'] = "Not Found"
+                c['gkart_value'] = p['price']
 
         product_changes.append(change)
 

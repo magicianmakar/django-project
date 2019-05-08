@@ -220,8 +220,6 @@ $('#product-update-btn').click(function (e) {
             var channel = pusher.subscribe(config.sub_conf.channel);
 
             channel.bind('product-update', function(data) {
-                console.dir(data);
-
                 if (data.product == config.product_id) {
                     if (data.progress) {
                         btn.text(data.progress);
@@ -877,8 +875,7 @@ function renderImages() {
             'id': imageId,
             'class': 'var-image',
             'image-url': el,
-            'image-id': i,
-            'style': 'cursor: default'
+            'image-id': i
         });
 
         d.append(img);
@@ -940,12 +937,8 @@ function renderImages() {
         d.find('.image-delete').click(imageClicked);
 
         d.find('.edit-photo').click(function (e) {
-            var img = $(this).parents('.var-image-block').find('img');
-
-            launchEditor(
-                img.attr('id'),
-                img.attr('src')
-            );
+            var image = $(this).parents('.var-image-block').find('img')[0];
+            launchEditor(image);
         });
 
         d.find('.remove-background-image-editor').click(function(e) {
@@ -973,18 +966,25 @@ function renderImages() {
     $('#var-images .itooltip').bootstrapTooltip({
         container: 'body'
     });
-}
 
-function launchEditor(id, src) {
-    if (config.photo_editor !== null) {
-        config.feather_editor.launch({
-            image: id,
-            url: src
+    $('#var-images .var-image-block img').click(function (e) {
+        e.preventDefault();
+
+        var imgs = [];
+        var idx = 0;
+
+        $('#var-images .var-image-block img').each(function (i, el) {
+            imgs.push({
+                href: $(el).prop('src'),
+            });
+
+            if (el == e.target) {
+                idx = i;
+            }
         });
-        return false;
-    } else {
-        swal('Image Editor', 'Please upgrade your plan to use this feature.', 'warning');
-    }
+
+        blueimp.Gallery(imgs, {index: idx});
+    });
 }
 
 var PusherSubscription = {

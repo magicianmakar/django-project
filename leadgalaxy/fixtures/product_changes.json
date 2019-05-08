@@ -360,5 +360,136 @@
   },
   "model": "product_alerts.productchange",
   "pk": 4
+},
+{
+  "fields": {
+    "api_url": "https://dropifieddemo.groovekart.com",
+    "title": "dropifieddemo",
+    "api_key": "b11630776c39da73cfb51c0f1d42b4b6",
+    "api_token": "gk-dropifieddemo",
+    "created_at": "2019-04-07T22:11:41.685Z",
+    "is_active": true,
+    "updated_at": "2019-04-07T22:11:41.685Z",
+    "store_hash": "7613ea7791a0e9c31d482ae8df316474",
+    "user": [
+      "admin"
+    ]
+  },
+  "model": "groovekart_core.groovekartstore",
+  "pk": 1
+},
+{
+  "fields": {
+    "data": "{\"title\": \"Kitchen Gadgets Silicone Ice Cube Tray Mold Mould Fits For Water Bottle Cream Markers Tools\", \"description\": \"\", \"price\": \"1.59\", \"compare_at_price\": \"1.99\", \"images\": {\"472\": \"https://cdn.groovekart.com/dropifieddemo/img/p/4/7/2/472-large_default2x.jpg?v=1557220328\", \"473\": \"https://cdn.groovekart.com/dropifieddemo/img/p/4/7/3/473-large_default2x.jpg?v=1557220328\", \"474\": \"https://cdn.groovekart.com/dropifieddemo/img/p/4/7/4/474-large_default2x.jpg?v=1557220328\"}, \"original_url\": \"https://www.aliexpress.com/item/Kitchen-Gadgets-Silicone-Ice-Cube-Tray-Mold-Mould-Fits-For-Water-Bottle-Cream-Markers-Tools/32866531954.html\", \"store\": {\"id\": \"3676003\", \"name\": \"Believer Store\", \"url\": \"//www.aliexpress.com/store/3676003\", \"contact\": \"//message.aliexpress.com/message/new.htm?productId=32866531954&messageType=product&memberType=seller&refer=https://www.aliexpress.com/item/Kitchen-Gadgets-Silicone-Ice-Cube-Tray-Mold-Mould-Fits-For-Water-Bottle-Cream-Markers-Tools/32866531954.html\"}, \"type\": \"Ice Cream Makers\", \"tags\": \"\", \"vendor\": \"Believer Store\", \"published\": false, \"weight\": \"0.180000\", \"weight_unit\": \"lb\", \"variants_images\": {}, \"variants_sku\": {}, \"variants\": [], \"sku\": \"\", \"cover_image\": \"https://cdn.groovekart.com/dropifieddemo/img/p/4/7/2/472-large_default2x.jpg?v=1557220328\"}",
+    "title": "Kitchen Gadgets Silicone Ice Cube Tray Mold Mould Fits For Water Bottle Cream Markers Tools",
+    "notes": "",
+    "price": 1.59,
+    "tags": "",
+    "product_type": "Ice Cream Makers",
+    "source_id": 134,
+    "variants_map": "",
+    "supplier_map": "",
+    "shipping_map": "",
+    "default_supplier": 16,
+    "parent_product": null,
+    "store": 1,
+    "user": [
+      "admin"
+    ],
+    "created_at": "2019-05-05T18:01:26.806Z",
+    "updated_at": "2019-05-05T22:44:07.939Z"
+  },
+  "model": "groovekart_core.groovekartproduct",
+  "pk": 16
+},
+{
+  "fields": {
+    "data": "{\"title\": \"dvr dash camera dash cam car dvr mirror dual lens rear view camera rearview dashcam auto recorder video full hd front and rear\", \"description\": \"\", \"price\": \"34.41\", \"compare_at_price\": \"93.00\", \"images\": {\"554\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/5/4/554-large_default2x.jpg?v=1557320705\", \"555\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/5/5/555-large_default2x.jpg?v=1557320705\", \"556\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/5/6/556-large_default2x.jpg?v=1557320705\", \"557\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/5/7/557-large_default2x.jpg?v=1557320705\", \"558\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/5/8/558-large_default2x.jpg?v=1557320705\", \"559\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/5/9/559-large_default2x.jpg?v=1557320705\", \"560\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/0/560-large_default2x.jpg?v=1557320705\", \"561\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/1/561-large_default2x.jpg?v=1557320705\"}, \"original_url\": \"https://www.aliexpress.com/item/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto/32881810553.html\", \"store\": {\"id\": \"4311001\", \"name\": \"Max-VIP Store\", \"url\": \"//www.aliexpress.com/store/4311001\", \"contact\": \"//message.aliexpress.com/message/new.htm?productId=32881810553&messageType=product&memberType=seller&refer=https://www.aliexpress.com/item/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto/32881810553.html\"}, \"type\": \"DVR/Dash Camera\", \"tags\": \"\", \"vendor\": \"Max-VIP Store\", \"published\": false, \"weight\": \"1.540000\", \"weight_unit\": \"lb\", \"variants_images\": {\"-1366225690.jpg\": \"Single Len DVR\", \"-2144222122.jpg\": \"Double Lens DVR\"}, \"variants_sku\": {\"Single Len DVR\": \"200000182:193\", \"Double Lens DVR\": \"200000182:691\", \"DVR with 16G TF card\": \"200009160:100018900\", \"DVR with 32G TF card\": \"200009160:100019035\", \"DVR without TF card\": \"200009160:350525\"}, \"variants\": [{\"id_product_variant\": \"3609\", \"group_name\": \"Color Name\", \"id_variant_group\": \"17\", \"variant_name\": \"Single Len DVR\", \"reference\": \"\", \"price\": \"34.41\", \"compare_price\": \"93.00\", \"quantity\": 20, \"weight\": \"0.000000\", \"default_on\": \"1\", \"image\": {\"id\": \"560\", \"url\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/0/560.jpg\", \"src\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/0/560-small_default.jpg\"}, \"compare_at_price\": \"93.00\", \"id\": \"3609\", \"description\": \"Single Len DVR | DVR with 16G TF card\"}, {\"id_product_variant\": \"3610\", \"group_name\": \"Color Name\", \"id_variant_group\": \"17\", \"variant_name\": \"Single Len DVR\", \"reference\": \"\", \"price\": \"34.41\", \"compare_price\": \"93.00\", \"quantity\": 20, \"weight\": \"0.000000\", \"default_on\": 0, \"image\": {\"id\": \"560\", \"url\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/0/560.jpg\", \"src\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/0/560-small_default.jpg\"}, \"compare_at_price\": \"93.00\", \"id\": \"3610\", \"description\": \"Single Len DVR | DVR with 32G TF card\"}, {\"id_product_variant\": \"3611\", \"group_name\": \"Color Name\", \"id_variant_group\": \"17\", \"variant_name\": \"Single Len DVR\", \"reference\": \"\", \"price\": \"34.41\", \"compare_price\": \"93.00\", \"quantity\": 20, \"weight\": \"0.000000\", \"default_on\": 0, \"image\": {\"id\": \"560\", \"url\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/0/560.jpg\", \"src\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/0/560-small_default.jpg\"}, \"compare_at_price\": \"93.00\", \"id\": \"3611\", \"description\": \"Single Len DVR | DVR without TF card\"}, {\"id_product_variant\": \"3612\", \"group_name\": \"Color Name\", \"id_variant_group\": \"17\", \"variant_name\": \"Double Lens DVR\", \"reference\": \"\", \"price\": \"34.41\", \"compare_price\": \"93.00\", \"quantity\": 20, \"weight\": \"0.000000\", \"default_on\": 0, \"image\": {\"id\": \"561\", \"url\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/1/561.jpg\", \"src\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/1/561-small_default.jpg\"}, \"compare_at_price\": \"93.00\", \"id\": \"3612\", \"description\": \"Double Lens DVR | DVR with 16G TF card\"}, {\"id_product_variant\": \"3613\", \"group_name\": \"Color Name\", \"id_variant_group\": \"17\", \"variant_name\": \"Double Lens DVR\", \"reference\": \"\", \"price\": \"34.41\", \"compare_price\": \"93.00\", \"quantity\": 20, \"weight\": \"0.000000\", \"default_on\": 0, \"image\": {\"id\": \"561\", \"url\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/1/561.jpg\", \"src\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/1/561-small_default.jpg\"}, \"compare_at_price\": \"93.00\", \"id\": \"3613\", \"description\": \"Double Lens DVR | DVR with 32G TF card\"}, {\"id_product_variant\": \"3614\", \"group_name\": \"Color Name\", \"id_variant_group\": \"17\", \"variant_name\": \"Double Lens DVR\", \"reference\": \"\", \"price\": \"34.41\", \"compare_price\": \"93.00\", \"quantity\": 20, \"weight\": \"0.000000\", \"default_on\": 0, \"image\": {\"id\": \"561\", \"url\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/1/561.jpg\", \"src\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/6/1/561-small_default.jpg\"}, \"compare_at_price\": \"93.00\", \"id\": \"3614\", \"description\": \"Double Lens DVR | DVR without TF card\"}], \"sku\": \"\", \"cover_image\": \"https://cdn.groovekart.com/dropifieddemo/img/p/5/5/4/554-large_default2x.jpg?v=1557320705\"}",
+    "title": "dvr dash camera dash cam car dvr mirror dual lens rear view camera rearview dashcam auto recorder video full hd front and rear",
+    "notes": "",
+    "price": 34.41,
+    "tags": "",
+    "product_type": "DVR/Dash Camera",
+    "source_id": 147,
+    "variants_map": "",
+    "supplier_map": "",
+    "shipping_map": "",
+    "default_supplier": 17,
+    "parent_product": null,
+    "store": 1,
+    "user": [
+      "admin"
+    ],
+    "created_at": "2019-05-05T18:01:26.806Z",
+    "updated_at": "2019-05-05T22:44:07.939Z"
+  },
+  "model": "groovekart_core.groovekartproduct",
+  "pk": 17
+},
+{
+  "fields": {
+    "product_url": "https://www.aliexpress.com/item/Kitchen-Gadgets-Silicone-Ice-Cube-Tray-Mold-Mould-Fits-For-Water-Bottle-Cream-Markers-Tools/32866531954.html",
+    "supplier_name": "Believer Store",
+    "supplier_url": "//www.aliexpress.com/store/3676003",
+    "shipping_method": null,
+    "variants_map": null,
+    "is_default": true,
+    "created_at": "2019-05-07T22:31:05.967Z",
+    "updated_at": "2019-05-07T22:44:07.920Z",
+    "product": 16,
+    "store": 1
+  },
+  "model": "groovekart_core.groovekartsupplier",
+  "pk": 16
+},
+{
+  "fields": {
+    "product_url": "https://www.aliexpress.com/item/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto/32881810553.html",
+    "supplier_name": "Max-VIP Store",
+    "supplier_url": "//www.aliexpress.com/store/4311001",
+    "shipping_method": null,
+    "variants_map": "{\"3609\": \"[{\\\"title\\\": \\\"Single Len DVR\\\"}, {\\\"title\\\": \\\"DVR with 16G TF card\\\"}]\", \"3610\": \"[{\\\"title\\\": \\\"Single Len DVR\\\"}, {\\\"title\\\": \\\"DVR with 32G TF card\\\"}]\", \"3611\": \"[{\\\"title\\\": \\\"Single Len DVR\\\"}, {\\\"title\\\": \\\"DVR without TF card\\\"}]\", \"3612\": \"[{\\\"title\\\": \\\"Double Lens DVR\\\"}, {\\\"title\\\": \\\"DVR with 16G TF card\\\"}]\", \"3613\": \"[{\\\"title\\\": \\\"Double Lens DVR\\\"}, {\\\"title\\\": \\\"DVR with 32G TF card\\\"}]\", \"3614\": \"[{\\\"title\\\": \\\"Double Lens DVR\\\"}, {\\\"title\\\": \\\"DVR without TF card\\\"}]\"}",
+    "is_default": true,
+    "created_at": "2019-05-07T22:31:05.967Z",
+    "updated_at": "2019-05-07T22:44:07.920Z",
+    "product": 17,
+    "store": 1
+  },
+  "model": "groovekart_core.groovekartsupplier",
+  "pk": 17
+},
+{
+  "fields": {
+    "store_type": "gkart",
+    "data": "[{\"name\": \"offline\", \"new_value\": true, \"level\": \"product\", \"old_value\": false}, {\"ships_from_title\": null, \"name\": \"price\", \"old_value\": 0, \"ships_from_id\": null, \"level\": \"variant\", \"new_value\": 1.59, \"sku\": null}, {\"ships_from_title\": null, \"name\": \"quantity\", \"old_value\": 0, \"ships_from_id\": null, \"level\": \"variant\", \"new_value\": 10128, \"sku\": null}]",
+    "hidden": false,
+    "seen": true,
+    "gkart_product": 16,
+    "created_at": "2019-05-07T01:43:18.902Z",
+    "updated_at": "2019-05-07T23:11:17.800Z",
+    "user": [
+      "admin"
+    ],
+    "categories": "product:offline,variant:price,variant:quantity"
+  },
+  "model": "product_alerts.productchange",
+  "pk": 5
+},
+{
+  "fields": {
+    "store_type": "gkart",
+    "data": "[{\"name\": \"offline\", \"level\": \"product\", \"new_value\": false, \"old_value\": true}, {\"name\": \"price\", \"sku\": \"200000182:193#Single Len DVR;200009160:100018900#DVR with 16G TF card\", \"ships_from_id\": null, \"old_value\": 0, \"level\": \"variant\", \"new_value\": 26.57, \"ships_from_title\": null}]",
+    "hidden": false,
+    "seen": true,
+    "gkart_product": 17,
+    "created_at": "2019-05-07T01:43:18.902Z",
+    "updated_at": "2019-05-07T23:11:17.800Z",
+    "user": [
+      "admin"
+    ],
+    "categories": "product:offline,variant:price"
+  },
+  "model": "product_alerts.productchange",
+  "pk": 6
 }
 ]
