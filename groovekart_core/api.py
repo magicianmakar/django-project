@@ -42,6 +42,7 @@ class GrooveKartApi(ApiBase):
     order_track_model = GrooveKartOrderTrack
     store_model = GrooveKartStore
     helper = GrooveKartApiHelper()
+    order_updater = utils.GrooveKartOrderUpdater
 
     def validate_store_data(self, data):
         title = data.get('title', '')
