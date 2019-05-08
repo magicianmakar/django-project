@@ -71,6 +71,11 @@
     }
 
     $('#var-images').on('click', '.advanced-edit-photo', function(e) {
+        var image = $(this).parents('.var-image-block').find('img');
+        var imageId = image.attr('id');
+        var imageSrc = image.attr('src');
+        window.open(createPhotopeaURL(imageSrc, imageId));
+
         subscribeToPusher();
     });
 

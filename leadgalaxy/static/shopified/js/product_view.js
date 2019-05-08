@@ -1103,14 +1103,11 @@ function renderImages() {
             }));
         }
 
-        if (config.advanced_photo_editor) {
-            var imageUrl = createPhotopeaURL(el, imageId);
 
-            buttons.push($('<a>', {
+        if (config.advanced_photo_editor) {
+            buttons.push($('<button>', {
                 'title': "Advanced Editor",
                 'class': "btn btn-warning btn-xs itooltip advanced-edit-photo",
-                'target': "_blank",
-                'href': imageUrl,
                 'html': '<i class="fa fa-picture-o"></i></a>'
             }));
         }
