@@ -394,6 +394,14 @@ def aliexpress_country_code_map(country_code):
     return maps.get(country_code, country_code)
 
 
+def ebay_country_code_map(country_code):
+    maps = {
+        'UK': 'GB',
+    }
+
+    return maps.get(country_code, country_code)
+
+
 def load_countries():
     global countries_code
 

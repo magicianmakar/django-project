@@ -27,7 +27,7 @@ from shopified_core.utils import (
     orders_update_limit,
     serializers_orders_track,
 )
-from shopified_core.shipping_helper import aliexpress_country_code_map
+from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 
 from shopified_core.decorators import HasSubuserPermission
 
@@ -299,7 +299,10 @@ class ApiBase(ApiResponseMixin, View):
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
 
-            order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
+            if order['supplier_type'] == 'ebay':
+                order['shipping_address']['country_code'] = ebay_country_code_map(order['shipping_address']['country_code'])
+            else:
+                order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
 
             order['ordered'] = False
             order['fast_checkout'] = user.get_config('_fast_checkout', True)
