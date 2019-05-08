@@ -299,7 +299,7 @@ class ApiBase(ApiResponseMixin, View):
             if not order['shipping_address'].get('address2'):
                 order['shipping_address']['address2'] = ''
 
-            if order['supplier_type'] == 'ebay':
+            if order.get('supplier_type') == 'ebay':
                 order['shipping_address']['country_code'] = ebay_country_code_map(order['shipping_address']['country_code'])
             else:
                 order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
