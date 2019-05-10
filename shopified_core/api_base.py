@@ -60,6 +60,18 @@ class ApiBase(ApiResponseMixin, View):
     def is_shopify(self):
         return self.store_slug == 'shopify'
 
+    def post_toggle_menu_layout(self, request, user, data):
+        try:
+            config = json.loads(user.profile.config)
+        except:
+            config = {}
+
+        config['_new-menu-active'] = data.get('value')
+        user.profile.config = json.dumps(config)
+        user.profile.save()
+
+        return self.api_success()
+
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def post_boards_add(self, request, user, data):
         can_add, total_allowed, user_count = permissions.can_add_board(user)

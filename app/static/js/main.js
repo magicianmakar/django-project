@@ -929,12 +929,10 @@ $('#switch-menu-layout').click(function (e) {
         value = Math.floor(Date.now() / 1000);
     }
     $.ajax({
-        url: '/api/user-config',
+        url: '/api/toggle-menu-layout',
         type: 'POST',
         data: {
-            'single': true,
-            'name': '_new-menu-active',
-            'value': value,
+            'value': value
         },
         success: function (data) {
             $('.new-menu').remove();
