@@ -75,7 +75,13 @@ from leadgalaxy.models import (
     ShopifyWebhook,
     UserProfile,
 )
-from shopified_core.shipping_helper import get_uk_province, valide_aliexpress_province, support_other_in_province, fix_br_address
+from shopified_core.shipping_helper import (
+    country_from_code,
+    get_uk_province,
+    valide_aliexpress_province,
+    support_other_in_province,
+    fix_br_address
+)
 from shopify_orders.models import ShopifyOrderLine
 
 
@@ -441,9 +447,6 @@ def slack_invite(data, team='users'):
 
 def wicked_report_add_user(request, user):
     try:
-
-        from shopified_core.shipping_helper import country_from_code
-
         if not settings.WICKED_REPORTS_API:
             return
 
@@ -1250,6 +1253,8 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
             customer_address[k] = unidecode(v)
         else:
             customer_address[k] = shipping_address[k]
+
+    customer_address['country'] = country_from_code(customer_address['country_code'], customer_address['country'])
 
     customer_province = customer_address['province']
     if not customer_address['province']:
