@@ -1258,7 +1258,7 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
 
     customer_province = customer_address['province']
     if not customer_address['province']:
-        if customer_address['country'] == 'United Kingdom' and customer_address['city']:
+        if customer_address['country'].lower() == 'united kingdom' and customer_address['city']:
             province = get_uk_province(customer_address['city'])
             customer_address['province'] = province
         else:
@@ -1303,7 +1303,7 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
         if customer_address['province'] == 'Newfoundland':
             customer_address['province'] = 'Newfoundland and Labrador'
 
-    if customer_address['country'] == 'United Kingdom':
+    if customer_address['country'].lower() == 'united kingdom':
         if customer_address.get('zip'):
             if not re.findall(r'^([0-9A-Za-z]{2,4}\s[0-9A-Za-z]{3})$', customer_address['zip']):
                 customer_address['zip'] = re.sub(r'(.+)([0-9A-Za-z]{3})$', r'\1 \2', customer_address['zip'])
@@ -1332,7 +1332,7 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
             if support_other_in_province(customer_address['country']):
                 customer_address['province'] = 'Other'
 
-                if customer_address['country'] == 'United Kingdom' and customer_address['city']:
+                if customer_address['country'].lower() == 'united kingdom' and customer_address['city']:
                     province = get_uk_province(customer_address['city'])
                     if province:
                         customer_address['province'] = province

@@ -1037,11 +1037,11 @@ class ShippingHelperTestCase(BaseTestCase):
         self.assertEqual(customer_address['city'], 'Not Found, England')
 
     def test_shopify_address_uk_unmatch2(self):
-        order = self.get_order(country='UNITED KINGDOM', country_code='GB', province='Xngnd', city="North Yorkshire")
+        order = self.get_order(country='UNITED KINGDOM', country_code='GB', province='Xngnd', city="North XYorkshire")
         order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, fix_aliexpress_city=True)
 
         self.assertEqual(customer_address['province'], 'Other')
-        self.assertEqual(customer_address['city'], 'North Yorkshire, Xngnd')
+        self.assertEqual(customer_address['city'], 'North XYorkshire, Xngnd')
 
     def test_shopify_address_uk_unmatch3(self):
         order = self.get_order(country='UNITED KINGDOM', country_code='GB', province='Englaand', city="City Bristol")
