@@ -1,14 +1,26 @@
 #!/bin/bash
 
-echo '[+] Native datetime usage'
-grep --exclude-dir='venv*' kwarg= --include="*.py" --recursive .
+grep datetime.strptime --exclude-dir='venv*' --include="*.py" --recursive .
 if [ "$?" == "0" ]; then
     echo
     echo "[-] Do not use 'datetime.strptime', use arrow or django.utils.timezone for timezone aware datetime:"
     exit -1
 fi
 
-echo '[+] Missing migration files'
+grep 'kwarg=' --exclude-dir='venv*' --include="*.py" --recursive .
+if [ "$?" == "0" ]; then
+    echo
+    echo "[-] kwarg= seem to be a typo, do you mean kwargs?"
+    exit -1
+fi
+
+grep django.contrib.postgres --exclude-dir='venv*' --include="*.py" --exclude-dir="phone_automation" --recursive .
+if [ "$?" == "0" ]; then
+    echo
+    echo "[-] Do not use 'django.contrib.postgres' unless necessary"
+    exit -1
+fi
+
 python manage.py makemigrations | grep 'No changes detected' > /dev/null
 
 if [ ! "$?" == "0" ]; then
@@ -17,7 +29,6 @@ if [ ! "$?" == "0" ]; then
     exit -2
 fi
 
-echo '[+] Missing models in Django Admin'
 DJANGO_ADMIN_ERROR=""
 for i in */models.py; do
     app_name="$(dirname $i)"

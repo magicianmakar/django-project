@@ -1,4 +1,6 @@
+import json
 import arrow
+
 from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery_base import celery_app, CaptureFailure
 
@@ -58,7 +60,7 @@ def sync_gkart_store_profits(self, sync_id, store_id):
                     'date': arrow.get(order.get('created_at')).datetime,
                     'order_name': order.get('reference'),
                     'amount': order.get('total_price'),
-                    'items': [f'{i.get("quantity", 1)} x {i.get("name")}' for i in order.get('line_items', [])],
+                    'items': json.dumps([f'{i.get("quantity", 1)} x {i.get("name")}' for i in order.get('line_items', [])]),
                 }
             )
 

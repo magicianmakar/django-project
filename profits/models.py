@@ -8,7 +8,6 @@ from time import sleep
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import ArrayField
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -299,7 +298,7 @@ class ProfitOrder(models.Model):
     order_id = models.BigIntegerField()
     order_name = models.CharField(max_length=255, null=True, blank=True)
     amount = models.DecimalField(decimal_places=2, max_digits=9, default=0)
-    items = ArrayField(models.CharField(max_length=255), default=[], blank=True)
+    items = models.TextField(blank=True, null=True, default='')
 
 
 class ProfitRefund(models.Model):
