@@ -307,65 +307,6 @@ def get_tracking_orders(store, tracker_orders):
     return new_tracker_orders
 
 
-class OrderListQuery(object):
-    def __init__(self, store, params=None):
-        self._endpoint = 'orders.json'
-        self._store = store
-        self._params = {} if params is None else params
-
-    def items(self):
-        url = self._store.get_api_url(self._endpoint)
-        r = self._store.request.post(url, json=self._params)
-
-        try:
-            if r.ok:
-                result = r.json()
-                # Empty list of orders returns with Error key
-                if 'Error' in result:
-                    return []
-
-                if 'orders' in result:
-                    result = result['orders']
-
-                # Single order search returns as dict
-                if not isinstance(result, list):
-                    if result.get('reference') is None:  # Order Not Found
-                        result = []
-                    else:
-                        result = [result]
-
-                return result
-            elif r.status_code == 404:
-                return []
-            else:
-                r.raise_for_status()
-        except:
-            raven_client.captureException()
-            return []
-
-    def count(self):
-        if self._params.get('order_id'):
-            return 1
-
-        url = self._store.get_api_url(self._endpoint)
-        r = self._store.request.post(url, json={
-            **self._params,
-            'action': 'orders_count'
-        })
-        r.raise_for_status()
-
-        try:
-            return r.json()['orders_count']
-        except:
-            raven_client.captureException()
-            return 0
-
-    def update_params(self, update):
-        self._params.update(update)
-
-        return self
-
-
 def map_images(product, product_data):
     variants_images = {}
     image_options_map = {}
@@ -452,6 +393,115 @@ def duplicate_product(product, store=None):
             product.set_default_supplier(supplier, commit=True)
 
     return product
+
+
+def get_variant_values(product, split_factor):
+    options_key = 'variant_options' if product.is_connected else 'variants'
+    variants = product.parsed.get(options_key, [])
+
+    for variant in variants:
+        if variant['title'] == split_factor:
+            return variant['values']
+
+    return []
+
+
+def get_variant_images(product, option):
+    variant_images = []
+    data = product.parsed
+    product_images = data.get('images', [])
+    variants_images = data.get('variants_images', {})
+    options = list(variants_images.values())
+    if option in options:
+        hashed_images = [key for key, value in list(variants_images.items()) if value == option]
+        for product_image in product_images:
+            if hash_url_filename(product_image) in hashed_images:
+                variant_images.append(product_image)
+
+    return variant_images if variant_images else product_images
+
+
+def split_product(product, split_factor, store=None):
+    new_products = []
+    options = get_variant_values(product, split_factor)
+    parent_data = product.parsed
+    title = parent_data.get('title', '')
+
+    for option in options:
+        new_product = duplicate_product(product, product.store)
+        variants = new_product.parsed.get('variants', [])
+        new_data = {}
+        new_data['title'] = '{} ({})'.format(title, option)
+        new_data['variants'] = [v for v in variants if not v['title'] == split_factor]
+        new_data['images'] = get_variant_images(new_product, option)
+        new_product.update_data(new_data)
+        new_product.save()
+        new_products.append(new_product)
+
+    return new_products
+
+
+class OrderListQuery(object):
+    def __init__(self, store, params=None):
+        self._endpoint = 'orders.json'
+        self._store = store
+        # Action search_orders only returns results if we use at least one filter
+        self._params = {'action': 'search_orders', 'reference': '%'}
+        if params:
+            self._params.update(params)
+
+    def items(self):
+        url = self._store.get_api_url(self._endpoint)
+        r = self._store.request.post(url, json=self._params)
+
+        try:
+            if r.ok:
+                result = r.json()
+                # Empty list of orders returns with Error key
+                if 'Error' in result:
+                    return []
+
+                if 'orders' in result:
+                    result = result['orders']
+
+                # Single order search returns as dict
+                if not isinstance(result, list):
+                    if result.get('reference') is None:  # Order Not Found
+                        result = []
+                    else:
+                        result = [result]
+
+                return result
+            elif r.status_code == 404:
+                return []
+            else:
+                r.raise_for_status()
+        except:
+            raven_client.captureException()
+            return []
+
+    def count(self):
+        if self._params.get('order_id'):
+            return 1
+
+        # TODO: This endpoint needs to be separated or it will eventually take forever to bring the orders
+        url = self._store.get_api_url(self._endpoint)
+        r = self._store.request.post(url, json={
+            **self._params,
+            'action': 'search_orders'
+        })
+        r.raise_for_status()
+
+        try:
+            return r.json()['orders_count']
+        except:
+            raven_client.captureException()
+            return 0
+
+    def update_params(self, update):
+        self._params.update(update)
+
+        return self
 
 
 class OrderListPaginator(Paginator):

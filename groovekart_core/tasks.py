@@ -17,7 +17,7 @@ from shopified_core import permissions
 from shopified_core import utils
 
 from .models import GrooveKartStore, GrooveKartProduct, GrooveKartSupplier
-from .utils import GrooveKartOrderUpdater, format_gkart_errors
+from .utils import OrderListQuery, GrooveKartOrderUpdater, format_gkart_errors
 
 
 @celery_app.task(base=CaptureFailure)
@@ -372,11 +372,14 @@ def calculate_user_statistics(self, user_id):
 
         stores_data = []
         for store in stores:
+            # Payment Accepted -> 2
+            order_query = OrderListQuery(store, {'order_status': '2'})
+
             stores_data.append({
                 'id': store.id,
-                'products_connected': 0,
-                'products_saved': 0,
-                'pending_orders': 0,
+                'products_connected': store.connected_count(),
+                'products_saved': store.saved_count(),
+                'pending_orders': order_query.count(),
             })
 
         cache.set('gkart_user_statistics_{}'.format(user_id), stores_data, timeout=3600)

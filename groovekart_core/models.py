@@ -103,6 +103,36 @@ class GrooveKartStore(models.Model):
 
         pusher.trigger(self.pusher_channel(), event, data)
 
+    def saved_count(self):
+        return self.products.filter(source_id=0).count()
+
+    def connected_count(self):
+        return self.products.exclude(source_id=0).count()
+
+    def get_groovekart_products(self):
+        products = []
+        limit = 100
+        page = 1
+        api_url = self.get_api_url('list_products.json')
+
+        while True:
+            params = {
+                'offset': limit * (page - 1),
+                'limit': limit,
+                'only_active': True
+            }
+            r = self.request.post(api_url, json=params)
+            result = r.json()
+
+            if r.ok:
+                if 'Error' in result:
+                    return products
+
+                products += result['products']
+                page += 1
+
+            r.raise_for_status()
+
 
 class GrooveKartProduct(models.Model):
     class Meta:
@@ -213,12 +243,15 @@ class GrooveKartProduct(models.Model):
 
     def sync_variants(self, product_variants):
         variants = []
+        variant_options = {}
 
         for product_variant in product_variants:
             variant_id = dict_val(product_variant, ['id_product_attribute', 'id_product_variant'])
             variant_name = dict_val(product_variant, ['attribute_name', 'variant_name'])
+            variant_options.setdefault(product_variant['group_name'], set()).add(variant_name)
             product_variant['price'] = "%.2f" % float(product_variant['price'])
             product_variant['compare_at_price'] = "%.2f" % float(product_variant['compare_price'])
+
             for variant in variants:
                 if variant_id == variant['id']:
                     variant['description'] += ' | {}'.format(variant_name)
@@ -235,6 +268,9 @@ class GrooveKartProduct(models.Model):
                     file = src.rstrip(extension)
                     product_variant['image']['src'] = "{}-small_default{}".format(file, extension)
                 variants.append(product_variant)
+
+        variant_options = [{'title': title, 'values': list(values)} for title, values in variant_options.items()]
+        self.update_data({'variant_options': variant_options})
 
         return variants
 

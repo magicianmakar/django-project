@@ -45,28 +45,42 @@
                           style="display:none"
                     {% endif %}
                     >
-                    {% comment %}
-                        <div class="row filter-row">
+                    <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Sort</span>
                         </div>
                         <div class="col-md-3">
                             <select name="sort" class="form-control">
-                                <option {% if sort == 'created_at' %}selected="selected"{% endif %} value="created_at">Order Date</option>
-                                <option {% if sort == 'updated_at' %}selected="selected"{% endif %} value="updated_at">Order Last Update</option>
-                                <option {% if sort == 'total_price' %}selected="selected"{% endif %} value="total_price">Total Price</option>
-                                <option {% if sort == 'country_code' %}selected="selected"{% endif %} value="country_code">Shipping Country</option>
+                                <option {% if sort == 'date_add' %}selected="selected"{% endif %} value="date_add">Created Date</option>
+                                <option {% if sort == 'date_upd' %}selected="selected"{% endif %} value="date_upd">Updated Date</option>
+                                <option {% if sort == 'delivery_date' %}selected="selected"{% endif %} value="delivery_date">Delivered Date</option>
+                                <option {% if sort == 'id_order' %}selected="selected"{% endif %} value="id_order">Order ID</option>
                             </select>
                         </div>
                         <div class="col-md-4">
                             <label for="sort-desc" class="control-label">
                                 <input type="checkbox" id="sort-desc" name="desc" value="true" class="icheck"
-                                       {% if sort_type == 'true' %}checked{% endif %}>
+                                       {% if request.GET.desc == 'true' or not request.GET.desc %}checked{% endif %}>
                                 Descending
                             </label>
                         </div>
                     </div>
-                    {% endcomment %}
+                    <div class="row filter-row m-b">
+                        <div class="col-md-2 filter-label">
+                            <span>Date Range</span>
+                        </div>
+                        <div class="col-md-4">
+                            <div id="created_at_daterange" class="form-control">
+                                <i class="fa fa-calendar m-r-xs"></i>
+                                <span>All Time</span>
+                                <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                            </div>
+                            <input type="hidden" type="text" name="created_at_daterange" value="{{ created_at_daterange|default:'' }}" />
+                        </div>
+                        <div class="col-md-6" style="">
+                            <span class="help-block "></span>
+                        </div>
+                    </div>
                     <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Order</span>
@@ -74,6 +88,29 @@
                         <div class="col-md-4">
                             <input name="query_order" value="{{request.GET.query_order|default:''}}" class="form-control"
                                    placeholder="Order ID">
+                        </div>
+                    </div>
+
+                    <div class="row filter-row">
+                        <div class="col-md-offset-1 col-md-1 filter-label">
+                            <span>Reference</span>
+                        </div>
+                        <div class="col-md-4">
+                            <input name="reference" value="{{request.GET.reference|default:''}}" class="form-control"
+                                   placeholder="Partial or Complete Order Reference">
+                        </div>
+                    </div>
+
+                    <div class="row filter-row">
+                        <div class="col-md-offset-1 col-md-1 filter-label">
+                            <span>Product</span>
+                        </div>
+                        <div class="col-md-4">
+                            <select name="product_ids" id="products" class="form-control" data-store="{{store.id}}" multiple="">
+                               {% for p in products %}
+                               <option value="{{p.id}}" selected="">{{p.title|truncatewords:5}}</option>
+                               {% endfor %}
+                           </select>
                         </div>
                     </div>
 
@@ -119,34 +156,23 @@
                         </div>
                     </div>
                     {% endif %}
+                {% endcomment %}
                     <div class="row filter-row">
                         <div class="col-md-offset-1 col-md-1 filter-label">
                             <span>Country</span>
                         </div>
                         <div class="col-md-4">
-                            <select name="query_address"  class="form-control" id="country-filter"
-                                    data-placeholder="Shipping Country" style="height:30px" multiple>
+                            <select name="country_code" class="form-control" id="country-filter"
+                                    data-placeholder="Shipping Country" style="height:30px">
                                <option value=""></option>
                                 {% for item in countries %}
                                 <option value="{{item.0}}"
-                                    {% query_active 'query_address' item.0 'selected="selected"' True %}
+                                    {% query_active 'country_code' item.0 'selected="selected"' True %}
                                     >{{item.1}}</option>
                                 {% endfor %}
                                 </select>
                         </div>
                     </div>
-                    <div class="row filter-row">
-                        <div class="col-md-offset-1 col-md-1 filter-label">
-                            <span>Sort</span>
-                        </div>
-                        <div class="col-md-3">
-                            <select name="sort" class="form-control">
-                                <option {% if request.GET.sort == '!order_date' %}selected="selected"{% endif %} value="!order_date">Newest orders first</option>
-                                <option {% if request.GET.sort == 'order_date' %}selected="selected"{% endif %} value="order_date">Oldest orders first</option>
-                            </select>
-                        </div>
-                    </div>
-                {% endcomment %}
                     <div class="row filter-row">
                         <div class="col-md-2  filter-label filter-order-status">
                             <span>Status</span>
@@ -525,7 +551,8 @@
 {% block extracss %}
 
 {% compress css %}
-    <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
     <link href="{% static 'groovekart/css/orders_list.css' %}" rel="stylesheet">
 {% endcompress %}
 
@@ -553,8 +580,10 @@
     <script src="//js.pusher.com/3.2/pusher.min.js"></script>
 
 {% compress js %}
-    <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}" type="text/javascript"></script>
     <script type="text/javascript" src="{% static 'groovekart/js/groovekart_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'groovekart/js/orders_list.js' %}"></script>
 {% endcompress %}

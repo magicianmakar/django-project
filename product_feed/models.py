@@ -114,3 +114,15 @@ class GearBubbleFeedStatus(FeedStatusAbstract):
     def get_filename(self, revision=None):
         feed_hash = hashlib.md5('u{}/{}/{}'.format('gear', self.store.user.id, self.store.id).encode()).hexdigest()
         return 'feeds/{}.xml'.format(feed_hash)
+
+
+class GrooveKartFeedStatus(FeedStatusAbstract):
+    store = models.OneToOneField('groovekart_core.GrooveKartStore', related_name='feedstatus')
+
+    class Meta:
+        verbose_name = 'GrooveKart Feed Status'
+        verbose_name_plural = 'GrooveKart Feed Statuses'
+
+    def get_filename(self, revision=None):
+        feed_hash = hashlib.md5('u{}/{}/{}'.format('gkart', self.store.user.id, self.store.id).encode()).hexdigest()
+        return 'feeds/{}.xml'.format(feed_hash)

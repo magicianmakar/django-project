@@ -29,6 +29,14 @@ def template_config(request):
                 'prefix': '/gear'
             }
         }
+    elif namespace == 'gkart':
+        template_config = {
+            'base': 'base_groovekart_core.html',
+            'url': {
+                'namespace': 'gkart:',
+                'prefix': '/gkart'
+            }
+        }
     else:
         template_config = {
             'base': 'base.html',

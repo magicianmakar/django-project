@@ -65,12 +65,14 @@ from product_feed.feed import (
     generate_chq_product_feed,
     generate_woo_product_feed,
     generate_gear_product_feed,
+    generate_gkart_product_feed,
 )
 from product_feed.models import (
     FeedStatus,
     CommerceHQFeedStatus,
     WooFeedStatus,
     GearBubbleFeedStatus,
+    GrooveKartFeedStatus,
 )
 
 from order_exports.models import OrderExport
@@ -795,6 +797,20 @@ def generate_gear_feed(self, feed_id, nocache=False, by_fb=False):
     try:
         feed = GearBubbleFeedStatus.objects.get(id=feed_id)
         generate_gear_product_feed(feed, nocache=nocache)
+
+    except:
+        feed.status = 0
+        feed.generation_time = -1
+        feed.save()
+
+        raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
+def generate_gkart_feed(self, feed_id, nocache=False, by_fb=False):
+    try:
+        feed = GrooveKartFeedStatus.objects.get(id=feed_id)
+        generate_gkart_product_feed(feed, nocache=nocache)
 
     except:
         feed.status = 0

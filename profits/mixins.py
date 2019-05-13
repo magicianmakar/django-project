@@ -8,6 +8,8 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 from shopified_core.utils import safe_int
 from shopified_core.paginators import SimplePaginator
 
@@ -62,6 +64,7 @@ class ProfitDashboardMixin():
 
         context = {
             'page': 'profit_dashboard',
+            'selected_menu': 'business:profit_dashboard',
             'base_template': self.base_template,
             'store': store,
             'store_type': self.store_type,
@@ -77,8 +80,7 @@ class ProfitDashboardMixin():
             user_timezone = self.request.user.profile.timezone
             self.request.session['django_timezone'] = user_timezone
 
-        # try:
-        if True:
+        try:
             start, end = utils.get_date_range(self.request, user_timezone)
             limit = safe_int(self.request.GET.get('limit'), 31)
             current_page = safe_int(self.request.GET.get('page'), 1)
@@ -117,8 +119,8 @@ class ProfitDashboardMixin():
                 'details_paginator': details_paginator,
             })
 
-        # except:
-        #     context['api_error'] = 'API Error'
-        #     raven_client.captureException()
+        except:
+            context['api_error'] = 'API Error'
+            raven_client.captureException()
 
         return context

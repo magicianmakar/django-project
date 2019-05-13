@@ -183,6 +183,7 @@ def product_alerts(request):
         'paginator': paginator,
         'current_page': page,
         'page': 'product_alerts',
+        'selected_menu': 'products:alerts',
         'store': store,
         'category': category,
         'product_type': product_type,
@@ -208,6 +209,7 @@ class StoresList(ListView):
         context['extra_stores'] = can_add and is_stripe and stores_count >= total_allowed and total_allowed != -1
         context['user_statistics'] = cache.get('gkart_user_statistics_{}'.format(self.request.user.id))
         context['breadcrumbs'] = ['Stores']
+        context['selected_menu'] = 'account:stores'
 
         return context
 
@@ -227,6 +229,7 @@ class ProductsList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['breadcrumbs'] = [{'title': 'Products', 'url': reverse('gkart:products_list')}]
+        context['selected_menu'] = 'products:all'
 
         if self.request.GET.get('store', 'n') == 'n':
             context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('gkart:products_list') + '?store=n'})
@@ -260,6 +263,7 @@ class ProductDetailView(DetailView):
         context['groovekart_product'] = self.object.sync() if self.object.source_id else None
         context['product_data'] = self.object.parsed
         context['breadcrumbs'] = [{'title': 'Products', 'url': products_path}, self.object.title]
+        context['selected_menu'] = 'products:all'
 
         if self.object.store:
             store_title = self.object.store.title
@@ -314,6 +318,7 @@ class BoardsList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['breadcrumbs'] = ['Boards']
+        context['selected_menu'] = 'products:boards'
 
         return context
 
@@ -346,6 +351,7 @@ class BoardDetailView(DetailView):
         context['products'] = page
         context['current_page'] = page
         context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('gkart:boards_list')}, self.object.title]
+        context['selected_menu'] = 'products:boards'
 
         return context
 
@@ -360,6 +366,21 @@ class OrdersList(ListView):
     paginator_class = OrderListPaginator
     url = reverse_lazy('gkart:orders_list')
 
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('orders.use'):
+            return render(request, 'upgrade.html')
+
+        store = self.get_store()
+        if not store:
+            messages.warning(request, 'Please add at least one store before using the Orders page.')
+            return HttpResponseRedirect('/gkart/')
+
+        if not request.user.can('place_orders.sub', store):
+            messages.warning(request, "You don't have access to this store orders")
+            return HttpResponseRedirect('/gkart/')
+
+        return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
+
     def get_store(self):
         if not hasattr(self, 'store'):
             self.store = get_store_from_request(self.request)
@@ -368,12 +389,52 @@ class OrdersList(ListView):
 
     def get_queryset(self, *args, **kwargs):
         params = {}
-        params['order_status'] = self.request.GET.get('status', '')
-        params['order_by'] = 'date_add'
-        params['order_way'] = 'DESC'
+        params['order_by'] = self.request.GET.get('sort', 'date_add')
+        order_way = self.request.GET.get('desc', 'true')
+        params['order_way'] = 'DESC' if order_way == 'true' else 'ASC'
+
+        if self.request.GET.get('status'):
+            params['order_status'] = self.request.GET.get('status')
 
         if self.request.GET.get('query_order'):
-            params['order_id'] = self.request.GET.get('query_order')
+            params['ids'] = self.request.GET.get('query_order')
+
+        if self.request.GET.get('reference'):
+            params['reference'] = self.request.GET.get('reference')
+
+        product_ids = self.request.GET.getlist('product_ids')
+        if product_ids:
+            params['product_id'] = ','.join(product_ids)
+
+        date_now = arrow.get(timezone.now())
+        default_date = '{}-{}'.format(
+            date_now.replace(days=-30).format('MM/DD/YYYY'),
+            date_now.format('MM/DD/YYYY'),
+        )
+        created_at_daterange = self.request.GET.get('created_at_daterange', default_date)
+        created_at_start, created_at_end = None, None
+        if created_at_daterange:
+            try:
+                daterange_list = created_at_daterange.split('-')
+
+                tz = timezone.localtime(timezone.now()).strftime(' %z')
+
+                created_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z')
+
+                if len(daterange_list) > 1 and daterange_list[1]:
+                    created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                    created_at_end = created_at_end.span('day')[1]
+
+            except:
+                pass
+
+        # TODO: Using only one date doesn't work
+        if created_at_start and created_at_end:
+            params['created_at_min'] = created_at_start.format('YYYY-MM-DD')
+            params['created_at_max'] = created_at_end.format('YYYY-MM-DD')
+
+        if self.request.GET.get('country_code'):
+            params['country_code'] = self.request.GET.get('country_code')
 
         return OrderListQuery(self.get_store(), params)
 
@@ -384,11 +445,20 @@ class OrdersList(ListView):
         context['shipping_carriers'] = store_shipping_carriers(store)
         context['status'] = self.request.GET.get('status', 'any')
         context['fulfillment'] = self.request.GET.get('fulfillment', 'any')
+        context['countries'] = get_counrties_list()
+
+        product_ids = self.request.GET.getlist('product_ids')
+        if len(product_ids):
+            context['products'] = GrooveKartProduct.objects.filter(pk__in=product_ids)
+
+        date_now = '{}-'.format(arrow.get(timezone.now()).replace(days=-30).format('MM/DD/YYYY'))
+        context['created_at_daterange'] = self.request.GET.get('created_at_daterange', date_now)
 
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},
             {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)},
         ]
+        context['selected_menu'] = 'orders:all'
 
         return context
 
@@ -537,11 +607,11 @@ class OrdersTrackList(ListView):
         store = self.get_store()
         if not store:
             messages.warning(request, 'Please add at least one store before using the Tracking page.')
-            return HttpResponseRedirect('/')
+            return HttpResponseRedirect('/gkart/')
 
         if not request.user.can('place_orders.sub', store):
             messages.warning(request, "You don't have access to this store orders")
-            return HttpResponseRedirect('/')
+            return HttpResponseRedirect('/gkart/')
 
         return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
 
@@ -685,6 +755,7 @@ class OrdersTrackList(ListView):
             {'title': 'Tracking', 'url': reverse('gkart:orders_track')},
             {'title': store.title, 'url': '{}?store={}'.format(reverse('gkart:orders_list'), store.id)},
         ]
+        context['selected_menu'] = 'orders:tracking'
 
         sync_delay_notify_days = safe_int(self.request.user.get_config('sync_delay_notify_days'))
         sync_delay_notify_highlight = self.request.user.get_config('sync_delay_notify_highlight')
@@ -850,6 +921,7 @@ class ProductMappingView(DetailView):
         context['product_suppliers'] = self.get_product_suppliers(product)
         context['current_supplier'] = current_supplier = self.get_current_supplier(product)
         context['variants_map'] = self.get_variants_map(groovekart_product, product, current_supplier)
+        context['selected_menu'] = 'products:all'
 
         return context
 
@@ -903,6 +975,7 @@ class MappingSupplierView(DetailView):
             {'title': product.title, 'url': reverse('gkart:product_detail', args=[product.id])},
             'Advanced Mapping'
         ]
+        context['selected_menu'] = 'products:all'
 
         self.add_supplier_info(groovekart_product.get('variants', []), suppliers_map)
 

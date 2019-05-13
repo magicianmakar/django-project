@@ -274,7 +274,7 @@ $('#modal-pick-variant .dropdown-menu li a').click(function(e) {
             $('#split-variants-values').text(targetVariants[0].values.join(', '));
         }
     } else {
-        targetVariants = config.groovekart_options.filter(function(o) { return o.name === val; });
+        targetVariants = config.groovekart_options.filter(function(o) { return o.title === val; });
         if (targetVariants.length > 0) {
             if (typeof targetVariants[0].values === 'string') {
                 targetVariants[0].values = targetVariants[0].values.split(',');

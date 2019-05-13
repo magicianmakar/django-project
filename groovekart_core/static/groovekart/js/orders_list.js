@@ -506,6 +506,7 @@ $('.note-panel .note-edit-cancel').click(function (e) {
 
 $('.note-panel .note-edit-save').click(function (e) {
     var parent = $(this).parents('.note-panel');
+
     parent.find('.note-edit-cancel').hide();
     $(this).button('loading');
 
@@ -1088,20 +1089,57 @@ $(function () {
     }
 
     fixNotePanelHeight();
-/*
-    $('#product_title').keyup(function() {
-        if (!$(this).val().trim().length) {
-            $('input[name="product"]', $(this).parent()).val('');
-        }
-    }).autocomplete({
-        serviceUrl: '/autocomplete/title?' + $.param({store: $('#product_title').data('store')}),
-        minChars: 1,
-        deferRequestBy: 1000,
-        onSelect: function(suggestion) {
-            $('input[name="product"]', $(this).parent()).val(suggestion.data);
+
+    $('select#products').select2({
+        placeholder: 'Select a Product',
+        ajax: {
+            url: api_url('autocomplete', 'gkart'),
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    query: params.term, // search term,
+                    store: $('#products').data('store'),
+                    page: params.page,
+                    trunc: 1,
+                    target: 'title'
+                };
+            },
+            processResults: function(data, params) {
+                params.page = params.page || 1;
+
+                return {
+                    results: $.map(data.suggestions, function(el) {
+                        return {
+                            id: el.data,
+                            text: el.value,
+                            image: el.image,
+                        };
+                    }),
+                    pagination: {
+                        more: false
+                    }
+                };
+            },
+            cache: true
+        },
+        escapeMarkup: function(markup) {
+            return markup;
+        },
+        minimumInputLength: 1,
+        templateResult: function(repo) {
+            if (repo.loading) {
+                return repo.text;
+            }
+
+            return '<span><img src="' + repo.image + '"><a href="#">' + repo.text.replace('"', '\'') + '</a></span>';
+        },
+        templateSelection: function(data) {
+            return data.text || data.element.innerText;
         }
     });
 
+/*
     $('#supplier_name').autocomplete({
         serviceUrl: '/autocomplete/supplier-name?' + $.param({store: $('#supplier_name').data('store')}),
         minChars: 1,
@@ -1120,6 +1158,82 @@ $(function () {
         }
     });
 */
+    $('#created_at_daterange').daterangepicker({
+        format: 'MM/DD/YYYY',
+        showDropdowns: true,
+        showWeekNumbers: true,
+        timePicker: false,
+        autoUpdateInput: false,
+        ranges: {
+            'Today': [moment(), moment()],
+            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+            'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+            'This Month': [moment().startOf('month'), moment().endOf('month')],
+            'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+            'All Time': 'all-time',
+        },
+        opens: 'right',
+        drops: 'down',
+        buttonClasses: ['btn', 'btn-sm'],
+        applyClass: 'btn-primary',
+        cancelClass: 'btn-default',
+        separator: ' to ',
+        locale: {
+            applyLabel: 'Submit',
+            cancelLabel: 'Clear',
+            fromLabel: 'From',
+            toLabel: 'To',
+            customRangeLabel: 'Custom Range',
+            daysOfWeek: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr','Sa'],
+            monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+            firstDay: 1
+        }
+    }, function(start, end, label) {
+        $('#created_at_daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+        $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
+    });
+
+    $('#created_at_daterange').on('apply.daterangepicker', function(ev, picker) {
+        var start = picker.startDate,
+            end = picker.endDate;
+
+        if (start.isValid && !end.isValid()) {
+            end = moment();
+        }
+
+        if (start.isValid() && end.isValid()) {
+            $('#created_at_daterange span').html(
+                start.format(start.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY') + ' - ' +
+                 end.format(end.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
+            $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
+        } else {
+            $('#created_at_daterange span').html('All Time');
+            $('input[name="created_at_daterange"]').val('all');
+        }
+    });
+
+    $('#created_at_daterange').on('cancel.daterangepicker', function(ev, picker) {
+        $('#created_at_daterange span').html('');
+        $('input[name="created_at_daterange"]').val('');
+    });
+
+    var createdAtDaterangeValue = $('input[name="created_at_daterange"]').val();
+    if (createdAtDaterangeValue && createdAtDaterangeValue.indexOf('-') !== -1) {
+        var dates = createdAtDaterangeValue.split('-'),
+            createdAtStart = moment(dates[0], 'MM/DD/YYYY'),
+            createdAtEnd = moment(dates[1], 'MM/DD/YYYY');
+
+        if (createdAtStart.isValid && !createdAtEnd.isValid()) {
+            createdAtEnd = moment();
+        }
+
+        $('#created_at_daterange span').html(
+            createdAtStart.format(createdAtStart.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY') + ' - ' +
+            createdAtEnd.format(createdAtEnd.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
+    }
+
+
     setTimeout(function() {
         window.location.reload();
     }, 3500 * 1000);

@@ -8,6 +8,7 @@ from django.core.cache import cache
 from django.core.exceptions import ValidationError, PermissionDenied
 from django.core.validators import URLValidator
 from django.db import transaction
+from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -634,3 +635,38 @@ class GrooveKartApi(ApiBase):
         upload.save()
 
         return self.api_success()
+
+    def get_autocomplete(self, request, user, data):
+        q = data.get('query', '').strip()
+        if not q:
+            q = data.get('term', '').strip()
+
+        if not q:
+            return self.api_success({'query': q, 'suggestions': []}, safe=False)
+
+        target = data.get('target')
+        if target == 'title':
+            results = []
+            products = user.models_user.groovekartproduct_set.only('id', 'title', 'data').filter(title__icontains=q, source_id__gt=0)
+            store = data.get('store')
+            if store:
+                products = products.filter(store=store)
+
+            for product in products[:10]:
+                results.append({
+                    'value': (truncatewords(product.title, 10) if data.get('trunc') else product.title),
+                    'data': product.source_id,
+                    'image': product.get_image()
+                })
+
+            return self.api_success({'query': q, 'suggestions': results}, safe=False)
+
+        elif target == 'types':
+            types = []
+            for product in request.user.models_user.groovekartproduct_set.only('product_type').filter(product_type__icontains=q)[:10]:
+                if product.product_type not in types:
+                    types.append(product.product_type)
+
+            return self.api_success({'query': q, 'suggestions': [{'value': i, 'data': i} for i in types]}, safe=False)
+
+        return self.api_error({'error': 'Target not found'}, status=404)

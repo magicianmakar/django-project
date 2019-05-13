@@ -724,9 +724,9 @@
                   </button>
                   <ul class="dropdown-menu">
                     {% if groovekart_product %}
-                        {% for v in product.parsed.options %}
+                        {% for option in product.parsed.variant_options %}
                           <li>
-                            <a type="button">{{ v.name }}</a>
+                            <a type="button">{{ option.title }}</a>
                           </li>
                         {% endfor %}
                     {% else %}
@@ -806,7 +806,7 @@ var config = {
 
 {% if groovekart_product %}
     connected: true,
-    groovekart_options: {% json_dumps groovekart_product.options %},
+    groovekart_options: {% json_dumps groovekart_product.variant_options %},
 {% else %}
     groovekart_options: null,
 {% endif %}
