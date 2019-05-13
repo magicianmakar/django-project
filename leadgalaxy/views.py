@@ -3259,6 +3259,16 @@ def save_image_s3(request):
         if old_url and not old_url == upload_url:
             update_product_data_images(product, old_url, upload_url)
 
+    elif request.GET.get('gkart') or request.POST.get('gkart'):
+        from groovekart_core.models import GrooveKartProduct, GrooveKartUserUpload
+
+        product = GrooveKartProduct.objects.get(id=product_id)
+        permissions.user_can_edit(user, product)
+        GrooveKartUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
+
+        if old_url and not old_url == upload_url:
+            update_product_data_images(product, old_url, upload_url)
+
     else:
         product = ShopifyProduct.objects.get(id=product_id)
         permissions.user_can_edit(user, product)
