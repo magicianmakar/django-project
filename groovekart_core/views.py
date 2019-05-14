@@ -379,7 +379,7 @@ class OrdersList(ListView):
             messages.warning(request, "You don't have access to this store orders")
             return HttpResponseRedirect('/gkart/')
 
-        return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
+        return super(ListView, self).dispatch(request, *args, **kwargs)
 
     def get_store(self):
         if not hasattr(self, 'store'):
