@@ -2,12 +2,11 @@
     var pusherSubscription = false;
 
     window.createPhotopeaURL = function(image, imageId) {
-        var imageUrl = image;
-        if (!imageUrl.match(/shopifiedapp.+?\.s3\.amazonaws\.com/)) {
-            imageUrl = app_link(['api/ali/get-image'], {
-                url: imageUrl
-            });
-        }
+        var imageUrl = app_link(['api/ali/get-image'], {
+            url: image
+        });
+
+        imageUrl = imageUrl.replace(/^https?:\/\/dev.dropified.com(:[0-9]+)?/, 'https://app.dropified.com'); // Make it work in dev
 
         var serverUrl = app_link('/upload/save_image_s3') + '?' + $.param({
             token: config.token,

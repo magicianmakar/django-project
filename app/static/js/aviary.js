@@ -1,12 +1,10 @@
 function launchEditor(image) {
     if (config.photo_editor !== null) {
-        var imageUrl = image.src;
-        if (!imageUrl.match(/shopifiedapp.+?\.s3\.amazonaws\.com/)) {
-            imageUrl = app_link(['api/ali/get-image'], {
-                url: btoa(imageUrl)
-            });
-            imageUrl = imageUrl.replace('http://dev', 'https://app');  // Make it work in dev
-        }
+        var imageUrl = app_link(['api/ali/get-image'], {
+            url: image.src
+        });
+
+        imageUrl = imageUrl.replace(/^https?:\/\/dev.dropified.com(:[0-9]+)?/, 'https://app.dropified.com');  // Make it work in dev
 
         // Maintain current image source
         var editorImage = new Image();
