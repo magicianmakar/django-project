@@ -5,7 +5,7 @@
         var imageUrl = image;
         if (!imageUrl.match(/shopifiedapp.+?\.s3\.amazonaws\.com/)) {
             imageUrl = app_link(['api/ali/get-image'], {
-                url: btoa(imageUrl)
+                url: imageUrl
             });
         }
 
