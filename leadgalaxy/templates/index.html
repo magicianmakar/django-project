@@ -137,7 +137,7 @@
 
             <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
                class="btn btn-default btn-outline btn-xs pull-right extension-link hidden-sm hidden-xs" target="_blank">Install Chrome Extension</a>
-
+            {% include 'partial/help_tooltip.html' with help="Click Add Store to get started.<br>For a full guide on adding your Shopify store view <a href='http://help.dropified.com/getting-started/connect-your-store/connect-a-shopify-store-in-dropified'>this article.</a>" qtipstyle="color:#BBB" %}
                 </div>
             </div>
 
@@ -157,7 +157,10 @@
                     <form id="config-form" class="form-horizontal" role="form">
                         <input type="hidden" name="from" value="webapp">
                         <div class="setting-section">
-                            <h3 class="setting-title">Products Import</h3>
+                            <h3 class="setting-title">
+                                Products Import
+                                {% include 'partial/help_tooltip.html' with help="Here you can configure the settings for the products that you import to your account. <br><a href='http://help.dropified.com/products/save-and-import-products/import-products-with-chrome-extension'>Click here</a> to learn how to import items." qtipstyle="color:#BBB" %}
+                            </h3>
                         </div>
 
                         {% if user|can:'auto_margin.use' %}
@@ -224,6 +227,7 @@
                                 <div class="form-group">
                                     <label for="default_weight_unit" class="col-sm-4 control-label" style="padding-top:0">
                                         Default Weight Unit
+                                        {% include 'partial/help_tooltip.html' with help="Set the unit of Weight to use in your Store. Weights are especially useful when creating weight based shipping rates." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-3">
                                         <select id="default_weight_unit" name="default_weight_unit" class="form-control">
@@ -253,6 +257,7 @@
                                 <div class="form-group">
                                     <label class="control-label">
                                         <a class="edit-markup-rules-btn m-l" href="#">Advanced Markup Rules...</a>
+                                        {% include 'partial/help_tooltip.html' with help="Create several markup rules which are applied to to items based on their price." qtipstyle="color:#BBB" %}
                                     </label>
                                 </div>
                             </div>
@@ -308,6 +313,7 @@
                                 <div class="form-group">
                                     <label for="make_visisble" class="col-sm-4 col-xs-8 control-label">
                                         Make Products Visible
+                                        {% include 'partial/help_tooltip.html' with help="You'll want to enable this option to ensure products you import with Dropified are visible on your store." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="make_visisble"
@@ -322,6 +328,7 @@
                                 <div class="form-group">
                                     <label for="initial_inventory_sync" class="col-sm-4 col-xs-8 control-label">
                                         Sync Product Inventory when importing products
+                                        {% include 'partial/help_tooltip.html' with help="Enable this option to import the inventory quantities from AliExpress to your store." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="initial_inventory_sync"
@@ -336,6 +343,7 @@
                                 <div class="form-group">
                                     <label for="supplier_change_inventory_sync" class="col-sm-4 col-xs-8 control-label">
                                         Sync Product Inventory when changing Suppliers
+                                        {% include 'partial/help_tooltip.html' with help="When you switch suppliers enable this option to automatically sync inventory with the new supplier." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="supplier_change_inventory_sync"
@@ -350,6 +358,7 @@
                                 <div class="form-group">
                                     <label for="update_product_vendor" class="col-sm-4 col-xs-8 control-label">
                                         Update Product Vendor when Default Supplier is changed
+                                        {% include 'partial/help_tooltip.html' with help="Enable this option to automatically update and display the supplier's name as the Vendor name in your store." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="update_product_vendor"
@@ -376,7 +385,10 @@
                         {% if user|can:'auto_order.view' %}
                         {% with can_use=user|can:'auto_order.use' %}
                         <div class="setting-section">
-                            <h3 class="setting-title">Auto Fulfill</h3>
+                            <h3 class="setting-title">
+                                Auto Fulfill
+                                {% include 'partial/help_tooltip.html' with help="Dropified can automatically place orders with suppliers. Once suppliers dispatch your items Dropifeid can automatically fulfill those orders in your store.<br><a href='http://help.dropified.com/orders/how-do-i-automatically-fulfill-an-order-and-email-the-customer'>Click here</a> to learn more about these options." qtipstyle="color:#BBB" %}
+                            </h3>
                         </div>
 
                         <div class="row">
@@ -419,6 +431,7 @@
                                 <div class="form-group v-center">
                                     <label for="order_custom_note" class="col-sm-2 control-label" style="padding-top:0">
                                             Custom Note To The Supplier
+                                        {% include 'partial/help_tooltip.html' with help="This message will be passed to the supplier.<br>You could include a message similar to '<b>Please do not include an invoice as we are dropshipping</b>'." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-10">
                                         <input type="text" class="form-control col-sm-2" {% if can_use %}id="order_custom_note" name="order_custom_note" value="{{config.order_custom_note}}"{% endif %}>
@@ -431,7 +444,10 @@
                         <div class="row">
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
-                                    <label for="epacket_shipping" class="col-sm-4 col-xs-8 control-label">Select ePacket when available</label>
+                                    <label for="epacket_shipping" class="col-sm-4 col-xs-8 control-label">
+                                        Select ePacket when available
+                                        {% include 'partial/help_tooltip.html' with help="Automatically selects the ePacket shipping method on AliExpress for all items." qtipstyle="color:#BBB" %}
+                                    </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input type="checkbox" class="js-switch" id="epacket_shipping"
                                                name="epacket_shipping" {% if config.epacket_shipping %}checked="checked"{% endif %}>
@@ -530,7 +546,10 @@
 
 
                         <div class="setting-section">
-                            <h3 class="setting-title">Aliexpress</h3>
+                            <h3 class="setting-title">
+                                Aliexpress
+                                {% include 'partial/help_tooltip.html' with help="To help automate ordering on AliExpress these options can: <ul> <li>Automatically solve the Captcha security codes.</li> <li>Automatically enter the customer's address in a format that AliExpress accepts.</li> </ul> We would recommend enabling them for full automation." qtipstyle="color:#BBB" %}
+                            </h3>
                         </div>
 
                         {% if user|can:'aliexpress_captcha.use' %}
@@ -539,6 +558,8 @@
                                 <div class="form-group">
                                     <label for="aliexpress_captcha" class="col-sm-4 col-xs-8 control-label">
                                         Enable Auto Captcha Solving
+                                        {% include 'partial/help_tooltip.html' with help="Automatically solves the Captcha codes on AliExpress. We recommend enabling this for full automation.<br>If you're on the Buidler plan you can purchase credits in <a href='https://app.dropified.com/user/profile#plan'>your account here</a>" qtipstyle="color:#BBB" %}
+
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="aliexpress_captcha" name="aliexpress_captcha" type="checkbox"
@@ -774,6 +795,7 @@
                                 <div class="form-group">
                                     <label for="aliexpress_as_notes" class="col-sm-4 col-xs-8 control-label">
                                         Save Supplier Order ID as standard Order Notes
+                                        {% include 'partial/help_tooltip.html' with help="Automatically saves the Supplier Order ID in the Notes field in your store - this may be visible to some customers." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="aliexpress_as_notes" name="aliexpress_as_notes" type="checkbox"
@@ -788,6 +810,8 @@
                                 <div class="form-group">
                                     <label for="aliexpress_as_custom_note" class="col-sm-4 col-xs-8 control-label">
                                         Save Supplier Order ID as Additional Details
+                                        {% include 'partial/help_tooltip.html' with help="Automatically saves the Supplier Order ID in the additional detauls field in Shopify - this may be visible to some customers." qtipstyle="color:#BBB" %}
+
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="aliexpress_as_custom_note" name="aliexpress_as_custom_note" type="checkbox" class="js-switch" {% if config.aliexpress_as_custom_note %}checked{% endif %} />
@@ -801,6 +825,7 @@
                                 <div class="form-group">
                                     <label for="aliexpress_as_order_tag" class="col-sm-4 col-xs-8 control-label">
                                         Save Supplier Order ID as Order Tag
+                                        {% include 'partial/help_tooltip.html' with help="Dropified can automatically add the Supplier Order ID as a Tag, making them searchable from within your Shopify store." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="aliexpress_as_order_tag" name="aliexpress_as_order_tag" type="checkbox"
@@ -843,6 +868,7 @@
                                 <div class="form-group">
                                     <label for="order_custom_line_attr" class="col-sm-4 col-xs-8 control-label">
                                         Send Custom Line Attributes along with the note to the seller
+                                        {% include 'partial/help_tooltip.html' with help="If you sell products where the user is able to customize the item then you’ll find our Custom Line Attributes feature useful. This will send a custom note to the supplier with the product details.<br>Learn more about this <a href='http://help.dropified.com/orders/placing-orders/how-do-i-add-a-custom-message-to-each-product'>here</a>" qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="order_custom_line_attr" name="order_custom_line_attr" type="checkbox"
@@ -857,6 +883,7 @@
                                 <div class="form-group">
                                     <label for="order_risk_levels_enabled" class="col-sm-4 col-xs-8 control-label">
                                         Enable Order Risk Levels
+                                        {% include 'partial/help_tooltip.html' with help="If you're using Shopify Payments, enable this option to show the Fraud risk for  transactions on your Dropified orders page. Great to spot those high risk orders before you place them!" qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="order_risk_levels_enabled" name="order_risk_levels_enabled" type="checkbox"
@@ -870,8 +897,8 @@
                             <div class="col-sm-offset-1 col-sm-11">
                                 <div class="form-group">
                                     <label for="sync_delay_notify_days" class="col-sm-4 col-xs-6 control-label">
-                                        {# Notify the user if a supplier in Aliexpress does not add a tracking number after #}
                                         Enable notification(s) for delayed Tracking Number syncing
+                                        {% include 'partial/help_tooltip.html' with help="Enable this option to be notified if you supplier hasn't shipped an order within X days." qtipstyle="color:#BBB" %}
                                     </label>
                                     <div class="col-sm-6 col-xs-4">
                                         <input id="sync_delay_notify" name="sync_delay_notify" type="checkbox"
