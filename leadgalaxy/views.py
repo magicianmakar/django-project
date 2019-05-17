@@ -2174,7 +2174,9 @@ def get_shipping_info(request):
 
     request_url = request.GET.get('url')
     if request_url:
-        cache_key = f'aliexpress_shipping_cache.{hash_text(request_url)}'
+        request_url = utils.set_url_query(request_url, 'useLocalAddress', 'false')
+
+        cache_key = f'aliexpress_shipping_cache2.{hash_text(request_url)}'
         data = cache.get(cache_key)
         if data is None:
             res = requests.get(
