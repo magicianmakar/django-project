@@ -694,6 +694,7 @@ class OrdersList(ListView):
             self.filter_data['fulfillment'] = 'any'
             self.filter_data['financial'] = 'any'
 
+        paginator.set_request(self.request)
         paginator.set_filter(**self.filter_data)
 
         return paginator

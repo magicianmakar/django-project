@@ -9,6 +9,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache, caches
 from django.utils.functional import cached_property
+from django.contrib import messages
 
 from unidecode import unidecode
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -618,6 +619,8 @@ class CommerceHQOrdersPaginator(Paginator):
     store = None
     size = 20
 
+    request = None
+
     query = None
     fulfillment = None
     financial = None
@@ -639,6 +642,9 @@ class CommerceHQOrdersPaginator(Paginator):
 
     def set_store(self, store):
         self.store = store
+
+    def set_request(self, r):
+        self.request = r
 
     def set_filter(self, fulfillment, financial, sort, query=''):
         self.fulfillment = fulfillment
@@ -790,7 +796,16 @@ class CommerceHQOrdersPaginator(Paginator):
                 params=params
             )
 
-        rep.raise_for_status()
+        if not rep.ok:
+            if self.request:
+                messages.error(self.request, f'API Error: {rep.reason} ({rep.status_code})')
+
+            return {
+                '_meta': {
+                    'pageCount': 0,
+                    'totalCount': 0
+                }
+            }
 
         return rep.json()
 
