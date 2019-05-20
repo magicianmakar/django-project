@@ -736,8 +736,9 @@ class OrdersList(ListView):
         models_user = self.request.user.models_user
         auto_orders = self.request.user.can('auto_order.use')
         fix_order_variants = self.request.user.get_config('fix_order_variants')
-        fix_aliexpress_address = self.request.user.get_config('fix_aliexpress_address', False)
+        fix_aliexpress_address = models_user.get_config('fix_aliexpress_address', False)
         fix_aliexpress_city = models_user.get_config('fix_aliexpress_city', False)
+        german_umlauts = models_user.get_config('_use_german_umlauts', False)
 
         products_cache = {}
         orders_cache = {}
@@ -940,7 +941,11 @@ class OrdersList(ListView):
                     order['items'][ldx] = line
                     continue
 
-                customer_address = chq_customer_address(order, aliexpress_fix=fix_aliexpress_address, fix_aliexpress_city=fix_aliexpress_city)
+                _order, customer_address = chq_customer_address(
+                    order=order,
+                    aliexpress_fix=fix_aliexpress_address,
+                    fix_aliexpress_city=fix_aliexpress_city,
+                    german_umlauts=german_umlauts)
 
                 order['customer_address'] = customer_address
 

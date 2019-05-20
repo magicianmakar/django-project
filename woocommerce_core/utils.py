@@ -22,7 +22,9 @@ from django.utils import timezone
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import (
-    safe_int, safe_float,
+    safe_int,
+    safe_float,
+    safe_str,
     hash_url_filename,
     decode_params,
     http_exception_response,
@@ -31,7 +33,8 @@ from shopified_core.utils import (
     order_data_cache
 )
 from shopified_core.shipping_helper import (
-    load_uk_provincess,
+    get_uk_province,
+    fix_br_address,
     valide_aliexpress_province,
     country_from_code,
     province_from_code,
@@ -692,13 +695,22 @@ def get_woo_products(store, page=1, limit=50, all_products=False):
                 yield product
 
 
-def woo_customer_address(order, aliexpress_fix=False):
+def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_aliexpress_city=False, return_corrections=False):
     customer_address = {}
     shipping_address = order['shipping'] if any(order['shipping'].values()) else order['billing']
 
     for k in list(shipping_address.keys()):
         if shipping_address[k] and type(shipping_address[k]) is str:
-            customer_address[k] = unidecode(shipping_address[k])
+            v = re.sub(' ?\xc2?[\xb0\xba] ?', r' ', shipping_address[k])
+            if german_umlauts:
+                v = re.sub('\u00e4', 'ae', v)
+                v = re.sub('\u00c4', 'AE', v)
+                v = re.sub('\u00d6', 'OE', v)
+                v = re.sub('\u00fc', 'ue', v)
+                v = re.sub('\u00dc', 'UE', v)
+                v = re.sub('\u00f6', 'oe', v)
+
+            customer_address[k] = unidecode(v)
         else:
             customer_address[k] = shipping_address[k]
 
@@ -708,16 +720,16 @@ def woo_customer_address(order, aliexpress_fix=False):
     customer_address['province_code'] = customer_address.get('state')
     customer_address['zip'] = customer_address.get('postcode')
 
-    country = country_from_code(customer_address['country_code'], '')
-    customer_address['country'] = unidecode(country) if type(country) is str else country
+    customer_address['country'] = country_from_code(customer_address['country_code'], '')
 
     province = province_from_code(customer_address['country_code'], customer_address['province_code'])
     customer_address['province'] = unidecode(province) if type(province) is str else province
 
-    if not customer_address.get('province'):
-        if customer_address['country'] == 'United Kingdom' and customer_address['city']:
-            province = load_uk_provincess().get(customer_address['city'].lower().strip(), '')
+    customer_province = customer_address['province']
 
+    if not customer_address.get('province'):
+        if customer_address['country'].lower() == 'united kingdom' and customer_address['city']:
+            province = get_uk_province(customer_address['city'])
             customer_address['province'] = province
         else:
             customer_address['province'] = customer_address['country_code']
@@ -743,6 +755,17 @@ def woo_customer_address(order, aliexpress_fix=False):
         customer_address['country_code'] = 'GU'
         customer_address['country'] = 'Guam'
 
+    if customer_address['country_code'] == 'FR':
+        if customer_address.get('zip'):
+            customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip']).strip().rjust(5, '0')
+
+    if customer_address['country_code'] == 'BR':
+        customer_address = fix_br_address(customer_address)
+
+    if customer_address['country_code'] == 'IL':
+        if customer_address.get('zip'):
+            customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip']).strip().rjust(7, '0')
+
     if customer_address['country_code'] == 'CA':
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t ]', '', customer_address['zip']).upper().strip()
@@ -750,10 +773,13 @@ def woo_customer_address(order, aliexpress_fix=False):
         if customer_address['province'] == 'Newfoundland':
             customer_address['province'] = 'Newfoundland and Labrador'
 
-    if customer_address['country'] == 'United Kingdom':
+    if customer_address['country'].lower() == 'united kingdom':
         if customer_address.get('zip'):
             if not re.findall(r'^([0-9A-Za-z]{2,4}\s[0-9A-Za-z]{3})$', customer_address['zip']):
                 customer_address['zip'] = re.sub(r'(.+)([0-9A-Za-z]{3})$', r'\1 \2', customer_address['zip'])
+
+    if customer_address['country_code'] == 'MK':
+        customer_address['country'] = 'Macedonia'
 
     if customer_address['country_code'] == 'PL':
         if customer_address.get('zip'):
@@ -761,13 +787,46 @@ def woo_customer_address(order, aliexpress_fix=False):
 
     customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
 
+    correction = {}
     if aliexpress_fix:
-        valide, correction = valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city'])
+        valide, correction = valide_aliexpress_province(
+            customer_address['country'],
+            customer_address['province'],
+            customer_address['city'],
+            auto_correct=True)
+
         if not valide:
             if support_other_in_province(customer_address['country']):
                 customer_address['province'] = 'Other'
 
-    return customer_address
+                if customer_address['country'].lower() == 'united kingdom' and customer_address['city']:
+                    province = get_uk_province(customer_address['city'])
+                    if province:
+                        customer_address['province'] = province
+
+                if customer_province and customer_address['province'] == 'Other':
+                    customer_address['city'] = '{}, {}'.format(customer_address['city'], customer_province)
+
+            elif fix_aliexpress_city:
+                city = safe_str(customer_address['city']).strip().strip(',')
+                customer_address['city'] = 'Other'
+
+                if not safe_str(customer_address['address2']).strip():
+                    customer_address['address2'] = '{},'.format(city)
+                else:
+                    customer_address['address2'] = '{}, {},'.format(customer_address['address2'].strip().strip(','), city)
+
+        elif correction:
+            if 'province' in correction:
+                customer_address['province'] = correction['province']
+
+            if 'city' in correction:
+                customer_address['city'] = correction['city']
+
+    if return_corrections:
+        return order, customer_address, correction
+    else:
+        return order, customer_address
 
 
 def get_latest_order_note(store, order_id):

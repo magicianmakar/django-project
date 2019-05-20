@@ -307,13 +307,22 @@ def filter_products(res, fdata):
     return res
 
 
-def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False):
+def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_aliexpress_city=False, return_corrections=False):
     customer_address = {}
     shipping_address = order['shipping_address']
 
     for k in list(shipping_address.keys()):
         if shipping_address[k] and type(shipping_address[k]) is str:
-            customer_address[k] = unidecode(shipping_address[k])
+            v = re.sub(' ?\xc2?[\xb0\xba] ?', r' ', shipping_address[k])
+            if german_umlauts:
+                v = re.sub('\u00e4', 'ae', v)
+                v = re.sub('\u00c4', 'AE', v)
+                v = re.sub('\u00d6', 'OE', v)
+                v = re.sub('\u00fc', 'ue', v)
+                v = re.sub('\u00dc', 'UE', v)
+                v = re.sub('\u00f6', 'oe', v)
+
+            customer_address[k] = unidecode(v)
         else:
             customer_address[k] = shipping_address[k]
 
@@ -327,9 +336,8 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
 
     customer_province = customer_address['province']
     if not customer_address.get('province'):
-        if customer_address['country'] == 'United Kingdom' and customer_address['city']:
+        if customer_address['country'].lower() == 'united kingdom' and customer_address['city']:
             province = get_uk_province(customer_address['city'])
-
             customer_address['province'] = province
         else:
             customer_address['province'] = customer_address['country_code']
@@ -355,6 +363,17 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
         customer_address['country_code'] = 'GU'
         customer_address['country'] = 'Guam'
 
+    if customer_address['country_code'] == 'FR':
+        if customer_address.get('zip'):
+            customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip']).strip().rjust(5, '0')
+
+    if customer_address['country_code'] == 'BR':
+        customer_address = fix_br_address(customer_address)
+
+    if customer_address['country_code'] == 'IL':
+        if customer_address.get('zip'):
+            customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip']).strip().rjust(7, '0')
+
     if customer_address['country_code'] == 'CA':
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t ]', '', customer_address['zip']).upper().strip()
@@ -362,10 +381,13 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
         if customer_address['province'] == 'Newfoundland':
             customer_address['province'] = 'Newfoundland and Labrador'
 
-    if customer_address['country'] == 'United Kingdom':
+    if customer_address['country'].lower() == 'united kingdom':
         if customer_address.get('zip'):
             if not re.findall(r'^([0-9A-Za-z]{2,4}\s[0-9A-Za-z]{3})$', customer_address['zip']):
                 customer_address['zip'] = re.sub(r'(.+)([0-9A-Za-z]{3})$', r'\1 \2', customer_address['zip'])
+
+    if customer_address['country_code'] == 'MK':
+        customer_address['country'] = 'Macedonia'
 
     if customer_address['country_code'] == 'PL':
         if customer_address.get('zip'):
@@ -378,13 +400,19 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
     #     customer_address['name'] = '{} - {}'.format(customer_address['name'],
     #                                                 customer_address['company'])
 
+    correction = {}
     if aliexpress_fix:
-        valide, correction = valide_aliexpress_province(customer_address['country'], customer_address['province'], customer_address['city'])
+        valide, correction = valide_aliexpress_province(
+            customer_address['country'],
+            customer_address['province'],
+            customer_address['city'],
+            auto_correct=True)
+
         if not valide:
             if support_other_in_province(customer_address['country']):
                 customer_address['province'] = 'Other'
 
-                if customer_address['country'] == 'United Kingdom' and customer_address['city']:
+                if customer_address['country'].lower() == 'united kingdom' and customer_address['city']:
                     province = get_uk_province(customer_address['city'])
                     if province:
                         customer_address['province'] = province
@@ -403,12 +431,15 @@ def chq_customer_address(order, aliexpress_fix=False, fix_aliexpress_city=False)
 
         elif correction:
             if 'province' in correction:
-                customer_address['province'] = correction['province'].title()
+                customer_address['province'] = correction['province']
 
             if 'city' in correction:
-                customer_address['city'] = correction['city'].title()
+                customer_address['city'] = correction['city']
 
-    return customer_address
+    if return_corrections:
+        return order, customer_address, correction
+    else:
+        return order, customer_address
 
 
 def get_tracking_orders(store, tracker_orders):

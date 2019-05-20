@@ -75,7 +75,7 @@ class WooCommerceAddressTest(BaseTestCase):
         }
 
     def test_must_return_address_even_if_all_values_are_empty_strings(self):
-        for value in list(woo_customer_address(self.order).values()):
+        for value in list(woo_customer_address(self.order)[1].values()):
             self.assertEqual(value, '')
 
 
