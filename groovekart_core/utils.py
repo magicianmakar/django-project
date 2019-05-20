@@ -24,6 +24,7 @@ from shopified_core.shipping_helper import (
     load_uk_provincess,
     province_from_code
 )
+import leadgalaxy.utils as leadgalaxy_utils
 
 from .models import GrooveKartStore, GrooveKartProduct, GrooveKartBoard
 
@@ -439,6 +440,102 @@ def split_product(product, split_factor, store=None):
         new_products.append(new_product)
 
     return new_products
+
+
+def cache_fulfillment_data(order_tracks, orders_max=None):
+    """
+    Caches order data of given `GrooveKartOrderTrack` instances
+    """
+    order_tracks = order_tracks[:orders_max] if orders_max else order_tracks
+    stores = set()
+    store_orders = {}
+
+    for order_track in order_tracks:
+        stores.add(order_track.store)
+        store_orders.setdefault(order_track.store.id, set()).add(order_track.order_id)
+
+    cache_data = {}
+
+    for store in stores:
+        order_ids = list(store_orders[store.id])
+        include = ','.join(str(order_id) for order_id in order_ids)
+
+        url = store.get_api_url('orders.json')
+        r = store.request.post(url, json={
+            'action': 'search_orders',
+            'ids': include
+        })
+
+        orders = []
+        if r.ok:
+            result = r.json()
+            if 'orders' in result:
+                orders = result['orders']
+
+            # Single order search returns as dict
+            if not isinstance(result, list):
+                if result.get('id') is not None:  # Order Found
+                    orders = [result]
+        elif r.status_code == 404:
+            orders = []
+        else:
+            r.raise_for_status()
+
+        for order in orders:
+            key = store.id, order['id']
+            cache_data['gkart_auto_country_{}_{}'.format(*key)] = order.get('shipping_address', {}).get('country_code')
+            fulfillment = order.get('trackings', [])
+            cache_data['gkart_auto_fulfillment_{}_{}'.format(*key)] = fulfillment if len(fulfillment) > 0 else None
+
+    cache.set_many(cache_data, timeout=3600)
+
+    return list(cache_data.keys())
+
+
+def order_track_fulfillment(order_track, user_config=None):
+    user_config = {} if user_config is None else user_config
+    tracking_number = order_track.source_tracking
+    carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
+    country = cache.get('gkart_auto_country_{}_{}'.format(order_track.store.id, order_track.order_id))
+
+    if country and country == 'US':
+        if leadgalaxy_utils.is_chinese_carrier(tracking_number) or leadgalaxy_utils.shipping_carrier(tracking_number) == 'USPS':
+            carrier_name = 'USPS'
+
+    carrier_name = 'AfterShip' if not carrier_name else carrier_name
+    carrier_url = order_track.get_tracking_link() if carrier_name == 'AfterShip' else ''
+    tracking_numbers = []
+    carrier_names = []
+    carrier_urls = []
+    fulfillment = cache.get('gkart_auto_fulfillment_{}_{}'.format(order_track.store.id, order_track.order_id))
+
+    if fulfillment:
+        if fulfillment['tracking_number']:
+            tracking_numbers = fulfillment['tracking_number'].split(',')
+            tracking_numbers = [str(number) for number in tracking_numbers]
+        if fulfillment.get('carrier_name'):
+            carrier_names = fulfillment['carrier_name'].split(',')
+        if fulfillment.get('carrier_url'):
+            carrier_urls = fulfillment['carrier_url'].split(',')
+
+    changed = False
+
+    if tracking_number not in tracking_numbers:
+        changed = True
+        tracking_numbers.append(tracking_number)
+        carrier_names.append(carrier_name)
+        carrier_urls.append(carrier_url)
+
+    tracking_numbers = ','.join(tracking_numbers)
+    carrier_names = ','.join(carrier_names)
+    carrier_urls = ','.join(carrier_urls)
+
+    return changed, {
+        'order_id': order_track.order_id,
+        'tracking_number': tracking_numbers,
+        'carrier_name': carrier_names,
+        'carrier_url': carrier_urls,
+    }
 
 
 class OrderListQuery(object):
