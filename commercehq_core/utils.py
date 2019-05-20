@@ -26,6 +26,7 @@ from shopified_core.utils import (
 )
 from shopified_core.shipping_helper import (
     get_uk_province,
+    fix_br_address,
     valide_aliexpress_province,
     support_other_in_province,
     country_from_code,
