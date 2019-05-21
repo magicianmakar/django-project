@@ -809,6 +809,8 @@ class ShopifyStore(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    uninstall_reason = models.TextField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     uninstalled_at = models.DateTimeField(null=True, blank=True)
