@@ -131,7 +131,7 @@ def normalize_country_code(country):
         country_code = 'br'
 
     elif country in ['kr', 'korea', 'south korea']:
-        country_code = 'br'
+        country_code = 'kr'
 
     elif country in ['sa', 'saudi arabia']:
         country_code = 'sa'
