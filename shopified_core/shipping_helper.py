@@ -79,62 +79,32 @@ def normalize_country_code(country):
     country_code = None
     country = country.lower().strip() if country else ''
 
-    if country in ['uk', 'gb', 'united kingdom']:
-        country_code = 'uk'
+    countries_map = {
+        'uk': ['gb', 'united kingdom'],
+        'es': ['spain'],
+        'au': ['australia'],
+        'nl': ['netherlands'],
+        'cl': ['chile'],
+        'ua': ['ukraine'],
+        'nz': ['new zealand'],
+        'us': ['united states'],
+        'ca': ['canada'],
+        'ru': ['russia'],
+        'id': ['indonesia'],
+        'th': ['thailand'],
+        'pl': ['poland'],
+        'fr': ['france'],
+        'it': ['italy'],
+        'tr': ['turkey'],
+        'br': ['brazil'],
+        'kr': ['korea', 'south korea'],
+        'sa': ['saudi arabia'],
+    }
 
-    elif country in ['es', 'spain']:
-        country_code = 'es'
-
-    elif country in ['au', 'australia']:
-        country_code = 'au'
-
-    elif country in ['nl', 'netherlands']:
-        country_code = 'nl'
-
-    elif country in ['cl', 'chile']:
-        country_code = 'cl'
-
-    elif country in ['ua', 'ukraine']:
-        country_code = 'ua'
-
-    elif country in ['nz', 'new zealand']:
-        country_code = 'nz'
-
-    elif country in ['us', 'united states']:
-        country_code = 'us'
-
-    elif country in ['ca', 'canada']:
-        country_code = 'ca'
-
-    elif country in ['ru', 'russia']:
-        country_code = 'ru'
-
-    elif country in ['id', 'indonesia']:
-        country_code = 'id'
-
-    elif country in ['th', 'thailand']:
-        country_code = 'th'
-
-    elif country in ['pl', 'poland']:
-        country_code = 'pl'
-
-    elif country in ['fr', 'france']:
-        country_code = 'fr'
-
-    elif country in ['it', 'italy']:
-        country_code = 'it'
-
-    elif country in ['tr', 'turkey']:
-        country_code = 'tr'
-
-    elif country in ['br', 'brazil']:
-        country_code = 'br'
-
-    elif country in ['kr', 'korea', 'south korea']:
-        country_code = 'kr'
-
-    elif country in ['sa', 'saudi arabia']:
-        country_code = 'sa'
+    for code, names in countries_map.items():
+        if country == code or country in names:
+            country_code = code
+            break
 
     return country_code
 

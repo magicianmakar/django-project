@@ -14,6 +14,7 @@ from leadgalaxy.models import (
 )
 
 from shopified_core.shipping_helper import (
+    normalize_country_code,
     get_uk_province,
     valide_aliexpress_province,
     support_other_in_province,
@@ -825,6 +826,64 @@ class ShippingHelperTestCase(BaseTestCase):
         shipping_address.update(kwargs)
 
         return {'shipping_address': shipping_address}
+
+    def test_normalize_country_code(self):
+        for country in ['uk', 'gb', 'united kingdom']:
+            self.assertEqual('uk', normalize_country_code(country))
+
+        for country in ['es', 'spain']:
+            self.assertEqual('es', normalize_country_code(country))
+
+        for country in ['au', 'australia']:
+            self.assertEqual('au', normalize_country_code(country))
+
+        for country in ['nl', 'netherlands']:
+            self.assertEqual('nl', normalize_country_code(country))
+
+        for country in ['cl', 'chile']:
+            self.assertEqual('cl', normalize_country_code(country))
+
+        for country in ['ua', 'ukraine']:
+            self.assertEqual('ua', normalize_country_code(country))
+
+        for country in ['nz', 'new zealand']:
+            self.assertEqual('nz', normalize_country_code(country))
+
+        for country in ['us', 'united states']:
+            self.assertEqual('us', normalize_country_code(country))
+
+        for country in ['ca', 'canada']:
+            self.assertEqual('ca', normalize_country_code(country))
+
+        for country in ['ru', 'russia']:
+            self.assertEqual('ru', normalize_country_code(country))
+
+        for country in ['id', 'indonesia']:
+            self.assertEqual('id', normalize_country_code(country))
+
+        for country in ['th', 'thailand']:
+            self.assertEqual('th', normalize_country_code(country))
+
+        for country in ['pl', 'poland']:
+            self.assertEqual('pl', normalize_country_code(country))
+
+        for country in ['fr', 'france']:
+            self.assertEqual('fr', normalize_country_code(country))
+
+        for country in ['it', 'italy']:
+            self.assertEqual('it', normalize_country_code(country))
+
+        for country in ['tr', 'turkey']:
+            self.assertEqual('tr', normalize_country_code(country))
+
+        for country in ['br', 'brazil']:
+            self.assertEqual('br', normalize_country_code(country))
+
+        for country in ['kr', 'korea', 'south korea']:
+            self.assertEqual('kr', normalize_country_code(country))
+
+        for country in ['sa', 'saudi arabia']:
+            self.assertEqual('sa', normalize_country_code(country))
 
     def test_uk_validate_address(self):
         valide, correction = valide_aliexpress_province('uk', 'england', 'Kent')
