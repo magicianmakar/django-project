@@ -186,7 +186,6 @@ USE_TZ = True
 # Parse database configuration from $DATABASE_URL
 if os.environ.get('DATABASE_URL'):
     DATABASES['default'] = dj_database_url.config()
-    DATABASES['default']['ENGINE'] = 'django_postgrespool'
 
 STORE_DATABASE = None
 if os.environ.get('DATA_STORE_DATABASE_URL'):
