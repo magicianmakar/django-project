@@ -957,7 +957,7 @@ function renderImages() {
     });
 }
 
-function launchEditor(id, src) {
+function launchEditor(image) {
     if (config.photo_editor !== null) {
         feather_editor.launch({'image': image});
     } else {
