@@ -189,7 +189,7 @@ class GrooveKartProduct(models.Model):
             data = json.loads(self.data)
 
             if type(data['images']) is dict:
-                data['images'] = data['images'].values()
+                data['images'] = list(data['images'].values())
 
             return data
 
