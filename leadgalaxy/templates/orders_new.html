@@ -500,6 +500,14 @@
                                                 <b>{{order.shipping_address.country}}</b>
                                             </span>
                                         </p>
+
+                                        {% if order.shipping_address.phone %}
+                                        <p style="margin:5px 0 0 0">
+                                            <span class="itooltip" title="Phone number" data-placement="auto right">
+                                                {{order.shipping_address.phone}}
+                                            </span>
+                                        </p>
+                                        {% endif %}
                                     </div>
                                     <div class="col-md-1 hidden-xs">
                                         {% if order.shipping_address.country_code %}
