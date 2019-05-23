@@ -186,7 +186,13 @@ class GrooveKartProduct(models.Model):
     @property
     def parsed(self):
         try:
-            return json.loads(self.data)
+            data = json.loads(self.data)
+
+            if type(data['images']) is dict:
+                data['images'] = data['images'].values()
+
+            return data
+
         except:
             return {}
 
