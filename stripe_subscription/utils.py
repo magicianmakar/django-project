@@ -520,16 +520,7 @@ def process_webhook_event(request, event_id, raven_client):
         return HttpResponse('Customer Refreshed')
 
     elif event.type == 'customer.created':
-        from leadgalaxy.tasks import invite_user_to_slack
-
         cus = event.data.object
-
-        invite_user_to_slack.delay('users', {
-            'email': cus.email,
-            'firstname': '',
-            'lastname': '',
-        })
-
         cache.set('affilaite_{}'.format(cus.id), True, timeout=604800)
 
         return HttpResponse('Invited To Slack')

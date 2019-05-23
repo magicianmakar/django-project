@@ -257,8 +257,6 @@ def webhook(request, provider, option):
                 data=data,
             )
 
-            utils.slack_invite(data)
-
             send_mail(subject='Dropified: New Registration',
                       recipient_list=['chase@dropified.com'],
                       from_email=settings.DEFAULT_FROM_EMAIL,
@@ -406,8 +404,6 @@ def webhook(request, provider, option):
                         data=data)
 
                 data.update(params)
-
-                tasks.invite_user_to_slack.delay(slack_teams=request.GET.get('slack', 'users'), data=data)
 
                 smartmemeber = request.GET.get('sm')
                 if smartmemeber:
@@ -605,8 +601,6 @@ def webhook(request, provider, option):
                     data=data)
 
             data.update(params)
-
-            tasks.invite_user_to_slack.delay(slack_teams=request.GET.get('slack', 'users'), data=data)
 
             smartmemeber = request.GET.get('sm')
             if smartmemeber:

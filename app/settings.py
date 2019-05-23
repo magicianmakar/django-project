@@ -256,10 +256,6 @@ SHOPIFY_API_SCOPE = ','.join([
     'write_inventory', 'read_locations', 'read_all_orders'
 ])
 
-# Slack API
-SLACK_USERS_TEAM_API = os.environ.get('SLACK_USERS_TEAM_API')
-SLACK_ECOM_TEAM_API = os.environ.get('SLACK_ECOM_TEAM_API')
-
 # Intercom API
 INTERCOM_APP_ID = os.environ.get('INTERCOM_APP_ID')
 INTERCOM_SECRET_KEY = os.environ.get('INTERCOM_SECRET_KEY')

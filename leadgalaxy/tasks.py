@@ -738,12 +738,6 @@ def add_ordered_note(self, store_id, order_id, note):
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
-@celery_app.task(base=CaptureFailure, ignore_result=True)
-def invite_user_to_slack(slack_teams, data):
-    for team in slack_teams.split(','):
-        utils.slack_invite(data, team=team)
-
-
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
 def generate_feed(self, feed_id, nocache=False, by_fb=False):
     try:

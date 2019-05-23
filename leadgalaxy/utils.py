@@ -409,42 +409,6 @@ def verify_shopify_webhook(store, request, throw_excption=True):
     return webhook_hash == request_hash
 
 
-def slack_invite(data, team='users'):
-    slack_teams = {
-        'users': {
-            'token': settings.SLACK_USERS_TEAM_API,
-            'channels': ['C0M6TTRAM', 'C0VN18AGP', 'C0LVBD3FD', 'C0V9EKPLG', 'C0V9P89S6',
-                         'C0M6V41S4', 'C10RT5BFC', 'C0V7P4TTM'],
-        },
-        'ecom': {
-            'token': settings.SLACK_ECOM_TEAM_API,
-            'channels': ['C0X2GRYKB', 'C0X29Q308', 'C0X2AHJLV', 'C0X2AL0VB', 'C0X0USP5Z',
-                         'C0RP77BL0', 'C0X0W91D1', 'C0X2N9JN6', 'C0RP35761', 'C0X0V4FL3',
-                         'C0X27GL9W', 'C0Z90JQSG', 'C0X29D5C0', 'C11KP35SP', 'C0X0U3F6F'],
-        }
-    }
-
-    try:
-        r = requests.post(
-            url='https://shopifiedapp.slack.com/api/users.admin.invite',
-            data={
-                'email': data['email'],
-                'first_name': data['firstname'],
-                'last_name': data['lastname'],
-                'channels': ','.join(slack_teams[team]['channels']),
-                'token': slack_teams[team]['token'],
-                'set_active': True,
-                '_attempts': 1
-            }
-        )
-
-        rep = r.json()
-        assert (rep['ok'] or rep.get('error') in ['already_invited', 'already_in_team']), 'Slack Invite Fail'
-
-    except:
-        raven_client.captureException()
-
-
 def wicked_report_add_user(request, user):
     try:
         if not settings.WICKED_REPORTS_API:
