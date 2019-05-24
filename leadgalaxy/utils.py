@@ -245,8 +245,8 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
             user, profile = create_user_without_signals(
                 username=username,
                 email=email,
-                first_name=first_name,
-                last_name=last_name,
+                first_name=first_name[:30],
+                last_name=last_name[:30],
                 password=password)
 
         send_email_from_template(
