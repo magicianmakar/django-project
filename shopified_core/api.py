@@ -15,6 +15,7 @@ from leadgalaxy.api import ShopifyStoreApi
 from commercehq_core.api import CHQStoreApi
 from woocommerce_core.api import WooStoreApi
 from gearbubble_core.api import GearBubbleApi
+from groovekart_core.api import GrooveKartApi
 
 from leadgalaxy.models import ShopifyOrderTrack
 from commercehq_core.models import CommerceHQOrderTrack
@@ -137,13 +138,22 @@ class ShopifiedApi(ApiResponseMixin, View):
                 'url': i.get_admin_url()
             })
 
+        for i in user.profile.get_gkart_stores():
+            stores.append({
+                'id': i.id,
+                'name': i.title,
+                'type': 'gkart',
+                'url': i.get_admin_url()
+            })
+
         return JsonResponse(stores, safe=False)
 
     def post_quick_save(self, request, user, data):
-        woo_count = user.profile.get_woo_stores().count()
-        chq_count = user.profile.get_chq_stores().count()
-        gear_count = user.profile.get_gear_stores().count()
         shopify_count = user.profile.get_shopify_stores().count()
+        chq_count = user.profile.get_chq_stores().count()
+        woo_count = user.profile.get_woo_stores().count()
+        gear_count = user.profile.get_gear_stores().count()
+        gkart_count = user.profile.get_gkart_stores().count()
 
         self.request_kwargs['target'] = 'save-for-later'
 
@@ -153,7 +163,7 @@ class ShopifiedApi(ApiResponseMixin, View):
             else:
                 cache.set('quick_save_limit_{}'.format(user.id), True, timeout=user.get_config('_quick_save_limit', 5))
 
-        other_stores_empty = woo_count == 0 and chq_count == 0 and gear_count == 0
+        other_stores_empty = woo_count == 0 and chq_count == 0 and gear_count == 0 and gkart_count == 0
 
         if shopify_count > 0 or other_stores_empty:
             return ShopifyStoreApi.as_view()(request, **self.request_kwargs)
@@ -161,8 +171,10 @@ class ShopifiedApi(ApiResponseMixin, View):
             return CHQStoreApi.as_view()(request, **self.request_kwargs)
         elif woo_count > 0:
             return WooStoreApi.as_view()(request, **self.request_kwargs)
-        else:
+        elif gear_count > 0:
             return GearBubbleApi.as_view()(request, **self.request_kwargs)
+        else:
+            return GrooveKartApi.as_view()(request, **self.request_kwargs)
 
     def get_orders_sync(self, request, user, data):
         if not user.can('orders.use'):
