@@ -273,6 +273,11 @@
                             {% if users.0.is_stripe_customer %}
                                 <a href="#" class="btn btn-warning btn-sm change-customer-id-btn" style="margin-top:2px"
                                    customer-id="{{customer_id}}" user-id="{{users.0.id}}">Change Customer ID</a>
+
+                                   {% if users.0.profile.from_shopify_app_store %}
+                                       <a href="#" class="btn btn-info btn-sm convert-to-stripe-btn" style="margin-top:2px"
+                                          customer-id="{{customer_id}}" user-id="{{users.0.id}}" data-convert="true">Convert To Stripe</a>
+                                   {% endif %}
                             {% else %}
                                 <a href="#" class="btn btn-warning btn-sm change-customer-id-btn" style="margin-top:2px"
                                    customer-id="{{customer_id}}" user-id="{{users.0.id}}" data-convert="true">Convert To Stripe User</a>
@@ -854,6 +859,37 @@
                         swal.close();
                     }).fail(function(data) {
                         displayAjaxError('Customer ID Change', data);
+                    });
+                });
+            });
+
+            $('.convert-to-stripe-btn').click(function (e) {
+                e.preventDefault();
+
+                swal({
+                    title: "Convert to Stripe",
+                    text: "Are you sure you want to convert this user to Stripe?",
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    animation: "slide-from-top",
+                    showLoaderOnConfirm: true
+                }, function(inputValue) {
+                    if (inputValue === false || !inputValue) return false;
+
+                    $.ajax({
+                        url: '/api/convert-to-strip',
+                        type: 'POST',
+                        data: {
+                            'customer-id': $(e.target).attr('customer-id'),
+                            'user': $(e.target).attr('user-id'),
+                        },
+                    }).done(function (data) {
+                        toastr.success('Converted!', 'Convert to Stripe');
+                        swal.close();
+                        window.location.reload();
+                    }).fail(function(data) {
+                        displayAjaxError('Convert to Stripe', data);
                     });
                 });
             });

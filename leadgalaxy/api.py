@@ -26,6 +26,8 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery_base import celery_app
 
 from stripe_subscription.stripe_api import stripe
+from stripe_subscription.models import StripeSubscription, StripeCustomer
+from stripe_subscription.utils import update_subscription
 
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
@@ -729,9 +731,6 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success()
 
     def post_change_customer_id(self, request, user, data):
-        from stripe_subscription.models import StripeSubscription, StripeCustomer
-        from stripe_subscription.utils import update_subscription
-
         if not user.is_superuser and not user.is_staff:
             raise PermissionDenied()
 
@@ -781,6 +780,19 @@ class ShopifyStoreApi(ApiBase):
             target_user.profile.change_plan(utils.get_plan(
                 payment_gateway='shopify',
                 plan_slug='shopify-free-plan'))
+
+        return self.api_success()
+
+    def post_convert_to_strip(self, request, user, data):
+        if not user.is_superuser and not user.is_staff:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        profile = target_user.profile
+
+        profile.shopify_app_store = False
+        profile.set_config_value('shopify_app_store', False)
+        profile.save()
 
         return self.api_success()
 
