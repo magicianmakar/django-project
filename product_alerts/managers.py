@@ -8,7 +8,6 @@ from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index_from_supplier_sku, calculate_price
 from zapier_core.utils import user_have_hooks
-from product_alerts.models import ProductVariantPriceHistory
 
 
 class ProductChangeManager():
@@ -387,14 +386,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
                 })
 
     def add_price_history(self, variant_id, variant_change):
-        history, created = ProductVariantPriceHistory.objects.get_or_create(
-            user=self.user,
-            shopify_product=self.product,
-            variant_id=variant_id
-        )
-        new_value = variant_change.get('new_value')
-        old_value = variant_change.get('old_value')
-        history.add_price(new_value, old_value)
+        pass
 
 
 class CommerceHQProductChangeManager(ProductChangeManager):
@@ -540,14 +532,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                 raven_client.captureException(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
-        history, created = ProductVariantPriceHistory.objects.get_or_create(
-            user=self.user,
-            chq_product=self.product,
-            variant_id=variant_id
-        )
-        new_value = variant_change.get('new_value')
-        old_value = variant_change.get('old_value')
-        history.add_price(new_value, old_value)
+        pass
 
 
 class GrooveKartProductChangeManager(ProductChangeManager):
@@ -751,11 +736,4 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                 raven_client.captureException(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
-        history, created = ProductVariantPriceHistory.objects.get_or_create(
-            user=self.user,
-            gkart_product=self.product,
-            variant_id=variant_id
-        )
-        new_value = variant_change.get('new_value')
-        old_value = variant_change.get('old_value')
-        history.add_price(new_value, old_value)
+        pass

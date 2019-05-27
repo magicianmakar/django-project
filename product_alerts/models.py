@@ -325,37 +325,3 @@ class ProductChange(models.Model):
                         payload=payload,
                         user=self.user
                     )
-
-
-class ProductVariantPriceHistory(models.Model):
-    class Meta:
-        ordering = ['-updated_at']
-        index_together = [['shopify_product', 'variant_id'], ['chq_product', 'variant_id'], ['gkart_product', 'variant_id']]
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=False)
-    shopify_product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE, db_index=False)
-    chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE, db_index=False)
-    gkart_product = models.ForeignKey(GrooveKartProduct, null=True, on_delete=models.CASCADE)
-    variant_id = models.BigIntegerField(null=True, verbose_name='Source Variant ID')
-    data = models.TextField(null=True, blank=True)
-    old_price = models.FloatField(null=True)
-    new_price = models.FloatField(null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return '{}'.format(self.id)
-
-    def add_price(self, new_price, old_price):
-        try:
-            data = json.loads(self.data)
-        except:
-            data = []
-        self.old_price = old_price
-        self.new_price = new_price
-        if len(data) == 0:
-            data.append(old_price)
-        data.append(new_price)
-        self.data = json.dumps(data)
-        self.save()
