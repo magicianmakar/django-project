@@ -2,3 +2,5 @@
 omit =
     */migrations/*
     venv/*
+    */tests/*
+    */test*
