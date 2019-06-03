@@ -12,6 +12,7 @@ class GoalsApi(ApiResponseMixin, View):
 
         if step:
             user.completed_steps.add(step)
-            return self.api_success({'added': True, 'slug': slug})
+            goals = step.goal_set.values_list('pk', flat=True)
+            return self.api_success({'added': True, 'slug': slug, 'goals': list(goals)})
 
         return self.api_success({'added': False})

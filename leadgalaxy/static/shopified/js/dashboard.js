@@ -10,14 +10,14 @@ $(document).ready(function() {
     $isExtensionReady.done(function() {
         $.post(api_url('extension-is-installed', 'goals')).done(function(data) {
             if (data.added) {
-                incrementTotalStepsCompleted();
                 markStepCircleAsCompleted(data.slug);
+                $.each(data.goals, incrementTotalStepsCompleted);
             }
         });
     });
 
-    function incrementTotalStepsCompleted() {
-        var $totalStepsCompleted = $('.total-steps-completed');
+    function incrementTotalStepsCompleted(index, goalId) {
+        var $totalStepsCompleted = $('#total-steps-completed-' + goalId);
         var total = parseInt($totalStepsCompleted.html());
         $totalStepsCompleted.html(++total);
     }

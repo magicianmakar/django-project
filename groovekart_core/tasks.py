@@ -17,7 +17,7 @@ from shopified_core import permissions
 from shopified_core import utils
 
 from .models import GrooveKartStore, GrooveKartProduct, GrooveKartSupplier
-from .utils import OrderListQuery, GrooveKartOrderUpdater, format_gkart_errors
+from .utils import OrderListQuery, GrooveKartOrderUpdater, format_gkart_errors, get_variant_value
 
 
 @celery_app.task(base=CaptureFailure)
@@ -209,7 +209,7 @@ def product_export(store_id, product_id, user_id):
                 }
 
                 for label, value in zip(titles, attributes):
-                    # e.g. label = Color, value = RED
+                    label, value = get_variant_value(label, value)
                     variant_data['variant_values'][label] = value
 
                 product_variants.append(variant_data)
@@ -218,7 +218,6 @@ def product_export(store_id, product_id, user_id):
                 'action': 'add',
                 'product_id': product.source_id,
                 'variants': product_variants,
-                'variant_groups': variant_groups,
             }
             variants_endpoint = store.get_api_url('variants.json')
             r = store.request.post(variants_endpoint, json=api_data)

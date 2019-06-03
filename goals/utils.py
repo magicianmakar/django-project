@@ -46,8 +46,8 @@ def get_step_check_function_map():
 
 
 def user_saved_a_product(user):
-    return user.shopifyproduct_set.exists()
+    return user.profile.has_product
 
 
 def user_has_board_filled(user):
-    return user.shopifyboard_set.filter(products__isnull=False).exists()
+    return user.profile.has_product_on_board

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends base_template %}
 {% load static %}
 
 {% block nav %}
@@ -122,7 +122,7 @@
                                 &nbsp;
                                 <span class="dropified-green">
                                     <strong>
-                                        <span class="total-steps-completed">{{ user_goal.total_steps_completed }}</span>/{{ user_goal.goal.steps.count }} completed
+                                        <span id="total-steps-completed-{{ user_goal.goal.id }}">{{ user_goal.total_steps_completed }}</span>/{{ user_goal.goal.steps.count }} completed
                                     </strong>
                                 </span>
                             </h3>

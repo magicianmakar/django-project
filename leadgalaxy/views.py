@@ -197,7 +197,8 @@ def dashboard(request):
     return render(request, 'dashboard.html', {
         'user_goals': user_goals,
         'videos': videos,
-        'selected_menu': 'business:overview'
+        'selected_menu': 'business:overview',
+        'base_template': 'base.html'
     })
 
 

@@ -151,6 +151,26 @@ class UserProfile(models.Model):
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title if self.plan else 'None')
 
+    @property
+    def has_product(self):
+        return any([
+            self.user.shopifyproduct_set.exists(),
+            self.user.commercehqproduct_set.exists(),
+            self.user.wooproduct_set.exists(),
+            self.user.gearbubbleproduct_set.exists(),
+            self.user.groovekartproduct_set.exists(),
+        ])
+
+    @property
+    def has_product_on_board(self):
+        return any([
+            self.user.shopifyboard_set.filter(products__isnull=False).exists(),
+            self.user.commercehqboard_set.filter(products__isnull=False).exists(),
+            self.user.wooboard_set.filter(products__isnull=False).exists(),
+            self.user.gearbubbleboard_set.filter(products__isnull=False).exists(),
+            self.user.groovekartboard_set.filter(products__isnull=False).exists(),
+        ])
+
     def save(self, *args, **kwargs):
         if self.config:
             config = json.loads(self.config)

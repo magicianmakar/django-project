@@ -56,6 +56,23 @@ from .utils import (
 from product_alerts.models import ProductChange
 from product_alerts.utils import variant_index_from_supplier_sku
 
+from goals.utils import update_completed_steps, get_dashboard_user_goals
+from leadgalaxy.models import DashboardVideo
+
+
+@login_required
+def dashboard(request):
+    update_completed_steps(request.user)
+    user_goals = get_dashboard_user_goals(request.user)
+    videos = DashboardVideo.objects.filter(is_active=True)[:4]
+
+    return render(request, 'dashboard.html', {
+        'user_goals': user_goals,
+        'videos': videos,
+        'selected_menu': 'business:overview',
+        'base_template': 'base_groovekart_core.html'
+    })
+
 
 @login_required
 def product_alerts(request):
