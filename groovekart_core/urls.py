@@ -6,6 +6,7 @@ import leadgalaxy.views
 
 urlpatterns = [
     url(r'^$', groovekart_core.views.StoresList.as_view(), name='index'),
+    url(r'^dashboard$', groovekart_core.views.dashboard, name='dashboard'),
     url(r'^products/?(?P<tpl>(grid|table))?$', groovekart_core.views.ProductsList.as_view(), name='products_list'),
     url(r'^product/(?P<pk>[0-9]+)$', groovekart_core.views.ProductDetailView.as_view(), name='product_detail'),
     url(r'^boards/list$', groovekart_core.views.BoardsList.as_view(), name='boards_list'),
