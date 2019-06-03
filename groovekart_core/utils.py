@@ -237,7 +237,7 @@ def set_gkart_order_note(store, order_id, note):
     api_url = store.get_api_url('orders.json')
     r = store.request.post(api_url, json={
         'order_id': safe_int(order_id),
-        'action': 'add_note',
+        'action': 'delete_note' if len(note) == 0 else 'add_note',
         'note': note
     })
     r.raise_for_status()
