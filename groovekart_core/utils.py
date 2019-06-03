@@ -538,6 +538,10 @@ def order_track_fulfillment(order_track, user_config=None):
     }
 
 
+def get_variant_value(label, value):
+    return ('Color', {'name': value}) if label.lower() == 'color' else (label, value)
+
+
 class OrderListQuery(object):
     def __init__(self, store, params=None):
         self._endpoint = 'orders.json'
