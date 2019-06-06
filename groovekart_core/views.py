@@ -51,6 +51,7 @@ from .utils import (
     get_tracking_orders,
     order_id_from_name,
     get_gkart_products,
+    get_orders_page_default_date_range
 )
 
 from product_alerts.models import ProductChange
@@ -404,6 +405,9 @@ class OrdersList(ListView):
 
         return self.store
 
+    def get_default_date_range(self):
+        return '{}-{}'.format(*get_orders_page_default_date_range(timezone))
+
     def get_queryset(self, *args, **kwargs):
         params = {}
         params['order_by'] = self.request.GET.get('sort', 'date_add')
@@ -423,12 +427,8 @@ class OrdersList(ListView):
         if product_ids:
             params['product_id'] = ','.join(product_ids)
 
-        date_now = arrow.get(timezone.now())
-        default_date = '{}-{}'.format(
-            date_now.replace(days=-30).format('MM/DD/YYYY'),
-            date_now.format('MM/DD/YYYY'),
-        )
-        created_at_daterange = self.request.GET.get('created_at_daterange', default_date)
+        default_date_range = self.get_default_date_range()
+        created_at_daterange = self.request.GET.get('created_at_daterange', default_date_range)
         created_at_start, created_at_end = None, None
         if created_at_daterange:
             try:
@@ -468,8 +468,8 @@ class OrdersList(ListView):
         if len(product_ids):
             context['products'] = GrooveKartProduct.objects.filter(pk__in=product_ids)
 
-        date_now = '{}-'.format(arrow.get(timezone.now()).replace(days=-30).format('MM/DD/YYYY'))
-        context['created_at_daterange'] = self.request.GET.get('created_at_daterange', date_now)
+        default_date_range = self.get_default_date_range()
+        context['created_at_daterange'] = self.request.GET.get('created_at_daterange', default_date_range)
 
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},

@@ -4,6 +4,8 @@ import re
 from unidecode import unidecode
 from collections import Counter
 
+import arrow
+
 from django.core.cache import cache
 from django.db.models import Q
 from django.core.exceptions import PermissionDenied
@@ -540,6 +542,13 @@ def order_track_fulfillment(order_track, user_config=None):
 
 def get_variant_value(label, value):
     return ('Color', {'name': value}) if label.lower() == 'color' else (label, value)
+
+
+def get_orders_page_default_date_range(timezone):
+    start = arrow.get(timezone.now()).replace(days=-30).format('MM/DD/YYYY')
+    end = arrow.get(timezone.now()).replace(days=+1).format('MM/DD/YYYY')
+
+    return start, end
 
 
 class OrderListQuery(object):
