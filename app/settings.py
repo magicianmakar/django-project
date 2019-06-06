@@ -391,6 +391,9 @@ if not DEBUG and SENTRY_DSN:
         'dsn': SENTRY_DSN
     }
 
+# default Aliexpress Affiliate
+DEFAULT_ALIEXPRESS_AFFILIATE = 'ali'
+
 # Auto Aliexpress fulfillment server API
 FULFILLBOX_API_URL = os.environ.get('FULFILLBOX_API_URL')
 if FULFILLBOX_API_URL:

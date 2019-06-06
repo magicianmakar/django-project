@@ -487,7 +487,7 @@ class OrderPlaceRedirectView(RedirectView):
                 elif user_ali_credentials:
                     service = 'ali'
                 else:
-                    service = 'admitad'
+                    service = settings.DEFAULT_ALIEXPRESS_AFFILIATE
 
                 if service == 'ali' and ali_api_key and ali_tracking_id:
                     redirect_url = get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
