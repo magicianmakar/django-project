@@ -33,7 +33,8 @@ from shopified_core.utils import (
     safe_float,
     aws_s3_context,
     url_join,
-    clean_query_id
+    clean_query_id,
+    http_excption_status_code,
 )
 
 from .forms import CommerceHQStoreForm
@@ -700,7 +701,15 @@ class OrdersList(ListView):
         return paginator
 
     def get_context_data(self, **kwargs):
-        context = super(OrdersList, self).get_context_data(**kwargs)
+        context = {}
+        api_error = None
+
+        try:
+            context = super(OrdersList, self).get_context_data(**kwargs)
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
+            api_error = f'HTTP Error: {http_excption_status_code(e)}'
+        except:
+            api_error = 'Store API Error'
 
         context['store'] = self.get_store()
         context['selected_menu'] = 'orders:all'
@@ -713,8 +722,14 @@ class OrdersList(ListView):
             'url': '{}?store={}'.format(reverse('chq:orders_list'), context['store'].id)
         }]
 
-        context['orders'] = self.get_orders(context)
-        context['shipping_carriers'] = store_shipping_carriers(self.get_store())
+        try:
+            if not api_error:
+                context['orders'] = self.get_orders(context)
+                context['shipping_carriers'] = store_shipping_carriers(self.get_store())
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
+            api_error = f'HTTP Error: {http_excption_status_code(e)}'
+        except:
+            api_error = 'Store API Error'
 
         context['user_filter'] = self.filter_data
 
@@ -724,6 +739,11 @@ class OrdersList(ListView):
         context['order_debug'] = self.request.session.get('is_hijacked_user') or \
             (self.request.user.is_superuser and self.request.GET.get('debug')) or \
             self.request.user.get_config('_orders_debug') or settings.DEBUG
+
+        if api_error:
+            messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
+
+        context['api_error'] = api_error
 
         return context
 
@@ -1282,8 +1302,12 @@ class OrdersTrackList(ListView):
 
         context['store'] = self.get_store()
         context['selected_menu'] = 'orders:tracking'
-        context['orders'] = get_tracking_orders(self.get_store(), context['orders'])
-        context['shipping_carriers'] = store_shipping_carriers(self.get_store())
+
+        try:
+            context['orders'] = get_tracking_orders(self.get_store(), context['orders'])
+            context['shipping_carriers'] = store_shipping_carriers(self.get_store())
+        except:
+            pass
 
         context['breadcrumbs'] = [{
             'title': 'Orders',

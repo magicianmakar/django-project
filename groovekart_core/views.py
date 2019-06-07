@@ -32,6 +32,7 @@ from shopified_core.utils import (
     safe_float,
     clean_query_id,
     url_join,
+    http_excption_status_code,
 )
 
 from .models import (
@@ -456,10 +457,23 @@ class OrdersList(ListView):
         return OrderListQuery(self.get_store(), params)
 
     def get_context_data(self, **kwargs):
-        context = super(OrdersList, self).get_context_data(**kwargs)
-        context['store'] = store = self.get_store()
-        context['orders'] = self.normalize_orders(context)
-        context['shipping_carriers'] = store_shipping_carriers(store)
+        api_error = None
+        context = {}
+
+        store = self.get_store()
+
+        try:
+            context = super(OrdersList, self).get_context_data(**kwargs)
+
+            context['store'] = store
+            context['orders'] = self.normalize_orders(context)
+            context['shipping_carriers'] = store_shipping_carriers(store)
+
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
+            api_error = f'HTTP Error: {http_excption_status_code(e)}'
+        except:
+            api_error = 'Store API Error'
+
         context['status'] = self.request.GET.get('status', 'any')
         context['fulfillment'] = self.request.GET.get('fulfillment', 'any')
         context['countries'] = get_counrties_list()
@@ -471,11 +485,16 @@ class OrdersList(ListView):
         default_date_range = self.get_default_date_range()
         context['created_at_daterange'] = self.request.GET.get('created_at_daterange', default_date_range)
 
+        context['selected_menu'] = 'orders:all'
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},
             {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)},
         ]
-        context['selected_menu'] = 'orders:all'
+
+        if api_error:
+            messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
+
+        context['api_error'] = api_error
 
         return context
 
@@ -758,7 +777,18 @@ class OrdersTrackList(ListView):
             orders = orders.filter(created_at__lte=created_at_end)
 
         orders = orders.order_by(sorting)
-        orders = get_tracking_orders(store, orders)
+
+        error = None
+        try:
+            orders = get_tracking_orders(store, orders)
+
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
+            error = f'HTTP Error: {http_excption_status_code(e)}'
+        except:
+            error = 'Store API Error'
+
+        if error:
+            messages.error(self.request, f'Error while trying to show your Store Orders: {error}')
 
         return orders
 

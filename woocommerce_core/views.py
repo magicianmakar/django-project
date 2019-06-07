@@ -2,6 +2,7 @@ import json
 
 import arrow
 import jwt
+import requests
 
 from django.conf import settings
 from django.contrib import messages
@@ -26,6 +27,7 @@ from shopified_core.utils import (
     safe_int,
     clean_query_id,
     safe_float,
+    http_excption_status_code,
 )
 
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
@@ -404,7 +406,17 @@ class OrdersList(ListView):
         return WooListQuery(self.get_store(), 'orders', self.get_filters())
 
     def get_context_data(self, **kwargs):
-        context = super(OrdersList, self).get_context_data(**kwargs)
+        api_error = None
+
+        context = {}
+
+        try:
+            context = super(OrdersList, self).get_context_data(**kwargs)
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
+            api_error = f'HTTP Error: {http_excption_status_code(e)}'
+        except:
+            api_error = 'Store API Error'
+
         context['store'] = store = self.get_store()
         context['status'] = self.request.GET.get('status', 'any')
         context['shipping_carriers'] = store_shipping_carriers(store)
@@ -414,7 +426,18 @@ class OrdersList(ListView):
             {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)}]
         context['selected_menu'] = 'orders:all'
 
-        self.normalize_orders(context)
+        try:
+            if not api_error:
+                self.normalize_orders(context)
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
+            api_error = f'HTTP Error: {http_excption_status_code(e)}'
+        except:
+            api_error = 'Store API Error'
+
+        if api_error:
+            messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
+
+        context['api_error'] = api_error
 
         return context
 
@@ -693,11 +716,23 @@ class OrdersTrackList(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(OrdersTrackList, self).get_context_data(**kwargs)
+        error = None
 
-        context['store'] = self.get_store()
-        context['orders'] = get_tracking_orders(self.get_store(), context['orders'], self.paginate_by)
-        context['orders'] = get_tracking_products(self.get_store(), context['orders'], self.paginate_by)
-        context['shipping_carriers'] = store_shipping_carriers(self.get_store())
+        try:
+            context['store'] = self.get_store()
+            context['orders'] = get_tracking_orders(self.get_store(), context['orders'], self.paginate_by)
+            context['orders'] = get_tracking_products(self.get_store(), context['orders'], self.paginate_by)
+            context['shipping_carriers'] = store_shipping_carriers(self.get_store())
+
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
+            error = f'HTTP Error: {http_excption_status_code(e)}'
+        except:
+            error = 'Store API Error'
+
+        if error:
+            messages.error(self.request, f'Error while trying to show your Store Orders: {error}')
+
+        context['api_error'] = error
 
         context['breadcrumbs'] = [{
             'title': 'Orders',
