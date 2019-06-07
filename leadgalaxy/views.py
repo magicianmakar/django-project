@@ -4408,10 +4408,6 @@ def orders_place(request):
 
         product = supplier.short_product_url()
 
-        # Temporarily disable eBay affiliate
-        if supplier.is_ebay:
-            disable_affiliate = True
-
     elif request.GET.get('product'):
         product = request.GET['product']
 
