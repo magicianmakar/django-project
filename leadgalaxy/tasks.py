@@ -23,6 +23,7 @@ from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 from app.celery_base import celery_app, CaptureFailure, retry_countdown, api_exceed_limits_countdown
 from shopified_core import permissions
+from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import (
     safe_int,
     app_link,
@@ -36,7 +37,6 @@ from shopified_core.utils import (
     delete_model_from_db,
     ALIEXPRESS_REJECTED_STATUS
 )
-from shopified_core.paginators import SimplePaginator
 
 from leadgalaxy.models import (
     ProductSupplier,
@@ -47,7 +47,6 @@ from leadgalaxy.models import (
     UserProfile,
 )
 from leadgalaxy import utils
-from leadgalaxy.statuspage import record_import_metric
 
 from shopified_core.utils import update_product_data_images
 
@@ -77,7 +76,7 @@ from product_feed.models import (
 
 from order_exports.models import OrderExport
 from order_exports.utils import ShopifyOrderExport, ShopifyTrackOrderExport
-
+from metrics.statuspage import record_import_metric
 from shopify_orders.models import ShopifyOrder, ShopifyOrderRisk
 
 

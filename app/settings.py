@@ -75,6 +75,7 @@ INSTALLED_APPS = (
     'youtube_ads',
     'sso_core',
     'goals',
+    'metrics',
 
     'commercehq_core',
     'woocommerce_core',
@@ -146,6 +147,7 @@ DROPIFIED_API = {
     'subusers': 'subusers.api.SubusersApi',
     'goals': 'goals.api.GoalsApi',
     'profits': 'profits.api.ProfitsApi',
+    'metrics': 'metrics.api.MetricsApi',
 }
 
 # Database
