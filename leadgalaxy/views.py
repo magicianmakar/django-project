@@ -1331,7 +1331,7 @@ def webhook(request, provider, option):
                     titles = []
                     plans = GroupPlan.objects.filter(id__in=add_query.split(','))
                     for plan in plans:
-                        titles.append(bundle.title)
+                        titles.append(plan.title)
                         plan.permissions.add(permission)
 
                     return HttpResponse(f'Permission {permission.name} added to Plan: {", ".join(titles)}')
@@ -1362,7 +1362,7 @@ def webhook(request, provider, option):
                     titles = []
                     plans = GroupPlan.objects.filter(id__in=add_query.split(','))
                     for plan in plans:
-                        titles.append(bundle.title)
+                        titles.append(plan.title)
                         plan.permissions.remove(permission)
 
                     return HttpResponse(f'Permission {permission.name} removed from Plan: {", ".join(titles)}')
