@@ -69,8 +69,11 @@ def get_subscription_month_start(user):
 
 def get_month_totals(user, phone_type="tollfree"):
     total = 0
+
     try:
         date_start = get_subscription_month_start(user)
+        if not date_start:
+            return total
 
         month_total_duration = user.twilio_logs.filter(
             log_type='status-callback',
@@ -78,9 +81,12 @@ def get_month_totals(user, phone_type="tollfree"):
         ).order_by('-created_at').filter(
             created_at__gte=date_start
         ).aggregate(Sum('call_duration'))
+
         total += safe_int(month_total_duration['call_duration__sum'])
+
     except:
         raven_client.captureException()
+
     return total
 
 
