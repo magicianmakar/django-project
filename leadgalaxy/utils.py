@@ -2040,11 +2040,9 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
                                         extra={'response': r, 'product': urls},
                                         level='warning')
 
-            cache.set(promotion_key, False, timeout=3600)
             return None
 
     except:
-        cache.set(promotion_key, False, timeout=3600)
         raven_client.captureException(level='warning', extra={'response': rep})
 
     return None
