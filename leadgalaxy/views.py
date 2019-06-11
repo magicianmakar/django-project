@@ -2187,7 +2187,14 @@ def get_shipping_info(request):
             if res.ok and '"success":false' not in data:
                 cache.set(cache_key, data, timeout=3600)
 
-        return HttpResponse(data, content_type='text/javascript;charset=utf-8')
+        response = HttpResponse(data, content_type='text/javascript;charset=utf-8')
+
+        # Add Cache control to response header
+        expire_days = 7
+        response['Cache-Control'] = f'max-age={expire_days * 86400}'
+        response['Expires'] = timezone.now() + timezone.timedelta(days=expire_days)
+
+        return response
 
     item_id = request.GET.get('id')
     product = request.GET.get('product')
