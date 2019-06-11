@@ -1316,7 +1316,53 @@ def webhook(request, provider, option):
                         plans_table.draw() if permission.groupplan_set.count() else 'None',
                         plans_perms.draw() if permission.featurebundle_set.count() else 'None')
                 })
-            #
+
+            elif command == 'add':
+                add_to = args[1]
+                add_query = args[2]
+                perm_name = args[3]
+
+                if not AppPermission.objects.filter(name=name).exists():
+                    return HttpResponse(':x: Permission {} does not exists'.format(name))
+
+                permission = AppPermission.objects.get(name=perm_name)
+
+                if add_to == 'plan':
+                    plan = GroupPlan.objects.get(id=add_query)
+                    plan.permissions.add(permission)
+                    return HttpResponse(f'Permission {permission.name} add to Plan: {plan.title}')
+
+                elif add_to == 'bundle':
+                    bundle = FeatureBundle.objects.get(id=add_query)
+                    bundle.permissions.add(permission)
+                    return HttpResponse(f'Permission {permission.name} add to Bundle: {bundle.title}')
+
+                else:
+                    return HttpResponse(f':x: Target is not known {add_to}')
+
+            elif command == 'remove':
+                add_to = args[1]
+                add_query = args[2]
+                perm_name = args[3]
+
+                if not AppPermission.objects.filter(name=name).exists():
+                    return HttpResponse(':x: Permission {} does not exists'.format(name))
+
+                permission = AppPermission.objects.get(name=perm_name)
+
+                if add_to == 'plan':
+                    plan = GroupPlan.objects.get(id_in=add_query.split(','))
+                    plan.permissions.remove(permission)
+                    return HttpResponse(f'Permission {permission.name} removed from Plan: {plan.title}')
+
+                elif add_to == 'bundle':
+                    bundle = FeatureBundle.objects.get(id_in=add_query.split(','))
+                    bundle.permissions.add(permission)
+                    return HttpResponse(f'Permission {permission.name} removed from Bundle: {bundle.title}')
+
+                else:
+                    return HttpResponse(f':x: Target is not known {add_to}')
+
         elif request.POST['command'] == '/affiliate':
             args = request.POST['text'].split(' ')
             command = args[0]
