@@ -102,6 +102,7 @@ You will need to install the following dependencies for this:
 
 Once the dependencies are installed, build applicaton image:
 ```
+cd docker
 docker-compose build
 ```
 
@@ -117,11 +118,13 @@ alias dj-run='python manage.py runserver 0.0.0.0:8000'
 
 Setup Docker docker environment:
 ```
-./scripts/setup-docker
+cd docker
+../scripts/setup-docker
 ```
 
 Log into the docker image:
 ```
+cd docker
 docker-compose run --service-ports web
 ```
 
