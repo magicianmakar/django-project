@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block main-container %}
+<div class="middle-box text-center">
+    <h3 class="font-bold">Your do not have enough credits to use this feature.</h3>
+    <div class="error-desc">
+        Purchase the credits below or upgrade your plan to get an access to this feature.
+        <br/><a href="/user/profile#plan" class="btn btn-primary m-t">Purchase Credits</a>
+    </div>
+</div>
+{% endblock %}

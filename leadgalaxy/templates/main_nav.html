@@ -150,27 +150,76 @@
             </li>
             {% endif %}
 
-            {% if user|can:'product_feeds.use' %}
-            <li {% if page == 'product_feeds' or 'youtube' in page or page == 'phone_automation' %}class="active"{% endif %}>
+            {% if user|can:'product_feeds.use' or user|can:'phone_automation.use' or user|can:'youtube_ads.use' %}
+            <li {% if page == 'product_feeds' or 'youtube' in page or 'phone_automation' in page %}class="active"{% endif %}>
                 <a href="#">
                     <i class="fa fa-bar-chart"></i>
                     <span class="nav-label">Marketing</span>
                     <span class="fa arrow"></span>
                 </a>
                 <ul class="nav nav-second-level collapse">
-                    <li {% if page == 'product_feeds' %}class="active"{% endif %}>
-                        <a href="{% url 'product_feeds' %}">
-                            <i class="fa fa-gift"></i>
-                            <span class="nav-label">Product Feeds</span>
-                        </a>
-                    </li>
+                    {% if user|can:'product_feeds.use'  %}
+                        <li {% if page == 'product_feeds' %}class="active"{% endif %}>
+                            <a href="{% url 'product_feeds' %}">
+                                <i class="fa fa-gift"></i>
+                                <span class="nav-label">Product Feeds</span>
+                            </a>
+                        </li>
+                    {% endif %}
 
                     {% if user|can:'phone_automation.use'  %}
-                        <li {% if page == 'phone_automation' %}class="active"{% endif %}>
+                        <li {% if selected_menu == 'tools:phone_automation' %}class="active"{% endif %}>
                             <a href="{% url 'phone_automation_index' %}">
                                 <i class="fa fa-phone"></i>
                                 <span class="nav-label">CallFlex</span>
+                                <span class="fa arrow"></span>
                             </a>
+
+                            <ul class="nav nav-third-level {% if 'phone_automation' not in page %}collapse{% endif %}">
+
+
+                                <li {% if 'phone_automation_call_logs' in page %}class="active"{% endif %}>
+                                    <a href="{% url 'phone_automation_call_logs' %}">
+                                        <i class="fa fa-area-chart"></i>
+                                        <span class="nav-label">Activity</span>
+                                    </a>
+                                </li>
+
+                                <li {% if 'phone_automation_reports' in page %}class="active"{% endif %}>
+                                    <a href="{% url 'phone_automation_reports_numbers' %}">
+                                        <i class="fa fa-bar-chart-o"></i>
+                                        <span class="nav-label">Reports</span>
+                                    </a>
+                                </li>
+
+                                <li {% if 'phone_automation_index' in page or 'phone_automations_index' in page %}class="active"{% endif %}>
+                                    <a href="{% url 'phone_automation_index' %}">
+                                        <i class="fa fa-phone"></i>
+                                        <span class="nav-label">Numbers</span>
+                                    </a>
+                                </li>
+
+
+                                <li {% if 'phone_automation_notifications' in page %}class="active"{% endif %}>
+                                    <a href="{% url 'phone_automation_notifications_alerts' %}">
+                                        <i class="fa fa-cogs"></i>
+                                        <span class="nav-label">Settings</span>
+                                    </a>
+                                </li>
+
+
+                                <li {% if 'phone_automation_companies_index' in page %}class="active"{% endif %}>
+                                    <a href="{% url 'phone_automation_companies_index' %}">
+                                        <i class="fa fa-users"></i>
+                                        <span class="nav-label">Account</span>
+                                    </a>
+                                </li>
+
+
+                             </ul>
+
+
+
                         </li>
                     {% endif %}
 

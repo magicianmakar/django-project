@@ -81,7 +81,7 @@
             </li>
             {% endif %}
 
-            {% if request.user|can:'price_changes.use' %}
+			{% if request.user|can:'price_changes.use' %}
             <li {% if url_name == 'chq:product_alerts' %}class="active"{% endif %}>
                 <a href="{% url 'chq:product_alerts' %}">
                     <i class="fa fa-bell"></i>
@@ -97,29 +97,143 @@
             </li>
             {% endif %}
 
-            {% if user|can:'product_feeds.use' %}
-            <li {% if url_name == 'product_feeds' %}class="active"{% endif %}>
-                <a href="#">
+			{% if user|can:'product_feeds.use' or user|can:'phone_automation.use' or user|can:'youtube_ads.use' %}
+            <li {% if page == 'product_feeds' or 'youtube' in page or page == 'phone_automation' %}class="active"{% endif %}>                <a href="#">
                     <i class="fa fa-bar-chart"></i>
                     <span class="nav-label">Marketing</span>
                     <span class="fa arrow"></span>
                 </a>
                 <ul class="nav nav-second-level collapse">
                     {% if user|can:'phone_automation.use'  %}
-                        <li {% if page == 'phone_automation' %}class="active"{% endif %}>
+                        <li {% if 'phone_automation' in page %}class="active"{% endif %}>
                             <a href="{% url 'phone_automation_index' %}">
                                 <i class="fa fa-phone"></i>
                                 <span class="nav-label">CallFlex</span>
+                                <span class="fa arrow"></span>
                             </a>
+
+
+                             <ul class="nav nav-third-level {% if 'phone_automation' not in page %}collapse{% endif %}">
+                                <li class="{% if 'phone_automation_index' in page %}active{% endif %} no-wrap">
+                                    <a href="{% url 'phone_automation_index' %}">
+                                        <i class="fa fa-phone"></i>
+                                        <span class="nav-label">Numbers & CallFlows</span>
+                                    </a>
+                                </li>
+
+                                <li {% if 'phone_automation_companies_index' in page %}class="active"{% endif %}>
+                                    <a href="{% url 'phone_automation_companies_index' %}">
+                                        <i class="fa fa-users"></i>
+                                        <span class="nav-label">My Companies</span>
+                                    </a>
+                                </li>
+
+                                <li {% if 'phone_automation_call_logs' in page %}class="active"{% endif %}>
+                                    <a href="{% url 'phone_automation_call_logs' %}">
+                                        <i class="fa fa-area-chart"></i>
+                                        <span class="nav-label">Call Logs</span>
+                                    </a>
+                                </li>
+
+                                <li {% if 'phone_automation_reports' in page %}class="active"{% endif %}>
+                                    <a href="#">
+                                        <i class="fa fa-bar-chart-o"></i>
+                                        <span class="nav-label">Reports</span>
+                                        <span class="fa arrow"></span>
+                                    </a>
+
+                                    <ul class="nav nav-third-level {% if 'phone_automation_reports' not in page %}collapse{% endif %}">
+
+                                        <li {% if 'phone_automation_reports_numbers' in page %}class="active"{% endif %}>
+                                            <a href="{% url 'phone_automation_reports_numbers' %}">
+                                                <span>&nbsp; </span>
+                                                <span class="nav-label">By Numbers</span>
+                                            </a>
+                                        </li>
+                                        <li {% if 'phone_automation_reports_companies' in page %}class="active"{% endif %}>
+                                            <a href="{% url 'phone_automation_reports_companies' %}">
+                                                <span>&nbsp; </span>
+                                                <span class="nav-label">By Companies</span>
+                                            </a>
+                                        </li>
+
+                                    </ul>
+                                </li>
+
+                                <li {% if 'phone_automation_notifications' in page %}class="active"{% endif %}>
+                                    <a href="#">
+                                        <i class="fa fa-bell"></i>
+                                        <span class="nav-label">Notifications</span>
+                                        <span class="fa arrow"></span>
+                                    </a>
+
+
+                                    <ul class="nav nav-third-level {% if 'phone_automation_notifications' not in page %}collapse{% endif %}">
+
+                                        <li {% if 'phone_automation_notifications_alerts' in page %}class="active"{% endif %}>
+                                            <a href="{% url 'phone_automation_notifications_alerts' %}">
+                                                <span>&nbsp; </span>
+                                                <span class="nav-label">Alerts</span>
+                                            </a>
+                                        </li>
+                                        <li {% if 'phone_automation_notifications_summaries' in page%}class="active"{% endif %}>
+                                            <a href="{% url 'phone_automation_notifications_summaries' %}">
+                                                <span>&nbsp; </span>
+                                                <span class="nav-label">Summaries</span>
+                                            </a>
+                                        </li>
+
+                                    </ul>
+
+                                </li>
+
+                             </ul>
+
+
+
                         </li>
                     {% endif %}
 
-                    <li {% if url_name == 'product_feeds' %}class="active"{% endif %}>
-                        <a href="{% url 'product_feeds' store_type='chq' %}">
-                            <i class="fa fa-gift"></i>
-                            <span class="nav-label">Product Feeds</span>
+
+                    {% if request.user|can:'youtube_ads.use' %}
+                    <li {% if 'youtube' in page %}class="active"{% endif %}>
+                        <a href="{% url 'youtube_ads.views.index' %}">
+                            <i class="fa fa-shopping-cart"></i>
+                            <span class="nav-label">TubeHunt</span>
+                            <span class="fa arrow"></span>
                         </a>
+
+                        <ul class="nav nav-third-level {% if 'youtube' not in page %}collapse{% endif %}">
+                            <li {% if page == 'youtube_search' %}class="active"{% endif %}>
+                                <a href="{% url 'youtube_ads.views.index' %}">
+                                    <i class="fa fa-search"></i>
+                                    <span class="nav-label">Search</span>
+                                </a>
+                            </li>
+
+                            <li {% if page == 'youtube_related' %}class="active"{% endif %}>
+                                <a href="{% url 'youtube_ads.views.index' %}?r">
+                                    <i class="fa fa-link"></i>
+                                    <span class="nav-label">Related</span>
+                                </a>
+                            </li>
+
+                            <li {% if page == 'youtube_channels' %}class="active"{% endif %}>
+                                <a href="{% url 'youtube_ads.views.channels' %}?r">
+                                    <i class="fa fa-users"></i>
+                                    <span class="nav-label">Channels</span>
+                                </a>
+                            </li>
+
+                            <li {% if page == 'youtube_lists' %}class="active"{% endif %}>
+                                <a href="{% url 'youtube_ads.views.lists' %}?r">
+                                    <i class="fa fa-list"></i>
+                                    <span class="nav-label">Lists</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
+                    {% endif %}
                 </ul>
             </li>
             {% endif %}

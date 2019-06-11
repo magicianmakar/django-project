@@ -25,7 +25,11 @@
     "animate.css": "^3.5.2",
     "chart.js": "^2.7.0",
     "slick-carousel": "^1.8.1",
-    "jquery.sparkline": "gwatts/jquery.sparkline#^2.1.2"
+    "jquery.sparkline": "gwatts/jquery.sparkline#^2.1.2",
+    "datatables.net": "^1.10.19",
+    "datatables.net-bs": "^2.1.1",
+    "datatables.net-responsive": "^2.2.3",
+    "datatables.net-responsive-bs": "^2.2.3"
   },
   "devDependencies": {}
 }

@@ -444,6 +444,7 @@ Vue.component('item', {
 var demo = new Vue({
     el: '#call-flow',
     data: {
+        title: title,
         treeData: data,
         bus: new Vue()
     },
@@ -473,6 +474,7 @@ var demo = new Vue({
                 url: save.url,
                 type: 'POST',
                 data: {
+                    title: this.title,
                     first_step: this.first_node,
                     last_step: nodeCount,
                     children: JSON.stringify(this.treeData)
@@ -483,7 +485,12 @@ var demo = new Vue({
                     }
                 },
                 error: function(data) {
-                    displayAjaxError('Saving call automation', data);
+                    var errors_html=""
+                    for (error in data.responseJSON.errors) {
+                        errors_html += "\n" + error +": ";
+                        errors_html += data.responseJSON.errors[error].join(", ");
+                    }
+                    displayAjaxError('Error saving call automation', errors_html);
                 }
             });
         },

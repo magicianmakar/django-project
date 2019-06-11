@@ -17,24 +17,47 @@ from django.utils.functional import cached_property
 from django.urls import reverse
 
 from leadgalaxy.utils import aws_s3_get_key
+from stripe_subscription.models import CustomStripeSubscription
 
 PHONE_NUMBER_STATUSES = (
     ('active', 'Incoming calls allowed'),
     ('inactive', 'Forwardning all incoming calls'),
 )
 
+PHONE_NUMBER_TYPES = (
+    ('tollfree', 'Toll-Free Number'),
+    ('local', 'Local Number'),
+)
+
+ALERT_EVENTS = (
+    ('all_calls', 'All Calls'),
+    ('new_callers', 'Only First Time Callers'),
+    ('missed_calls', 'Only Missed Calls'),
+    ('voicemails', 'Only Calls with Voicemails'),
+)
+
+ALERT_TYPES = (
+    ('email', 'Email'),
+)
+
 
 class TwilioAutomation(models.Model):
+    DEFAULT_TITLE = "Untitled CallFlow"
     user = models.ForeignKey(User, related_name='twilio_automations', null=True, on_delete=models.CASCADE)
 
     title = models.CharField(max_length=255, default='')
     first_step = models.IntegerField(default=0)
     last_step = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     @cached_property
     def json_data(self):
         serialized_data = [s.serializable_object() for s in self.steps.filter(parent__isnull=True)]
         return json.dumps(serialized_data)
+
+    def __str__(self):
+        return self.title or self.DEFAULT_TITLE
 
 
 class TwilioStep(models.Model):
@@ -93,22 +116,63 @@ class TwilioStep(models.Model):
         return next_step.url
 
 
-class TwilioPhoneNumber(models.Model):
-    user = models.OneToOneField(User, related_name='twilio_phone_number', on_delete=models.CASCADE)
-    automation = models.ForeignKey(TwilioAutomation, related_name='phone', null=True)
+class TwilioCompany(models.Model):
+    user = models.ForeignKey(User, related_name='twilio_companies', on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default='')
+    timezone = models.CharField(max_length=255, default='')
+    config = models.TextField(default='{}')
 
-    incoming_number = models.CharField(max_length=50, default='', blank=True)
-    forwarding_number = models.CharField(max_length=50, default='', blank=True)
-    status = models.CharField(max_length=50, default='', choices=PHONE_NUMBER_STATUSES)
-    country_code = models.CharField(max_length=10, default='', blank=True)
-    twilio_sid = models.CharField(max_length=50, default='', blank=True)
-    twilio_metadata = JSONField(default={})
+    def get_config(self):
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
+
+    def get_profile_users(self):
+        profile_user = {"email": self.user.email, "name": self.user.get_full_name()}
+        return [profile_user]
+
+    def get_config_users(self):
+        return self.get_config().get('users', [])
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.incoming_number
+        return self.title
+
+
+class TwilioPhoneNumber(models.Model):
+    user = models.ForeignKey(User, related_name='twilio_phone_numbers', on_delete=models.CASCADE)
+    automation = models.ForeignKey(TwilioAutomation, related_name='phones', null=True)
+    company = models.ForeignKey(TwilioCompany, related_name='phones', null=True)
+    title = models.CharField(max_length=255, default='')
+
+    incoming_number = models.CharField(max_length=50, default='', blank=True)
+    forwarding_number = models.CharField(max_length=50, default='', blank=True)
+    status = models.CharField(max_length=50, default='', choices=PHONE_NUMBER_STATUSES)
+    type = models.CharField(max_length=50, default='tollfree', choices=PHONE_NUMBER_TYPES)
+    country_code = models.CharField(max_length=10, default='', blank=True)
+    twilio_sid = models.CharField(max_length=50, default='', blank=True)
+    twilio_metadata = JSONField(default={})
+    sms_enabled = models.BooleanField(default=False)
+    custom_subscription = models.ForeignKey(CustomStripeSubscription, related_name='twilio_phone_numbers', null=True,
+                                            on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    class Meta:
+        ordering = ('pk',)
+
+    @property
+    def twilio_metadata_json(self):
+        if isinstance(self.twilio_metadata, str):
+            return json.loads(self.twilio_metadata)
+        else:
+            return self.twilio_metadata
+
+    def __str__(self):
+        return f'{self.title} ({self.incoming_number})'
 
     def last_two_month_usage(self):
         # TODO: for multiple numbers, change query from User to TwilioPhoneNumber
@@ -136,7 +200,8 @@ class TwilioUpload(models.Model):
         ordering = ['-created_at']
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    phone = models.ForeignKey(TwilioPhoneNumber, on_delete=models.CASCADE)
+    # phone = models.ForeignKey(TwilioPhoneNumber, on_delete=models.CASCADE)
+    automation = models.ForeignKey(TwilioAutomation, related_name='automation', null=True)
     url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
@@ -148,15 +213,17 @@ class TwilioUpload(models.Model):
 
 class TwilioLog(models.Model):
     user = models.ForeignKey(User, related_name='twilio_logs', on_delete=models.CASCADE)
+    twilio_phone_number = models.ForeignKey(TwilioPhoneNumber, related_name='twilio_logs', null=True)
     direction = models.CharField(max_length=50, default='', blank=True)
     from_number = models.CharField(max_length=50, default='', blank=True)
     call_duration = models.IntegerField(default=0, null=True)
     call_sid = models.CharField(max_length=50, default='', blank=True)
     call_status = models.CharField(max_length=50, default='', blank=True)
     log_type = models.CharField(max_length=50, default='', blank=True)
+    phone_type = models.CharField(max_length=50, default='tollfree', choices=PHONE_NUMBER_TYPES)
     digits = models.CharField(max_length=50, default='', blank=True)
     twilio_metadata = JSONField(default={})
-
+    notes = models.TextField(default='')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
@@ -196,3 +263,88 @@ def convert_callflow_audio_file(sender, instance, created, **kwargs):
             'PresetId': '1351620000001-300040',  # MP3 128K
         }]
     )
+
+
+class CallflexCreditsPlan(models.Model):
+    allowed_credits = models.IntegerField(default=0)
+    amount = models.IntegerField(default=0, verbose_name='In USD')
+
+    def __unicode__(self):
+        return f'{self.allowed_credtis} / {self.amount}'
+
+
+class CallflexCredit(models.Model):
+    class Meta:
+        ordering = ('pk',)
+
+    user = models.ForeignKey(User, related_name='callflex_credits', on_delete=models.CASCADE)
+
+    purchased_credits = models.BigIntegerField(default=0)
+    phone_type = models.CharField(max_length=50, default='tollfree', choices=PHONE_NUMBER_TYPES)
+    stripe_invoice = models.CharField(max_length=50, default='', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __unicode__(self):
+        return f'{self.user.username} / {self.remaining_credits} Credits'
+
+
+class TwilioAlert(models.Model):
+    user = models.ForeignKey(User, related_name='twilio_alerts', on_delete=models.CASCADE)
+    twilio_phone_number = models.ForeignKey(TwilioPhoneNumber, related_name='twilio_alerts', null=True)
+    company = models.ForeignKey(TwilioCompany, related_name='twilio_alerts', null=True)
+    config = models.TextField(default='{}')
+    alert_event = models.CharField(max_length=50, default='', choices=ALERT_EVENTS)
+    alert_type = models.CharField(max_length=50, default='', choices=ALERT_TYPES)
+
+    def get_config(self):
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
+
+    def get_config_users(self):
+        config_users = []
+        try:
+            config_users = self.get_config()['users']
+        except:
+            pass
+
+        return config_users
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __str__(self):
+        return self.title
+
+
+class TwilioSummary(models.Model):
+    user = models.ForeignKey(User, related_name='twilio_summaries', on_delete=models.CASCADE)
+    company = models.ForeignKey(TwilioCompany, related_name='twilio_summaries', null=True)
+    config = models.TextField(default='{}')
+    freq_daily = models.BooleanField(default=False)
+    freq_weekly = models.BooleanField(default=False)
+    freq_monthly = models.BooleanField(default=False)
+    include_calllogs = models.BooleanField(default=False)
+
+    def get_config(self):
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
+
+    def get_config_users(self):
+        config_users = []
+        try:
+            config_users = self.get_config()['users']
+        except:
+            pass
+
+        return config_users
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __str__(self):
+        return self.title

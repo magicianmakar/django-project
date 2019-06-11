@@ -154,9 +154,9 @@ class WooProduct(models.Model):
             elif title:
                 return title
             else:
-                return '<WooProduct: {}'.format(self.id)
+                return '<WooProduct: {}>'.format(self.id)
         except:
-            return '<WooProduct: {}'.format(self.id)
+            return '<WooProduct: {}>'.format(self.id)
 
     @property
     def parsed(self):

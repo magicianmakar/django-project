@@ -1,0 +1,43 @@
+[
+  {
+    "model": "leadgalaxy.apppermission",
+    "pk": 131,
+    "fields": {
+      "name": "phone_automation.use",
+      "description": "CallFlex Feature"
+    }
+  },
+  {
+    "model": "leadgalaxy.apppermission",
+    "pk": 132,
+    "fields": {
+      "name": "phone_automation_unlimited_phone_numbers.use",
+      "description": "CallFlex Unlimited Number"
+    }
+  },
+  {
+    "model": "leadgalaxy.apppermission",
+    "pk": 133,
+    "fields": {
+      "name": "phone_automation_unlimited_calls.use",
+      "description": "CallFlex Unlimited Calls"
+    }
+  },
+  {
+    "model": "leadgalaxy.apppermission",
+    "pk": 136,
+    "fields": {
+      "name": "phone_automation_free_number.use",
+      "description": "use 1 phone number and 60 minutes for premier users for free"
+    }
+  },
+  {
+    "model": "leadgalaxy.subuserpermission",
+    "pk": 7,
+    "fields": {
+        "codename": "use_callflex",
+        "name": "CallFlex access",
+        "store": null
+    }
+  }
+]

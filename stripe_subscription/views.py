@@ -5,7 +5,7 @@ from django.views.decorators.http import require_http_methods
 from django.core.urlresolvers import reverse
 
 import arrow
-
+import simplejson as json
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core.utils import app_link
@@ -22,7 +22,10 @@ from .utils import (
     update_subscription,
     get_stripe_invoice,
     refresh_invoice_cache,
+    get_main_subscription_item,
 )
+from phone_automation.models import CallflexCreditsPlan, CallflexCredit
+from stripe_subscription.models import CustomStripePlan, CustomStripeSubscription
 
 
 @login_required
@@ -126,15 +129,14 @@ def subscription_plan(request):
     if user.stripesubscription_set.exists():
         subscription = user.stripesubscription_set.latest('created_at')
         sub = subscription.refresh()
+        sub_plan = subscription.get_main_subscription_item_plan(sub=sub)
 
-        if sub.plan.id != plan.stripe_plan.stripe_id:
+        if sub_plan.id != plan.stripe_plan.stripe_id:
             if sub.status == 'trialing':
                 trial_delta = arrow.get(sub.trial_end) - arrow.utcnow()
                 still_in_trial = sub.trial_end and trial_delta.days > 0
             else:
                 still_in_trial = False
-
-            sub.plan = plan.stripe_plan.stripe_id
 
             if user.get_config('try_plan'):
                 sub.trial_end = arrow.utcnow().replace(days=14).timestamp
@@ -146,6 +148,18 @@ def subscription_plan(request):
                     sub.trial_end = arrow.get(sub.trial_end).timestamp
 
             try:
+                main_plan_item = get_main_subscription_item(sub)
+
+                # check if new plan has different interval
+                if main_plan_item['plan']['interval'] != plan.stripe_plan.interval and len(sub['items']['data']) > 1:
+                    # move existing custom SI to new subscription
+                    subscription.move_custom_subscriptions(sub)
+
+                stripe.SubscriptionItem.modify(
+                    main_plan_item['id'],
+                    plan=plan.stripe_plan.stripe_id
+                )
+                subscription.refresh()
                 sub.save()
 
             except (SubscriptionException, stripe.error.CardError, stripe.error.InvalidRequestError) as e:
@@ -472,3 +486,212 @@ def invoice_pay(request, invoice_id):
 
         else:
             return JsonResponse({'status': 'ok'}, status=200)
+
+
+@login_required
+@csrf_protect
+def callflexcredit_subscription(request):
+    user = request.user
+    paid = False
+
+    callflexcredit_plan = CallflexCreditsPlan.objects.get(id=request.POST.get('plan'))
+
+    if request.user.profile.from_shopify_app_store():
+        store = user.profile.get_shopify_stores().first()
+
+        request.session['shopiyf_charge'] = {
+            'type': 'callflex_minutes',
+            'credits': callflexcredit_plan.allowed_credits
+        }
+
+        charge = store.shopify.ApplicationCharge.create({
+            "name": "CallFlex - {} Minutes".format(callflexcredit_plan.allowed_credits),
+            "price": callflexcredit_plan.amount,
+            "return_url": app_link(reverse('shopify_subscription.views.subscription_charged', kwargs={'store': store.id})),
+        })
+
+        return JsonResponse({
+            'status': 'ok',
+            'location': charge.confirmation_url
+        })
+
+    try:
+        stripe.InvoiceItem.create(
+            customer=user.stripe_customer.customer_id,
+            amount=callflexcredit_plan.amount * 100,
+            currency='usd',
+            description="CallFlex - {} Minutes - Credits".format(callflexcredit_plan.allowed_credits),
+        )
+
+        invoice = stripe.Invoice.create(
+            customer=user.stripe_customer.customer_id,
+            description='CallFlex Minutes - Credits',
+            metadata={
+                'user': user.id,
+                'captchacredit_plan': callflexcredit_plan.id
+            }
+        )
+
+        invoice.pay()
+
+        paid = True
+
+        # adding minutes to DB
+
+        callflexcredit = CallflexCredit()
+        callflexcredit.user = user
+        callflexcredit.stripe_invoice = invoice.id
+        callflexcredit.purchased_credits = callflexcredit_plan.allowed_credits
+        callflexcredit.save()
+
+    except CallflexCreditsPlan.DoesNotExist:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Selected Credit not found'
+        }, status=500)
+
+    except stripe.CardError as e:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Credit Card Error: {}'.format(e.message)
+        }, status=500)
+
+    except stripe.InvalidRequestError as e:
+        raven_client.captureException(level='warning')
+        return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
+
+    except:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Credit Card Error, Please try again'
+        }, status=500)
+
+    finally:
+        if not paid and invoice:
+            invoice.closed = True
+            invoice.save()
+
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@csrf_protect
+def callflex_subscription(request):
+    user = request.user
+    plan = CustomStripePlan.objects.get(id=request.POST.get('plan'))
+
+    subscription = user.stripesubscription_set.latest('created_at')
+    sub = subscription.refresh()
+    sub_id_to_use = sub.id
+
+    try:
+        user_callflex_subscription = user.customstripesubscription_set.filter(
+            custom_plan__type='callflex_subscription').first()
+        if user_callflex_subscription:
+            sub_container = stripe.Subscription.retrieve(user_callflex_subscription.subscription_id)
+        else:
+            sub_container = sub
+
+        if plan.interval != sub_container['items']['data'][0]["plan"]["interval"]:
+            # check if main subscription match with interval and can be combined to
+            if plan.interval != sub['items']['data'][0]["plan"]["interval"]:
+                need_new_sub_flag = True
+            else:
+                # main sub can be used, take it instead
+                sub_container = sub
+                need_new_sub_flag = False
+            # delete current subscription, as new one will be created with another interval
+            if user_callflex_subscription:
+                user_callflex_subscription.safe_delete()
+        else:
+            need_new_sub_flag = False
+
+        # checking existing subscription
+        user_callflex_subscription = user.customstripesubscription_set.filter(
+            custom_plan__type='callflex_subscription').first()
+
+        if user_callflex_subscription:
+            stripe.SubscriptionItem.modify(
+                user_callflex_subscription.subscription_item_id,
+
+                plan=plan.stripe_id,
+                metadata={'plan_id': plan.id, 'user_id': user.id}
+            )
+            si = stripe.SubscriptionItem.retrieve(user_callflex_subscription.subscription_item_id)
+            custom_stripe_subscription = user_callflex_subscription
+        else:
+            if need_new_sub_flag:
+                # creating new subscription for callflex plan
+                sub_container = stripe.Subscription.create(
+                    customer=user.stripe_customer.customer_id,
+                    plan=plan.stripe_id,
+                    metadata={'custom_plan_id': plan.id, 'user_id': user.id, 'custom': True,
+                              'custom_plan_type': 'callflex_subscription'}
+                )
+                sub_id_to_use = sub_container.id
+                si = stripe.SubscriptionItem.retrieve(sub_container['items']['data'][0]["id"])
+            else:
+                si = stripe.SubscriptionItem.create(
+                    subscription=sub_id_to_use,
+                    plan=plan.stripe_id,
+                    metadata={'plan_id': plan.id, 'user_id': user.id}
+                )
+
+            custom_stripe_subscription = CustomStripeSubscription()
+
+        custom_stripe_subscription.data = json.dumps(sub_container)
+        custom_stripe_subscription.status = sub_container['status']
+        custom_stripe_subscription.period_start = arrow.get(sub_container['current_period_start']).datetime
+        custom_stripe_subscription.period_end = arrow.get(sub_container['current_period_end']).datetime
+        custom_stripe_subscription.user = user
+        custom_stripe_subscription.custom_plan = plan
+        custom_stripe_subscription.subscription_id = sub_id_to_use
+        custom_stripe_subscription.subscription_item_id = si.id
+
+        custom_stripe_subscription.save()
+
+    except CustomStripePlan.DoesNotExist:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Selected Credit not found'
+        }, status=500)
+
+    except stripe.error.CardError as e:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Credit Card Error: {}'.format(e.message)
+        }, status=500)
+
+    except stripe.error.InvalidRequestError as e:
+        raven_client.captureException(level='warning')
+        return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
+
+    except Exception as e:
+        raven_client.captureException(level='warning')
+
+        return JsonResponse({
+            'error': 'Error occurred {}'.format(e.message)
+        }, status=500)
+
+    return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@csrf_protect
+def custom_subscription_cancel(request):
+    user = request.user
+
+    try:
+        custom_subscription = user.customstripesubscription_set.get(id=request.POST['subscription'])
+        custom_subscription.safe_delete()
+
+    except stripe.error.InvalidRequestError as e:
+        raven_client.captureException(level='warning')
+        return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
+
+    return JsonResponse({'status': 'ok'})

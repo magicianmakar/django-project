@@ -1,0 +1,136 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+{% load perms_helper %}
+{% load widget_tweaks %}
+{% load template_helper %}
+{% load phone_numbers %}
+{% block main-container %}
+{% load compress %}
+
+
+<div class="row">
+    <div class="col-md-12">
+
+        <div class="ibox float-e-margins">
+
+            <div class="ibox-title ibox-title-adjust">
+                <h5 class="content-tittle">Your CallFlex Companies<small></small></h5>
+
+                <div class="ibox-tools">
+                    <a class="btn-sm btn-primary " href="{% url 'phone_automation_companies_create' %}">
+                            <i class="fa fa-phone"></i> &nbsp; Add New Company</a>
+                </div>
+            </div>
+
+
+
+
+            <div class="ibox-content ibox-content-adjust">
+
+                <div class="row">
+                    <div class="col-md-2 col-xs-12">
+                       {% include 'phone_automation/partial/sub_nav.html' %}
+                    </div>
+                    <div class="col-md-10 col-xs-12">
+
+
+                    {% if twilio_companies|length %}
+                        <div class="grey-cont">
+                            <table class="table table-bordered dataTables">
+                                <thead>
+                                    <tr>
+                                        <th style="width:50%">Company Name</th>
+                                        <th>Compnany numbers</th>
+                                        <th>Company Users</th>
+                                        <th style="width:20%">Options</th>
+                                    </tr>
+                                </thead>
+
+                            {% for twilio_company in twilio_companies %}
+
+
+
+
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                {{ twilio_company.title }}
+                                            </td>
+                                            <td class="text-center">
+                                                {{ twilio_company.phones.all|length }}
+
+                                            </td>
+                                            <td class="text-center">{{ twilio_company.get_config_users|length }}</td>
+                                            <td class="text-center">
+                                                <a href="{% url 'phone_automation_companies_edit' company_id=twilio_company.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
+                                                <!-- <a data-twilio_company_id={{ twilio_company.id }} _href="{% url 'phone_automation_companies_delete' company_id=twilio_company.id %}" class="btn btn-xs btn-danger remove-company"><i class="fa fa-times"></i> Delete</a> -->
+                                            </td>
+                                        </tr>
+                                    </tbody>
+
+
+                            {% endfor %}
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="">
+                            <h2>You do not have an CallFlex Companies.</h2>
+                            <div>
+                                <br />
+                                <a class="btn btn-primary  invite-subuser" href="{% url 'phone_automation_companies_create' %}">
+                                <i class="fa fa-phone"></i> &nbsp; Create new Company</a>
+                                <br />&nbsp;
+                            </div>
+                        </div>
+                    {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+{% block extracss %}
+    <style>
+
+    </style>
+    {% compress css %}
+        <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
+    {% endcompress %}
+{% endblock %}
+
+{% block extrajs %}
+     <script type="text/javascript">
+
+     $(document).ready(function() {
+            $('.remove-company').click(function (e) {
+                        href = $(this).attr('_href')
+                        swal({
+                            title: "Delete Company",
+                            text: "This will delete your company and remove all provisioned phone numbers related to this company. \n\nAre you sure you want to continue?",
+                            type: "warning",
+                            showCancelButton: true,
+                            closeOnCancel: true,
+                            closeOnConfirm: false,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "Yes, delete",
+                            cancelButtonText: "No, keep it"
+                        },
+                        function(isConfirmed) {
+                            if (isConfirmed) {
+                                window.location = href;
+                            }
+                        });
+                    });
+
+    });
+    </script>
+{% endblock %}

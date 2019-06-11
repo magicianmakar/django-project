@@ -2,6 +2,7 @@ import arrow
 import simplejson as json
 
 from django.dispatch import receiver
+from django.dispatch import Signal
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.db.models import Q
@@ -213,3 +214,7 @@ def add_goals_to_new_user(sender, instance, created, **kwargs):
     if created:
         for goal in Goal.objects.all():
             UserGoalRelationship.objects.create(user=instance, goal=goal)
+
+
+main_subscription_canceled = Signal(providing_args=["stripe_sub"])
+main_subscription_updated = Signal(providing_args=["stripe_sub"])

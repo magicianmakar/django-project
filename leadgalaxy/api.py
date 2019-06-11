@@ -83,6 +83,7 @@ from .models import (
 )
 
 from .templatetags.template_helper import shopify_image_thumb, money_format
+from stripe_subscription import utils as stripe_utils
 
 
 class ShopifyStoreApi(ApiBase):
@@ -765,12 +766,12 @@ class ShopifyStoreApi(ApiBase):
 
         if subscribtions:
             sub = subscribtions[0]
-
+            sub_plan = stripe_utils.get_main_subscription_item_plan(sub)
             try:
                 stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
                 stripe_sub.refresh(sub=sub)
             except StripeSubscription.DoesNotExist:
-                plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) | Q(stripe_plan__stripe_id=sub.plan.id))
+                plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) | Q(stripe_plan__stripe_id=sub_plan.id))
 
                 if plan.is_stripe():
                     target_user.profile.change_plan(plan)

@@ -58,6 +58,8 @@ from product_alerts.models import ProductChange
 from stripe_subscription.stripe_api import stripe
 from shopify_subscription.tasks import cancel_baremetrics_subscriptions
 from shopify_subscription.models import BaremetricsCustomer
+from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
+from phone_automation.models import CallflexCreditsPlan
 
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
@@ -132,6 +134,7 @@ from .models import (
 )
 from .templatetags.template_helper import money_format
 from functools import reduce
+from stripe_subscription.models import CustomStripePlan
 
 
 @login_required
@@ -3037,6 +3040,7 @@ def upload_file_sign(request):
 @ensure_csrf_cookie
 def user_profile(request):
     profile = request.user.profile
+
     bundles = profile.bundles.all().values_list('register_hash', flat=True)
     extra_bundles = []
 
@@ -3120,6 +3124,43 @@ def user_profile(request):
     except:
         affiliate = None
 
+    # == CallFlex ==
+
+    callflex_month_limit_tollfree = get_month_limit(request.user, "tollfree")
+    callflex_month_totals_tollfree = get_month_totals(request.user, "tollfree")
+    if callflex_month_limit_tollfree:
+        callflex_remaining_tollfree = callflex_month_limit_tollfree - callflex_month_totals_tollfree
+    else:
+        callflex_remaining_tollfree = False
+
+    callflex_month_limit_local = get_month_limit(request.user, "local")
+    callflex_month_totals_local = get_month_totals(request.user, "local")
+    if callflex_month_limit_local:
+        callflex_remaining_local = callflex_month_limit_local - callflex_month_totals_local
+    else:
+        callflex_remaining_local = False
+
+    callflexcredit_plans = CallflexCreditsPlan.objects.all()
+
+    callflexnumber_plans_monthly = CustomStripePlan.objects.filter(type="callflex_subscription", interval='month', hidden=False)
+    callflexnumber_plans_yearly = CustomStripePlan.objects.filter(type="callflex_subscription", interval='year', hidden=False)
+    callflexnumber_minutes_tollfree = int(settings.PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE) / 60
+    callflexnumber_minutes_local = int(settings.PHONE_AUTOMATION_MONTH_LIMIT_LOCAL) / 60
+    current_callflex_subscritption = request.user.customstripesubscription_set.filter(
+        custom_plan__type='callflex_subscription').first()
+    if current_callflex_subscritption:
+        current_callflex_plan = current_callflex_subscritption.custom_plan
+    else:
+        current_callflex_plan = None
+
+    callflex_phonenumber_usage_tollfree = get_phonenumber_usage(request.user, "tollfree")
+    callflex_phonenumber_usage_local = get_phonenumber_usage(request.user, "local")
+
+    callflex_extranumber_subscriptions = request.user.customstripesubscription_set.filter(
+        custom_plan__type='callflex_subscription')
+
+    # ====
+
     return render(request, 'user/profile.html', {
         'countries': get_counrties_list(),
         'now': timezone.now(),
@@ -3142,6 +3183,22 @@ def user_profile(request):
         'example_dates': [arrow.utcnow().replace(days=-2).format('MM/DD/YYYY'), arrow.utcnow().replace(days=-2).humanize()],
         'page': 'user_profile',
         'selected_menu': 'account:profile',
+        'callflex_month_limit_tollfree': callflex_month_limit_tollfree,
+        'callflex_month_totals_tollfree': callflex_month_totals_tollfree,
+        'callflex_month_limit_local': callflex_month_limit_local,
+        'callflex_month_totals_local': callflex_month_totals_local,
+        'callflexcredit_plans': callflexcredit_plans,
+        'callflex_remaining_tollfree': callflex_remaining_tollfree,
+        'callflex_remaining_local': callflex_remaining_local,
+        'callflexnumber_plans_monthly': callflexnumber_plans_monthly,
+        'callflexnumber_plans_yearly': callflexnumber_plans_yearly,
+        'settings': settings,
+        'current_callflex_plan': current_callflex_plan,
+        'callflexnumber_minutes_tollfree': callflexnumber_minutes_tollfree,
+        'callflexnumber_minutes_local': callflexnumber_minutes_local,
+        'callflex_phonenumber_usage_tollfree': callflex_phonenumber_usage_tollfree,
+        'callflex_phonenumber_usage_local': callflex_phonenumber_usage_local,
+        'callflex_extranumber_subscriptions': callflex_extranumber_subscriptions,
         'breadcrumbs': ['Profile']
     })
 

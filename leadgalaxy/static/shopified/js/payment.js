@@ -217,6 +217,7 @@
 
                 setTimeout(function() {
                     window.location.href = '/user/profile#plan';
+                    window.location.reload();
                 }, 1500);
             },
             error: function(data) {
@@ -282,11 +283,21 @@
 
         $(this).button('loading');
 
+        var subscription_type = $('#modal-subscription-cancel').data('subscription-type')
+
+        if ( subscription_type=="custom" ){
+            ajax_url = config.custom_subscription_cancel
+        }
+        else {
+            ajax_url = config.subscription_cancel
+        }
+
         $.ajax({
-            url: config.subscription_cancel,
+            url: ajax_url,
             type: 'POST',
             data: {
                 subscription: $('#modal-subscription-cancel').data('subscription'),
+                subscription_type: $('#modal-subscription-cancel').data('subscription-type'),
                 when: 'period_end'
             },
             success: function(data) {
@@ -343,6 +354,8 @@
 
     $('.cancel-sub-btn').click(function(e) {
         $('#modal-subscription-cancel').data('subscription', $(this).data('subscription'));
+        $('#modal-subscription-cancel').data('subscription-type', $(this).data('subscription-type'));
+
         $('#modal-subscription-cancel .plan-name').text($(this).data('plan'));
         $('#modal-subscription-cancel .billing-end').text($(this).data('period-end'));
 
@@ -416,5 +429,61 @@
         $('.plan-more-features').hide();
         $('.plan-feature-list').fadeIn();
     });
+
+
+
+
+
+    $('.choose-callflex-plan').click(function(e) {
+        var parent = $(this).parents('.callflex-subsciption-plan');
+        var plan = parent.data('data-plan');
+
+        if (!window.skipPlanSelectConfirmation) {
+            swal({
+                    title: parent.data('plan-title') + " Plan",
+                    text: "Subscribe to " + parent.data('plan-title') + ' Plan?',
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    animation: false,
+                    showLoaderOnConfirm: true,
+                    confirmButtonText: "Choose Plan",
+                    cancelButtonText: "No Thanks"
+                },
+                function(isConfirmed) {
+                    if (isConfirmed) {
+                        selectCallflexPlan(parent.data('plan'));
+                    }
+                }
+            );
+        } else {
+            selectCallflexPlan(parent.data('plan'));
+        }
+    });
+
+
+    function selectCallflexPlan(plan) {
+        $.ajax({
+            url: config.callflex_subscription,
+            type: 'POST',
+            data: {
+                plan: plan
+            },
+            success: function(data) {
+                toastr.success("Your Subscription has been updated.", "Plan Subscription");
+                swal.close();
+
+                setTimeout(function() {
+                    // window.location.href = '/user/profile#plan';
+                    window.location.reload();
+                }, 1500);
+            },
+            error: function(data) {
+                displayAjaxError('Plan Subscription', data);
+            }
+        });
+    }
+
+
+
 
 })(config);

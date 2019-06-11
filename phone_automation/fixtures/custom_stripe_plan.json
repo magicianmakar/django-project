@@ -1,0 +1,55 @@
+[{
+	"model": "stripe_subscription.customstripeplan",
+	"pk": 9,
+	"fields": {
+		"name": "CallFlex Local",
+		"amount": "12.00",
+		"currency": "usd",
+		"retail_amount": "12.00",
+		"interval": "month",
+		"interval_count": 1,
+		"trial_period_days": 0,
+		"statement_descriptor": null,
+		"hidden": false,
+		"type": "callflex_subscription",
+		"credits_data": "{\"credits_local\": 1, \"credits_tollfree\": 0, \"credits_minutes_local\": 200, \"credits_minutes_tollfree\": 0}",
+		"stripe_id": "CP_33422a8a",
+		"created_at": "2019-05-16T19:38:07.956Z"
+	}
+}, {
+	"model": "stripe_subscription.customstripeplan",
+	"pk": 10,
+	"fields": {
+		"name": "CallFlex Toll Free Plus",
+		"amount": "19.00",
+		"currency": "usd",
+		"retail_amount": "19.00",
+		"interval": "month",
+		"interval_count": 1,
+		"trial_period_days": 0,
+		"statement_descriptor": null,
+		"hidden": false,
+		"type": "callflex_subscription",
+		"credits_data": "{\"credits_local\": 0, \"credits_tollfree\": 1, \"credits_minutes_local\": 0, \"credits_minutes_tollfree\": 200}",
+		"stripe_id": "CP_5d901d4b",
+		"created_at": "2019-05-17T14:39:19.562Z"
+	}
+}, {
+	"model": "stripe_subscription.customstripeplan",
+	"pk": 11,
+	"fields": {
+		"name": "CallFlex Toll Free Plus (Premier Users Only)",
+		"amount": "0.00",
+		"currency": "usd",
+		"retail_amount": "0.00",
+		"interval": "month",
+		"interval_count": 1,
+		"trial_period_days": 0,
+		"statement_descriptor": null,
+		"hidden": true,
+		"type": "callflex_subscription",
+		"credits_data": "{\"credits_local\": 0, \"credits_tollfree\": 1, \"credits_minutes_local\": 0, \"credits_minutes_tollfree\": 200}",
+		"stripe_id": "CP_386d85b0",
+		"created_at": "2019-05-17T14:40:41.936Z"
+	}
+}]

@@ -290,6 +290,11 @@
                         {% if user|can:'clippingmagic.use' %}
                             {% include "payments/clippingmagic_plans.html" %}
                         {% endif %}
+
+                        {% if user|can:'phone_automation.use' %}
+                            {% include "payments/callflex_plans.html" %}
+                        {% endif %}
+
                     </div>
                 </div>
                 {% endif %}
@@ -506,9 +511,10 @@
         'subscription_trial': '{% url "stripe_subscription.views.subscription_trial" %}',
         'subscription_plan': '{% url "stripe_subscription.views.subscription_plan" %}',
         'subscription_cancel': '{% url "stripe_subscription.views.subscription_cancel" %}',
+        'custom_subscription_cancel': '{% url "stripe_subscription.views.custom_subscription_cancel" %}',
         'subscription_activate': '{% url "stripe_subscription.views.subscription_activate" %}',
-
         'shopify_plan': '{% url "shopify_subscription.views.subscription_plan" %}',
+        'callflex_subscription': '{% url "stripe_subscription.views.callflex_subscription" %}',
 
         'stripe': '{% app_setting "STRIPE_PUBLIC_KEY" %}',
     };

@@ -48,6 +48,15 @@ $(function () {
     });
 
     checkSelectedMenu(window.location.hash);
+
+    var callflex_anchor = window.location.href.match(/callflex_anchor/);
+    if(callflex_anchor)
+    {
+        $('.plan-tab a').tab('show')
+        $('.callflex-anchor').get(0).scrollIntoView()
+    }
+
+
 });
 
 $('#country').change(function (e) {
@@ -212,7 +221,7 @@ $('#save-aliexpress-integration').click(function() {
     });
 });
 
-$('#renew_clippingmagic, #renew_captchacredit').click(function() {
+$('#renew_clippingmagic, #renew_captchacredit, #renew_callflexcredit, #renew_callflexnumber').click(function() {
     var type = $(this).attr('id').split('_')[1];
     var title = $(this).data('title');
     var option = $('#' + type + '_plan option:selected');
@@ -289,6 +298,11 @@ $('#renew_clippingmagic, #renew_captchacredit').click(function() {
             });
         }
     });
+
+
+
+
+
 });
 
 function checkSelectedMenu(selectedMenu) {

@@ -12,7 +12,7 @@ from shopified_core.utils import (
 
 import simplejson as json
 import re
-
+import math
 import arrow
 import markdown
 
@@ -323,3 +323,10 @@ def force_https(url):
 
 
 register.filter(slugify_menu)
+
+
+@register.filter()
+def sec_to_min(s):
+    mins = math.floor(s / 60)
+    secs = math.floor(s - (mins * 60))
+    return "%d:%02d" % (mins, secs)

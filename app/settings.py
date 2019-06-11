@@ -453,13 +453,20 @@ YOUTUBE_CLIENT_SECRET = os.environ.get('YOUTUBE_CLIENT_SECRET')
 YOUTUBE_CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
 
 # CallFlex
-PHONE_AUTOMATION_MONTH_LIMIT = os.environ.get('PHONE_AUTOMATION_MONTH_LIMIT', '3600')  # in seconds.  1 hr per month for user
+PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE = os.environ.get('PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE', '12000')  # in seconds.  1 hr per month for user
+PHONE_AUTOMATION_MONTH_LIMIT_LOCAL = os.environ.get('PHONE_AUTOMATION_MONTH_LIMIT_LOCAL', '12000')  # in seconds.  1 hr per month for user
 TWILIO_SID = os.environ.get('TWILIO_SID')
 TWILIO_TOKEN = os.environ.get('TWILIO_TOKEN')
 if DEBUG:
-    AWS_AUDIO_TRANSCODE_PIPELINE_ID = '1545231733178-6djxwp'
+    AWS_AUDIO_TRANSCODE_PIPELINE_ID = os.environ.get('AWS_AUDIO_TRANSCODE_PIPELINE_ID', '1545231733178-6djxwp')
 else:
-    AWS_AUDIO_TRANSCODE_PIPELINE_ID = '1545230355460-asr0hb'
+    AWS_AUDIO_TRANSCODE_PIPELINE_ID = os.environ.get('AWS_AUDIO_TRANSCODE_PIPELINE_ID', '1545230355460-asr0hb')
+EXTRA_TOLLFREE_NUMBER_PRICE = 5  # USD
+EXTRA_LOCAL_NUMBER_PRICE = 3  # USD
+EXTRA_TOLLFREE_MINUTE_PRICE = 0.05  # USD per minute
+EXTRA_LOCAL_MINUTE_PRICE = 0.02  # USD per minute
+CALLFLEX_OVERAGES_MAX_NUMBERS = 10  # user can never go over this limit  of phone number when adding as overages
+CALLFLEX_OVERAGES_MAX_MINUTES = 1000  # user can never go over this limit of minutes when adding as overages
 
 # Baremetrics (Customer Tags)
 BAREMETRICS_API_KEY = os.environ.get('BAREMETRICS_API_KEY')
@@ -468,3 +475,4 @@ BAREMETRICS_TAGS_FIELD = os.environ.get('BAREMETRICS_TAGS_FIELD', 753)
 # Baremetrics
 BAREMETRICS_ACCESS_TOKEN = os.environ.get('BAREMETRICS_ACCESS_TOKEN')
 BAREMETRICS_JWT_TOKEN_KEY = os.environ.get('BAREMETRICS_JWT_TOKEN_KEY')
+PHONE_AUTOMATION_WARNING_LIMIT = 0.75  # percent. when reached - send warning email

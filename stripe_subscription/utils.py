@@ -13,7 +13,7 @@ from django.db.models import Q
 
 import arrow
 
-from .models import StripeCustomer, StripeSubscription, ExtraStore, ExtraCHQStore, ExtraWooStore, ExtraGearStore
+from .models import StripeCustomer, StripeSubscription, ExtraStore, ExtraCHQStore, ExtraWooStore, ExtraGearStore, CustomStripeSubscription
 from .stripe_api import stripe
 
 from shopified_core.utils import safe_str
@@ -21,10 +21,27 @@ from leadgalaxy.models import GroupPlan, UserProfile
 from leadgalaxy.utils import register_new_user
 from analytic_events.models import SuccessfulPaymentEvent
 from tapfiliate.tasks import commission_from_stripe
+from leadgalaxy import signals
 
 
 class SubscriptionException(Exception):
     pass
+
+
+def get_main_subscription_item(sub):
+    for item in sub['items']['data']:
+        try:
+            custom_flag = item['plan']['metadata']['custom']
+            if custom_flag:
+                continue
+        except:
+            return item
+
+
+def get_main_subscription_item_plan(sub=None):
+    plan_item = get_main_subscription_item(sub)
+    if plan_item:
+        return plan_item['plan']
 
 
 def update_subscription(user, plan, subscription):
@@ -375,6 +392,17 @@ def process_webhook_event(request, event_id, raven_client):
 
     elif event.type == 'customer.subscription.created':
         sub = event.data.object
+        sub_plan = get_main_subscription_item_plan(sub)
+
+        # check for all custom subscriptions in lines data
+        for item in sub['items']['data']:
+            try:
+                if item['plan']['metadata']['custom']:
+                    stripe_sub = CustomStripeSubscription.objects.get(subscription_id=sub.id)
+                    stripe_sub.refresh(sub=sub)
+            except:
+                pass
+
         created = False
 
         try:
@@ -394,7 +422,7 @@ def process_webhook_event(request, event_id, raven_client):
                 raven_client.captureException(level='warning')
 
         except StripeCustomer.DoesNotExist:
-            if sub.plan.metadata.get('click_funnels') or sub.plan.metadata.get('lifetime') or request.GET.get('cf'):
+            if sub_plan.metadata.get('click_funnels') or sub_plan.metadata.get('lifetime') or request.GET.get('cf'):
                 stripe_customer = stripe.Customer.retrieve(sub.customer)
 
                 fullname = ''
@@ -412,8 +440,8 @@ def process_webhook_event(request, event_id, raven_client):
                 if created:
                     customer = update_customer(user, stripe_customer)[0]
 
-                    if sub.plan.metadata.get('lifetime'):
-                        user.set_config('_stripe_lifetime', sub.plan.id)
+                    if sub_plan.metadata.get('lifetime'):
+                        user.set_config('_stripe_lifetime', sub_plan.id)
                 else:
                     if user.have_stripe_billing():
                         customer = user.stripe_customer
@@ -445,7 +473,7 @@ def process_webhook_event(request, event_id, raven_client):
             try:
                 sub = stripe.Subscription.retrieve(sub.id)
                 plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id'))
-                                             | Q(stripe_plan__stripe_id=sub.plan.id))
+                                             | Q(stripe_plan__stripe_id=sub_plan.id))
 
                 if plan.is_stripe():
                     customer.user.profile.change_plan(plan)
@@ -463,9 +491,22 @@ def process_webhook_event(request, event_id, raven_client):
     elif event.type == 'customer.subscription.updated':
         sub = event.data.object
 
+        # check for all custom subscriptions in lines data
+        for item in sub['items']['data']:
+            try:
+                if item['plan']['metadata']['custom']:
+                    stripe_sub = CustomStripeSubscription.objects.get(subscription_id=sub.id)
+                    stripe_sub.refresh(sub=sub)
+            except:
+                pass
+
         try:
             stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
             stripe_sub.refresh(sub=sub)
+
+            # Firing custom signal about updating main user subscription
+            signals.main_subscription_updated.send(sender=stripe_sub, stripe_sub=sub)
+
         except StripeSubscription.DoesNotExist:
             return HttpResponse('Subscription Not Found')
 
@@ -479,6 +520,15 @@ def process_webhook_event(request, event_id, raven_client):
 
     elif event.type == 'customer.subscription.deleted':
         sub = event.data.object
+
+        # check for all custom subscriptions in lines data
+        for item in sub['items']['data']:
+            try:
+                if item['plan']['metadata']['custom']:
+                    stripe_sub = CustomStripeSubscription.objects.get(subscription_id=sub.id)
+                    stripe_sub.delete()
+            except:
+                pass
 
         try:
             customer = StripeCustomer.objects.get(customer_id=sub.customer)
@@ -499,6 +549,10 @@ def process_webhook_event(request, event_id, raven_client):
             profile.save()
 
         StripeSubscription.objects.filter(subscription_id=sub.id).delete()
+
+        # Firing custom signal about canceling main user subscription
+        signals.main_subscription_canceled.send(sender=StripeSubscription.objects.filter(subscription_id=sub.id),
+                                                stripe_sub=sub)
 
         if not profile.plan_expire_at:
             return HttpResponse('Subscription Deleted - Plan Exipre Set')

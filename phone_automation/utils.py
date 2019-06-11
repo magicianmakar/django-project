@@ -1,18 +1,18 @@
-import re
-import dateutil.parser
-from datetime import datetime
-
+from datetime import datetime, timedelta
 from django.utils import timezone
 from django.db.models import Sum
 from django.conf import settings
-from django.urls import reverse
 
 import requests
+import re
+import dateutil.parser
 from twilio.rest import Client
+
 from raven.contrib.django.raven_compat.models import client as raven_client
-
-from shopified_core.utils import app_link
-
+from shopified_core.utils import safe_int, app_link
+from django.urls import reverse
+from shopified_core.utils import send_email_from_template
+from stripe_subscription.models import CustomStripeSubscription
 
 CHQ_ORDER_STATUSES = {
     0: 'Not sent to fulfilment',
@@ -22,6 +22,7 @@ CHQ_ORDER_STATUSES = {
     4: 'Partially shipped',
     5: 'Shipped',
 }
+
 CHQ_ORDER_PAID = {
     '0': 'Not paid',
     '1': 'Paid',
@@ -30,22 +31,86 @@ CHQ_ORDER_PAID = {
 }
 
 
-def get_month_totals(user):
-    date_start = timezone.now().replace(day=1)
-    month_total_duration = user.twilio_logs.filter(
-        log_type='status-callback'
-    ).order_by('-created_at').filter(
-        created_at__gte=date_start
-    ).aggregate(Sum('call_duration'))
+def get_callflex_subscription_start(user):
+    try:
+        # getting callflex subscription
+        subscription_period_start = user.customstripesubscription_set.filter(custom_plan__type='callflex_subscription'). \
+            latest('created_at').period_start
+    except CustomStripeSubscription.DoesNotExist:
+        # getting callflex subscription
+        try:
+            subscription_period_start = user.stripesubscription_set.latest('created_at').period_start
+        except:
+            subscription_period_start = False
+    except:
+        subscription_period_start = False
 
-    return month_total_duration['call_duration__sum']
+    return subscription_period_start
 
 
-def get_month_limit(user):
+def get_monthes_passed(subscription_period_start, cur_date=timezone.now()):
+    diff_days = (cur_date - subscription_period_start).days
+    month_passed = int(diff_days / 30)
+    return month_passed
+
+
+def get_subscription_month_start(user):
+    subscription_period_start = get_callflex_subscription_start(user)
+    if not subscription_period_start:
+        return False
+
+    cur_date = timezone.now()
+    month_passed = get_monthes_passed(subscription_period_start, cur_date)
+
+    sub_month_start = subscription_period_start + timedelta(days=month_passed * 30)
+
+    return sub_month_start
+
+
+def get_month_totals(user, phone_type="tollfree"):
+    total = 0
+    try:
+        date_start = get_subscription_month_start(user)
+
+        month_total_duration = user.twilio_logs.filter(
+            log_type='status-callback',
+            phone_type=phone_type
+        ).order_by('-created_at').filter(
+            created_at__gte=date_start
+        ).aggregate(Sum('call_duration'))
+        total += safe_int(month_total_duration['call_duration__sum'])
+    except:
+        raven_client.captureException()
+    return total
+
+
+def get_month_limit(user, phone_type="tollfree"):
     if user.can('phone_automation_unlimited_calls.use'):
         limit = False
     else:
-        limit = int(settings.PHONE_AUTOMATION_MONTH_LIMIT)
+        limit = 0
+
+        # counting purchased credits in current month
+        date_start = timezone.now().replace(day=1)
+        month_total_credits_purchased = user.callflex_credits.filter(
+            created_at__gte=date_start,
+            phone_type=phone_type
+        ).aggregate(Sum('purchased_credits'))
+
+        user_callflex_subscription = user.customstripesubscription_set.filter(
+            custom_plan__type='callflex_subscription').first()
+        if user_callflex_subscription:
+            try:
+                if phone_type == "tollfree":
+                    credits_minutes = user_callflex_subscription.custom_plan.get_credits_data['credits_minutes_tollfree']
+                if phone_type == "local":
+                    credits_minutes = user_callflex_subscription.custom_plan.get_credits_data['credits_minutes_local']
+            except:
+                credits_minutes = 0
+            limit += safe_int(credits_minutes) * 60 + \
+                safe_int(month_total_credits_purchased['purchased_credits__sum']) * 60
+        elif user.can('phone_automation_free_number.use') and phone_type == "tollfree":
+            limit += safe_int(settings.PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE)
     return limit
 
 
@@ -57,7 +122,6 @@ def get_twilio_client():
 def get_orders_by_phone(user, phone, phone_raw):
 
     shopify_filter_status = 'open'  # - to get only open orders
-    # shopify_filter_status = 'any'  # - to get all orders (debugging)
     orders = {'shopify': [], 'woo': [], 'chq': [], 'gear': []}
     shopify_stores = user.profile.get_shopify_stores()
     woo_stores = user.profile.get_woo_stores()
@@ -93,14 +157,12 @@ def get_orders_by_phone(user, phone, phone_raw):
                 for woo_order in resp_customer_orders.json():
                     if woo_order not in orders['woo']:
                         orders['woo'].append(woo_order)
-
                 # another status processing
                 resp_customer_orders = woo_store.wcapi.get("orders?search=" + phone_woo + "&status=pending")
                 resp_customer_orders.raise_for_status()
                 for woo_order in resp_customer_orders.json():
                     if woo_order not in orders['woo']:
                         orders['woo'].append(woo_order)
-
         except:
             raven_client.captureException()
 
@@ -255,16 +317,97 @@ def get_sms_text(orders):
 def check_sms_abilities(phone):
     client = get_twilio_client()
 
-    if phone.twilio_metadata['capabilities']['sms'] is True and phone.twilio_metadata['sms_url'] == "":
+    if phone.twilio_metadata_json['capabilities']['sms'] is True and phone.twilio_metadata_json['sms_url'] == "":
         # activating sms webhook
         client \
             .incoming_phone_numbers(phone.twilio_sid) \
             .update(sms_url=app_link(reverse('phone_automation_sms_flow')))
 
-        phone.twilio_metadata['sms_url'] = app_link(reverse('phone_automation_sms_flow'))
+        twilio_metadata = phone.twilio_metadata_json
+        twilio_metadata['sms_url'] = app_link(reverse('phone_automation_sms_flow'))
+        phone.twilio_metadata = twilio_metadata
         phone.save()
 
     if phone.twilio_metadata['sms_url'] != "":
         return True
     else:
         return False
+
+
+def check_provision_access(user, phone_type="tollfree"):
+    usage = get_phonenumber_usage(user, phone_type)
+
+    if usage['total'] is not False and usage['used'] >= usage['total']:
+        return False
+    else:
+        return True
+
+
+def get_phonenumber_usage(user, phone_type="tollfree"):
+    credits_total = 0
+    if user.can('phone_automation_free_number.use') and phone_type == "tollfree":
+        credits_total += 1
+
+    phone_subscriptions = user.customstripesubscription_set.filter(status='active',
+                                                                   custom_plan__type='callflex_subscription').all()
+    for phone_subscription in phone_subscriptions:
+        try:
+            if phone_type == "tollfree":
+                credits = phone_subscription.custom_plan.get_credits_data['credits_tollfree']
+            if phone_type == "local":
+                credits = phone_subscription.custom_plan.get_credits_data['credits_local']
+        except:
+            credits = 0
+        credits_total += safe_int(credits)
+
+    added_numbers = user.twilio_phone_numbers.filter(type=phone_type).count()
+
+    if user.can('phone_automation_unlimited_phone_numbers.use'):
+        credits_total = False
+
+    res = {"total": credits_total, "used": added_numbers}
+
+    return res
+
+
+def get_unused_subscription(user):
+    count_null = user.twilio_phone_numbers.filter(custom_subscription__isnull=True).count()
+    if user.can('phone_automation_free_number.use') and count_null <= 0:
+        return None
+    if user.can('phone_automation_unlimited_phone_numbers.use'):
+        return None
+
+    used_subscription_ids = user.twilio_phone_numbers.filter(custom_subscription__isnull=False).values_list('custom_subscription_id', flat=True)
+    unused_phone_subscription = user.customstripesubscription_set.filter(
+        status='active', custom_plan__type='callflex_extranumber').exclude(id__in=used_subscription_ids).first()
+    return unused_phone_subscription
+
+
+def check_callflex_warnings(user, call_duration, phone_type="tollfree"):
+    total_duration = get_month_totals(user, phone_type)
+    total_duration_month_limit = get_month_limit(user, phone_type)
+    month_limit_percent = float(settings.PHONE_AUTOMATION_WARNING_LIMIT)
+    # if monthly limit reached, send notification
+    if total_duration_month_limit and \
+            total_duration < int(total_duration_month_limit * month_limit_percent) and \
+            ((total_duration + safe_int(call_duration)) > int(total_duration_month_limit * month_limit_percent)):
+        # sending notification to user
+        send_callflexlimit_warning(user, phone_type)
+        return False
+    else:
+        return True
+
+
+def send_callflexlimit_warning(user, phone_type="tollfree"):
+    month_limit_percent = float(settings.PHONE_AUTOMATION_WARNING_LIMIT)
+    send_email_from_template(
+        tpl='callflex_limit_warning.html',
+        subject='CallFlex Monthly Limit Warning',
+        recipient=user.email,
+        data={
+            'callflex_limit': (month_limit_percent * 100) + "%",
+            'phone_type': phone_type,
+            'purchase_link': app_link("user/profile/#plan")
+        }
+    )
+    return True

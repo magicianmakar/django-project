@@ -1,0 +1,131 @@
+.btn-danger, .ibox-tools a.btn-danger {
+            color: #FFFFFF;
+            }
+.btn-danger:hover {
+    background-color:#c9302c;
+    }
+
+
+
+.grey-cont {
+    box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.15);
+    background-color: #F3F3F4;
+    padding: 20px;
+    border-radius: 10px;
+}
+.green-color {
+    color: #94C47D;
+
+}
+
+h5.content-tittle {
+    font-weight: bold;
+    font-size: 22px;
+    font-family: Lato;
+    color: #696F8A;
+}
+
+.report-sub-tittle {
+    padding: 10px 0 15px 28px;
+    font-weight: bold;
+    font-size: 16px;
+    color: #848585;
+}
+
+.ibox-content-adjust {
+        padding-top: 0px;
+        border-top: none;
+}
+
+.ibox-title-adjust {
+    min-height:50px
+
+}
+
+.btn-adjust {
+
+        background-color: transparent;
+        color: #94C47D;
+        border:none;
+        font-weight:bold;
+        white-space: initial;
+        font-size:13px;
+        text-align: left;
+}
+.btn-selected-adjust {
+
+        background-color: #F3F3F4;
+        color: #94C47D;
+        border:none;
+        font-weight:bold;
+
+}
+
+.table-bordered {
+        border: 2px solid #ffffff;
+        color: #919191;
+}
+.table-bordered>thead>tr>th{
+    font-size: 20px;
+    color: #94C47D;
+    font-weight:normal;
+    border: 2px solid #ffffff;
+    padding:10px;
+    text-align: center;
+}
+.table-bordered>tbody>tr>td{
+    font-family: Lato;
+    border: 2px solid #ffffff;
+    padding:10px;
+}
+
+.dataTable thead th {
+    color: #94C47D;
+}
+.table-bordered>thead>tr>th:nth-child(even),
+.table-bordered>tbody>tr>td:nth-child(even){
+    background: #E5E5E5;
+}
+.table-bordered>thead>tr>th:nth-child(odd) {
+
+}
+
+.row-title-adjust {
+    color: #94C47D;
+    font-family: Lato;
+    font-size:20px;
+    padding: 0 0 20px 15px;
+}
+
+.edit-form-adjust {padding:30px;}
+.provision-phone-number-label {color: #94C47D;}
+
+.btn-circled-adjust  {
+
+    border-radius: 20px;
+    padding: 5px;
+    min-width: 30px;
+}
+
+.hidden-adjust { display:none;}
+
+.custom-grey-bg {
+    background-color: #F3F3F4;
+    color: #696F8A;
+}
+.custom-grey-text {
+    font-family: Lato;
+    font-size:18px;
+}
+.custom-grey-bg .font-bold {
+    font-size:22px !important;
+}
+
+
+.leftnav a {text-transform: uppercase;}
+
+.callflex-index-cont {
+    background-color: #ffffff;
+}
+
+.dt-adjust {width:100%;}

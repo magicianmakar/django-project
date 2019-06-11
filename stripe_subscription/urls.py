@@ -21,6 +21,9 @@ urlpatterns = [
     url(r'^activate$', stripe_subscription.views.subscription_activate,
         name='stripe_subscription.views.subscription_activate'),
 
+    url(r'^custom-cancel$', stripe_subscription.views.custom_subscription_cancel,
+        name='stripe_subscription.views.custom_subscription_cancel'),
+
     url(r'^invoices/(?P<invoice_id>[\w-]+)/pay$', stripe_subscription.views.invoice_pay,
         name='invoice_pay'),
 
@@ -28,5 +31,11 @@ urlpatterns = [
         name='stripe_subscription.views.clippingmagic_subscription'),
 
     url(r'^captchacredit_subscription$', stripe_subscription.views.captchacredit_subscription,
-        name='stripe_subscription.views.captchacredit_subscription')
+        name='stripe_subscription.views.captchacredit_subscription'),
+
+    url(r'^callflexcredit_subscription$', stripe_subscription.views.callflexcredit_subscription,
+        name='stripe_subscription.views.callflexcredit_subscription'),
+
+    url(r'^callflex_subscription$', stripe_subscription.views.callflex_subscription,
+        name='stripe_subscription.views.callflex_subscription')
 ]

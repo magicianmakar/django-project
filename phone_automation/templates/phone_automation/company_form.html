@@ -1,0 +1,209 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+{% load perms_helper %}
+{% load widget_tweaks %}
+{% load template_helper %}
+{% load compress %}
+{% block main-container %}
+
+
+<div id="edit-phone" class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>Edit Your CallFlex Company<small></small></h5>
+
+
+        <div class="ibox-tools">
+            {% if twilio_company.pk %}
+
+                <a data-company-id="{{ twilio_phone_number.pk }}"
+                       _href="{% url 'phone_automation_companies_delete' company_id=twilio_company.pk %}"
+                        class="btn-sm btn-danger remove-company"><i class="fa fa-trash"></i> Delete</a>
+            {% else %}
+
+            {% endif %}
+
+        </div>
+
+
+    </div>
+    <div class="ibox-content">
+        <form
+                    id="company-form-edit"
+                    method="POST" class="form-horizontal"
+                    role="form"
+                    >
+
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="form-group _row v-center">
+                {{ form.title.errors }}
+                <label class="col-sm-2 col-xs-12 control-label">
+                                 Company Name
+                </label>
+                <div class="col-sm-8 col-xs-12">
+                    {{ form.title|add_class:"form-control"|attr:"placeholder:Your Company Name" }}
+                </div>
+            </div>
+
+
+            <div class="form-group _row v-center">
+
+                <label class="col-sm-2 col-xs-12 control-label">
+                                 Users
+                </label>
+                <div class="col-sm-8 col-xs-12">
+                    <div class="users-list">
+                        {% for user in users %}
+
+                            <div class="input-group users-item">
+                                <div class="input-group-addon">Name:</div>
+                                <input type="text" class="form-control user_name" id="exampleInputAmount" value="{{ user.name }}" placeholder="Name">
+                                <div class="input-group-addon">Email:</div>
+                                <input type="email" class="form-control user_email" id="exampleInputAmount" value="{{ user.email }}" placeholder="Email">
+                                <a class="input-group-addon btn-danger users-delete-button">X</a>
+
+
+                            </div>
+
+                        {% endfor %}
+
+                        <input type="hidden"  name="users" class="users-hidden" value="" >
+                    </div>
+                    <br />
+                    <div class="input-group users-item">
+                        <div class="input-group-addon">Name:</div>
+                        <input type="text" class="form-control user_name" id="exampleInputAmount" value="" placeholder="Name">
+                        <div class="input-group-addon">Email:</div>
+                        <input type="email" class="form-control user_email" id="exampleInputAmount" value="" placeholder="Email">
+                        <a class="input-group-addon btn-success users-add-button" title="Add">+</a>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <input type="submit" value="Submit" class="btn btn-primary">
+
+
+
+
+        </form>
+    </div>
+</div>
+
+
+
+{% endblock %}
+
+{% block extracss %}
+    <style>
+        #search-form label {margin-left:10px;}
+        #search-form button {margin-left:10px;}
+
+        .provision-phone-number {margin-bottom:15px;}
+
+
+        .input-group-addon {
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1;
+            color: #555;
+            text-align: center;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+    </style>
+    {% compress css %}
+        <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+        <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
+    {% endcompress %}
+{% endblock %}
+
+{% block extrajs %}
+     <script type="text/javascript">
+
+        $(function () {
+            var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
+            elems.forEach(function(html) {
+                var switchery = new Switchery(html, {
+                    color: '#93c47d',
+                    size: 'small'
+                });
+            });
+
+            $('.remove-company').click(function (e) {
+                        href = $(this).attr('_href')
+                        swal({
+                            title: "Delete Company",
+                            text: "This will delete your company and remove all provisioned phone numbers related to this company. \n\nAre you sure you want to continue?",
+                            type: "warning",
+                            showCancelButton: true,
+                            closeOnCancel: true,
+                            closeOnConfirm: false,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "Yes, delete",
+                            cancelButtonText: "No, keep it"
+                        },
+                        function(isConfirmed) {
+                            if (isConfirmed) {
+                                window.location = href;
+                            }
+                        });
+                    });
+
+            $('.users-add-button').click(function (e) {
+                    row=$(this).parents('.users-item').clone()
+                    $(row).find(".users-add-button").addClass('users-delete-button btn-danger').removeClass('users-add-button btn-success')
+                    $(row).find(".users-delete-button").html("X")
+                    $(row).find(".users-delete-button").attr('title','Delete')
+
+                    $('.users-list').append(row)
+
+                    $(this).parents('.users-item').find('.user_name').val('')
+                    $(this).parents('.users-item').find('.user_email').val('')
+
+                    });
+            $('.users-list').on('click', '.users-delete-button', function (e) {
+                    row=$(this).parents('.users-item')
+
+                    row.remove()
+
+
+                    });
+
+
+            $("#company-form-edit").submit(function( event ) {
+
+                var users=[]
+
+
+                $(this).find('.users-list .users-item').each(function() {
+                    user_name=$(this).find('.user_name').val()
+                    user_email=$(this).find('.user_email').val()
+                    users.push( {'name':user_name,'email':user_email} )
+                    }
+                )
+
+                console.log(users)
+                //users_str=JSON.stringify(users).replace(/\"/g,'\\"')
+                users_str=JSON.stringify(users)
+
+                $(this).find('.users-hidden').val(users_str)
+
+                //event.preventDefault();
+                //return false;
+            });
+
+        });
+
+    </script>
+
+    <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
+
+
+{% endblock %}

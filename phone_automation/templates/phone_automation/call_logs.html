@@ -6,76 +6,242 @@
 {% load template_helper %}
 {% load phone_numbers %}
 {% block main-container %}
+{% load url_tools %}
+{% load compress %}
 
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
 
-             <div class="ibox-title">
-                <h5>CallFlex Logs<small></small></h5>
+             <div class="ibox-title ibox-title-adjust">
+                <h5 class="content-tittle">CallFlex Logs<small></small></h5>
+
+                 <div class="text-right"><a data-toggle="collapse" class="btn btn-white " href="#collapseFilter">Filter Options</a></div>
             </div>
 
             <div class="ibox-content">
-                {% if twilio_logs %}
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="ibox ">
-                                <div class="ibox-title">
-                                    <h5>Incoming Calls</h5>
 
+
+            <div class="row">
+
+
+                <div class="col-md-2 col-xs-12">
+                       {% include 'phone_automation/partial/sub_nav.html' %}
+                    </div>
+
+                <div class="col-md-10 sol-sm-12 col-xs-12">
+
+                    <div class="collapse {% if request.GET.show_filter %}show{% endif %}" id="collapseFilter" >
+
+                      <div class="well ">
+                         <form class="row form-inline "
+                                id="search-form"
+                                method="GET"
+                                >
+                                <input type="hidden" name="show_filter" value="1">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="auto_margin" class=" control-label">
+                                            Date Range:
+                                            <i class="fa fa-fw fa-question-circle" qtip-tooltip="Select date range to show" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
+                                        </label>
+                                        <span class="">
+
+                                            <div id="created_at_daterange" class="form-control">
+                                                   <i class="fa fa-calendar m-r-xs"></i>
+                                                   <span>All Time</span>
+                                                   <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                                            </div>
+                                            <input type="hidden" type="text" name="created_at_daterange" value="{{ request.GET.created_at_daterange|default:'' }}" />
+
+
+                                        </span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="auto_margin" class=" control-label">
+                                            Call statuses:
+                                            <i class="fa fa-fw fa-question-circle" qtip-tooltip="Call Statuses to show" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
+                                        </label>
+                                        <span class="">
+                                            <select name="call_status" class="form-control" title="Call Status">
+                                                <option value="" {% if request.GET.call_status == "" %} selected {% endif %}>All</option>
+                                                <option value="completed" {% if request.GET.call_status == "completed" %} selected {% endif %}>Completed</option>
+                                                <option value="no-answer" {% if request.GET.call_status == "no-answer" %} selected {% endif %}>Not Answered</option>
+                                            </select>
+
+                                        </span>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label for="auto_margin" class=" control-label">
+                                            Company:
+                                            <i class="fa fa-fw fa-question-circle" qtip-tooltip="Call Statuses to show" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
+                                        </label>
+                                        <span class="">
+                                            <select name="company_id" id="company_id" class="form-control" title="Company">
+                                                <option value="" {% if request.GET.company_id == "" %} selected {% endif %}>All Companies</option>
+                                                {% for company in companies %}
+                                                    <option value="{{ company.id }}" {% if request.GET.company_id == company.id|stringformat:"i"  %} selected {% endif %}>{{ company.title }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </span>
+                                    </div>
+
+                                    <button type="submit" value="Search" class="btn btn-primary" style="margin-bottom:0;">Apply</button>&nbsp;
+                                    <button type="submit" value="Reset" class="btn btn-white" style="margin-bottom:0;" id="form-reset">Clear</button>
                                 </div>
-                                <div class="ibox-content">
+                            </form>
+                        </div>
+                    </div>
 
-                                    <table class="table table-bordered dataTables">
-                                        <thead>
-                                        <tr>
-                                            <th>Caller</th>
-                                            <th>Duration</th>
-                                            <th>Date</th>
-                                            <th>Saved Recordings</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
+                 {% if twilio_logs %}
+                    <p class="_row grey-cont">
+                        <canvas id="calllogs_chart" width="300" height="50"></canvas>
+                    </p>
+                    <div class="_row grey-cont" >
 
-                                        {% for twilio_log in twilio_logs %}
-                                            <tr>
-                                                <td>{{ twilio_log.from_number|phone_number  }}</td>
-                                                <td>{{ twilio_log.call_duration  }} sec</td>
-                                                <td>{{ twilio_log.created_at  }}</td>
-                                                <td>
-                                                    {% for recording in twilio_log.twilio_recordings.all %}
-                                                        <div>
-                                                            <audio controls height="32" style="vertical-align: middle;">
-                                                              <source src="{{ recording.recording_url }}" type="audio/mpeg">
-                                                            Your browser does not support the audio element.
-                                                            </audio>
-                                                            &nbsp; <a class="btn btn-default btn-sm" href="{{ recording.recording_url }}" download="{{ recording.recording_sid }}.mp3" target="_blank">Download</a>
-                                                        </div>
-                                                    {% endfor %}
+                        <table class="table table-bordered dataTables responsive dt-responsive">
+                            <thead>
+                            <tr>
+                                <th>Caller</th>
+                                <th>To Number</th>
+                                <th>Duration</th>
+                                <th>Date</th>
+                                <th>Saved Recordings</th>
+                                <th>Call Status</th>
+                                <th>Notes</th>
+                                <th>Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
 
-                                                </td>
-                                            </tr>
+                            {% for twilio_log in twilio_logs %}
+                                <tr>
+                                    <td class="text-center">{{ twilio_log.from_number|phone_number  }}</td>
+                                    <td class="text-center">
+                                        {% if twilio_log.twilio_phone_number %}
 
-                                            <div> </div>
+                                            <a href="{% url 'phone_automation_provision_edit' twilio_phone_number_id=twilio_log.twilio_phone_number.id %}" class="">
+                                                {{ twilio_log.twilio_phone_number.title}} ( {{ twilio_log.twilio_phone_number.incoming_number|phone_number  }} )
+                                            </a>
+
+                                            <div>
+                                                {% if twilio_log.twilio_phone_number.company is None %}
+                                                    <span class="color-red">Company is not assigned</span>
+                                                {% else %}
+                                                    <a href="{% url 'phone_automation_companies_edit' company_id=twilio_log.twilio_phone_number.company.pk %}" class="" title="Edit Company">
+                                                        {{ twilio_log.twilio_phone_number.company.title|default:"Untitled Company" }}
+                                                    </a>
+
+                                                {% endif %}
+                                            </div>
+
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">{{ twilio_log.call_duration  }} sec</td>
+                                    <td class="text-center">{{ twilio_log.created_at  }}</td>
+                                    <td class="text-center">
+                                        {% for recording in twilio_log.twilio_recordings.all %}
+                                            <div>
+                                                <audio controls height="32" style="vertical-align: middle;">
+                                                  <source src="{{ recording.recording_url }}" type="audio/mpeg">
+                                                Your browser does not support the audio element.
+                                                </audio>
+                                                &nbsp; <a class="btn btn-default btn-sm" href="{{ recording.recording_url }}" download="{{ recording.recording_sid }}.mp3" target="_blank">Download</a>
+                                            </div>
                                         {% endfor %}
 
+                                    </td>
+                                    <td class="text-center">
+                                        <span
+                                            {% if twilio_log.call_status == 'no-answer' %} class="badge badge-danger"{% endif %}
+                                            {% if twilio_log.call_status == 'completed' %} class="badge badge-primary"{% endif %}
+                                        >{{ twilio_log.call_status }}</span>
+                                    </td>
+                                    <td style="width:300px;">
 
-                                        </tbody>
-                                    </table>
 
-                                </div>
-                            </div>
-                        </div>
+                                        <div class="truncate2 note-text log-id-{{ twilio_log.id }}">{{twilio_log.notes|default:''}}</div>
+
+
+                                    </td>
+                                    <td class="text-center">
+                                        <a href="#"  data-toggle="modal" data-target="#note-edit" class="btn btn-xs btn-info log-edit btn-circled-adjust"
+                                           data-post-url="{% url 'phone_automation_call_log_save' twilio_log_id=twilio_log.id %}" data-log-id="{{ twilio_log.id }}" title="Edit"><i class="fa fa-edit"></i></a>
+                                    </td>
+                                </tr>
+
+
+                            {% endfor %}
+
+
+                            </tbody>
+                        </table>
+
+
                     </div>
                 {%  else %}
                      <div class="alert alert-warning">
-                       You have no logs yet.
+                       No Data.
                     </div>
                 {%  endif %}
+                </div>
+
+            </div>
+
+
+
             </div>
         </div>
     </div>
 </div>
+
+
+<div class="modal inmodal" id="note-edit" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog">
+        <form
+                    id="log-form-edit"
+                    method="POST" class="form-horizontal"
+                    role="form"
+                    >
+            <div class="modal-content animated fadeIn">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
+                    <i class="fa fa-mobile modal-icon"></i>
+                    <h4 class="modal-title">Edit Call Log Record</h4>
+                    <small></small>
+                </div>
+                <div class="modal-body">
+
+
+                        <input type="hidden" name="log-id" id="log-id" value="">
+                        <input type="hidden" name="post-url" id="post-url" value="">
+                        <div class="form-group _row v-center">
+
+                            <label class="col-sm-2 col-xs-12 control-label">
+                                             Notes
+                            </label>
+                            <div class="col-sm-8 col-xs-12">
+                                <textarea class="form-control " id="log-note"></textarea>
+                            </div>
+                        </div>
+
+
+
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-white text-left update-log-cancel" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success text-right update-log"  >Save</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
 
 {% endblock %}
 
@@ -85,21 +251,63 @@
     <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
 
+
+
     <style type="text/css">
     tbody td {
         padding: 0px;
         margin: 0px;
     }
 
+
+    .truncate {
+        max-width: 300px;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .truncate2{
+
+
+          display: block; /* Fallback for non-webkit */
+
+          display: -webkit-box;
+          max-width: 100%;
+          height: 13px*1.4pt*3; /* Fallback for non-webkit */
+          margin: 0 auto;
+          font-size: 13px;
+          line-height: 1.4;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+    }
+
+
+
     </style>
+
+
+    {% compress css %}
+        <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+        <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+        <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
+    {% endcompress %}
+
 {% endblock %}
 
 {% block extrajs %}
     <!-- Data Tables -->
-    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
-    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
-    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
-    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/datatables.net-responsive-bs/js/responsive.bootstrap.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/chart.js/dist/Chart.bundle.js' %}"></script>
+
+
 
 
     <script type="text/javascript">
@@ -109,27 +317,72 @@
                 responsive: true,
                 dom: 'T<"clear">lfrtip',
                 buttons: [
-                    {extend: 'copy'},
-                    {extend: 'csv'},
-                    {extend: 'excel', title: 'CallLogs'},
-                    {extend: 'pdf', title: 'CallLogs'},
-                    {extend: 'print',
-                     customize: function (win) {
-                            $(win.document.body).addClass('white-bg');
-                            $(win.document.body).css('font-size', '10px');
 
-                            $(win.document.body).find('table')
-                                    .addClass('compact')
-                                    .css('font-size', 'inherit');
-                        }
-                    }
+
                 ],
 
-                bLengthChange: false,
+                bLengthChange: true,
                 iDisplayLength: 50,
                 order: [],
 
             });
+
+            var dateFormat = 'MMMM DD YYYY';
+            var ctx = document.getElementById('calllogs_chart');
+            var calllogs_chart = new Chart(ctx, {
+                    data: {
+                        datasets: [{
+                            label: 'Last 7 Days',
+                            data: [
+                                {% for day in charts_data.last_7_days %}
+                                    {
+                                        x: moment('{{ day.x }}', dateFormat),
+                                        y: {{  day.y }}
+                                    },
+                                {% endfor %}
+
+                            ],
+                            type: 'line',
+                            pointRadius: 2,
+                            fill: false,
+                            borderColor: '#94C47D',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        tooltips: {mode: 'index', intersect: false},
+                        hover: {mode: 'nearest', intersect: true},
+                        scales: {
+                            xAxes: [{
+                                type: 'time',
+                                time: {
+                                    unit: 'day'
+                                }
+                            }],
+                            yAxes: [{
+                                display: true,
+                                scaleLabel: {
+                                    display: true,
+                                    labelString: 'Total Calls'
+                                },
+                                ticks: {
+                                  stepSize: 1
+                                }
+                            }]
+                        }
+                    }
+                });
+
         });
     </script>
+
+
+    {% compress js %}
+        <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+        <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
+        <script src="{% static 'phone_automation/js/call_logs.js' %}"></script>
+    {% endcompress %}
+
+
 {% endblock %}

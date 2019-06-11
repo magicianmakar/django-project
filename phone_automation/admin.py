@@ -7,7 +7,11 @@ from .models import (
     TwilioStep,
     TwilioUpload,
     TwilioLog,
-    TwilioRecording
+    TwilioRecording,
+    CallflexCreditsPlan,
+    TwilioCompany,
+    TwilioAlert,
+    TwilioSummary
 )
 
 
@@ -15,8 +19,8 @@ from .models import (
 class TwilioAutomationAdmin(admin.ModelAdmin):
     form = TwilioAutomationForm
 
-    list_display = ('numbers', 'first_step', 'last_step')
-    search_fields = ('phone__incoming_number',)
+    list_display = ('id', 'title', 'numbers', 'first_step', 'last_step')
+    search_fields = ('phones__incoming_number',)
     raw_id_fields = ('user',)
 
     def get_form(self, request, instance=None, **kwargs):
@@ -29,7 +33,7 @@ class TwilioAutomationAdmin(admin.ModelAdmin):
         return form
 
     def numbers(self, obj):
-        return ','.join([p.incoming_number for p in obj.phone.all()])
+        return ','.join([p.incoming_number for p in obj.phones.all()])
 
 
 @admin.register(TwilioPhoneNumber)
@@ -53,8 +57,8 @@ class TwilioStepAdmin(admin.ModelAdmin):
 @admin.register(TwilioUpload)
 class TwilioUploadAdmin(admin.ModelAdmin):
     list_display = ('url', 'created_at')
-    search_fields = ('automation__phone__incoming_number', 'user__email')
-    raw_id_fields = ('user', 'phone')
+    search_fields = ('automation__title', 'user__email')
+    raw_id_fields = ('user', 'automation')
 
 
 @admin.register(TwilioLog)
@@ -69,3 +73,70 @@ class TwilioRecordingAdmin(admin.ModelAdmin):
     list_display = ('recording_sid', 'recording_url')
     search_fields = ('twilio_log__user__email', 'twilio_log__from_number')
     raw_id_fields = ('twilio_log',)
+
+
+@admin.register(CallflexCreditsPlan)
+class CallflexCreditsPlanAdmin(admin.ModelAdmin):
+    list_display = ('allowed_credits', 'amount')
+    search_fields = ('allowed_credits', 'amount')
+    raw_id_fields = ()
+
+
+@admin.register(TwilioCompany)
+class TwilioCompanyAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'title',
+        'timezone',
+        'config',
+        'created_at',
+        'updated_at',
+    )
+    list_filter = ('created_at', 'updated_at')
+    raw_id_fields = ('user',)
+    date_hierarchy = 'created_at'
+
+
+@admin.register(TwilioAlert)
+class TwilioAlertAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'twilio_phone_number',
+        'company',
+        'config',
+        'alert_event',
+        'alert_type',
+        'created_at',
+        'updated_at',
+    )
+    list_filter = ('created_at', 'updated_at')
+    raw_id_fields = ('user', 'twilio_phone_number', 'company')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(TwilioSummary)
+class TwilioSummaryAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'company',
+        'config',
+        'freq_daily',
+        'freq_weekly',
+        'freq_monthly',
+        'include_calllogs',
+        'created_at',
+        'updated_at',
+    )
+    list_filter = (
+        'freq_daily',
+        'freq_weekly',
+        'freq_monthly',
+        'include_calllogs',
+        'created_at',
+        'updated_at',
+    )
+    raw_id_fields = ('user', 'company')
+    date_hierarchy = 'created_at'

@@ -1,0 +1,51 @@
+{% load template_helper %}
+{% load phone_numbers %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    {% include "partial/email/css.html" %}
+</head>
+<body>
+    <p>Hi,</p>
+
+    <p>Here is Your summary report for "{{ twilio_summary.company.title }}"
+        From {{ from_date }} to {{ to_date }}
+        :</p>
+    Call Summary:
+
+    <table class="table table-bordered dataTables">
+        <thead>
+        <tr>
+            <th>Number</th>
+            <th>Total Calls</th>
+            <th>Total Duration</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for twilio_phone_number in twilio_phone_numbers %}
+            <tr>
+                <td>
+                    {{ twilio_phone_number.title }}
+                    <br> ( {{ twilio_phone_number.incoming_number|phone_number  }} )
+                </td>
+                <td>{{ twilio_phone_number.stats.total_calls  }} </td>
+                <td>{{ twilio_phone_number.stats.total_minutes  }} sec</td>
+            </tr>
+
+            <div> </div>
+        {% endfor %}
+
+
+        </tbody>
+    </table>
+
+
+    <p>
+        <br>The Dropified Team<br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
+    </p>
+</body>
+</html>

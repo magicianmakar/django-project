@@ -1,0 +1,32 @@
+{% load template_helper %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    {% include "partial/email/css.html" %}
+</head>
+<body>
+    <p>Hi,</p>
+
+    <p>Your company "{{ twilio_alert.company.title }}" got a call. Here are the details:</p>
+    <p><b>Caller:</b> {{ twilio_log.from_number }}    </p>
+    <p><b>Call Status:</b> {{ twilio_log.call_status }}    </p>
+    <p><b>Voicemails:</b>
+        {% for recording in twilio_log.twilio_recordings.all %}
+            <div>
+                &nbsp; <a class="btn btn-default btn-sm" href="{{ recording.recording_url }}" download="{{ recording.recording_sid }}.mp3" target="_blank">Download</a>
+            </div>
+        {% endfor %}
+
+    </p>
+    <p><b>Date:</b> {{ twilio_log.created_at }}    </p>
+
+
+
+    <p>
+        <br>The Dropified Team<br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
+    </p>
+</body>
+</html>

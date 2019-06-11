@@ -1,24 +1,31 @@
 import time
 import hashlib
-import uuid
 import math
 
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils.functional import cached_property
 from django.utils import timezone
+from django.utils.functional import cached_property
+from django.utils.crypto import get_random_string
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 import simplejson as json
 import arrow
-
-from .stripe_api import stripe
 import stripe.error
 
+from .stripe_api import stripe
+
+
 PLAN_INTERVAL = (
-    ('day', 'daily'),
     ('month', 'monthly'),
     ('year', 'yearly'),
-    ('week', 'weekly'),
+)
+
+CUSTOM_PLAN_TYPES = (
+    ('callflex_subscription', 'CallFlex Subscription'),
+    ('callflex_extranumber', 'CallFlex Extra Number'),
+    ('callflex_extraminutes', 'CallFlex Extra Minutes'),
+
 )
 
 
@@ -121,13 +128,17 @@ class StripeCustomer(models.Model):
 
     @cached_property
     def current_subscription(self):
-        stripe_customer = self.retrieve()
-        subscriptions = stripe_customer['subscriptions']['data']
-        plan_stripe_id = self.user.profile.plan.stripe_plan.stripe_id
+        subscriptions = self.user.stripesubscription_set.all()
 
-        for subscription in subscriptions:
-            if subscription.plan.id == plan_stripe_id:
-                return subscription
+        try:
+            plan_stripe_id = self.user.profile.plan.stripe_plan.stripe_id
+            for subscription in subscriptions:
+                sub_plan = subscription.get_main_subscription_item_plan()
+                if sub_plan['id'] == plan_stripe_id:
+                    return subscription.subscription
+        except:
+            raven_client.captureException()
+            return False
 
     @cached_property
     def on_trial(self):
@@ -179,7 +190,7 @@ class StripePlan(models.Model):
             self.statement_descriptor = None
 
         if not self.stripe_id:
-            self.stripe_id = 'SA_{}'.format(hashlib.md5(str(uuid.uuid4()).encode()).hexdigest()[:8])
+            self.stripe_id = 'SA_{}'.format(hashlib.md5(get_random_string(32).encode()).hexdigest()[:8])
 
             stripe.Plan.create(
                 amount=int(self.amount * 100),  # How much to charge in cents, we store it in dollars
@@ -238,7 +249,10 @@ class StripeSubscription(models.Model):
         self.period_start = arrow.get(sub.current_period_start).datetime
         self.period_end = arrow.get(sub.current_period_end).datetime
 
-        plan = GroupPlan.objects.filter(stripe_plan__stripe_id=sub.plan.id).first()
+        # getting primary plan from items is multiple plans is set
+        # TODO: probably need to replace this by some function/method instead of updating Stripe-native data
+        sub_plan = self.get_main_subscription_item_plan(sub=sub)
+        plan = GroupPlan.objects.filter(stripe_plan__stripe_id=sub_plan.id).first()
 
         if plan:
             self.user.profile.change_plan(plan)
@@ -249,6 +263,49 @@ class StripeSubscription(models.Model):
         self.save()
 
         return sub
+
+    def get_main_subscription_item_plan(self, sub=None):
+        from .utils import get_main_subscription_item
+
+        if sub is None:
+            sub = stripe.Subscription.retrieve(self.subscription_id)
+
+        plan_item = get_main_subscription_item(sub=sub)
+        if plan_item:
+            return plan_item['plan']
+
+    def move_custom_subscriptions(self, sub=None):
+        if sub is None:
+            sub = stripe.Subscription.retrieve(self.subscription_id)
+        custom_subscriptions = self.user.customstripesubscription_set.filter(
+            custom_plan__type='callflex_subscription').all()
+        if custom_subscriptions.count() > 0:
+            items = []
+            for custom_subscription in custom_subscriptions:
+                items.append({'plan': custom_subscription.custom_plan.stripe_id,
+                              'metadata': {'custom_plan_id': custom_subscription.custom_plan.id,
+                                           'user_id': self.user.id,
+                                           'custom': True,
+                                           'custom_plan_type': custom_subscription.custom_plan.type}})
+                custom_subscription.safe_delete()
+
+            new_sub = stripe.Subscription.create(
+                customer=self.user.stripe_customer.customer_id,
+                items=items,
+            )
+
+            for si_item in new_sub['items']['data']:
+                plan = CustomStripePlan.objects.get(stripe_id=si_item['plan']['id'])
+                CustomStripeSubscription.objects.create(
+                    user=self.user,
+                    custom_plan=plan,
+                    data=json.dumps(new_sub),
+                    status=new_sub['status'],
+                    period_start=arrow.get(new_sub['current_period_start']).datetime,
+                    period_end=arrow.get(new_sub['current_period_end']).datetime,
+                    subscription_id=new_sub.id,
+                    subscription_item_id=si_item.id
+                )
 
     @property
     def subscription(self):
@@ -376,3 +433,153 @@ class ExtraGearStore(models.Model):
 
     def __str__(self):
         return "{}".format(self.store.title)
+
+
+class CustomStripePlan(models.Model):
+    class Meta:
+        verbose_name = "Custom Plan"
+        verbose_name_plural = "Custom Plans"
+
+    name = models.CharField(max_length=150)
+    amount = models.DecimalField(decimal_places=2, max_digits=9, verbose_name='Amount(in USD)')
+    currency = models.CharField(max_length=15, default='usd')
+    retail_amount = models.DecimalField(null=True, decimal_places=2, max_digits=9)
+    interval = models.CharField(max_length=15, choices=PLAN_INTERVAL, default='month')
+    interval_count = models.IntegerField(default=1)
+    trial_period_days = models.IntegerField(default=14)
+    statement_descriptor = models.TextField(null=True, blank=True)
+    hidden = models.BooleanField(default=False, verbose_name='Plan is hidden')
+    type = models.CharField(max_length=255, choices=CUSTOM_PLAN_TYPES, default='custom')
+
+    # See dropified-webapp/wiki/CallFlex-custom-subscription for details
+    credits_data = models.TextField(default='{}', null=True, blank=True, verbose_name='Plan-specific credits set')
+
+    stripe_id = models.CharField(max_length=255, unique=True, editable=False, verbose_name='Stripe Plan ID')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __unicode__(self):
+        return f"{self.name} (${self.amount})"
+
+    def save(self, *args, **kwargs):
+        if self.statement_descriptor:
+            self.statement_descriptor = self.statement_descriptor.upper().strip()[:22]
+        else:
+            self.statement_descriptor = None
+
+        if not self.stripe_id:
+            self.stripe_id = 'CP_{}'.format(hashlib.md5(get_random_string(32).encode()).hexdigest()[:8])
+
+            stripe.Plan.create(
+                amount=int(self.amount * 100),  # How much to charge in cents, we store it in dollars
+                interval=self.interval,
+                interval_count=self.interval_count,
+                name=self.name,
+                currency=self.currency,
+                trial_period_days=self.trial_period_days,
+                statement_descriptor=self.statement_descriptor,
+                id=self.stripe_id,
+                metadata={"custom": True, "type": self.type}
+            )
+        else:
+            p = stripe.Plan.retrieve(self.stripe_id)
+            p.name = self.name
+            p.metadata = {"custom": True, "type": self.type}
+            p.statement_descriptor = self.statement_descriptor
+
+            p.save()
+
+        super(CustomStripePlan, self).save(*args, **kwargs)
+
+    @property
+    def get_credits_data(self):
+        try:
+            return json.loads(self.credits_data)
+        except:
+            return {}
+
+
+class CustomStripeSubscription(models.Model):
+    class Meta:
+        verbose_name = "Custom Subscription"
+        verbose_name_plural = "Custom Subscriptions"
+        get_latest_by = 'created_at'
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    custom_plan = models.ForeignKey(CustomStripePlan, null=True)
+
+    subscription_id = models.CharField(max_length=255, editable=False, verbose_name='Stripe Subscription ID')
+    subscription_item_id = models.CharField(max_length=255, verbose_name='Stripe Subscription Item ID', null=True)
+    status = models.CharField(null=True, blank=True, max_length=64, editable=False, verbose_name='Subscription Status')
+    data = models.TextField(null=True, blank=True)
+
+    period_start = models.DateTimeField(null=True)
+    period_end = models.DateTimeField(null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __unicode__(self):
+        return "{} {}".format(self.user.username, self.custom_plan.name if self.custom_plan else 'None')
+
+    def retrieve(self, commit=True):
+        return stripe.Subscription.retrieve(self.subscription_id)
+
+    def refresh(self, sub=None, commit=True):
+        if sub is None:
+            sub = stripe.Subscription.retrieve(self.subscription_id)
+
+        self.data = json.dumps(sub)
+
+        self.status = sub.status
+        self.period_start = arrow.get(sub.current_period_start).datetime
+        self.period_end = arrow.get(sub.current_period_end).datetime
+
+        self.save()
+
+        return sub
+
+    @property
+    def subscription(self):
+        try:
+            return json.loads(self.data)
+        except:
+            return {}
+
+    @property
+    def customer_id(self):
+        try:
+            return self.subscription['customer']
+        except:
+            return None
+
+    @property
+    def is_active(self):
+        sub = self.subscription
+        return sub['status'] in ['trialing', 'active']
+
+    def get_status(self):
+        import arrow
+
+        sub = self.subscription
+
+        status = {
+            'status': sub['status'],
+            'status_str': sub['status'].replace('_', ' ').title(),
+            'cancel_at_period_end': sub['cancel_at_period_end']
+        }
+
+        if sub['status'] == 'trialing' and sub.get('trial_end'):
+            status['status_str'] = 'Trial ends {}'.format(arrow.get(sub.get('trial_end')).humanize())
+
+        return status
+
+    def safe_delete(self, sub=None, commit=True):
+        sub = stripe.Subscription.retrieve(self.subscription_id)
+
+        count_items = len(sub['items']['data'])
+        if count_items > 1:
+            si = stripe.SubscriptionItem.retrieve(self.subscription_item_id)
+            si.delete()
+        else:
+            sub.delete()
+        self.delete()

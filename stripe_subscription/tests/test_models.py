@@ -11,6 +11,14 @@ from lib.test import BaseTestCase
 
 from stripe_subscription import utils
 from stripe_subscription.tests import factories as f
+from shopified_core.decorators import add_to_class
+from leadgalaxy.models import (
+    User,
+)
+from stripe_subscription.models import (
+    StripeSubscription,
+)
+from leadgalaxy.tests.factories import GroupPlanFactory
 
 
 class StripeCustomerTestCase(BaseTestCase):
@@ -113,14 +121,34 @@ class StripeCustomerTestCase(BaseTestCase):
 
     @patch('leadgalaxy.models.GroupPlan.stripe_plan')
     def test_current_subcription_returns_current_stripe_subscription(self, stripe_plan):
-        stripe_id = 'testId'
-        subscription = Mock()
-        subscription.plan = Mock(id=stripe_id)
-        subscriptions = [subscription]
+        stripe_id = 'SA_TEST'
+        user = User.objects.create_user(username='john', email='john.test@gmail.com', password='123456')
+        user.save()
+        user.profile.plan = GroupPlanFactory(payment_gateway='stripe')
         stripe_plan.stripe_id = stripe_id
+        user.profile.save()
+
+        subscription = StripeSubscription()
+        subscription.subscription_id = stripe_id
+        subscription.plan = user.profile.plan
+        subscription.user = user
+        subscription.save()
+
         stripe_customer = f.StripeCustomerFactory()
-        stripe_customer.retrieve = Mock(return_value={'subscriptions': {'data': subscriptions}})
-        self.assertEquals(stripe_customer.current_subscription.id, subscription.id)
+        stripe_customer.user = user
+        stripe_customer.save()
+
+        user.stripe_customer = stripe_customer
+        user.save()
+
+        @add_to_class(StripeSubscription, 'get_main_subscription_item_plan')
+        def get_main_subscription_item_plan(self):
+            return {'id': stripe_id}
+
+        target = 'stripe_subscription.models.StripeSubscription.subscription'
+        with patch(target, new_callable=PropertyMock) as subscription:
+            subscription.return_value = {'id': stripe_id, 'object': 'subscription'}
+            self.assertEquals(stripe_customer.current_subscription['id'], stripe_id)
 
     def test_returns_true_if_current_subscription_is_on_trial(self):
         target = 'stripe_subscription.models.StripeCustomer.current_subscription'

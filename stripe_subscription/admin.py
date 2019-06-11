@@ -8,6 +8,8 @@ from .models import (
     ExtraCHQStore,
     ExtraWooStore,
     ExtraGearStore,
+    CustomStripePlan,
+    CustomStripeSubscription
 )
 
 from leadgalaxy.models import GroupPlan
@@ -96,3 +98,17 @@ class ExtraGearStoreAdmin(admin.ModelAdmin):
 
     def is_active(self, obj):
         return obj.store.is_active
+
+
+@admin.register(CustomStripePlan)
+class CustomStripePlanAdmin(admin.ModelAdmin):
+    list_display = ('name', 'type', 'amount', 'interval', 'stripe_id', 'hidden')
+    list_filter = ('interval',)
+
+
+@admin.register(CustomStripeSubscription)
+class CustomStripeSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'custom_plan', 'subscription_id', 'created_at', 'updated_at', 'status')
+    readonly_fields = ('subscription_id',)
+    search_fields = ('subscription_id',) + USER_SEARCH_FIELDS
+    raw_id_fields = ('user',)
