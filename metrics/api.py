@@ -36,6 +36,7 @@ class MetricsApi(ApiResponseMixin, View):
                 'user_id': user.id,
                 'user_name': user.username,
                 'plan_name': user.profile.plan.title,
+                'extension_version': request.META.get('HTTP_X_EXTENSION_VERSION'),
                 'took': val,
             })
 
