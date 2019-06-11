@@ -1345,20 +1345,28 @@ def webhook(request, provider, option):
                 add_query = args[2]
                 perm_name = args[3]
 
-                if not AppPermission.objects.filter(name=name).exists():
-                    return HttpResponse(':x: Permission {} does not exists'.format(name))
+                if not AppPermission.objects.filter(name=perm_name).exists():
+                    return HttpResponse(':x: Permission {} does not exists'.format(perm_name))
 
                 permission = AppPermission.objects.get(name=perm_name)
 
                 if add_to == 'plan':
-                    plan = GroupPlan.objects.get(id_in=add_query.split(','))
-                    plan.permissions.remove(permission)
-                    return HttpResponse(f'Permission {permission.name} removed from Plan: {plan.title}')
+                    titles = []
+                    plans = GroupPlan.objects.filter(id__in=add_query.split(','))
+                    for plan in plans:
+                        titles.append(bundle.title)
+                        plan.permissions.remove(permission)
+
+                    return HttpResponse(f'Permission {permission.name} removed from Plan: {", ".join(titles)}')
 
                 elif add_to == 'bundle':
-                    bundle = FeatureBundle.objects.get(id_in=add_query.split(','))
-                    bundle.permissions.add(permission)
-                    return HttpResponse(f'Permission {permission.name} removed from Bundle: {bundle.title}')
+                    titles = []
+                    bundles = FeatureBundle.objects.filter(id__in=add_query.split(','))
+                    for bundle in bundles:
+                        titles.append(bundle.title)
+                        bundle.permissions.add(permission)
+
+                    return HttpResponse(f'Permission {permission.name} removed from Bundle: {", ".join(titles)}')
 
                 else:
                     return HttpResponse(f':x: Target is not known {add_to}')
