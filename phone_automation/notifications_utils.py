@@ -23,10 +23,13 @@ class AlertNotification:
             self.process_alert(alert)
 
         # getting alerts assigned to entire phone's company (where selected 'All Phones')
-        alerts_compnay = self.twilio_phone_number.company.twilio_alerts.filter(twilio_phone_number=None)
+        try:
+            alerts_compnay = self.twilio_phone_number.company.twilio_alerts.filter(twilio_phone_number=None)
+        except:
+            return
+
         for alert in alerts_compnay:
             self.process_alert(alert)
-        return True
 
     def process_alert(self, twilio_alert):
         # type: (TwilioAlert ) -> ...

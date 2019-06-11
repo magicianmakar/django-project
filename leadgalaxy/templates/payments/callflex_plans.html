@@ -16,21 +16,21 @@
             <div class="col-md-3" >
 
                 <span>
-                    <b>{{ callflex_month_totals_tollfree|default:0|sec_to_min }}</b>  /
-                    {% if callflex_month_limit_tollfree is False %}
+                    <b>{{ callflex.month_totals_tollfree|default:0|sec_to_min }}</b>  /
+                    {% if callflex.month_limit_tollfree is False %}
                         <span>Unlimited Minutes</span>
                     {% else %}
-                       <b>{{ callflex_month_limit_tollfree|default:0|sec_to_min }}</b> mm:ss
+                       <b>{{ callflex.month_limit_tollfree|default:0|sec_to_min }}</b> mm:ss
                     {% endif %}
 
                 </span> <b>( Toll-Free )</b> <br>
 
                 <span>
-                    <b>{{ callflex_month_totals_local|default:0|sec_to_min }}</b>  /
-                    {% if callflex_month_limit_local is False %}
+                    <b>{{ callflex.month_totals_local|default:0|sec_to_min }}</b>  /
+                    {% if callflex.month_limit_local is False %}
                         <span>Unlimited Minutes</span>
                     {% else %}
-                       <b>{{ callflex_month_limit_local|default:0|sec_to_min }}</b> mm:ss
+                       <b>{{ callflex.month_limit_local|default:0|sec_to_min }}</b> mm:ss
                     {% endif %}
 
                 </span> <b>( Local )</b>
@@ -46,36 +46,36 @@
 
                 <span>
                     <b>
-                        {{callflex_phonenumber_usage_tollfree.used}}
+                        {{callflex.phonenumber_usage_tollfree.used}}
                             /
-                        {% if callflex_phonenumber_usage_tollfree.total is False %}
+                        {% if callflex.phonenumber_usage_tollfree.total is False %}
                             <span>Unlimited</span>
                         {% else %}
-                            {{ callflex_phonenumber_usage_tollfree.total}}
+                            {{ callflex.phonenumber_usage_tollfree.total}}
                         {%  endif %}
                     </b>
                 </span> <b>( Toll-Free )</b> <br>
 
                 <span>
                     <b>
-                        {{callflex_phonenumber_usage_local.used}}
+                        {{callflex.phonenumber_usage_local.used}}
                             /
-                        {% if callflex_phonenumber_usage_local.total is False %}
+                        {% if callflex.phonenumber_usage_local.total is False %}
                             <span>Unlimited</span>
                         {% else %}
-                            {{ callflex_phonenumber_usage_local.total}}
+                            {{ callflex.phonenumber_usage_local.total}}
                         {%  endif %}
                     </b> <b>( Local )</b>
                 </span> <br>
             </div>
         </div>
 
-        {% if callflex_extranumber_subscriptions.count > 0 %}
+        {% if callflex.extranumber_subscriptions.count > 0 %}
             <br>
             <p style="margin:0">Your Current CallFlex Subscriptions:</p>
 
             <ul class="list-unstyled">
-                {% for item in callflex_extranumber_subscriptions %}
+                {% for item in callflex.extranumber_subscriptions %}
                     {% with status=item.get_status %}
 
                     <li class="list-group-item" style="border:0 none">

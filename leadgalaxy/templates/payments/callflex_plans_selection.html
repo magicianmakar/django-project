@@ -5,10 +5,10 @@
     <div class="m-t m-b">
         <!-- Nav tabs -->
         <ul class="nav nav-tabs centered" role="tablist">
-            {% if callflexnumber_plans_monthly|length %}
+            {% if callflex.number_plans_monthly|length %}
             <li role="presentation" class="active"><a href="#callflex-monthly" role="tab" data-toggle="tab">Monthly</a></li>
             {% endif %}
-            {% if callflexnumber_plans_yearly|length %}
+            {% if callflex.number_plans_yearly|length %}
             <li role="presentation"><a href="#callflex-early" role="tab" data-toggle="tab">Yearly</a></li>
             {% endif %}
         </ul>
@@ -18,8 +18,8 @@
                 <table class="plan-table table plans-monthly m-t" style="display: table;">
                     <thead>
                         <tr>
-                            {% for item in callflexnumber_plans_monthly %}
-                            <th class="callflex-subsciption-plan {{item.slug}} {% if current_callflex_plan == item %}selected{% endif %}" data-plan-title="{{item.name}}" data-plan="{{item.id}}" data-trial-days="{{item.trial_period_days}}" style="width: {% widthratio 100 stripe_plans|length 1 %}%">
+                            {% for item in callflex.number_plans_monthly %}
+                            <th class="callflex-subsciption-plan {{item.slug}} {% if callflex.current_plan == item %}selected{% endif %}" data-plan-title="{{item.name}}" data-plan="{{item.id}}" data-trial-days="{{item.trial_period_days}}" style="width: {% widthratio 100 stripe_plans|length 1 %}%">
                                 <h3>{{item.name}}</h3>
                                 <p class="price">${{item.amount|stringformat:"i"}}<span>/mo</span></p>
                                 {% if item.retail_amount %}
@@ -30,7 +30,7 @@
                                 <p class="retail-price"></p>
                                 {% endif %}
                                 <p class="cta">
-                                    {% if current_callflex_plan == item %}
+                                    {% if callflex.current_plan == item %}
                                     <button class="btn btn-primary">Selected</button>
                                     {% elif not user.can_trial and not user.stripe_customer.source and not current_plan.is_stripe and not item.is_free %}
                                     <button class="btn btn-default" data-toggle="tab" href="#tab-4" data-auto-hash="billing">
@@ -46,8 +46,8 @@
                     </thead>
                     <tbody class="features">
                         <tr>
-                            {% for item in callflexnumber_plans_monthly %}
-                            <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}" class="plan-feature {% if current_callflex_plan == item %}selected{% endif %}">
+                            {% for item in callflex.number_plans_monthly %}
+                            <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}" class="plan-feature {% if callflex.current_plan == item %}selected{% endif %}">
                                 <p class="plan-feature"><b class="cf-price">{{ item.credits_data.credits_tollfree }}</b> Toll-Free Phone Number(s)</p>
                                 <p class="plan-feature"><b class="cf-price">{{ item.credits_data.credits_local }}</b> Local Phone Number(s)</p>
                                 <p class="plan-feature"><b class="cf-price">{{ item.credits_data.credits_minutes_tollfree }}</b> Toll-Free Call Minutes</p>
@@ -63,8 +63,8 @@
                 <table class="plan-table table plans-yearly m-t" style="display: table;">
                     <thead>
                         <tr>
-                            {% for item in callflexnumber_plans_yearly %}
-                            <th class="callflex-subsciption-plan {{item.slug}} {% if current_callflex_plan == item %}selected{% endif %}" data-plan-title="{{item.name}}" data-plan="{{item.id}}" data-trial-days="{{item.trial_period_days}}" style="width: {% widthratio 100 stripe_plans|length 1 %}%">
+                            {% for item in callflex.number_plans_yearly %}
+                            <th class="callflex-subsciption-plan {{item.slug}} {% if callflex.current_plan == item %}selected{% endif %}" data-plan-title="{{item.name}}" data-plan="{{item.id}}" data-trial-days="{{item.trial_period_days}}" style="width: {% widthratio 100 stripe_plans|length 1 %}%">
                                 <h3>{{item.name}}</h3>
                                 <p class="price">${{item.amount|stringformat:"i"}}<span>/year</span></p>
                                 {% if item.retail_amount %}
@@ -75,7 +75,7 @@
                                 <p class="retail-price"></p>
                                 {% endif %}
                                 <p class="cta">
-                                    {% if current_callflex_plan == item %}
+                                    {% if callflex.current_plan == item %}
                                     <button class="btn btn-primary">Selected</button>
                                     {% elif not user.can_trial and not user.stripe_customer.source and not current_plan.is_stripe and not item.is_free %}
                                     <button class="btn btn-default" data-toggle="tab" href="#tab-4" data-auto-hash="billing">
@@ -91,8 +91,8 @@
                     </thead>
                     <tbody class="features">
                         <tr>
-                            {% for item in callflexnumber_plans_yearly %}
-                            <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}" class="plan-feature {% if current_callflex_plan == item %}selected{% endif %}">
+                            {% for item in callflex.number_plans_yearly %}
+                            <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}" class="plan-feature {% if callflex.current_plan == item %}selected{% endif %}">
                                 <p class="plan-feature">{{ item.credits_data.credits_tollfree }} Toll-Free Phone Number(s)</p>
                                 <p class="plan-feature">{{ item.credits_data.credits_local }} Local Phone Number(s)</p>
                                 <p class="plan-feature">{{ item.credits_data.credits_minutes_tollfree }} Toll-Free Call Minutes</p>
@@ -107,16 +107,16 @@
         </div>
         <div class="row-overages">
             <h2>Overages pricing:</h2>
-            <h5><b class="cf-price">${{ settings.EXTRA_TOLLFREE_NUMBER_PRICE }}</b> For extra Toll-Free number over the limit
+            <h5><b class="cf-price">${% app_setting 'EXTRA_TOLLFREE_NUMBER_PRICE' %}</b> For extra Toll-Free number over the limit
                 <i class="fa fa-fw fa-question-circle" qtip-tooltip="You'll be invoiced this amount every 30 days for any extra phone number over membership limit" qtip-my="bottom center" qtip-at="top center" style="font-size:16px;color:#BBB"></i>
             </h5>
-            <h5><b class="cf-price">${{ settings.EXTRA_LOCAL_NUMBER_PRICE }}</b> For extra Local number over the limit
+            <h5><b class="cf-price">${% app_setting 'EXTRA_LOCAL_NUMBER_PRICE' %}</b> For extra Local number over the limit
                 <i class="fa fa-fw fa-question-circle" qtip-tooltip="You'll be invoiced this amount every 30 days for any extra phone number over membership limit" qtip-my="bottom center" qtip-at="top center" style="font-size:16px;color:#BBB"></i>
             </h5>
-            <h5><b class="cf-price">${{ settings.EXTRA_TOLLFREE_MINUTE_PRICE }}</b> For extra Toll-Free minute over the limit
+            <h5><b class="cf-price">${% app_setting 'EXTRA_TOLLFREE_MINUTE_PRICE' %}</b> For extra Toll-Free minute over the limit
                 <i class="fa fa-fw fa-question-circle" qtip-tooltip="You'll be invoiced this amount for every extra minute over membership limit" qtip-my="bottom center" qtip-at="top center" style="font-size:16px;color:#BBB"></i>
             </h5>
-            <h5><b class="cf-price">${{ settings.EXTRA_LOCAL_MINUTE_PRICE }}</b> For extra Local minute over the limit
+            <h5><b class="cf-price">${% app_setting 'EXTRA_LOCAL_MINUTE_PRICE' %}</b> For extra Local minute over the limit
                 <i class="fa fa-fw fa-question-circle" qtip-tooltip="You'll be invoiced this amount for every extra minute over membership limit" qtip-my="bottom center" qtip-at="top center" style="font-size:16px;color:#BBB"></i>
             </h5>
         </div>
