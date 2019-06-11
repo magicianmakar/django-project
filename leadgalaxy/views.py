@@ -1322,8 +1322,8 @@ def webhook(request, provider, option):
                 add_query = args[2]
                 perm_name = args[3]
 
-                if not AppPermission.objects.filter(name=name).exists():
-                    return HttpResponse(':x: Permission {} does not exists'.format(name))
+                if not AppPermission.objects.filter(name=perm_name).exists():
+                    return HttpResponse(':x: Permission {} does not exists'.format(perm_name))
 
                 permission = AppPermission.objects.get(name=perm_name)
 
