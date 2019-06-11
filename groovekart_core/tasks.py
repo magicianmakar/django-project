@@ -17,7 +17,13 @@ from shopified_core import permissions
 from shopified_core import utils
 
 from .models import GrooveKartStore, GrooveKartProduct, GrooveKartSupplier
-from .utils import OrderListQuery, GrooveKartOrderUpdater, format_gkart_errors, get_variant_value
+from .utils import (
+    OrderListQuery,
+    GrooveKartOrderUpdater,
+    format_gkart_errors,
+    get_variant_value,
+    update_product_images,
+)
 
 
 @celery_app.task(base=CaptureFailure)
@@ -334,21 +340,7 @@ def product_update(product_id, data):
         r = store.request.post(variants_endpoint, json=api_data)
         r.raise_for_status()
 
-        images = data.get('images', [])
-        if images:
-            for index, image in enumerate(images.values()):
-                # TODO: This endpoint currently only add images
-                if 'groovekart.com' in image:
-                    continue
-
-                api_data = {
-                    'product': {
-                        'id': product.source_id,
-                        'image': {'src': image, 'position': index},
-                    }
-                }
-                r = store.request.post(endpoint, json=api_data)
-                r.raise_for_status()
+        update_product_images(product, data.get('images', []))
 
         pusher_data['success'] = True
 

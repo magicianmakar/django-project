@@ -551,6 +551,26 @@ def get_orders_page_default_date_range(timezone):
     return start, end
 
 
+def update_product_images(product, images):
+    if images:
+        store = product.store
+        endpoint = store.get_api_url('products.json')
+
+        for index, image in enumerate(images):
+            if 'groovekart.com' in image:
+                continue
+
+            api_data = {
+                'product': {
+                    'id': product.source_id,
+                    'image': {'src': image, 'position': index},
+                }
+            }
+
+            r = store.request.post(endpoint, json=api_data)
+            r.raise_for_status()
+
+
 class OrderListQuery(object):
     def __init__(self, store, params=None):
         self._endpoint = 'orders.json'
