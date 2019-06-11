@@ -1328,14 +1328,22 @@ def webhook(request, provider, option):
                 permission = AppPermission.objects.get(name=perm_name)
 
                 if add_to == 'plan':
-                    plan = GroupPlan.objects.get(id=add_query)
-                    plan.permissions.add(permission)
-                    return HttpResponse(f'Permission {permission.name} add to Plan: {plan.title}')
+                    titles = []
+                    plans = GroupPlan.objects.filter(id__in=add_query.split(','))
+                    for plan in plans:
+                        titles.append(bundle.title)
+                        plan.permissions.add(permission)
+
+                    return HttpResponse(f'Permission {permission.name} added to Plan: {", ".join(titles)}')
 
                 elif add_to == 'bundle':
-                    bundle = FeatureBundle.objects.get(id=add_query)
-                    bundle.permissions.add(permission)
-                    return HttpResponse(f'Permission {permission.name} add to Bundle: {bundle.title}')
+                    titles = []
+                    bundles = FeatureBundle.objects.filter(id__in=add_query.split(','))
+                    for bundle in bundles:
+                        titles.append(bundle.title)
+                        bundle.permissions.add(permission)
+
+                    return HttpResponse(f'Permission {permission.name} added to Bundle: {", ".join(titles)}')
 
                 else:
                     return HttpResponse(f':x: Target is not known {add_to}')
@@ -1364,7 +1372,7 @@ def webhook(request, provider, option):
                     bundles = FeatureBundle.objects.filter(id__in=add_query.split(','))
                     for bundle in bundles:
                         titles.append(bundle.title)
-                        bundle.permissions.add(permission)
+                        bundle.permissions.remove(permission)
 
                     return HttpResponse(f'Permission {permission.name} removed from Bundle: {", ".join(titles)}')
 
