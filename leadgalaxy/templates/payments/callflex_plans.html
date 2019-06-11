@@ -66,72 +66,10 @@
                             {{ callflex_phonenumber_usage_local.total}}
                         {%  endif %}
                     </b> <b>( Local )</b>
-
                 </span> <br>
             </div>
-
         </div>
 
-        {% comment %}
-        <div class="row m-t flex-group">
-            <div class="col-md-3 ">
-                <label for="callflexcredit_plan">Purchase Minutes (one-time):</label>
-            </div>
-
-            <div class="col-md-3">
-                <select class="form-control" id="callflexcredit_plan"
-                        name="callflexcredit_plan">
-                    <option value="">Select Product</option>
-                    {% for item in callflexcredit_plans %}
-                        <option value="{{item.id}}" data-amount="{% money_format item.amount %}"
-                                data-credits="{{item.allowed_credits}}">
-                            {{item.allowed_credits}} Minutes / {% money_format item.amount %}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="col-md-2" >
-                <button class="btn btn-primary" id="renew_callflexcredit"
-                        data-title="CallFlex Credits" data-cc="{{user.have_billing_info|lower}}"
-                        data-shopify="{{shopify_apps_customer|lower}}">Purchase</button>
-            </div>
-
-            <div class="col-md-4">
-                Extra minutes ara aplying to current month only.
-            </div>
-        </div>
-
-
-        <div class="row m-t flex-group">
-            <div class="col-md-3 ">
-                <label for="callflexcredit_plan">Purchase/Switch Callflex :</label>
-            </div>
-
-            <div class="col-md-3">
-                <select class="form-control" id="callflexnumber_plan"
-                        name="callflexnumber_plan">
-                    <option value="">Select Product</option>
-                    {% for item in callflexnumber_plans %}
-                        <option value="{{item.id}}" data-amount="{% money_format item.amount %}"
-                                data-credits="{{item.credits}}">
-                            {{item.name}} ( {% money_format item.amount %} / month )
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>
-
-            <div class="col-md-2" >
-                <button class="btn btn-primary" id="renew_callflexnumber"
-                        data-title="CallFlex Phone Number" data-cc="{{user.have_billing_info|lower}}"
-                        data-shopify="{{shopify_apps_customer|lower}}">Purchase</button>
-            </div>
-
-            <div class="col-md-4">
-                Each extra number includes {{ callflexnumber_minutes }} minutes per month
-            </div>
-        </div>
-        {% endcomment %}
         {% if callflex_extranumber_subscriptions.count > 0 %}
             <br>
             <p style="margin:0">Your Current CallFlex Subscriptions:</p>
@@ -169,7 +107,6 @@
                                 data-status="{{status.status}}"
                                 data-period-end="{{item.period_end|date:'SHORT_DATE_FORMAT'}}"
                                 data-plan="{{item.custom_plan.name}}">
-                            {# <i class="fa fa-times"></i>  #}
                             Cancel
                         </button>
                         {% endif %}
@@ -182,15 +119,6 @@
             <p style="margin:0">You do not have any CallFlex Subscriptions:</p>
         {%  endif %}
 
-
-
         {% include "payments/callflex_plans_selection.html" %}
-
-
-
-
-
-
     </div>
 </div>
-}

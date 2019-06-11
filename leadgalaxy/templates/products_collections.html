@@ -20,8 +20,6 @@
                     </div>
                     <div class="col-md-1 pull-right text-right">
                         <button class="btn btn-success btn-outline filter-btn" data-toggle="modal" data-target="#modal-filter">Filter</button>
-                        {# <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Table Layout"><i class="fa fa-lg fa-list"></i></a> #}
-                        {# <a href="/product" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a> #}
                     </div>
                 </div>
                 <table class="table table-striped table-bordered xdataTables">
@@ -36,16 +34,11 @@
                             <th><a href="{% url_toggle 'sort' '-orders_numbers,orders_numbers' %}">Orders {% sort_icon 'sort' 'orders_numbers' %}</a></th>
                             <th style="width: 10%;"><a href="{% url_toggle 'sort' '-created_at,created_at' %}">Date added {% sort_icon 'sort' 'created_at' %}</a></th>
                             <th style="width: 110px">Store</th>
-                            {# <th>Options</th> #}
                         </tr>
                     </thead>
                     <tbody>
                     {% for item in products %}
                         <tr product-id="{{item.id}}" product-title="{{item.product.title}}">
-                            <!-- <td>
-                                <input class="item-select icheck" style="" id="product_{{item.id}}" name="product" value="{{item.id}}" type="checkbox" />
-                                <label class="pull-left" for="product_{{item.id}}"></label>
-                            </td> -->
                             <td>
                                 <img style="width: 64px; height: 64px;"
                                      class="media-object unveil"
@@ -61,7 +54,6 @@
                             <td>{{item.orders_numbers}}</td>
                             <td>{{item.created_at|get_datetime|date:"M d, Y"}}</td>
                             <td><a href="{{item.store.url}}" target="_blank">{{item.store.name}}</a></td>
-                            {# <td> <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.id}}"><i class="fa fa-times"></i> Delete</button> </td> #}
                         </tr>
                     {% empty %}
                         <tr>

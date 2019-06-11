@@ -56,9 +56,6 @@
                                 <option value="edit">Edit...</option>
                                 {% endif %}
                                 <option value="board">Add to Board...</option>
-                                {% if not request.GET.store or request.GET.store == 'n' %}
-                                {# <option value="shopify-send">Send To My Store...</option> #}
-                                {% endif %}
                                 <option value="delete">Delete</option>
                             </select>
                             <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>

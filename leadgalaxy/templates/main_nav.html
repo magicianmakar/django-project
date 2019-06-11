@@ -88,15 +88,6 @@
                     </li>
                 </ul>
             </li>
-            {# {% else %} #}
-            {# <li> #}
-                {# <a href="{% url 'product' %}"> #}
-                    {# <i class="fa fa-shopping-cart"></i> #}
-                    {# <span class="nav-label">Products</span> #}
-                    {# <span class="fa arrow"></span> #}
-                {# </a> #}
-            {# </li> #}
-            {# {% endif %} #}
 
             {% if request.user|can:'orders.view' %}
             <li {% if page == 'orders' %}class="active"{% endif %}>
