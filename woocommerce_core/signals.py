@@ -32,7 +32,7 @@ def woo_send_keen_event_for_product(sender, instance, created, **kwargs):
                 }]
             },
             'source_url': source_url,
-            'store': store.title,
+            'store': store.title if store else None,
             'store_type': 'WooCommerce',
             'product_title': instance.title,
             'product_price': instance.price,
