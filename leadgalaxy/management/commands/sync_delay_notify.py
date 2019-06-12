@@ -13,10 +13,14 @@ from shopified_core.utils import (
     safe_int,
     app_link,
     send_email_from_template,
+    using_replica,
 )
 
 
 class Command(DropifiedBaseCommand):
+
+    def add_arguments(self, parser):
+        parser.add_argument('--replica', dest='replica', action='store_true', help='Use Replica database if available')
 
     def start_command(self, *args, **options):
         profiles = UserProfile.objects.select_related('user') \
@@ -34,7 +38,7 @@ class Command(DropifiedBaseCommand):
 
             time_threshold = timezone.now() - timezone.timedelta(days=notify_days)
             time_threshold_prior = timezone.now() - timezone.timedelta(days=30)
-            delayed_orders_count = ShopifyOrderTrack.objects \
+            delayed_orders_count = using_replica(ShopifyOrderTrack, options['replica']) \
                 .filter(user=user) \
                 .filter(source_tracking='') \
                 .filter(created_at__lt=time_threshold) \

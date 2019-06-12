@@ -8,7 +8,7 @@ from django.core.cache import cache
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core.management import DropifiedBaseCommand
-from shopified_core.utils import send_email_from_template
+from shopified_core.utils import send_email_from_template, using_replica
 from product_alerts.models import ProductChange
 from product_alerts.managers import ProductChangeManager
 
@@ -17,6 +17,9 @@ class Command(DropifiedBaseCommand):
     help = 'Send product change alerts per every given hours'
 
     users_more_changes = {}
+
+    def add_arguments(self, parser):
+        parser.add_argument('--replica', dest='replica', action='store_true', help='Use Replica database if available')
 
     def get_users(self):
         """ Return users that will be notified
@@ -44,7 +47,7 @@ class Command(DropifiedBaseCommand):
 
         ignored_users = set()
         for user in users:
-            prodduct_changes = ProductChange.objects.filter(user=user, notified_at=None, seen=False)
+            prodduct_changes = using_replica(ProductChange, options['replica']).filter(user=user, notified_at=None, seen=False)
 
             last_notified_key = 'last_alert_id_{}'.format(user.id)
             last_notified_id = cache.get(last_notified_key, 30860000)
