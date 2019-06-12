@@ -1,4 +1,5 @@
 import json
+import re
 
 import arrow
 import jwt
@@ -28,7 +29,9 @@ from shopified_core.utils import (
     clean_query_id,
     safe_float,
     http_excption_status_code,
+    order_data_cache,
 )
+from shopified_core.tasks import keen_add_event
 
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
 from .utils import (
@@ -909,5 +912,73 @@ class OrderPlaceRedirectView(RedirectView):
                 return '/'
 
             cache.set(limit_check_key, arrow.utcnow().timestamp, timeout=3600)
+
+        # Save Auto fulfill event
+        event_data = {}
+        order_data = None
+        order_key = self.request.GET.get('SAPlaceOrder')
+        if order_key:
+            event_key = 'keen_event_{}'.format(self.request.GET['SAPlaceOrder'])
+
+            if not order_key.startswith('order_'):
+                order_key = 'order_{}'.format(order_key)
+
+            order_data = order_data_cache(f'woo_{order_key}')
+            prefix, store, order, line = order_key.split('_')
+
+        if order_data:
+            order_data['url'] = redirect_url
+            caches['orders'].set(order_key, order_data, timeout=caches['orders'].ttl(order_key))
+
+        if order_data and settings.KEEN_PROJECT_ID and not cache.get(event_key):
+            try:
+                store = WooStore.objects.get(id=store)
+                permissions.user_can_view(self.request.user, store)
+            except WooStore.DoesNotExist:
+                raise Http404('Store not found')
+
+            for k in list(self.request.GET.keys()):
+                if k == 'SAPlaceOrder':
+                    event_data['data_id'] = self.request.GET[k]
+
+                elif k == 'product':
+                    event_data['product'] = self.request.GET[k]
+
+                    if not safe_int(event_data['product']):  # Check if we are using product link or just the ID
+                        event_data['product'] = re.findall('[/_]([0-9]+).html', event_data['product'])
+                        if event_data['product']:
+                            event_data['product'] = event_data['product'][0]
+
+                elif k.startswith('SA'):
+                    event_data[k[2:].lower()] = self.request.GET[k]
+
+            affiliate = 'ShopifiedApp'
+            if user_admitad_credentials:
+                affiliate = 'UserAdmitad'
+            elif user_ali_credentials:
+                affiliate = 'UserAliexpress'
+
+            if supplier and supplier.is_ebay:
+                event_data['supplier_type'] = 'ebay'
+
+            event_data.update({
+                'user': store.user.username,
+                'user_id': store.user_id,
+                'store': store.title,
+                'store_id': store.id,
+                'store_type': 'WooCommerce',
+                'plan': plan.title,
+                'plan_id': plan.id,
+                'affiliate': affiliate,
+                'sub_user': self.request.user.is_subuser,
+                'total': order_data['total'],
+                'quantity': order_data['quantity'],
+                'cart': 'SACart' in self.request.GET
+            })
+
+            if not settings.DEBUG:
+                keen_add_event.delay("auto_fulfill", event_data)
+
+            cache.set(event_key, True, timeout=3600)
 
         return redirect_url
