@@ -43,6 +43,7 @@ def store_limits_check(request):
 
     if request.user.is_authenticated and \
             not request.user.profile.is_subuser and \
+            not request.user.profile.plan.is_paused and \
             not request.path.startswith('/user/profile') and \
             not settings.DEBUG:
 
