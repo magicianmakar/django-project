@@ -183,6 +183,9 @@ class UserProfileTestCase(BaseTestCase):
 
 
 class ShopifyProductTestCase(BaseTestCase):
+    def setUp(self):
+        self.product = ShopifyProductFactory()
+
     def tearDown(self):
         using_store_db(DataStore).all().delete()
 
@@ -199,6 +202,37 @@ class ShopifyProductTestCase(BaseTestCase):
         product.set_original_data(data)
         data_store = using_store_db(DataStore).first()
         self.assertEqual(data_store.key, product.original_data_key)
+
+    @patch('django.conf.settings.DEBUG', False)
+    @patch('django.conf.settings.KEEN_PROJECT_ID', True)
+    @patch('keen.add_event')
+    def test_send_keen_event_on_create(self, keen_add_event):
+        product = ShopifyProductFactory()
+        keen_add_event.assert_called_with(
+            'product_created',
+            {
+                'keen': {
+                    'addons': [{
+                        'name': 'keen:url_parser',
+                        'input': {'url': 'source_url'},
+                        'output': 'parsed_source_url'
+                    }]
+                },
+                'source_url': None,
+                'store': product.store.title,
+                'store_type': 'Shopify',
+                'product_title': product.title,
+                'product_price': product.price,
+                'product_type': product.product_type,
+            }
+        )
+
+    @patch('django.conf.settings.DEBUG', False)
+    @patch('django.conf.settings.KEEN_PROJECT_ID', True)
+    @patch('keen.add_event')
+    def test_not_send_keen_event_on_update(self, keen_add_event):
+        self.product.save()
+        keen_add_event.assert_not_called()
 
 
 class ShopifyOrderLogTestCase(BaseTestCase):

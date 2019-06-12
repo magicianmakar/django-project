@@ -19,23 +19,37 @@ class Command(DropifiedBaseCommand):
             default=False,
             help='Process only specified user'
         )
+        parser.add_argument(
+            '-preview_only',
+            '--preview_only',
+            default=False,
+            help='Only preview phones to delete'
+        )
 
     def start_command(self, *args, **options):
+        exp_date = timezone.now() + timedelta(days=-90)
         user_phones = TwilioPhoneNumber.objects
         if options['user_id']:
             user_phones = user_phones.filter(user_id=options['user_id'])
 
-        for user_phone in user_phones.all():
+        for user_phone in user_phones.filter(created_at__lte=exp_date).iterator():
 
             try:
-                self.write(f"Processing Twilio Phone Number {user_phone.pk} (user_id: {user_phone.user_id})")
+                self.write(f"Processing Twilio Phone Number {user_phone.pk} {user_phone.incoming_number} "
+                           f" (user_id: {user_phone.user_id})")
                 # checking latest call log
-                exp_date = timezone.now() + timedelta(days=-90)
-                latest_logs_count = user_phone.twilio_logs.filter(created_at__gte=exp_date).count()
+
+                latest_logs_count = user_phone.user.twilio_logs.filter(created_at__gte=exp_date).\
+                    filter(twilio_metadata__To=user_phone.incoming_number).count()
+
                 if latest_logs_count <= 0:
                     self.write(f"No call logs after {exp_date} Unregistering phone number")
-                    client = get_twilio_client()
-                    client.incoming_phone_numbers(user_phone.twilio_sid).delete()
-                    user_phone.delete()
+                    if options['preview_only']:
+                        self.write(f"Preview mode - phone wasn't deleted")
+                    else:
+                        client = get_twilio_client()
+                        client.incoming_phone_numbers(user_phone.twilio_sid).delete()
+                        user_phone.delete()
+                        self.write(f"Phone {user_phone.twilio_sid} was deleted")
             except:
                 raven_client.captureException()

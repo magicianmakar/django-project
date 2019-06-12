@@ -4,7 +4,6 @@ import time
 import tempfile
 import zipfile
 import os.path
-import keen
 
 import simplejson as json
 from pusher import Pusher
@@ -27,7 +26,6 @@ from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import (
     safe_int,
     app_link,
-    url_join,
     get_domain,
     random_hash,
     hash_list,
@@ -1175,35 +1173,6 @@ def calculate_user_statistics(self, user_id):
 
     except:
         raven_client.captureException()
-
-
-@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=30)
-def keen_add_event(self, event_name, event_data):
-    try:
-        try:
-            if 'product' in event_data:
-                cache_key = 'keen_event_product_price_{}'.format(event_data.get('product'))
-                product_price = cache.get(cache_key)
-
-                if product_price is None:
-                    url = url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/price/', event_data.get('product'))
-                    prices_response = requests.get(
-                        url=url,
-                        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD),
-                        timeout=10,
-                    )
-
-                    product_price = prices_response.json()['price']
-                    cache.set(cache_key, product_price, timeout=3600)
-
-                if product_price:
-                    event_data['product_price'] = product_price
-        except:
-            pass
-
-        keen.add_event(event_name, event_data)
-    except:
-        raven_client.captureException(level='warning')
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
