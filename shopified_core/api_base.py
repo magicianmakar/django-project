@@ -26,6 +26,7 @@ from shopified_core.utils import (
     order_phone_number,
     orders_update_limit,
     serializers_orders_track,
+    using_replica,
 )
 from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 
@@ -368,9 +369,10 @@ class ApiBase(ApiResponseMixin, View):
         sync_all_orders = cache.get('_sync_all_orders') and data.get('forced') == 'false'
         sync_all_orders_key = f'user_sync_all_orders_{self.store_slug}_{user.id}'
 
-        order_tracks = self.order_track_model.objects.filter(user=user.models_user, hidden=False) \
-                           .defer('data') \
-                           .order_by('updated_at')
+        order_tracks = using_replica(self.order_track_model) \
+            .filter(user=user.models_user, hidden=False) \
+            .defer('data') \
+            .order_by('updated_at')
 
         created_at_start = None
         created_at_end = None
