@@ -227,6 +227,13 @@ class TwilioLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
+    @property
+    def twilio_metadata_json(self):
+        if isinstance(self.twilio_metadata, str):
+            return json.loads(self.twilio_metadata)
+        else:
+            return self.twilio_metadata
+
     class Meta:
         ordering = ('-created_at',)
 

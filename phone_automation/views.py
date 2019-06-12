@@ -426,7 +426,7 @@ def status_callback(request):
         twilio_log.call_status = request.POST.get('CallStatus')
         twilio_log.log_type = 'status-callback'
         twilio_metadata = json.dumps(request.POST, default=JsonDatetimeConverter)
-        twilio_log.twilio_metadata = twilio_metadata
+        twilio_log.twilio_metadata = json.loads(twilio_metadata)
         twilio_log.phone_type = twilio_phone_number.type
         twilio_log.save()
 
