@@ -4641,6 +4641,7 @@ def orders_place(request):
             'plan_id': plan.id,
             'affiliate': affiliate,
             'sub_user': request.user.is_subuser,
+            'extension_version': user.set_config('extension_version'),
             'total': order_data['total'],
             'quantity': order_data['quantity'],
             'cart': 'SACart' in request.GET
