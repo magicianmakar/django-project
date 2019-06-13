@@ -33,6 +33,7 @@ from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
 from stripe_subscription.stripe_api import stripe
 from shopified_core.tasks import keen_send_event
+from shopified_core.utils import get_domain
 from goals.models import Goal, UserGoalRelationship
 
 
@@ -234,13 +235,7 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
             store = instance.user.models_user.profile.get_shopify_stores().first()
 
         keen_data = {
-            'keen': {
-                'addons': [{
-                    'name': 'keen:url_parser',
-                    'input': {'url': 'source_url'},
-                    'output': 'parsed_source_url'
-                }]
-            },
+            'supplier': get_domain(get_domain) if source_url else None,
             'source_url': source_url,
             'store': store.title if store else None,
             'store_type': 'Shopify',
@@ -249,7 +244,7 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
             'product_type': instance.product_type,
         }
 
-        keen_send_event.delay('product_created', keen_data)
+        keen_send_event.delay('product_save', keen_data)
 
 
 main_subscription_canceled = Signal(providing_args=["stripe_sub"])

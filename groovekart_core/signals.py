@@ -6,6 +6,7 @@ from django.db.models.signals import post_save
 
 from groovekart_core.models import GrooveKartProduct
 from shopified_core.tasks import keen_send_event
+from shopified_core.utils import get_domain
 
 
 @receiver(post_save, sender=GrooveKartProduct)
@@ -23,13 +24,7 @@ def gkart_send_keen_event_for_product(sender, instance, created, **kwargs):
             store = instance.user.models_user.profile.get_gkart_stores().first()
 
         keen_data = {
-            'keen': {
-                'addons': [{
-                    'name': 'keen:url_parser',
-                    'input': {'url': 'source_url'},
-                    'output': 'parsed_source_url'
-                }]
-            },
+            'supplier': get_domain(get_domain) if source_url else None,
             'source_url': source_url,
             'store': store.title if store else None,
             'store_type': 'GrooveKart',
@@ -38,4 +33,4 @@ def gkart_send_keen_event_for_product(sender, instance, created, **kwargs):
             'product_type': instance.product_type,
         }
 
-        keen_send_event.delay('product_created', keen_data)
+        keen_send_event.delay('product_save', keen_data)
