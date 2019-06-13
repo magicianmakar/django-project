@@ -24,7 +24,7 @@ def woo_send_keen_event_for_product(sender, instance, created, **kwargs):
             store = instance.user.models_user.profile.get_woo_stores().first()
 
         keen_data = {
-            'supplier': get_domain(get_domain) if source_url else None,
+            'supplier': get_domain(source_url) if source_url else None,
             'source_url': source_url,
             'store': store.title if store else None,
             'store_type': 'WooCommerce',
