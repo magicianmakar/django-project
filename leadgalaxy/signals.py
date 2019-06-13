@@ -10,8 +10,6 @@ from django.db.models import Q
 from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.contrib.auth.models import User
 
-import keen
-
 from leadgalaxy.models import (
     UserProfile,
     GroupPlan,
@@ -34,6 +32,7 @@ from leadgalaxy.models import (
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
 from stripe_subscription.stripe_api import stripe
+from shopified_core.tasks import keen_send_event
 from goals.models import Goal, UserGoalRelationship
 
 
@@ -250,7 +249,7 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
             'product_type': instance.product_type,
         }
 
-        keen.add_event('product_created', keen_data)
+        keen_send_event.delay('product_created', keen_data)
 
 
 main_subscription_canceled = Signal(providing_args=["stripe_sub"])

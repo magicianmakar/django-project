@@ -2,11 +2,11 @@ from django.core.cache import cache
 from django.http import JsonResponse
 from django.views.generic import View
 
-import keen
 import requests
 
 from shopified_core.utils import hash_text, get_client_ip, safe_float
 from shopified_core.mixins import ApiResponseMixin
+from shopified_core.tasks import keen_send_event
 from metrics.statuspage import record_aliexpress_single_order, record_aliexpress_multi_order
 
 
@@ -29,7 +29,7 @@ class MetricsApi(ApiResponseMixin, View):
                 user_country = requests.get(f'https://ipinfo.io/{user_ip}').json().get('country')
                 cache.set(cache_key, user_country, timeout=9600)
 
-            keen.add_event('auto_fulfill_timing', {
+            keen_send_event.delay('auto_fulfill_timing', {
                 'supplier_type': data.get('supplier'),
                 'order_type': data.get('type'),
                 'user_country': user_country,

@@ -36,7 +36,7 @@ from shopified_core.utils import (
     http_excption_status_code,
     order_data_cache,
 )
-from shopified_core.tasks import keen_add_event
+from shopified_core.tasks import keen_order_event
 
 from .models import (
     GrooveKartStore,
@@ -980,7 +980,7 @@ class OrderPlaceRedirectView(RedirectView):
             })
 
             if not settings.DEBUG:
-                keen_add_event.delay("auto_fulfill", event_data)
+                keen_order_event.delay("auto_fulfill", event_data)
 
             cache.set(event_key, True, timeout=3600)
 

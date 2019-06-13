@@ -4,8 +4,7 @@ from django.conf import settings
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 
-import keen
-
+from shopified_core.tasks import keen_send_event
 from gearbubble_core.models import GearBubbleProduct
 
 
@@ -42,4 +41,4 @@ def gear_send_keen_event_for_product(sender, instance, created, **kwargs):
         if instance.store:
             keen_data['store'] = instance.store.title
 
-        keen.add_event('product_created', keen_data)
+        keen_send_event.delay('product_created', keen_data)

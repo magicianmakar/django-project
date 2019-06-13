@@ -80,7 +80,7 @@ from shopified_core.utils import (
     base64_decode,
     using_replica,
 )
-from shopified_core.tasks import keen_add_event
+from shopified_core.tasks import keen_order_event
 
 from shopify_orders.models import (
     ShopifyOrder,
@@ -4650,7 +4650,7 @@ def orders_place(request):
         })
 
         if not settings.DEBUG:
-            keen_add_event.delay("auto_fulfill", event_data)
+            keen_order_event.delay("auto_fulfill", event_data)
 
         cache.set(event_key, True, timeout=3600)
 

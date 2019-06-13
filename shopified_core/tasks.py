@@ -62,8 +62,14 @@ def update_baremetrics_attributes(self, email, attribute_id, attribute_value):
             raven_client.captureException()
 
 
+# TODO: Remove this task
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=30)
 def keen_add_event(self, event_name, event_data):
+    keen_order_event(event_name, event_data)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=30)
+def keen_order_event(self, event_name, event_data):
     try:
         try:
             if 'product' in event_data:
@@ -86,6 +92,14 @@ def keen_add_event(self, event_name, event_data):
         except:
             pass
 
+        keen.add_event(event_name, event_data)
+    except:
+        raven_client.captureException(level='warning')
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=30)
+def keen_send_event(self, event_name, event_data):
+    try:
         keen.add_event(event_name, event_data)
     except:
         raven_client.captureException(level='warning')

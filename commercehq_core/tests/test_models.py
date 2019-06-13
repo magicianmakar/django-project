@@ -38,7 +38,7 @@ class CommerceHQProductTestCase(BaseTestCase):
 
     @patch('django.conf.settings.DEBUG', False)
     @patch('django.conf.settings.KEEN_PROJECT_ID', True)
-    @patch('keen.add_event')
+    @patch('shopified_core.tasks.keen_send_event.delay')
     def test_send_keen_event_on_create(self, keen_add_event):
         product = CommerceHQProductFactory()
         keen_add_event.assert_called_with(
@@ -62,7 +62,7 @@ class CommerceHQProductTestCase(BaseTestCase):
 
     @patch('django.conf.settings.DEBUG', False)
     @patch('django.conf.settings.KEEN_PROJECT_ID', True)
-    @patch('keen.add_event')
+    @patch('shopified_core.tasks.keen_send_event.delay')
     def test_not_send_keen_event_on_update(self, keen_add_event):
         self.product.save()
         keen_add_event.assert_not_called()
