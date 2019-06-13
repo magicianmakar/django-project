@@ -1,8 +1,6 @@
-from unittest.mock import patch
-
 from lib.test import BaseTestCase
 
-from .factories import GrooveKartStoreFactory, GrooveKartProductFactory
+from .factories import GrooveKartStoreFactory
 
 from leadgalaxy.models import SUBUSER_GKART_STORE_PERMISSIONS
 from leadgalaxy.tests.factories import UserFactory

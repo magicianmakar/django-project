@@ -9,17 +9,15 @@ from .factories import UserFactory, ShopifyStoreFactory, GroupPlanFactory
 from lib.test import BaseTestCase
 from leadgalaxy.utils import create_user_without_signals
 from shopified_core.decorators import add_to_class
-from shopified_core.utils import using_store_db
 from shopify_orders.models import MAX_LOGS, ShopifyOrderLog
 from leadgalaxy.models import (
     SUBUSER_PERMISSIONS,
     SUBUSER_STORE_PERMISSIONS,
-    DataStore,
     GroupPlan,
     SubuserPermission,
     User,
 )
-from .factories import ShopifyProductFactory, ShopifyOrderLogFactory
+from .factories import ShopifyOrderLogFactory
 
 from stripe_subscription.models import StripeCustomer
 from stripe_subscription.tests.factories import StripeCustomerFactory

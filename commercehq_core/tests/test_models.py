@@ -1,8 +1,6 @@
-from unittest.mock import patch
-
 from lib.test import BaseTestCase
 
-from .factories import CommerceHQStoreFactory, CommerceHQProductFactory
+from .factories import CommerceHQStoreFactory
 
 from leadgalaxy.models import SUBUSER_CHQ_STORE_PERMISSIONS
 from leadgalaxy.tests.factories import UserFactory

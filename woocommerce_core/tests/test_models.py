@@ -1,8 +1,6 @@
-from unittest.mock import patch
-
 from lib.test import BaseTestCase
 
-from .factories import WooStoreFactory, WooProductFactory
+from .factories import WooStoreFactory
 
 from leadgalaxy.models import SUBUSER_WOO_STORE_PERMISSIONS
 from leadgalaxy.tests.factories import UserFactory

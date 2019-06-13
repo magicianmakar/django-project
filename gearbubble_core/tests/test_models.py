@@ -1,8 +1,6 @@
-from unittest.mock import patch
-
 from lib.test import BaseTestCase
 
-from .factories import GearBubbleStoreFactory, GearBubbleProductFactory
+from .factories import GearBubbleStoreFactory
 
 from leadgalaxy.models import SUBUSER_GEAR_STORE_PERMISSIONS
 from leadgalaxy.tests.factories import UserFactory
