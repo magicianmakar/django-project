@@ -56,7 +56,9 @@ def subscription_plan(request):
                     "test": settings.DEBUG,
                     "name": f'Dropified {plan.title} {extra_description}'.strip(),
                     "price": price,
+                    "capped_amount": price,
                     "trial_days": plan.trial_days,
+                    "terms": "Dropified Monthly Subscription",
                     "return_url": app_link(reverse(subscription_activated))
                 })
             else:
@@ -69,7 +71,9 @@ def subscription_plan(request):
                     "test": settings.DEBUG,
                     "name": f'Dropified {plan.title} {extra_description}'.strip(),
                     "price": price,
+                    "capped_amount": price,
                     "trial_days": plan.trial_days,
+                    "terms": "Dropified Yearly Subscription",
                     "return_url": app_link(reverse(subscription_activated))
                 })
         except Exception as e:
