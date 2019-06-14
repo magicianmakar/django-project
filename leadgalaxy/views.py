@@ -2236,20 +2236,13 @@ def get_shipping_info(request):
     if request_url:
         request_url = utils.set_url_query(request_url, 'useLocalAddress', 'false')
 
-        cache_key = f'aliexpress_shipping_cache2.{hash_text(request_url)}'
-        data = cache.get(cache_key)
-        if data is None:
-            res = requests.get(
-                url=request_url,
-                headers={
-                    "referer": "https://shoppingcart.aliexpress.com/orders.htm?aeOrderFrom=main_shopcart",
-                })
+        res = requests.get(
+            url=request_url,
+            headers={
+                "referer": "https://shoppingcart.aliexpress.com/orders.htm?aeOrderFrom=main_shopcart",
+            })
 
-            data = res.text
-            if res.ok and '"success":false' not in data:
-                cache.set(cache_key, data, timeout=3600)
-
-        response = HttpResponse(data, content_type='text/javascript;charset=utf-8')
+        response = HttpResponse(res.text, content_type='text/javascript;charset=utf-8')
 
         # Add Cache control to response header
         expire_days = 7
