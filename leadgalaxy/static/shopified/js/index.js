@@ -35,7 +35,7 @@ $('#install-store-form').on('submit', function(e) {
 });
 
 $('#install-store').click(function (e) {
-    var shop = $('#shop-url').val().trim().match(/(?:https?:\/\/)?(?:[^:]*:[^@]*@)?([^/\.]+)(?:\.myshopify\.com)?/);
+    var shop = $('#shop-url').val().trim().match(/(?:https?:\/\/)?(?:[^:]*:[^@]*@)?([^\/\.]+)(?:\.myshopify\.com)?/);
     if (!shop || shop.length != 2) {
         swal('Add Store', 'Store URL is not correct!', 'error');
         return;
@@ -70,7 +70,7 @@ $('#install-store').click(function (e) {
 });
 
 $('#add-store').click(function(e) {
-    var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
+    var url = $('#store-url').val().match(/[^\*:\/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
 
     if (!url || url.length != 1) {
         swal('Add Store', 'API URL is not correct!', 'error');
@@ -232,7 +232,7 @@ $('#update-store').click(function (e) {
     var btn = $(this);
     var store = $('#store-name').attr('store-id');
     var name = $('#store-name').val();
-    var url = $('#store-url').val().match(/[^\*:/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
+    var url = $('#store-url').val().match(/[^\*:\/]{10,}:[^\*:]{10,}@[^\.]+\.myshopify\.com/);
 
     if (!url || url.length != 1) {
         swal('Add Store', 'API URL is not correct!', 'error');
