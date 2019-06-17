@@ -908,23 +908,66 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                 <h4 class="modal-title">Bulk Order Processing</h4>
             </div>
             <div class="modal-body">
-                <div class="row">
-                    <div class="col-sm-12">
-                        <div class="update-progress">
-                            <div class="progress progress-striped active">
-                                <div style="width: 0%;" class="progress-bar progress-bar-success"></div>
+                <div id="bulk-order-steps">
+                    <h1>Select Pages</h1>
+                    <div class="bulk-order-step">
+                        <h2>Select the pagination range to queue</h2>
+                        <p>Total number of pages: {{ paginator.num_pages }}</p>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>From</label>
+                                    <input type="text" class="form-control" name="queue_page_from" value="1">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>To</label>
+                                    <input type="text" class="form-control" name="queue_page_to" value="{{ paginator.num_pages }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-12">
+                                <div id="bulk-order-step-error" class="form-group has-error" style="display: none;">
+                                    <span class="help-block"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <h1>Load Orders</h1>
+                    <div class="bulk-order-step">
+                        <h2>Wait while we load your orders</h2>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="update-progress">
+                                    <div class="progress progress-striped active">
+                                        <div style="width: 0%;" class="progress-bar progress-bar-success"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-3">
+                                <button class="btn btn-danger btn-outline stop-bulk-btn" style=""
+                                        data-store="{{store.id}}" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Stopping..."
+                                        data-continue-text="<i class='fa fa-play-circle-o'></i> Continue">
+                                    <i class="fa fa-stop-circle"></i> Stop
+                                </button>
+                            </div>
+                            <div class="col-sm-9">
+                                <div id="bulk-order-load-error" class="text-right form-group has-error" style="display: none;">
+                                    <span class="help-block">Wait for the loading to end or click in stop to finish</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h1>Send to Queue</h1>
+                    <div class="bulk-order-step">
+                        <h2>You Have <span id="bulk-order-count"></span> that need fulfillment</h2>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger btn-outline pull-left stop-bulk-btn" style=""
-                    data-store="{{store.id}}" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Stopping...">
-                    <i class="fa fa-stop-circle"></i> Stop</button>
             </div>
         </div>
     </div>
@@ -1002,6 +1045,7 @@
 {% compress css %}
 <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+<link href="{% static 'libs/bower_components/jquery.steps/demo/css/jquery.steps.css' %}" rel="stylesheet">
 <link href="{% static 'shopified/css/orders.css' %}" rel="stylesheet">
 
 {% endcompress %}
@@ -1034,6 +1078,7 @@
     <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}" type="text/javascript"></script>
+    <script src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/shopify_product_selector.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}

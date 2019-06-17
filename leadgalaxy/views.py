@@ -3414,6 +3414,8 @@ def orders_view(request):
     store = None
     post_per_page = safe_int(request.GET.get('ppp'), 20)
     page = safe_int(request.GET.get('page'), 1)
+    page_start = safe_int(request.GET.get('page_start'), 1)
+    page += page_start - 1
 
     store = utils.get_store_from_request(request)
     if not store:
