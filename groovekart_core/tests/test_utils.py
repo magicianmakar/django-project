@@ -16,13 +16,18 @@ from .factories import GrooveKartStoreFactory, GrooveKartProductFactory
 
 
 class GetVariantValueTestCase(BaseTestCase):
-    def test_must_return_dictionary_for_color_value(self):
-        label, value = get_variant_value('Color', 'red')
-        self.assertEqual((label, value), ('Color', {'name': 'red'}))
-
-    def test_must_return_string_for_non_color_values(self):
+    def test_must_return_dict_for_non_color_values(self):
         label, value = get_variant_value('Size', 'S')
-        self.assertEqual((label, value), ('Size', 'S'))
+        new_value = {'variant_group_type': 'select', 'variant_name': 'S'}
+        self.assertEqual((label, value), ('Size', new_value))
+
+    def test_must_include_color_hash_for_color_label(self):
+        label, value = get_variant_value('Color', 'red')
+        self.assertIn('color', value)
+
+    def test_must_use_color_for_variant_group_for_color_label(self):
+        label, value = get_variant_value('Color', 'red')
+        self.assertTrue(value['variant_group_type'], 'color')
 
 
 class GetOrdersPageDefaultDateRange(BaseTestCase):

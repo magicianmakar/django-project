@@ -163,7 +163,10 @@ def product_export(store_id, product_id, user_id):
 
         if variants:
             for variant in variants:
-                variant_groups.append({"name": variant['title'], "group_type": "select"})
+                if variant['title'].lower() == 'color':
+                    variant_groups.append({"name": variant['title'], "group_type": "color"})
+                else:
+                    variant_groups.append({"name": variant['title'], "group_type": "select"})
 
             api_data['product']['variant_groups'] = variant_groups
 

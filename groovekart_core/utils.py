@@ -541,7 +541,9 @@ def order_track_fulfillment(order_track, user_config=None):
 
 
 def get_variant_value(label, value):
-    return ('Color', {'name': value}) if label.lower() == 'color' else (label, value)
+    if label.lower() == 'color':
+        return ('Color', {'variant_group_type': 'color', 'variant_name': value, 'color': '#FFFFFF'})
+    return (label, {'variant_group_type': 'select', 'variant_name': value})
 
 
 def get_orders_page_default_date_range(timezone):
