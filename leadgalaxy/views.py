@@ -26,6 +26,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as user_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.contrib.auth.views import login as login_view
 from django.conf import settings
 from django.core.cache import cache, caches
 from django.core.cache.utils import make_template_fragment_key
@@ -1399,6 +1400,30 @@ def webhook(request, provider, option):
                 return HttpResponse(f'Affiliate {command}d for {user_id}')
             else:
                 return HttpResponse(':x: Unknown Command: {} {}'.format(request.POST['command'], command))
+
+        elif request.POST['command'] == '/login-as':
+            args = request.POST['text'].split(' ')
+            email = args[0]
+
+            try:
+                user = User.objects.get(email__iexact=email)
+            except:
+                return HttpResponse(f':x: User not found {email} (or duplicate accounts) {request_from.email}')
+
+            token = token = jwt.encode({
+                'id': user.id,
+                'exp': arrow.utcnow().replace(hours=1).timestamp
+            }, settings.API_SECRECT_KEY, algorithm='HS256')
+
+            link = app_link(reverse('sudo_login'), token=token)
+
+            AdminEvent.objects.create(
+                user=request_from,
+                event_type='generate_login_as_user',
+                target_user=user,
+                data=json.dumps({'token': token}))
+
+            return HttpResponse(f'Login as {user.email} using:\n{link}')
 
         else:
             return HttpResponse(':x: Unknown Command: {}'.format(request.POST['command']))
@@ -5037,7 +5062,35 @@ def register(request, registration=None, subscribe_plan=None):
 
 
 def sudo_login(request):
-    from django.contrib.auth.views import login as login_view
+    if request.GET.get('token'):
+        token = request.GET.get('token')
+
+        data = jwt.decode(token, settings.API_SECRECT_KEY, algorithm='HS256')
+        if not request.user.is_authenticated:
+            return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, quote_plus(request.GET.urlencode())))
+
+        target_user = User.objects.get(id=data['id'])
+
+        AdminEvent.objects.create(
+            user=request.user,
+            event_type='login_as_user',
+            target_user=target_user,
+            data=json.dumps({'token': token}))
+
+        hijacker = request.user
+        hijack_history = [request.user._meta.pk.value_to_string(hijacker)]
+        if request.session.get('hijack_history'):
+            hijack_history = request.session['hijack_history'] + hijack_history
+
+        target_user.backend = settings.AUTHENTICATION_BACKENDS[0]
+        login(request, target_user)
+
+        request.session['hijack_history'] = hijack_history
+        request.session['is_hijacked_user'] = True
+        request.session['display_hijack_warning'] = True
+        request.session.modified = True
+
+        return redirect('/')
 
     target_user = None
     if request.session.get('sudo_user'):
