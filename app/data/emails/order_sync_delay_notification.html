@@ -77,7 +77,7 @@
     <img class="logo" src="https://d2kadg5e284yn4.cloudfront.net/static/dropified-logo.png" width="220" height="50" alt="logo" />
     <div class="content">
      	<p>Hi,</p>
-	    <p>{{count}} order(s) haven't shipped in time:</p>
+	    <p>{{count}} {% if count > 1 %}orders{% else %}order{% endif %} haven't shipped in time:</p>
 	    <p style="margin-bottom: 10px; line-height: 36px;">
 	        You can find more details by visiting the <a href="{{url}}" target="_blank" title="Order Tracking Page">Tracking Page</a>
 	    </p>
