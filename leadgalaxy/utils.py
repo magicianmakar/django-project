@@ -2953,9 +2953,11 @@ def format_queueable_orders(request, orders, current_page):
 
                 orders_result.append(queue_order)
 
-    if current_page.has_next():
+    page_end = safe_int(request.GET.get('page_end'), 0)
+    page_start = safe_int(request.GET.get('page_start'), 1) - 1
+    if current_page.has_next() and (not page_end or current_page.next_page_number() <= page_end):
         params = request.GET.copy()
-        params['page'] = current_page.next_page_number()
+        params['page'] = current_page.next_page_number() - page_start
         next_page_url = app_link(request.path, **params.dict())
 
     return JsonResponse({

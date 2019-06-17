@@ -1061,8 +1061,11 @@ $('.help-select').each(function (i, el) {
     $(el).trigger('change');
 });
 
+window.bulkOrderQueue = null;
 function fetchOrdersToQueue(data) {
-    var bulkOrdersFound = 0;
+    $('.stop-bulk-btn').show();
+    $('.stop-bulk-btn').button('reset').removeClass('btn-primary').addClass('btn-danger');
+
     var api_url = /^http/.test(data) ? data : cleanUrlPatch(window.location.href);
     var api_data = /^http/.test(data) ? null : data;
     $.ajax({
@@ -1078,51 +1081,31 @@ function fetchOrdersToQueue(data) {
                 .attr('current', page);
 
             $.each(data.orders, function (i, order) {
-                window.ordersQueueData.push(order);
+                window.bulkOrderQueue.data.push(order);
             });
 
-            if (data.next && !window.bulkOrderStop) {
+            window.bulkOrderQueue.next = data.next;
+            if (data.next && !window.bulkOrderQueue.stop) {
                 fetchOrdersToQueue(data.next);
+            } else if (!data.next) {
+                $('.stop-bulk-btn').hide();
+                $("#bulk-order-steps").steps('next');
             } else {
-                window.bulkOrderStop = false;
+                $('.stop-bulk-btn').button('continue');
+                $('.stop-bulk-btn').removeClass('btn-danger').addClass('btn-primary');
 
-                $('.stop-bulk-btn').button('reset');
-                $('#bulk-order-modal').modal('hide');
-
-                if (window.ordersQueueData.length) {
-                    swal({
-                        title: 'Bulk Orders Processing',
-                        text: 'You have ' + window.ordersQueueData.length + ' Order' +
-                              (window.ordersQueueData.length ? 's' : '') + ' that need to be fulfilled',
-                        type: "success",
-                        showCancelButton: true,
-                        animation: false,
-                        cancelButtonText: "Cancel",
-                        confirmButtonText: 'Continue',
-                        closeOnCancel: true,
-                        closeOnConfirm: false,
-                        showLoaderOnConfirm: true,
-                    },
-                    function(isConfirm) {
-                        if (isConfirm) {
-                            $.each(window.ordersQueueData, function (i, order) {
-                                addOrderToQueue(order, false);
-                            });
-
-                            swal.close();
-                        }
-                    });
-                } else {
-                    swal({
-                        title: 'Bulk Orders Processing',
-                        text: 'No order has been found!',
-                        type: "warning"
-                    });
+                var currentStep = $("#bulk-order-steps").steps('getCurrentIndex');
+                if (currentStep == 1) {  // Still at progress bar step
+                    $("#bulk-order-steps").steps('next');
                 }
             }
         },
         error: function(data) {
             displayAjaxError('Bulk Order Processing', data);
+
+            window.bulkOrderQueue.stop = true;
+            $('.stop-bulk-btn').button('continue');
+            $('.stop-bulk-btn').removeClass('btn-danger').addClass('btn-primary');
         }
     });
 }
@@ -1141,31 +1124,127 @@ $('.bulk-order-btn').click(function (e) {
         return;
     }
 
-    window.ordersQueueData = [];
-
-    $('#bulk-order-modal .progress .progress-bar').css('width', '0px');
-    $('#bulk-order-modal .progress .progress-bar').attr('max', $(e.target).attr('pages-count'));
-    $('#bulk-order-modal .progress .progress-bar').attr('current', '0');
+    window.bulkOrderQueue = {pages: {}, data: [], stop: false, next: null};
 
     $('#bulk-order-modal').modal({
         backdrop: 'static',
         keyboard: false
     });
-
-    var formData = $('form.filter-form').serializeArray();
-    formData.push({
-        name: 'bulk_queue',
-        value: '1',
-    });
-
-    fetchOrdersToQueue(formData);
 });
 
-$('.stop-bulk-btn').click(function (e) {
+$('#bulk-order-modal').on('click', '.stop-bulk-btn', function (e) {
     e.preventDefault();
 
-    window.bulkOrderStop = true;
-    $(e.target).button('loading');
+    if (window.bulkOrderQueue.stop == true && window.bulkOrderQueue.next) {
+        $(e.target).button('reset').removeClass('btn-danger').addClass('btn-primary');
+        window.bulkOrderQueue.stop = false;
+        fetchOrdersToQueue(window.bulkOrderQueue.next);
+    } else {
+        window.bulkOrderQueue.stop = true;
+        $(e.target).button('loading');
+    }
+});
+
+$("#bulk-order-steps").steps({
+    bodyTag: "div.bulk-order-step",
+    enableAllSteps: false,
+    forceMoveForward: true,
+    labels: {
+        finish: "Start ordering",
+    },
+    onStepChanging: function(event, currentIndex, newIndex) {
+        // Always allow going backward
+        if (currentIndex > newIndex) {
+            return true;
+        }
+
+        if (currentIndex == 0) {
+            var pageFrom = parseInt($('[name="queue_page_from"]').val());
+            var pageTo = parseInt($('[name="queue_page_to"]').val());
+            var maxPages = parseInt($('.bulk-order-btn').attr('pages-count'));
+
+            if (isNaN(pageFrom) || isNaN(pageTo)) {
+                $('#bulk-order-step-error').css('display', '');
+                $('#bulk-order-step-error span').text('Page range is not a number');
+
+                return false;
+            } else if (pageFrom < 1 || pageTo > maxPages) {
+                $('#bulk-order-step-error').css('display', '');
+                $('#bulk-order-step-error span').text('Page numbers outside of range 1-' + maxPages);
+
+                return false;
+            } else if (pageFrom > pageTo) {
+                $('#bulk-order-step-error').css('display', '');
+                $('#bulk-order-step-error span').text('Starting page number must be higher than ending');
+
+                return false;
+            } else {
+                $('#bulk-order-step-error').css('display', 'none');
+                $('#bulk-order-step-error span').text('');
+                window.bulkOrderQueue = {
+                    pages: {
+                        'from': pageFrom,
+                        'to': pageTo
+                    },
+                    data: [],
+                    stop: false,
+                    next: null
+                };
+            }
+        } else if (currentIndex == 1) {
+            var progress = $('#bulk-order-modal .progress .progress-bar');
+            var progressMax = parseInt(progress.attr('max'));
+            var progressCurrent = parseInt(progress.attr('current'));
+
+            if (progressMax == progressCurrent || window.bulkOrderQueue.stop) {
+                $('#bulk-order-load-error').css('display', 'none');
+            } else {
+                $('#bulk-order-load-error').css('display', '');
+                return false;
+            }
+        }
+
+        return true;
+    },
+    onStepChanged: function (event, currentIndex, priorIndex) {
+        if (currentIndex == 0) {
+            // Stop progress if we go back to one
+            window.bulkOrderQueue.stop = true;
+
+        } else if (currentIndex == 1 && priorIndex == 0) {  // Coming from "Select Pages" step
+            window.bulkOrderQueue.stop = false;
+            window.bulkOrderQueue.data = [];
+
+            var maxPages = window.bulkOrderQueue.pages.to - window.bulkOrderQueue.pages.from + 1;
+            $('#bulk-order-modal .progress .progress-bar').css('width', '0px');
+            $('#bulk-order-modal .progress .progress-bar').attr('max', maxPages);
+            $('#bulk-order-modal .progress .progress-bar').attr('current', '0');
+
+            var formData = $('form.filter-form').serializeArray();
+            formData.push({name: 'bulk_queue', value: '1'});
+            formData.push({name: 'page_start', value: window.bulkOrderQueue.pages.from});
+            formData.push({name: 'page_end', value: window.bulkOrderQueue.pages.to});
+
+            fetchOrdersToQueue(formData);
+        } else if (currentIndex == 2) {
+            var queueOrdersLength = window.bulkOrderQueue.data.length;
+
+            if (queueOrdersLength == 0) {
+                $('#bulk-order-count').text('No Orders');
+            } else if (queueOrdersLength == 1) {
+                $('#bulk-order-count').text('1 Order');
+            } else if (queueOrdersLength > 1) {
+                $('#bulk-order-count').text(queueOrdersLength + ' Orders');
+            }
+        }
+    },
+    onFinished: function (event, currentIndex) {
+        $.each(window.bulkOrderQueue.data, function (i, order) {
+            addOrderToQueue(order, false);
+        });
+
+        $('#bulk-order-modal').modal('hide');
+    }
 });
 
 $('#country-filter').chosen({
