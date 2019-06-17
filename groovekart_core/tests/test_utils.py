@@ -51,3 +51,10 @@ class UpdateProductImagesTestCase(BaseTestCase):
         images = []
         update_product_images(product, images)
         self.assertFalse(post_request.called)
+
+    @patch('groovekart_core.models.GrooveKartStoreSession.post')
+    def test_must_not_send_to_store_if_image_is_from_groovekart(self, post_request):
+        product = GrooveKartProductFactory(store=GrooveKartStoreFactory())
+        images = ['http://groovekart.com/test.jpg']
+        update_product_images(product, images)
+        self.assertFalse(post_request.called)
