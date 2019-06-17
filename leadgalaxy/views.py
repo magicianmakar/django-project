@@ -1410,6 +1410,9 @@ def webhook(request, provider, option):
             except:
                 return HttpResponse(f':x: User not found {email} (or duplicate accounts) {request_from.email}')
 
+            if user.is_superuser or user.is_staff:
+                return HttpResponse(f':x: Can not login as {email} (Staff account)')
+
             token = token = jwt.encode({
                 'id': user.id,
                 'exp': arrow.utcnow().replace(hours=1).timestamp
