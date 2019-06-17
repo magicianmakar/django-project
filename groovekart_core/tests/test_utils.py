@@ -16,13 +16,18 @@ from .factories import GrooveKartStoreFactory, GrooveKartProductFactory
 
 
 class GetVariantValueTestCase(BaseTestCase):
-    def test_must_return_dictionary_for_color_value(self):
-        label, value = get_variant_value('Color', 'red')
-        self.assertEqual((label, value), ('Color', {'name': 'red'}))
-
-    def test_must_return_string_for_non_color_values(self):
+    def test_must_return_dict_for_non_color_values(self):
         label, value = get_variant_value('Size', 'S')
-        self.assertEqual((label, value), ('Size', 'S'))
+        new_value = {'variant_group_type': 'select', 'variant_name': 'S'}
+        self.assertEqual((label, value), ('Size', new_value))
+
+    def test_must_include_color_hash_for_color_label(self):
+        label, value = get_variant_value('Color', 'red')
+        self.assertIn('color', value)
+
+    def test_must_use_color_for_variant_group_for_color_label(self):
+        label, value = get_variant_value('Color', 'red')
+        self.assertTrue(value['variant_group_type'], 'color')
 
 
 class GetOrdersPageDefaultDateRange(BaseTestCase):
@@ -49,5 +54,12 @@ class UpdateProductImagesTestCase(BaseTestCase):
     def test_must_not_send_post_request_to_store_if_images_is_empty(self, post_request):
         product = GrooveKartProductFactory(store=GrooveKartStoreFactory())
         images = []
+        update_product_images(product, images)
+        self.assertFalse(post_request.called)
+
+    @patch('groovekart_core.models.GrooveKartStoreSession.post')
+    def test_must_not_send_to_store_if_image_is_from_groovekart(self, post_request):
+        product = GrooveKartProductFactory(store=GrooveKartStoreFactory())
+        images = ['http://groovekart.com/test.jpg']
         update_product_images(product, images)
         self.assertFalse(post_request.called)

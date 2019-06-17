@@ -57,9 +57,7 @@ function upload_file(file, signed_request, url){
 }
 
 function file_uploaded(url) {
-    var imageId = url.split('/');
-    imageId = imageId[imageId.length - 1];
-    product.images[imageId] = url;
+    product.images.push(url);
     document.renderImages();
 
     $.ajax({
