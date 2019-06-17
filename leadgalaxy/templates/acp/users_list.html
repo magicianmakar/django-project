@@ -926,6 +926,23 @@
             });
 
             handleEvents();
+
+            if (getQueryVariable('user') && getQueryVariable('bundle') && getQueryVariable('auto') === 'bundle') {
+                $.ajax({
+                    type: 'POST',
+                    url: '/api/add-bundle',
+                    data: {
+                        'bundle': getQueryVariable('bundle'),
+                        'user': getQueryVariable('user')
+                    },
+                    success: function(data) {
+                        swal('Bundle ' + data.bundle.title + ' add to ' + data.user.email);
+                    },
+                    error: function(data) {
+                        displayAjaxError('Add Bundle', data);
+                    }
+                });
+            }
         });
     </script>
 {% endblock %}

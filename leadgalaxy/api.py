@@ -608,7 +608,15 @@ class ShopifyStoreApi(ApiBase):
 
         target_user.profile.bundles.add(bundle)
 
-        return self.api_success()
+        return self.api_success({
+            'user': {
+                'email': target_user.email
+            },
+            'bundle': {
+                'title': bundle.title,
+                'id': bundle.id
+            }
+        })
 
     def post_stripe_refund_charge(self, request, user, data):
         if not user.is_superuser and not user.is_staff:
