@@ -1266,7 +1266,7 @@ var FacebookProfitDashboard = {
                             },
                             success: function(data) {
                                 swal.close();
-                                toastr.success("Your account have been disconnected.", "Facebook");
+                                toastr.success("Your account has been disconnected.", "Facebook");
                                 FB.logout();
                             },
                             error: function(data) {
