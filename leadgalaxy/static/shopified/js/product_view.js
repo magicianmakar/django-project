@@ -734,7 +734,7 @@ function bindExportEvents(target) {
                 'product': form.data('product-id'),
             },
             success: function(data) {
-                toastr.success('It may a couple of minutes to complete.', 'Inventory Syncing Started');
+                toastr.success('It may take a couple of minutes to complete.', 'Inventory Syncing Started');
             },
             error: function(data) {
                 displayAjaxError('Inventory Syncing', data);
