@@ -1218,6 +1218,9 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
         else:
             customer_address[k] = shipping_address[k]
 
+    if not customer_address['country']:
+        customer_address['country'] = ''
+
     customer_address['country'] = country_from_code(customer_address['country_code'], customer_address['country'])
 
     customer_province = customer_address['province']
