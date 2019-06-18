@@ -337,7 +337,7 @@ def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_
 
     customer_province = customer_address['province']
     if not customer_address.get('province'):
-        if safe_str(customer_address['country']).lower() == 'united kingdom' and customer_address['city']:
+        if customer_address['country'].lower() == 'united kingdom' and customer_address['city']:
             province = get_uk_province(customer_address['city'])
             customer_address['province'] = province
         else:
@@ -413,7 +413,7 @@ def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_
             if support_other_in_province(customer_address['country']):
                 customer_address['province'] = 'Other'
 
-                if safe_str(customer_address['country']).lower() == 'united kingdom' and customer_address['city']:
+                if customer_address['country'].lower() == 'united kingdom' and customer_address['city']:
                     province = get_uk_province(customer_address['city'])
                     if province:
                         customer_address['province'] = province
