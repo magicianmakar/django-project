@@ -3740,20 +3740,18 @@ def orders_view(request):
                 }
             })
 
+        product_ids_search = []
         if product_filter:
-            should_products = [{'match': {'product_ids': product_id}} for product_id in product_filter]
-            _must_term.append({
-                'bool': {
-                    'should': should_products
-                }
-            })
+            product_ids_search += product_filter
 
         if supplier_filter:
             products = ShopifyProduct.objects.filter(default_supplier__supplier_name=supplier_filter)
-            should_products = [{'match': {'product_ids': product.id}} for product in products]
+            product_ids_search += [product.id for product in products]
+
+        if product_ids_search:
             _must_term.append({
-                'bool': {
-                    'should': should_products
+                'terms': {
+                    'product_ids': list(set(product_ids_search))
                 }
             })
 
