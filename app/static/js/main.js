@@ -656,6 +656,60 @@ function editor_sync_content() {
     });
 }
 
+function comapre_sku(a, b) {
+    try {
+        return a.split(/[-:]/).pop().toLowerCase().trim() === b.split(/[-:]/).pop().toLowerCase().trim() ;
+    } catch (e) {
+        return false;
+    }
+}
+
+function select_variant(variants, variant_title, variant_sku) {
+    // variants: Shopify variants to select
+    // variant_title: variant name to test if need to be selected
+    // variant_sku: variant SKU to test if need to be selected
+
+    variant_title = variant_title.toLowerCase().trim();
+    if (variant_sku) {
+        variant_sku = variant_sku.toLowerCase().trim();
+    }
+
+    if (typeof(variants) === 'string' && variants.toLowerCase().trim() == variant_title) {
+        // Simple variant compare
+        return true;
+    } else {
+        if (typeof(variants) === 'string') {
+            if (variants.trim().startsWith('[') && variants.trim().endsWith(']')) {
+                variants = JSON.parse(variants);
+            } else if (variants.indexOf(',') != -1) {
+                // variants is string list of variants separated by ,
+                variants = variants.split(',');
+            }
+        }
+
+        if (typeof(variants) === 'object') {
+            for (var i = 0; i < variants.length; i++) {
+                var mapped = variants[i];
+                if (typeof(mapped) === 'string') {
+                    if (mapped.toLowerCase().trim() == variant_title) {
+                        return true;
+                    }
+                } else if (typeof(mapped) === 'object') {
+                    if (mapped.sku && variant_sku) {
+                        if (comapre_sku(mapped.sku, variant_sku) && mapped.title.toLowerCase().trim() === variant_title) {
+                            return true;
+                        }
+                    } else if (mapped.title.toLowerCase().trim() == variant_title) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
 $(function() {
     $('.icheck').iCheck({
         checkboxClass: 'icheckbox_square-blue',
