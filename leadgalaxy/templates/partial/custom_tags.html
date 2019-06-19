@@ -42,6 +42,7 @@
                 chq_count: {{user.profile.get_chq_stores.count}},
                 woo_count: {{user.profile.get_woo_stores.count}},
                 gear_count: {{user.profile.get_gear_stores.count}},
+                gkart_count: {{user.profile.get_gkart_stores.count}},
                 {% endcache %}
 
                 {% cache 604800 total_orders user.id %}
