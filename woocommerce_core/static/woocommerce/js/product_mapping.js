@@ -35,9 +35,7 @@
                             if (mapped.sku.toLowerCase().trim() == variant_sku) {
                                 return true;
                             }
-                        }
-
-                        if (mapped.title.toLowerCase().trim() == variant_title) {
+                        } else if (mapped.title.toLowerCase().trim() == variant_title) {
                             return true;
                         }
                     }
