@@ -328,11 +328,15 @@ def product_update(product_id, data):
 
         variants = []
         for variant in data.get('variants'):
-            variants.append({
+            info = {
                 'id': variant.get('id'),
                 'price': f'{variant.get("price"):,.2f}',
-                'compare_at_price': f'{variant.get("compare_at_price"):,.2f}'
-            })
+            }
+
+            if variant.get("compare_at_price"):
+                info['compare_at_price'] = f'{variant.get("compare_at_price"):,.2f}'
+
+            variants.append(info)
 
         api_data = {
             'action': 'update',
