@@ -6,6 +6,11 @@
 
 var image_cache = {};
 
+document.linkNewUrlToOldImage = function (image, newUrl) {
+    var originalUrl = image.attr('image-url');
+    config.old_to_new_url[originalUrl] = newUrl;
+};
+
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
@@ -374,6 +379,7 @@ $('#export-btn').click(function () {
             'store': store_id,
             'data': JSON.stringify(api_data),
             'b': true,
+            'old_to_new_url': JSON.stringify(config.old_to_new_url),
         }),
         contentType: "application/json; charset=utf-8",
         dataType: "json",

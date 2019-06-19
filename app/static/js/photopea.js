@@ -59,6 +59,7 @@
                         var image = $('#' + data.image_id);
                         image.attr('src', data.url);
                         product.images[parseInt(image.attr('image-id'), 10)] = data.url;
+                        document.linkNewUrlToOldImage(image, data.url);
                     }, 500);
                 } else {
                     displayAjaxError('Advanced Editor', data);

@@ -63,6 +63,7 @@ window.asi = function(img, blob, imageBytes, type) {
         success: function(data) {
             $('#product-image-' + imageID).prop('src', data.url);
             window.product.images[imageID] = data.url;
+            document.linkNewUrlToOldImage($('#product-image-' + imageID), data.url);
 
 
             if (window.asic) { // Send new url to the editor

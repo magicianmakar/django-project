@@ -165,6 +165,10 @@ def export_product(req_data, target, user_id):
                 product = ShopifyProduct.objects.get(id=req_data['product'])
                 permissions.user_can_edit(user, product)
 
+                parsed_data = link_variants_to_new_images(product,
+                                                          parsed_data,
+                                                          req_data)
+
                 api_data = parsed_data
                 api_data['product']['id'] = product.get_shopify_id()
 
@@ -1529,3 +1533,31 @@ def delete_user(self, user_id):
         raven_client.captureMessage('Delete User', level='info', extra={'Saved Products': products})
     except:
         raven_client.captureException()
+
+
+def link_variants_to_new_images(product, new_data, req_data):
+    old_to_new_image_url = json.loads(req_data.get('old_to_new_url', '{}'))
+
+    new_images = new_data['product']['images']
+
+    # Retrieve the current data from Shopify.
+    shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
+    shopify_images = shopify_product['images']
+
+    for shopify_image in shopify_images:
+        old_image_src = shopify_image['src']
+        if old_image_src not in old_to_new_image_url:
+            continue
+
+        # Get the variants that were linked to the previous image.
+        variant_ids = shopify_image.get('variant_ids', [])
+        if not variant_ids:
+            continue
+
+        new_image_src = old_to_new_image_url[old_image_src]
+        for new_image in new_images:
+            if new_image_src == new_image.get('src'):
+                # Link the variants to the updated image.
+                new_image['variant_ids'] = variant_ids
+
+    return new_data
