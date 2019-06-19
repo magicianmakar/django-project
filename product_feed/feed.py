@@ -48,7 +48,7 @@ class ProductFeed():
 
         self.revision = safe_int(revision, 1)  # 1,2: For FaceBook - 3: For Google
         self.all_variants = all_variants
-        self.include_variants = include_variants or self.revision == 3
+        self.include_variants = include_variants
         self.default_product_category = default_product_category
 
         self.feed = feed
