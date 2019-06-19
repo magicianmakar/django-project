@@ -42,7 +42,11 @@ class GrooveKartStoreSession(Session):
 
     def update_json_data(self, kwargs):
         auth_token, api_key = self._store.api_token, self._store.api_key
-        kwargs['json'].update({'auth_token': auth_token, 'api_key': api_key})
+        kwargs['json'].update({
+            'auth_token': auth_token,
+            'api_key': api_key,
+            'api_user': 'dropified',
+        })
 
         return kwargs
 
