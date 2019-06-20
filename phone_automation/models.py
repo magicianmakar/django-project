@@ -198,8 +198,7 @@ class TwilioPhoneNumber(models.Model):
 class TwilioUpload(models.Model):
     class Meta:
         ordering = ['-created_at']
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='twilio_uploads', on_delete=models.CASCADE)
     # phone = models.ForeignKey(TwilioPhoneNumber, on_delete=models.CASCADE)
     automation = models.ForeignKey(TwilioAutomation, related_name='automation', null=True)
     url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")

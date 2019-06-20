@@ -2,7 +2,7 @@ import json
 
 from django import forms
 
-from phone_automation.models import TwilioAlert, TwilioAutomation, TwilioCompany, TwilioPhoneNumber, TwilioStep, TwilioSummary
+from phone_automation.models import TwilioAlert, TwilioAutomation, TwilioCompany, TwilioPhoneNumber, TwilioStep, TwilioSummary, TwilioUpload
 
 
 class TwilioAutomationForm(forms.ModelForm):
@@ -24,6 +24,13 @@ class TwilioAutomationForm(forms.ModelForm):
                     next_step=node.get('next_step'),
                     config=json.dumps(node.get('config')),
                 )
+
+                # update uplaod which where saved on callflow creation step
+                if node.get('config').get('upload_id'):
+                    twilio_upload_id = node.get('config').get('upload_id')
+                    twilio_upload = TwilioUpload.objects.filter(pk=twilio_upload_id).first()
+                    twilio_upload.automation = automation
+                    twilio_upload.save()
 
             if len(node.get('children')):
                 for node in node.get('children'):

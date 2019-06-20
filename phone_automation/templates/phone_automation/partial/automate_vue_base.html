@@ -23,7 +23,7 @@
 
 
 <script type="text/x-template" id="mp3-upload-tpl">
-    <div :data-audio="model.config.mp3">
+    <div :data-audio="model.config.mp3" :data-audio-upload-id="model.config.upload_id" >
         <form enctype="multipart/form-data" novalidate>
             <div v-if="!isSaving">
                 <input v-if="!model.config.mp3"
@@ -32,6 +32,7 @@
                        type="file"
                        class="form-control"
                        accept="audio/mp3">
+
 
                 <div v-if="model.config.mp3" class="alert alert-info">
                       <button @click="removeUploadedFile" type="button" class="close" aria-label="Close"><span aria-hidden="true">&times;</span></button>

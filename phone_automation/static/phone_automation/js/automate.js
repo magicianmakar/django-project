@@ -103,6 +103,8 @@ Vue.component('mp3-upload', {
                 success: function(data) {
                     if (data.status) {
                         that.model.config.mp3 = data.url;
+                        that.model.config.upload_id = data.id;
+
                     }
                 },
                 error: function(data) {

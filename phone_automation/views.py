@@ -12,7 +12,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.db.models import Sum
 from django.utils import timezone
-
+from django.utils.crypto import get_random_string
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from twilio.base.exceptions import TwilioRestException
@@ -528,16 +528,18 @@ def automate(request, twilio_automation_id=None):
 @login_required
 def upload(request, twilio_automation_id):
     user = request.user.models_user
-
-    twilio_automation = get_object_or_404(TwilioAutomation, pk=twilio_automation_id, user=request.user.models_user)
+    if twilio_automation_id:
+        twilio_automation = request.user.twilio_automations.filter(pk=twilio_automation_id).first()
+    else:
+        twilio_automation = None
 
     audio = request.FILES.get('mp3')
     step = request.POST.get('step')
 
     # Randomize filename in order to not overwrite an existing file
     ext = audio.name.split('.')[1:]
-    audio_name = '{}-{}.{}'.format(twilio_automation.id, step, '.'.join(ext))
-    audio_name = 'uploads/u{}/phone/{}'.format(user.id, audio_name)
+    random_name = get_random_string(length=10)
+    audio_name = 'uploads/u{}/phone/{}/s-{}/{}'.format(user.id, random_name, step, '.'.join(ext))
     mimetype = mimetypes.guess_type(audio.name)[0]
 
     upload_url = aws_s3_upload(
@@ -547,7 +549,7 @@ def upload(request, twilio_automation_id):
         bucket_name=settings.S3_UPLOADS_BUCKET
     )
 
-    TwilioUpload.objects.create(
+    twilio_upload = TwilioUpload.objects.create(
         user=user,
         automation=twilio_automation,
         url=upload_url[:510]
@@ -555,7 +557,8 @@ def upload(request, twilio_automation_id):
 
     return JsonResponse({
         'status': 'ok',
-        'url': upload_url
+        'url': upload_url,
+        'id': twilio_upload.id
     })
 
 
