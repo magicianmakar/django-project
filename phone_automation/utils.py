@@ -410,8 +410,9 @@ def send_callflexlimit_warning(user, phone_type="tollfree"):
         tpl='callflex_limit_warning.html',
         subject='CallFlex Monthly Limit Warning',
         recipient=user.email,
+        is_async=True,
         data={
-            'callflex_limit': (month_limit_percent * 100) + "%",
+            'callflex_limit': f'{month_limit_percent * 100:.0f}%',
             'phone_type': phone_type,
             'purchase_link': app_link("user/profile/#plan")
         }
