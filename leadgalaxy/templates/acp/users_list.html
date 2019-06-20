@@ -34,6 +34,7 @@
                             <th>Shopify</th>
                             <th>CommerceHQ</th>
                             <th>WooCommerce</th>
+                            <th>GrooveKart</th>
                             <th>Bundles</th>
                             {% endif %}
                             <th style="width:13%">Join Date</th>
@@ -93,6 +94,15 @@
 
                                     {% if product_count %}
                                         <li style="list-style:none">{{item.wooproduct_set.count}} Products</li>
+                                    {% endif %}
+                                </ul>
+                            </td>
+                            <td style=" white-space:nowrap">
+                                <ul style="padding:0;margin:0">
+                                    <li style="list-style:none">{{item.profile.get_gkart_stores.count}} Stores</li>
+
+                                    {% if product_count %}
+                                        <li style="list-style:none">{{item.groovekartproduct_set.count}} Products</li>
                                     {% endif %}
                                 </ul>
                             </td>
