@@ -36,7 +36,11 @@
                             {% endif %}
                         </label>
                         <div class="col-sm-6">
-                            <input name="{% if related %}r{% else %}q{% endif %}" id="{% if related %}r{% else %}q{% endif %}" type="text" class="form-control" placeholder="" value="" />
+                            {% if related %}
+                                <input name="r" id="r" type="text" class="form-control" placeholder="" value="" />
+                            {% else %}
+                                <input name="q" id="q" type="text" class="form-control" placeholder="" value="{{ request.GET.q|default:'' }}" />
+                            {% endif %}
                         </div>
                     </div>
                     <div class="form-group">

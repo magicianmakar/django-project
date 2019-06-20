@@ -468,3 +468,12 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
     min-height: auto;
     font-size: 13px;
 }
+
+.fa-external-link-top {
+    font-size: 11px;
+    vertical-align: text-top;
+}
+
+.fa-external-link-top:before {
+    content: "\f08e";
+}

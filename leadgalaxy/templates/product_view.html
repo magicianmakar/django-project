@@ -70,6 +70,13 @@
                     </a>
                 </li>
                 {% endif %}
+                {% if request.user|can:'youtube_ads.use' %}
+                <li>
+                    <a href="{% url 'youtube_ads.views.index' %}?type=all&q={{ product.product.title }}" target="_blank">
+                        <i class="fa fa-video-camera"></i> Find Videos <i class="fa fa-external-link-top"></i>
+                    </a>
+                </li>
+                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -261,6 +268,11 @@
                         </a>
                         {% endif %}
                         <button class="btn btn-success btn-xs add-images-btn" original-product="{{product.product.original_url}}">More images</button>
+                        {% if request.user|can:'youtube_ads.use' %}
+                        <a class="btn btn-primary btn-xs" href="{% url 'youtube_ads.views.index' %}?type=all&q={{ product.product.title }}" target="_blank">
+                            <i class="fa fa-video-camera"></i> Find Product Videos
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -794,7 +806,7 @@
                         </div>
                     </div>
                 </form>
-               
+
             </div>
         </div>
         {% endif %}
