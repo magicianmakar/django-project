@@ -673,7 +673,7 @@ class WooOrderTrack(models.Model):
 
     def get_tracking_link(self):
         if self.user.id in [49354]:
-            aftership_domain = 'http://17track.net/en?nums={{tracking_number}}'
+            aftership_domain = 'http://17track.net/?nums={{tracking_number}}'
         else:
             aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
 
