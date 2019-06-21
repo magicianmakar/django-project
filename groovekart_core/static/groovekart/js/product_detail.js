@@ -25,14 +25,16 @@ function showProductInfo(rproduct) {
                 v.find("a.remove-variant").click(removeVariant);
                 v.show();
 
-                v.find('#product-variant-name').val(el.title);
-                v.find('#product-variant-values').val(el.values.join(','));
+                if (el.title) {
+                    v.find('#product-variant-name').val(el.title);
+                    v.find('#product-variant-values').val(el.values.join(','));
 
-                $("#product-variant-values", v).tagit({
-                    allowSpaces: true
-                });
+                    $("#product-variant-values", v).tagit({
+                        allowSpaces: true
+                    });
 
-                $('#variants .area').append(v);
+                    $('#variants .area').append(v);
+                }
             });
         }
 

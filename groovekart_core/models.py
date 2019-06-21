@@ -245,6 +245,7 @@ class GrooveKartProduct(models.Model):
         self.update_data({'description': product_data['description']})
         self.update_data({'cover_image': product_data.get('cover_image', '')})
         self.update_data({'tags': product_data.get('tags', '')})
+        self.update_data({'vendor': product_data.get('manufacturer_name', '')})
         self.update_data({'variants': self.sync_variants(product_variants)})
         self.update_data({'images': {i.get('id'): i.get('url') for i in product_data.get('images', [])}})
         self.save()
