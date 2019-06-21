@@ -112,12 +112,10 @@
                         <label for="product-type">Tags</label>
                         <input type="text" class="form-control tag-it" value="{{ product.parsed.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
                     </div>
-                    {% if not product.is_connected %}
                     <div class="form-group col-xs-3">
                         <label for="product-vendor">Vendor</label>
-                        <input type="text" class="form-control" value="" id="product-vendor" placeholder="Product Vendor" />
+                        <input type="text" class="form-control" value="{{ product.parsed.vendor|default:'' }}" id="product-vendor" placeholder="Product Vendor" />
                     </div>
-                    {% endif %}
                 </div>
 
                 <div class="row">

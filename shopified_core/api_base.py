@@ -492,7 +492,8 @@ class ApiBase(ApiResponseMixin, View):
         store = self.store_model.objects.get(id=data.get('store'))
         permissions.user_can_view(user, store)
 
-        source_id = safe_int(dict_val(data, ['shopify', 'woocommerce', 'gearbubble']))
+        # TODO: Change use of data['shopify'] to data['commercehq'] in CommerceHQ
+        source_id = safe_int(dict_val(data, ['shopify', 'woocommerce', 'groovekart', 'gearbubble']))
 
         if source_id != product.source_id or product.store != store:
             connected_to = self.helper.get_connected_products(self.product_model, store, source_id)
