@@ -151,7 +151,8 @@ def product_export(store_id, product_id, user_id):
             'product': {
                 'title': product_data.get('title'),
                 'body_html': product_data.get('description'),
-                'vendor': product_data.get('vendor'),
+                # Remove default value when vendor is not required anymore
+                'vendor': product_data.get('vendor') or '-',
                 'price': product_data.get('price'),
                 'weight': product_data.get('weight'),
                 'compare_default_price': product_data.get('compare_at_price'),
