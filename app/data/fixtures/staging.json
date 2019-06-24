@@ -97,15 +97,6 @@
     }
 },
   {
-    "model": "leadgalaxy.subuserpermission",
-    "pk": 7,
-    "fields": {
-        "codename": "use_callflex",
-        "name": "CallFlex access",
-        "store": null
-    }
-},
-  {
     "model": "leadgalaxy.shopifystore",
     "pk": 1,
     "fields": {
