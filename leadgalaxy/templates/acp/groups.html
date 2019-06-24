@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load url_tools %}
+{% load perms_helper %}
 
 {% block main-container %}
 
@@ -74,7 +75,7 @@
                             <td>
                                 {{item.hidden|yesno:'No,Yes'}}
                             </td>
-                            {% if user.is_superuser %}
+                            {% if user.is_superuser or user|has_group:'Plan Inviter' %}
                             <td>
                                 {% if not item.is_stripe %}
                                     <button class="btn btn-outline btn-success btn-xs gen-link" plan-title="{{item.title}}" plan-id="{{item.id}}">

@@ -2107,8 +2107,6 @@ class ShopifyStoreApi(ApiBase):
             return self.api_error('Unauthorized API call', status=403)
 
         plan_id = int(data.get('plan'))
-        if not user.is_superuser and plan_id != 16:
-            return self.api_error('Unauthorized API call', status=403)
 
         email = data.get('email', data.get('user')).strip()
         if not email:
