@@ -3,14 +3,14 @@ from datetime import timedelta
 from django.utils import timezone
 
 from raven.contrib.django.raven_compat.models import client as raven_client
-
+from shopified_core.utils import last_executed
 from phone_automation.models import TwilioPhoneNumber
-from phone_automation.utils import get_twilio_client
 from shopified_core.management import DropifiedBaseCommand
+from shopified_core.utils import send_email_from_template
 
 
 class Command(DropifiedBaseCommand):
-    help = 'Cleanup unused phone numbers'
+    help = 'Alert users about expiring phones (no calls during 87 days)'
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -19,15 +19,13 @@ class Command(DropifiedBaseCommand):
             default=False,
             help='Process only specified user'
         )
-        parser.add_argument(
-            '-preview_only',
-            '--preview_only',
-            default=False,
-            help='Only preview phones to delete'
-        )
 
     def start_command(self, *args, **options):
-        exp_date = timezone.now() + timedelta(days=-90)
+        # 3 days prior to expiration
+        exp_date = timezone.now() + timedelta(days=-86)
+
+        print(f"Fetching all til {exp_date} ")
+
         user_phones = TwilioPhoneNumber.objects
         if options['user_id']:
             user_phones = user_phones.filter(user_id=options['user_id'])
@@ -43,13 +41,19 @@ class Command(DropifiedBaseCommand):
                     filter(twilio_metadata__To=user_phone.incoming_number).count()
 
                 if latest_logs_count <= 0:
-                    self.write(f"No call logs after {exp_date} Unregistering phone number")
-                    if options['preview_only']:
-                        self.write(f"Preview mode - phone wasn't deleted")
+                    self.write(f"No call logs after {exp_date} Send email alert to {user_phone.user.email}")
+                    if not last_executed(f'callflex_phone_{user_phone.id}_release_alert', 3600 * 24 * 4):
+                        send_email_from_template(
+                            tpl='callflex_phone_alert.html',
+                            subject='CallFlex PhoneNumber Alert',
+                            recipient=user_phone.user.email,
+                            data={
+                                'twilio_phone': user_phone,
+                                'user': user_phone.user
+                            }
+                        )
                     else:
-                        client = get_twilio_client()
-                        client.incoming_phone_numbers(user_phone.twilio_sid).delete()
-                        user_phone.delete()
-                        self.write(f"Phone {user_phone.twilio_sid} was deleted")
+                        self.write(f"No call logs after {exp_date} email already sent before")
+
             except:
                 raven_client.captureException()

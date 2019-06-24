@@ -1,0 +1,20 @@
+{% load template_helper %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    {% include "partial/email/css.html" %}
+</head>
+<body>
+    <p>Hi, {{ user.profile.name }}</p>
+
+    <p>Your CallFlex Phone number "{{ twilio_phone.incoming_number }}" will expire soon because of inactivity (no incoming calls in past 90 days). It'll be removed from your profile.</p>
+
+
+    <p>
+        <br>The Dropified Team<br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
+    </p>
+</body>
+</html>

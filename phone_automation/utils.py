@@ -7,7 +7,7 @@ import requests
 import re
 import dateutil.parser
 from twilio.rest import Client
-
+from shopified_core.utils import last_executed
 from raven.contrib.django.raven_compat.models import client as raven_client
 from shopified_core.utils import safe_int, app_link
 from django.urls import reverse
@@ -397,8 +397,9 @@ def check_callflex_warnings(user, call_duration, phone_type="tollfree"):
     if total_duration_month_limit and \
             total_duration < int(total_duration_month_limit * month_limit_percent) and \
             ((total_duration + safe_int(call_duration)) > int(total_duration_month_limit * month_limit_percent)):
-        # sending notification to user
-        send_callflexlimit_warning(user, phone_type)
+        # sending notification to user (if not already sent in last 24 hrs)
+        if not last_executed(f'callflex_limitreached_u_{user.id}', 3600 * 24):
+            send_callflexlimit_warning(user, phone_type)
         return False
     else:
         return True
@@ -410,7 +411,6 @@ def send_callflexlimit_warning(user, phone_type="tollfree"):
         tpl='callflex_limit_warning.html',
         subject='CallFlex Monthly Limit Warning',
         recipient=user.email,
-        is_async=True,
         data={
             'callflex_limit': f'{month_limit_percent * 100:.0f}%',
             'phone_type': phone_type,
