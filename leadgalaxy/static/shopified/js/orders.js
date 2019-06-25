@@ -73,6 +73,8 @@ $('#fullfill-order-btn').click(function (e) {
     $(this).button('loading');
     var line_btn = $('.fulfill-btn[line-id="'+$('#modal-fulfillment #fulfill-line-id').val()+'"]');
 
+    ga('clientTracker.send', 'event', 'Order Manual Fulfillment', 'Shopify', sub_conf.shop);
+
     $.ajax({
         url: '/api/fulfill-order',
         type: 'POST',
@@ -109,6 +111,8 @@ $('#fullfill-order-btn').click(function (e) {
 
 $('.filter-btn').click(function (e) {
     Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
+
+    ga('clientTracker.send', 'event', 'Order Filter Toggle', 'Shopify', sub_conf.shop);
 
     if (!$('.filter-form').is(':visible')) {
         $('.filter-form').fadeIn('fast');
@@ -153,6 +157,8 @@ $('.save-filter-btn').click(function (e) {
             $(el).prop('filtred', true);
         }
     });
+
+    ga('clientTracker.send', 'event', 'Order Save Filter', 'Shopify', sub_conf.shop);
 
     $.ajax({
         url: '/api/save-orders-filter',
@@ -209,6 +215,8 @@ function confirmDeleteOrderID(e) {
     function(isConfirm) {
         if (isConfirm) {
             deleteOrderID(tr_parent, order_id, line_id);
+
+            ga('clientTracker.send', 'event', 'Delete Order ID', 'Shopify', sub_conf.shop);
         }
     });
 }
@@ -312,6 +320,8 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
 
         btn.button('reset');
     };
+
+    ga('clientTracker.send', 'event', 'Add Order ID', supplierType, sub_conf.shop);
 
     if (supplierType === 'aliexpress') {
         var order_link = orderId.match(/orderId=([0-9]+)/);
@@ -536,6 +546,8 @@ $('.note-panel .note-edit-save').click(function (e) {
     var order_id = $(this).attr('order-id');
     var store = $(this).attr('store-id');
 
+    ga('clientTracker.send', 'event', 'Edit Order Note', 'Shopify', sub_conf.shop);
+
     $.ajax({
         url: '/api/order-note',
         type: 'POST',
@@ -654,6 +666,8 @@ $('.hide-ordered-btn').click(function () {
             }
         });
     }
+
+    ga('clientTracker.send', 'event', 'Hide Ordered Click', 'Shopify', sub_conf.shop);
 });
 
 $('.hide-non-connected-btn').click(function () {
@@ -688,6 +702,8 @@ $('.hide-non-connected-btn').click(function () {
             }
         });
     }
+
+    ga('clientTracker.send', 'event', 'Hide Non-Connected Click', 'Shopify', sub_conf.shop);
 });
 
 function addOrderToQueue(order, warn) {
@@ -790,6 +806,8 @@ $('.auto-shipping-btn').click(function (e) {
 /* Connect Product */
 $('.add-supplier-btn').click(function (e) {
     e.preventDefault();
+
+    ga('clientTracker.send', 'event', 'Order Add Supplier', 'Shopify', sub_conf.shop);
 
     $('#modal-supplier-link').prop('shopify-store', $(this).attr('store-id'));
     $('#modal-supplier-link').prop('shopify-product', $(this).attr('shopify-product'));
@@ -946,6 +964,8 @@ $('.order-seleted-lines').click(function (e) {
     }
 
     orderItems(order, null, true);
+
+    ga('clientTracker.send', 'event', 'Ordered Selected Items', 'Shopify', sub_conf.shop);
 });
 
 $('.order-seleted-suppliers').click(function(e) {
@@ -968,6 +988,8 @@ $('.order-seleted-suppliers').click(function(e) {
     }
 
     orderItems(order, supplier_type);
+
+    ga('clientTracker.send', 'event', 'Ordered Selected Supplier', 'Shopify', sub_conf.shop);
 });
 
 $('.order-bundle').click(function(e) {
@@ -1035,6 +1057,8 @@ $('.order-bundle').click(function(e) {
         }
 
         addOrderToQueue(order);
+
+        ga('clientTracker.send', 'event', 'Ordered Bundle', 'Shopify', sub_conf.shop);
 
     }).fail(function(data) {
         displayAjaxError('Order Bundle', data);
@@ -1124,7 +1148,14 @@ $('.bulk-order-btn').click(function (e) {
         return;
     }
 
-    window.bulkOrderQueue = {pages: {}, data: [], stop: false, next: null};
+    ga('clientTracker.send', 'event', 'Bulk Order', 'Shopify', sub_conf.shop);
+
+    window.bulkOrderQueue = {
+        pages: {},
+        data: [],
+        stop: false,
+        next: null
+    };
 
     $('#bulk-order-modal').modal({
         backdrop: 'static',
@@ -1134,6 +1165,8 @@ $('.bulk-order-btn').click(function (e) {
 
 $('#bulk-order-modal').on('click', '.stop-bulk-btn', function (e) {
     e.preventDefault();
+
+    ga('clientTracker.send', 'event', 'Stop Bulk Order', 'Shopify', sub_conf.shop);
 
     if (window.bulkOrderQueue.stop == true && window.bulkOrderQueue.next) {
         $(e.target).button('reset').removeClass('btn-danger').addClass('btn-primary');
@@ -1482,6 +1515,8 @@ $('.changed-variant').click(function (e) {
             }));
         }
 
+        ga('clientTracker.send', 'event', 'Change Variant', 'Shopify', sub_conf.shop);
+
         $('#change-variant-modal').modal('show');
 
     }).fail(function(data) {
@@ -1550,6 +1585,8 @@ $(".track-details").click(function(e) {
         'order_id': btn.attr('order-id'),
         'line_id': btn.attr('order-id'),
     });
+
+    ga('clientTracker.send', 'event', 'Track Details', 'Shopify', sub_conf.shop);
 
     $('#modal-tracking-details .modal-content').load(detailsUrl, function(response, status) {
         if (status != 'error') {
@@ -1646,6 +1683,7 @@ $(function () {
         deferRequestBy: 1000,
         onSelect: function(suggestion) {
             $('#supplier_name').val(suggestion.value);
+            ga('clientTracker.send', 'event', 'Order Autocomplete', 'Supplier', sub_conf.shop);
         }
     });
 
@@ -1655,6 +1693,7 @@ $(function () {
         deferRequestBy: 1000,
         onSelect: function(suggestion) {
             $('#shipping_method_name').val(suggestion.value);
+            ga('clientTracker.send', 'event', 'Order Autocomplete', 'Shipping Method', sub_conf.shop);
         }
     });
 
@@ -1686,6 +1725,8 @@ $(function () {
                 $('#query_customer').val(suggestion.value.replace(/ \([^\)]+\)$/, ''));
                 $('#query_customer_id').val(suggestion.data);
                 $('#query_customer_id').attr('orig-value', suggestion.data);
+
+                ga('clientTracker.send', 'event', 'Order Autocomplete', 'Customer ID', sub_conf.shop);
             }
         });
     }
@@ -1772,6 +1813,8 @@ $(function () {
             var link = options.$trigger.data('link-' + key);
             if (link) {
                 window.open(link, '_blank');
+
+                ga('clientTracker.send', 'event', 'Order ContextMenu', key, sub_conf.shop);
             }
         },
         items: {
