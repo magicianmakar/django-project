@@ -301,6 +301,8 @@ def product_export(store_id, product_id, user_id, publish=None):
 
             vars_list = utils.all_possible_cases(vars_list)
 
+            product_price = utils.safe_float(p['price'])
+            product_compare_at = utils.safe_float(p['compare_at_price'], '')
             for idx, variants in enumerate(vars_list):
                 if type(variants) is list:
                     title = ' / '.join(variants)
@@ -317,11 +319,12 @@ def product_export(store_id, product_id, user_id, publish=None):
                     if not image and v in variants_uploads:
                         image = variants_uploads[v]
 
+                data_variants_info = p.get('variants_info', {}).get(title, {})
                 var_info = {
                     'default': idx == 0,
                     'title': title,
-                    'price': utils.safe_float(p['price']),
-                    'compare_price': utils.safe_float(p['compare_at_price'], ''),
+                    'price': utils.safe_float(data_variants_info.get('price'), product_price),
+                    'compare_price': utils.safe_float(data_variants_info.get('price'), product_compare_at),
                     'shipping_weight': weight,
                     'variant': variants,
                     'images': []
