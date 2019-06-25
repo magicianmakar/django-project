@@ -4288,6 +4288,8 @@ def orders_view(request):
     if bulk_queue:
         return utils.format_queueable_orders(request, all_orders, current_page)
 
+    queue_page_to = min(paginator.num_pages, 10)
+
     return render(request, 'orders_new.html', {
         'orders': all_orders,
         'store': store,
@@ -4320,6 +4322,7 @@ def orders_view(request):
         'use_relative_dates': use_relative_dates,
         'order_risk_all_getaways': order_risk_all_getaways,
         'aliexpress_mobile_order': aliexpress_mobile_order,
+        'queue_page_to': queue_page_to,
         'order_debug': order_debug,
         'use_fulfillbox': bool(settings.FULFILLBOX_API_URL and models_user.can('fulfillbox.use')),
         'page': 'orders',
