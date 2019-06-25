@@ -112,7 +112,7 @@ def product_alerts(request):
                                            chq_product__store=store)
 
     if request.user.is_subuser:
-        store_ids = request.user.profile.subuser_permissions.filter(
+        store_ids = request.user.profile.subuser_chq_permissions.filter(
             codename='view_alerts'
         ).values_list(
             'store_id', flat=True
