@@ -182,7 +182,7 @@ def subuser_chq_store_permissions(request, user_id, store_id):
             new_permissions = form.cleaned_data['permissions']
             subuser.profile.subuser_chq_permissions.remove(*subuser_chq_permissions)
             subuser.profile.subuser_chq_permissions.add(*new_permissions)
-            messages.success(request, 'Subuser permissions successfully {}updated')
+            messages.success(request, 'Subuser permissions successfully updated')
             return redirect('{}subuser_chq_store_permissions'.format(get_namespace(request)), user_id, store_id)
     else:
         form = SubuserCHQPermissionsForm(initial=initial)
