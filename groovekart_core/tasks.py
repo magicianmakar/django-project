@@ -209,10 +209,12 @@ def product_export(store_id, product_id, user_id):
             product_variants = []
 
             for index, attributes in enumerate(itertools.product(*values)):
+                data_variants_info = product_data.get('variants_info', {}).get(' / '.join(attributes), {})
+
                 variant_data = {
-                    'compare_at_price': product_data.get('compare_at_price'),
                     'weight': product_data.get('weight'),
-                    'price': product_data.get('price'),
+                    'compare_at_price': utils.safe_float(data_variants_info.get('price'), product_data.get('compare_at_price')),
+                    'price': utils.safe_float(data_variants_info.get('price'), product_data.get('price')),
                     'default_on': 1 if index == 0 else 0,
                     'image_id': api_images[0]['id'],
                     'variant_values': {}
