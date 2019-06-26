@@ -146,6 +146,3 @@ jobs:
           name: Codecov upload
           command: |
             codecov --token=1e92f142-d3e3-4ef4-9feb-e4146b378ca4
-
-      - store_artifacts:
-          path: htmlcov
