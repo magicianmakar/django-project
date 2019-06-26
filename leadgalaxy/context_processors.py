@@ -61,6 +61,9 @@ def store_limits_check(request):
                 # Only cache value if the store limit is not reached
                 cache.set(cache_key, False, timeout=900)
 
+        if request.user.models_user.profile.plan.is_paused:
+            stores_limit_reached = False
+
     return {
         'stores_limit_reached': stores_limit_reached,
         'stores_limit_max': stores_limit_max,
