@@ -190,10 +190,7 @@ def can_add_store(user):
     else:
         total_allowed = user_stores
 
-    user_count = profile.user.shopifystore_set.filter(is_active=True).count()
-    user_count += profile.user.commercehqstore_set.filter(is_active=True).count()
-    user_count += profile.user.woostore_set.filter(is_active=True).count()
-    user_count += profile.user.gearbubblestore_set.filter(is_active=True).count()
+    user_count = profile.get_stores_count()
 
     can_add = True
 
