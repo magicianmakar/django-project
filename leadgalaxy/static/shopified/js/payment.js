@@ -283,13 +283,13 @@
 
         $(this).button('loading');
 
-        var subscription_type = $('#modal-subscription-cancel').data('subscription-type')
+        var subscription_type = $('#modal-subscription-cancel').data('subscription-type');
 
         if ( subscription_type=="custom" ){
-            ajax_url = config.custom_subscription_cancel
+            ajax_url = config.custom_subscription_cancel;
         }
         else {
-            ajax_url = config.subscription_cancel
+            ajax_url = config.subscription_cancel;
         }
 
         $.ajax({

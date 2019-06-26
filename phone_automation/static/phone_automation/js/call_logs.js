@@ -1,6 +1,4 @@
-$(function () {
-
-
+$(function() {
     $('#created_at_daterange').daterangepicker({
         format: 'MM/DD/YYYY',
         showDropdowns: true,
@@ -32,12 +30,12 @@ $(function () {
             monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
             firstDay: 1
         }
-    }, function (start, end, label) {
+    }, function(start, end, label) {
         $('#created_at_daterange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
         $('input[name="created_at_daterange"]').val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
     });
 
-    $('#created_at_daterange').on('apply.daterangepicker', function (ev, picker) {
+    $('#created_at_daterange').on('apply.daterangepicker', function(ev, picker) {
         var start = picker.startDate,
             end = picker.endDate;
 
@@ -55,10 +53,10 @@ $(function () {
             $('input[name="created_at_daterange"]').val('all');
         }
 
-        $('#search-form').submit()
+        $('#search-form').submit();
     });
 
-    $('#created_at_daterange').on('cancel.daterangepicker', function (ev, picker) {
+    $('#created_at_daterange').on('cancel.daterangepicker', function(ev, picker) {
         $('#created_at_daterange span').html('');
         $('input[name="created_at_daterange"]').val('');
     });
@@ -78,25 +76,17 @@ $(function () {
             createdAtEnd.format(createdAtEnd.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
     }
 
-
-
-    $('.log-edit').click(function (e) {
-        console.log(33)
+    $('.log-edit').click(function(e) {
         var log_id = $(this).attr('data-log-id');
-        var note = $('.note-text.log-id-'+log_id).html()
+        var note = $('.note-text.log-id-' + log_id).html();
         var post_url = $(this).attr('data-post-url');
 
-        $('#log-form-edit #log-note').val(note)
-        $('#log-form-edit #log-id').val(log_id)
-        $('#log-form-edit #post-url').val(post_url)
-
+        $('#log-form-edit #log-note').val(note);
+        $('#log-form-edit #log-id').val(log_id);
+        $('#log-form-edit #post-url').val(post_url);
     });
 
-
-
-    $('.update-log').click(function (e) {
-
-
+    $('.update-log').click(function(e) {
         var note = $('#log-form-edit #log-note').val();
         var log_id = $('#log-form-edit #log-id').val();
         var post_url = $('#log-form-edit #post-url').val();
@@ -108,37 +98,30 @@ $(function () {
                 'log_id': log_id,
                 'note': note
             },
-            context: {btn: this, parent: parent},
-            success: function (data) {
+            context: {
+                btn: this,
+                parent: parent
+            },
+            success: function(data) {
                 if (data.status == 'ok') {
                     toastr.success('Note', 'Note saved');
 
-                    $('.note-text.log-id-'+log_id).html(note)
-
+                    $('.note-text.log-id-' + log_id).html(note);
                 } else {
                     displayAjaxError('Add Note', data);
                 }
             },
-            error: function (data) {
+            error: function(data) {
                 displayAjaxError('Add Note', data);
             },
-            complete: function () {
+            complete: function() {
                 $(this.btn).button('reset');
                 $('.update-log-cancel').trigger('click');
             }
         });
     });
 
-
-
-    $('#company_id,#created_at_daterange2').change(function (e) {
-
-        $('#search-form').submit()
-
-    })
-
-
-
-
-
+    $('#company_id,#created_at_daterange2').change(function(e) {
+        $('#search-form').submit();
+    });
 });

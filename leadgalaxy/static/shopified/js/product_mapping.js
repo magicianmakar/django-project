@@ -332,8 +332,8 @@
                         }
                         $(this).find('option').attr('disabled', null);
                     });
-                    for (var i = 0; i < values.length; i++) {
-                        $('.options-container .shopify-option-select').each(function() {
+                    for (var i = 0; i < values.length; i++) { // jshint ignore:line
+                        $('.options-container .shopify-option-select').each(function() { // jshint ignore:line
                             if (values[i] != $(this).val()) {
                                 $(this).find("option[value=" + values[i] + "]").attr('disabled', 'disabled');
                             }

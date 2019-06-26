@@ -233,7 +233,7 @@ $(document).ready(function() {
                 }
             });
 
-            var param = {products: products, board_id: board_id}
+            var param = {products: products, board_id: board_id};
 
             $.ajax({
                 url: api_url('board-products', 'gkart') + '?' + $.param(param),

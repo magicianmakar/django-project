@@ -200,7 +200,7 @@ window.OrderExport = {
         for (var i = 0, iLength = list.length; i < iLength; i++) {
             var item = list[i].id,
                 itemText = select.find('option[value="'+item+'"]').text(),
-                found = choices.find('.search-choice').filter(function() {
+                found = choices.find('.search-choice').filter(function() { // jshint ignore:line
                     return $(this).text().trim() == itemText;
                 });
             choices.append(found);
@@ -462,19 +462,21 @@ window.OrderExport = {
                     });
                 },
                 text: function() {
+                    var value = null;
+
                     if (window.OrderExport.helpText.general.isPreviousDay()) {
                         if (this.isEmpty()) {
                             return '';
                         }
 
-                        var value = $('[name="schedule"]').val(),
-                            label = $('<span class="label">').text(value);
+                        value = $('[name="schedule"]').val();
+                        label = $('<span class="label">').text(value);
 
                         return [', update everyday at ', label];
                     } else {
-                        var value = $('[name="daterange"]').val().split('-'),
-                            pre = $('<span class="label">').text(value[0]),
-                            post = $('<span class="label">').text(value[1]);
+                        value = $('[name="daterange"]').val().split('-');
+                        pre = $('<span class="label">').text(value[0]);
+                        post = $('<span class="label">').text(value[1]);
 
                         return [', from ', pre, ' until ', post, '.'];
                     }
@@ -779,7 +781,7 @@ window.OrderExport = {
                 text: function() {
                     if (window.OrderExport.foundProducts.data.length == 0) {
                         window.OrderExport.helpText.productFilters.checkEmpty();
-                        return ''
+                        return '';
                     } else {
                         if (window.OrderExport.helpText.productFilters.empty) {
                             window.OrderExport.helpText.productFilters.checkEmpty();

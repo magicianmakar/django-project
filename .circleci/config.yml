@@ -84,7 +84,7 @@ jobs:
           command: |
               source venv/bin/activate
               pip install -r requirements.txt
-              npm install
+              npm install --dev
 
       - run:
           name: Set up test
@@ -104,6 +104,18 @@ jobs:
           command: |
             source venv/bin/activate
             ./scripts/common_issues.sh
+
+      - run:
+          name: Template Syntax Check
+          command: |
+            source venv/bin/activate
+            pip install django-template-check
+            python manage.py templatecheck -v3
+
+      - run:
+          name: JSHint
+          command: |
+            npm run jshint
 
       - run:
           name: Django Tests

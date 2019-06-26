@@ -14,6 +14,14 @@ class GrooveKartStoreFactory(factory.DjangoModelFactory):
         model = 'groovekart_core.GrooveKartStore'
 
 
+class GrooveKartSupplierFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('groovekart_core.tests.factories.GrooveKartStoreFactory')
+    product = factory.SubFactory('groovekart_core.tests.factories.GrooveKartProductFactory')
+
+    class Meta:
+        model = 'groovekart_core.GrooveKartSupplier'
+
+
 class GrooveKartOrderTrackFactory(factory.DjangoModelFactory):
     user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
     store = factory.SubFactory('gearbubble_core.tests.factories.GrooveKartStoreFactory')

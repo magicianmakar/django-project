@@ -158,7 +158,7 @@ $('#apply-btn').click(function (e) {
                 }
             });
         } else {
-            swal('', "Please select connected products to disconnect.")
+            swal('', "Please select connected products to disconnect.");
         }
     }
 });
@@ -173,7 +173,7 @@ Vue.component('shopify-products-table', {
             prev: false,
             next: false,
             current: 1
-        }
+        };
     },
     methods: {
         replacePageParam: function(value) {
@@ -225,7 +225,7 @@ Vue.component('shopify-products-table', {
                                     e.preventDefault();
                                     connect(sub_conf.store, $(this).data('shopify'));
                                 });
-                            })
+                            });
                         },
                         error: function(data) {
                             displayAjaxError('Search Shopify Products', data);

@@ -5,38 +5,31 @@
 {% load widget_tweaks %}
 {% load template_helper %}
 {% load compress %}
-{% block main-container %}
 
+{% block main-container %}
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
             <div class="ibox-title ibox-title-adjust">
                 <h5 class="content-tittle">Setup Your CallFlex Number<small> </small></h5>
-
-
-
-
             </div>
             <div class="ibox-content ibox-content-adjust edit-form-adjust">
                 <div class="grey-cont">
                     {% if overages_warning %}
-                        <div class="alert alert-warning">WARNING!!! You're exceeding your membership limit of allowed phone numbers. You'll be invoiced extra ${{ overages_extra_number_price }}/mo if you're going to add this number.
-                            <a class="btn-sm btn-info" href="{% url 'user_profile' %}?callflex_anchor#plan">Check your CallFlex subscription here</a>
-                        </div>
-                    {%  endif %}
-                    <form
-                            id="provision-form"
-                            method="POST" class="form-horizontal "
-                            role="form"
-                            action="{% url template_config.url.namespace|add:'phone_automation_provision'  %}">
-                            <input type="hidden" name="phone_number" id="phone_number" value=""/>
-                            <input type="hidden" name="phone_number_type" id="phone_number_type" value=""/>
+                    <div class="alert alert-warning">
+                        You're adding a phone number which exceeds the limits of your plan. You'll be invoiced ${{ overages_extra_number_price }}/mo for each additional phone number.<br>
+                        <a href="{% url 'user_profile' %}?callflex_anchor#plan">View your CallFlex subscription</a>
+                    </div>
+                    {% endif %}
+                    <form id="provision-form" method="POST" class="form-horizontal " role="form" action="{% url template_config.url.namespace|add:'phone_automation_provision'  %}">
+                        <input type="hidden" name="phone_number" id="phone_number" value="" />
+                        <input type="hidden" name="phone_number_type" id="phone_number_type" value="" />
                         {% csrf_token %}
-                        <div class="row" >
+                        <div class="row">
                             <div class="form-group _row v-center">
                                 {{ form.title.errors }}
                                 <label class="col-sm-2 col-xs-12 control-label">
-                                                 Number Name
+                                    Number Name
                                 </label>
                                 <div class="col-sm-5 col-xs-12">
                                     {{ form.title|add_class:"form-control"|attr:"placeholder:Enter A Name For Your Number" }}
@@ -45,23 +38,21 @@
                             <div class="form-group _row v-center">
                                 {{ form.automation.errors }}
                                 <label class="col-sm-2  col-xs-12 control-label">
-                                                 Forward Calls To
+                                    Forward Calls To
                                 </label>
                                 <div class="col-sm-5 col-xs-12 row">
-
                                     <div class="col-sm-6">
                                         {{ form.automation|add_class:"form-control select2"|attr:"placeholder:Select Your CallFlow" }}
                                     </div>
                                     <div class="col-sm-6">
                                         {{ form.forwarding_number|add_class:"form-control "|attr:"placeholder:Enter Phone Number to Forward"|attr:"data-mask:(999) 999-9999" }}
                                     </div>
-
                                 </div>
                             </div>
                             <div class="form-group _row v-center ">
                                 {{ form.company.errors }}
                                 <label class="col-sm-2  col-xs-12 control-label">
-                                                 Company
+                                    Company
                                 </label>
                                 <div class="col-sm-5 col-xs-12">
                                     {{ form.company|add_class:"form-control select2"|attr:"placeholder:Select Company to assign" }}
@@ -69,138 +60,128 @@
                             </div>
                         </div>
                     </form>
-                        <div class="row">
-                            <div class="col-md-12 sol-sm-12 col-xs-12">
-
-
-                                <div class="show" id="collapseFilter" >
-
-                                  <div class="well ">
-                                     <form class="row form-inline "
-                                            id="search-form"
-                                            method="GET"
-                                            action="{% url template_config.url.namespace|add:'phone_automation_provision'  %}">
-                                            <div class="col-md-12">
-                                                <div class="form-group">
-                                                    <label for="auto_margin" class=" control-label">
-                                                        Phone Country:
-                                                        <i class="fa fa-fw fa-question-circle" qtip-tooltip="Select the country your phone number will be allocated in" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
-                                                    </label>
-                                                    <span class="">
-                                                        <select name="country_code" class="form-control" title="Phone's country">
-                                                            <option value="US" {% if request.GET.country_code == "US" %} selected {% endif %}>United States</option>
-                                                            <option value="CA" {% if request.GET.country_code == "CA" %} selected {% endif %}>Canada</option>
-                                                        </select>
-
-                                                    </span>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="auto_margin" class=" control-label">
-                                                        Phone Type:
-                                                        <i class="fa fa-fw fa-question-circle" qtip-tooltip="Local or Toll-free phone" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
-                                                    </label>
-                                                    <span class="">
-                                                        <select name="phone_type" class="form-control" title="Phone type">
-                                                            <option value="tollfree" {% if request.GET.phone_type == "tollfree" %} selected {% endif %}>Toll-Free</option>
-                                                            <option value="local" {% if request.GET.phone_type == "local" %} selected {% endif %}>Local</option>
-                                                        </select>
-
-                                                    </span>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="auto_margin" class=" control-label">
-                                                        Area Code:
-                                                        <i class="fa fa-fw fa-question-circle" qtip-tooltip="Enter a 3-digit area code" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
-                                                    </label>
-                                                    <span class="">
-                                                        <input type="text" value="{{ request.GET.areacode }}" placeholder="Area Code (212)" name="areacode" id="areacode" title="Areacode (212)" maxlength="3" minlength="3" class="form-control" autocomplete="off" >
-                                                    </span>
-                                                </div>
-
-                                                <div class="form-group">
-                                                    <label for="auto_margin" class=" control-label">
-                                                        Search Pattern:
-                                                        <i class="fa fa-fw fa-question-circle" qtip-tooltip="Enter a pattern of numbers to search for ( Use * for any digit) " style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
-                                                    </label>
-                                                    <span class="">
-                                                        <input type="text" value="{{ request.GET.mask }}" placeholder="Search Pattern (*123)" name="mask" id="mask" title="Search Pattern" maxlength="10"  class="form-control" autocomplete="off" >
-                                                    </span>
-                                                </div>
-
-                                                <button type="submit" value="Search" class="btn btn-primary" style="margin-bottom:0;">Apply</button>&nbsp;
-                                                <button type="submit" value="Reset" class="btn btn-white" style="margin-bottom:0;" id="form-reset">Clear</button>
+                    <div class="row">
+                        <div class="col-md-12 sol-sm-12 col-xs-12">
+                            <div class="show" id="collapseFilter">
+                                <div class="well ">
+                                    <form class="row form-inline " id="search-form" method="GET" action="{% url template_config.url.namespace|add:'phone_automation_provision'  %}">
+                                        <div class="col-md-12">
+                                            <div class="form-group">
+                                                <label for="auto_margin" class=" control-label">
+                                                    Phone Country:
+                                                    <i class="fa fa-fw fa-question-circle" qtip-tooltip="Select the country your phone number will be allocated in" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
+                                                </label>
+                                                <span class="">
+                                                    <select name="country_code" class="form-control" title="Phone's country">
+                                                        <option value="US" {% if request.GET.country_code == "US" %} selected {% endif %}>United States</option>
+                                                        <option value="CA" {% if request.GET.country_code == "CA" %} selected {% endif %}>Canada</option>
+                                                    </select>
+                                                </span>
                                             </div>
-                                        </form>
-                                    </div>
+                                            <div class="form-group">
+                                                <label for="auto_margin" class=" control-label">
+                                                    Phone Type:
+                                                    <i class="fa fa-fw fa-question-circle" qtip-tooltip="Local or Toll-free phone" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
+                                                </label>
+                                                <span class="">
+                                                    <select name="phone_type" class="form-control" title="Phone type">
+                                                        <option value="tollfree" {% if request.GET.phone_type == "tollfree" %} selected {% endif %}>Toll-Free</option>
+                                                        <option value="local" {% if request.GET.phone_type == "local" %} selected {% endif %}>Local</option>
+                                                    </select>
+                                                </span>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="auto_margin" class=" control-label">
+                                                    Area Code:
+                                                    <i class="fa fa-fw fa-question-circle" qtip-tooltip="Enter a 3-digit area code" style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
+                                                </label>
+                                                <span class="">
+                                                    <input type="text" value="{{ request.GET.areacode }}" placeholder="Area Code (212)" name="areacode" id="areacode" title="Areacode (212)" maxlength="3" minlength="3" class="form-control" autocomplete="off">
+                                                </span>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="auto_margin" class=" control-label">
+                                                    Search Pattern:
+                                                    <i class="fa fa-fw fa-question-circle" qtip-tooltip="Enter a pattern of numbers to search for ( Use * for any digit) " style="color:#BBB" data-hasqtip="0" aria-describedby="qtip-0"></i>
+                                                </label>
+                                                <span class="">
+                                                    <input type="text" value="{{ request.GET.mask }}" placeholder="Search Pattern (*123)" name="mask" id="mask" title="Search Pattern" maxlength="10" class="form-control" autocomplete="off">
+                                                </span>
+                                            </div>
+                                            <button type="submit" value="Search" class="btn btn-primary" style="margin-bottom:0;">Apply</button>&nbsp;
+                                            <button type="submit" value="Reset" class="btn btn-white" style="margin-bottom:0;" id="form-reset">Clear</button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
-
                         </div>
-
-                        <div class="row">
-                            {% for number in twilio_phone_numbers_pool %}
-                                <div class="col-xs-6 col-sm-4 col-md-3">
-                                    <div class="i-checks">
-                                        <label class="provision-phone-number-label">
-                                            <input type="radio" name="phone_number" class="provision-phone-number" data-phone-number="{{ number.phone_number }}" data-phone-number-type="{{ phone_number_type }}">
-                                            &nbsp; {{ number.friendly_name }}
-                                        </label>
-                                    </div>
-
-                                </div>
-
-                            {% endfor %}
-
-                            {% if twilio_phone_numbers_pool|length == 0 %}
-                                <div class="col-md-12 sol-sm-62 col-xs-12">
-                                    <div class="alert alert-danger">
-                                        There are no phone numbers matching your search criteria. Please adjust options repeat the search.
-                                    </div>
-                                </div>
-                            {% endif %}
-                        </div>
-                        <br>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <a type="button" class="btn btn-danger align-right provision-cancel" href="{%  url 'phone_automation_index' %}">Cancel</a>
-                            </div>
-                            <div  class="col-md-6 text-right">
-                                <input type="button" class="btn btn-primary text-left provision-submit" value="Submit">
+                    </div>
+                    <div class="row">
+                        {% for number in twilio_phone_numbers_pool %}
+                        <div class="col-xs-6 col-sm-4 col-md-3">
+                            <div class="i-checks">
+                                <label class="provision-phone-number-label">
+                                    <input type="radio" name="phone_number" class="provision-phone-number" data-phone-number="{{ number.phone_number }}" data-phone-number-type="{{ phone_number_type }}">
+                                    &nbsp; {{ number.friendly_name }}
+                                </label>
                             </div>
                         </div>
+                        {% endfor %}
+                        {% if twilio_phone_numbers_pool|length == 0 %}
+                        <div class="col-md-12 sol-sm-62 col-xs-12">
+                            <div class="alert alert-danger">
+                                There are no phone numbers matching your search criteria. Please adjust options repeat the search.
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <br>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a type="button" class="btn btn-danger align-right provision-cancel" href="{%  url 'phone_automation_index' %}">Cancel</a>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <input type="button" class="btn btn-primary text-left provision-submit" value="Submit">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
-
 {% block extracss %}
     <style>
-        #search-form label {margin-left:10px;}
-        #search-form button {margin-left:10px;}
+        #search-form label {
+            margin-left:10px;
+        }
 
-        .provision-phone-number {margin-bottom:15px;}
-        #search-form .form-group {margin-bottom: 5px;}
+        #search-form button {
+            margin-left:10px;
+        }
+
+        .provision-phone-number {
+            margin-bottom:15px;
+        }
+
+        #search-form .form-group {
+            margin-bottom: 5px;
+        }
     </style>
-    {% compress css %}
-        <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
-        <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
-        <link href="{% static 'libs/iCheck/icheck_blue.css' %}" rel="stylesheet">
 
-        <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
+    {% compress css %}
+    <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/iCheck/icheck_blue.css' %}" rel="stylesheet">
+    <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
     {% endcompress %}
 {% endblock %}
 
 {% block extrajs %}
-     <script type="text/javascript">
+    <script type="text/javascript">
+        $(document).ready(function() {
 
-     $(document).ready(function() {
-
-         var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
+            var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
             elems.forEach(function(html) {
                 var switchery = new Switchery(html, {
                     color: '#93c47d',
@@ -208,92 +189,71 @@
                 });
             });
 
-         $('#form-reset').click( function (e) {
-             $('#areacode').val('');
-             $('#mask').val('');
-         });
+            $('#form-reset').click(function(e) {
+                $('#areacode').val('');
+                $('#mask').val('');
+            });
 
-         $('.provision-submit').click(function(e) {
-            e.preventDefault();
+            $('.provision-submit').click(function(e) {
+                e.preventDefault();
 
-            var phone_number = $(".provision-phone-number:checked").data('phone-number')
-            var phone_number_type = $(".provision-phone-number:checked").data('phone-number-type')
+                var phone_number = $(".provision-phone-number:checked").data('phone-number');
+                var phone_number_type = $(".provision-phone-number:checked").data('phone-number-type');
 
-            $('#provision-form #phone_number').val(phone_number);
-            $('#provision-form #phone_number_type').val(phone_number_type);
+                $('#provision-form #phone_number').val(phone_number);
+                $('#provision-form #phone_number_type').val(phone_number_type);
 
-            swal({
-                title: "Select This Number?",
-                text: "This will set "+ phone_number +" as your incoming phone number.\n\nYou will not be able to change your number for 30 days.",
-                type: "info",
-                showCancelButton: true,
-                closeOnCancel: true,
-                closeOnConfirm: false,
-                confirmButtonColor: "#79aa63",
-                confirmButtonText: "Yes, Use This Number",
-                cancelButtonText: "No, Select Another Number"
-            },
-            function(isConfirmed) {
-                if (isConfirmed) {
-                    $('#provision-form').submit();
+                swal({
+                        title: "Select This Number?",
+                        text: "This will set " + phone_number + " as your incoming phone number.\n\nYou will not be able to change your number for 30 days.",
+                        type: "info",
+                        showCancelButton: true,
+                        closeOnCancel: true,
+                        closeOnConfirm: false,
+                        confirmButtonColor: "#79aa63",
+                        confirmButtonText: "Yes, Use This Number",
+                        cancelButtonText: "No, Select Another Number"
+                    },
+                    function(isConfirmed) {
+                        if (isConfirmed) {
+                            $('#provision-form').submit();
+                        }
+                    });
+            });
+
+
+
+            $('#id_automation').change(function() {
+                update_fields();
+            });
+
+            $('#id_automation').on('select2:open', function(e) {
+                if ($('.select2-dropdown #add').length <= 0) {
+                    $('.select2-dropdown').append('<a style="margin:5px" class="select2-results btn btn-success btn-sm" id="add" href="{% url 'phone_automation_automate_create' %}" target=_blank> Add CallFlow</a>');
                 }
             });
+
+            $(".select2").select2();
+
+            function update_fields() {
+                var automation_id = $('#id_automation').val();
+                if (automation_id == '') {
+                    $('#id_forwarding_number').show();
+                } else {
+                    $('#id_forwarding_number').hide();
+                }
+            }
+
+            update_fields();
+
+            $('.i-checks').iCheck({
+                checkboxClass: 'icheckbox_square-blue',
+                radioClass: 'iradio_square-blue',
+            });
         });
-
-
-
-         $('#id_automation').change(function () {
-
-            var val=$(this).val()
-            console.log(val)
-            update_fields()
-
-        })
-
-        $('#id_automation').on('select2:open', function (e) {
-
-            console.log(333)
-            if ($('.select2-dropdown #add').length<=0)
-            {
-                $('.select2-dropdown').append('<a style="margin:5px" class="select2-results btn btn-success btn-sm" id="add" href="{% url 'phone_automation_automate_create' %}" target=_blank> Add CallFlow</a>');
-            }
-
-            console.log(4444)
-        })
-
-        $(".select2").select2();
-
-        function update_fields()
-        {
-            automation_id=$('#id_automation').val()
-            if (automation_id=='')
-            {
-                $('#id_forwarding_number').show()
-            }
-            else
-            {
-                $('#id_forwarding_number').hide()
-            }
-        }
-
-        update_fields()
-
-
-
-                $('.i-checks').iCheck({
-                    checkboxClass: 'icheckbox_square-blue',
-                    radioClass: 'iradio_square-blue',
-                });
-
-
-
-    });
     </script>
-
 
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script src="{% static 'libs/iCheck/icheck_min.css' %}"></script>
-
     <script src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
-
 {% endblock %}

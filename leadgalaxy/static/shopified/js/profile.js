@@ -50,13 +50,10 @@ $(function () {
     checkSelectedMenu(window.location.hash);
 
     var callflex_anchor = window.location.href.match(/callflex_anchor/);
-    if(callflex_anchor)
-    {
-        $('.plan-tab a').tab('show')
-        $('.callflex-anchor').get(0).scrollIntoView()
+    if(callflex_anchor) {
+        $('.plan-tab a').tab('show');
+        $('.callflex-anchor').get(0).scrollIntoView();
     }
-
-
 });
 
 $('#country').change(function (e) {
@@ -298,16 +295,10 @@ $('#renew_clippingmagic, #renew_captchacredit, #renew_callflexcredit, #renew_cal
             });
         }
     });
-
-
-
-
-
 });
 
 function checkSelectedMenu(selectedMenu) {
     selectedMenu = selectedMenu.replace('#', '');
-    console.log(selectedMenu);
     $('.profile-submenus').removeClass('active');
     if (selectedMenu == 'billing') {
         $('#profile-billing').addClass('active');

@@ -77,3 +77,7 @@ done
 if [ -n "$DJANGO_ADMIN_ERROR" ]; then
     exit -2
 fi
+
+if [ -n "$CIRCLE_BRANCH" ]; then
+    echo "INSTALLED_APPS += ('django_template_check',)" >> app/settings.py
+fi

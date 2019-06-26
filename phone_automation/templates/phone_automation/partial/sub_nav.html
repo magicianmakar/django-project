@@ -1,27 +1,22 @@
 
-         <div class="_ibox-content leftnav">
+ <div class="_ibox-content leftnav">
 
-            {% if 'phone_automation_index' in page or 'phone_automations_index' in page %}
-                <div><a href="{% url 'phone_automation_index' %}" class="btn btn-default btn-adjust {% if 'phone_automation_index' in page %}btn-selected-adjust{% endif %}">My Numbers</a></div>
-                <div><a href="{% url 'phone_automations_index' %}" class="btn btn-default btn-adjust {% if 'phone_automations_index' in page %}btn-selected-adjust{% endif %}">My CallFlows</a></div>
-            {% elif 'phone_automation_call_logs' in page %}
-                <div><a href="{% url 'phone_automation_call_logs' %}" class="btn btn-default btn-adjust {% if 'phone_automation_call_logs' in page %}btn-selected-adjust{% endif %}">Call Logs</a></div>
-            {% elif 'phone_automation_reports' in page %}
-                <div><a href="{% url 'phone_automation_reports_numbers' %}" class="btn btn-default btn-adjust {% if 'phone_automation_reports_numbers' in page %}btn-selected-adjust{% endif %}">USAGE BY NUMBER</a></div>
-                <div><a href="{% url 'phone_automation_reports_companies' %}" class="btn btn-default btn-adjust {% if 'phone_automation_reports_companies' in page %}btn-selected-adjust{% endif %}">USAGE BY COMPANY</a></div>
-            {% elif 'phone_automation_notifications' in page %}
-                <div><a href="{% url 'phone_automation_notifications_alerts' %}" class="btn btn-default btn-adjust {% if 'phone_automation_notifications_alerts' in page %}btn-selected-adjust{% endif %}">Alerts</a></div>
-                <div><a href="{% url 'phone_automation_notifications_summaries' %}" class="btn btn-default btn-adjust {% if 'phone_automation_notifications_summaries' in page %}btn-selected-adjust{% endif %}">Summaries</a></div>
-            {% elif 'phone_automation_account' in page %}
-                <div><a href="{% url 'phone_automation_companies_index' %}" class="btn btn-default btn-adjust {% if 'phone_automation_companies_index' in page %}btn-selected-adjust{% endif %}">My Companies</a></div>
-                <div><a href="{% url 'phone_automation_index' %}" class="btn btn-default btn-adjust {% if 'phone_automation_index' in page %}btn-selected-adjust{% endif %}">My Numbers</a></div>
-                <div><a href="{% url 'subusers' %}" class="btn btn-default btn-adjust {% if 'subusers' in page %}btn-selected-adjust{% endif %}">Users</a></div>
-                <div><a href="{% url 'user_profile' %}?callflex_anchor#plan" class="btn btn-default btn-adjust ">Billing</a></div>
-            {% endif %}
+    {% if 'phone_automation_index' in page or 'phone_automations_index' in page %}
+        <div><a href="{% url 'phone_automation_index' %}" class="btn btn-default btn-adjust {% if 'phone_automation_index' in page %}btn-selected-adjust{% endif %}">My Numbers</a></div>
+        <div><a href="{% url 'phone_automations_index' %}" class="btn btn-default btn-adjust {% if 'phone_automations_index' in page %}btn-selected-adjust{% endif %}">My CallFlows</a></div>
+    {% elif 'phone_automation_call_logs' in page %}
+        <div><a href="{% url 'phone_automation_call_logs' %}" class="btn btn-default btn-adjust {% if 'phone_automation_call_logs' in page %}btn-selected-adjust{% endif %}">Call Logs</a></div>
+    {% elif 'phone_automation_reports' in page %}
+        <div><a href="{% url 'phone_automation_reports_numbers' %}" class="btn btn-default btn-adjust {% if 'phone_automation_reports_numbers' in page %}btn-selected-adjust{% endif %}">USAGE BY NUMBER</a></div>
+        <div><a href="{% url 'phone_automation_reports_companies' %}" class="btn btn-default btn-adjust {% if 'phone_automation_reports_companies' in page %}btn-selected-adjust{% endif %}">USAGE BY COMPANY</a></div>
+    {% elif 'phone_automation_notifications' in page %}
+        <div><a href="{% url 'phone_automation_notifications_alerts' %}" class="btn btn-default btn-adjust {% if 'phone_automation_notifications_alerts' in page %}btn-selected-adjust{% endif %}">Alerts</a></div>
+        <div><a href="{% url 'phone_automation_notifications_summaries' %}" class="btn btn-default btn-adjust {% if 'phone_automation_notifications_summaries' in page %}btn-selected-adjust{% endif %}">Summaries</a></div>
+    {% elif 'phone_automation_account' in page %}
+        <div><a href="{% url 'phone_automation_companies_index' %}" class="btn btn-default btn-adjust {% if 'phone_automation_companies_index' in page %}btn-selected-adjust{% endif %}">My Companies</a></div>
+        <div><a href="{% url 'phone_automation_index' %}" class="btn btn-default btn-adjust {% if 'phone_automation_index' in page %}btn-selected-adjust{% endif %}">My Numbers</a></div>
+        <div><a href="{% url 'subusers' %}" class="btn btn-default btn-adjust {% if 'subusers' in page %}btn-selected-adjust{% endif %}">Users</a></div>
+        <div><a href="{% url 'user_profile' %}?callflex_anchor#plan" class="btn btn-default btn-adjust ">Billing</a></div>
+    {% endif %}
 
-
-
-
-
-
-         </div>
+</div>

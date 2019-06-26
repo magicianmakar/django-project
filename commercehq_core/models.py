@@ -635,7 +635,7 @@ class CommerceHQProduct(models.Model):
         return variant_images[0] if variant_images else ''
 
     def get_original_info(self):
-        if self.have_supplier:
+        if self.have_supplier():
             url = self.default_supplier.product_url
 
             try:

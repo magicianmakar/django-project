@@ -67,7 +67,7 @@ $("a.add-variant").click(function (e) {
 function removeVariant(e) {
     e.preventDefault();
 
-    $(this).parent().remove();
+    $(e.target).parent().remove();
 }
 
 $('#product-export-btn').click(function (e) {
@@ -98,20 +98,21 @@ function productExport(btn) {
         },
         context: {btn: btn},
         success: function (data) {
+            var pusher = null;
+            var channel = null;
+
             if (config.sub_conf.key) {
-                var pusher = new Pusher(config.sub_conf.key);
+                pusher = new Pusher(config.sub_conf.key);
             } else {
-                var pusher = new Pusher(data.pusher.key);
+                pusher = new Pusher(data.pusher.key);
             }
             if (config.sub_conf.channel) {
-                var channel = pusher.subscribe(config.sub_conf.channel);
+                channel = pusher.subscribe(config.sub_conf.channel);
             } else {
-                var channel = pusher.subscribe(data.pusher.channel);
+                channel = pusher.subscribe(data.pusher.channel);
             }
 
             channel.bind('product-export', function(data) {
-                console.dir(data);
-
                 if (data.product == config.product_id) {
                     if (data.progress) {
                         btn.text(data.progress);
@@ -209,8 +210,6 @@ $('#product-update-btn').click(function (e) {
             var channel = pusher.subscribe(config.sub_conf.channel);
 
             channel.bind('product-update', function(data) {
-                console.dir(data);
-
                 if (data.product == config.product_id) {
                     if (data.progress) {
                         btn.text(data.progress);
@@ -448,7 +447,7 @@ function matchImagesWithExtra() {
 }
 
 function imageClicked(e) {
-    var imageID = $(this).parent().find('img').attr('image-id');
+    var imageID = $(e.target).parent().find('img').attr('image-id');
     var new_images = [];
 
     for (var i = 0; i < product.images.length; i++) {
@@ -458,7 +457,7 @@ function imageClicked(e) {
     }
 
     product.images = new_images;
-    $(this).parent().remove();
+    $(e.target).parent().remove();
 
     renderImages();
 }
@@ -808,9 +807,6 @@ function indexOfImages(images, link) {
     for (var i = images.length - 1; i >= 0; i--) {
         if(cleanImageLink(images[i]) == cleanImageLink(link)) {
             return i;
-        }
-        if(cleanImageLink(images[i]).toLocaleLowerCase() == cleanImageLink(link).toLocaleLowerCase()) {
-            console.log('Lower issue',cleanImageLink(images[i]), cleanImageLink(link));
         }
     }
 

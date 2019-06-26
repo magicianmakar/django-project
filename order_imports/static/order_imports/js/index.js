@@ -49,10 +49,11 @@ window.OrderImportsIndex = {
                     lineItemSearch = lineItemSearch+'[data-identify="'+item.identify+'"]';
                 }
 
+                var tr = null;
                 if ($(lineItemSearch).length == 0) {
-                    var tr = $('.table .clone').clone();
+                    tr = $('.table .clone').clone();
                 } else {
-                    var tr = $('.'+lineItemClass);
+                    tr = $('.'+lineItemClass);
                 }
 
                 tr.find('td:nth-child(1)').text(order.name);
@@ -176,7 +177,7 @@ window.OrderImportsIndex = {
                         config.sub_conf.channels[storeId].running = false;
                         config.sub_conf.channels[storeId].message = '';
 
-                        window.OrderImportsIndex.ajaxFoundOrders(data.store_id, data.file_index)
+                        window.OrderImportsIndex.ajaxFoundOrders(data.store_id, data.file_index);
                     }, 1000);
                 } else {
                     config.sub_conf.channels[storeId].running = false;

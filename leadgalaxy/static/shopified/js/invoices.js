@@ -58,7 +58,7 @@ $(function () {
                 $('#invoice-table').html(data);
                 applyShowMore();
                 applyPayInvoiceAction();
-            })
+            });
         }
     };
 

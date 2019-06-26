@@ -5,9 +5,8 @@
 {% load widget_tweaks %}
 {% load template_helper %}
 {% load compress %}
+
 {% block main-container %}
-
-
 <div id="edit-phone" class="ibox float-e-margins">
     <div class="ibox-title ibox-title-adjust">
         <div class="col-md-6 col-xs-12">
@@ -15,26 +14,13 @@
         </div>
         <div class="col-md-6 col-xs-12 text-right">
             {% if twilio_alert.pk %}
-
-                <a data-twilio-alert-id={{ twilio_alert.pk }}
-                       _href="{% url 'phone_automation_notifications_alert_delete' alert_id=twilio_alert.pk %}"
-                        class="btn-sm btn-danger remove-alert"><i class="fa fa-trash"></i> Delete</a>
+            <a data-twilio-alert-id={{ twilio_alert.pk }} _href="{% url 'phone_automation_notifications_alert_delete' alert_id=twilio_alert.pk %}" class="btn-sm btn-danger remove-alert"><i class="fa fa-trash"></i> Delete</a>
             {% else %}
-
             {% endif %}
         </div>
-
-
-
     </div>
-
     <div class="ibox-content ibox-content-adjust edit-form-adjust">
-        <form
-                    id="alert-form-edit"
-                    method="POST" class="form-horizontal"
-                    role="form"
-                    >
-
+        <form id="alert-form-edit" method="POST" class="form-horizontal" role="form">
             {% csrf_token %}
             {{ form.non_field_errors }}
             <div class="row">
@@ -53,34 +39,30 @@
             </div>
             <div class="row">
                 <div class="col-md-3">
-                   <div class="form-group _row v-center">
+                    <div class="form-group _row v-center">
                         <div class="col-md-12 col-xs-12">
                             <div class="users-list">
                                 {% if users|length %}
-                                    {% for user in users %}
-                                        <p>
-                                            <input type="checkbox" {% if user.checked %} checked {% endif %} class="users-item form-control js-switch" name="users_array[]" value="1" data-user-name="{{ user.name }}"
-                                                                                            data-user-email="{{ user.email }}"> {{ user.name }} {{ user.email }}
-                                        </p>
-
-
-
-                                    {% endfor %}
-                                {%  else %}
-                                    <span>You have no users in this company</span>
-                                {%  endif %}
-                                <input type="hidden"  name="users" class="users-hidden" value="" >
+                                {% for user in users %}
+                                <p>
+                                    <input type="checkbox" {% if user.checked %} checked {% endif %} class="users-item form-control js-switch" name="users_array[]" value="1" data-user-name="{{ user.name }}" data-user-email="{{ user.email }}"> {{ user.name }} {{ user.email }}
+                                </p>
+                                {% endfor %}
+                                {% else %}
+                                <span>You have no users in this company</span>
+                                {% endif %}
+                                <input type="hidden" name="users" class="users-hidden" value="">
                             </div>
                         </div>
-                   </div>
+                    </div>
                 </div>
                 <div class="col-md-3">
-                   <div class="form-group _row v-center">
+                    <div class="form-group _row v-center">
                         {{ form.alert_event.errors }}
                         <div class="col-md-12 col-xs-12">
                             {{ form.alert_event|add_class:"form-control" }}
                         </div>
-                   </div>
+                    </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group _row v-center">
@@ -99,32 +81,25 @@
                     </div>
                 </div>
             </div>
-
-
-
-
-
-
             <input type="submit" value="Submit" class="btn btn-primary">
-
-
-
-
         </form>
     </div>
 </div>
-
-
-
 {% endblock %}
 
 {% block extracss %}
-    <style>
-        #search-form label {margin-left:10px;}
-        #search-form button {margin-left:10px;}
+    <style type="text/css">
+        #search-form label {
+            margin-left:10px;
+        }
 
-        .provision-phone-number {margin-bottom:15px;}
+        #search-form button {
+            margin-left:10px;
+        }
 
+        .provision-phone-number {
+            margin-bottom:15px;
+        }
 
         .input-group-addon {
             padding: 6px 12px;
@@ -137,18 +112,15 @@
             border: 1px solid #ccc;
             border-radius: 4px;
         }
-
     </style>
-    {% compress css %}
-        <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
-        <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
-    {% endcompress %}
+
+    <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+    <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
-     <script type="text/javascript">
-
-        $(function () {
+    <script type="text/javascript">
+        $(function() {
             var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
             elems.forEach(function(html) {
                 var switchery = new Switchery(html, {
@@ -157,75 +129,58 @@
                 });
             });
 
-            $('.remove-alert').click(function (e) {
-                        href = $(this).attr('_href')
-                        swal({
-                            title: "Delete Alert",
-                            text: "This will delete your elert record.  \n\nAre you sure you want to continue?",
-                            type: "warning",
-                            showCancelButton: true,
-                            closeOnCancel: true,
-                            closeOnConfirm: false,
-                            confirmButtonColor: "#DD6B55",
-                            confirmButtonText: "Yes, delete",
-                            cancelButtonText: "No, keep it"
-                        },
-                        function(isConfirmed) {
-                            if (isConfirmed) {
-                                window.location = href;
-                            }
-                        });
+            $('.remove-alert').click(function(e) {
+                var href = $(this).attr('_href');
+                swal({
+                        title: "Delete Alert",
+                        text: "This will delete your elert record.  \n\nAre you sure you want to continue?",
+                        type: "warning",
+                        showCancelButton: true,
+                        closeOnCancel: true,
+                        closeOnConfirm: false,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "Yes, delete",
+                        cancelButtonText: "No, keep it"
+                    },
+                    function(isConfirmed) {
+                        if (isConfirmed) {
+                            window.location.href = href;
+                        }
                     });
+            });
 
-            $('.users-add-button').click(function (e) {
-                    row=$(this).parents('.users-item').clone()
-                    $(row).find(".users-add-button").addClass('users-delete-button btn-danger').removeClass('users-add-button btn-success')
-                    $(row).find(".users-delete-button").html("X")
-                    $(row).find(".users-delete-button").attr('title','Delete')
+            $('.users-add-button').click(function(e) {
+                var row = $(this).parents('.users-item').clone();
+                $(row).find(".users-add-button").addClass('users-delete-button btn-danger').removeClass('users-add-button btn-success');
+                $(row).find(".users-delete-button").html("X");
+                $(row).find(".users-delete-button").attr('title', 'Delete');
 
-                    $('.users-list').append(row)
+                $('.users-list').append(row);
 
-                    $(this).parents('.users-item').find('.user_name').val('')
-                    $(this).parents('.users-item').find('.user_email').val('')
+                $(this).parents('.users-item').find('.user_name').val('');
+                $(this).parents('.users-item').find('.user_email').val('');
 
-                    });
-            $('.users-list').on('click', '.users-delete-button', function (e) {
-                    row=$(this).parents('.users-item')
+            });
 
-                    row.remove()
+            $('.users-list').on('click', '.users-delete-button', function(e) {
+                $(this).parents('.users-item').remove();
+            });
 
-
-                    });
-
-
-            $("#alert-form-edit").submit(function( event ) {
-
-                var users=[]
-
+            $("#alert-form-edit").submit(function(event) {
+                var users = [];
 
                 $(this).find('.users-list .users-item:checked').each(function() {
-                    user_name=$(this).data('user-name')
-                    user_email=$(this).data('user-email')
-                    users.push( {'name':user_name,'email':user_email} )
-                    }
-                )
+                    users.push({
+                        'name': $(this).data('user-name'),
+                        'email': $(this).data('user-email')
+                    });
+                });
 
-                console.log(users)
-                //users_str=JSON.stringify(users).replace(/\"/g,'\\"')
-                users_str=JSON.stringify(users)
-
-                $(this).find('.users-hidden').val(users_str)
-
-                //event.preventDefault();
-                //return false;
+                $(this).find('.users-hidden').val(JSON.stringify(users));
             });
 
         });
-
     </script>
 
-
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
-
-
 {% endblock %}

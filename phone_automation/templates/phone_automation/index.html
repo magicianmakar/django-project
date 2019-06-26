@@ -5,123 +5,99 @@
 {% load widget_tweaks %}
 {% load template_helper %}
 {% load phone_numbers %}
-{% block main-container %}
 {% load compress %}
 
+{% block main-container %}
 
 <div class="row">
-
     <div class="col-md-12 callflex-index-cont">
-
         {% if twilio_stats %}
+        <div class="row">
+            <div class="col-lg-3 col-xs-6">
+                <div class="widget style1 custom-grey-bg">
                     <div class="row">
-                        <div class="col-lg-3 col-xs-6">
-                            <div class="widget style1 custom-grey-bg">
-
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <i class="fa fa-calendar fa-3x"></i>
-                                    </div>
-                                    <div class="col-md-9 text-right custom-grey-text">
-                                        <span> Today's Calls </span>
-                                        <h2 class="font-bold">{{ twilio_stats.twilio_logs_today_count }}</h2>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="col-md-3">
+                            <i class="fa fa-calendar fa-3x"></i>
                         </div>
-                        <div class="col-lg-3 col-xs-6">
-                            <div class="widget style1 custom-grey-bg">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <i class="fa fa-user fa-3x"></i>
-                                    </div>
-                                    <div class="col-md-9 text-right custom-grey-text">
-                                        <span>Unique Callers Today</span>
-                                        <h2 class="font-bold">{{  twilio_stats.today_uniq_callers_count }}</h2>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-xs-6">
-                            <div class="widget style1 custom-grey-bg">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <i class="fa fa-phone fa-3x"></i>
-                                    </div>
-                                    <div class="col-md-9 text-right custom-grey-text">
-                                        <span> Total incoming calls </span>
-                                        <h2 class="font-bold">{{ twilio_stats.twilio_logs_total_count }}</h2>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-xs-6">
-                            <div class="widget style1 custom-grey-bg">
-                                <div class="row">
-                                    <div class="col-md-3">
-                                        <i class="fa fa-clock-o fa-3x"></i>
-                                    </div>
-                                    <div class="col-md-9 text-right custom-grey-text">
-                                        <span>Time Used This Month</span>
-                                        <h2 class="font-bold">{{ twilio_stats.total_duration|formatSeconds }} of
-                                            {% if twilio_stats.total_duration_month_limit != False %} {{twilio_stats.total_duration_month_limit|formatSeconds }} {%  else %} &infin; {%  endif %}</h2>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="col-md-9 text-right custom-grey-text">
+                            <span> Today's Calls </span>
+                            <h2 class="font-bold">{{ twilio_stats.twilio_logs_today_count }}</h2>
                         </div>
                     </div>
-
-                {%  endif %}
+                </div>
+            </div>
+            <div class="col-lg-3 col-xs-6">
+                <div class="widget style1 custom-grey-bg">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <i class="fa fa-user fa-3x"></i>
+                        </div>
+                        <div class="col-md-9 text-right custom-grey-text">
+                            <span>Unique Callers Today</span>
+                            <h2 class="font-bold">{{ twilio_stats.today_uniq_callers_count }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-xs-6">
+                <div class="widget style1 custom-grey-bg">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <i class="fa fa-phone fa-3x"></i>
+                        </div>
+                        <div class="col-md-9 text-right custom-grey-text">
+                            <span> Total incoming calls </span>
+                            <h2 class="font-bold">{{ twilio_stats.twilio_logs_total_count }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-xs-6">
+                <div class="widget style1 custom-grey-bg">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <i class="fa fa-clock-o fa-3x"></i>
+                        </div>
+                        <div class="col-md-9 text-right custom-grey-text">
+                            <span>Time Used This Month</span>
+                            <h2 class="font-bold">{{ twilio_stats.total_duration|formatSeconds }} of
+                                {% if twilio_stats.total_duration_month_limit != False %} {{twilio_stats.total_duration_month_limit|formatSeconds }} {% else %} &infin; {% endif %}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
         <div class="row ">
             <div class="col-md-2">
-
-                    {% include 'phone_automation/partial/sub_nav.html' %}
-
-
-
+                {% include 'phone_automation/partial/sub_nav.html' %}
             </div>
             <div class="col-md-10">
                 <div class="ibox float-e-margins row">
-
-                <div class="ibox-title">
-                    <h5 class="content-tittle">Your CallFlex Numbers<small></small></h5>
-
-                    <div class="ibox-tools row">
-
-
-
-                        <div class="col-md-6 form-inline">
-                            <div class="form-group">
-                                <span class="">
-                                    <select name="company_id" id="company_id" class="form-control" title="Company">
-                                        <option value="" {% if request.GET.company_id == "" %} selected {% endif %}>All Companies</option>
-                                        {% for company in companies %}
-                                            <option value="{{ company.id }}" {% if request.GET.company_id == company.id|stringformat:"i"  %} selected {% endif %}>{{ company.title }}</option>
-                                        {% endfor %}
-                                    </select>
-
-                                </span>
+                    <div class="ibox-title">
+                        <h5 class="content-tittle">Your CallFlex Numbers<small></small></h5>
+                        <div class="ibox-tools row">
+                            <div class="col-md-6 form-inline">
+                                <div class="form-group">
+                                    <span class="">
+                                        <select name="company_id" id="company_id" class="form-control" title="Company">
+                                            <option value="" {% if not request.GET.company_id %} selected {% endif %}>All Companies</option>
+                                            {% for company in companies %}
+                                            <option value="{{ company.id }}" {% if request.GET.company_id == company.id|stringformat:"i" %} selected {% endif %}>{{ company.title }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="col-md-6 text-right">
+                            <div class="col-md-6 text-right">
                                 <a class="btn-sm btn-primary " href="{% url template_config.url.namespace|add:'phone_automation_provision' %}">
                                     <i class="fa fa-phone"></i> &nbsp; Add New Number
                                 </a>
+                            </div>
                         </div>
-
-
-
                     </div>
-                </div>
-
-
-
-
-                <div class="ibox-content ">
-
-
-                                {% if twilio_phone_numbers|length %}
+                    <div class="ibox-content ">
+                        {% if twilio_phone_numbers|length %}
                         <div class="grey-cont">
                             <table class="table table-bordered dataTables " style="width:100%;">
                                 <thead>
@@ -135,88 +111,66 @@
                                         <th style="width:150px;">Options</th>
                                     </tr>
                                 </thead>
-
-                            {% for twilio_phone_number in twilio_phone_numbers %}
-
-
-
-
-                                    <tbody>
-                                        <tr class="table-item" data-company-id="{{ twilio_phone_number.company.id }}">
-                                            <td class="text-center">
-                                                {{ twilio_phone_number.incoming_number|phone_number }}
-                                            </td>
-                                            <td class="text-center">
-                                                {{ twilio_phone_number.type }}
-                                            </td>
-                                            <td class="text-center">
-                                                {{ twilio_phone_number.title }}
-                                            </td>
-                                            <td class="text-center">
-                                                {% if twilio_phone_number.company is None %}
-                                                    <span class="color-red">Company is not assigned</span>
-                                                {% else %}
-                                                    <a href="{% url 'phone_automation_companies_edit' company_id=twilio_phone_number.company.pk %}" class="" title="Edit Company">
-                                                        {{ twilio_phone_number.company.title|default:"Untitled Company" }}
-                                                    </a>
-
-                                                {% endif %}
-
-                                            </td>
-                                            <td class="text-center">
-                                                {% if twilio_phone_number.automation is None %}
-                                                    <span class="color-red">CallFlow Not Set</span>
-                                                {% else %}
-                                                    <a href="{% url 'phone_automation_automate' twilio_automation_id=twilio_phone_number.automation.pk %}" class="" title="Edit CallFlow">
-                                                        {{ twilio_phone_number.automation.title|default:"Untitled Callflow" }}
-                                                    </a>
-
-                                                {% endif %}
-
-                                            </td>
-                                            <td class="text-center">{{twilio_phone_number.updated_at|date}}</td>
-                                            <td class="text-center">
-                                                {%  if twilio_phone_number.sms_allowed and twilio_phone_number.sms_enabled %}
-                                                    <a id="sms-automation" type="button" data-toggle="modal" data-target="#sms-automation-hint"  class="btn btn-xs btn-info " >SMS Automation</a>
-                                                {% endif %}
-                                                <a href="{% url 'phone_automation_provision_edit' twilio_phone_number_id=twilio_phone_number.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
-                                                <a data-twilio_phone_number_id={{ twilio_phone_number.pk }} _href="{% url 'phone_automation_provision_release' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-xs btn-danger remove-provision btn-circled-adjust" title="Delete"><i class="fa fa-times"></i></a>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-
-
-                            {% endfor %}
+                                {% for twilio_phone_number in twilio_phone_numbers %}
+                                <tbody>
+                                    <tr class="table-item" data-company-id="{{ twilio_phone_number.company.id }}">
+                                        <td class="text-center">
+                                            {{ twilio_phone_number.incoming_number|phone_number }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ twilio_phone_number.type }}
+                                        </td>
+                                        <td class="text-center">
+                                            {{ twilio_phone_number.title }}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if twilio_phone_number.company is None %}
+                                            <span class="color-red">Company is not assigned</span>
+                                            {% else %}
+                                            <a href="{% url 'phone_automation_companies_edit' company_id=twilio_phone_number.company.pk %}" class="" title="Edit Company">
+                                                {{ twilio_phone_number.company.title|default:"Untitled Company" }}
+                                            </a>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            {% if twilio_phone_number.automation is None %}
+                                            <span class="color-red">CallFlow Not Set</span>
+                                            {% else %}
+                                            <a href="{% url 'phone_automation_automate' twilio_automation_id=twilio_phone_number.automation.pk %}" class="" title="Edit CallFlow">
+                                                {{ twilio_phone_number.automation.title|default:"Untitled Callflow" }}
+                                            </a>
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">{{twilio_phone_number.updated_at|date}}</td>
+                                        <td class="text-center">
+                                            {% if twilio_phone_number.sms_allowed and twilio_phone_number.sms_enabled %}
+                                            <a id="sms-automation" type="button" data-toggle="modal" data-target="#sms-automation-hint" class="btn btn-xs btn-info ">SMS Automation</a>
+                                            {% endif %}
+                                            <a href="{% url 'phone_automation_provision_edit' twilio_phone_number_id=twilio_phone_number.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
+                                            <a data-twilio_phone_number_id={{ twilio_phone_number.pk }} _href="{% url 'phone_automation_provision_release' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-xs btn-danger remove-provision btn-circled-adjust" title="Delete"><i class="fa fa-times"></i></a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                {% endfor %}
                             </table>
                         </div>
-                    {% else %}
+                        {% else %}
                         <div class="">
                             <h2>You do not have an active CallFlex number.</h2>
                             <div>
                                 <br />
                                 <a class="btn btn-primary  invite-subuser" href="{% url template_config.url.namespace|add:'phone_automation_provision' %}">
-                                <i class="fa fa-phone"></i> &nbsp; Select a new number</a>
+                                    <i class="fa fa-phone"></i> &nbsp; Select a new number</a>
                                 <br />&nbsp;
                             </div>
                         </div>
-                    {% endif %}
-
-
-
-
-
-
+                        {% endif %}
+                    </div>
                 </div>
-
-
-            </div>
-
             </div>
         </div>
     </div>
 </div>
-
-
 <div class="modal inmodal" id="sms-automation-hint" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
     <div class="modal-dialog">
         <div class="modal-content animated fadeIn">
@@ -227,15 +181,19 @@
                 <small></small>
             </div>
             <div class="modal-body">
-
                 <p>Your incoming phone number supports automated SMS replies for the following commands in the message body:</p>
-                <p><blockquote class="sms-command">orders</blockquote> - get all pending orders of the customer, who send the sms message (by incoming phone number match)</p>
+                <p>
+                    <blockquote class="sms-command">orders</blockquote> - get all pending orders of the customer, who send the sms message (by incoming phone number match)
+                </p>
                 <br /><br />
-                <p><blockquote class="sms-command">orders-phone &lt;phone-number&gt;</blockquote> - get all pending orders by specified phone number</p>
+                <p>
+                    <blockquote class="sms-command">orders-phone &lt;phone-number&gt;</blockquote> - get all pending orders by specified phone number
+                </p>
                 <br /><br />
-                <p><blockquote class="sms-command">order-id &lt;store-specific-order-id&gt;</blockquote> - get the status of specified order</p>
+                <p>
+                    <blockquote class="sms-command">order-id &lt;store-specific-order-id&gt;</blockquote> - get the status of specified order
+                </p>
                 <br /><br />Just send an sms message with the text in the message body to use these features.
-
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
@@ -243,159 +201,147 @@
         </div>
     </div>
 </div>
-
-
-
 {% endblock %}
 
 {% block extracss %}
     <style>
-        .widget {padding: 10px 15px;
-                margin-top:10px;}
-        .widget h2 {font-size: 20px !important; margin-top: 0;}
-        .setup-automation {margin-right:10px;}
-        .phone-nummber-cont {margin-bottom:20px;}
-        .sms-command {color:#1ab394;}
-        .ibox-title {    border: none}
-        .ibox-content {    padding: 14px 15px 7px;}
+        .color-red {
+            color:#880000;
+        }
+
+        #company_id {
+            margin-top:-7px;
+        }
+
+        .widget {
+            padding: 10px 15px;
+            margin-top:10px;
+        }
+
+        .widget h2 {
+            font-size: 20px !important;
+            margin-top: 0;
+        }
+
+        .setup-automation {
+            margin-right:10px;
+        }
+
+        .phone-nummber-cont {
+            margin-bottom:20px;
+        }
+
+        .sms-command {
+            color:#1ab394;
+        }
+
+        .ibox-title {
+            border: none;
+        }
+
+        .ibox-content {
+            padding: 14px 15px 7px;
+        }
+
         .blink-button {
-          -webkit-border-radius: 3px;
           border-radius: 3px;
-
-          -webkit-animation: glowing 1500ms infinite;
-          -moz-animation: glowing 1500ms infinite;
-          -o-animation: glowing 1500ms infinite;
           animation: glowing 1500ms infinite;
-        }
-        @-webkit-keyframes glowing {
-          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
-          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
-          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
-        }
-
-        @-moz-keyframes glowing {
-          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
-          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
-          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
-        }
-
-        @-o-keyframes glowing {
-          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
-          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
-          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
         }
 
         @keyframes glowing {
-          0% {  -webkit-box-shadow: 0 0 1px #ed5565;  }
-          50% {  -webkit-box-shadow: 0 0 20px #ed5565;  }
-          100% {  -webkit-box-shadow: 0 0 1px #ed5565; }
+            0% {
+                box-shadow: 0 0 1px #ed5565;
+            }
+
+            50% {
+                box-shadow: 0 0 20px #ed5565;
+            }
+
+            100% {
+                box-shadow: 0 0 1px #ed5565;
+            }
         }
-        .color-red {color:#880000;}
-        #company_id {margin-top:-7px;}
     </style>
+
     <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
-
-    {% compress css %}
-        <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
-
-    {% endcompress %}
+    <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
-     <!-- Data Tables -->
-     <script src="{% static 'libs/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
-     <script src="{% static 'libs/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
-     <script src="{% static 'libs/bower_components/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
-     <script src="{% static 'libs/bower_components/datatables.net-responsive-bs/js/responsive.bootstrap.min.js' %}"></script>
-     <script type="text/javascript">
+    <script src="{% static 'libs/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/datatables.net-responsive-bs/js/responsive.bootstrap.min.js' %}"></script>
 
-     $(document).ready(function() {
-         var table = $('.dataTables').dataTable({
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var table = $('.dataTables').dataTable({
                 responsive: true,
                 dom: 'T<"clear">lfrtip',
-                buttons: [
-
-
-                ],
-
+                buttons: [],
                 bLengthChange: true,
                 iDisplayLength: 50,
                 order: [],
-
             });
 
-
-        $('.remove-provision').click(function (e) {
-            href = $(this).attr('_href')
-            swal({
-                title: "Delete Phone Number?",
-                text: "This will delete your incoming phone number. \n\nYou will not be able to use this number again. \n\nAre you sure you want to continue?",
-                type: "warning",
-                showCancelButton: true,
-                closeOnCancel: true,
-                closeOnConfirm: false,
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "Yes, delete my number",
-                cancelButtonText: "No, keep my number"
-            },
-            function(isConfirmed) {
-                if (isConfirmed) {
-                    window.location = href;
-                }
+            $('.remove-provision').click(function(e) {
+                var href = $(this).attr('_href');
+                swal({
+                        title: "Delete Phone Number?",
+                        text: "This will delete your incoming phone number. \n\nYou will not be able to use this number again. \n\nAre you sure you want to continue?",
+                        type: "warning",
+                        showCancelButton: true,
+                        closeOnCancel: true,
+                        closeOnConfirm: false,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "Yes, delete my number",
+                        cancelButtonText: "No, keep my number"
+                    },
+                    function(isConfirmed) {
+                        if (isConfirmed) {
+                            window.location.href = href;
+                        }
+                    });
             });
-        });
 
-
-
-        $('.remove-automation').click(function (e) {
-            href = $(this).attr('_href')
-            swal({
-                title: "Delete CallFlow?",
-                text: "This will delete your callflow settings. . \n\nAre you sure you want to continue?",
-                type: "warning",
-                showCancelButton: true,
-                closeOnCancel: true,
-                closeOnConfirm: false,
-                confirmButtonColor: "#DD6B55",
-                confirmButtonText: "Yes, delete my CallFlow",
-                cancelButtonText: "No, keep my CallFlow"
-            },
-            function(isConfirmed) {
-                if (isConfirmed) {
-                    window.location = href;
-                }
+            $('.remove-automation').click(function(e) {
+                var href = $(this).attr('_href');
+                swal({
+                        title: "Delete CallFlow?",
+                        text: "This will delete your callflow settings. . \n\nAre you sure you want to continue?",
+                        type: "warning",
+                        showCancelButton: true,
+                        closeOnCancel: true,
+                        closeOnConfirm: false,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "Yes, delete my CallFlow",
+                        cancelButtonText: "No, keep my CallFlow"
+                    },
+                    function(isConfirmed) {
+                        if (isConfirmed) {
+                            window.location.href = href;
+                        }
+                    });
             });
-        });
 
-        function update_tables_filter()
-            {
-                company=$("#company_id").val()
+            function update_tables_filter() {
+                company = $("#company_id").val();
 
-                if (company=="")
-                {
-                    $('.table-item').show()
-                }
-                else
-                {
-                    $('.table-item').hide()
-                    $('.table-item[data-company-id='+company+']').show()
+                if (company == "") {
+                    $('.table-item').show();
+                } else {
+                    $('.table-item').hide();
+                    $('.table-item[data-company-id=' + company + ']').show();
                 }
             }
 
+            $("#company_id").change(function() {
+                update_tables_filter();
+            });
 
-        $("#company_id").change(function(){
-            company=$(this).val()
-            console.log(company)
-           update_tables_filter()
-
-
-        })
-
-        update_tables_filter()
-
-
-    });
+            update_tables_filter();
+        });
     </script>
 {% endblock %}

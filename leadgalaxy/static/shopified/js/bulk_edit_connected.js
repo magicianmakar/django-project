@@ -100,7 +100,7 @@
                     var sub_conf = sub_confs[i];
                     var channel = pusher.subscribe(sub_conf.channel);
 
-                    channel.bind('bulk-edit-connected', function(data) {
+                    channel.bind('bulk-edit-connected', function(data) { // jshint ignore:line
                         if (data.task in vm.task_ids) {
                             vm.task_ids[data.task] = data;
                             var completed = true;
