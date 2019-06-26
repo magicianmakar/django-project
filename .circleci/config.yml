@@ -109,7 +109,7 @@ jobs:
           name: Django Tests
           command: |
             source venv/bin/activate
-            coverage run ./manage.py test --noinput -v2
+            coverage run ./manage.py test --noinput -v2 --exclude-tag excessive
 
       - run:
           name: Coverage Report

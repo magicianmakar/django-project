@@ -468,7 +468,7 @@ class OrdersTestCase(BaseTestCase):
     def setUp(self):
         pass
 
-    @tag('slow')
+    @tag('slow', 'excessive')
     def test_order_notes(self):
         order_id = 4905209738
         line_id = 9309669834
@@ -507,7 +507,7 @@ class OrdersTestCase(BaseTestCase):
 
         utils.set_shopify_order_note(store, order_id, '')
 
-    @tag('slow')
+    @tag('slow', 'excessive')
     def test_order_updater_note(self):
         store = ShopifyStoreFactory()
         order_id = 579111223384
@@ -525,7 +525,7 @@ class OrdersTestCase(BaseTestCase):
         except LockError:
             pass
 
-    @tag('slow')
+    @tag('slow', 'excessive')
     def test_order_updater_note_unicode(self):
         store = ShopifyStoreFactory()
         order_id = 579111518296
@@ -554,7 +554,7 @@ class OrdersTestCase(BaseTestCase):
 
         updater.reset('notes')
 
-    @tag('slow')
+    @tag('slow', 'excessive')
     def test_order_updater_tags(self):
         store = ShopifyStoreFactory()
         order_id = 579111714904
@@ -573,7 +573,7 @@ class OrdersTestCase(BaseTestCase):
 
         self.assertEqual(tag, utils.get_shopify_order(store, order_id)['tags'])
 
-    @tag('slow')
+    @tag('slow', 'excessive')
     def test_order_updater_attributes(self):
         store = ShopifyStoreFactory()
         order_id = 579111845976
