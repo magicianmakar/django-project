@@ -1,3 +1,5 @@
+/* jshint -W004 */
+
 var Currency = {
     storeFormat: config.currencyFormat,
     init: function() {
@@ -816,9 +818,7 @@ var Utils = {
                 });
 
                 this.loadedCharts.big = true;
-            } catch(err) {
-                console.error(err);
-            }
+            } catch(err) {}
 
             var miniChartOptions = {
                 responsive: true,
@@ -858,9 +858,7 @@ var Utils = {
                     options: miniChartOptions
                 });
                 this.loadedCharts.mini.amounts = true;
-            } catch(err) {
-                console.error(err);
-            }
+            } catch(err) {}
 
             try {
                 var ctx = document.getElementById("counts-chart-mini").getContext("2d");
@@ -870,9 +868,7 @@ var Utils = {
                     options: miniChartOptions
                 });
                 this.loadedCharts.mini.counts = true;
-            } catch(err) {
-                console.error(err);
-            }
+            } catch(err) {}
 
             try {
                 var ctx = document.getElementById("averages-chart-mini").getContext("2d");
@@ -882,9 +878,7 @@ var Utils = {
                     options: miniChartOptions
                 });
                 this.loadedCharts.mini.averages = true;
-            } catch(err) {
-                console.error(err);
-            }
+            } catch(err) {}
         },
         reloadCharts: function() {
             var dateRange = $('[name="date_range"]').val().split('-'),

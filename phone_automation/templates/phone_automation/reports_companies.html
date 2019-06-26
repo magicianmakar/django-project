@@ -5,14 +5,13 @@
 {% load widget_tweaks %}
 {% load template_helper %}
 {% load phone_numbers %}
-{% block main-container %}
 {% load url_tools %}
 {% load compress %}
 
+{% block main-container %}
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
-
             <div class="ibox-title ibox-title-adjust">
                 <div class="row">
                     <div class="col-md-6 col-xs-12">
@@ -20,168 +19,111 @@
                     </div>
                     <div class="col-md-6 col-xs-12">
                         <div class="text-right">
-
-                         <form class="row form-inline "
-                                    id="search-form"
-                                    method="GET"
-                                    >
-                                    <input type="hidden" name="show_filter" value="1">
-                                    <div class="col-md-12">
-
-                                        <div class="form-group">
-
-                                            <span class="">
-
-                                                <div id="created_at_daterange" class="form-control">
-                                                       <i class="fa fa-calendar m-r-xs"></i>
-                                                       <span>All Time</span>
-                                                       <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
-                                                </div>
-                                                <input type="hidden" type="text" name="created_at_daterange" id="created_at_daterange2" value="{{ request.GET.created_at_daterange|default:'' }}" />
-
-
-                                            </span>
-                                        </div>
-
-
-                                        <!--
-                                        <button type="submit" value="Search" class="btn btn-primary" style="margin-bottom:0;">Apply</button>&nbsp;
-                                        <button type="submit" value="Reset" class="btn btn-white" style="margin-bottom:0;" id="form-reset">Clear</button>
-                                        -->
+                            <form class="row form-inline " id="search-form" method="GET">
+                                <input type="hidden" name="show_filter" value="1">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <span class="">
+                                            <div id="created_at_daterange" class="form-control">
+                                                <i class="fa fa-calendar m-r-xs"></i>
+                                                <span>All Time</span>
+                                                <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                                            </div>
+                                            <input type="hidden" type="text" name="created_at_daterange" id="created_at_daterange2" value="{{ request.GET.created_at_daterange|default:'' }}" />
+                                        </span>
                                     </div>
-                                </form>
+                                </div>
+                            </form>
                         </div>
                     </div>
-
-
                 </div>
-
                 <div class="report-sub-tittle  col-md-offset-2">Usage by Company Report</div>
-
-
             </div>
-
-
             <div class="ibox-content ibox-content-adjust">
                 <div class="row">
                     <div class="col-md-2 col-xs-12">
                         {% include 'phone_automation/partial/sub_nav.html' %}
                     </div>
                     <div class="col-md-10 col-xs-12">
-
-
                         {% if twilio_logs %}
-                            <div class="_row grey-cont">
-
-                                <table class="table table-bordered dataTables responsive dt-responsive " style="width:100%;">
-                                    <thead>
+                        <div class="_row grey-cont">
+                            <table class="table table-bordered dataTables responsive dt-responsive " style="width:100%;">
+                                <thead>
                                     <tr>
                                         <th>Company</th>
                                         <th>Total Numbers</th>
                                         <th>Total Calls</th>
                                         <th>Total Duration</th>
                                     </tr>
-                                    </thead>
-                                    <tbody>
-
+                                </thead>
+                                <tbody>
                                     {% for twilio_log in twilio_logs %}
-                                        <tr>
-                                            <td class="text-center">
-
-                                                <a href="{% url 'phone_automation_companies_edit' company_id=twilio_log.pk %}" class="" title="Edit Company">
-                                                    {{ twilio_log.title|default:"Untitled Company" }}
-                                                </a>
-
-
-                                            </td>
-
-                                            <td class="text-center">{{ twilio_log.stats.total_numbers  }} </td>
-                                            <td class="text-center">{{ twilio_log.stats.total_calls  }} </td>
-                                            <td class="text-center">{{ twilio_log.stats.total_minutes  }} sec</td>
-                                        </tr>
-
-                                        <div> </div>
+                                    <tr>
+                                        <td class="text-center">
+                                            <a href="{% url 'phone_automation_companies_edit' company_id=twilio_log.pk %}" class="" title="Edit Company">
+                                                {{ twilio_log.title|default:"Untitled Company" }}
+                                            </a>
+                                        </td>
+                                        <td class="text-center">{{ twilio_log.stats.total_numbers }} </td>
+                                        <td class="text-center">{{ twilio_log.stats.total_calls }} </td>
+                                        <td class="text-center">{{ twilio_log.stats.total_minutes }} sec</td>
+                                    </tr>
+                                    <div> </div>
                                     {% endfor %}
-
-
-                                    </tbody>
-                                </table>
-
-
-                            </div>
-                        {%  else %}
-                             <div class="alert alert-warning">
-                               No Data.
-                            </div>
-                        {%  endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            No Data.
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extracss %}
-    <!-- Data Tables -->
+    <style type="text/css">
+        tbody td {
+            padding: 0px;
+            margin: 0px;
+        }
+    </style>
+
     <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
 
-    <style type="text/css">
-    tbody td {
-        padding: 0px;
-        margin: 0px;
-    }
-
-    </style>
-
-
-    {% compress css %}
-        <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
-        <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
-        <link href="{% static 'shopified/css/orders.css' %}" rel="stylesheet">
-        <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
-
-    {% endcompress %}
-
+    <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'shopified/css/orders.css' %}" rel="stylesheet">
+    <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
-    <!-- Data Tables -->
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var table = $('.dataTables').dataTable({
+                responsive: true,
+                dom: 'T<"clear">lfrtip',
+                buttons: [],
+                bLengthChange: true,
+                iDisplayLength: 50,
+                order: [],
+            });
+        });
+    </script>
+
     <script src="{% static 'libs/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/datatables.net-responsive-bs/js/responsive.bootstrap.min.js' %}"></script>
 
-
-
-    <script type="text/javascript">
-        $(document).ready(function() {
-
-            var table = $('.dataTables').dataTable({
-                responsive: true,
-                dom: 'T<"clear">lfrtip',
-                buttons: [
-
-
-                ],
-
-                bLengthChange: true,
-                iDisplayLength: 50,
-                order: [],
-
-            });
-        });
-    </script>
-
-
-    {% compress js %}
-        <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
-        <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
-        <script src="{% static 'phone_automation/js/call_logs.js' %}"></script>
-    {% endcompress %}
-
-
+    <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
+    <script src="{% static 'phone_automation/js/call_logs.js' %}"></script>
 {% endblock %}

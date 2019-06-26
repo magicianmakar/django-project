@@ -5,49 +5,43 @@
 {% load widget_tweaks %}
 {% load template_helper %}
 {% load phone_numbers %}
-{% block main-container %}
 {% load url_tools %}
 {% load compress %}
 
+{% block main-container %}
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
-             <div class="ibox-title ibox-title-adjust">
-                 <div class="row">
-                        <div class="col-md-6 col-xs-12">
-                            <h5 class="content-tittle">Notifications<small></small></h5>
-                        </div>
-                        <div class="col-md-6 col-xs-12 text-right">
-                            <div class="ibox-tools">
-                                <div class="col-md-4 form-inline">
-                                    <div class="form-group">
-                                        <span class="">
-                                            <select name="company_id" id="company_id" class="form-control" title="Company">
-                                                <option value="" {% if request.GET.company_id == "" %} selected {% endif %}>All Companies</option>
-                                                {% for company in companies %}
-                                                    <option value="{{ company.id }}" {% if request.GET.company_id == company.id|stringformat:"i"  %} selected {% endif %}>{{ company.title }}</option>
-                                                {% endfor %}
-                                            </select>
-
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-md-8 text-right">
-                                        <a class="btn-sm btn-primary add-summary" href="#">
-                                        <i class="fa fa-newspaper-o"></i> &nbsp; Add New Summary</a>
-
-
-                                        <a class="btn-sm btn-disbaled add-summary-disabled"  disabled="true" href="#">
-                                        <i class="fa fa-newspaper-o"></i> &nbsp; Select Company to Add New Alert</a>
+            <div class="ibox-title ibox-title-adjust">
+                <div class="row">
+                    <div class="col-md-6 col-xs-12">
+                        <h5 class="content-tittle">Notifications<small></small></h5>
+                    </div>
+                    <div class="col-md-6 col-xs-12 text-right">
+                        <div class="ibox-tools">
+                            <div class="col-md-4 form-inline">
+                                <div class="form-group">
+                                    <span class="">
+                                        <select name="company_id" id="company_id" class="form-control" title="Company">
+                                            <option value="" {% if not request.GET.company_id %} selected {% endif %}>All Companies</option>
+                                            {% for company in companies %}
+                                            <option value="{{ company.id }}" {% if request.GET.company_id == company.id|stringformat:"i" %} selected {% endif %}>{{ company.title }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </span>
                                 </div>
                             </div>
-
+                            <div class="col-md-8 text-right">
+                                <a class="btn-sm btn-primary add-summary" href="#">
+                                    <i class="fa fa-newspaper-o"></i> &nbsp; Add New Summary</a>
+                                <a class="btn-sm btn-disbaled add-summary-disabled" disabled="true" href="#">
+                                    <i class="fa fa-newspaper-o"></i> &nbsp; Select Company to Add New Alert</a>
+                            </div>
                         </div>
-                 </div>
-                 <div class="report-sub-tittle  col-md-offset-2">Call Summaries</div>
-             </div>
-
-
+                    </div>
+                </div>
+                <div class="report-sub-tittle  col-md-offset-2">Call Summaries</div>
+            </div>
             <div class="ibox-content ibox-content-adjust">
                 <div class="row">
                     <div class="col-md-2 col-xs-12">
@@ -55,10 +49,9 @@
                     </div>
                     <div class="col-md-10 col-xs-12">
                         {% if summaries %}
-                            <div class="_row grey-cont">
-
-                                <table class="table table-bordered dataTables" style="width:100%;">
-                                    <thead>
+                        <div class="_row grey-cont">
+                            <table class="table table-bordered dataTables" style="width:100%;">
+                                <thead>
                                     <tr>
                                         <th>Users</th>
                                         <th>Company</th>
@@ -66,96 +59,76 @@
                                         <th>Email Options</th>
                                         <th>Actions</th>
                                     </tr>
-                                    </thead>
-                                    <tbody>
-
+                                </thead>
+                                <tbody>
                                     {% for summary in summaries %}
-                                        <tr data-company-id="{{ summary.company.id }}" class="summary-item">
-                                            <td class="text-center">
-                                                    {%  for user in summary.get_config_users  %}
-                                                        <div> {{ user.name }} {{ user.email }} </div>
-                                                    {%  endfor %}
-                                            </td>
-                                            <td class="text-center">
-                                                <a href="{% url 'phone_automation_companies_edit' company_id=summary.company.pk %}" class="" title="Edit Company">
-                                                        {{ summary.company.title|default:"Untitled Company" }}
-                                                    </a>
-                                            </td>
-                                            <td class="text-center">
-                                                {% if summary.freq_daily %} <div>Daily</div> {%  endif %}
-                                                {% if summary.freq_weekly %} <div>Weekly</div> {%  endif %}
-                                                {% if summary.freq_monthly %} <div>Monthly</div> {%  endif %}
-
-                                            </td>
-                                            <td class="text-center">
-                                                <div>Include Summaries</div>
-                                                {% if summary.include_calllogs %} <div>Include CallLogs</div> {%  endif %}
-                                            </td>
-                                            <td class="text-center">
-                                                <a href="{% url 'phone_automation_notifications_summary_edit' summary_id=summary.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
-
-                                            </td>
-                                        </tr>
-
-                                        <div> </div>
+                                    <tr data-company-id="{{ summary.company.id }}" class="summary-item">
+                                        <td class="text-center">
+                                            {% for user in summary.get_config_users %}
+                                            <div> {{ user.name }} {{ user.email }} </div>
+                                            {% endfor %}
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="{% url 'phone_automation_companies_edit' company_id=summary.company.pk %}" class="" title="Edit Company">
+                                                {{ summary.company.title|default:"Untitled Company" }}
+                                            </a>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if summary.freq_daily %} <div>Daily</div> {% endif %}
+                                            {% if summary.freq_weekly %} <div>Weekly</div> {% endif %}
+                                            {% if summary.freq_monthly %} <div>Monthly</div> {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <div>Include Summaries</div>
+                                            {% if summary.include_calllogs %} <div>Include CallLogs</div> {% endif %}
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="{% url 'phone_automation_notifications_summary_edit' summary_id=summary.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
+                                        </td>
+                                    </tr>
+                                    <div> </div>
                                     {% endfor %}
-
-
-                                    </tbody>
-                                </table>
-
-
-                            </div>
-                        {%  else %}
-                             <div class="alert alert-warning">
-                               You have no summary reports added
-                            </div>
-                        {%  endif %}
-
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            You have no summary reports added
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
-
-
-
-
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extracss %}
-    <!-- Data Tables -->
+    <style type="text/css">
+        tbody td {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        #company_id {
+            margin-top: -7px;
+        }
+    </style>
+
     <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
 
-    <style type="text/css">
-    tbody td {
-        padding: 0px;
-        margin: 0px;
-    }
-    #company_id {margin-top:-7px;}
-
-    </style>
-
-
-    {% compress css %}
-        <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
-        <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
-    {% endcompress %}
-
+    <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
-    <!-- Data Tables -->
     <script src="{% static 'libs/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/datatables.net-responsive-bs/js/responsive.bootstrap.min.js' %}"></script>
-
-
 
     <script type="text/javascript">
         $(document).ready(function() {
@@ -163,66 +136,40 @@
             var table = $('.dataTables').dataTable({
                 responsive: true,
                 dom: 'T<"clear">lfrtip',
-                buttons: [
-
-
-                ],
-
+                buttons: [],
                 bLengthChange: true,
                 iDisplayLength: 50,
                 order: [],
-
             });
 
+            function update_add_button() {
+                var company = $("#company_id").val();
 
+                if (company == "") {
+                    $('.summary-item').show();
+                    $('.add-summary').hide();
+                    $('.add-summary-disabled').show();
 
-            function update_add_button()
-            {
-                company=$("#company_id").val()
-
-                if (company=="")
-                {
-                    $('.summary-item').show()
-                    $('.add-summary').hide()
-                    $('.add-summary-disabled').show()
-
-                }
-                else
-                {
-                    $('.summary-item').hide()
-                    $('.summary-item[data-company-id='+company+']').show()
-                    $('.add-summary').show()
-                    $('.add-summary-disabled').hide()
+                } else {
+                    $('.summary-item').hide();
+                    $('.summary-item[data-company-id=' + company + ']').show();
+                    $('.add-summary').show();
+                    $('.add-summary-disabled').hide();
                 }
             }
 
-
-            $("#company_id").change(function(){
-                company=$(this).val()
-                console.log(company)
+            $("#company_id").change(function() {
                 // TODO: add table re-render
-               update_add_button()
+                update_add_button();
+            });
 
+            update_add_button();
 
-            })
-
-            update_add_button()
-
-
-
-            $('.add-summary').click(function(){
-                company=$("#company_id").val()
-                url='{%  url 'phone_automation_notifications_summary_create' %}'
-                url = url + company + '/'
-                window.location = url
-
-            })
-
-
+            $('.add-summary').click(function() {
+                var company = $("#company_id").val();
+                var url = "{% url 'phone_automation_notifications_summary_create' %}" + company + '/';
+                window.location.href = url;
+            });
         });
     </script>
-
-
-
-
 {% endblock %}

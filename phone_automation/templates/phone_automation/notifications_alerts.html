@@ -5,60 +5,53 @@
 {% load widget_tweaks %}
 {% load template_helper %}
 {% load phone_numbers %}
-{% block main-container %}
 {% load url_tools %}
 {% load compress %}
 
+{% block main-container %}
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
-
-             <div class="ibox-title ibox-title-adjust">
-                 <div class="row">
-                        <div class="col-md-6 col-xs-12">
-                            <h5 class="content-tittle">Notifications<small></small></h5>
-                        </div>
-                        <div class="col-md-6 col-xs-12 text-right">
-                            <div class="ibox-tools">
-                                <div class="col-md-4 form-inline">
-                                    <div class="form-group">
-                                        <span class="">
-                                            <select name="company_id" id="company_id" class="form-control" title="Company">
-                                                <option value="" {% if request.GET.company_id == "" %} selected {% endif %}>All Companies</option>
-                                                {% for company in companies %}
-                                                    <option value="{{ company.id }}" {% if request.GET.company_id == company.id|stringformat:"i"  %} selected {% endif %}>{{ company.title }}</option>
-                                                {% endfor %}
-                                            </select>
-
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-md-8 text-right">
-                                        <a class="btn-sm btn-primary add-alert" href="#">
-                                        <i class="fa fa-bell"></i> &nbsp; Add New Alert</a>
-
-
-                                        <a class="btn-sm btn-disbaled add-alert-disabled"  disabled="true" href="#">
-                                        <i class="fa fa-bell"></i> &nbsp; Select Company to Add New Alert</a>
+            <div class="ibox-title ibox-title-adjust">
+                <div class="row">
+                    <div class="col-md-6 col-xs-12">
+                        <h5 class="content-tittle">Notifications<small></small></h5>
+                    </div>
+                    <div class="col-md-6 col-xs-12 text-right">
+                        <div class="ibox-tools">
+                            <div class="col-md-4 form-inline">
+                                <div class="form-group">
+                                    <span class="">
+                                        <select name="company_id" id="company_id" class="form-control" title="Company">
+                                            <option value="" {% if not request.GET.company_id %} selected {% endif %}>All Companies</option>
+                                            {% for company in companies %}
+                                            <option value="{{ company.id }}" {% if request.GET.company_id == company.id|stringformat:"i" %} selected {% endif %}>{{ company.title }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </span>
                                 </div>
                             </div>
-
+                            <div class="col-md-8 text-right">
+                                <a class="btn-sm btn-primary add-alert" href="#">
+                                    <i class="fa fa-bell"></i> &nbsp; Add New Alert</a>
+                                <a class="btn-sm btn-disbaled add-alert-disabled" disabled="true" href="#">
+                                    <i class="fa fa-bell"></i> &nbsp; Select Company to Add New Alert</a>
+                            </div>
                         </div>
-                 </div>
-                 <div class="report-sub-tittle  col-md-offset-2">Call Alerts</div>
-             </div>
-             <div class="ibox-content ibox-content-adjust">
+                    </div>
+                </div>
+                <div class="report-sub-tittle  col-md-offset-2">Call Alerts</div>
+            </div>
+            <div class="ibox-content ibox-content-adjust">
                 <div class="row">
                     <div class="col-md-2 col-xs-12">
                         {% include 'phone_automation/partial/sub_nav.html' %}
                     </div>
                     <div class="col-md-10 col-xs-12">
-
                         {% if alerts %}
-                            <div class="_row grey-cont">
-
-                                <table class="table table-bordered dataTables" style="width:100%;">
-                                    <thead>
+                        <div class="_row grey-cont">
+                            <table class="table table-bordered dataTables" style="width:100%;">
+                                <thead>
                                     <tr>
                                         <th>Alert User</th>
                                         <th>Company</th>
@@ -67,98 +60,80 @@
                                         <th>Alert Type</th>
                                         <th>Actions</th>
                                     </tr>
-                                    </thead>
-                                    <tbody>
-
+                                </thead>
+                                <tbody>
                                     {% for alert in alerts %}
-                                        <tr data-company-id="{{ alert.company.id }}" class="alert-item">
-                                            <td class="text-center">
-                                                    {%  for user in alert.get_config_users  %}
-                                                        <div> {{ user.name }} {{ user.email }} </div>
-                                                    {%  endfor %}
-                                            </td>
-                                            <td class="text-center">
-                                                <a href="{% url 'phone_automation_companies_edit' company_id=alert.company.pk %}" class="" title="Edit Company">
-                                                        {{ alert.company.title|default:"Untitled Company" }}
-                                                    </a>
-                                            </td>
-                                            <td class="text-center">
-                                                {% if alert.twilio_phone_number is None %}
-                                                    <span class="color-red">All Numbers</span>
-                                                {% else %}
-                                                    <a href="{% url 'phone_automation_provision_edit' twilio_phone_number_id=alert.twilio_phone_number.id %}" class="">
-                                                    {{ alert.twilio_phone_number.title }}
-                                                    </a>
-                                                    <br> ( {{ alert.twilio_phone_number.incoming_number|phone_number  }} )
-
-                                                {% endif %}
-
-                                            </td>
-                                            <td class="text-center">{{ alert.alert_event }} </td>
-                                            <td class="text-center">{{ alert.alert_type }} </td>
-                                            <td class="text-center">
-                                                <a href="{% url 'phone_automation_notifications_alert_edit' alert_id=alert.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
-
-                                            </td>
-                                        </tr>
-
-                                        <div> </div>
+                                    <tr data-company-id="{{ alert.company.id }}" class="alert-item">
+                                        <td class="text-center">
+                                            {% for user in alert.get_config_users %}
+                                            <div> {{ user.name }} {{ user.email }} </div>
+                                            {% endfor %}
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="{% url 'phone_automation_companies_edit' company_id=alert.company.pk %}" class="" title="Edit Company">
+                                                {{ alert.company.title|default:"Untitled Company" }}
+                                            </a>
+                                        </td>
+                                        <td class="text-center">
+                                            {% if alert.twilio_phone_number is None %}
+                                            <span class="color-red">All Numbers</span>
+                                            {% else %}
+                                            <a href="{% url 'phone_automation_provision_edit' twilio_phone_number_id=alert.twilio_phone_number.id %}" class="">
+                                                {{ alert.twilio_phone_number.title }}
+                                            </a>
+                                            <br> ( {{ alert.twilio_phone_number.incoming_number|phone_number }} )
+                                            {% endif %}
+                                        </td>
+                                        <td class="text-center">{{ alert.alert_event }} </td>
+                                        <td class="text-center">{{ alert.alert_type }} </td>
+                                        <td class="text-center">
+                                            <a href="{% url 'phone_automation_notifications_alert_edit' alert_id=alert.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
+                                        </td>
+                                    </tr>
+                                    <div> </div>
                                     {% endfor %}
-
-
-                                    </tbody>
-                                </table>
-
-
-                            </div>
-                        {%  else %}
-                             <div class="alert alert-warning">
-                               You have no alerts
-                            </div>
-                        {%  endif %}
-
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            You have no alerts
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
-
-
-
             </div>
         </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block extracss %}
     <!-- Data Tables -->
+
+    <style type="text/css">
+        tbody td {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        #company_id {
+            margin-top: -7px;
+        }
+    </style>
+
     <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
     <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
-
-    <style type="text/css">
-    tbody td {
-        padding: 0px;
-        margin: 0px;
-    }
-    #company_id {margin-top:-7px;}
-
-    </style>
-
-
-    {% compress css %}
-        <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
-        <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
-    {% endcompress %}
-
+    <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'phone_automation/css/phone_automation_styles.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
-    <!-- Data Tables -->
     <script src="{% static 'libs/bower_components/datatables.net/js/jquery.dataTables.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/datatables.net-bs/js/dataTables.bootstrap.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/datatables.net-responsive-bs/js/responsive.bootstrap.min.js' %}"></script>
-
 
     <script type="text/javascript">
         $(document).ready(function() {
@@ -166,65 +141,40 @@
             var table = $('.dataTables').dataTable({
                 responsive: true,
                 dom: 'T<"clear">lfrtip',
-                buttons: [
-
-
-                ],
-
+                buttons: [],
                 bLengthChange: true,
                 iDisplayLength: 50,
                 order: [],
-
             });
 
+            function update_add_button() {
+                var company = $("#company_id").val();
 
+                if (company == "") {
+                    $('.alert-item').show();
+                    $('.add-alert').hide();
+                    $('.add-alert-disabled').show();
 
-            function update_add_button()
-            {
-                company=$("#company_id").val()
-
-                if (company=="")
-                {
-                    $('.alert-item').show()
-                    $('.add-alert').hide()
-                    $('.add-alert-disabled').show()
-
-                }
-                else
-                {
-                    $('.alert-item').hide()
-                    $('.alert-item[data-company-id='+company+']').show()
-                    $('.add-alert').show()
-                    $('.add-alert-disabled').hide()
+                } else {
+                    $('.alert-item').hide();
+                    $('.alert-item[data-company-id=' + company + ']').show();
+                    $('.add-alert').show();
+                    $('.add-alert-disabled').hide();
                 }
             }
 
-
-            $("#company_id").change(function(){
-                company=$(this).val()
-                console.log(company)
+            $("#company_id").change(function() {
                 // TODO: add table re-render
-               update_add_button()
+                update_add_button();
+            });
 
+            update_add_button();
 
-            })
-
-            update_add_button()
-
-
-
-            $('.add-alert').click(function(){
-                company=$("#company_id").val()
-                url='{%  url 'phone_automation_notifications_alert_create' %}'
-                url = url + company + '/'
-                window.location = url
-
-            })
-
-
+            $('.add-alert').click(function() {
+                var company = $("#company_id").val();
+                var url = "{%  url 'phone_automation_notifications_alert_create' %}" + company + '/';
+                window.location.href = url;
+            });
         });
-    </script>
-
-
-
+</script>
 {% endblock %}

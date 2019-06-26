@@ -104,7 +104,6 @@ $(document).ready(function() {
 
     function updateUserStatistics(statistics_data) {
         $.each(statistics_data, function (i, store_info) {
-            console.log(store_info);
             $('#orders_pending_' + store_info.id).html(store_info.pending_orders).parents('.statistics-link').toggle(true);
             $('#products_saved_' + store_info.id).html(store_info.products_saved).parents('.statistics-link').toggle(true);
             $('#products_connected_' + store_info.id).html(store_info.products_connected).parents('.statistics-link').toggle(true);

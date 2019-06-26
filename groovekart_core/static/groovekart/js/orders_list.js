@@ -334,7 +334,7 @@ function addOrderSourceID(e) {
 
     $('#modal-add-order-id .supplier-type').val(orderData.supplier_type);
     $('#modal-add-order-id .order-id').val('');
-    $('#modal-add-order-id .save-order-id-btn').button('reset')
+    $('#modal-add-order-id .save-order-id-btn').button('reset');
 
     $('#modal-add-order-id').modal('show');
 }
@@ -600,7 +600,6 @@ $('.hide-ordered-btn').click(function () {
         $(this).text('Show Ordered');
 
         $('.pagination a').each(function (i, el) {
-            console.log(el)
             var url = $(el).attr('href');
             var hash = 'hide-compete';
             if (url.indexOf(hash)==-1) {
@@ -617,7 +616,6 @@ $('.hide-ordered-btn').click(function () {
         $(this).text('Hide Ordered');
 
         $('.pagination a').each(function (i, el) {
-            console.log(el)
             var url = $(el).attr('href');
             var hash = 'hide-compete';
             if (url.indexOf(hash)!=-1) {

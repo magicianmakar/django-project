@@ -120,7 +120,6 @@
             url: getSupplierUrl(),
             cache: true,
         }, function(response) {
-            console.log(response)
             var variant_tpl = Handlebars.compile($("#variant-template").html());
             var option_tpl = Handlebars.compile($("#variant-option-template").html());
             var extra_input_tpl = Handlebars.compile($("#extra-input-template").html());

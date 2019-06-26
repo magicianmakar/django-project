@@ -322,7 +322,7 @@ function addOrderSourceID(e) {
 
     $('#modal-add-order-id .supplier-type').val(orderData.supplier_type);
     $('#modal-add-order-id .order-id').val('');
-    $('#modal-add-order-id .save-order-id-btn').button('reset')
+    $('#modal-add-order-id .save-order-id-btn').button('reset');
 
     $('#modal-add-order-id').modal('show');
 }

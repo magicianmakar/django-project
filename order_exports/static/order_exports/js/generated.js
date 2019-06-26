@@ -7,7 +7,7 @@ var checkRows = function() {
     } else {
         $('.table thead tr .collapse-info i').addClass('fa-chevron-up').removeClass('fa-chevron-down');
     }
-}
+};
 
 $('.order-export-row .collapse-info').on('click', function(e) {
     e.preventDefault();

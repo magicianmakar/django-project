@@ -310,7 +310,7 @@ Vue.component('flow-block-menu', {
             for (var i = 0, iLength = this.model.children.length; i < iLength; i++) {
                 var children = this.model.children[i];
                 if (children.block_type) {
-                    var index = newChildrenBlockTypes.indexOf(children.block_type)
+                    var index = newChildrenBlockTypes.indexOf(children.block_type);
                     if (index > -1) {
                         newChildrenBlockTypes.splice(index, 1);
                     }
@@ -487,8 +487,8 @@ var demo = new Vue({
                     }
                 },
                 error: function(data) {
-                    var errors_html=""
-                    for (error in data.responseJSON.errors) {
+                    var errors_html = "";
+                    for (var error in data.responseJSON.errors) {
                         errors_html += "\n" + error +": ";
                         errors_html += data.responseJSON.errors[error].join(", ");
                     }

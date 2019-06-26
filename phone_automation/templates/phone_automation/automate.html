@@ -2,30 +2,21 @@
 
 {% load static %}
 {% load compress %}
-
 {% block main-container %}
+
 <div id="call-flow" class="ibox float-e-margins">
     <div class="ibox-title">
         <h5>Call Flow<small></small></h5>
     </div>
-    <div class="ibox-content" id="call-flow" >
-
+    <div class="ibox-content" id="call-flow">
         <div class="form-group row">
-
-
             <label for="q" class="col-sm-3 control-label">
                 CallFlow Name <span class="required">*</span>
             </label>
             <div class="col-sm-6">
-                <input id="title" v-model="title" required="true" class="form-control" placeholder="Your CallFlow Title"/>
+                <input id="title" v-model="title" required="true" class="form-control" placeholder="Your CallFlow Title" />
             </div>
-
-
-
         </div>
-
-
-
         <ul class="dd-list">
             <li class="dd-item">
                 <div class="panel panel-default">
@@ -57,40 +48,37 @@
 
 {% include 'phone_automation/partial/automate_vue_base.html' %}
 {% include 'phone_automation/partial/automate_vue_blocks.html' %}
+
 {% endblock %}
 
 {% block extracss %}
-{% compress css %}
-  <link href="{% static 'phone_automation/css/automate.css' %}" rel="stylesheet">
-{% endcompress %}
+    <link href="{% static 'phone_automation/css/automate.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
     <script type="text/javascript">
-        var nodeCount = {{ automation.last_step|default:0 }};
-        var data = {{ automation.json_data|default:"[]"|safe }};
+        var nodeCount = {{ automation.last_step | default:0 }};
+        var data = {{ automation.json_data | default:"[]" | safe }};
         var title = '{{ automation.title|default:"" }}';
 
-        {% if automation %}
-        var save = {
-            url: "{% url 'phone_automation_save_automation' twilio_automation_id=automation.pk %}",
-            redirect: "{% url 'phone_automations_index' %}"
-        };
-        var uploadUrl = "{% url 'phone_automation_upload' twilio_automation_id=automation.pk %}";
-        {% else %}
-        var save = {
-            url: "{% url 'phone_automation_create_automation'  %}",
-            redirect: "{% url 'phone_automations_index' %}"
-        };
-        var uploadUrl = "{% url 'phone_automation_upload'  %}";
-        {% endif %}
+        { % if automation % }
+            var uploadUrl = "{% url 'phone_automation_upload' twilio_automation_id=automation.pk %}";
+            var save = {
+                url: "{% url 'phone_automation_save_automation' twilio_automation_id=automation.pk %}",
+                redirect: "{% url 'phone_automations_index' %}"
+            };
 
-
+        { % else % }
+            var uploadUrl = "{% url 'phone_automation_upload'  %}";
+            var save = {
+                url: "{% url 'phone_automation_create_automation'  %}",
+                redirect: "{% url 'phone_automations_index' %}"
+            };
+        { % endif % }
     </script>
 
     {% compress js %}
     <script src="{% static 'libs/bower_components/vue/dist/vue.min.js' %}"></script>
     <script src="{% static 'phone_automation/js/automate.js' %}"></script>
     {% endcompress %}
-
 {% endblock %}

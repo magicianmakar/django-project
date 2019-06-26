@@ -324,10 +324,10 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
         if (vars_list.length>0) {
             vars_list = allPossibleCases(vars_list);
 
-            for (var i=0; i<vars_list.length; i++) {
+            for (var i=0; i<vars_list.length; i++) { // jshint ignore:line
                 var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
 
-                var vdata = {
+                var vdata = { // jshint ignore:line
                     "price": product.price,
                     "title": title,
                 };
@@ -341,7 +341,7 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
                 } else {
                     var sku = [];
 
-                    $.each(vars_list[i], function (j, va) {
+                    $.each(vars_list[i], function (j, va) { // jshint ignore:line
                         vdata["option"+(j+1)] = va;
 
                         if (product.variants_sku && product.variants_sku.hasOwnProperty(va)) {

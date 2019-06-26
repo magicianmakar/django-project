@@ -113,7 +113,7 @@ $("a.add-variant").click(function (e) {
 function removeVariant(e) {
     e.preventDefault();
 
-    $(this).parent().remove();
+    $(e.target).parent().remove();
 }
 
 function productExported(data, target, btn) {
@@ -263,10 +263,10 @@ $('#export-btn').click(function () {
 
             if (vars_list.length>0) {
                 vars_list = allPossibleCases(vars_list);
-                for (var i = 0; i < vars_list.length; i++) {
+                for (var i = 0; i < vars_list.length; i++) { // jshint ignore:line
                     var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
 
-                    var vdata = {
+                    var vdata = { // jshint ignore:line
                         "price": parseFloat($('#product-price').val()),
                         "title": title,
                     };
@@ -280,7 +280,7 @@ $('#export-btn').click(function () {
                     } else {
                         var sku = [];
 
-                        $.each(vars_list[i], function (j, va) {
+                        $.each(vars_list[i], function (j, va) { // jshint ignore:line
                             vdata["option"+(j+1)] = va;
 
                             if (product.variants_sku && product.variants_sku.hasOwnProperty(va)) {
@@ -643,7 +643,7 @@ function matchImagesWithExtra(parent) {
 }
 
 function imageClicked(e) {
-    var imageID = $(this).parent().find('img').attr('image-id');
+    var imageID = $(e.target).parent().find('img').attr('image-id');
     var new_images = [];
 
     for (var i = 0; i < product.images.length; i++) {
@@ -653,7 +653,7 @@ function imageClicked(e) {
     }
 
     product.images = new_images;
-    $(this).parent().remove();
+    $(e.target).parent().remove();
 
     renderImages();
 }
@@ -1007,9 +1007,6 @@ function indexOfImages(images, link) {
     for (var i = images.length - 1; i >= 0; i--) {
         if(cleanImageLink(images[i]) == cleanImageLink(link)) {
             return i;
-        }
-        if(cleanImageLink(images[i]).toLocaleLowerCase() == cleanImageLink(link).toLocaleLowerCase()) {
-            console.log('Lower issue',cleanImageLink(images[i]), cleanImageLink(link));
         }
     }
 
@@ -1622,8 +1619,6 @@ var PusherSubscription = {
         escapeMarkup: function(markup) {
             return markup;
         }
-    }).on('select2:select', function(evt) {
-        console.dir(evt);
     });
 
     $(document).on('click', '.select2-results__option.select2-results__message', function() {
