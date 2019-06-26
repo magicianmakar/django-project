@@ -502,6 +502,26 @@ class BoardDetailTestCase(BaseTestCase):
             self.assertEqual(r.status_code, 403)
 
 
+class CommerceHQProductTestCase(BaseTestCase):
+    def test_get_original_info(self):
+        product = CommerceHQProductFactory()
+        self.assertIs(product.get_original_info(), None)
+
+        product = CommerceHQProductFactory()
+        supplier = CommerceHQSupplierFactory(product=product)
+        supplier.product_url = 'http://www.aliexpress.com/123'
+        product.default_supplier = supplier
+        product.save()
+
+        expected = {
+            'domain': 'aliexpress',
+            'source': 'Aliexpress',
+            'url': supplier.product_url,
+        }
+
+        self.assertDictEqual(product.get_original_info(), expected)
+
+
 class SubuserpermissionsApiTestCase(BaseTestCase):
     def setUp(self):
         self.error_message = "Permission Denied: You don't have permission to perform this action"
