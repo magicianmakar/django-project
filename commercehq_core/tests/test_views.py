@@ -4,7 +4,7 @@ from unittest.mock import patch, Mock, call as mock_call
 import arrow
 from munch import Munch
 
-from lib.test import BaseTestCase
+from lib.test import BaseTestCase, ProductAlertsBase
 from django.urls import reverse
 from django.test import tag
 from django.core.cache import caches
@@ -729,6 +729,45 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
         data = {'store': self.store.id}
         r = self.client.post('/api/chq/order-fulfill-update', data, **self.headers)
         self.assertEqual(r.status_code, 403)
+
+
+class ProductAlertsTestCase(ProductAlertsBase):
+    store_factory = CommerceHQStoreFactory
+    product_factory = CommerceHQProductFactory
+    supplier_factory = CommerceHQSupplierFactory
+    change_factory = ProductChangeFactory
+
+    def setUp(self):
+        super().setUp()
+        self.subuser.profile.subuser_chq_stores.add(self.store)
+
+        self.product_change1 = self.change_factory(
+            chq_product=self.product,
+            user=self.user,
+            store_type='chq',
+            data=self.change_data1,
+        )
+
+        self.product_change2 = self.change_factory(
+            chq_product=self.product,
+            user=self.user,
+            store_type='chq',
+            data=self.change_data2,
+        )
+
+    def test_subuser_can_access_alerts(self):
+        self.subuser.profile.have_global_permissions()
+        self.client.force_login(self.subuser)
+
+        path = reverse('chq:product_alerts')
+        with patch('commercehq_core.utils.get_chq_products',
+                   return_value=[{'id': self.product.source_id}]):
+            response = self.client.get(path)
+
+        text = response.content.decode()
+        key = 'Is now <b style="color:green">Online</b>'
+
+        self.assertEqual(text.count(key), 2)
 
 
 class ApiTestCase(BaseTestCase):
