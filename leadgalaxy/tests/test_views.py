@@ -8,7 +8,6 @@ from django.urls import reverse
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.conf import settings
-from django.utils.html import strip_tags
 
 from unittest.mock import patch, Mock
 
