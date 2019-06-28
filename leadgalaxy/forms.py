@@ -5,11 +5,12 @@ from django.forms.utils import ErrorList
 
 # for login with email
 from django.contrib.auth.forms import AuthenticationForm
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.validators import validate_email, ValidationError
+from django.conf import settings
 
 from .models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission
-from shopified_core.utils import login_attempts_exceeded, unlock_account_email, unique_username
+from shopified_core.utils import login_attempts_exceeded, unlock_account_email, unique_username, send_email_from_template
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -229,6 +230,33 @@ class EmailAuthenticationForm(AuthenticationForm):
                 code='invalid_login',
                 params={'username': self.username_field.verbose_name},
             )
+
+        except MultipleObjectsReturned:
+            paid_plan_users = []
+
+            for user in User.objects.filter(email__iexact=username, profile__shopify_app_store=False):
+                if not user.profile.plan.is_free:
+                    paid_plan_users.append(user)
+
+            if len(paid_plan_users) == 1:
+                return paid_plan_users.pop().username
+            else:
+                raven_client.captureException()
+
+                send_email_from_template(
+                    tpl='login_duplicate.html',
+                    subject='Duplicate Email Detected',
+                    recipient=settings.DEFAULT_FROM_EMAIL,
+                    from_email=username,
+                    data={'email': username},
+                    is_async=True
+                )
+
+                raise ValidationError(
+                    "Duplicate account with the same email detected, Customer Support has been notified and will contact you soon",
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
 
         except:
             raven_client.captureException()

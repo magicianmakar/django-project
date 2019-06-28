@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.utils.html import strip_tags
 
 from unittest.mock import patch, Mock
 
@@ -762,3 +763,53 @@ class SlackCommandWebhooksTestCase(BaseTestCase):
 
         self.assertFalse(user.get_config('_disable_affiliate'))
         self.assertContains(response, 'enabled')
+
+
+class UserLoginTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = f.UserFactory(email='user1@test.com', username='user_one')
+
+        password = 'test'
+        self.user.set_password(password)
+        self.user.save()
+
+        self.user.profile.plan = f.GroupPlanFactory(title='Pro', slug='pro')
+        self.user.profile.save()
+
+        self.path = reverse('login')
+        self.data = {
+            'next': '/',
+            'username': self.user.email,
+            'password': password,
+        }
+        self.headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+
+        cache.delete_pattern('login_attempts_*')
+
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
+
+    def form_errors(self, r):
+        try:
+            return r.context["form"].error_messages
+        except:
+            return ''
+
+    def test_normal_login(self):
+        r = self.client.post(self.path, self.data, **self.headers)
+
+        self.assertEqual(r.status_code, 302, self.form_errors(r))
+        self.assertEqual(r.url, '/')
+
+    def test_duplicate_login(self):
+        user2 = f.UserFactory(email='user1@test.com', username='user_two')
+        user2.profile.plan.title = 'Free'
+        user2.profile.plan.slug = 'free-plan'
+        user2.profile.plan.save()
+
+        r = self.client.post(self.path, self.data, **self.headers)
+
+        self.assertEqual(r.status_code, 302, self.form_errors(r))
+        self.assertEqual(r.url, '/')
