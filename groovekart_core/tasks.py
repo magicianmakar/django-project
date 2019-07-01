@@ -1,6 +1,5 @@
 import json
 import itertools
-import re
 from tempfile import mktemp
 from zipfile import ZipFile
 
