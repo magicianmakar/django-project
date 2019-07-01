@@ -290,6 +290,14 @@
                                             {{order.status|title}}
                                             {% if order.partially_ordered %}(Partially Ordered){% endif %}
                                     </div>
+                                    <div class="col-xs-2">
+                                        {% if order.lines_count %}
+                                        <button class="btn btn-success btn-xs pull-right order-all" order-id="{{order.id}}"
+                                                type="button" style="border-right:1px solid #66a8cc">
+                                            Order Items
+                                        </button>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
 
@@ -423,7 +431,7 @@
                                                         source-url="{{item.order_track.get_source_url}}"
                                                         order-date="{{item.order_track.created_at|date:'N j, Y, P'}}"
                                                         line-id="{{item.id}}"
-                                                        product-id="{{item.product_id}}
+                                                        product-id="{{item.product_id}}"
                                                         title="View Order Details">#{{item.order_track.source_id}}</a>
                                                 {% else %}
                                                     <a class="mark-as-ordered" href="#" store="{{order.store.id}}" order-id="{{order.id}}" line-id="{{item.id}}" product-id="{{item.product_id}}">Add</a>
