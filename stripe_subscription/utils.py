@@ -403,6 +403,14 @@ def process_webhook_event(request, event_id, raven_client):
             except:
                 pass
 
+        # checking if it's a custom single subscription ( when mixing yearly/monthly )
+        try:
+            if sub['plan']['metadata']['custom']:
+                raven_client.captureMessage('Single Custom Subscription Event', level='info')
+                return HttpResponse('Subscription Updated')
+        except:
+            pass
+
         created = False
 
         try:
@@ -500,6 +508,14 @@ def process_webhook_event(request, event_id, raven_client):
             except:
                 pass
 
+        # checking if it's a custom single subscription ( when mixing yearly/monthly )
+        try:
+            if sub['plan']['metadata']['custom']:
+                raven_client.captureMessage('Single Custom Subscription Event', level='info')
+                return HttpResponse('ok')
+        except:
+            pass
+
         try:
             stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
             stripe_sub.refresh(sub=sub)
@@ -530,6 +546,14 @@ def process_webhook_event(request, event_id, raven_client):
             except:
                 pass
 
+        # checking if it's a custom single subscription ( when mixing yearly/monthly )
+        try:
+            if sub['plan']['metadata']['custom']:
+                raven_client.captureMessage('Single Custom Subscription Event', level='info')
+                return HttpResponse('Custom Subscription Deleted')
+        except:
+            pass
+
         try:
             customer = StripeCustomer.objects.get(customer_id=sub.customer)
             customer.can_trial = False
@@ -548,11 +572,11 @@ def process_webhook_event(request, event_id, raven_client):
             profile.plan = GroupPlan.objects.get(default_plan=True)
             profile.save()
 
+        stripe_sub = StripeSubscription.objects.filter(subscription_id=sub.id).first()
         StripeSubscription.objects.filter(subscription_id=sub.id).delete()
 
         # Firing custom signal about canceling main user subscription
-        signals.main_subscription_canceled.send(sender=StripeSubscription.objects.filter(subscription_id=sub.id),
-                                                stripe_sub=sub)
+        signals.main_subscription_canceled.send(sender=stripe_sub, stripe_sub=sub)
 
         if not profile.plan_expire_at:
             return HttpResponse('Subscription Deleted - Plan Exipre Set')
@@ -598,6 +622,7 @@ def process_webhook_event(request, event_id, raven_client):
         clear_invoice_cache(stripe_customer)
 
     elif event.type == 'charge.succeeded':
+
         charge = event.data.object
 
         if not charge.customer:
