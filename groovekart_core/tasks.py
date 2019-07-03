@@ -1,5 +1,6 @@
 import json
 import itertools
+import re
 from tempfile import mktemp
 from zipfile import ZipFile
 
@@ -144,16 +145,22 @@ def product_export(store_id, product_id, user_id):
         return store.pusher_trigger('product-export', pusher_data)
 
     try:
+        product.update_data({'exporting': True})
+        product.save()
+
         permissions.user_can_view(user, store)
         permissions.user_can_edit(user, product)
         product_data = product.parsed
         tags = product_data.get('tags').split(',')
+        variants_images = product_data.get('variants_images') or {}
+        images = product_data.get('images', [])
         variants = product_data.get('variants', [])
         variant_groups = []
 
         api_data = {
             'product': {
-                'title': product_data.get('title'),
+                # Remove special chars from title
+                'title': re.sub(r'#|\?|=', '-', product_data.get('title') or ''),
                 'body_html': product_data.get('description'),
                 # Remove default value when vendor is not required anymore
                 'vendor': product_data.get('vendor') or '-',
@@ -175,30 +182,7 @@ def product_export(store_id, product_id, user_id):
 
             api_data['product']['variant_groups'] = variant_groups
 
-        endpoint = store.get_api_url('products.json')
-        r = store.request.post(endpoint, json=api_data)
-        r.raise_for_status()
-        product.store = store
-        groovekart_product = r.json()
-        product.source_id = groovekart_product['id_product']
-        product.save()
-
-        images = product_data.get('images', [])
-        api_images = []
-        if images:
-            for index, image in enumerate(images):
-                api_data = {
-                    'product': {
-                        'id': product.source_id,
-                        'image': {'src': image, 'position': index},
-                    }
-                }
-
-                # The API only allows images to be uploaded one at a time
-                r = store.request.post(endpoint, json=api_data)
-                r.raise_for_status()
-                api_images.append({'url': image, 'id': r.json().get('id_image')})
-
+        product_variants = []
         if variants:
             # e.g. Color, Size
             titles = []
@@ -210,8 +194,6 @@ def product_export(store_id, product_id, user_id):
                 values.append(variant['values'])
 
             # Iterates through all possible variants e.g. [(RED, LARGE), (RED, SMALL)]
-            product_variants = []
-
             for index, attributes in enumerate(itertools.product(*values)):
                 data_variants_info = product_data.get('variants_info', {}).get(' / '.join(attributes), {})
 
@@ -220,7 +202,6 @@ def product_export(store_id, product_id, user_id):
                     'compare_at_price': utils.safe_float(data_variants_info.get('price'), product_data.get('compare_at_price')),
                     'price': utils.safe_float(data_variants_info.get('price'), product_data.get('price')),
                     'default_on': 1 if index == 0 else 0,
-                    'image_id': api_images[0]['id'],
                     'variant_values': {}
                 }
 
@@ -229,32 +210,36 @@ def product_export(store_id, product_id, user_id):
                     variant_data['variant_values'][label] = value
 
                 product_variants.append(variant_data)
+            api_data['product']['variants'] = product_variants
 
-            api_data = {
-                'action': 'add',
-                'product_id': product.source_id,
-                'variants': product_variants,
-            }
-            variants_endpoint = store.get_api_url('variants.json')
-            r = store.request.post(variants_endpoint, json=api_data)
-            r.raise_for_status()
-            product.sync()
+        endpoint = store.get_api_url('products.json')
+        r = store.request.post(endpoint, json=api_data)
+        r.raise_for_status()
 
-            if product.default_supplier:
-                variants_mapping = {}
-                for variant in product.parsed.get('variants'):
-                    variant_id = variant.get('id')
-                    if variant_id not in variants_mapping:
-                        variants_mapping[variant_id] = []
+        product.store = store
+        groovekart_product = r.json()
+        product.source_id = groovekart_product['id_product']
+        product.sync()
 
-                    for variant_title in GrooveKartProduct.get_variant_options(variant):
-                        variants_mapping[variant_id].append({'title': variant_title})
+        if product.default_supplier:
+            variants_mapping = {}
+            for variant in product.parsed.get('variants'):
+                variant_id = variant.get('id')
+                if variant_id not in variants_mapping:
+                    variants_mapping[variant_id] = []
 
-                for variant_id in variants_mapping:
-                    variants_mapping[variant_id] = json.dumps(variants_mapping[variant_id])
+                variant_titles = [{'title': t} for t in GrooveKartProduct.get_variant_options(variant)]
+                variants_mapping[variant_id].extend(variant_titles)
 
+            for variant_id in variants_mapping:
+                variants_mapping[variant_id] = json.dumps(variants_mapping[variant_id])
+
+            if variants_mapping:
                 product.default_supplier.variants_map = json.dumps(variants_mapping)
-                product.default_supplier.save()
+            else:
+                product.default_supplier.variants_map = None
+
+            product.default_supplier.save()
 
         api_data = {
             'product': {
@@ -266,27 +251,8 @@ def product_export(store_id, product_id, user_id):
         r = store.request.post(endpoint, json=api_data)
         r.raise_for_status()
 
-        # Update variant images by hash
-        if product_data.get('variants_images') and api_images:
-            image_id_by_hash = {}
-            for image in api_images:
-                hash_ = utils.hash_url_filename(image['url'])
-                image_id_by_hash[hash_] = image['id']
-
-            saved_variants = product.parsed.get('variants')
-            for image_hash, variant_name in product_data.get('variants_images').items():
-                api_data = {
-                    'image_id': image_id_by_hash[image_hash],
-                    'variants': []
-                }
-                for variant in saved_variants:
-                    if variant_name in GrooveKartProduct.get_variant_options(variant):
-                        api_data['variants'].append(variant['id'])
-
-                if len(api_data['variants']) > 0:
-                    variants_endpoint = store.get_api_url('variants.json')
-                    r = store.request.post(variants_endpoint, json=api_data)
-                    r.raise_for_status()
+        # Too many images to export in the same thread
+        product_export_images.s(store_id, product_id, images, variants_images).apply_async()
 
         pusher_data['success'] = True
 
@@ -296,6 +262,56 @@ def product_export(store_id, product_id, user_id):
         response = e.response.text if hasattr(e, 'response') else ''
         raven_client.captureException(extra={'response': response})
         pusher_data['error'] = format_gkart_errors(e)
+
+        return store.pusher_trigger('product-export', pusher_data)
+
+
+@celery_app.task(base=CaptureFailure)
+def product_export_images(store_id, product_id, images, variants_images):
+    store = GrooveKartStore.objects.get(id=store_id)
+    product = GrooveKartProduct.objects.get(id=product_id)
+    pusher_data = {'success': False, 'product': product.id}
+
+    try:
+        if not images:
+            product.update_data({'exporting': False})
+            product.save()
+            pusher_data['success'] = True
+            return store.pusher_trigger('product-export', pusher_data)
+
+        total = len(images)
+        for index, image in enumerate(images):
+            api_data = {
+                'product': {
+                    'id': product.source_id,
+                    'image': {'src': image, 'position': index},
+                }
+            }
+
+            store.pusher_trigger('product-export', {
+                'product': product.id,
+                'progress': 'Uploading Images ({:,.2f}%)'.format(((index + 1) * 100 / total) - 1),
+            })
+
+            # The API only allows images to be uploaded one at a time
+            endpoint = store.get_api_url('products.json')
+            r = store.request.post(endpoint, json=api_data)
+            r.raise_for_status()
+
+        product.update_data({'exporting': False})
+        product.save()
+
+        pusher_data['success'] = True
+
+        return store.pusher_trigger('product-export', pusher_data)
+
+    except Exception as e:
+        response = e.response.text if hasattr(e, 'response') else ''
+        raven_client.captureException(extra={'response': response})
+        pusher_data['error'] = format_gkart_errors(e)
+
+        product.update_data({'exporting': False})
+        product.save()
 
         return store.pusher_trigger('product-export', pusher_data)
 

@@ -150,6 +150,39 @@ function productExport(btn) {
     });
 }
 
+if (product.exporting) {
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
+
+    var btn = $('#product-update-btn');
+    btn.bootstrapBtn('loading');
+
+    channel.bind('product-export', function(data) {
+        if (data.product === config.product_id) {
+            if (data.progress) {
+                btn.text(data.progress);
+                return;
+            }
+
+            btn.bootstrapBtn('reset');
+
+            pusher.unsubscribe(config.sub_conf.channel);
+
+            if (data.success) {
+                toastr.success('Product Exported.','GrooveKart Export');
+
+                setTimeout(function () {
+                    window.location.reload(true);
+                }, 1500);
+            } else {
+                displayAjaxError('GrooveKart Export', data);
+            }
+        }
+    });
+}
+
+
+
 $('#product-update-btn').click(function (e) {
     e.preventDefault();
 
