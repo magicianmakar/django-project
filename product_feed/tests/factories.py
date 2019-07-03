@@ -28,3 +28,10 @@ class GearBubbleFeedStatusFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'product_feed.GearBubbleFeedStatus'
+
+
+class GrooveKartFeedStatusFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('groovekart_core.tests.factories.GrooveKartStoreFactory')
+
+    class Meta:
+        model = 'product_feed.GrooveKartFeedStatus'

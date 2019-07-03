@@ -28,12 +28,17 @@ class FeedStatusAbstract(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     fb_access_at = models.DateTimeField(null=True, blank=True, verbose_name='Last Facebook Access')
+    google_access_at = models.DateTimeField(null=True, blank=True, verbose_name='Last Google Access')
 
     class Meta:
         abstract = True
 
     def __str__(self):
         return '{}'.format(self.store.title)
+
+    @property
+    def updated_version(self):
+        return self.updated_at and self.updated_at.strftime("%s") or '1'
 
     def get_url(self, revision=None):
         return 'https://{}.s3.amazonaws.com/{}'.format(
@@ -63,6 +68,18 @@ class FeedStatusAbstract(models.Model):
         self.feed_options = json.dumps(data)
         self.save()
 
+    def get_filename(self, revision=None, store_type=''):
+        prefix = ''
+        if store_type:
+            prefix = f'{store_type}/'
+
+        if revision == 3:
+            feed_hash = hashlib.md5('u{}{}/{}/{}'.format(prefix, self.store.user.id, self.store.id, revision).encode()).hexdigest()
+        else:
+            feed_hash = hashlib.md5('u{}{}/{}'.format(prefix, self.store.user.id, self.store.id).encode()).hexdigest()
+
+        return 'feeds/{}.xml'.format(feed_hash)
+
 
 class FeedStatus(FeedStatusAbstract):
     store = models.OneToOneField(ShopifyStore, on_delete=models.CASCADE)
@@ -70,14 +87,6 @@ class FeedStatus(FeedStatusAbstract):
     class Meta:
         verbose_name = 'Feed Status'
         verbose_name_plural = 'Feed Statuses'
-
-    def get_filename(self, revision=None):
-        if revision == 3:
-            feed_hash = hashlib.md5('u{}/{}/{}'.format(self.store.user.id, self.store.id, revision).encode()).hexdigest()
-        else:
-            feed_hash = hashlib.md5('u{}/{}'.format(self.store.user.id, self.store.id).encode()).hexdigest()
-
-        return 'feeds/{}.xml'.format(feed_hash)
 
 
 class CommerceHQFeedStatus(FeedStatusAbstract):
@@ -87,9 +96,8 @@ class CommerceHQFeedStatus(FeedStatusAbstract):
         verbose_name = 'Commerce HQ Feed Status'
         verbose_name_plural = 'Commerce HQ Feed Statuses'
 
-    def get_filename(self, revision=None):
-        feed_hash = hashlib.md5('u{}/{}/{}'.format('chq', self.store.user.id, self.store.id).encode()).hexdigest()
-        return 'feeds/{}.xml'.format(feed_hash)
+    def get_filename(self, revision=None, store_type='chq'):
+        return super().get_filename(revision=revision, store_type=store_type)
 
 
 class WooFeedStatus(FeedStatusAbstract):
@@ -99,9 +107,8 @@ class WooFeedStatus(FeedStatusAbstract):
         verbose_name = 'WooCommerce Feed Status'
         verbose_name_plural = 'WooCommerce Feed Statuses'
 
-    def get_filename(self, revision=None):
-        feed_hash = hashlib.md5('u{}/{}/{}'.format('woo', self.store.user.id, self.store.id).encode()).hexdigest()
-        return 'feeds/{}.xml'.format(feed_hash)
+    def get_filename(self, revision=None, store_type='woo'):
+        return super().get_filename(revision=revision, store_type=store_type)
 
 
 class GearBubbleFeedStatus(FeedStatusAbstract):
@@ -111,9 +118,8 @@ class GearBubbleFeedStatus(FeedStatusAbstract):
         verbose_name = 'GearBubble Feed Status'
         verbose_name_plural = 'GearBubble Feed Statuses'
 
-    def get_filename(self, revision=None):
-        feed_hash = hashlib.md5('u{}/{}/{}'.format('gear', self.store.user.id, self.store.id).encode()).hexdigest()
-        return 'feeds/{}.xml'.format(feed_hash)
+    def get_filename(self, revision=None, store_type='gear'):
+        return super().get_filename(revision=revision, store_type=store_type)
 
 
 class GrooveKartFeedStatus(FeedStatusAbstract):
@@ -123,6 +129,5 @@ class GrooveKartFeedStatus(FeedStatusAbstract):
         verbose_name = 'GrooveKart Feed Status'
         verbose_name_plural = 'GrooveKart Feed Statuses'
 
-    def get_filename(self, revision=None):
-        feed_hash = hashlib.md5('u{}/{}/{}'.format('gkart', self.store.user.id, self.store.id).encode()).hexdigest()
-        return 'feeds/{}.xml'.format(feed_hash)
+    def get_filename(self, revision=None, store_type='gkart'):
+        return super().get_filename(revision=revision, store_type=store_type)

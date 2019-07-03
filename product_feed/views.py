@@ -33,6 +33,7 @@ from .models import (
     GearBubbleFeedStatus,
     GrooveKartFeedStatus,
 )
+from .utils import update_feed_social_access_at
 
 
 @login_required
@@ -172,16 +173,13 @@ def get_shopify_product_feed(request, store_id, revision=None):
         revision = 1
 
     feed = get_store_feed(store)  # Get feed or create it if doesn't exists
-
-    if 'facebookexternalhit' in request.META.get('HTTP_USER_AGENT', '') or request.GET.get('f') == '1':
-        feed.fb_access_at = timezone.now()
-
+    update_feed_social_access_at(feed, request)
     feed.save()
 
     feed_s3_url = generate_product_feed(feed, nocache=nocache, revision=revision)
 
     if feed_s3_url:
-        return HttpResponseRedirect(feed_s3_url)
+        return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
         raven_client.captureMessage('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
@@ -255,16 +253,13 @@ def get_chq_product_feed(request, store_id, revision=None):
 
     feed = get_chq_store_feed(store)  # Get feed or create it if doesn't exists
     feed.revision = revision
-
-    if 'facebookexternalhit' in request.META.get('HTTP_USER_AGENT', '') or request.GET.get('f') == '1':
-        feed.fb_access_at = timezone.now()
-
+    update_feed_social_access_at(feed, request)
     feed.save()
 
     feed_s3_url = generate_chq_product_feed(feed, nocache=nocache)
 
     if feed_s3_url:
-        return HttpResponseRedirect(feed_s3_url)
+        return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
         raven_client.captureMessage('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
@@ -344,16 +339,13 @@ def get_woo_product_feed(request, store_id, revision=None):
 
     feed = get_woo_store_feed(store)  # Get feed or create it if doesn't exists
     feed.revision = revision
-
-    if 'facebookexternalhit' in request.META.get('HTTP_USER_AGENT', '') or request.GET.get('f') == '1':
-        feed.fb_access_at = timezone.now()
-
+    update_feed_social_access_at(feed, request)
     feed.save()
 
     feed_s3_url = generate_woo_product_feed(feed, nocache=nocache)
 
     if feed_s3_url:
-        return HttpResponseRedirect(feed_s3_url)
+        return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
         raven_client.captureMessage('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
@@ -433,16 +425,13 @@ def get_gear_product_feed(request, store_id, revision=None):
 
     feed = get_gear_store_feed(store)  # Get feed or create it if doesn't exists
     feed.revision = revision
-
-    if 'facebookexternalhit' in request.META.get('HTTP_USER_AGENT', '') or request.GET.get('f') == '1':
-        feed.fb_access_at = timezone.now()
-
+    update_feed_social_access_at(feed, request)
     feed.save()
 
     feed_s3_url = generate_gear_product_feed(feed, nocache=nocache)
 
     if feed_s3_url:
-        return HttpResponseRedirect(feed_s3_url)
+        return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
         raven_client.captureMessage('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
@@ -450,7 +439,7 @@ def get_gear_product_feed(request, store_id, revision=None):
 
 def gkart_product_feeds(request):
     if not request.user.can('product_feeds.use'):
-        return render(request, 'upgrade.html')
+        return render(request, 'groovekart/upgrade.html')
 
     if request.method == 'POST':
         if request.POST.get('feed'):
@@ -522,16 +511,13 @@ def get_gkart_product_feed(request, store_id, revision=None):
 
     feed = get_gkart_store_feed(store)  # Get feed or create it if doesn't exists
     feed.revision = revision
-
-    if 'facebookexternalhit' in request.META.get('HTTP_USER_AGENT', '') or request.GET.get('f') == '1':
-        feed.fb_access_at = timezone.now()
-
+    update_feed_social_access_at(feed, request)
     feed.save()
 
     feed_s3_url = generate_gkart_product_feed(feed, nocache=nocache)
 
     if feed_s3_url:
-        return HttpResponseRedirect(feed_s3_url)
+        return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
         raven_client.captureMessage('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')

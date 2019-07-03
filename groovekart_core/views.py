@@ -82,7 +82,7 @@ def dashboard(request):
 @login_required
 def product_alerts(request):
     if not request.user.can('price_changes.use'):
-        return render(request, 'upgrade.html')
+        return render(request, 'groovekart/upgrade.html')
 
     show_hidden = True if request.GET.get('hidden') else False
 
@@ -390,7 +390,7 @@ class OrdersList(ListView):
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.can('orders.use'):
-            return render(request, 'upgrade.html')
+            return render(request, 'groovekart/upgrade.html')
 
         store = self.get_store()
         if not store:
