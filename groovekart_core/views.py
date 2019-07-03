@@ -606,7 +606,7 @@ class OrdersList(ListView):
                 # product_data = product_data_by_source_id.get(product_id)
 
                 item['product'] = product
-                item['total'] = safe_float(item['price'] * item['quantity'])
+                item['total'] = safe_float(item['price'] * safe_int(item['quantity']))
                 item['image'] = item.get('variants', {}).get('image') or item.get('cover_image')
 
                 if product and product.has_supplier:
