@@ -254,6 +254,7 @@ def product_export(store_id, product_id, user_id):
         # Too many images to export in the same thread
         product_export_images.s(store_id, product_id, images, variants_images).apply_async()
 
+        pusher_data['commercehq_url'] = groovekart_product.get('product_url')
         pusher_data['success'] = True
 
         return store.pusher_trigger('product-export', pusher_data)
@@ -270,6 +271,7 @@ def product_export(store_id, product_id, user_id):
 def product_export_images(store_id, product_id, images, variants_images):
     store = GrooveKartStore.objects.get(id=store_id)
     product = GrooveKartProduct.objects.get(id=product_id)
+    product_data = product.parsed
     pusher_data = {'success': False, 'product': product.id}
 
     try:
@@ -279,6 +281,7 @@ def product_export_images(store_id, product_id, images, variants_images):
             pusher_data['success'] = True
             return store.pusher_trigger('product-export', pusher_data)
 
+        image_id_by_hash = {}
         total = len(images)
         for index, image in enumerate(images):
             api_data = {
@@ -297,6 +300,31 @@ def product_export_images(store_id, product_id, images, variants_images):
             endpoint = store.get_api_url('products.json')
             r = store.request.post(endpoint, json=api_data)
             r.raise_for_status()
+
+            json_image = r.json()
+            hash_ = utils.hash_url_filename(image)
+            image_id_by_hash[hash_] = json_image.get('id_image')
+
+            # Assign images and default images to variants
+            if variants_images:
+                api_data = {
+                    'image_id': json_image.get('id_image'),
+                    'variants': []
+                }
+
+                if not variants_images.get(hash_):
+                    # TODO: Not correctly assigning images yet [GKart BUG]
+                    pass
+                else:
+                    variant_name = variants_images.get(hash_)
+                    for variant in product_data.get('variants', []):
+                        if variant_name in GrooveKartProduct.get_variant_options(variant):
+                            api_data['variants'].append(variant['id'])
+
+                if len(api_data['variants']) > 0:
+                    variants_endpoint = store.get_api_url('variants.json')
+                    r = store.request.post(variants_endpoint, json=api_data)
+                    r.raise_for_status()
 
         product.update_data({'exporting': False})
         product.save()
