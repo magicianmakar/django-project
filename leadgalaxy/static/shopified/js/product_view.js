@@ -643,7 +643,7 @@ function matchImagesWithExtra(parent) {
 }
 
 function imageClicked(e) {
-    var imageID = $(e.target).parent().find('img').attr('image-id');
+    var imageID = $(e.target).parents('.var-image-block').find('img').attr('image-id');
     var new_images = [];
 
     for (var i = 0; i < product.images.length; i++) {
