@@ -400,7 +400,7 @@ def calculate_user_statistics(self, user_id):
                 'id': store.id,
                 'products_connected': store.connected_count(),
                 'products_saved': store.saved_count(),
-                'pending_orders': order_query.count(),
+                'pending_orders': order_query.count(attempts=2),
             })
 
         cache.set('gkart_user_statistics_{}'.format(user_id), stores_data, timeout=3600)

@@ -612,23 +612,28 @@ class OrderListQuery(object):
             raven_client.captureException()
             return []
 
-    def count(self):
+    def count(self, attempts=1):
         if self._params.get('order_id'):
             return 1
 
         # TODO: This endpoint needs to be separated or it will eventually take forever to bring the orders
         url = self._store.get_api_url(self._endpoint)
-        r = self._store.request.post(url, json={
-            **self._params,
-            'action': 'search_orders'
-        })
-        r.raise_for_status()
 
-        try:
-            return r.json()['orders_count']
-        except:
-            raven_client.captureException()
-            return 0
+        for _ in reversed(range(attempts)):
+            try:
+                r = self._store.request.post(url, json={
+                    **self._params,
+                    'action': 'search_orders'
+                })
+                r.raise_for_status()
+                return r.json()['orders_count']
+
+            except:
+                if attempts > 0:
+                    continue
+
+                raven_client.captureException()
+                return 0
 
     def update_params(self, update):
         self._params.update(update)

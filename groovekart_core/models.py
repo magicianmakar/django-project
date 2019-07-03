@@ -12,6 +12,7 @@ from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
@@ -185,7 +186,8 @@ class GrooveKartProduct(models.Model):
 
     @staticmethod
     def get_variant_options(variant):
-        return variant['description'].split(' | ')
+        description = variant.get('description') or ''
+        return description.split(' | ')
 
     @property
     def parsed(self):
@@ -235,7 +237,7 @@ class GrooveKartProduct(models.Model):
         super().save(*args, **kwargs)
 
     def sync(self):
-        product_data = self.retrieve()
+        product_data = self.retrieve(attempts=2)
         product_variants = product_data.get('variants', [])
         self.update_data({'title': product_data.get('title', product_data.get('product_title'))})
         self.update_data({'price': f'{float(product_data["price"]):,.2f}'})
@@ -285,14 +287,23 @@ class GrooveKartProduct(models.Model):
 
         return variants
 
-    def retrieve(self):
+    def retrieve(self, attempts=1):
         # TODO: Change URL to products.json when it start returning the images
         endpoint = self.store.get_api_url('search_products.json')
         json_data = {'ids': self.source_id}
-        r = self.store.request.post(endpoint, json=json_data)
-        r.raise_for_status()
 
-        return r.json()['products']['0']
+        for _ in reversed(range(attempts)):
+            try:
+                r = self.store.request.post(endpoint, json=json_data)
+                r.raise_for_status()
+                return r.json()['products']['0']
+
+            except:
+                if attempts > 0:
+                    continue
+
+                raven_client.captureException()
+                raise
 
     def get_config(self):
         try:
