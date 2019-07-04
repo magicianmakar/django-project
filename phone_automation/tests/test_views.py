@@ -1,4 +1,5 @@
 from django.urls import reverse
+from django.test import tag
 
 from leadgalaxy.tests import factories as f
 from leadgalaxy.models import AppPermission
@@ -42,6 +43,7 @@ class CallflexViewsTestCase(BaseTestCase):
         response = self.client.get(path)
         self.assertEqual(response.status_code, 200)
 
+    @tag('slow')
     def test_provision(self):
         path = reverse('phone_automation_provision')
         response = self.client.get(path)
