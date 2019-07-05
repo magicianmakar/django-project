@@ -626,7 +626,11 @@ class OrderListQuery(object):
                     'action': 'search_orders'
                 })
                 r.raise_for_status()
-                return r.json()['orders_count']
+                result = r.json()
+                if 'no orders found' in result.get('Error', '').lower():
+                    return 0
+                else:
+                    return result['orders_count']
 
             except:
                 if attempts > 0:
