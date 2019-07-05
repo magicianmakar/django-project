@@ -231,8 +231,7 @@
                     {% if user|can:'aliextractor.use'  %}
                     <li {% if selected_menu == 'tools:aliextractor' %}class="active"{% endif %}>
                         <a href="{% url 'aliextractor_index' %}">
-                            <span class="nav-label">AliExtractor</span> &nbsp;
-                            <span class="label  label-default float-right">NEW</span>
+                            <span class="nav-label">AliExtractor</span>
                         </a>
                     </li>
                     {% endif %}
