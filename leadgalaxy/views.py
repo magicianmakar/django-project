@@ -3438,6 +3438,10 @@ def orders_view(request):
     if not request.user.can('orders.use'):
         return render(request, 'upgrade.html', {'selected_menu': 'orders:all', })
 
+    bulk_queue = bool(request.GET.get('bulk_queue'))
+    if bulk_queue and not request.user.can('bulk_order.use'):
+        return render(request, 'upgrade.html', {'selected_menu': 'orders:all', })
+
     all_orders = []
     store = None
     post_per_page = safe_int(request.GET.get('ppp'), 20)
@@ -4078,10 +4082,10 @@ def orders_view(request):
 
             order['line_items'][i]['image_src'] = images_list.get('{}-{}'.format(el['product_id'], el['variant_id']))
 
-            shopify_order = orders_track.get('{}-{}'.format(order['id'], el['id']))
+            order_track = orders_track.get('{}-{}'.format(order['id'], el['id']))
             changed_variant = changed_variants.get('{}-{}'.format(order['id'], el['id']))
 
-            order['line_items'][i]['shopify_order'] = shopify_order
+            order['line_items'][i]['order_track'] = order_track
             order['line_items'][i]['changed_variant'] = changed_variant
 
             variant_id = changed_variant.variant_id if changed_variant else el['variant_id']
@@ -4099,7 +4103,7 @@ def orders_view(request):
             else:
                 product = products_list.get(el['product_id'])
 
-            if shopify_order or el['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
+            if order_track or el['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
                 order['placed_orders'] += 1
 
             country_code = order.get('shipping_address', {}).get('country_code')
@@ -4262,8 +4266,6 @@ def orders_view(request):
         order['mixed_supplier_types'] = len(order['supplier_types']) > 1
 
         all_orders.append(order)
-
-    bulk_queue = bool(request.GET.get('bulk_queue'))
 
     active_orders = {}
     for i in orders_ids:
