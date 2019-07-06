@@ -812,3 +812,132 @@ class UserLoginTestCase(BaseTestCase):
 
         self.assertEqual(r.status_code, 302, self.form_errors(r))
         self.assertEqual(r.url, '/')
+
+
+class BulkOrderTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = f.UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+
+        self.store = f.ShopifyStoreFactory()
+        self.store.user = self.user
+        self.store.save()
+
+        self.product = f.ShopifyProductFactory(
+            store=self.store, user=self.user, shopify_id=1565445881899,
+            data="""{"store": {
+                "name": "Suplier 1",
+                "url": "https://www.aliexpress.com/item//12345467890.html"
+            }, "title": "Mala Prayer Bracelet"}""")
+
+        supplier = f.ProductSupplierFactory(product=self.product, product_url='https://www.aliexpress.com/item//12345467890.html')
+        self.product.default_supplier = supplier
+        self.product.save()
+
+        self.shopify_order = [{
+            'id': 938453336107,
+            'email': 'guilherme.dcosta@gmail.com',
+            'created_at': '2019-02-11T08:35:00-05:00',
+            'updated_at': '2019-02-11T08:35:01-05:00',
+            'total_price': '1.46',
+            'currency': 'BRL',
+            'financial_status': 'paid',
+            'gateway': 'paypal',
+            'name': '#2578',
+            'processed_at': '2019-02-11T08:35:00-05:00',
+            'phone': None,
+            'order_number': 2578,
+            'note_attributes': [],
+            'fulfillment_status': None,
+            'tax_lines': [],
+            'refunds': [],
+            'tags': '',
+            'line_items': [{
+                'id': 1813448753195, 'variant_id': 14503000834091, 'title': self.product.title, 'quantity': 1, 'sku': '', 'variant_title': None,
+                'vendor': 'GlobalDropShipping Store', 'product_id': self.product.shopify_id, 'name': self.product.title, 'fulfillment_status': None,
+                'variant_inventory_management': 'shopify', 'properties': [], 'product_exists': True, 'fulfillable_quantity': 1, 'price': '1.46',
+
+            }],
+            'shipping_lines': [],
+            'shipping_address': {
+                'first_name': 'Guilherme', 'address1': 'Szkolna', 'phone': None, 'city': 'Pyrzyce', 'zip': '7420', 'province': None,
+                'country': 'Poland', 'last_name': 'Poland', 'address2': '26', 'company': None, 'name': 'Guilherme Poland', 'country_code': 'PL',
+                'province_code': None
+            }
+        }]
+
+        self.permission = f.AppPermissionFactory(name='bulk_order.use')
+        self.user.profile.plan.permissions.add(self.permission)
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='orders.use'))
+        self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='auto_order.use'))
+
+        self.client.login(username=self.user.username, password=self.password)
+        self.bulk_order_url = f"{reverse('orders')}?bulk_queue=true"
+
+    def test_bulk_order_action_without_permission(self):
+        self.user.profile.plan.permissions.remove(self.permission)
+
+        self.client.get(self.bulk_order_url)
+        self.assertTemplateUsed('upgrade.html')
+
+    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    def test_bulk_order_should_return_orders(self, get_orders):
+        get_orders.return_value = self.shopify_order
+
+        result = self.client.get(self.bulk_order_url).json()
+        self.assertEqual(len(result['orders']), 1)
+        self.assertEqual(result['pages'], 1)
+        self.assertEqual(result['next'], None)
+
+    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    def test_bulk_order_without_supplier(self, get_orders):
+        get_orders.return_value = self.shopify_order
+        self.product.default_supplier = None
+        self.product.save()
+
+        result = self.client.get(self.bulk_order_url).json()
+        self.assertEqual(len(result['orders']), 0)
+
+    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    def test_bulk_order_without_payment(self, get_orders):
+        self.shopify_order[0]['financial_status'] = 'pending'
+        get_orders.return_value = self.shopify_order
+
+        result = self.client.get(self.bulk_order_url).json()
+        self.assertEqual(len(result['orders']), 0)
+
+    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    def test_fulfilled_bulk_order(self, get_orders):
+        get_orders.return_value = self.shopify_order
+        order_track = f.ShopifyOrderTrackFactory(
+            user=self.user,
+            store=self.store,
+            order_id=self.shopify_order[0]['id'],
+            line_id=self.shopify_order[0]['line_items'][0]['id']
+        )
+
+        result = self.client.get(self.bulk_order_url).json()
+        self.assertEqual(len(result['orders']), 0)
+
+        self.shopify_order[0]['fulfillment_status'] = 'fulfilled'
+        get_orders.return_value = self.shopify_order
+        order_track.delete()
+
+        result = self.client.get(self.bulk_order_url).json()
+        self.assertEqual(len(result['orders']), 0)
+
+    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    def test_not_aliexpress_supplier(self, get_orders):
+        get_orders.return_value = self.shopify_order
+        self.product.default_supplier.product_url = self.product.default_supplier.product_url.replace('aliexpress', 'ebay')
+        self.product.default_supplier.save()
+
+        result = self.client.get(self.bulk_order_url).json()
+        self.assertEqual(len(result['orders']), 0)

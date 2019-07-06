@@ -2853,7 +2853,7 @@ class ProductCollections(object):
             raven_client.captureException()
 
 
-def format_queueable_orders(request, orders, current_page):
+def format_queueable_orders(request, orders, current_page, store_type='shopify'):
     orders_result = []
     next_page_url = None
     enable_supplier_grouping = False
@@ -2873,57 +2873,82 @@ def format_queueable_orders(request, orders, current_page):
         if order.get('pending_payment', False):
             continue
 
-        line_times = order.get('line_items', [])
+        if order.get('fulfillment_status') == 'fulfilled':
+            continue
+
+        line_items = order.get('line_items', [])
 
         if enable_supplier_grouping:
-            line_times = group_by_supplier(line_times)
+            line_items = group_by_supplier(line_items)
         else:
-            line_times = {'all': line_times}
+            line_items = {'all': line_items}
 
-        for _supplier, group_lines in list(line_times.items()):
+        for _supplier, group_lines in list(line_items.items()):
             queue_order = {"cart": True, "items": [], "line_id": []}
 
             for line_item in group_lines:
+                # Line item is not connected
                 if not line_item.get('order_data_id'):
-                    # Line item is not connected
                     continue
 
+                # Product is excluded from Dropified auto fulfill feature
                 if line_item.get('product') and line_item['product'].is_excluded:
-                    # Product is excluded from Dropified auto fulfill feature
                     continue
 
-                if line_item.get('shopify_order') and line_item['shopify_order'].id:
-                    # Order is already placed (linked to a ShopifyOrderTrack)
+                # Order is already placed (linked to a ShopifyOrderTrack)
+                if line_item.get('order_track') and line_item['order_track'].id:
                     continue
 
-                if line_item.get('is_bundle', False):
-                    # Ignore Bundle items
+                # Ignore items without a supplier
+                if not line_item.get('supplier') or not line_item['supplier'].support_auto_fulfill():
                     continue
 
+                # Do only aliexpress orders for now
+                if not line_item['supplier'].is_aliexpress:
+                    continue
+
+                supplier = line_item['supplier']
+                shipping_method = line_item.get('shipping_method') or {}
                 line_data = {
                     'order_data': line_item.get('order_data_id'),
                     'order_name': order['name'],
                     'order_id': str(order['id']),
                     'line_id': str(line_item['id']),
-                    'line_title': line_item['title']
-                }
-
-                if line_item.get('supplier') and line_item['supplier'].support_auto_fulfill() and line_item['supplier'].is_aliexpress:
-                    shipping_method = line_item.get('shipping_method') or {}
-                    line_data['source_id'] = str(line_item['supplier'].get_source_id())
-                    line_data['url'] = app_link(
+                    'line_title': line_item['title'],
+                    'store_type': store_type,
+                    'source_id': str(supplier.get_source_id()),
+                    'url': app_link(
                         reverse('orders_place'),
-                        supplier=line_item['supplier'].id,
+                        supplier=supplier.id,
                         SAPlaceOrder=line_item.get('order_data_id'),
                         SACompany=shipping_method.get('method', ''),
                         SACountry=shipping_method.get('country', ''),
                         SACart='true',
-                    )
-                else:
-                    continue  # Ignore items without a supplier
+                    ),
+                }
 
-                queue_order['items'].append(line_data)
-                queue_order['line_id'].append(line_data['line_id'])
+                # Append bundle orders separately
+                if line_item.get('is_bundle', False):
+                    queue_bundle = {"cart": True, "items": [], "line_id": [], "bundle": True}
+
+                    for product in line_item['order_data']['products']:
+                        # Do only aliexpress orders for now
+                        if product['supplier_type'] != 'aliexpress':
+                            continue
+
+                        queue_bundle['items'].append({
+                            **line_data,
+                            'url': product['order_url'],
+                            'line_title': product['title'],
+                            'supplier_type': product['supplier_type'],
+                            'product': product,
+                        })
+                        queue_bundle['line_id'].append(line_data['line_id'])
+
+                    orders_result.append(queue_bundle)
+                else:
+                    queue_order['items'].append(line_data)
+                    queue_order['line_id'].append(line_data['line_id'])
 
             if len(queue_order['items']) == 1:
                 item = queue_order['items'][0]
