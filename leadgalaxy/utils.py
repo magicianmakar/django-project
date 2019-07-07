@@ -2929,23 +2929,21 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
 
                 # Append bundle orders separately
                 if line_item.get('is_bundle', False):
-                    queue_bundle = {"cart": True, "items": [], "line_id": [], "bundle": True}
+                    queue_order['bundle'] = True
 
                     for product in line_item['order_data']['products']:
                         # Do only aliexpress orders for now
                         if product['supplier_type'] != 'aliexpress':
                             continue
 
-                        queue_bundle['items'].append({
+                        queue_order['items'].append({
                             **line_data,
                             'url': product['order_url'],
                             'line_title': product['title'],
                             'supplier_type': product['supplier_type'],
                             'product': product,
                         })
-                        queue_bundle['line_id'].append(line_data['line_id'])
-
-                    orders_result.append(queue_bundle)
+                        queue_order['line_id'].append(line_data['line_id'])
                 else:
                     queue_order['items'].append(line_data)
                     queue_order['line_id'].append(line_data['line_id'])
