@@ -4,13 +4,6 @@
 (function(config, product) {
 'use strict';
 
-var image_cache = {};
-
-document.linkNewUrlToOldImage = function (image, newUrl) {
-    var originalUrl = image.attr('image-url');
-    config.old_to_new_url[originalUrl] = newUrl;
-};
-
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {

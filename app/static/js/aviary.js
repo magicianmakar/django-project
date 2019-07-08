@@ -63,7 +63,7 @@ window.asi = function(img, blob, imageBytes, type) {
         success: function(data) {
             $('#product-image-' + imageID).prop('src', data.url);
             window.product.images[imageID] = data.url;
-            document.linkNewUrlToOldImage($('#product-image-' + imageID), data.url);
+            linkNewUrlToOldImage($('#product-image-' + imageID), data.url);
 
 
             if (window.asic) { // Send new url to the editor
@@ -82,4 +82,11 @@ window.asi = function(img, blob, imageBytes, type) {
             feather_editor.hideWaitIndicator();
         }
     });
+};
+
+config.old_to_new_url = {};  // This stores link from old to new image urls.
+
+var linkNewUrlToOldImage = function (image, newUrl) {
+    var originalUrl = image.attr('image-url');
+    config.old_to_new_url[originalUrl] = newUrl;
 };
