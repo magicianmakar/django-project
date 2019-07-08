@@ -549,6 +549,7 @@ class ShopifyStoreApi(ApiBase):
             raise PermissionDenied()
 
         target_user = User.objects.get(id=data.get('user'))
+        plan = GroupPlan.objects.get(id=data.get('plan'))
 
         if data.get('allow_trial'):
             target_user.stripe_customer.can_trial = True
@@ -561,13 +562,9 @@ class ShopifyStoreApi(ApiBase):
 
             return self.api_success()
 
-        if target_user.is_recurring_customer() and target_user.have_billing_info():
-            return self.api_error(
-                ('Plan should be changed from Stripe Dashboard:\n'
-                 'https://dashboard.stripe.com/customers/{}').format(target_user.stripe_customer.customer_id),
-                status=422)
+        if not plan.is_free:
+            return self.api_error('Plan should be changed from Stripe or from the user Profile page for Shopify', status=422)
 
-        plan = GroupPlan.objects.get(id=data.get('plan'))
         try:
             profile = target_user.profile
             target_user.profile.plan = plan
