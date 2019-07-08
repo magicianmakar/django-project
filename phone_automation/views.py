@@ -295,10 +295,9 @@ def provision(request):
             raven_client.captureException()
             messages.error(request, 'Error while provisioning this phone number. Please try another one.')
             return HttpResponseRedirect(reverse('phone_automation_provision'))
-        except Exception as e:
+        except Exception:
             raven_client.captureException()
-            messages.error(request, 'Error while provisioning this phone number (' + str(e) + '). Please '
-                                                                                              'try another one. ')
+            messages.error(request, 'Error while provisioning this phone number, please try another one. ')
             return HttpResponseRedirect(reverse('phone_automation_provision'))
     else:
         areacode = request.GET.get("areacode")
