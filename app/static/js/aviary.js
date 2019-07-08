@@ -84,6 +84,11 @@ window.asi = function(img, blob, imageBytes, type) {
     });
 };
 
+if (!window.config) {
+    // Make sure that config exists.
+    window.config = {};
+}
+
 config.old_to_new_url = {};  // This stores link from old to new image urls.
 
 var linkNewUrlToOldImage = function (image, newUrl) {
