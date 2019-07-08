@@ -2869,6 +2869,38 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
 
         return suppliers
 
+    def add_order_to_queue(orders_result, queue_order):
+        if len(queue_order['items']) == 1:
+            item = queue_order['items'][0]
+
+            del queue_order['cart']
+            del queue_order['items']
+
+            queue_order.update(item)
+
+            queue_order['url'] = re.sub(r'SACart=true&?', r'', queue_order['url'])
+
+            orders_result.append(queue_order)
+
+        elif len(queue_order['items']) > 1:
+            line_item = queue_order['items'][0]
+            queue_order['order_data'] = re.sub(r'_[^_]+$', '', line_item['order_data']) + '_' + ''.join([str(i['id']) for i in group_lines])
+            queue_order['order_name'] = line_item['order_name']
+            queue_order['order_id'] = line_item['order_id']
+
+            queue_order['line_title'] = '<ul style="padding:0px;overflow-x:hidden;">'
+
+            for line_item in queue_order['items'][:3]:
+                queue_order['line_title'] += '<li>&bull; {}</li>'.format(line_item['line_title'])
+
+            count = len(queue_order['items']) - 3
+            if count > 0:
+                queue_order['line_title'] += '<li>&bull; Plus {} Product{}...</li>'.format(count, pluralize(count))
+
+            queue_order['line_title'] += '</ul>'
+
+            orders_result.append(queue_order)
+
     for order in orders:
         if order.get('pending_payment', False):
             continue
@@ -2945,41 +2977,12 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                         })
                         queue_bundle['line_id'].append(line_data['line_id'])
 
-                    orders_result.append(queue_bundle)
+                    add_order_to_queue(orders_result, queue_bundle)
                 else:
                     queue_order['items'].append(line_data)
                     queue_order['line_id'].append(line_data['line_id'])
 
-            if len(queue_order['items']) == 1:
-                item = queue_order['items'][0]
-
-                del queue_order['cart']
-                del queue_order['items']
-
-                queue_order.update(item)
-
-                queue_order['url'] = re.sub(r'SACart=true&?', r'', queue_order['url'])
-
-                orders_result.append(queue_order)
-
-            elif len(queue_order['items']) > 1:
-                line_item = queue_order['items'][0]
-                queue_order['order_data'] = re.sub(r'_[^_]+$', '', line_item['order_data']) + '_' + str(group_lines[0]['id'])
-                queue_order['order_name'] = line_item['order_name']
-                queue_order['order_id'] = line_item['order_id']
-
-                queue_order['line_title'] = '<ul style="padding:0px;overflow-x:hidden;">'
-
-                for line_item in queue_order['items'][:3]:
-                    queue_order['line_title'] += '<li>&bull; {}</li>'.format(line_item['line_title'])
-
-                count = len(queue_order['items']) - 3
-                if count > 0:
-                    queue_order['line_title'] += '<li>&bull; Plus {} Product{}...</li>'.format(count, pluralize(count))
-
-                queue_order['line_title'] += '</ul>'
-
-                orders_result.append(queue_order)
+            add_order_to_queue(orders_result, queue_order)
 
     page_end = safe_int(request.GET.get('page_end'), 0)
     page_start = safe_int(request.GET.get('page_start'), 1) - 1
