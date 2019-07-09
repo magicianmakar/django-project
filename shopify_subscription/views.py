@@ -44,6 +44,14 @@ def subscription_plan(request):
         user.profile.change_plan(plan)
     else:
         request.session['current_plan'] = user.profile.plan.id
+        charge_params = {
+            "name": f'Dropified {plan.title} {extra_description}'.strip(),
+            "test": settings.DEBUG,
+            "return_url": app_link(reverse(subscription_activated))
+        }
+
+        if user.get_config('_can_trial'):
+            charge_params["trial_days"] = plan.trial_days
 
         try:
             if plan.payment_interval != 'yearly':
@@ -53,13 +61,10 @@ def subscription_plan(request):
                     price = price / 2
 
                 charge = store.shopify.RecurringApplicationCharge.create({
-                    "test": settings.DEBUG,
-                    "name": f'Dropified {plan.title} {extra_description}'.strip(),
+                    **charge_params,
                     "price": price,
                     "capped_amount": price,
-                    "trial_days": plan.trial_days,
                     "terms": "Dropified Monthly Subscription",
-                    "return_url": app_link(reverse(subscription_activated))
                 })
             else:
                 charge_type = 'single'
@@ -68,13 +73,10 @@ def subscription_plan(request):
                     price = price / 2
 
                 charge = store.shopify.ApplicationCharge.create({
-                    "test": settings.DEBUG,
-                    "name": f'Dropified {plan.title} {extra_description}'.strip(),
+                    **charge_params,
                     "price": price,
                     "capped_amount": price,
-                    "trial_days": plan.trial_days,
                     "terms": "Dropified Yearly Subscription",
-                    "return_url": app_link(reverse(subscription_activated))
                 })
         except Exception as e:
             if hasattr(e, 'response') and e.response.code == 401:
