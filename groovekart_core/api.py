@@ -351,6 +351,19 @@ class GrooveKartApi(ApiBase):
 
         return self.api_success()
 
+    def delete_supplier(self, request, user, data):
+        supplier_id = safe_int(data.get('supplier'))
+
+        try:
+            product_supplier = GrooveKartSupplier.objects.get(pk=supplier_id)
+        except GrooveKartSupplier.DoesNotExist:
+            return self.api_error('Supplier Not Found!', status=404)
+        
+        permissions.user_can_delete(user, product_supplier)
+        product_supplier.delete()
+        
+        return self.api_success()
+
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def delete_board(self, request, user, data):
         board_id = safe_int(data.get('board_id'))
