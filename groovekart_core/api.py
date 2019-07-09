@@ -358,10 +358,10 @@ class GrooveKartApi(ApiBase):
             product_supplier = GrooveKartSupplier.objects.get(pk=supplier_id)
         except GrooveKartSupplier.DoesNotExist:
             return self.api_error('Supplier Not Found!', status=404)
-        
+
         permissions.user_can_delete(user, product_supplier)
         product_supplier.delete()
-        
+
         return self.api_success()
 
     @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
