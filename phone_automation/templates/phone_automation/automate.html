@@ -61,20 +61,20 @@
         var data = {{ automation.json_data | default:"[]" | safe }};
         var title = '{{ automation.title|default:"" }}';
 
-        { % if automation % }
+        {% if automation %}
             var uploadUrl = "{% url 'phone_automation_upload' twilio_automation_id=automation.pk %}";
             var save = {
                 url: "{% url 'phone_automation_save_automation' twilio_automation_id=automation.pk %}",
                 redirect: "{% url 'phone_automations_index' %}"
             };
 
-        { % else % }
+        {% else %}
             var uploadUrl = "{% url 'phone_automation_upload'  %}";
             var save = {
                 url: "{% url 'phone_automation_create_automation'  %}",
                 redirect: "{% url 'phone_automations_index' %}"
             };
-        { % endif % }
+        {% endif %}
     </script>
 
     {% compress js %}

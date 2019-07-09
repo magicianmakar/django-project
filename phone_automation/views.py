@@ -247,13 +247,17 @@ def provision(request):
         try:
             if not check_provision_access(request.user, phone_number_type):
                 overages = billing.CallflexOveragesBilling(user)
-                if phone_number_type == "tollfree":
-                    overages_warning_phone_price = settings.EXTRA_TOLLFREE_NUMBER_PRICE
-                    overages.add_invoice('extra_number', overages_warning_phone_price, False)
-                if phone_number_type == "local":
-                    overages_warning_phone_price = settings.EXTRA_LOCAL_NUMBER_PRICE
-                    overages.add_invoice('extra_number', overages_warning_phone_price, False)
-
+                try:
+                    if phone_number_type == "tollfree":
+                        overages_warning_phone_price = settings.EXTRA_TOLLFREE_NUMBER_PRICE
+                        overages.add_invoice('extra_number', overages_warning_phone_price, False)
+                    if phone_number_type == "local":
+                        overages_warning_phone_price = settings.EXTRA_LOCAL_NUMBER_PRICE
+                        overages.add_invoice('extra_number', overages_warning_phone_price, False)
+                except Exception:
+                    raven_client.captureException()
+                    messages.error(request, 'Error while provisioning phone number. Please subscribe to a CallFlex plan')
+                    return HttpResponseRedirect(reverse('phone_automation_provision'))
             incoming_phone_number = client.incoming_phone_numbers \
                 .create(
                     phone_number=phone_number,
@@ -297,6 +301,7 @@ def provision(request):
             return HttpResponseRedirect(reverse('phone_automation_provision'))
         except Exception:
             raven_client.captureException()
+
             messages.error(request, 'Error while provisioning this phone number, please try another one. ')
             return HttpResponseRedirect(reverse('phone_automation_provision'))
     else:
