@@ -289,7 +289,7 @@ $('#modal-add-order-id .supplier-type').on('change', function (e) {
     var supplierType = $(e.target).val();
     var placeholder = '';
     if (supplierType === 'ebay') {
-        placeholder = 'http://payments.ebay.com/ws/eBayISAPI.dll?ViewPaymentStatus&transId=XXXX&itemid=XXXX';
+        placeholder = 'https://www.ebay.com/vod/FetchOrderDetails?itemid=XXXX&transId=XXXX';
     } else {
         placeholder = 'http://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
     }
