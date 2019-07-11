@@ -1,3 +1,4 @@
+from django.core import mail
 import json
 import uuid
 from datetime import timedelta
@@ -500,6 +501,23 @@ class ProductsApiTestCase(BaseTestCase):
         track_data = json.loads(track.data)
         self.assertEqual(track_data['bundle']['123']['source_status'], data['status'])
         self.assertEqual(track_data['bundle']['123']['source_tracking'], data['tracking_number'])
+
+    def test_post_order_fulfill_update_email(self):
+        track = f.ShopifyOrderTrackFactory(user=self.user, store=self.store)
+        data = {
+            'store': self.store.id,
+            'order': track.id,
+            'source_id': '123',
+            'tracking_number': '123',
+            'status': 'PLACE_ORDER_SUCCESS',
+            'end_reason': 'buyer_accept_goods'
+        }
+
+        self.user.email = 'test@example.com'
+        self.user.set_config('alert_order_cancelled', 'notify')
+        self.user.save()
+        self.client.post('/api/shopify/order-fulfill-update', data)
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_post_product_remove_board(self):
         self.user.profile.plan.permissions.add(f.AppPermissionFactory(name='edit_product_boards.sub', description=''))

@@ -11,7 +11,13 @@ from urllib.parse import urlparse
 import requests
 from pusher import Pusher
 
-from shopified_core.utils import hash_url_filename, get_domain, safe_str, base64_encode
+from shopified_core.utils import (
+    hash_url_filename,
+    get_domain,
+    safe_str,
+    base64_encode,
+    ALIEXPRESS_SOURCE_STATUS,
+)
 from shopified_core.decorators import add_to_class
 from product_alerts.utils import monitor_product
 
@@ -922,27 +928,14 @@ class CommerceHQOrderTrack(models.Model):
             return status_map.get(self.source_status)
 
     def get_source_status_details(self):
-        ALIEXPRESS_REJECTED_STATUS = {
-            "buyer_pay_timeout": "Order Payment Timeout",
-            "risk_reject_closed": "Rejected By Risk Control",
-            "buyer_accept_goods_timeout": "Buyer Accept Goods Timeout",
-            "buyer_cancel_notpay_order": "Buyer Cancel or Doesn't Pay Order",
-            "cancel_order_close_trade": "Cancel Order Close Trade",
-            "seller_send_goods_timeout": "Seller Send Goods Timeout",
-            "buyer_cancel_order_in_risk": "Buyer Cancel Order In Risk",
-            "buyer_accept_goods": "Buyer Accept Goods",
-            "seller_accept_issue_no_goods_return": "Seller Accept Issue No Goods Return",
-            "seller_response_issue_timeout": "Seller Response Issue Timeout",
-        }
-
         if self.source_status_details and ',' in self.source_status_details:
             source_status_details = []
             for i in self.source_status_details.split(','):
-                source_status_details.append(ALIEXPRESS_REJECTED_STATUS.get(safe_str(i).lower()))
+                source_status_details.append(ALIEXPRESS_SOURCE_STATUS.get(safe_str(i).lower()))
 
             return ', '.join(set(source_status_details))
         else:
-            return ALIEXPRESS_REJECTED_STATUS.get(safe_str(self.source_status_details).lower())
+            return ALIEXPRESS_SOURCE_STATUS.get(safe_str(self.source_status_details).lower())
 
     get_source_status.admin_order_field = 'source_status'
 
