@@ -163,8 +163,9 @@ DATABASE_STATEMENT_TIMEOUT = os.environ.get('DATABASE_STATEMENT_TIMEOUT')
 CELERY_STATEMENT_TIMEOUT = os.environ.get('CELERY_STATEMENT_TIMEOUT')
 COMMAND_STATEMENT_TIMEOUT = os.environ.get('COMMAND_STATEMENT_TIMEOUT')
 
-# Ignore psycopg2-binary warnings
-warnings.filterwarnings("ignore", module="psycopg2")
+# Ignore psycopg2-binary and urllib3 warnings
+warnings.filterwarnings('ignore', module='psycopg2')
+warnings.filterwarnings('ignore', module='urllib3', message='Unverified HTTPS request')
 
 # Cache
 REDISCLOUD_URL = os.environ['REDISCLOUD_URL']
