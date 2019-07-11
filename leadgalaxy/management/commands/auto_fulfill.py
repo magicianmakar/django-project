@@ -149,7 +149,7 @@ class Command(DropifiedBaseCommand):
                     time.sleep(5)
                     continue
 
-                elif e.response.status_code == 422:
+                elif e.response.status_code in [422, 404]:
                     if 'is already fulfilled' in rep.text:
                         # Mark as fulfilled but not auto-fulfilled
                         self.write('Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
@@ -238,7 +238,9 @@ class Command(DropifiedBaseCommand):
 
                         return False
 
-                    elif 'must be stocked at the same location' in rep.text:
+                    elif 'must be stocked at the same location' in rep.text \
+                            or e.response.status_code == 404:
+
                         location = None
 
                         if locations:
@@ -267,6 +269,19 @@ class Command(DropifiedBaseCommand):
 
                             self.log_fulfill_error(order, 'Fulfill in location: {}'.format(location['name']), shopify_api=False)
 
+                        elif e.response.status_code == 404:
+                            raven_client.captureException(extra={
+                                'order_track': order.id,
+                                'response': rep.text
+                            })
+
+                            self.log_fulfill_error(order, 'Order Not Found')
+
+                            self.write('Not found #{} in [{}]'.format(order.order_id, order.store.title))
+                            order.hidden = True
+                            order.save()
+
+                            return False
                         else:
                             raven_client.captureMessage('No location found', extra={'track': order.id, 'store': order.store.shop})
 
@@ -276,20 +291,6 @@ class Command(DropifiedBaseCommand):
                             order.save()
 
                         continue
-
-                elif e.response.status_code == 404:
-                    raven_client.captureException(extra={
-                        'order_track': order.id,
-                        'response': rep.text
-                    })
-
-                    self.log_fulfill_error(order, 'Order Not Found')
-
-                    self.write('Not found #{} in [{}]'.format(order.order_id, order.store.title))
-                    order.hidden = True
-                    order.save()
-
-                    return False
 
                 elif e.response.status_code in [401, 402, 403]:
                     self.log_fulfill_error(order, 'API Authorization ({})'.format(e.response.status_code))
