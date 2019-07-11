@@ -33,10 +33,16 @@ ALIEXPRESS_REJECTED_STATUS = {
     "cancel_order_close_trade": "Cancel Order Close Trade",
     "seller_send_goods_timeout": "Seller Send Goods Timeout",
     "buyer_cancel_order_in_risk": "Buyer Cancel Order In Risk",
-    "buyer_accept_goods": "Buyer Accept Goods",
     "seller_accept_issue_no_goods_return": "Seller Accept Issue No Goods Return",
     "seller_response_issue_timeout": "Seller Response Issue Timeout",
 }
+
+ALIEXPRESS_SOURCE_STATUS = {}
+ALIEXPRESS_SOURCE_STATUS.update({
+    **ALIEXPRESS_REJECTED_STATUS,
+    "buyer_accept_goods_timeout": "Buyer Accept Goods Timeout",
+    "buyer_accept_goods": "Buyer Accept Goods",
+})
 
 
 class OrderErrors:

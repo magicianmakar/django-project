@@ -53,16 +53,17 @@ def sync_gkart_store_profits(self, sync_id, store_id):
             break
 
         for order in result['orders']:
-            models.ProfitOrder.objects.update_or_create(
-                sync=sync,
-                order_id=order.get('id'),
-                defaults={
-                    'date': arrow.get(order.get('created_at')).datetime,
-                    'order_name': order.get('reference'),
-                    'amount': order.get('total_price'),
-                    'items': json.dumps([f'{i.get("quantity", 1)} x {i.get("name")}' for i in order.get('line_items', [])]),
-                }
-            )
+            if order.get('created_at') and order.get('created_at') != '0000-00-00 00:00:00':
+                models.ProfitOrder.objects.update_or_create(
+                    sync=sync,
+                    order_id=order.get('id'),
+                    defaults={
+                        'date': arrow.get(order.get('created_at')).datetime,
+                        'order_name': order.get('reference'),
+                        'amount': order.get('total_price'),
+                        'items': json.dumps([f'{i.get("quantity", 1)} x {i.get("name")}' for i in order.get('line_items', [])]),
+                    }
+                )
 
         # Lesser results than limit means we reached the end
         if len(result['orders']) < limit:

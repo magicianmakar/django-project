@@ -326,7 +326,8 @@ class ApiBase(ApiResponseMixin, View):
                 phone_country, phone_number = order_phone_number(request, user.models_user, phone['number'], phone['country'])
                 order['order']['phone'] = phone_number
                 order['order']['phoneCountry'] = phone_country
-            elif not phone and order.get('supplier_type') == 'ebay':
+
+            if not order['order']['phone'] and order.get('supplier_type') == 'ebay':
                 order['order']['phone'] = '0000000000'
 
             if user.models_user.get_config('_aliexpress_telephone_workarround'):
