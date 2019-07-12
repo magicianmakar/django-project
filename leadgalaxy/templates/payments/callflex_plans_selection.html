@@ -48,10 +48,10 @@
                         <tr>
                             {% for item in callflex.number_plans_monthly %}
                             <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}" class="plan-feature {% if callflex.current_plan == item %}selected{% endif %}">
-                                <p class="plan-feature"><b class="cf-price">{{ item.credits_data.credits_tollfree }}</b> Toll-Free Phone Number(s)</p>
-                                <p class="plan-feature"><b class="cf-price">{{ item.credits_data.credits_local }}</b> Local Phone Number(s)</p>
-                                <p class="plan-feature"><b class="cf-price">{{ item.credits_data.credits_minutes_tollfree }}</b> Toll-Free Call Minutes</p>
-                                <p class="plan-feature"><b class="cf-price">{{ item.credits_data.credits_minutes_local }}</b> Local Call Minutes</p>
+                                <p class="plan-feature"><b class="cf-price">{{ item.get_credits_data.credits_tollfree }}</b> Toll-Free Phone Number(s)</p>
+                                <p class="plan-feature"><b class="cf-price">{{ item.get_credits_data.credits_local }}</b> Local Phone Number(s)</p>
+                                <p class="plan-feature"><b class="cf-price">{{ item.get_credits_data.credits_minutes_tollfree }}</b> Toll-Free Call Minutes</p>
+                                <p class="plan-feature"><b class="cf-price">{{ item.get_credits_data.credits_minutes_local }}</b> Local Call Minutes</p>
                                 <br />
                             </td>
                             {% endfor %}
@@ -93,10 +93,10 @@
                         <tr>
                             {% for item in callflex.number_plans_yearly %}
                             <td data-index="{{forloop.counter0}}" data-plan="{{item.slug}}" class="plan-feature {% if callflex.current_plan == item %}selected{% endif %}">
-                                <p class="plan-feature">{{ item.credits_data.credits_tollfree }} Toll-Free Phone Number(s)</p>
-                                <p class="plan-feature">{{ item.credits_data.credits_local }} Local Phone Number(s)</p>
-                                <p class="plan-feature">{{ item.credits_data.credits_minutes_tollfree }} Toll-Free Call Minutes</p>
-                                <p class="plan-feature">{{ item.credits_data.credits_minutes_local }} Local Call Minutes</p>
+                                <p class="plan-feature">{{ item.get_credits_data.credits_tollfree }} Toll-Free Phone Number(s)</p>
+                                <p class="plan-feature">{{ item.get_credits_data.credits_local }} Local Phone Number(s)</p>
+                                <p class="plan-feature">{{ item.get_credits_data.credits_minutes_tollfree }} Toll-Free Call Minutes</p>
+                                <p class="plan-feature">{{ item.get_credits_data.credits_minutes_local }} Local Call Minutes</p>
                                 <br />
                             </td>
                             {% endfor %}
