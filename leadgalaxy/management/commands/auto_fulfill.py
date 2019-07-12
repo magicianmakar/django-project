@@ -116,6 +116,7 @@ class Command(DropifiedBaseCommand):
         locations = []
         trying_locations = False
         fulfilled = False
+        check_order_exist = False
         tries = 3
 
         while tries > 0 or locations:
@@ -150,6 +151,20 @@ class Command(DropifiedBaseCommand):
                     continue
 
                 elif e.response.status_code in [422, 404]:
+                    if e.response.status_code == 404:
+                        if not check_order_exist:
+                            r = requests.get(store.get_link(f'/admin/orders/{order.order_id}.json', api=True))
+                            if r.status_code == 404:
+                                self.log_fulfill_error(order, 'Order Not Found')
+
+                                self.write('Not found #{} in [{}]'.format(order.order_id, order.store.title))
+                                order.hidden = True
+                                order.save()
+
+                                return False
+                            else:
+                                check_order_exist = True
+
                     if 'is already fulfilled' in rep.text:
                         # Mark as fulfilled but not auto-fulfilled
                         self.write('Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
@@ -269,19 +284,6 @@ class Command(DropifiedBaseCommand):
 
                             self.log_fulfill_error(order, 'Fulfill in location: {}'.format(location['name']), shopify_api=False)
 
-                        elif e.response.status_code == 404:
-                            raven_client.captureException(extra={
-                                'order_track': order.id,
-                                'response': rep.text
-                            })
-
-                            self.log_fulfill_error(order, 'Order Not Found')
-
-                            self.write('Not found #{} in [{}]'.format(order.order_id, order.store.title))
-                            order.hidden = True
-                            order.save()
-
-                            return False
                         else:
                             raven_client.captureMessage('No location found', extra={'track': order.id, 'store': order.store.shop})
 
