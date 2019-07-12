@@ -283,7 +283,7 @@ class WooStoreApi(ApiBase):
         supplier_url = data.get('supplier')
 
         if source_id:
-            if user.models_user.wooproduct_set.filter(source_id=source_id).count():
+            if user.models_user.wooproduct_set.filter(store=store, source_id=source_id).count():
                 return self.api_error('Product is already import/connected', status=422)
         else:
             return self.api_error('WooCommerce Product ID is missing', status=422)

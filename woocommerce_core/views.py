@@ -140,7 +140,7 @@ class ProductsList(ListView):
         context = super(ProductsList, self).get_context_data(**kwargs)
 
         context['breadcrumbs'] = [{'title': 'Products', 'url': reverse('woo:products_list')}]
-        context['selected_menu'] = 'product:all'
+        context['selected_menu'] = 'products:all'
 
         if self.request.GET.get('store', 'n') == 'n':
             context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('woo:products_list') + '?store=n'})
@@ -181,7 +181,7 @@ class ProductDetailView(DetailView):
 
         context['product_data'] = self.object.parsed
         context['breadcrumbs'] = [{'title': 'Products', 'url': products}, self.object.title]
-        context['selected_menu'] = 'product:all'
+        context['selected_menu'] = 'products:all'
 
         if self.object.store:
             store_title = self.object.store.title
@@ -243,7 +243,7 @@ class ProductMappingView(DetailView):
         context['product_suppliers'] = self.get_product_suppliers(product)
         context['current_supplier'] = current_supplier = self.get_current_supplier(product)
         context['variants_map'] = self.get_variants_map(woocommerce_product, product, current_supplier)
-        context['selected_menu'] = 'product:all'
+        context['selected_menu'] = 'products:all'
 
         return context
 
@@ -302,7 +302,7 @@ class MappingSupplierView(DetailView):
             {'title': product.title, 'url': reverse('woo:product_detail', args=[product.id])},
             'Advanced Mapping'
         ]
-        context['selected_menu'] = 'product:all'
+        context['selected_menu'] = 'products:all'
 
         self.add_supplier_info(woocommerce_product.get('variants', []), suppliers_map)
 
@@ -349,7 +349,7 @@ class VariantsEditView(DetailView):
         context['store'] = self.object.store
         context['product_id'] = self.object.source_id
         context['page'] = 'product'
-        context['selected_menu'] = 'product:all'
+        context['selected_menu'] = '3'
 
         context['breadcrumbs'] = [
             {'title': 'Products', 'url': reverse('woo:products_list')},
