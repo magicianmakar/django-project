@@ -116,7 +116,7 @@ class Command(DropifiedBaseCommand):
         locations = []
         trying_locations = False
         fulfilled = False
-        check_order_exist = False
+        check_order_exist = True
         tries = 3
 
         while tries > 0 or locations:
@@ -152,7 +152,7 @@ class Command(DropifiedBaseCommand):
 
                 elif e.response.status_code in [422, 404]:
                     if e.response.status_code == 404:
-                        if not check_order_exist:
+                        if check_order_exist:
                             r = requests.get(store.get_link(f'/admin/orders/{order.order_id}.json', api=True))
                             if r.status_code == 404:
                                 self.log_fulfill_error(order, 'Order Not Found')
@@ -163,7 +163,7 @@ class Command(DropifiedBaseCommand):
 
                                 return False
                             else:
-                                check_order_exist = True
+                                check_order_exist = False
 
                     if 'is already fulfilled' in rep.text:
                         # Mark as fulfilled but not auto-fulfilled
