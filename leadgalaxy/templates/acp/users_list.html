@@ -30,13 +30,6 @@
                             <th>Username</th>
                             <th>Email</th>
                             <th>Plan</th>
-                            {% if users_count == 1 %}
-                            <th>Shopify</th>
-                            <th>CommerceHQ</th>
-                            <th>WooCommerce</th>
-                            <th>GrooveKart</th>
-                            <th>Bundles</th>
-                            {% endif %}
                             <th style="width:13%">Join Date</th>
                             <th style="width:13%">Last Login</th>
                             {% if users_count == 1 %}
@@ -66,53 +59,6 @@
                                            target="_blank">
                                         {{item.profile.subuser_parent.username}}</a>
                                 {% endif %}
-                            </td>
-                            {% with product_count=request.GET.pcount %}
-                            <td style=" white-space:nowrap">
-                                <ul style="padding:0;margin:0">
-                                    <li style="list-style:none">{{item.profile.get_shopify_stores.count}} Stores</li>
-
-                                    {% if product_count %}
-                                        <li style="list-style:none">{{item.shopifyproduct_set.count}} Products</li>
-                                    {% else %}
-                                        <a href="{% url_replace 'pcount' 1 %}">Show Products Count</a>
-                                    {% endif %}
-                                </ul>
-                            </td>
-                            <td style=" white-space:nowrap">
-                                <ul style="padding:0;margin:0">
-                                    <li style="list-style:none">{{item.profile.get_chq_stores.count}} Stores</li>
-
-                                    {% if product_count %}
-                                        <li style="list-style:none">{{item.commercehqproduct_set.count}} Products</li>
-                                    {% endif %}
-                                </ul>
-                            </td>
-                            <td style=" white-space:nowrap">
-                                <ul style="padding:0;margin:0">
-                                    <li style="list-style:none">{{item.profile.get_woo_stores.count}} Stores</li>
-
-                                    {% if product_count %}
-                                        <li style="list-style:none">{{item.wooproduct_set.count}} Products</li>
-                                    {% endif %}
-                                </ul>
-                            </td>
-                            <td style=" white-space:nowrap">
-                                <ul style="padding:0;margin:0">
-                                    <li style="list-style:none">{{item.profile.get_gkart_stores.count}} Stores</li>
-
-                                    {% if product_count %}
-                                        <li style="list-style:none">{{item.groovekartproduct_set.count}} Products</li>
-                                    {% endif %}
-                                </ul>
-                            </td>
-                            {% endwith %}
-                            <td>
-                                <ul style="padding:0;margin:0">
-                                    {% for bundle in item.profile.bundles.all %}
-                                    <li>{{bundle.title}}</li>
-                                    {% endfor %}
-                                </ul>
                             </td>
                             {% else %}
                             <td>
@@ -177,6 +123,89 @@
                     {% endfor %}
                     </tbody>
                 </table>
+
+                {% if users_count == 1 %}
+                {% with item=users.0 product_count=request.GET.pcount %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-bordered user-data">
+                            <tr>
+                                <td>Shopify</td>
+                                <td style=" white-space:nowrap">
+                                    <ul style="padding:0;margin:0">
+                                        <li style="list-style:none">{{item.profile.get_shopify_stores.count}} Stores</li>
+
+                                        {% if product_count %}
+                                            <li style="list-style:none">{{item.shopifyproduct_set.count}} Products</li>
+                                        {% else %}
+                                            <a href="{% url_replace 'pcount' 1 %}">Show Products Count</a>
+                                        {% endif %}
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>CommerceHQ</td>
+                                <td style=" white-space:nowrap">
+                                    <ul style="padding:0;margin:0">
+                                        <li style="list-style:none">{{item.profile.get_chq_stores.count}} Stores</li>
+
+                                        {% if product_count %}
+                                            <li style="list-style:none">{{item.commercehqproduct_set.count}} Products</li>
+                                        {% endif %}
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>WooCommerce</td>
+                                <td style=" white-space:nowrap">
+                                    <ul style="padding:0;margin:0">
+                                        <li style="list-style:none">{{item.profile.get_woo_stores.count}} Stores</li>
+
+                                        {% if product_count %}
+                                            <li style="list-style:none">{{item.wooproduct_set.count}} Products</li>
+                                        {% endif %}
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>GearBubble</td>
+                                <td style=" white-space:nowrap">
+                                    <ul style="padding:0;margin:0">
+                                        <li style="list-style:none">{{item.profile.get_gear_stores.count}} Stores</li>
+
+                                        {% if product_count %}
+                                            <li style="list-style:none">{{item.gearbubbleproduct_set.count}} Products</li>
+                                        {% endif %}
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>GrooveKart</td>
+                                <td style=" white-space:nowrap">
+                                    <ul style="padding:0;margin:0">
+                                        <li style="list-style:none">{{item.profile.get_gkart_stores.count}} Stores</li>
+
+                                        {% if product_count %}
+                                            <li style="list-style:none">{{item.groovekartproduct_set.count}} Products</li>
+                                        {% endif %}
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Bundles</td>
+                                <td>
+                                    <ul style="margin: 0;padding: 0 0 0 15px;">
+                                        {% for bundle in item.profile.bundles.all %}
+                                        <li>{{bundle.title}}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                {% endwith %}
+                {% endif %}
 
                 {% if registrations %}
                     <hr/>
@@ -424,6 +453,10 @@
 
     .user-profile-btn {
         margin-right: 5px;
+    }
+
+    .user-data td {
+        vertical-align: middle !important;
     }
     </style>
 {% endblock %}
