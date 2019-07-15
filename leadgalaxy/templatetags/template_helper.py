@@ -110,7 +110,7 @@ def shopify_image_thumb(link, size='small', crop=''):
             else:
                 return None
 
-        if 'cdn.shopify.com' in link.lower():
+        if 'cdn.shopify.com' in link.lower().replace('cdn2', 'cdn'):
             if crop:
                 crop = '_crop_{}'.format(crop)
 

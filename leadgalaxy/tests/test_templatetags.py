@@ -48,6 +48,10 @@ class TagsTestCase(BaseTestCase):
             'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd.jpg?v=1445304129', size='64x64', crop='center'),
             'https://cdn.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd_64x64_crop_center.jpg?v=1445304129')
 
+        self.assertEqual(template_helper.shopify_image_thumb(
+            'https://cdn2.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd.jpg?v=1445304129', size='64x64', crop='center'),
+            'https://cdn2.shopify.com/s/files/1/1013/1174/products/HTB1v0vzIVXXXXb8XFXXq6xXFXXXd_64x64_crop_center.jpg?v=1445304129')
+
     def test_shopify_image_obj_path(self):
         img = ('https://s3-us-west-2.amazonaws.com/commercehq-userfiles-master/commercehq-store29857086'
                '/uploads/1489910485_59ef386e8d0880257db38f529394b4f3bb4ad05b.jpg')
