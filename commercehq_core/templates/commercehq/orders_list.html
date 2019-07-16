@@ -221,6 +221,8 @@
 
                                         {% if order.customer_address.phone %}
                                         <br> {{order.customer_address.phone}}
+                                        {% elif order.address.phone %}
+                                        <br> {{order.address.phone}}
                                         {% endif %}
 
                                         <br> <b>{{order.customer_address.country}}</b>
