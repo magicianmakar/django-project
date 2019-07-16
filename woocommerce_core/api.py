@@ -1,5 +1,6 @@
 import re
 import json
+from lxml import etree
 from urllib.parse import urlencode, parse_qs, urlparse
 
 import requests
@@ -108,7 +109,8 @@ class WooStoreApi(ApiBase):
                                           'Please contact support@shopifiedapp.com to learn how to connect more stores.')
 
         title = data.get('title', '').strip()
-        api_url = data.get('api_url', '').strip()
+        store_url = data.get('api_url', '').strip()
+        api_url = store_url
 
         try:
             validate = URLValidator()
@@ -116,15 +118,29 @@ class WooStoreApi(ApiBase):
         except ValidationError:
             return self.api_error('The URL is invalid.', status=400)
 
+        try:
+            rep = requests.get(store_url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5)'})
+            rep.raise_for_status()
+
+            tree = etree.fromstring(rep.text, parser=etree.HTMLParser())
+
+            element = tree.xpath('//link[@rel="https://api.w.org/"]')[0]
+            api_url = element.attrib.get('href').replace('/wp-json/', '')
+
+        except:
+            pass
+
         if len(title) > WooStore._meta.get_field('title').max_length:
             return self.api_error('The title is too long.', status=400)
 
-        store = WooStore()
-        store.user = user.models_user
-        store.title = data.get('title', '').strip()
-        store.api_url = data.get('api_url', '').strip()
+        store = WooStore(
+            user=user.models_user,
+            title=data.get('title', '').strip(),
+            api_url=api_url)
+
         permissions.user_can_add(user, store)
         store.save()
+
         return_url = request.build_absolute_uri(reverse('woo:index'))
         return_url = urlparse(return_url)._replace(scheme='https').geturl()
         callback_path = reverse('woo:callback_endpoint', kwargs={'store_hash': store.store_hash})
@@ -137,7 +153,7 @@ class WooStoreApi(ApiBase):
             'return_url': return_url,
             'callback_url': callback_url}
 
-        return self.api_success({'authorize_url': store.get_authorize_url(params)})
+        return self.api_success({'authorize_url': store.get_authorize_url(params, url=store_url)})
 
     def post_store_update(self, request, user, data):
         if user.is_subuser:

@@ -87,9 +87,10 @@ class StoreCreateTestCase(BaseTestCase):
 
         self.data = {
             'title': 'Test Store',
-            'api_url': 'https://woostore.com',
-            'api_key': 'ck_323fce33402a70913e4cdbbdffa14bdb1cfb9a50',
-            'api_password': 'cs_e32287eb90192ab2476015f9a69a30bb015dbdaf'}
+            'api_url': 'https://woo.dropified.com/',
+            'api_key': 'ck_62deefc81935f65e528f6920f72f5cb81c96917a',
+            'api_password': 'cs_aae36e80483440b748c457b96e91e7515d13b259'
+        }
 
         self.headers = {'HTTP_X_REQUESTED_WITH': 'XMLHttpRequest'}
         self.path = '/api/woo/store-add'
@@ -180,9 +181,10 @@ class StoreUpdateTestCase(BaseTestCase):
 
         self.data = {
             'title': 'Test Store',
-            'api_url': 'https://woostore.com',
-            'api_key': 'ck_323fce33402a70913e4cdbbdffa14bdb1cfb9a50',
-            'api_password': 'cs_e32287eb90192ab2476015f9a69a30bb015dbdaf'}
+            'api_url': 'https://woo.dropified.com/',
+            'api_key': 'ck_62deefc81935f65e528f6920f72f5cb81c96917a',
+            'api_password': 'cs_aae36e80483440b748c457b96e91e7515d13b259'
+        }
 
         self.store = WooStoreFactory(user=self.user, **self.data)
 
@@ -1067,9 +1069,9 @@ class ApiTestCase(BaseTestCase):
     def test_post_store_add(self):
         data = {
             'title': 'Test Store',
-            'api_url': 'https://woostore.com',
-            'api_key': 'ck_323fce33402a70913e4cdbbdffa14bdb1cfb9a50',
-            'api_password': 'cs_e32287eb90192ab2476015f9a69a30bb015dbdaf'
+            'api_url': 'https://woo.dropified.com/',
+            'api_key': 'ck_62deefc81935f65e528f6920f72f5cb81c96917a',
+            'api_password': 'cs_aae36e80483440b748c457b96e91e7515d13b259'
         }
         r = self.client.post('/api/woo/store-add', data)
         self.assertEqual(r.status_code, 200)

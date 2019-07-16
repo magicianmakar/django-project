@@ -81,8 +81,11 @@ class WooStore(models.Model):
     def get_admin_url(self):
         return self.get_store_url() + '/wp-admin'
 
-    def get_authorize_url(self, params):
-        return '{}/wc-auth/v1/authorize?{}'.format(self.get_store_url(), urlencode(params))
+    def get_authorize_url(self, params, url=None):
+        if not url:
+            url = self.get_store_url()
+
+        return '{}/wc-auth/v1/authorize?{}'.format(url.rstrip('/'), urlencode(params))
 
     def get_suppliers(self):
         return self.woosupplier_set.all().order_by('-is_default')

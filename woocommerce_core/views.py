@@ -459,8 +459,12 @@ class OrdersList(ListView):
 
     def get_order_date_paid(self, order):
         if order.get('date_paid'):
+            paid_date = arrow.get(order['date_paid'])
             timezone = self.request.session.get('django_timezone')
-            return arrow.get(order['date_paid']).to(timezone).datetime
+            if timezone:
+                paid_date = paid_date.to(timezone)
+
+            return paid_date.datetime
 
     def get_item_shipping_method(self, product, item, variant_id, country_code):
         if item.get('supplier'):
