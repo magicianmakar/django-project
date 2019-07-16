@@ -583,19 +583,23 @@ def callflex_subscription(request):
     user = request.user
     plan = CustomStripePlan.objects.get(id=request.POST.get('plan'))
 
-    subscription = user.stripesubscription_set.latest('created_at')
-    sub = subscription.refresh()
-    sub_id_to_use = sub.id
-
     try:
+        try:
+            subscription = user.stripesubscription_set.latest('created_at')
+            sub = subscription.refresh()
+            sub_id_to_use = sub.id
+        except StripeSubscription.DoesNotExist:
+            sub = None
+
         user_callflex_subscription = user.customstripesubscription_set.filter(
             custom_plan__type='callflex_subscription').first()
         if user_callflex_subscription:
             sub_container = stripe.Subscription.retrieve(user_callflex_subscription.subscription_id)
         else:
             sub_container = sub
-
-        if plan.interval != sub_container['items']['data'][0]["plan"]["interval"]:
+        if sub is None:
+            need_new_sub_flag = True
+        elif plan.interval != sub_container['items']['data'][0]["plan"]["interval"]:
             # check if main subscription match with interval and can be combined to
             if plan.interval != sub['items']['data'][0]["plan"]["interval"]:
                 need_new_sub_flag = True
@@ -667,10 +671,9 @@ def callflex_subscription(request):
             'error': 'Credit Card Error: {}'.format(e.message)
         }, status=500)
 
-    except stripe.error.InvalidRequestError as e:
+    except stripe.error.InvalidRequestError:
         raven_client.captureException(level='warning')
-        return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
-
+        return JsonResponse({'error': 'Invoice payment error. Please check your CC data. '}, status=500)
     except Exception as e:
         raven_client.captureException(level='warning')
 

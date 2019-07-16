@@ -314,6 +314,43 @@
         });
     });
 
+    $('#modal-subscription-cancel-callflex .confirm-cancel-btn').click(function(e) {
+        var parent = $(this).parents('.subsciption-plan');
+        var plan = parent.data('data-plan');
+
+        $(this).button('loading');
+
+        var subscription_type = $('#modal-subscription-cancel-callflex').data('subscription-type');
+
+        if (subscription_type == "custom"){
+            ajax_url = config.custom_subscription_cancel;
+        }
+        else {
+            ajax_url = config.subscription_cancel;
+        }
+
+        $.ajax({
+            url: ajax_url,
+            type: 'POST',
+            data: {
+                subscription: $('#modal-subscription-cancel-callflex').data('subscription'),
+                subscription_type: $('#modal-subscription-cancel-callflex').data('subscription-type'),
+                when: 'period_end'
+            },
+            success: function(data) {
+                toastr.success("Your Subscription has been canceled.", "Cancel Subscription");
+                $('#modal-subscription-cancel-callflex').modal('hide');
+
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
+            },
+            error: function(data) {
+                displayAjaxError('Cancel Subscription', data);
+            }
+        });
+    });
+
     $('.delete-cc-btn').click(function(e) {
         var btn = $(this);
         var parent = $(this).parents('th');
@@ -365,6 +402,21 @@
         }
 
         $('#modal-subscription-cancel').modal('show');
+    });
+
+    $('.cancel-sub-btn-callflex').click(function(e) {
+        $('#modal-subscription-cancel-callflex').data('subscription', $(this).data('subscription'));
+        $('#modal-subscription-cancel-callflex').data('subscription-type', $(this).data('subscription-type'));
+
+        $('#modal-subscription-cancel-callflex .plan-name').text($(this).data('plan'));
+        $('#modal-subscription-cancel-callflex .billing-end').text($(this).data('period-end'));
+
+        if ($(this).data('status') != 'active') {
+            $('#modal-subscription-cancel-callflex .part-refund').hide();
+            $('#modal-subscription-cancel-callflex .period-name').text('trial');
+        }
+
+        $('#modal-subscription-cancel-callflex').modal('show');
     });
 
     $('.pause-account').click(function(e) {
