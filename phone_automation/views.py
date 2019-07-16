@@ -258,6 +258,31 @@ def provision(request):
                     raven_client.captureException()
                     messages.error(request, 'Error while provisioning phone number. Please subscribe to a CallFlex plan')
                     return HttpResponseRedirect(reverse('phone_automation_provision'))
+                if user.profile.from_shopify_app_store():
+                    try:
+                        # getting last created active shopify subscriptioon
+                        shopify_subscription = billing.get_shopify_recurring(request.user)
+                        if shopify_subscription:
+                            # subscription exists
+                            pass
+                        else:
+                            profile_link = app_link(reverse('user_profile'))
+                            messages.error(request,
+                                           'Error while provisioning this phone number. There is no shopify active subscription. '
+                                           f'Please check your <a href="{profile_link}?callflex_anchor#plan">Profile</a> page for details')
+                            return HttpResponseRedirect(reverse('phone_automation_provision'))
+                    except:
+                        messages.error(request, 'Error while provisioning this phone number. There is no active shopify subscription')
+                        return HttpResponseRedirect(reverse('phone_automation_provision'))
+                else:
+                    overages = billing.CallflexOveragesBilling(user)
+                    if phone_number_type == "tollfree":
+                        overages_warning_phone_price = settings.EXTRA_TOLLFREE_NUMBER_PRICE
+                        overages.add_invoice('extra_number', overages_warning_phone_price, False)
+                    if phone_number_type == "local":
+                        overages_warning_phone_price = settings.EXTRA_LOCAL_NUMBER_PRICE
+                        overages.add_invoice('extra_number', overages_warning_phone_price, False)
+
             incoming_phone_number = client.incoming_phone_numbers \
                 .create(
                     phone_number=phone_number,
@@ -402,11 +427,7 @@ def provision_release(request, twilio_phone_number_id):
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
     try:
-        client = get_twilio_client()
-        client.incoming_phone_numbers(twilio_phone_number.twilio_sid).delete()
-
         twilio_phone_number.delete()
-
         messages.success(request, 'Phone number has been successfully removed')
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
@@ -453,8 +474,12 @@ def status_callback(request):
                 extra_minute_price = settings.EXTRA_LOCAL_MINUTE_PRICE
 
             try:
-                overages.add_invoice('extra_minutes', extra_minute_price * safe_float(
-                    request.POST.get('CallDuration')) / 60, False)
+                if twilio_phone_number.user.profile.from_shopify_app_store():
+                    overages.add_shopify_usage_invoice('extra_minutes', extra_minute_price * safe_float(
+                        request.POST.get('CallDuration')) / 60, False)
+                else:
+                    overages.add_invoice('extra_minutes', extra_minute_price * safe_float(
+                        request.POST.get('CallDuration')) / 60, False)
             except:
                 raven_client.captureException()
         # fetch recordings

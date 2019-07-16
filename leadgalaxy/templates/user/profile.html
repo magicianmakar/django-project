@@ -292,7 +292,11 @@
                         {% endif %}
 
                         {% if user|can:'phone_automation.use' %}
-                            {% include "payments/callflex_plans.html" %}
+                            {% if user.profile.from_shopify_app_store %}
+                                {% include "payments/callflex_plans_shopify.html" %}
+                            {% else %}
+                                {% include "payments/callflex_plans.html" %}
+                            {% endif %}
                         {% endif %}
 
                     </div>
@@ -516,6 +520,7 @@
         'subscription_activate': '{% url "stripe_subscription.views.subscription_activate" %}',
         'shopify_plan': '{% url "shopify_subscription.views.subscription_plan" %}',
         'callflex_subscription': '{% url "stripe_subscription.views.callflex_subscription" %}',
+        'shopify_callflex_subscription': '{% url "shopify_subscription.views.subscription_callflex" %}',
 
         'stripe': '{% app_setting "STRIPE_PUBLIC_KEY" %}',
     };

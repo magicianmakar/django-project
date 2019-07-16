@@ -1,0 +1,97 @@
+{% load template_helper %}
+{% load perms_helper %}
+
+<div class="panel panel-default callflex-anchor">
+    <div class="panel-heading">
+        CallFlex Usage
+    </div>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-3" >
+                <span class="">
+                    <b>CallFlex Minutes Usage:</b>
+                </span>
+            </div>
+
+            <div class="col-md-3" >
+
+                <span>
+                    <span>Toll-Free: </span>
+                    <b>{{ callflex.month_totals_tollfree|default:0|sec_to_min }}</b>
+                    {% if callflex.month_limit_tollfree is False %}
+                        <span>Unlimited Minutes</span>
+                    {% elif callflex.month_limit_tollfree > 0 %}
+                       mm:ss
+                        <div><small>(your plan includes {{ callflex.month_limit_tollfree|default:0|sec_to_min }} minutes w/o charge)</small> </div>
+                    {% endif %}
+
+                </span>
+
+                <span>
+                    <span>Local: </span>
+                    <b>{{ callflex.month_totals_local|default:0|sec_to_min }}</b>
+                    {% if callflex.month_limit_local is False %}
+                        <span>Unlimited Minutes</span>
+                    {% elif callflex.month_limit_local > 0 %}
+                        mm:ss
+                        <div><small>(your plan includes {{ callflex.month_limit_local|default:0|sec_to_min }} minutes w/o charge)</small></div>
+                    {% endif %}
+
+                </span>
+            </div>
+
+            <div class="col-md-3" >
+                <span class="">
+                    <b>Phone Number Usage:</b>
+                </span>
+            </div>
+
+            <div class="col-md-3" >
+
+                <span>
+                        <span>Toll-Free: </span>
+                        <b>{{callflex.phonenumber_usage_tollfree.used}}</b>
+
+                        {% if callflex.phonenumber_usage_tollfree.total is False %}
+                            <span>Unlimited</span>
+                        {% elif callflex.phonenumber_usage_tollfree.total > 0 %}
+                            <div><small>(your plan includes  {{ callflex.phonenumber_usage_tollfree.total}} phones w/o charge)</small></div>
+                        {%  endif %}
+                </span>
+
+                <span>
+
+                        <span>Local: </span>
+                        <b>{{callflex.phonenumber_usage_local.used}}</b>
+
+                        {% if callflex.phonenumber_usage_local.total is False %}
+                            <span>Unlimited</span>
+                        {% elif callflex.phonenumber_usage_local.total > 0 %}
+                            <div><small>(your plan includes  {{ callflex.phonenumber_usage_local.total}} phones w/o charge)</small></div>
+                        {%  endif %}
+
+                </span> <br>
+            </div>
+        </div>
+        <br>
+                {% if callflex.shopify_subscription %}
+                    <p style="margin:0">Your current CallFlex subscription pricing:</p>
+                    {% if callflex.shopify_subscription.update_capped_amount_url %}
+                        <p style="margin:0;color:red;">
+                            You need to confirm increasing your shopify subscription usage limit.
+                            <a class="btn btn-success" href="{{ callflex.shopify_subscription.update_capped_amount_url }}">Click here to confirm</a>
+                        </p>
+
+                    {%  endif %}
+                {% else %}
+                    <p style="margin:0;color:red;">You do not have active shopify requrring subscription, you're not able to use CallFlex.
+                    <button class="btn btn-success shopify-callflex-activate">Activate CallFlex Subscription</button>
+                    </p>
+
+
+
+                {%  endif %}
+
+        {% include "payments/callflex_plans_selection_shopify.html" %}
+    </div>
+</div>

@@ -469,6 +469,8 @@ EXTRA_LOCAL_MINUTE_PRICE = 0.02  # USD per minute
 CALLFLEX_OVERAGES_MAX_NUMBERS = 10  # user can never go over this limit  of phone number when adding as overages
 CALLFLEX_OVERAGES_MAX_MINUTES = 1000  # user can never go over this limit of minutes when adding as overages
 
+CALLFLEX_SHOPIFY_USAGE_MAX_PENDING = 50  # after reaching this pending limit (in USD) it deletes all user's twilio phones
+
 # Baremetrics (Customer Tags)
 BAREMETRICS_API_KEY = os.environ.get('BAREMETRICS_API_KEY')
 BAREMETRICS_TAGS_FIELD = os.environ.get('BAREMETRICS_TAGS_FIELD', 753)

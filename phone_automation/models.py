@@ -15,7 +15,9 @@ from django.contrib.postgres.fields import JSONField
 from django.forms.models import model_to_dict
 from django.utils.functional import cached_property
 from django.urls import reverse
-
+from .utils import (
+    get_twilio_client,
+)
 from leadgalaxy.utils import aws_s3_get_key
 from stripe_subscription.models import CustomStripeSubscription
 
@@ -38,6 +40,10 @@ ALERT_EVENTS = (
 
 ALERT_TYPES = (
     ('email', 'Email'),
+)
+
+SHOPIFY_USAGE_STATUSES = (
+    ('not_paid', 'paid'),
 )
 
 
@@ -193,6 +199,14 @@ class TwilioPhoneNumber(models.Model):
             monthly_totals.append(f'{month}: {seconds} seconds')
 
         return ' - '.join(monthly_totals)
+
+    def delete(self, *args, **kwargs):
+        try:
+            client = get_twilio_client()
+            client.incoming_phone_numbers(self.twilio_sid).delete()
+        except:
+            pass
+        super(TwilioPhoneNumber, self).delete(*args, **kwargs)
 
 
 class TwilioUpload(models.Model):
@@ -354,3 +368,15 @@ class TwilioSummary(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class CallflexShopifyUsageCharge(models.Model):
+    class Meta:
+        ordering = ('pk',)
+
+    user = models.ForeignKey(User, related_name='callflex_shopify_usage_charges', on_delete=models.CASCADE)
+    type = models.CharField(max_length=50, default='', blank=True)
+    status = models.CharField(max_length=50, default='not_paid', choices=SHOPIFY_USAGE_STATUSES)
+    amount = models.DecimalField(decimal_places=2, max_digits=9, verbose_name='Amount(in USD)', default=0)
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')

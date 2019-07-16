@@ -1,0 +1,44 @@
+{% load template_helper %}
+{% load perms_helper %}
+{% load compress %}
+<div class="_panel-body col-md-8 col-md-offset-2" style="padding:0">
+    <div class="m-t m-b">
+
+        <div class="row-overages">
+            <h2>CallFlex Usage Pricing for Shopify users:</h2>
+            <h5><b class="cf-price">${% app_setting 'EXTRA_TOLLFREE_NUMBER_PRICE' %}</b>/mo For every Toll-Free number
+                <i class="fa fa-fw fa-question-circle" qtip-tooltip="You'll be invoiced this amount every 30 days for every phone number added into your account. " qtip-my="bottom center" qtip-at="top center" style="font-size:16px;color:#BBB"></i>
+            </h5>
+            <h5><b class="cf-price">${% app_setting 'EXTRA_LOCAL_NUMBER_PRICE' %}</b>/mo For every Local number
+                <i class="fa fa-fw fa-question-circle" qtip-tooltip="You'll be invoiced this amount every 30 days for every phone number added into your account" qtip-my="bottom center" qtip-at="top center" style="font-size:16px;color:#BBB"></i>
+            </h5>
+            <h5><b class="cf-price">${% app_setting 'EXTRA_TOLLFREE_MINUTE_PRICE' %}</b> for every Toll-Free minute
+                <i class="fa fa-fw fa-question-circle" qtip-tooltip="You'll be invoiced this amount for every call minute" qtip-my="bottom center" qtip-at="top center" style="font-size:16px;color:#BBB"></i>
+            </h5>
+            <h5><b class="cf-price">${% app_setting 'EXTRA_LOCAL_MINUTE_PRICE' %}</b> for every Local minute
+                <i class="fa fa-fw fa-question-circle" qtip-tooltip="You'll be invoiced this amount for every call minute " qtip-my="bottom center" qtip-at="top center" style="font-size:16px;color:#BBB"></i>
+            </h5>
+        </div>
+    </div>
+</div>
+{% compress css %}
+<style type="text/css">
+.row-overages {
+    text-align: center;
+
+}
+
+.row-overages .cf-price {
+    font-size: 14px;
+}
+
+.plan-feature .cf-price {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.row-overages h5 {
+    font-weight: normal;
+}
+</style>
+{% endcompress %}

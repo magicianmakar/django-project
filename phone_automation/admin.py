@@ -11,7 +11,8 @@ from .models import (
     CallflexCreditsPlan,
     TwilioCompany,
     TwilioAlert,
-    TwilioSummary
+    TwilioSummary,
+    CallflexShopifyUsageCharge,
 )
 
 
@@ -139,4 +140,18 @@ class TwilioSummaryAdmin(admin.ModelAdmin):
         'updated_at',
     )
     raw_id_fields = ('user', 'company')
+    date_hierarchy = 'created_at'
+
+
+@admin.register(CallflexShopifyUsageCharge)
+class CallflexShopifyUsageChargeAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'user',
+        'type',
+        'status',
+        'created_at',
+        'updated_at',
+    )
+    list_filter = ('created_at', 'updated_at')
     date_hierarchy = 'created_at'

@@ -60,6 +60,7 @@ from stripe_subscription.stripe_api import stripe
 from shopify_subscription.tasks import cancel_baremetrics_subscriptions
 from shopify_subscription.models import BaremetricsCustomer
 from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
+from phone_automation import billing_utils as billing
 
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
@@ -3191,14 +3192,12 @@ def user_profile(request):
 
         except CaptchaCredit.DoesNotExist:
             captchacredit = CaptchaCredit.objects.create(user=request.user, remaining_credits=0)
-
     stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
     shopify_apps_customer = request.user.profile.from_shopify_app_store()
-
     baremetrics_jwt_token = None
+
     if not request.user.is_subuser and stripe_customer:
         sync_subscription(request.user)
-
         subscription = request.user.stripesubscription_set.all().first()
         if subscription and settings.BAREMETRICS_ACCESS_TOKEN \
                 and settings.BAREMETRICS_JWT_TOKEN_KEY:
@@ -3240,11 +3239,14 @@ def user_profile(request):
     else:
         callflex.current_plan = None
 
+    if shopify_apps_customer:
+        # check existing recurring
+        callflex.shopify_subscription = billing.get_shopify_recurring(request.user)
+
     callflex.phonenumber_usage_tollfree = get_phonenumber_usage(request.user, "tollfree")
     callflex.phonenumber_usage_local = get_phonenumber_usage(request.user, "local")
 
     callflex.extranumber_subscriptions = request.user.customstripesubscription_set.filter(custom_plan__type='callflex_subscription')
-
     return render(request, 'user/profile.html', {
         'countries': get_counrties_list(),
         'now': timezone.now(),

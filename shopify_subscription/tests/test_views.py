@@ -195,3 +195,56 @@ class ShopifyApssSubscriprtionTestCase(BaseTestCase):
         refresh.assert_called_with(sub=charge_create.return_value)
 
         self.assertEqual(PlanSelectionEvent.objects.count(), 1, 'Plan selection event')
+
+    @requests_mock.Mocker()
+    @patch('leadgalaxy.models.ShopifyStore.shopify.RecurringApplicationCharge.create')
+    @patch('leadgalaxy.models.ShopifyStore.shopify')
+    @patch('phone_automation.billing_utils.get_shopify_recurring')
+    def test_shopify_subscription_callflex(self, req_mock, get_shopify_recurring, shopify, recu_charge_create):
+        self.store = f.ShopifyStoreFactory(user=self.user)
+        req_mock.get(self.store.get_link('/admin/shop.json', api=True), json={"shop": {"plan_name": "pro"}})
+        confirm_hash = random_hash()
+        get_shopify_recurring.return_value = False
+        recu_charge_create.return_value = Munch({
+            'id': 123456789,
+            'status': 'pending',
+            'confirmation_url': self.store.get_link(f'/admin/charges/1029266950/confirm_recurring_application_charge?signature={confirm_hash}')})
+
+        data = {}
+        r = self.client.post(reverse('shopify_subscription.views.subscription_callflex'), data)
+
+        self.assertEqual(r.status_code, 200)
+        self.assertIn('location', r.json(), 'Respond with charge confirmation url')
+        self.assertIn(confirm_hash, r.json()['location'])
+
+        recu_charge_create.assert_called_once()
+        self.assertEqual(recu_charge_create.call_args[0][0]['price'], 0, 'Plan monthly price'),
+
+        get_shopify_recurring.assert_called_once()
+
+    @requests_mock.Mocker()
+    @patch('leadgalaxy.models.ShopifyStore.shopify.RecurringApplicationCharge.create')
+    @patch('leadgalaxy.models.ShopifyStore.shopify')
+    @patch('phone_automation.billing_utils.get_shopify_recurring')
+    def test_shopify_subscription_callflex_exists(self, req_mock, get_shopify_recurring, shopify, recu_charge_create):
+        self.store = f.ShopifyStoreFactory(user=self.user)
+
+        req_mock.get(self.store.get_link('/admin/shop.json', api=True), json={"shop": {"plan_name": "pro"}})
+        confirm_hash = random_hash()
+        get_shopify_recurring.return_value = Munch({
+            'id': 123456789,
+            'status': 'active'})
+
+        recu_charge_create.return_value = Munch({
+            'id': 123456789,
+            'status': 'pending',
+            'confirmation_url': self.store.get_link(f'/admin/charges/1029266950/confirm_recurring_application_charge?signature={confirm_hash}')})
+
+        data = {}
+        r = self.client.post(reverse('shopify_subscription.views.subscription_callflex'), data)
+
+        self.assertEqual(r.status_code, 422)
+        self.assertIn('error', r.json(), 'Respond with error')
+
+        recu_charge_create.assert_not_called()
+        get_shopify_recurring.assert_called_once()

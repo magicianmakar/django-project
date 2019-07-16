@@ -535,7 +535,27 @@
         });
     }
 
+    $('.shopify-callflex-activate').click(function(e) {
 
+        $.ajax({
+            url: config.shopify_callflex_subscription,
+            type: 'POST',
+            data: {
+            },
+            success: function(data) {
+                setTimeout(function() {
+                    if (data.location) {
+                        window.location.href = data.location;
+                    } else {
+                        window.location.reload();
+                    }
+                }, 500);
+            },
+            error: function(data) {
+                displayAjaxError('CallFlex Subscription', data);
+            }
+        });
+    });
 
 
 })(config);

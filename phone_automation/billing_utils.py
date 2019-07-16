@@ -5,6 +5,10 @@ from django.contrib.auth.models import User
 from stripe_subscription.stripe_api import stripe
 from . import utils as utils
 from django.conf import settings
+from shopified_core.utils import app_link
+from shopified_core.utils import send_email_from_template
+from django.urls import reverse
+from .models import CallflexShopifyUsageCharge
 
 
 class CallflexOveragesBilling:
@@ -16,6 +20,7 @@ class CallflexOveragesBilling:
     def add_invoice(self, invoice_type, amount, replace_flag=False, description="CallFlex Overages for"):
         # type: (Dict, float) -> ...
         # adding stripe invoice item
+
         upcoming_invoice = stripe.Invoice.upcoming(customer=self.user.stripe_customer.customer_id)
         upcoming_invoice_item = False
 
@@ -50,7 +55,6 @@ class CallflexOveragesBilling:
 
     def update_overages(self):
         # update phone number overages
-
         # getting number of 'monthes' passed after last invoice date (to process yearly subs)
         subscription_period_start = utils.get_callflex_subscription_start(self.user)
         month_passed = utils.get_monthes_passed(subscription_period_start)
@@ -89,3 +93,83 @@ class CallflexOveragesBilling:
                 * settings.EXTRA_LOCAL_MINUTE_PRICE / 60
 
         self.add_invoice('extra_minutes', overages_minutes, True)
+
+    def add_shopify_overages(self):
+        overages_phone_number = 0
+        phonenumber_usage_tollfree = utils.get_phonenumber_usage(self.user, "tollfree")
+        phonenumber_usage_local = utils.get_phonenumber_usage(self.user, "local")
+        if phonenumber_usage_tollfree['total'] is not False and phonenumber_usage_tollfree['used'] >= phonenumber_usage_tollfree['total']:
+            overages_phone_number += (phonenumber_usage_tollfree['used'] - phonenumber_usage_tollfree['total']) * \
+                settings.EXTRA_TOLLFREE_NUMBER_PRICE / 30
+
+        if phonenumber_usage_local['total'] is not False and phonenumber_usage_local['used'] >= phonenumber_usage_local['total']:
+            overages_phone_number += (phonenumber_usage_local['used'] - phonenumber_usage_local['total']) * \
+                settings.EXTRA_LOCAL_NUMBER_PRICE / 30
+        if overages_phone_number > 0:
+            self.add_shopify_usage_invoice('extra_number', overages_phone_number, False)
+
+    def add_shopify_usage_invoice(self, invoice_type, amount, charge_only_flag=False, description="CallFlex Overages for"):
+        # getting last created active shopify subscriptioon
+        shopify_subscription = get_shopify_recurring(self.user)
+        charge_id = False
+        if shopify_subscription:
+            amount = amount
+            if shopify_subscription.balance_remaining < amount:
+                # adjusting capped limit by $50 (to not ask to recap very often)
+                shopify_subscription.customize(capped_amount=safe_float(shopify_subscription.capped_amount) + 50)
+                profile_link = app_link(reverse('user_profile'))
+                send_email_from_template(
+                    tpl='callflex_shopify_capped_limit_warning.html',
+                    subject='CallFlex Subscription - actions required',
+                    recipient=self.user.email,
+                    data={
+                        'profile_link': f'{profile_link}?callflex_anchor#plan'
+                    }
+                )
+
+            store = self.user.profile.get_shopify_stores().first()
+            # adding usage charge item
+            charge = store.shopify.UsageCharge.create({
+                "test": settings.DEBUG,
+                "recurring_application_charge_id": shopify_subscription.id,
+                "description": f'{description} {invoice_type}'.strip(),
+                "price": amount
+
+            })
+            charge_id = charge.id
+        else:
+            # no recurring subscription need to delete user's phones
+            profile_link = app_link(reverse('user_profile'))
+            send_email_from_template(
+                tpl='callflex_shopify_no_subscription_warning.html',
+                subject='CallFlex Subscription - actions required',
+                recipient=self.user.email,
+                data={
+                    'profile_link': f'{profile_link}?callflex_anchor#plan'
+                }
+            )
+            charge_id = False
+
+        if not charge_id and not charge_only_flag:
+            usage_charge = CallflexShopifyUsageCharge()
+            usage_charge.user = self.user
+            usage_charge.amount = amount
+            usage_charge.type = invoice_type
+            usage_charge.status = "not_paid"
+            usage_charge.save()
+
+        return charge_id
+
+
+def get_shopify_recurring(user):
+    active_recurring = False
+    try:
+        store = user.profile.get_shopify_stores().first()
+        recurrings = store.shopify.RecurringApplicationCharge.find()
+
+        for recurring in recurrings:
+            if recurring.status == 'active':
+                active_recurring = recurring
+    except:
+        active_recurring = False
+    return active_recurring

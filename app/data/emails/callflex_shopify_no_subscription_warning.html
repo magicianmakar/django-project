@@ -1,0 +1,21 @@
+{% load template_helper %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    {% include "partial/email/css.html" %}
+</head>
+<body>
+    <p>Hi,</p>
+
+    <p>You do not have any active Shopiy subscription to proceed CallFlex usage charges.
+    <p>Please go to <a target=_blank href="{{profile_link}}">your profile page</a> and activate CallFlex.</p>
+
+
+    <p>
+        <br>The Dropified Team<br>
+        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
+    </p>
+</body>
+</html>

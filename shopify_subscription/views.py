@@ -13,6 +13,7 @@ from leadgalaxy.models import GroupPlan, ShopifyStore, ClippingMagic, CaptchaCre
 from analytic_events.models import PlanSelectionEvent
 
 from .models import ShopifySubscription
+from phone_automation import billing_utils as billing
 
 
 @csrf_protect
@@ -204,3 +205,67 @@ def subscription_charged(request, store):
         messages.warning(request, 'Your purchase was not completed because the charge was declined')
 
     return HttpResponseRedirect('/')
+
+
+@csrf_protect
+def subscription_callflex(request):
+    """
+        This method is used to add a 'service' subscription for handling callflex usage. The subscription itself is free, we're
+        only using it to stick shopify UsageCharge to.
+        This method can be called for lifetime (annual) users or those who do not have any active shopify recurring for their
+        first added store
+    """
+    user = request.user
+
+    if user.profile.get_shopify_stores().count() != 1:
+        return JsonResponse({'error': 'Please make sure you\'ve added your store'}, status=422)
+
+    shopify_subscription = billing.get_shopify_recurring(request.user)
+    if shopify_subscription:
+        return JsonResponse({'error': 'You already have active subscription'}, status=422)
+
+    store = user.profile.get_shopify_stores().first()
+
+    try:
+        price = 0
+        charge = store.shopify.RecurringApplicationCharge.create({
+            "test": settings.DEBUG,
+            "name": f'Dropified CallFlex'.strip(),
+            "price": price,
+            "capped_amount": price + 50,
+            "trial_days": 0,
+            "terms": "Dropified CallFlex Monthly Subscription",
+            "return_url": app_link(reverse(subscription_callflex_activated))
+        })
+
+    except Exception as e:
+        print(e)
+        if hasattr(e, 'response') and e.response.code == 401:
+            return JsonResponse({
+                'status': 'redirect',
+                'location': app_link('/shopify/install', store.shop.split('.')[0], reinstall=store.id)
+            })
+        else:
+            raven_client.captureException()
+            return JsonResponse({'error': 'Shopify API Error'}, status=403)
+
+    return JsonResponse({
+        'status': 'ok',
+        'location': charge.confirmation_url
+    })
+
+
+@login_required
+def subscription_callflex_activated(request):
+    user = request.user
+    charge_id = request.GET['charge_id']
+    store = user.profile.get_shopify_stores().first()
+    charge = store.shopify.RecurringApplicationCharge.find(charge_id)
+
+    if charge.status == 'accepted':
+        charge.activate()
+        messages.success(request, 'Your CallFlex subscription has been successfully activated!')
+
+    profile_link = app_link(reverse('user_profile'))
+
+    return HttpResponseRedirect(f'{profile_link}?callflex_anchor#plan')
