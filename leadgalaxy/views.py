@@ -3696,10 +3696,10 @@ def orders_view(request):
                 _must_term.append({'match': {'customer_name': query_customer.lower()}})
 
         if query_address and len(query_address):
+            # Note: query_address must be lower-cased depending on the Elasticsearch cluster used (probably the default analyzer)
+            # Our production require country codes to be uppercase
             _must_term.append({
-                'bool': {
-                    'should': [{'term': {'country_code': country_code.lower()}} for country_code in query_address]
-                }
+                'terms': {'country_code': query_address}
             })
 
         if created_at_start and created_at_end:
