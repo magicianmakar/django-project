@@ -1,14 +1,35 @@
-from raven.contrib.django.raven_compat.models import client as raven_client
-
 import time
 import math
+from random import choice
+
 import requests
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core.management import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
 from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safe_int, str_max, delete_store_orders
 from leadgalaxy.models import ShopifyStore
 from leadgalaxy.utils import get_shopify_order
+
+
+DESKTOP_AGENTS = []
+DESKTOP_AGENTS_TEMPLATE = [
+    'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/{VER}.0',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.71 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.99 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.71 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.99 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.99 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.99 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/602.2.14 (KHTML, like Gecko) Version/10.0.1 Safari/602.2.14',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.98 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.98 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/{VER}.0.2840.98 Chrome/{VER}.0.2840.98 Safari/537.36'
+]
+
+for i in range(54, 74):
+    for u in DESKTOP_AGENTS_TEMPLATE:
+        DESKTOP_AGENTS.append(u.format(VER=i))
 
 
 class Command(DropifiedBaseCommand):
@@ -144,6 +165,9 @@ class Command(DropifiedBaseCommand):
                         'status': 'any',
                         'fulfillment': 'any',
                         'financial': 'any'
+                    },
+                    headers={
+                        'User-Agent': choice(DESKTOP_AGENTS)
                     }
                 )
 
