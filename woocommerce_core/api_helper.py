@@ -11,7 +11,8 @@ class WooApiHelper(ApiHelperBase):
         pass
 
     def after_delete_product_connect(self, product, source_id):
-        pass
+        utils.map_variants(product, product.parsed)
+        product.save()
 
     def format_order_key(self, order_key):
         order_key = order_data_cache_key(order_key, prefix='woo_order')
