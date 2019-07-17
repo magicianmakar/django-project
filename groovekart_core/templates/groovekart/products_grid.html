@@ -23,7 +23,7 @@
                             <label for="selected-actions" class="filter-col-item">Selected Items:</label>
                             <select class="form-control filter-col-item" name="selected-actions" id="selected-actions">
                                 <option value=""></option>
-                                {% if request.GET.store != 'c' %}
+                                {% if request.GET.store == 'n' %}
                                 <option value="edit">Edit...</option>
                                 {% endif %}
                                 <option value="board">Add to Board...</option>

@@ -388,7 +388,6 @@ class CommerceHQProduct(ProductBase):
         else:
             return bundle_map
 
-    #
     def set_bundle_mapping(self, mapping):
         bundle_map = self.get_bundle_mapping()
         bundle_map.update(mapping)
