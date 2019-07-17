@@ -154,6 +154,10 @@
 {% endblock %}
 
 {% block extrajs %}
+    <script type="text/javascript">
+        $.fn.bootstrapBtn = $.fn.button.noConflict();
+    </script>
+
     <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 
     <script type="text/javascript">

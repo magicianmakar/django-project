@@ -273,6 +273,8 @@
 
 
 <script type="text/javascript">
+    $.fn.bootstrapBtn = $.fn.button.noConflict();
+
     var product_id = {{product.id}};
     var variants_mapping = {% json_dumps variants_map %};
     var shopify_variants = {% json_dumps shopify_variants %};

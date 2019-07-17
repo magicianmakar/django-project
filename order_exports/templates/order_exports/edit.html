@@ -6,6 +6,10 @@
 
 {% block extrajs %}
     <script type="text/javascript">
+        // Fix js errors with shopify_product_selector
+        $.fn.bootstrapBtn = $.fn.button.noConflict();
+        $.fn.bootstrapTooltip = $.fn.tooltip.noConflict();
+
         window.foundProducts = {{ found_products|safe }};
     </script>
 

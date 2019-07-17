@@ -143,6 +143,9 @@
 {% block extrajs %}
 
     <script type="text/javascript">
+        $.fn.bootstrapBtn = $.fn.button.noConflict();
+        $.fn.bootstrapTooltip =  $.fn.tooltip.noConflict();
+
         var sub_conf = {
             key: "{% app_setting 'PUSHER_KEY' %}",
             channel: "user_{{user.id}}",

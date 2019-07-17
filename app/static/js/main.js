@@ -4,9 +4,6 @@
 var taskIntervals = {};
 var taskCallsCount = {};
 
-$.fn.bootstrapBtn = $.fn.button.noConflict();
-$.fn.bootstrapTooltip = $.fn.tooltip.noConflict();
-
 function isExtensionReady() {
     var $deferred = $.Deferred();
 
