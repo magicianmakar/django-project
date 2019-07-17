@@ -13,7 +13,11 @@ class CHQApiHelper(ApiHelperBase):
         pass
 
     def after_delete_product_connect(self, product, source_id):
-        pass
+        options = product.parsed.get('options', [])
+        new_options = [{'values': i['values'], 'title': i['title']} for i in options]
+        if new_options:
+            product.update_data({'variants': new_options})
+            product.save()
 
     def format_order_key(self, order_key):
         order_key = order_data_cache_key(order_key, prefix='order')
