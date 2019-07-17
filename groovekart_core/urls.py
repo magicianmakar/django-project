@@ -3,9 +3,11 @@ from django.conf.urls import url, include
 import groovekart_core.views
 import subusers.views
 import leadgalaxy.views
+import home.views
 
 urlpatterns = [
-    url(r'^$', groovekart_core.views.StoresList.as_view(), name='index'),
+    url(r'^$', home.views.home_page_view, name='index'),
+
     url(r'^dashboard$', groovekart_core.views.dashboard, name='dashboard'),
     url(r'^products/?(?P<tpl>(grid|table))?$', groovekart_core.views.ProductsList.as_view(), name='products_list'),
     url(r'^product/(?P<pk>[0-9]+)$', groovekart_core.views.ProductDetailView.as_view(), name='product_detail'),

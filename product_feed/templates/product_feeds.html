@@ -7,13 +7,11 @@
 {% load compress %}
 
 {% block main-container %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="ibox collapsed border-bottom">
-            <div class="ibox-title">
-                <h5>Product Feeds</h5>
-            </div>
-            <div class="ibox-content" style="display:block">
+<div class="tabs-container">
+    {% include 'home/partial/tabs/feeds.html' %}
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane active">
+            <div class="panel-body">
                 <p>
                     Use the Feeds below to create your Facebook Products Catalogs for use with Facebook Dynamic Products Ads.
                 </p>

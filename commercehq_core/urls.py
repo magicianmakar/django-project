@@ -1,11 +1,12 @@
 from django.conf.urls import url, include
 
 import commercehq_core.views
+import home.views
 import subusers.views
 import leadgalaxy.views
 
 urlpatterns = [
-    url(r'^$', commercehq_core.views.StoresList.as_view(), name='index'),
+    url(r'^$', home.views.home_page_view, name='index'),
 
     url(r'^store-update/(?P<store_id>[0-9]+)$', commercehq_core.views.store_update, name='store_update'),
 

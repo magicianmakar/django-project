@@ -19,6 +19,7 @@ from shopified_core.utils import (
     ALIEXPRESS_SOURCE_STATUS,
 )
 from shopified_core.decorators import add_to_class
+from shopified_core.models import StoreBase, SupplierBase, ProductBase
 from product_alerts.utils import monitor_product
 
 
@@ -30,8 +31,8 @@ def user_get_chq_boards(self):
         return self.commercehqboard_set.all().order_by('title')
 
 
-class CommerceHQStore(models.Model):
-    class Meta:
+class CommerceHQStore(StoreBase):
+    class Meta(StoreBase.Meta):
         verbose_name = 'CHQ Store'
         ordering = ['-created_at']
 
@@ -44,7 +45,6 @@ class CommerceHQStore(models.Model):
     is_active = models.BooleanField(default=True)
     store_hash = models.CharField(unique=True, default='', max_length=50, editable=False)
 
-    list_index = models.IntegerField(default=0)
     auto_fulfill = models.CharField(max_length=50, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -126,8 +126,8 @@ class CommerceHQStore(models.Model):
         pusher.trigger(self.pusher_channel(), event, data)
 
 
-class CommerceHQProduct(models.Model):
-    class Meta:
+class CommerceHQProduct(ProductBase):
+    class Meta(ProductBase.Meta):
         verbose_name = 'CHQ Product'
         ordering = ['-created_at']
 
@@ -664,7 +664,7 @@ class CommerceHQProduct(models.Model):
             }
 
 
-class CommerceHQSupplier(models.Model):
+class CommerceHQSupplier(SupplierBase):
     store = models.ForeignKey(CommerceHQStore, related_name='suppliers', on_delete=models.CASCADE)
     product = models.ForeignKey(CommerceHQProduct, on_delete=models.CASCADE)
 

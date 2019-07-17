@@ -154,12 +154,7 @@
 {% endblock %}
 
 {% block extrajs %}
-    <script type="text/javascript">
-        var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
-        $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
-    </script>
-
-    <script src="//js.pusher.com/3.2/pusher.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 
     <script type="text/javascript">
         var config = {

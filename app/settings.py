@@ -56,6 +56,7 @@ INSTALLED_APPS = (
     'adminsortable2',
 
     'article',
+    'home',
     'leadgalaxy',
     'shopified_core',
     'shopify_oauth',
@@ -114,6 +115,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'home.context_processors.all_stores',
                 'article.context_processors.sidebarlinks',
                 'leadgalaxy.context_processors.extra_bundles',
                 'leadgalaxy.context_processors.extension_release',

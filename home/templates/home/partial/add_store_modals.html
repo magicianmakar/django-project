@@ -1,0 +1,204 @@
+<div id="modal-add-all-store-form" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Add Store</h4>
+            </div>
+
+            <div class="modal-body">
+                <ul class="nav nav-tabs" id="wizard-nav" style="display: none;">
+                    <li><a href="#select-section" data-toggle="tab"></a></li>
+                    <li><a href="#shopify-section" data-toggle="tab"></a></li>
+                    <li><a href="#chq-section" data-toggle="tab"></a></li>
+                    <li><a href="#woo-section" data-toggle="tab"></a></li>
+                    <li><a href="#gear-section" data-toggle="tab"></a></li>
+                    <li><a href="#gk-section" data-toggle="tab"></a></li>
+                </ul>
+                <div class="tab-content">
+                    <div id="select-section" class="tab-pane fade in active">
+                        <div class="row">
+                            <p>Select your store platform:</p>
+
+                            <fieldset class="radio-strip m-l" id="store-types">
+                                <label class="checked" style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#shopify-section" checked="" type="radio">
+                                    <span class="label-text"><strong>Shopify</strong></span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#chq-section" type="radio">
+                                    <span class="label-text"><strong>CommerceHQ</strong></span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#woo-section" type="radio">
+                                    <span class="label-text"><strong>Woocommerce</strong></span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#gear-section" type="radio">
+                                    <span class="label-text"><strong>GearBubble</strong></span>
+                                </label>
+
+                                <label style="display: block;">
+                                    <input name="amt" value="#gk-section" type="radio">
+                                    <span class="label-text"><strong>GrooveKart</strong></span>
+                                </label>
+                            </fieldset>
+
+                            <hr style="margin:20px -15px">
+
+                            <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                            <button id="continue-btn" class="btn btn-primary pull-right" type="button"><strong>Continue &gt;</strong></button>
+                        </div>
+                    </div>
+
+                    <!-- Shopify -->
+                    <div id="shopify-section" class="tab-pane fade">
+                        <div class="row">
+                            <h3 class="m-t-none m-b">Add Shopify Store</h3>
+
+                            <div class="col-sm-12">
+                                <form id="install-store-form" role="form">
+                                    <div class="form-group">
+                                        <label for="shop-url">Enter your store's URL:</label>
+                                        <input type="text" id="shop-url" placeholder="your-shop-url.myshopify.com"
+                                                class="form-control" autocorrect="off" spellcheck="false">
+                                    </div>
+                                </form>
+
+                                <hr style="margin:20px -30px">
+                            </div>
+
+                            <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                            <button id="install-store" class="btn btn-primary pull-right" type="button"><strong>Add store</strong></button>
+                        </div>
+                    </div>
+
+                    <!-- CommerceHQ -->
+                    <div id="chq-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h3 class="m-t-none m-b">Add CommerceHQ Store</h3>
+                                <form id="chq-store-create-form" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Title</label>
+                                        <input type="text" id="chq_store_title" name="title" placeholder="Store name" class="form-control" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>API URL</label>
+                                        <input type="text" id="chq_store_api_url" name="api_url" placeholder="your-shop-url.commercehq.com" class="form-control" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>API Key</label>
+                                        <input type="text" id="chq_store_api_key" name="api_key" class="form-control" autocomplete="off"  required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>API Password</label>
+                                        <input type="password" id="chq_store_api_password" name="api_password" class="form-control" autocomplete="off"  required />
+                                    </div>
+
+                                    <hr style="margin:20px -30px">
+
+                                    <div>
+                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                            <strong>Add store</strong>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WooCommerce -->
+                    <div id="woo-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h3 class="m-t-none m-b">Add WooCommerce Store</h3>
+                                <form id="woo-store-create-form" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Title</label>
+                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Store URL</label>
+                                        <input type="url" name="api_url" placeholder="https://your-shop-url.com" class="form-control" required />
+                                    </div>
+                                    <div>
+                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                            <strong>Add store</strong>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GearBubble -->
+                    <div id="gear-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h3 class="m-t-none m-b">Add GearBubble Store</h3>
+                                <form id="gear-store-create-form" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Title</label>
+                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>API Token</label>
+                                        <input type="password" name="api_token" class="form-control" autocomplete="off" required />
+                                        <input type="hidden" name="gear_store_mode" value="staging" />
+                                    </div>
+
+                                    <hr style="margin:20px -30px">
+
+                                    <div>
+                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                            <strong>Add store</strong>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GrooveKart -->
+                    <div id="gk-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h3 class="m-t-none m-b">Add GrooveKart Store</h3>
+                                <form id="gk-store-create-form" method="post" role="form">
+                                    <div class="form-group">
+                                        <label>Title</label>
+                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Store URL</label>
+                                        <input type="url" name="api_url" placeholder="https://your-shop-url.com" class="form-control" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>API Key</label>
+                                        <input type="password" name="api_key" class="form-control" autocomplete="off" required />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Auth Token</label>
+                                        <input type="text" name="api_token" class="form-control" autocomplete="off" required />
+                                    </div>
+
+                                    <hr style="margin:20px -30px">
+
+                                    <div>
+                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                            <strong>Add store</strong>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

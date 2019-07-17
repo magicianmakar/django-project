@@ -224,39 +224,6 @@ def product_alerts(request):
     })
 
 
-class StoresList(ListView):
-    model = CommerceHQStore
-    context_object_name = 'stores'
-    template_name = 'commercehq/index.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.can('commercehq.use'):
-            raise permissions.PermissionDenied()
-
-        return super(StoresList, self).dispatch(request, *args, **kwargs)
-
-    def get_queryset(self):
-        qs = super(StoresList, self).get_queryset()
-        return qs.filter(user=self.request.user.models_user).filter(is_active=True)
-
-    def get_context_data(self, **kwargs):
-        context = super(StoresList, self).get_context_data(**kwargs)
-        can_add, total_allowed, user_count = permissions.can_add_store(self.request.user)
-        is_stripe = self.request.user.profile.plan.is_stripe()
-        stores_count = self.request.user.profile.get_stores_count()
-
-        context['add_store_btn'] = not self.request.user.is_subuser \
-            and (can_add or self.request.user.profile.plan.extra_stores) \
-            and not self.request.user.profile.from_shopify_app_store()
-
-        context['extra_stores'] = can_add and is_stripe and stores_count >= total_allowed and total_allowed != -1
-        context['breadcrumbs'] = ['Stores']
-        context['selected_menu'] = 'account:stores'
-
-        return context
-
-
 class BoardsList(ListView):
     model = CommerceHQBoard
     context_object_name = 'boards'

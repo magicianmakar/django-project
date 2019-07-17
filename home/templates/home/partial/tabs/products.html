@@ -1,0 +1,80 @@
+{% load home_helper %}
+
+<ul class="nav nav-tabs scrolling-tabs">
+    {% if not request.GET.store %}
+        <li class="active"><a data-toggle="tab" href="#tab-1">Non Connected</a></li>
+        <li><a href="{{ request.path }}?store=c">Connected</a></li>
+
+        {% for item in user_stores.all %}
+            {% if item|model_name == 'shopifystore' %}
+                <li><a href="{% url 'product' %}{% if 'table' in request.path %}/table{% endif %}?store={{item.id}}">{{item.title}}</a></li>
+
+            {% elif item|model_name == 'commercehqstore' %}
+                <li><a href="{% url 'chq:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+
+            {% elif item|model_name == 'woostore' %}
+                <li><a href="{% url 'woo:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+
+            {% elif item|model_name == 'gearbubblestore' %}
+                <li><a href="{% url 'gear:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+
+            {% elif item|model_name == 'groovekartstore' %}
+                <li><a href="{% url 'gkart:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+            {% endif %}
+        {% endfor %}
+
+    {% else %}
+
+        {% if request.GET.store == 'n' %}
+        <li class="active"><a data-toggle="tab" href="#tab-1">Non Connected</a></li>
+        {% else %}
+        <li><a href="{{ request.path }}?store=n">Not Connected</a></li>
+        {% endif %}
+
+        {% if request.GET.store == 'c' %}
+        <li class="active"><a data-toggle="tab" href="#tab-1">Connected</a></li>
+        {% else %}
+        <li><a href="{{ request.path }}?store=c">Connected</a></li>
+        {% endif %}
+
+        {% for item in user_stores.all %}
+            {% if item|model_name == 'shopifystore' %}
+                {% if item == store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+                {% else %}
+                    <li><a href="{% url 'product' %}{% if 'table' in request.path %}/table{% endif %}?store={{item.id}}">{{item.title}}</a></li>
+                {% endif %}
+
+            {% elif item|model_name == 'commercehqstore' %}
+                {% if item == store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+                {% else %}
+                    <li><a href="{% url 'chq:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+                {% endif %}
+
+            {% elif item|model_name == 'woostore' %}
+                {% if item == store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+                {% else %}
+                    <li><a href="{% url 'woo:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+                {% endif %}
+
+            {% elif item|model_name == 'gearbubblestore' %}
+                {% if item == store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+                {% else %}
+                    <li><a href="{% url 'gear:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+                {% endif %}
+
+            {% elif item|model_name == 'groovekartstore' %}
+                {% if item == store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+                {% else %}
+                    <li><a href="{% url 'gkart:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+                {% endif %}
+            {% endif %}
+
+        {% endfor %}
+
+    {% endif %}
+</ul>

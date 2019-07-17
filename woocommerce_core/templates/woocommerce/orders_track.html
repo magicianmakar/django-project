@@ -10,15 +10,7 @@
 {% block main-container %}
 
     <div class="tabs-container">
-        <ul class="nav nav-tabs">
-            {% for item in user.profile.get_woo_stores %}
-                {% if store == item or item.id|stringformat:"i" == request.GET.store %}
-                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
-                {% else %}
-                    <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+        {% include 'home/partial/tabs/orders_track.html' %}
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">

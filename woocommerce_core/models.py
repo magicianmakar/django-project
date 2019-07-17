@@ -19,6 +19,7 @@ from shopified_core.utils import (
     ALIEXPRESS_SOURCE_STATUS,
 )
 from shopified_core.decorators import add_to_class
+from shopified_core.models import StoreBase, SupplierBase, ProductBase
 
 
 @add_to_class(User, 'get_woo_boards')
@@ -29,8 +30,8 @@ def user_get_woo_boards(self):
         return self.wooboard_set.all().order_by('title')
 
 
-class WooStore(models.Model):
-    class Meta:
+class WooStore(StoreBase):
+    class Meta(StoreBase.Meta):
         verbose_name = 'WooCommerce Store'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -42,7 +43,6 @@ class WooStore(models.Model):
     is_active = models.BooleanField(default=True)
     store_hash = models.CharField(default='', max_length=50, editable=False)
 
-    list_index = models.IntegerField(default=0)
     auto_fulfill = models.CharField(max_length=50, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -125,8 +125,8 @@ class WooStore(models.Model):
         pusher.trigger(self.pusher_channel(), event, data)
 
 
-class WooProduct(models.Model):
-    class Meta:
+class WooProduct(ProductBase):
+    class Meta(ProductBase.Meta):
         verbose_name = 'WooCommerce Product'
         ordering = ['-created_at']
 
@@ -546,7 +546,7 @@ class WooProduct(models.Model):
         return all_mapping
 
 
-class WooSupplier(models.Model):
+class WooSupplier(SupplierBase):
     store = models.ForeignKey('WooStore', null=True, related_name='suppliers', on_delete=models.CASCADE)
     product = models.ForeignKey('WooProduct', on_delete=models.CASCADE)
 

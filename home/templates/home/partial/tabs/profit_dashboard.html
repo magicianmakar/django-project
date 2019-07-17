@@ -1,0 +1,24 @@
+{% load home_helper %}
+
+<ul class="nav nav-tabs scrolling-tabs">
+{% for item in user_stores.all %}
+    {% if item|model_name == 'shopifystore' %}
+        {% if store == item %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% else %}
+            <li><a href="{% url 'profit_dashboard.views.index' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% endif %}
+
+    {% elif item|model_name == 'commercehqstore' %}
+    {% elif item|model_name == 'woostore' %}
+    {% elif item|model_name == 'gearbubblestore' %}
+
+    {% elif item|model_name == 'groovekartstore' %}
+        {% if store == item %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% else %}
+            <li><a href="{% url 'gkart:profits' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% endif %}
+    {% endif %}
+{% endfor %}
+</ul>

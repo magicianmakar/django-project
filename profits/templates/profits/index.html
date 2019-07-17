@@ -9,15 +9,7 @@
 {% block main-container %}
 
 <div class="tabs-container">
-  <ul class="nav nav-tabs">
-    {% for item in stores %}
-      {% if store == item or item.id|stringformat:"i" == request.GET.store %}
-        <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
-      {% else %}
-        <li class=""><a href="{% url store_type|add:':profits' %}?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
-      {% endif %}
-    {% endfor %}
-  </ul>
+  {% include 'home/partial/tabs/profit_dashboard.html' %}
 
   <div class="tab-content">
     <div id="tab-1" class="tab-pane active">
@@ -118,7 +110,7 @@
     };
   </script>
 
-  <script src="//js.pusher.com/3.2/pusher.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 
 {% compress js %}
   <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>

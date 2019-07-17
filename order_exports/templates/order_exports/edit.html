@@ -6,18 +6,11 @@
 
 {% block extrajs %}
     <script type="text/javascript">
-        // Fix js errors with shopify_product_selector
-        var bootstrapButton = $.fn.button.noConflict();
-        $.fn.bootstrapBtn = bootstrapButton;
-
-        var bootstrapTooltip = $.fn.tooltip.noConflict();
-        $.fn.bootstrapTooltip = bootstrapTooltip;
-
         window.foundProducts = {{ found_products|safe }};
     </script>
 
     <!-- Fix js errors with shopify_product_selector -->
-    <script src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'libs/bower_components/nestable-fork/dist/jquery.nestable.min.js' %}"></script>

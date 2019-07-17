@@ -526,7 +526,7 @@
 {% endblock %}
 
 {% block extracss %}
-<link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
 
 {% compress css %}
@@ -538,16 +538,8 @@
 
 
 {% block extrajs %}
-<script type="text/javascript">
-    var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
-    $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
-
-    var bootstrapTooltip = $.fn.tooltip.noConflict();
-    $.fn.bootstrapTooltip = bootstrapTooltip;
-</script>
-
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
-<script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 
@@ -672,7 +664,7 @@ $(function() {
 });
 
 </script>
-    <script src="//js.pusher.com/3.2/pusher.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>

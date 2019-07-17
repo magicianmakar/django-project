@@ -5,15 +5,11 @@
 
 {% block main-container %}
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="ibox float-e-margins">
-
-             <div class="ibox-title">
-                <h5>Boards<small></small></h5>
-            </div>
-
-            <div class="ibox-content">
+<div class="tabs-container">
+    {% include 'home/partial/tabs/boards.html' %}
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane active">
+            <div class="panel-body">
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>

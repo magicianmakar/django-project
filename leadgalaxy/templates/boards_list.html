@@ -5,15 +5,11 @@
 
 {% block main-container %}
 
-<div class="row">
-    <div class="col-md-12">
-        <div class="ibox float-e-margins">
-
-             <div class="ibox-title">
-                <h5>Boards<small></small></h5>
-            </div>
-
-            <div class="ibox-content">
+<div class="tabs-container">
+    {% include 'home/partial/tabs/boards.html' %}
+    <div class="tab-content">
+        <div id="tab-1" class="tab-pane active">
+            <div class="panel-body">
                 <form id="board-search-form" method="get" role="form" class="form-inline">
                     <div class="form-group pull-right">
                         <label>Search:</label>

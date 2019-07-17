@@ -277,7 +277,7 @@
 {% endblock %}
 
 {% block extracss %}
-<link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
 
 {% compress css %}
@@ -290,12 +290,6 @@
 {% block extrajs %}
 
 <script type="text/javascript">
-    var bootstrapButton = $.fn.button.noConflict();
-    $.fn.bootstrapBtn = bootstrapButton;
-
-    var bootstrapTooltip = $.fn.tooltip.noConflict();
-    $.fn.bootstrapTooltip = bootstrapTooltip;
-
     var product_id = {{product.id}};
     var product_suppliers = {% json_dumps product_suppliers %};
 
@@ -304,7 +298,7 @@
     var variants_mapping = {% json_dumps variants_map %};
 </script>
 
-<script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
 
 {% compress js %}
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>

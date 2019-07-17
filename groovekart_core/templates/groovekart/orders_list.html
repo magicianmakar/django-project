@@ -10,15 +10,7 @@
 {% block main-container %}
 
     <div class="tabs-container">
-        <ul class="nav nav-tabs">
-            {% for item in user.profile.get_gkart_stores %}
-                {% if store == item or item.id|stringformat:"i" == request.GET.store %}
-                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
-                {% else %}
-                    <li class=""><a href="{% url 'gkart:orders_list' %}?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+        {% include 'home/partial/tabs/orders.html' %}
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body gray-panel" style="padding:20px 0 0 0;border:none">
@@ -577,7 +569,7 @@
     var STORE_ID = "{{ store.id }}";
 </script>
 
-    <script src="//js.pusher.com/3.2/pusher.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 
 {% compress js %}
     <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>

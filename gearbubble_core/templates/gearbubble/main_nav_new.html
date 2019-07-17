@@ -65,7 +65,7 @@
             {% endif %}
 
             <li {% if 'tools:' in selected_menu %}class="active"{% endif %}>
-                <a href="{% url 'gear:index' %}">
+                <a href="{% url 'index' %}">
                     <i class="fa fa-file-text-o"></i>
                     <span class="nav-label">Business Tools</span>
                     <span class="fa arrow"></span>
@@ -213,7 +213,7 @@
             </li>
 
             <li {% if 'source:' in selected_menu %}class="active"{% endif %}>
-                <a href="{% url 'gear:index' %}">
+                <a href="{% url 'index' %}">
                     <i class="fa fa-tag"></i>
                     <span class="nav-label">Source Products</span>
                     <span class="fa arrow"></span>
@@ -297,7 +297,7 @@
             </li>
 
             <li {% if 'account:' in selected_menu %}class="active"{% endif %}>
-                <a href="{% url 'gear:index' %}">
+                <a href="{% url 'index' %}">
                     <i class="fa fa-institution"></i>
                     <span class="nav-label">Manage Account</span>
                     <span class="fa arrow"></span>
@@ -305,7 +305,7 @@
 
                 <ul class="nav nav-second-level {% if 'account:' not in selected_menu %}collapse{% endif %}">
                     <li {% if selected_menu == 'account:stores' %}class="active"{% endif %}>
-                        <a href="{% url 'gear:index' %}">
+                        <a href="{% url 'index' %}">
                             <span class="nav-label">Your Stores</span>
                         </a>
                     </li>
@@ -344,7 +344,7 @@
             </li>
 
             <li {% if 'support:' in selected_menu %}class="active"{% endif %}>
-                <a href="{% url 'gear:index' %}">
+                <a href="{% url 'index' %}">
                     <i class="fa fa-picture-o"></i>
                     <span class="nav-label">Learn &amp; Get Support</span>
                     <span class="fa arrow"></span>

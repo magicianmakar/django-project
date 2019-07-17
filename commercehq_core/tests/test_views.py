@@ -40,7 +40,7 @@ class StoreListTestCase(BaseTestCase):
         self.user.profile.plan.permissions.add(permission)
         self.user.profile.save()
 
-        self.path = reverse('chq:index')
+        self.path = reverse('index')
 
     def login(self):
         self.client.login(username=self.user.username, password=self.password)
@@ -58,14 +58,14 @@ class StoreListTestCase(BaseTestCase):
     def test_must_return_correct_template(self):
         self.login()
         r = self.client.get(self.path)
-        self.assertTemplateUsed(r, 'commercehq/index.html')
+        self.assertTemplateUsed(r, 'home/index.html')
 
     def test_must_only_list_active_stores(self):
         CommerceHQStoreFactory(user=self.user, is_active=True)
         CommerceHQStoreFactory(user=self.user, is_active=False)
         self.login()
         r = self.client.get(self.path)
-        self.assertEqual(r.context['stores'].count(), 1)
+        self.assertEqual(len(r.context['user_stores']['all']), 1)
 
     def test_must_have_breadcrumbs(self):
         self.login()

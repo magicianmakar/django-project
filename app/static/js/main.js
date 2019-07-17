@@ -4,6 +4,9 @@
 var taskIntervals = {};
 var taskCallsCount = {};
 
+$.fn.bootstrapBtn = $.fn.button.noConflict();
+$.fn.bootstrapTooltip = $.fn.tooltip.noConflict();
+
 function isExtensionReady() {
     var $deferred = $.Deferred();
 
@@ -1055,6 +1058,12 @@ function versionCompare(left, right) {
 
     return 0;
 }
+
+$('.scrolling-tabs').scrollingTabs({
+    disableScrollArrowsOnFullyScrolled: true,
+    cssClassLeftArrow: 'fa fa-chevron-left',
+    cssClassRightArrow: 'fa fa-chevron-right',
+});
 
 $(function() {
     setTimeout(function() {

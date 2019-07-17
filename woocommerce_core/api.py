@@ -141,7 +141,7 @@ class WooStoreApi(ApiBase):
         permissions.user_can_add(user, store)
         store.save()
 
-        return_url = request.build_absolute_uri(reverse('woo:index'))
+        return_url = request.build_absolute_uri(reverse('index'))
         return_url = urlparse(return_url)._replace(scheme='https').geturl()
         callback_path = reverse('woo:callback_endpoint', kwargs={'store_hash': store.store_hash})
         callback_url = request.build_absolute_uri(callback_path)

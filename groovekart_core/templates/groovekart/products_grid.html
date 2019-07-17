@@ -9,44 +9,15 @@
 {% block main-container %}
 
     <div class="tabs-container">
-        <ul class="nav nav-tabs">
-        {% if not request.GET.store %}
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
-            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
-
-            {% for item in user.profile.get_gkart_stores %}
-            <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
-            {% endfor %}
-
-        {% else %}
-            {% if request.GET.store == 'n' %}
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
-            {% else %}
-            <li class=""><a href="?store=n" aria-expanded="true">Not Connected</a></li>
-            {% endif %}
-
-            {% if request.GET.store == 'c' %}
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Connected</a></li>
-            {% else %}
-            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
-            {% endif %}
-
-            {% for item in user.profile.get_gkart_stores %}
-                {% if item.id|stringformat:"i" == request.GET.store %}
-                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
-                {% else %}
-                    <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
-                {% endif %}
-            {% endfor %}
-
-        {% endif %}
-        </ul>
+        {% include 'home/partial/tabs/products.html' %}
 
 
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
                 {% if products %}
+                    {% include 'home/partial/platform_selection_dropdown.html' with section='GrooveKart' %}
+
                     <div class="row m-b-lg">
                         <div class="col-md-8 filter-col">
                             <label for="selected-actions" class="filter-col-item">Selected Items:</label>
@@ -81,6 +52,8 @@
                             <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
                         </div> -->
                     </div>
+                {% else %}
+                    {% include 'home/partial/platform_selection_dropdown.html' with section='GrooveKart' %}
                 {% endif %}
 
                     <div class="row">
@@ -238,7 +211,7 @@
         "clear": {name: "Clear", icon: 'quit'}
     };
 </script>
-<script src="https://js.pusher.com/4.0/pusher.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 <script>var PUSHER_KEY = "{% app_setting 'PUSHER_KEY' %}";</script>
 {% compress js %}
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>

@@ -52,18 +52,13 @@
 {% endblock %}
 
 {% block extracss %}
-<link href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
 <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
-    <script type="text/javascript">
-        var bootstrapButton = $.fn.button.noConflict() // return $.fn.button to previously assigned value
-        $.fn.bootstrapBtn = bootstrapButton            // give $().bootstrapBtn the Bootstrap functionality
-    </script>
-
-    <script type="text/javascript" src="//code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
     <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.4.5/ckeditor.js" type="text/javascript"></script>
