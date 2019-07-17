@@ -4940,7 +4940,7 @@ def products_collections(request, collection):
 @login_required
 def logout(request):
     user_logout(request)
-    return redirect('/')
+    return redirect('index')
 
 
 def register(request, registration=None, subscribe_plan=None):
@@ -5100,7 +5100,7 @@ def sudo_login(request):
         request.session['display_hijack_warning'] = True
         request.session.modified = True
 
-        return redirect('/')
+        return redirect('index')
 
     target_user = None
     if request.session.get('sudo_user'):

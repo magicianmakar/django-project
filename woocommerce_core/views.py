@@ -375,11 +375,11 @@ class OrdersList(ListView):
 
         if not self.get_store():
             messages.warning(request, 'Please add at least one store before using the Orders page.')
-            return redirect('/woo')
+            return redirect('woo:index')
 
         if not request.user.can('place_orders.sub', self.get_store()):
             messages.warning(request, "You don't have access to this store orders")
-            return redirect('/woo')
+            return redirect('woo:index')
 
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
@@ -655,7 +655,7 @@ class OrdersTrackList(ListView):
 
         if not self.get_store():
             messages.warning(request, 'Please add at least one store before using the Tracking page.')
-            return redirect('/woo')
+            return redirect('woo:index')
 
         return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
 

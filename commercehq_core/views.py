@@ -666,11 +666,11 @@ class OrdersList(ListView):
     def dispatch(self, request, *args, **kwargs):
         if not self.get_store():
             messages.warning(request, 'Please add at least one store before using the Orders page.')
-            return redirect('/chq')
+            return redirect('chq:index')
 
         if not request.user.can('place_orders.sub', self.get_store()):
             messages.warning(request, "You don't have access to this store orders")
-            return redirect('/chq')
+            return redirect('chq:index')
 
         if not request.user.can('commercehq.use'):
             raise permissions.PermissionDenied()
@@ -1288,7 +1288,7 @@ class OrdersTrackList(ListView):
     def dispatch(self, request, *args, **kwargs):
         if not self.get_store():
             messages.warning(request, 'Please add at least one store before using the Tracking page.')
-            return redirect('/chq')
+            return redirect('chq:index')
 
         if not request.user.can('commercehq.use'):
             raise permissions.PermissionDenied()
