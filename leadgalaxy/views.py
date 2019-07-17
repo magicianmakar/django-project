@@ -81,6 +81,7 @@ from shopified_core.utils import (
     base64_encode,
     base64_decode,
     using_replica,
+    format_queueable_orders,
 )
 from shopified_core.tasks import keen_order_event
 
@@ -3386,7 +3387,7 @@ def orders_view(request):
 
     bulk_queue = bool(request.GET.get('bulk_queue'))
     if bulk_queue and not request.user.can('bulk_order.use'):
-        return render(request, 'upgrade.html', {'selected_menu': 'orders:all', })
+        return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."})
 
     all_orders = []
     store = None
@@ -4005,6 +4006,7 @@ def orders_view(request):
         order['refunded_lines'] = []
         order['order_log'] = orders_log.get(order['id'])
         order['supplier_types'] = set()
+        order['is_fulfilled'] = order.get('fulfillment_status') == 'fulfilled'
         order['pending_payment'] = (order['financial_status'] == 'pending'
                                     and (order['gateway'] == 'paypal' or 'amazon' in order['gateway'].lower()))
 
@@ -4234,7 +4236,7 @@ def orders_view(request):
         settings.DEBUG
 
     if bulk_queue:
-        return utils.format_queueable_orders(request, all_orders, current_page)
+        return format_queueable_orders(request, all_orders, current_page)
 
     queue_page_to = min(paginator.num_pages, 10)
 

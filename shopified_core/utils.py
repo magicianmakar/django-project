@@ -15,10 +15,12 @@ from django.conf import settings
 from django.core import serializers
 from django.core.mail import send_mail
 from django.core.cache import cache, caches
+from django.core.urlresolvers import reverse
 from django.contrib.auth.models import User
+from django.http import JsonResponse
 from django.template import Context, Template
+from django.template.defaultfilters import pluralize
 from django.utils.crypto import get_random_string
-from django.urls import reverse
 
 import arrow
 import bleach
@@ -802,3 +804,164 @@ def get_first_valid_option(most_commons, valid_options):
 
 def slugify_menu(selected_menu):
     return selected_menu.replace(':', '-').replace('_', '-')
+
+
+def bulk_order_format(queue_order, first_line_id):
+    items_count = len(queue_order['items'])
+    if items_count == 1:
+        item = queue_order['items'][0]
+
+        del queue_order['cart']
+        del queue_order['items']
+
+        queue_order.update(item)
+
+        queue_order['url'] = re.sub(r'SACart=true&?', r'', queue_order['url'])
+
+        return queue_order
+
+    elif items_count > 1:
+        line_item = queue_order['items'][0]
+        queue_order['order_data'] = re.sub(r'_[^_]+$', '', line_item['order_data']) + '_' + str(first_line_id)
+        queue_order['order_name'] = line_item['order_name']
+        queue_order['order_id'] = line_item['order_id']
+
+        queue_order['line_title'] = '<ul style="padding:0px;overflow-x:hidden;">'
+
+        for line_item in queue_order['items'][:3]:
+            queue_order['line_title'] += '<li>&bull; {}</li>'.format(line_item['line_title'])
+
+        count = len(queue_order['items']) - 3
+        if count > 0:
+            queue_order['line_title'] += '<li>&bull; Plus {} Product{}...</li>'.format(count, pluralize(count))
+
+        queue_order['line_title'] += '</ul>'
+
+        return queue_order
+
+    return None
+
+
+def format_queueable_orders(request, orders, current_page, store_type='shopify'):
+    orders_result = []
+    next_page_url = None
+    enable_supplier_grouping = False
+    if store_type in ['shopify', '']:
+        orders_place_url = reverse('orders_place')
+    else:
+        orders_place_url = reverse(f'{store_type}:orders_place')
+
+    def group_by_supplier(lines):
+        suppliers = {}
+        for line in lines:
+            if line.get('supplier') and line['supplier'].get_store_id():
+                if line['supplier'].get_store_id() not in suppliers:
+                    suppliers[line['supplier'].get_store_id()] = []
+
+                suppliers[line['supplier'].get_store_id()].append(line)
+
+        return suppliers
+
+    for order in orders:
+        if order.get('pending_payment', False):
+            continue
+
+        if order.get('is_fulfilled', False):
+            continue
+
+        line_items = dict_val(order, ['line_items', 'items'], [])
+
+        if enable_supplier_grouping:
+            line_items = group_by_supplier(line_items)
+        else:
+            line_items = {'all': line_items}
+
+        for _supplier, group_lines in list(line_items.items()):
+            queue_order = {"cart": True, "items": [], "line_id": []}
+            first_line_id = None
+
+            for line_item in group_lines:
+                # Line item is not connected
+                if not line_item.get('order_data_id') or not line_item.get('product'):
+                    continue
+
+                # Product is excluded from Dropified auto fulfill feature
+                if hasattr(line_item['product'], 'is_excluded') and line_item['product'].is_excluded:
+                    continue
+
+                # Order is already placed (linked to a ShopifyOrderTrack)
+                if line_item.get('order_track') and line_item['order_track'].id:
+                    continue
+
+                # Ignore items without a supplier
+                if not line_item.get('supplier') or not line_item['supplier'].support_auto_fulfill():
+                    continue
+
+                # Do only aliexpress orders for now
+                if not line_item['supplier'].is_aliexpress:
+                    continue
+
+                supplier = line_item['supplier']
+                shipping_method = line_item.get('shipping_method') or {}
+                line_data = {
+                    'order_data': line_item.get('order_data_id'),
+                    'order_name': order['name'],
+                    'order_id': str(order['id']),
+                    'line_id': str(line_item['id']),
+                    'line_title': line_item['title'],
+                    'store_type': store_type,
+                    'source_id': str(supplier.get_source_id()),
+                    'url': app_link(
+                        orders_place_url,
+                        supplier=supplier.id,
+                        SAPlaceOrder=line_item.get('order_data_id'),
+                        SACompany=shipping_method.get('method', ''),
+                        SACountry=shipping_method.get('country', ''),
+                        SACart='true',
+                    ),
+                }
+
+                # Append bundle orders separately
+                if line_item.get('is_bundle', False):
+                    queue_bundle = {"cart": True, "items": [], "line_id": [], 'bundle': True}
+
+                    for product in line_item['order_data']['products']:
+                        # Do only aliexpress orders for now
+                        if product['supplier_type'] != 'aliexpress':
+                            continue
+
+                        queue_bundle['items'].append({
+                            **line_data,
+                            'url': product['order_url'],
+                            'line_title': product['title'],
+                            'supplier_type': product['supplier_type'],
+                            'product': product,
+                        })
+                        queue_bundle['line_id'].append(line_data['line_id'])
+
+                    queue_bundle = bulk_order_format(queue_bundle, line_item['id'])
+                    if queue_bundle is not None:
+                        orders_result.append(queue_bundle)
+                else:
+                    if first_line_id is None:
+                        first_line_id = line_item['id']
+
+                    queue_order['items'].append(line_data)
+                    queue_order['line_id'].append(line_data['line_id'])
+
+            queue_order = bulk_order_format(queue_order, first_line_id)
+            if queue_order is not None:
+                orders_result.append(queue_order)
+
+    page_end = safe_int(request.GET.get('page_end'), 0)
+    page_start = safe_int(request.GET.get('page_start'), 1) - 1
+    if current_page.has_next() and (not page_end or current_page.next_page_number() <= page_end):
+        params = request.GET.copy()
+        params['page'] = current_page.next_page_number() - page_start
+        next_page_url = app_link(request.path, **params.dict())
+
+    return JsonResponse({
+        'orders': orders_result,
+        'next': next_page_url,
+        'pages': current_page.paginator.num_pages,
+    })

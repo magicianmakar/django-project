@@ -668,6 +668,9 @@ class CommerceHQOrdersPaginator(Paginator):
         """
 
         number = self.validate_number(number)
+        page_start = safe_int(self.request.GET.get('page_start'), 1)
+        number += page_start - 1
+
         bottom = (number - 1) * self.per_page
         top = bottom + self.per_page
         if top + self.orphans >= self.count:

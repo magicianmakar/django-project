@@ -879,8 +879,8 @@ class BulkOrderTestCase(BaseTestCase):
     def test_bulk_order_action_without_permission(self):
         self.user.profile.plan.permissions.remove(self.permission)
 
-        self.client.get(self.bulk_order_url)
-        self.assertTemplateUsed('upgrade.html')
+        r = self.client.get(self.bulk_order_url)
+        self.assertIn('error', r.json())
 
     @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
     @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')

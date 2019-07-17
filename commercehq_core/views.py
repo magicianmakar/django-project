@@ -37,6 +37,7 @@ from shopified_core.utils import (
     clean_query_id,
     http_excption_status_code,
     order_data_cache,
+    format_queueable_orders,
 )
 from shopified_core.tasks import keen_order_event
 
@@ -639,10 +640,21 @@ class OrdersList(ListView):
             messages.warning(request, "You don't have access to this store orders")
             return redirect('chq:index')
 
+        bulk_queue = bool(request.GET.get('bulk_queue'))
+        if bulk_queue and not request.user.can('bulk_order.use'):
+            return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."})
+
         if not request.user.can('commercehq.use'):
             raise permissions.PermissionDenied()
 
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
+
+    def render_to_response(self, context, **response_kwargs):
+        bulk_queue = bool(self.request.GET.get('bulk_queue'))
+        if bulk_queue:
+            return format_queueable_orders(self.request, context['orders'], context['page_obj'])
+
+        return super().render_to_response(context, **response_kwargs)
 
     def get_queryset(self):
         return []
@@ -714,6 +726,7 @@ class OrdersList(ListView):
             messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
 
         context['api_error'] = api_error
+        context['queue_page_to'] = min(context['paginator'].num_pages, 10)
 
         return context
 
@@ -758,6 +771,7 @@ class OrdersList(ListView):
             except:
                 pass
 
+            order['name'] = order['display_number']
             order['date'] = created_at
             order['date_str'] = created_at.format('MM/DD/YYYY')
             order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
@@ -770,6 +784,7 @@ class OrdersList(ListView):
             order['connected_lines'] = 0
             order['lines_count'] = len(order['items'])
             order['refunded_lines'] = []
+            order['supplier_types'] = set()
 
             order_status = {
                 0: 'Not sent to fulfilment',
@@ -789,6 +804,12 @@ class OrdersList(ListView):
 
             order['fulfillment_status'] = order_status.get(order['status'])
             order['financial_status'] = paid_status.get(order['paid'])
+
+            # In case order['payment']['type'] == None
+            is_paypal = 'paypal' in (order.get('payment', {}).get('type') or '').lower()
+            is_pending_payment = safe_int(order['paid']) == 0
+            order['pending_payment'] = is_pending_payment and is_paypal
+            order['is_fulfilled'] = order['status'] >= 3
 
             if not order['address']:
                 order['address'] = {
@@ -868,8 +889,10 @@ class OrdersList(ListView):
                     line['supplier'] = supplier
                     line['supplier_type'] = supplier.supplier_type()
                     line['shipping_method'] = shipping_method
-
                     order['connected_lines'] += 1
+
+                    if supplier:
+                        order['supplier_types'].add(supplier.supplier_type())
 
                     if fix_order_variants:
                         mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
@@ -928,7 +951,7 @@ class OrdersList(ListView):
                 products_cache[line['product_id']] = product
 
                 order['shipping_address'] = order['address']['shipping']
-                if not auto_orders or not order.get('shipping_address'):
+                if not auto_orders or not order.get('shipping_address') or order['pending_payment']:
                     order['items'][ldx] = line
                     continue
 
@@ -979,7 +1002,7 @@ class OrdersList(ListView):
 
                 order['items'][ldx] = line
 
-            order['order_compplete'] = order['placed_orders'] == len(order['items'])
+            order['order_complete'] = order['placed_orders'] == len(order['items'])
 
             if tracked_unfulfilled:
                 try:
@@ -991,9 +1014,12 @@ class OrdersList(ListView):
                 except:
                     raven_client.captureException(level='warning')
 
+            order['mixed_supplier_types'] = len(order['supplier_types']) > 1
+
             orders[odx] = order
 
-        caches['orders'].set_many(orders_cache, timeout=21600)
+        bulk_queue = bool(self.request.GET.get('bulk_queue'))
+        caches['orders'].set_many(orders_cache, timeout=86400 if bulk_queue else 21600)
 
         return orders
 

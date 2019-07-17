@@ -132,6 +132,10 @@
                     </div>
                     </form>
 
+                    {% if paginator.count and user|can:'bulk_order.use' %}
+                    {% include 'partial/bulk_orders.html' with orders_count=paginator.count %}
+                    {% endif %}
+
                     <div class="orders">
                         {% for order in orders %}
                         <div class="order" order-id="{{order.id}}" connected="{{order.connected_lines}}">
@@ -160,10 +164,10 @@
                                         </span>
                                     </div>
                                     <div class="col-xs-2 order-status">
-                                        {% if not order.order_compplete and order.status == 0 %}
+                                        {% if not order.order_complete and order.status == 0 %}
                                             <span class="badge badge-danger primary">&nbsp;</span>
                                             No Products Ordered
-                                        {% elif not order.order_compplete and order.status < 3 %}
+                                        {% elif not order.order_complete and order.status < 3 %}
                                             <span class="badge badge-warning primary">&nbsp;</span>
                                             Partially Ordered
                                         {% else %}
@@ -171,21 +175,30 @@
                                             Order Complete
                                         {% endif %}
                                     </div>
-                                    <div class="col-xs-2">
-                                        {% if order.lines_count %}
-                                            <div class="btn-group pull-right" style="display:flex">
+                                    <div class="col-xs-2 text-right">
+                                        {% if order.lines_count and not order.have_bundle %}
+                                            <div class="btn-group pull">
                                                 <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
-                                                        type="button" style="border-right:1px solid #66a8cc">
+                                                        type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
                                                     Order Items
                                                 </button>
 
                                                 <button type="button" class="btn btn-success btn-xs dropdown-toggle"
                                                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    {% if order.mixed_supplier_types %}
+                                                    Order Items From
+                                                    {% endif %}
                                                     <span class="caret"></span>
                                                 </button>
 
                                                 <ul class="dropdown-menu pull-right">
-                                                    <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
+                                                    {% if order.mixed_supplier_types %}
+                                                        {% for type in order.supplier_types %}
+                                                            <li><a class="order-seleted-suppliers" supplier-type="{{type}}" href="#">{{type|supplier_type}} Suppliers</a></li>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
+                                                    {% endif %}
                                                 </ul>
                                             </div>
                                         {% endif %}
@@ -379,13 +392,19 @@
                                                          </td>
                                                         <td>
                                                             {% if item.product %}
-                                                            <a href="/chq/product/{{item.product.id}}" target="_blank" title="{{item.title}}">
-                                                                {{item.title|truncatewords:9}}
-                                                            </a>
+                                                                <a class="open-product-in"
+                                                                    href="/product/{{item.product.id}}"
+                                                                    target="_blank"
+                                                                    title="{{item.title}}"
+                                                                    data-link-dropified="{% url 'chq:product_detail' pk=item.product.id %}"
+                                                                    data-link-store="{{item.variant_link}}"
+                                                                    data-link-connections="{% url 'chq:product_detail' pk=item.product.id %}#connections"
+                                                                    data-link-mapping="{% url 'chq:product_mapping' item.product.id %}"
+                                                                >{{item.title|truncatewords:9}}</a>
                                                             {% else %}
-                                                            <span title="{{item.title}}">
-                                                                {{item.title|truncatewords:9}}
-                                                            </span>
+                                                                <span title="{{item.title}}">
+                                                                    {{item.title|truncatewords:9}}
+                                                                </span>
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
@@ -580,6 +599,7 @@
 {% block extracss %}
 
 {% compress css %}
+    <link href="{% static 'libs/bower_components/jquery.steps/demo/css/jquery.steps.css' %}" rel="stylesheet">
     <link href="{% static 'commercehq/css/orders_list.css' %}" rel="stylesheet">
 {% endcompress %}
 
@@ -605,6 +625,8 @@
 {% compress js %}
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/commercehq_product_selector.js' %}"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}"></script>
+    <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'commercehq/js/orders_list.js' %}"></script>
 {% endcompress %}
 
