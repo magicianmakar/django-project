@@ -9,20 +9,20 @@
 
     <div class="tabs-container">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active">
-                <a class="nav-link active" data-toggle="tab" href="#stores-tab"><i class="fa fa-bars"></i> Stores</a>
+            <li {% if not settings_tab %}class="active"{% endif %}>
+                <a class="nav-link {% if not settings_tab %}active{% endif %}" data-toggle="tab" href="#stores"><i class="fa fa-bars"></i> Stores {{settings_tab}}</a>
             </li>
-            <li>
-                <a class="nav-link" data-toggle="tab" href="#settings-tab"><i class="fa fa-cogs"></i> Settings</a>
+            <li {% if settings_tab %}class="active"{% endif %}>
+                <a class="nav-link {% if settings_tab %}active{% endif %}" data-toggle="tab" href="#settings"><i class="fa fa-cogs"></i> Settings</a>
             </li>
         </ul>
         <div class="tab-content">
-            <div role="tabpanel" id="stores-tab" class="tab-pane active">
+            <div role="tabpanel" id="stores" class="tab-pane active">
                 <div class="panel-body">
                     {% include 'home/partial/stores_list.html' %}
                 </div>
             </div>
-            <div role="tabpanel" id="settings-tab" class="tab-pane">
+            <div role="tabpanel" id="settings" class="tab-pane">
                 <div class="panel-body">
                     {% include 'home/partial/settings.html'%}
                 </div>

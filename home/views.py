@@ -39,6 +39,7 @@ def home_page_view(request):
         'add_store_btn': add_store_btn,
         'templates': templates,
         'markup_rules': markup_rules,
+        'settings_tab': request.path == '/settings',
         'page': 'index',
         'selected_menu': 'account:stores',
         'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
