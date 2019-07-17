@@ -15,6 +15,7 @@ from django.core.urlresolvers import reverse
 
 from shopified_core.utils import get_domain, safe_str, base64_encode
 from shopified_core.decorators import add_to_class
+from shopified_core.models import StoreBase, SupplierBase, ProductBase
 
 
 @add_to_class(User, 'get_gear_boards')
@@ -25,8 +26,8 @@ def user_get_gear_boards(self):
         return self.gearbubbleboard_set.all().order_by('title')
 
 
-class GearBubbleStore(models.Model):
-    class Meta:
+class GearBubbleStore(StoreBase):
+    class Meta(StoreBase.Meta):
         verbose_name = 'GearBubble Store'
 
     STAGING = 'staging'
@@ -108,8 +109,8 @@ class GearBubbleStore(models.Model):
             r.raise_for_status()
 
 
-class GearBubbleProduct(models.Model):
-    class Meta:
+class GearBubbleProduct(ProductBase):
+    class Meta(ProductBase.Meta):
         verbose_name = 'GearBubble Product'
         ordering = ['-created_at']
 
@@ -528,7 +529,7 @@ class GearBubbleProduct(models.Model):
         return all_mapping
 
 
-class GearBubbleSupplier(models.Model):
+class GearBubbleSupplier(SupplierBase):
     store = models.ForeignKey('GearBubbleStore', null=True, related_name='suppliers')
     product = models.ForeignKey('GearBubbleProduct')
 

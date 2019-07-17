@@ -29,6 +29,8 @@ from shopified_core.utils import (
 )
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import upsell_page_permissions
+from shopified_core.models import StoreBase, SupplierBase, ProductBase
+
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -813,7 +815,7 @@ def user_can_trial(self):
         return True
 
 
-class ShopifyStore(models.Model):
+class ShopifyStore(StoreBase):
     class Meta:
         ordering = ['list_index', '-created_at']
 
@@ -832,7 +834,6 @@ class ShopifyStore(models.Model):
     version = models.IntegerField(default=1, choices=((1, 'Private App'), (2, 'Shopify App')), verbose_name='Store Version')
 
     info = models.TextField(null=True, blank=True)
-    list_index = models.IntegerField(default=0)
     auto_fulfill = models.CharField(max_length=50, null=True, blank=True, db_index=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -1110,7 +1111,7 @@ class AccessToken(models.Model):
         return self.token
 
 
-class ShopifyProduct(models.Model):
+class ShopifyProduct(ProductBase):
     class Meta:
         ordering = ['-created_at']
 
@@ -1720,7 +1721,7 @@ class ShopifyProduct(models.Model):
         return inventory.get('available', 0)
 
 
-class ProductSupplier(models.Model):
+class ProductSupplier(SupplierBase):
     store = models.ForeignKey(ShopifyStore, null=True, on_delete=models.CASCADE)
     product = models.ForeignKey(ShopifyProduct, on_delete=models.CASCADE)
 

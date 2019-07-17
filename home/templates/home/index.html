@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+    <div class="tabs-container">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active">
+                <a class="nav-link active" data-toggle="tab" href="#stores-tab"><i class="fa fa-bars"></i> Stores</a>
+            </li>
+            <li>
+                <a class="nav-link" data-toggle="tab" href="#settings-tab"><i class="fa fa-cogs"></i> Settings</a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div role="tabpanel" id="stores-tab" class="tab-pane active">
+                <div class="panel-body">
+                    {% include 'home/partial/stores_list.html' %}
+                </div>
+            </div>
+            <div role="tabpanel" id="settings-tab" class="tab-pane">
+                <div class="panel-body">
+                    {% include 'home/partial/settings.html'%}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'home/partial/add_store_modals.html' %}
+    {% include 'home/partial/update_store_modals.html' %}
+    {% include 'home/partial/markup_price_modals.html' %}
+    {% include 'home/partial/product_template_modals.html' %}
+    {% include 'home/partial/store_config_modals.html' %}
+
+{% endblock %}
+
+{% block extracss %}
+
+    <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+
+{% compress css %}
+    <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/dragula.js/dist/dragula.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
+{% endcompress %}
+
+<style type="text/css">
+    label {
+        text-align: left !important;
+    }
+    .setting-section {
+        margin-top: 15px;
+        border-left: 2px #eee solid;
+        padding-top: 5px;
+        margin-left: 20px;
+        margin-bottom: 15px;
+        padding-bottom: 5px;
+        background-color: rgb(250, 250, 250);
+        padding-left: 15px;
+    }
+    h3.setting-title {
+        padding: 0;
+        margin: 5px 0;
+    }
+    .table-ligthborder {
+        border:1px solid #eee;
+    }
+    .table-ligthborder > thead > tr > th {
+        background-color: #fafafa;
+    }
+
+    table .label {
+        border-radius: 3px;
+        background-color: #f7f7f8;
+        color: #564c4c;
+        font-size: 12px;
+        line-height: 1.5;
+        font-weight: 500;
+    }
+    table .label:hover {
+        background-color: #dbdbdb;
+    }
+    table a.label:focus, a.label:hover {
+        color: #564c4c;
+    }
+    table .label .num {
+        font-weight: 600;
+    }
+    table .label-danger {
+        background-color: #ed5565 !important;
+        color: #FFFFFF !important;
+    }
+    table .label-danger[href]:focus,
+    table .label-danger[href]:hover {
+        background-color: #c9302c !important;
+    }
+    table td:first-child {
+        width: 100%;
+    }
+    .table > tbody > tr > td {
+        vertical-align: middle;
+    }
+    .table > tbody > tr > td > .btn {
+        margin-bottom: 0;
+    }
+    .v-center {
+        display: flex !important;
+        align-items: center !important;
+    }
+    .statistics-link {
+        display: none;
+    }
+    .sync-delay-config {
+        text-align: right !important;
+    }
+    .sync-delay-config label {
+        text-align: right !important;
+    }.sync-delay-config .left {
+        text-align: left !important;
+    }
+    .btn-group .dropdown-menu .btn-success:hover {
+        background-color: #1a7bb9;
+    }
+    .btn-group .dropdown-menu .btn-info:hover {
+        background-color: #21bdbb;
+    }
+    .btn-group .dropdown-menu .btn-danger:hover {
+        background-color: #ec4758;
+    }
+
+    {% if user.is_subuser %}
+        .order-handle {
+            display: none;
+        }
+    {% endif %}
+</style>
+{% endblock %}
+
+{% block extrajs %}
+
+    <script type="text/javascript">
+        var sub_conf = {
+            key: "{% app_setting 'PUSHER_KEY' %}",
+            channel: "user_{{user.id}}",
+        };
+
+        var user_statistics = {% json_dumps user_statistics %};
+    </script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+
+{% compress js %}
+    <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/dragula.js/dist/dragula.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/jquery-form/jquery.form.js' %}"></script>
+    <script src="{% static 'js/tag-it.min.js' %}"></script>
+    <script src="{% static 'home/js/index.js' %}"></script>
+{% endcompress %}
+
+{% endblock %}

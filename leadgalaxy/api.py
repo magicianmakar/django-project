@@ -196,16 +196,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def post_store_order(self, request, user, data):
-        for store, idx in list(data.items()):
-            store = ShopifyStore.objects.get(id=store)
-            permissions.user_can_edit(user, store)
-
-            store.list_index = safe_int(idx, 0)
-            store.save()
-
-        return self.api_success()
-
     def get_store_verify(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))
@@ -2643,6 +2633,8 @@ class ShopifyStoreApi(ApiBase):
         locations_url = store.get_link('/admin/locations.json', api=True)
         response = requests.get(locations_url)
         locations = response.json()
+
+        locations['primary_location'] = store.primary_location
 
         return self.api_success(locations)
 

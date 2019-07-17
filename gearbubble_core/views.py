@@ -73,32 +73,6 @@ def autocomplete(request, target):
     return JsonResponse({'error': 'Unknown target'})
 
 
-class StoresList(ListView):
-    model = GearBubbleStore
-    context_object_name = 'stores'
-    template_name = 'gearbubble/index.html'
-
-    @method_decorator(login_required)
-    @method_decorator(platform_permission_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super(StoresList, self).dispatch(request, *args, **kwargs)
-
-    def get_queryset(self):
-        return self.request.user.profile.get_gear_stores()
-
-    def get_context_data(self, **kwargs):
-        context = super(StoresList, self).get_context_data(**kwargs)
-        can_add, total_allowed, user_count = permissions.can_add_store(self.request.user)
-        is_stripe = self.request.user.profile.plan.is_stripe()
-        stores_count = self.request.user.profile.get_stores_count()
-        context['extra_stores'] = can_add and is_stripe and stores_count >= total_allowed and total_allowed != -1
-        context['user_statistics'] = cache.get('gear_user_statistics_{}'.format(self.request.user.id))
-        context['breadcrumbs'] = ['Stores']
-        context['selected_menu'] = 'account:stores'
-
-        return context
-
-
 class ProductsList(ListView):
     model = GearBubbleProduct
     template_name = 'gearbubble/products_grid.html'

@@ -16,6 +16,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
+from shopified_core.models import StoreBase, SupplierBase, ProductBase
 from shopified_core.utils import (
     get_domain,
     safe_str,
@@ -52,8 +53,8 @@ class GrooveKartStoreSession(Session):
         return kwargs
 
 
-class GrooveKartStore(models.Model):
-    class Meta:
+class GrooveKartStore(StoreBase):
+    class Meta(StoreBase.Meta):
         verbose_name = 'GrooveKart Store'
 
     user = models.ForeignKey(User)
@@ -139,8 +140,8 @@ class GrooveKartStore(models.Model):
             r.raise_for_status()
 
 
-class GrooveKartProduct(models.Model):
-    class Meta:
+class GrooveKartProduct(ProductBase):
+    class Meta(ProductBase.Meta):
         verbose_name = 'GrooveKart Product'
         ordering = ['-created_at']
 
@@ -579,7 +580,7 @@ class GrooveKartProduct(models.Model):
         return all_mapping
 
 
-class GrooveKartSupplier(models.Model):
+class GrooveKartSupplier(SupplierBase):
     store = models.ForeignKey('GrooveKartStore', null=True, related_name='suppliers')
     product = models.ForeignKey('GrooveKartProduct')
 

@@ -1,0 +1,43 @@
+{% if request.GET.store == 'n' or request.GET.store == 'c' or request.GET.store == None %}
+<div class="row filter-col m-b">
+    <div class="col-md-1">
+        <label for="">Platform:</label>
+    </div>
+    <div class="col-md-10">
+        <div class="dropdown">
+            <button class="btn btn-default btn-outline dropdown-toggle" type="button" id="dropdownMenu1" >
+                {{ section }}
+                <span class="caret"></span>
+            </button>
+            <ul id="store-dropdown-menu" class="dropdown-menu" style="display: none;">
+                {% if section != 'Shopify' %}
+                <li>
+                    <a href="{% url 'product' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">Shopify</a>
+                </li>
+                {% endif %}
+                {% if section != 'CommerceHQ' %}
+                <li>
+                    <a href="{% url 'chq:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">CommerceHQ</a>
+                </li>
+                {% endif %}
+                {% if section != 'WooCommerce' %}
+                <li>
+                    <a href="{% url 'woo:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">WooCommerce</a>
+                </li>
+                {% endif %}
+                {% if section != 'GearBubble' %}
+                <li>
+                    <a href="{% url 'gear:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">GearBubble</a>
+                </li>
+                {% endif %}
+                {% if section != 'GrooveKart' %}
+                <li>
+                    <a href="{% url 'gkart:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">GrooveKart</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+
+    </div>
+</div>
+{% endif %}

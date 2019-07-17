@@ -84,40 +84,6 @@ class CallbackEndpoint(View):
         return HttpResponse('ok')
 
 
-class StoresList(ListView):
-    model = WooStore
-    context_object_name = 'stores'
-    template_name = 'woocommerce/index.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.can('woocommerce.use'):
-            raise permissions.PermissionDenied()
-
-        return super(StoresList, self).dispatch(request, *args, **kwargs)
-
-    def get_queryset(self):
-        stores = self.request.user.profile.get_woo_stores()
-
-        return stores
-
-    def get_context_data(self, **kwargs):
-        context = super(StoresList, self).get_context_data(**kwargs)
-        can_add, total_allowed, user_count = permissions.can_add_store(self.request.user)
-        is_stripe = self.request.user.profile.plan.is_stripe()
-        stores_count = self.request.user.profile.get_stores_count()
-
-        context['add_store_btn'] = not self.request.user.is_subuser \
-            and (can_add or self.request.user.profile.plan.extra_stores) \
-            and not self.request.user.profile.from_shopify_app_store()
-
-        context['extra_stores'] = can_add and is_stripe and stores_count >= total_allowed and total_allowed != -1
-        context['breadcrumbs'] = ['Stores']
-        context['selected_menu'] = 'account:stores'
-
-        return context
-
-
 class ProductsList(ListView):
     model = WooProduct
     template_name = 'woocommerce/products_grid.html'
@@ -375,11 +341,11 @@ class OrdersList(ListView):
 
         if not self.get_store():
             messages.warning(request, 'Please add at least one store before using the Orders page.')
-            return redirect('/woo')
+            return redirect('woo:index')
 
         if not request.user.can('place_orders.sub', self.get_store()):
             messages.warning(request, "You don't have access to this store orders")
-            return redirect('/woo')
+            return redirect('woo:index')
 
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
@@ -655,7 +621,7 @@ class OrdersTrackList(ListView):
 
         if not self.get_store():
             messages.warning(request, 'Please add at least one store before using the Tracking page.')
-            return redirect('/woo')
+            return redirect('woo:index')
 
         return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
 

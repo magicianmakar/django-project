@@ -477,3 +477,7 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
 .fa-external-link-top:before {
     content: "\f08e";
 }
+
+.scrolling-tabs {
+    display: none;
+}

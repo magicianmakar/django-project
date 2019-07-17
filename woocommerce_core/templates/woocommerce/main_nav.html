@@ -33,8 +33,8 @@
             </li>
             {% endif %}
 
-            <li {% if url_name == 'woo:index' %}class="active"{% endif %}>
-                <a href="{% url 'woo:index' %}">
+            <li {% if url_name == 'index' %}class="active"{% endif %}>
+                <a href="{% url 'index' %}">
                     <i class="fa fa-th-large"></i>
                     <span class="nav-label">Stores</span>
                 </a>
@@ -88,6 +88,12 @@
 
 
                 <ul class="nav nav-second-level collapse">
+                    <li {% if url_name == 'product_feeds' %}class="active"{% endif %}>
+                        <a href="{% url 'product_feeds' store_type='woo' %}">
+                            <i class="fa fa-gift"></i>
+                            <span class="nav-label">Product Feeds</span>
+                        </a>
+                    </li>
                     {% if user|can:'phone_automation.use'  %}
                         <li {% if 'phone_automation' in page %}class="active"{% endif %}>
                             <a href="{% url 'phone_automation_index' %}">

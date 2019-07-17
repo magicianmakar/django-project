@@ -5,7 +5,7 @@
         action="{{request.path}}"
     {% else %}
         {% comment %}
-        action="{#% url 'gkart:products_list' %}"
+        action="{% url 'gkart:products_list' %}"
         {% endcomment %}
     {% endif %}
 >

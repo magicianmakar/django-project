@@ -33,8 +33,8 @@
             </li>
             {% endif %}
 
-            <li {% if url_name == 'gkart:index' %}class="active"{% endif %}>
-                <a href="{% url 'gkart:index' %}">
+            <li {% if url_name == 'index' %}class="active"{% endif %}>
+                <a href="{% url 'index' %}">
                     <i class="fa fa-th-large"></i>
                     <span class="nav-label">Stores</span>
                 </a>
@@ -121,7 +121,7 @@
                         </li>
                     {% endif %}
                     <li {% if url_name == 'product_feeds' %}class="active"{% endif %}>
-                        <a href="{#% url 'product_feeds' store_type='gear' %#}">
+                        <a href="{% url 'product_feeds' store_type='gkart' %}">
                             <i class="fa fa-gift"></i>
                             <span class="nav-label">Product Feeds</span>
                         </a>

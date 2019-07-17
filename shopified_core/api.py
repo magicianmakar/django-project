@@ -17,15 +17,16 @@ from woocommerce_core.api import WooStoreApi
 from gearbubble_core.api import GearBubbleApi
 from groovekart_core.api import GrooveKartApi
 
-from leadgalaxy.models import ShopifyOrderTrack
-from commercehq_core.models import CommerceHQOrderTrack
-from woocommerce_core.models import WooOrderTrack
-from gearbubble_core.models import GearBubbleOrderTrack
-from groovekart_core.models import GrooveKartOrderTrack
+from leadgalaxy.models import ShopifyStore, ShopifyOrderTrack
+from commercehq_core.models import CommerceHQStore, CommerceHQOrderTrack
+from woocommerce_core.models import WooStore, WooOrderTrack
+from gearbubble_core.models import GearBubbleStore, GearBubbleOrderTrack
+from groovekart_core.models import GrooveKartStore, GrooveKartOrderTrack
 
 from .mixins import ApiResponseMixin
 
 from . import utils as core_utils
+from . import permissions
 
 
 class ShopifiedApi(ApiResponseMixin, View):
@@ -147,6 +148,30 @@ class ShopifiedApi(ApiResponseMixin, View):
             })
 
         return JsonResponse(stores, safe=False)
+
+    def post_store_order(self, request, user, data):
+        for store_info, idx in list(data.items()):
+
+            store_id, store_type = store_info.split(',')
+
+            if store_type == 'shopify':
+                store_model = ShopifyStore
+            elif store_type == 'chq':
+                store_model = CommerceHQStore
+            elif store_type == 'woo':
+                store_model = WooStore
+            elif store_type == 'gear':
+                store_model = GearBubbleStore
+            elif store_type == 'gkart':
+                store_model = GrooveKartStore
+
+            store = store_model.objects.get(id=store_id)
+            permissions.user_can_edit(user, store)
+
+            store.list_index = core_utils.safe_int(idx, 0)
+            store.save()
+
+        return self.api_success()
 
     def post_quick_save(self, request, user, data):
         shopify_count = user.profile.get_shopify_stores().count()

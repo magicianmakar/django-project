@@ -1,0 +1,41 @@
+<ul class="nav nav-tabs">
+    {% if user_stores.shopify %}
+        {% if request.path == '/boards/list' %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">Shopify</a></li>
+        {% else %}
+            <li><a href="{% url 'boards_list' %}">Shopify</a></li>
+        {% endif %}
+    {% endif %}
+
+    {% if user_stores.chq %}
+        {% if 'chq' in request.path %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">CommerceHQ</a></li>
+        {% else %}
+            <li><a href="{% url 'chq:boards_list' %}">CommerceHQ</a></li>
+        {% endif %}
+    {% endif %}
+
+    {% if user_stores.woo %}
+        {% if 'woo' in request.path %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">WooComerce</a></li>
+        {% else %}
+            <li><a href="{% url 'woo:boards_list' %}">WooCommerce</a></li>
+        {% endif %}
+    {% endif %}
+
+    {% if user_stores.gear %}
+        {% if 'gear' in request.path %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">GearBubble</a></li>
+        {% else %}
+            <li><a href="{% url 'gear:boards_list' %}">GearBubble</a></li>
+        {% endif %}
+    {% endif %}
+
+    {% if user_stores.gkart %}
+        {% if 'gkart' in request.path %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">GrooveKart</a></li>
+        {% else %}
+            <li><a href="{% url 'gkart:boards_list' %}">GrooveKart</a></li>
+        {% endif %}
+    {% endif %}
+</ul>

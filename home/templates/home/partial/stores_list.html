@@ -1,0 +1,385 @@
+{% load home_helper %}
+
+<div class="row">
+    <div class="col-md-12">
+        <table class="table store-tables">
+          <thead>
+            <tr>
+                <th class="text-right" colspan="6">
+                {% if user_stores.type_count > 1 %}
+                    {% if user_stores.shopify|length %}
+                    <a href="{% url 'product' %}" class="label m-xs filter-store-btn" filter-store="shopify">
+                        <span class="num">{{ user_stores.shopify|length }}</span>
+                        Shopify
+                    </a>
+                    {% endif %}
+
+                    {% if user_stores.chq|length %}
+                    <a href="{% url 'chq:products_list' %}" class="label m-xs filter-store-btn" filter-store="chq">
+                        <span class="num">{{ user_stores.chq|length }}</span>
+                        CommerceHQ
+                    </a>
+                    {% endif %}
+
+                    {% if user_stores.woo|length %}
+                    <a href="{% url 'woo:products_list' %}" class="label m-xs filter-store-btn" filter-store="woo">
+                        <span class="num">{{ user_stores.woo|length }}</span>
+                        Woocommerce
+                    </a>
+                    {% endif %}
+
+                    {% if user_stores.gear|length %}
+                    <a href="{% url 'gear:products_list' %}" class="label m-xs filter-store-btn" filter-store="gear">
+                        <span class="num">{{ user_stores.gear|length }}</span>
+                        GearBubble
+                    </a>
+                    {% endif %}
+
+                    {% if user_stores.gkart|length %}
+                    <a href="{% url 'gkart:products_list' %}" class="label m-xs filter-store-btn" filter-store="gkart">
+                        <span class="num">{{ user_stores.gkart|length }}</span>
+                        GrooveKart
+                    </a>
+                    {% endif %}
+                {% endif %}
+                </th>
+            </tr>
+          </thead>
+          <tbody id="stores-table-body">
+                {% for item in user_stores.all %}
+                {% if item|model_name == 'shopifystore' %}
+                <tr class="store-item" store-id="{{item.id}}" store-shop="{{item.get_shop}}" store-type="shopify">
+                    <td class="drag-show">
+                        <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
+                        <a class="store-link" href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'product' %}?store={{ item.id }}" class="label">Products</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'orders' %}?store={{ item.id }}" class="label">Orders</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                    </td>
+
+                    {% if not user.is_subuser %}
+                    <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                        <div class="btn-group ">
+                            <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                <i class="fa fa-cog"></i> <span class=""></span></button>
+                            <ul class="dropdown-menu pull-right">
+                                <li>
+                                    <a class="visit-store " href="{{item.get_link}}/admin" target="_blank">
+                                        <i class="fa fa-external-link"></i> Visit Store
+                                    </a>
+                                </li>
+
+                                <li class="divider"></li>
+
+                                <li>
+                                    <a store-id="{{item.id}}" class="verify-api-url btn-success btn-outline"
+                                       data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
+                                        <i class="fa fa-check-circle-o"></i> Verify
+                                    </a>
+                                </li>
+
+
+                                <li>
+                                    <a store-id="{{item.id}}" store-shop="{{item.get_shop}}" class="re-install-store btn-info btn-outline">
+                                        <i class="fa fa-refresh"></i> Re-Install
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a store-id="{{item.id}}" class="change-tracking-url btn-success btn-outline">
+                                        <i class="fa fa-chain"></i> Custom Tracking URL
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a store-id="{{item.id}}" class="change-default-location btn-success btn-outline">
+                                        <i class="fa fa-building-o"></i> Select Primary Location
+                                    </a>
+                                </li>
+
+                                {% if item.version == 1 %}
+                                <li>
+                                    <a class="edit-store  " store-id="{{item.id}}"
+                                            store-name="{{item.title}}" store-version="{{item.version}}"
+                                            store-url="{% if item.version == 1 %}{{item.get_api_url}}{% endif %}">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                <li>
+                                    <a class="delete-store btn-danger btn-outline" store-id="{{item.id}}" store-version="{{item.version}}">
+                                        <i class="fa fa-times"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endif %}
+
+                {% if item|model_name == 'commercehqstore' %}
+                <tr id="chq-store-row-{{item.id}}" class="store-item" store-id="{{item.id}}" store-type="chq">
+                    <td class="drag-show">
+                        <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
+                        <a class="store-link" href="{% url 'chq:products_list' %}?store={{item.id}}">{{item.title}}</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'chq:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'chq:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'chq:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                    </td>
+                    {% if not user.is_subuser %}
+                    <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                        <div class="btn-group ">
+                            <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                <i class="fa fa-cog"></i> <span class=""></span></button>
+                            <ul class="dropdown-menu pull-right">
+
+                                <li>
+                                    <a class="visit-store " href="{{ item.get_admin_url }}" target="_blank">
+                                        <i class="fa fa-external-link"></i> Visit Store
+                                    </a>
+                                </li>
+
+                                <li class="divider"></li>
+                                <li>
+                                    <a data-store-id="{{item.pk}}" class="chq-verify-api-url btn-success btn-outline"
+                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
+                                        <i class="fa fa-check-circle-o"></i> Verify
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a
+                                        class="chq-edit-store-btn"
+                                        data-store-update-url="{% url 'chq:store_update' item.pk %}"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a
+                                        class="chq-delete-store-btn btn-danger btn-outline"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-times"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endif %}
+
+                {% if item|model_name == 'woostore' %}
+                <tr id="woo-store-row-{{item.id}}" class="store-item" store-id="{{item.id}}" store-type="woo">
+                    <td class="drag-show">
+                        <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
+                        <a class="store-link" href="{% url 'woo:products_list' %}?store={{item.id}}">{{item.title}}</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'woo:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'woo:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'woo:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                    </td>
+                    {% if not user.is_subuser %}
+                    <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                        <div class="btn-group ">
+                            <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                <i class="fa fa-cog"></i> <span class=""></span></button>
+                            <ul class="dropdown-menu pull-right">
+
+                                <li>
+                                    <a class="visit-store " href="{{ item.get_admin_url }}" target="_blank">
+                                        <i class="fa fa-external-link"></i> Visit Store
+                                    </a>
+                                </li>
+
+                                <li class="divider"></li>
+                                <li>
+                                    <a data-store-id="{{item.pk}}" class="woo-verify-api-url btn-success btn-outline"
+                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
+                                        <i class="fa fa-check-circle-o"></i> Verify
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a
+                                        class="woo-edit-store-btn"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a
+                                        class="woo-delete-store-btn btn-danger btn-outline"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-times"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endif %}
+
+                {% if item|model_name == 'gearbubblestore' %}
+                <tr id="gear-store-row-{{item.id}}" class="store-item" store-id="{{item.id}}" store-type="gear">
+                    <td class="drag-show">
+                        <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
+                        <a class="store-link" href="{% url 'gear:products_list' %}?store={{item.id}}">{{item.title}}</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'gear:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'gear:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'gear:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                    </td>
+                    {% if not user.is_subuser %}
+                    <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                        <div class="btn-group ">
+                            <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                <i class="fa fa-cog"></i> <span class=""></span></button>
+                            <ul class="dropdown-menu pull-right">
+
+                                <li>
+                                    <a class="visit-store " href="{{ item.get_admin_url }}" target="_blank">
+                                        <i class="fa fa-external-link"></i> Visit Store
+                                    </a>
+                                </li>
+
+                                <li class="divider"></li>
+
+                                <li>
+                                    <a
+                                        class="gear-edit-store-btn"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a
+                                        class="gear-delete-store-btn btn-danger btn-outline"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-times"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endif %}
+
+                {% if item|model_name == 'groovekartstore' %}
+                <tr id="gk-store-row-{{item.id}}" class="store-item" store-id="{{item.id}}" store-type="gkart">
+                    <td class="drag-show">
+                        <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
+                        <a class="store-link" href="{% url 'gkart:products_list' %}?store={{ item.id }}">{{item.title}}</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'gkart:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'gkart:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'gkart:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                    </td>
+
+                    {% if not user.is_subuser %}
+                    <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                        <div class="btn-group ">
+                            <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                <i class="fa fa-cog"></i> <span class=""></span></button>
+                            <ul class="dropdown-menu pull-right">
+
+                                <li>
+                                    <a class="visit-store " href="{{ item.get_admin_url }}" target="_blank">
+                                        <i class="fa fa-external-link"></i> Visit Store
+                                    </a>
+                                </li>
+
+                                <li class="divider"></li>
+
+                                <li>
+                                    <a data-store-id="{{item.pk}}" class="gkart-verify-api-url btn-success btn-outline"
+                                       data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
+                                        <i class="fa fa-check-circle-o"></i> Verify
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a
+                                        class="gk-edit-store-btn"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a
+                                        class="gk-delete-store-btn btn-danger btn-outline"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-times"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endif %}
+
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No store found.</td>
+                </tr>
+                {% endfor %}
+          </tbody>
+        </table>
+
+        {% if add_store_btn %}
+        <a class="add-store-btn btn btn-primary " href="#"
+            data-extra="{{extra_stores|lower}}" data-plan="{{user.profile.plan.title}}">
+            Add Store
+        </a>
+
+        <span class="m-l m-r-xs">Need a new Shopify store?</span>
+        <a href="http://bit.ly/2k0FdOI" class="itooltip" title=""
+            data-toggle="tooltip" data-placement="bottom" data-original-title="14 Day Free Trial">
+            Get your Free Trial here
+        </a>
+
+        {% include 'partial/help_tooltip.html' with help="Click Add Store to get started.<br>For a full guide on adding your Shopify store view <a href='http://help.dropified.com/getting-started/connect-your-store/connect-a-shopify-store-in-dropified'>this article.</a>" qtipstyle="color:#BBB" %}
+        {% endif %}
+
+    <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"
+       class="btn btn-default btn-outline pull-right extension-link hidden-sm hidden-xs"
+       target="_blank" {% if request.COOKIES.ext_installed %}style="display:none"{% endif %}>Install Chrome Extension</a>
+
+    </div>
+</div>

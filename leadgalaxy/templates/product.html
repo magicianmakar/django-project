@@ -11,43 +11,16 @@
 
 
     <div class="tabs-container">
-        <ul class="nav nav-tabs">
-        {% if not request.GET.store %}
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
-            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
-
-            {% for item in user.profile.get_shopify_stores %}
-            <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
-            {% endfor %}
-
-        {% else %}
-            {% if request.GET.store == 'n' %}
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Non Connected</a></li>
-            {% else %}
-            <li class=""><a href="?store=n" aria-expanded="true">Not Connected</a></li>
-            {% endif %}
-
-            {% if request.GET.store == 'c' %}
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">Connected</a></li>
-            {% else %}
-            <li class=""><a href="?store=c" aria-expanded="true">Connected</a></li>
-            {% endif %}
-
-            {% for item in user.profile.get_shopify_stores %}
-                {% if item.id|stringformat:"i" == request.GET.store %}
-                    <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">{{item.title}}</a></li>
-                {% else %}
-                    <li class=""><a href="?store={{item.id}}" aria-expanded="false">{{item.title}}</a></li>
-                {% endif %}
-            {% endfor %}
-
-        {% endif %}
-        </ul>
+        {% include 'home/partial/tabs/products.html' %}
 
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
-{% if products %}
+
+        {% if products %}
+
+        {% include 'home/partial/platform_selection_dropdown.html' with section='Shopify' %}
+
         <div class="row m-b-lg">
             <div class="col-md-8 filter-col">
                 <label for="selected-actions" class="filter-col-item">Selected Items:</label>
@@ -85,12 +58,14 @@
                 {% endif %}
             </div>
 
-            <div class="col-md-1 pull-right text-right" style="padding:6px  5px">
+            <div class="col-md-1 pull-right text-right" style="padding:6px  5px;">
                 <a href="{% url_path '/product/table' %}" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
                 <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
             </div>
         </div>
-{% endif %}
+        {% else %}
+            {% include 'home/partial/platform_selection_dropdown.html' with section='Shopify' %}
+        {% endif %}
 
 <div class="row">
     {% for item in products %}
@@ -278,7 +253,7 @@
 {% endcompress %}
 
 {% if store and user|can:'manual_suppliers_sync.use' %}
-<script src="//js.pusher.com/3.2/pusher.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 <script src="{% static 'shopified/js/product_supplier_sync.js' %}"></script>
 {% endif %}
 
