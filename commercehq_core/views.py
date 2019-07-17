@@ -652,7 +652,7 @@ class OrdersList(ListView):
     def render_to_response(self, context, **response_kwargs):
         bulk_queue = bool(self.request.GET.get('bulk_queue'))
         if bulk_queue:
-            return format_queueable_orders(self.request, context['orders'], context['page_obj'])
+            return format_queueable_orders(self.request, context['orders'], context['page_obj'], store_type='chq')
 
         return super().render_to_response(context, **response_kwargs)
 
