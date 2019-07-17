@@ -3387,7 +3387,7 @@ def orders_view(request):
 
     bulk_queue = bool(request.GET.get('bulk_queue'))
     if bulk_queue and not request.user.can('bulk_order.use'):
-        return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."})
+        return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."}, status=402)
 
     all_orders = []
     store = None

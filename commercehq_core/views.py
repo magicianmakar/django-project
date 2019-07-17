@@ -642,7 +642,7 @@ class OrdersList(ListView):
 
         bulk_queue = bool(request.GET.get('bulk_queue'))
         if bulk_queue and not request.user.can('bulk_order.use'):
-            return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."})
+            return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."}, status=402)
 
         if not request.user.can('commercehq.use'):
             raise permissions.PermissionDenied()
