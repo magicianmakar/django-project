@@ -481,3 +481,13 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
 .scrolling-tabs {
     display: none;
 }
+
+#bulk-order-steps.wizard > .content {
+    min-height: 0;
+}
+#bulk-order-steps.wizard > .content > .body {
+    position: relative;
+}
+#bulk-order-steps.wizard > .content > .body h2 {
+    margin: 10px 0 15px;
+}
