@@ -2293,7 +2293,7 @@ class GroupPlan(models.Model):
 
     @property
     def is_paused(self):
-        return self.slug == 'paused-plan'
+        return self.slug in ['paused-plan', 'paused-plan-shopify']
 
     @property
     def is_free(self):

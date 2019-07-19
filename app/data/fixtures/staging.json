@@ -4569,6 +4569,34 @@
     "permissions": []
   }
 }, {
+  "model": "leadgalaxy.groupplan",
+  "pk": 50,
+  "fields": {
+    "title": "Shopify Paused Plan",
+    "slug": "paused-plan-shopify",
+    "register_hash": "",
+    "stores": -1,
+    "products": 0,
+    "boards": 0,
+    "extra_stores": false,
+    "auto_fulfill_limit": 0,
+    "badge_image": "",
+    "description": "",
+    "notes": "",
+    "features": "",
+    "monthly_price": "12.00",
+    "trial_days": 0,
+    "plan_description": null,
+    "price_info": null,
+    "retail_price_info": null,
+    "default_plan": 0,
+    "payment_gateway": "shopify",
+    "payment_interval": "monthly",
+    "hidden": true,
+    "locked": true,
+    "permissions": []
+  }
+}, {
     "model": "leadgalaxy.apppermission",
     "pk": 1,
     "fields": {

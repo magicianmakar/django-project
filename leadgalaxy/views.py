@@ -3115,6 +3115,7 @@ def user_profile(request):
                                             .order_by('num_permissions')
 
     stripe_paused_plan = GroupPlan.objects.filter(slug='paused-plan').first()
+    shopify_paused_plan = GroupPlan.objects.filter(slug='paused-plan-shopify').first()
 
     if request.user.get_config('_enable_yearly_60dc_plan'):
         stripe_plans_yearly = list(stripe_plans_yearly)
@@ -3200,6 +3201,7 @@ def user_profile(request):
         'stripe_plans': stripe_plans,
         'stripe_plans_yearly': stripe_plans_yearly,
         'stripe_paused_plan': stripe_paused_plan,
+        'shopify_paused_plan': shopify_paused_plan,
         'shopify_plans': shopify_plans,
         'shopify_plans_yearly': shopify_plans_yearly,
         'stripe_customer': stripe_customer,

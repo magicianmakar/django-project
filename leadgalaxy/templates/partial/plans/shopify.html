@@ -11,6 +11,14 @@
                         <b>
                         {{ current_plan.get_description }}
                         </b>
+
+                        {% if shopify_paused_plan and not current_plan.is_paused %}
+                            <button class="btn btn-success btn-outline btn-xs itooltip pause-account-shopify pull-right m-r-sm"
+                                title="Pause Your Subscription"
+                                data-plan="{{shopify_paused_plan.id}}"
+                                >Pause Account</button>
+                        {% endif %}
+
                     </li>
                 </ul>
             </div>

@@ -424,6 +424,11 @@
         $('#modal-pause-account').modal('show');
     });
 
+    $('.pause-account-shopify').click(function(e) {
+        $('#modal-pause-account-shopify').data('plan', $(e.target).data('plan'));
+        $('#modal-pause-account-shopify').modal('show');
+    });
+
     $(".confirm-pause-btn").click(function(e) {
         var plan = $('#modal-pause-account').data('plan');
         var btn = $(e.target);
@@ -447,6 +452,33 @@
             error: function(data) {
                 btn.button("reset");
                 displayAjaxError('Pause Account', data);
+            }
+        });
+    });
+
+
+    $(".confirm-pause-btn-shopify").click(function(e) {
+        var plan = $('#modal-pause-account-shopify').data('plan');
+        var btn = $(e.target);
+        btn.button('loading');
+
+        $.ajax({
+            url: config.shopify_plan,
+            type: 'POST',
+            data: {
+                plan: plan
+            },
+            success: function(data) {
+                setTimeout(function() {
+                    if (data.location) {
+                        window.location.href = data.location;
+                    } else {
+                        window.location.reload();
+                    }
+                }, 500);
+            },
+            error: function(data) {
+                displayAjaxError('Plan Subscription', data);
             }
         });
     });
