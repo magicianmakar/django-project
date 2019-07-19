@@ -1,6 +1,5 @@
 from shopified_core.utils import safe_int, safe_float
 
-from typing import Dict
 from django.contrib.auth.models import User
 from stripe_subscription.stripe_api import stripe
 from . import utils as utils
@@ -9,6 +8,7 @@ from shopified_core.utils import app_link
 from shopified_core.utils import send_email_from_template
 from django.urls import reverse
 from .models import CallflexShopifyUsageCharge
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 
 class CallflexOveragesBilling:
@@ -18,10 +18,13 @@ class CallflexOveragesBilling:
         self.user = user
 
     def add_invoice(self, invoice_type, amount, replace_flag=False, description="CallFlex Overages for"):
-        # type: (Dict, float) -> ...
-        # adding stripe invoice item
 
-        upcoming_invoice = stripe.Invoice.upcoming(customer=self.user.stripe_customer.customer_id)
+        try:
+            upcoming_invoice = stripe.Invoice.upcoming(customer=self.user.stripe_customer.customer_id)
+        except:
+            raven_client.captureMessage("No Upcoming Invoice. Skipping this user.")
+            return False
+
         upcoming_invoice_item = False
 
         for item in upcoming_invoice['lines']['data']:
@@ -57,6 +60,11 @@ class CallflexOveragesBilling:
         # update phone number overages
         # getting number of 'monthes' passed after last invoice date (to process yearly subs)
         subscription_period_start = utils.get_callflex_subscription_start(self.user)
+        if not subscription_period_start:
+            raven_client.captureMessage("No Stripe Subscription for customer. Skipping this user.")
+            return False
+        else:
+            invoices = []
         month_passed = utils.get_monthes_passed(subscription_period_start)
 
         overages_phone_number = 0
@@ -72,7 +80,8 @@ class CallflexOveragesBilling:
             overages_phone_number += (phonenumber_usage_local['used'] - phonenumber_usage_local['total']) * \
                 settings.EXTRA_LOCAL_NUMBER_PRICE * (month_passed + 1)
 
-        self.add_invoice('extra_number', overages_phone_number, True)
+        invoice_numbers = self.add_invoice('extra_number', overages_phone_number, True)
+        invoices.append(invoice_numbers)
 
         # update minutes overages
         overages_minutes = 0
@@ -92,7 +101,9 @@ class CallflexOveragesBilling:
             overages_minutes += (total_duration_local - total_duration_month_limit_local) \
                 * settings.EXTRA_LOCAL_MINUTE_PRICE / 60
 
-        self.add_invoice('extra_minutes', overages_minutes, True)
+        invoice_minutes = self.add_invoice('extra_minutes', overages_minutes, True)
+        invoices.append(invoice_minutes)
+        return invoices
 
     def add_shopify_overages(self):
         overages_phone_number = 0
