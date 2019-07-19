@@ -380,15 +380,26 @@
     $('.change-tracking-url').click(function(e) {
         e.preventDefault();
 
+        var storeType = $(this).attr('store-type');
+        var useDomain = $(this).attr('tracking-domain');
+        if (useDomain) {
+            $('#custom-tracking-type').text('Domain');
+            $('#tracking-url-wrapper').css('display', 'none');
+        } else {
+            $('#custom-tracking-type').text('URL');
+            $('#tracking-url-wrapper').css('display', '');
+        }
         $.ajax({
-            url: '/api/custom-tracking-url',
+            url: api_url('custom-tracking-url', storeType),
             type: 'GET',
             data: {
-                store: $(this).attr('store-id')
+                store: $(this).attr('store-id'),
+                storeType: storeType
             },
             success: function(data) {
                 $('#custom-tracking-url-input').val(data.tracking_url);
                 $('#custom-tracking-url-input').attr('store', data.store);
+                $('#custom-tracking-url-input').attr('store-type', storeType);
             },
             error: function(data) {
                 displayAjaxError('Custom Tracking URL', data);
@@ -437,6 +448,7 @@
 
         var tracking_url = $('#custom-tracking-url-input').val().trim();
         var store = $('#custom-tracking-url-input').attr('store');
+        var storeType = $('#custom-tracking-url-input').attr('store-type');
 
         if (tracking_url.length && tracking_url.indexOf('{{tracking_number}}') == -1) {
             swal('Tracking URL', 'Tracking url must include {{tracking_number}}\nsee the example below custom url entry field.', 'error');
@@ -444,7 +456,7 @@
         }
 
         $.ajax({
-            url: '/api/custom-tracking-url',
+            url: api_url('custom-tracking-url', storeType),
             type: 'POST',
             data: {
                 store: store,

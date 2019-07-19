@@ -766,8 +766,8 @@ class GrooveKartOrderTrack(models.Model):
     def get_tracking_link(self):
         aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
 
-        if type(self.user.get_config('aftership_domain')) is dict:
-            aftership_domain = self.user.get_config('aftership_domain').get(str(self.store_id), aftership_domain)
+        if self.user.get_config('gkart_custom_tracking'):
+            aftership_domain = self.user.get_config('gkart_custom_tracking', {}).get(str(self.store_id), aftership_domain)
 
             if '{{tracking_number}}' not in aftership_domain:
                 aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)

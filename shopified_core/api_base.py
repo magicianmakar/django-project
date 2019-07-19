@@ -695,3 +695,51 @@ class ApiBase(ApiResponseMixin, View):
         product.save()
 
         return self.api_success()
+
+    def get_custom_tracking_url(self, request, user, data):
+        try:
+            store = self.store_model.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        custom_tracking = None
+        tracking_config_key = 'aftership_domain' if self.is_shopify else f'{self.store_slug}_custom_tracking'
+        tracking_config = user.models_user.get_config(tracking_config_key)
+        if tracking_config and type(tracking_config) is dict:
+            custom_tracking = tracking_config.get(str(store.id))
+
+        return self.api_success({
+            'tracking_url': custom_tracking,
+            'store': store.id
+        })
+
+    def post_custom_tracking_url(self, request, user, data):
+        try:
+            store = self.store_model.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        if not user.can('edit_settings.sub'):
+            raise PermissionDenied()
+
+        custom_tracking_key = str(store.id)
+        tracking_config_key = 'aftership_domain' if self.is_shopify else f'{self.store_slug}_custom_tracking'
+        tracking_config = user.models_user.get_config(tracking_config_key)
+        if not tracking_config:
+            tracking_config = {}
+        elif type(tracking_config) is not dict:
+            raise Exception('Custom domains is not a dict')
+
+        if data.get('tracking_url'):
+            tracking_config[custom_tracking_key] = data.get('tracking_url')
+        else:
+            if custom_tracking_key in tracking_config:
+                del tracking_config[custom_tracking_key]
+
+        user.models_user.set_config(tracking_config_key, tracking_config)
+
+        return self.api_success()

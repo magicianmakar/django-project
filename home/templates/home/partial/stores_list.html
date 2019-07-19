@@ -84,7 +84,6 @@
                                     </a>
                                 </li>
 
-
                                 <li>
                                     <a store-id="{{item.id}}" store-shop="{{item.get_shop}}" class="re-install-store btn-info btn-outline">
                                         <i class="fa fa-refresh"></i> Re-Install
@@ -92,7 +91,7 @@
                                 </li>
 
                                 <li>
-                                    <a store-id="{{item.id}}" class="change-tracking-url btn-success btn-outline">
+                                    <a store-id="{{item.id}}" store-type="" class="change-tracking-url btn-success btn-outline">
                                         <i class="fa fa-chain"></i> Custom Tracking URL
                                     </a>
                                 </li>
@@ -162,6 +161,12 @@
                                 </li>
 
                                 <li>
+                                    <a store-id="{{item.pk}}" store-type="chq" tracking-domain="true" class="change-tracking-url btn-success btn-outline">
+                                        <i class="fa fa-chain"></i> Custom Tracking Domain
+                                    </a>
+                                </li>
+
+                                <li>
                                     <a
                                         class="chq-edit-store-btn"
                                         data-store-update-url="{% url 'chq:store_update' item.pk %}"
@@ -221,6 +226,12 @@
                                 </li>
 
                                 <li>
+                                    <a store-id="{{item.id}}" store-type="woo" class="change-tracking-url btn-success btn-outline">
+                                        <i class="fa fa-chain"></i> Custom Tracking URL
+                                    </a>
+                                </li>
+
+                                <li>
                                     <a
                                         class="woo-edit-store-btn"
                                         data-store-id="{{ item.pk }}">
@@ -271,6 +282,12 @@
                                 </li>
 
                                 <li class="divider"></li>
+
+                                <li>
+                                    <a store-id="{{item.pk}}" store-type="gear" class="change-tracking-url btn-success btn-outline">
+                                        <i class="fa fa-chain"></i> Custom Tracking URL
+                                    </a>
+                                </li>
 
                                 <li>
                                     <a
@@ -329,6 +346,12 @@
                                     <a data-store-id="{{item.pk}}" class="gkart-verify-api-url btn-success btn-outline"
                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                         <i class="fa fa-check-circle-o"></i> Verify
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a store-id="{{item.pk}}" store-type="gkart" class="change-tracking-url btn-success btn-outline">
+                                        <i class="fa fa-chain"></i> Custom Tracking URL
                                     </a>
                                 </li>
 

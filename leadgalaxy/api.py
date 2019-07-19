@@ -159,43 +159,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def get_custom_tracking_url(self, request, user, data):
-        store = ShopifyStore.objects.get(id=data.get('store'))
-        permissions.user_can_view(user, store)
-
-        custom_tracking = None
-        aftership_domain = user.models_user.get_config('aftership_domain')
-        if aftership_domain and type(aftership_domain) is dict:
-            custom_tracking = aftership_domain.get(str(store.id))
-
-        return self.api_success({
-            'tracking_url': custom_tracking,
-            'store': store.id
-        })
-
-    def post_custom_tracking_url(self, request, user, data):
-        store = ShopifyStore.objects.get(id=data.get('store'))
-        permissions.user_can_edit(user, store)
-
-        if not user.can('edit_settings.sub'):
-            raise PermissionDenied()
-
-        aftership_domain = user.models_user.get_config('aftership_domain')
-        if not aftership_domain:
-            aftership_domain = {}
-        elif type(aftership_domain) is not dict:
-            raise Exception('Custom domains is not a dict')
-
-        if data.get('tracking_url'):
-            aftership_domain[str(store.id)] = data.get('tracking_url')
-        else:
-            if str(store.id) in aftership_domain:
-                del aftership_domain[str(store.id)]
-
-        user.models_user.set_config('aftership_domain', aftership_domain)
-
-        return self.api_success()
-
     def get_store_verify(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))

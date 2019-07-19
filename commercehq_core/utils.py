@@ -955,8 +955,9 @@ def order_track_fulfillment(order_track, user_config=None):
         if leadgalaxy_utils.is_chinese_carrier(tracking_number) or leadgalaxy_utils.shipping_carrier(tracking_number) == 'USPS':
             shipping_carrier_name = 'USPS'
 
-    if user_config.get('_chq_shipping_carrier'):
-        shipping_carrier_name = user_config.get('_chq_shipping_carrier')
+    custom_tracking_carrier = user_config.get('chq_custom_tracking', {})
+    if custom_tracking_carrier:
+        shipping_carrier_name = custom_tracking_carrier.get(str(order_track.store_id))
 
     shipping_carrier = get_shipping_carrier(shipping_carrier_name, order_track.store)
 
