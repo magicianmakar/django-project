@@ -57,7 +57,7 @@ $(document).ready(function() {
         });
     });
 
-    $('.chq-edit-board-btn').click(function(e) {
+    $(document).on('click', '.chq-edit-board-btn', function(e) {
         e.preventDefault();
         var boardId = $(this).data('board-id');
 
@@ -88,7 +88,7 @@ $(document).ready(function() {
         });
     });
 
-    $('.chq-delete-board-btn').click(function(e) {
+    $(document).on('click', '.chq-delete-board-btn', function(e) {
         e.preventDefault();
         var boardId = $(this).data('board-id');
 

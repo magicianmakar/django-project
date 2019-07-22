@@ -233,6 +233,10 @@ def product_update(product_id, data):
         api_data = add_store_tags_to_api_data(api_data, store, data.get('tags', []))
         api_data = update_product_images_api_data(api_data, data)
 
+        variants_data = data.get('variants', [])
+        if variants_data:
+            api_data['type'] = 'variable'
+
         r = store.get_wcapi(timeout=60).put('products/{}'.format(product.source_id), api_data)
         r.raise_for_status()
 
@@ -240,7 +244,6 @@ def product_update(product_id, data):
         product.source_id = r.json()['id']
         product.save()
 
-        variants_data = data.get('variants', [])
         if variants_data:
             variants = update_variants_api_data(variants_data)
             path = 'products/%s/variations/batch' % product.source_id
