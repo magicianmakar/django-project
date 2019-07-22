@@ -120,6 +120,9 @@ class Command(DropifiedBaseCommand):
         tries = 3
 
         while tries > 0 or locations:
+            if tries < -3:
+                raven_client.captureMessage('Fulfillment Loop Detected')
+
             try:
                 rep = requests.post(
                     url=store.get_link('/admin/orders/{}/fulfillments.json'.format(order.order_id), api=True),
@@ -254,6 +257,7 @@ class Command(DropifiedBaseCommand):
                         return False
 
                     elif 'must be stocked at the same location' in rep.text \
+                            or 'none of the items are stocked at the new location' in rep.text \
                             or e.response.status_code == 404:
 
                         location = None
@@ -293,6 +297,11 @@ class Command(DropifiedBaseCommand):
                             order.save()
 
                         continue
+
+                elif locations:
+                    # we are trying locations but we don't hand this excption
+                    raven_client.captureMessage('Unhandled Shopify status Loop Detected', extra=http_exception_response(e))
+                    locations = []
 
                 elif e.response.status_code in [401, 402, 403]:
                     self.log_fulfill_error(order, 'API Authorization ({})'.format(e.response.status_code))
