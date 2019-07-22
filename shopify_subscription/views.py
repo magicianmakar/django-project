@@ -51,7 +51,7 @@ def subscription_plan(request):
             "return_url": app_link(reverse(subscription_activated))
         }
 
-        if user.get_config('_can_trial'):
+        if user.get_config('_can_trial', True):
             charge_params["trial_days"] = plan.trial_days
 
         try:
