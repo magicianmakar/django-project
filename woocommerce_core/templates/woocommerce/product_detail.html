@@ -50,35 +50,38 @@
                         <textarea class="form-control" id="product-title" placeholder="Product Title"></textarea>
                     </div>
                 </div>
-                <div class=" row" {% if woocommerce_product %}style="display:none"{% endif %}>
-                    <div class="form-group col-xs-3">
-                        <label for="product-price">Price</label>
-                        <div class="input-group">
-                            <span class="input-group-addon">{% money_format None product.store  %}</span>
-                            <input type="text" class="form-control" id="product-price">
+                {% if not woocommerce_product or woocommerce_product.product_type == 'simple' %}
+                    <div class="row">
+                        <div class="form-group col-xs-3">
+                            <label for="product-price">Price</label>
+                            <div class="input-group">
+                                <span class="input-group-addon">{% money_format None product.store  %}</span>
+                                <input type="text" class="form-control" id="product-price">
+                            </div>
+                        </div>
+                        <div class="form-group col-xs-3">
+                            <label for="product-type">Compare at price</label>
+                            <div class="input-group">
+                                <span class="input-group-addon">{% money_format None product.store  %}</span>
+                                <input type="text" class="form-control" id="product-compare-at"
+                                       value="{{product.parsed.compare_at_price|default:''}}">
+                            </div>
+                        </div>
+                        <div class="form-group col-xs-3">
+                            <label for="product-type" style="display: block">Weight</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="product-weight" style="width:70%">
+                                <select name="product-weight-unit" id="product-weight-unit" class="input-group-addon form-control" style="width:30%;padding: 0 5px">
+                                    <option value="g" {% if product.parsed.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
+                                    <option value="kg" {% if not product.parsed.weight_unit or product.parsed.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
+                                    <option value="oz" {% if product.parsed.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
+                                    <option value="lb" {% if product.parsed.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
+                                    <option value="lb" {% if product.parsed.weight_unit == 'lbs' %}selected="selected"{% endif %}>lb</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group col-xs-3">
-                        <label for="product-type">Compare at price</label>
-                        <div class="input-group">
-                            <span class="input-group-addon">{% money_format None product.store  %}</span>
-                            <input type="text" class="form-control" id="product-compare-at"
-                                   value="{{product.parsed.compare_at_price|default:''}}">
-                        </div>
-                    </div>
-                    <div class="form-group col-xs-3">
-                        <label for="product-type" style="display: block">Weight</label>
-                        <div class="input-group">
-                            <input type="text" class="form-control" id="product-weight" style="width:70%">
-                            <select name="product-weight-unit" id="product-weight-unit" class="input-group-addon form-control" style="width:30%;padding: 0 5px">
-                                <option value="g" {% if product.parsed.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
-                                <option value="kg" {% if not product.parsed.weight_unit or product.parsed.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
-                                <option value="oz" {% if product.parsed.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
-                                <option value="lb" {% if product.parsed.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+                {% endif %}
                 <div class="row">
                     <div class="form-group col-xs-3">
                         <label for="product-type">Type</label>
@@ -97,7 +100,7 @@
                 <div class="row">
                     <div id="more-options" class="col-xs-12">
                         <div class="childs" style="">
-                            {% if woocommerce_product and woocommerce_product.variants %}
+                            {% if woocommerce_product and woocommerce_product.variants and woocommerce_product.product_type == "variable" %}
                                 <div class="panel panel-default m-b-lg">
                                     <div class="panel-heading">Variants</div>
                                     <div class="panel-body" style="padding-bottom:0">
