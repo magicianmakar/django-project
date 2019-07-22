@@ -358,7 +358,7 @@
                 btn: $(this)
             },
             success: function (data) {
-                swal('API URL', 'The API URL is working properly for Shopify Store:\n' + data.store, 'success');
+                swal('API URL', 'The API URL is working properly for Shopify store:\n' + data.store, 'success');
             },
             error: function (data) {
                 displayAjaxError('API URL', data);
@@ -920,7 +920,7 @@
                 btn: $(this)
             },
             success: function (data) {
-                swal('API URL', 'The API URL is working properly for CommerceHQ Store:\n' + data.store, 'success');
+                swal('API URL', 'The API URL is working properly for CommerceHQ store:\n' + data.store, 'success');
             },
             error: function (data) {
                 displayAjaxError('API URL', data);
@@ -1096,7 +1096,7 @@
                 btn: $(this)
             },
             success: function (data) {
-                swal('API URL', 'The API URL is working properly for WooCommerce Store:\n' + data.store, 'success');
+                swal('API URL', 'The API URL is working properly for WooCommerce store:\n' + data.store, 'success');
             },
             error: function (data) {
                 displayAjaxError('API URL', data);
@@ -1198,7 +1198,7 @@
                 btn: $(this)
             },
             success: function (data) {
-                swal('API URL', 'The API URL is working properly for Shopify Store:\n' + data.store, 'success');
+                swal('API URL', 'The API URL is working properly for GrooveKart store:\n' + data.store, 'success');
             },
             error: function (data) {
                 displayAjaxError('API URL', data);
