@@ -256,8 +256,8 @@ class Command(DropifiedBaseCommand):
 
                         return False
 
-                    elif 'must be stocked at the same location' in rep.text \
-                            or 'none of the items are stocked at the new location' in rep.text \
+                    elif 'must be stocked at the same location' in rep.text.lower() \
+                            or 'none of the items are stocked at the new location' in rep.text.lower() \
                             or e.response.status_code == 404:
 
                         location = None
