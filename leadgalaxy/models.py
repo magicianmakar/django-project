@@ -1280,7 +1280,7 @@ class ShopifyProduct(ProductBase):
 
     def get_image(self):
         images = self.get_images()
-        return images.pop() if len(images) else None
+        return images[0] if images else None
 
     def get_original_info(self, url=None):
         if not url:
