@@ -288,7 +288,7 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
             'store': orderData.store,
             'order_id': orderData.order_id,
             'line_id': orderData.line_id,
-            'source_type': orderData.supplier_type,
+            'source_type': supplierType,
             'aliexpress_order_id': orderId,
         }, callback);
 
@@ -308,7 +308,7 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
                     'store': orderData.store,
                     'order_id': orderData.order_id,
                     'line_id': orderData.line_id,
-                    'source_type': orderData.supplier_type,
+                    'source_type': supplierType,
                     'aliexpress_order_id': data.purchaseOrderId,
                 }, callback);
             } else {
