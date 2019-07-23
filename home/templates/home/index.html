@@ -17,12 +17,12 @@
             </li>
         </ul>
         <div class="tab-content">
-            <div role="tabpanel" id="stores" class="tab-pane active">
+            <div role="tabpanel" id="stores" class="tab-pane {% if not settings_tab %}active{% endif %}">
                 <div class="panel-body">
                     {% include 'home/partial/stores_list.html' %}
                 </div>
             </div>
-            <div role="tabpanel" id="settings" class="tab-pane">
+            <div role="tabpanel" id="settings" class="tab-pane {% if settings_tab %}active{% endif %}">
                 <div class="panel-body">
                     {% include 'home/partial/settings.html'%}
                 </div>
