@@ -283,6 +283,9 @@ class GrooveKartProduct(ProductBase):
                     product_variant['image']['src'] = "{}-small_default{}".format(file, extension)
                 variants.append(product_variant)
 
+        if not variants:
+            variants = [{'id': -1, 'description': 'Default Title'}]
+
         variant_options = [{'title': title, 'values': list(values)} for title, values in variant_options.items()]
         self.update_data({'variant_options': variant_options})
 
