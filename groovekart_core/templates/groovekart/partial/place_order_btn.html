@@ -61,7 +61,7 @@
                    >Auto Place Order</a></li>
             <li><a class="place-order-btn auto-shipping-btn" href="#"
                     order-id="{{order.id}}" line-id="{{item.id}}"
-                    product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.country}}"
+                    product-id="{{item.product.id}}" original-id="{{item.supplier.get_source_id}}" country-code="{{order.shipping_address.country_code}}"
                     data-href="{% app_link 'gkart/orders/place' supplier=item.supplier.id %}"
                     data-order="{{ item.order_data_id|urlencode }}"
                 >Auto - Choose Shipping</a></li>
