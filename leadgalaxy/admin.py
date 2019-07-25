@@ -47,7 +47,7 @@ class GroupPlanAdmin(admin.ModelAdmin):
     exclude = ('default_plan',)
     filter_horizontal = ('permissions',)
     prepopulated_fields = {'slug': ('title',)}
-    list_filter = ('payment_gateway', 'payment_interval', 'monthly_price', 'trial_days', 'hidden', 'locked')
+    list_filter = ('free_plan', 'payment_gateway', 'payment_interval', 'monthly_price', 'trial_days', 'hidden', 'locked')
     readonly_fields = ('register_hash',)
     search_fields = ('title', 'slug', 'description', 'register_hash')
 
@@ -144,7 +144,7 @@ class AccessTokenAdmin(admin.ModelAdmin):
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'email', 'plan', 'tz', 'date')
+    list_display = ('user', 'email', 'plan', 'tz', 'date', 'updated_at')
     list_filter = ('plan', 'plan__payment_gateway', 'status', 'bundles', 'shopify_app_store', 'sync_delay_notify', 'shopify_app_store')
     search_fields = ('emails', 'country', 'timezone', 'ips') + USER_SEARCH_FIELDS
     raw_id_fields = ('user', 'subuser_parent')

@@ -158,6 +158,8 @@ class UserProfile(models.Model):
     subuser_gear_permissions = models.ManyToManyField('SubuserGearPermission', blank=True)
     subuser_gkart_permissions = models.ManyToManyField('SubuserGKartPermission', blank=True)
 
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
     def __str__(self):
         return '{} | {}'.format(self.user.username, self.plan.title if self.plan else 'None')
 
@@ -2220,6 +2222,7 @@ class GroupPlan(models.Model):
     notes = models.TextField(null=True, blank=True, verbose_name='Admin Notes')
     features = models.TextField(null=True, blank=True, verbose_name='Features List')
     monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True, verbose_name='Monthly Price(in USD)')
+    free_plan = models.BooleanField(default=True)
     trial_days = models.IntegerField(default=0)
 
     plan_description = models.CharField(max_length=512, blank=True, null=True, verbose_name='Plan description in in Plans Page')
