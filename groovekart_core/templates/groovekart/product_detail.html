@@ -68,7 +68,7 @@
                         <textarea class="form-control" id="product-title" placeholder="Product Title"></textarea>
                     </div>
                 </div>
-                <div class=" row" {% if groovekart_product and groovekart_product.variants %}style="display:none"{% endif %}>
+                <div class=" row" {% if groovekart_product and groovekart_product.variants and groovekart_product.variants.0.id != -1 %}style="display:none"{% endif %}>
                     <div class="form-group col-xs-3">
                         <label for="product-price">Price</label>
                         <div class="input-group">
@@ -121,7 +121,7 @@
                 <div class="row">
                     <div id="more-options" class="col-xs-12">
                         <div class="childs" style="">
-                            {% if groovekart_product and groovekart_product.variants %}
+                            {% if groovekart_product and groovekart_product.variants and groovekart_product.variants.0.id != -1 %}
                                 <div class="panel panel-default m-b-lg">
                                     <div class="panel-heading">Variants</div>
                                     <div class="panel-body" style="padding-bottom:0">
