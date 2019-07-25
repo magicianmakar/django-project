@@ -28,11 +28,14 @@ if [ "$?" == "0" ]; then
     exit -1
 fi
 
-python manage.py makemigrations | grep 'No changes detected' > /dev/null
+OUTFILE="$(mktemp)"
+python manage.py makemigrations > $OUTFILE 2>&1
+grep 'No changes detected' $OUTFILE > /dev/null
 
 if [ ! "$?" == "0" ]; then
     echo
-    echo "[-] Your models have changes that are not yet reflected in a migration, run: manage.py makemigrations"
+    echo "[-] Your models have changes that are not yet reflected in a migration:"
+    cat $OUTFILE
     exit -2
 fi
 
