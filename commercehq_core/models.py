@@ -18,7 +18,7 @@ from shopified_core.utils import (
     ALIEXPRESS_SOURCE_STATUS,
 )
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, SupplierBase, ProductBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
 from product_alerts.utils import monitor_product
 
 
@@ -751,11 +751,7 @@ class CommerceHQSupplier(SupplierBase):
         super(CommerceHQSupplier, self).save(*args, **kwargs)
 
 
-class CommerceHQBoard(models.Model):
-    class Meta:
-        verbose_name = "CHQ Board"
-        verbose_name_plural = "CHQ Boards"
-
+class CommerceHQBoard(BoardBase):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=512)
     products = models.ManyToManyField('CommerceHQProduct', blank=True)
@@ -775,11 +771,7 @@ class CommerceHQBoard(models.Model):
         return self.products.exclude(store__is_active=True, source_id=0).count()
 
 
-class CommerceHQOrderTrack(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-        index_together = ['store', 'order_id', 'line_id']
-
+class CommerceHQOrderTrack(OrderTrackBase):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     store = models.ForeignKey(CommerceHQStore, null=True, on_delete=models.CASCADE)
     order_id = models.BigIntegerField()

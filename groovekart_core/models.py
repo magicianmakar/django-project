@@ -15,7 +15,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, SupplierBase, ProductBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
 from shopified_core.utils import (
     get_domain,
     safe_str,
@@ -686,11 +686,7 @@ class GrooveKartUserUpload(models.Model):
         return f'<GrooveKartUserUpload: {self.id}>'
 
 
-class GrooveKartBoard(models.Model):
-    class Meta:
-        verbose_name = "GrooveKart Board"
-        verbose_name_plural = "GrooveKart Boards"
-
+class GrooveKartBoard(BoardBase):
     user = models.ForeignKey(User)
     title = models.CharField(max_length=512)
     products = models.ManyToManyField('GrooveKartProduct', blank=True, related_name='boards')
@@ -712,11 +708,7 @@ class GrooveKartBoard(models.Model):
         return self.products.filter(store__is_active=True).exclude(source_id=0).count()
 
 
-class GrooveKartOrderTrack(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-        index_together = ['store', 'order_id', 'line_id']
-
+class GrooveKartOrderTrack(OrderTrackBase):
     user = models.ForeignKey(User)
     store = models.ForeignKey('GrooveKartStore', null=True)
     order_id = models.BigIntegerField()

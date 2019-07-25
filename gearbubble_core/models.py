@@ -14,7 +14,7 @@ from django.core.urlresolvers import reverse
 
 from shopified_core.utils import get_domain, safe_str, base64_encode
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, SupplierBase, ProductBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
 
 
 @add_to_class(User, 'get_gear_boards')
@@ -622,11 +622,7 @@ class GearUserUpload(models.Model):
         return f'<GearUserUpload: {self.id}>'
 
 
-class GearBubbleBoard(models.Model):
-    class Meta:
-        verbose_name = "GearBubble Board"
-        verbose_name_plural = "GearBubble Boards"
-
+class GearBubbleBoard(BoardBase):
     user = models.ForeignKey(User)
     title = models.CharField(max_length=512)
     products = models.ManyToManyField('GearBubbleProduct', blank=True)
@@ -649,11 +645,7 @@ class GearBubbleBoard(models.Model):
         return self.products.filter(store__is_active=True).exclude(source_id=0).count()
 
 
-class GearBubbleOrderTrack(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-        index_together = ['store', 'order_id', 'line_id']
-
+class GearBubbleOrderTrack(OrderTrackBase):
     user = models.ForeignKey(User)
     store = models.ForeignKey('GearBubbleStore', null=True)
     order_id = models.BigIntegerField()

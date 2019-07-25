@@ -18,7 +18,7 @@ from shopified_core.utils import (
     ALIEXPRESS_SOURCE_STATUS,
 )
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, SupplierBase, ProductBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
 
 
 @add_to_class(User, 'get_woo_boards')
@@ -629,11 +629,7 @@ class WooSupplier(SupplierBase):
             return False
 
 
-class WooOrderTrack(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-        index_together = ['store', 'order_id', 'line_id']
-
+class WooOrderTrack(OrderTrackBase):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     store = models.ForeignKey(WooStore, null=True, on_delete=models.CASCADE)
     order_id = models.BigIntegerField()
@@ -751,11 +747,7 @@ class WooOrderTrack(models.Model):
             return ALIEXPRESS_SOURCE_STATUS.get(safe_str(self.source_status_details).lower())
 
 
-class WooBoard(models.Model):
-    class Meta:
-        verbose_name = "WooCommerce Board"
-        verbose_name_plural = "WooCommerce Boards"
-
+class WooBoard(BoardBase):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=512)
     products = models.ManyToManyField('WooProduct', blank=True)

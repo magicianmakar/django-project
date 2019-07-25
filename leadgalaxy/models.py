@@ -28,7 +28,7 @@ from shopified_core.utils import (
 )
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class, upsell_page_permissions
-from shopified_core.models import StoreBase, SupplierBase, ProductBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
 
 
 ENTITY_STATUS_CHOICES = (
@@ -1722,11 +1722,7 @@ class ShopifyProductImage(models.Model):
         return f'<ShopifyProductImage: {self.id}>'
 
 
-class ShopifyOrderTrack(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-        index_together = ['store', 'order_id', 'line_id']
-
+class ShopifyOrderTrack(OrderTrackBase):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     store = models.ForeignKey(ShopifyStore, null=True, on_delete=models.CASCADE)
     order_id = models.BigIntegerField()
@@ -1963,10 +1959,7 @@ class ShopifyOrderTrack(models.Model):
         return list(set(data.get('errors', [])))
 
 
-class ShopifyBoard(models.Model):
-    class Meta:
-        ordering = ['title']
-
+class ShopifyBoard(BoardBase):
     title = models.CharField(max_length=512, blank=True, default='')
     config = models.CharField(max_length=512, blank=True, default='')
     favorite = models.BooleanField(default=False)
