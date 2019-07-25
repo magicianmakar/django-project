@@ -1,4 +1,3 @@
-import textwrap
 import json
 import re
 from urllib.parse import urlencode
@@ -49,7 +48,7 @@ class WooStore(StoreBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title
+        return f'<WooStore: {self.id}>'
 
     def get_wcapi(self, timeout=30):
         return API(
@@ -155,16 +154,7 @@ class WooProduct(ProductBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        try:
-            title = self.title
-            if len(title) > 79:
-                return '{}...'.format(textwrap.wrap(title, width=79)[0])
-            elif title:
-                return title
-            else:
-                return '<WooProduct: {}>'.format(self.id)
-        except:
-            return '<WooProduct: {}>'.format(self.id)
+        return f'<WooProduct: {self.id}>'
 
     @property
     def parsed(self):
@@ -668,6 +658,9 @@ class WooOrderTrack(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
     status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
 
+    def __str__(self):
+        return f'<WooOrderTrack: {self.id}>'
+
     def save(self, *args, **kwargs):
         try:
             self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
@@ -757,9 +750,6 @@ class WooOrderTrack(models.Model):
         else:
             return ALIEXPRESS_SOURCE_STATUS.get(safe_str(self.source_status_details).lower())
 
-    def __str__(self):
-        return '{} | {}'.format(self.order_id, self.line_id)
-
 
 class WooBoard(models.Model):
     class Meta:
@@ -776,7 +766,7 @@ class WooBoard(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.title
+        return f'<WooBoard: {self.id}>'
 
     def saved_count(self):
         return self.products.filter(store__is_active=True, source_id=0).count()
@@ -797,4 +787,4 @@ class WooUserUpload(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.url.replace('%2F', '/').split('/')[-1]
+        return f'<WooUserUpload: {self.id}>'

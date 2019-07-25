@@ -1,6 +1,5 @@
 import json
 import re
-import textwrap
 
 from urllib.parse import urlparse
 
@@ -68,7 +67,7 @@ class GrooveKartStore(StoreBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title
+        return f'<GrooveKartStore: {self.id}>'
 
     @property
     def request(self):
@@ -174,16 +173,7 @@ class GrooveKartProduct(ProductBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        try:
-            title = self.title
-            if len(title) > 79:
-                return '{}...'.format(textwrap.wrap(title, width=79)[0])
-            elif title:
-                return title
-            else:
-                return '<GrooveKartProduct: {}'.format(self.id)
-        except:
-            return '<GrooveKartProduct: {}'.format(self.id)
+        return f'<GrooveKartProduct: {self.id}>'
 
     @staticmethod
     def get_variant_options(variant):
@@ -598,12 +588,7 @@ class GrooveKartSupplier(SupplierBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        if self.supplier_name:
-            return self.supplier_name
-        elif self.supplier_url:
-            return self.supplier_url
-        else:
-            return '<GrooveKartSupplier: {}>'.format(self.id)
+        return f'<GrooveKartSupplier: {self.id}>'
 
     def get_source_id(self):
         try:
@@ -698,7 +683,7 @@ class GrooveKartUserUpload(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.url.replace('%2F', '/').split('/')[-1]
+        return f'<GrooveKartUserUpload: {self.id}>'
 
 
 class GrooveKartBoard(models.Model):
@@ -715,7 +700,7 @@ class GrooveKartBoard(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.title
+        return f'<GrooveKartBoard: {self.id}>'
 
     def saved_count(self):
         products = self.products.filter(Q(store__is_active=True) | Q(store__isnull=True))
@@ -754,6 +739,9 @@ class GrooveKartOrderTrack(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
     status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
+
+    def __str__(self):
+        return f'<GrooveKartOrderTrack: {self.id}>'
 
     def save(self, *args, **kwargs):
         try:
@@ -830,6 +818,3 @@ class GrooveKartOrderTrack(models.Model):
         return status_map.get(self.source_status)
 
     get_source_status.admin_order_field = 'source_status'
-
-    def __str__(self):
-        return '{} | {}'.format(self.order_id, self.line_id)

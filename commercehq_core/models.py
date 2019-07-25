@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 
 import re
-import textwrap
 import simplejson as json
 from urllib.parse import urlparse
 
@@ -51,7 +50,7 @@ class CommerceHQStore(StoreBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title
+        return f'<CommerceHQStore: {self.id}>'
 
     def save(self, *args, **kwargs):
         if not self.store_hash:
@@ -164,16 +163,7 @@ class CommerceHQProduct(ProductBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        try:
-            title = self.title
-            if len(title) > 79:
-                return '{}...'.format(textwrap.wrap(title, width=79)[0])
-            elif title:
-                return title
-            else:
-                return '<CommerceHQProduct: {}'.format(self.id)
-        except:
-            return '<CommerceHQProduct: {}'.format(self.id)
+        return f'<CommerceHQProduct: {self.id}'
 
     def save(self, *args, **kwargs):
         data = json.loads(self.data)
@@ -678,12 +668,7 @@ class CommerceHQSupplier(SupplierBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        if self.supplier_name:
-            return self.supplier_name
-        elif self.supplier_url:
-            return self.supplier_url
-        else:
-            return '<CommerceHQSupplier: {}>'.format(self.id)
+        return f'<CommerceHQSupplier: {self.id}>'
 
     def get_source_id(self):
         try:
@@ -781,7 +766,7 @@ class CommerceHQBoard(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.title
+        return f'<CommerceHQBoard: {self.id}>'
 
     def saved_count(self):
         return self.products.filter(store__is_active=True, source_id=0).count()
@@ -817,6 +802,9 @@ class CommerceHQOrderTrack(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
     status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
+
+    def __str__(self):
+        return f'<CommerceHQOrderTrack: {self.id}>'
 
     def save(self, *args, **kwargs):
         try:
@@ -926,6 +914,8 @@ class CommerceHQOrderTrack(models.Model):
         else:
             return status_map.get(self.source_status)
 
+    get_source_status.admin_order_field = 'source_status'
+
     def get_source_status_details(self):
         if self.source_status_details and ',' in self.source_status_details:
             source_status_details = []
@@ -935,8 +925,6 @@ class CommerceHQOrderTrack(models.Model):
             return ', '.join(set(source_status_details))
         else:
             return ALIEXPRESS_SOURCE_STATUS.get(safe_str(self.source_status_details).lower())
-
-    get_source_status.admin_order_field = 'source_status'
 
     def get_source_status_color(self):
         if not self.source_status:
@@ -959,9 +947,6 @@ class CommerceHQOrderTrack(models.Model):
         if self.source_id:
             return ', '.join(set(['#{}'.format(i) for i in self.source_id.split(',')]))
 
-    def __str__(self):
-        return '{} | {}'.format(self.order_id, self.line_id)
-
 
 class CommerceHQUserUpload(models.Model):
     class Meta:
@@ -975,4 +960,4 @@ class CommerceHQUserUpload(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.url.replace('%2F', '/').split('/')[-1]
+        return f'<CommerceHQUserUpload: {self.id}>'

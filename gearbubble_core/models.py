@@ -1,6 +1,5 @@
 import requests
 import json
-import textwrap
 import re
 
 from pusher import Pusher
@@ -44,7 +43,7 @@ class GearBubbleStore(StoreBase):
     mode = models.CharField(max_length=7, choices=MODE_CHOICES, default=LIVE)
 
     def __str__(self):
-        return self.title
+        return f'<GearBubbleStore: {self.id}>'
 
     def save(self, *args, **kwargs):
         if not self.store_hash:
@@ -167,16 +166,7 @@ class GearBubbleProduct(ProductBase):
         return options
 
     def __str__(self):
-        try:
-            title = self.title
-            if len(title) > 79:
-                return '{}...'.format(textwrap.wrap(title, width=79)[0])
-            elif title:
-                return title
-            else:
-                return '<GearBubbleProduct: {}'.format(self.id)
-        except:
-            return '<GearBubbleProduct: {}'.format(self.id)
+        return f'<GearBubbleProduct: {self.id}>'
 
     @property
     def parsed(self):
@@ -544,12 +534,7 @@ class GearBubbleSupplier(SupplierBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        if self.supplier_name:
-            return self.supplier_name
-        elif self.supplier_url:
-            return self.supplier_url
-        else:
-            return '<GearBubbleSupplier: {}>'.format(self.id)
+        return f'<GearBubbleSupplier: {self.id}>'
 
     def get_source_id(self):
         try:
@@ -634,7 +619,7 @@ class GearUserUpload(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.url.replace('%2F', '/').split('/')[-1]
+        return f'<GearUserUpload: {self.id}>'
 
 
 class GearBubbleBoard(models.Model):
@@ -652,7 +637,7 @@ class GearBubbleBoard(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.title
+        return f'<GearBubbleBoard: {self.id}>'
 
     def saved_count(self):
         products = self.products.filter(Q(store__is_active=True) | Q(store__isnull=True))
@@ -769,4 +754,4 @@ class GearBubbleOrderTrack(models.Model):
     get_source_status.admin_order_field = 'source_status'
 
     def __str__(self):
-        return '{} | {}'.format(self.order_id, self.line_id)
+        return f'<GearBubbleOrderTrack: {self.id}>'

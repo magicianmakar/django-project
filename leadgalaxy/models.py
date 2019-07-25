@@ -9,7 +9,6 @@ from django.utils.crypto import get_random_string
 import re
 import simplejson as json
 import requests
-import textwrap
 import hashlib
 from urllib.parse import urlparse
 
@@ -28,7 +27,7 @@ from shopified_core.utils import (
     ALIEXPRESS_SOURCE_STATUS,
 )
 from product_alerts.utils import monitor_product
-from shopified_core.decorators import upsell_page_permissions
+from shopified_core.decorators import add_to_class, upsell_page_permissions
 from shopified_core.models import StoreBase, SupplierBase, ProductBase
 
 
@@ -65,44 +64,36 @@ SUBUSER_PERMISSIONS = (
     ('view_profit_dashboard', 'View profit dashboard'),
 )
 
-SUBUSER_STORE_PERMISSIONS = (
+SUBUSER_STORE_PERMISSIONS_BASE = (
     ('save_for_later', 'Save products for later'),
-    ('send_to_shopify', 'Send products to Shopify'),
     ('delete_products', 'Delete products'),
     ('place_orders', 'Place orders'),
     ('view_alerts', 'View alerts'),
+)
+
+SUBUSER_STORE_PERMISSIONS = (
+    *SUBUSER_STORE_PERMISSIONS_BASE,
+    ('send_to_shopify', 'Send products to Shopify'),
 )
 
 SUBUSER_CHQ_STORE_PERMISSIONS = (
-    ('save_for_later', 'Save products for later'),
+    *SUBUSER_STORE_PERMISSIONS_BASE,
     ('send_to_chq', 'Send products to CHQ'),
-    ('delete_products', 'Delete products'),
-    ('place_orders', 'Place orders'),
-    ('view_alerts', 'View alerts'),
 )
 
 SUBUSER_WOO_STORE_PERMISSIONS = (
-    ('save_for_later', 'Save products for later'),
+    *SUBUSER_STORE_PERMISSIONS_BASE,
     ('send_to_woo', 'Send products to WooCommerce'),
-    ('delete_products', 'Delete products'),
-    ('place_orders', 'Place orders'),
-    ('view_alerts', 'View alerts'),
 )
 
 SUBUSER_GEAR_STORE_PERMISSIONS = (
-    ('save_for_later', 'Save products for later'),
+    *SUBUSER_STORE_PERMISSIONS_BASE,
     ('send_to_gear', 'Send products to GearBubble'),
-    ('delete_products', 'Delete products'),
-    ('place_orders', 'Place orders'),
-    ('view_alerts', 'View alerts'),
 )
 
 SUBUSER_GKART_STORE_PERMISSIONS = (
-    ('save_for_later', 'Save products for later'),
+    *SUBUSER_STORE_PERMISSIONS_BASE,
     ('send_to_gear', 'Send products to GearBubble'),
-    ('delete_products', 'Delete products'),
-    ('place_orders', 'Place orders'),
-    ('view_alerts', 'View alerts'),
     ('view_profit_dashboard', 'View profit dashboard'),
 )
 
@@ -111,12 +102,6 @@ PRICE_MARKUP_TYPES = (
     ('margin_amount', 'Increase by amount'),
     ('fixed_amount', 'Set to fixed amount'),
 )
-
-
-def add_to_class(cls, name):
-    def _decorator(*args, **kwargs):
-        cls.add_to_class(name, args[0])
-    return _decorator
 
 
 class UserProfile(models.Model):
@@ -161,7 +146,7 @@ class UserProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     def __str__(self):
-        return '{} | {}'.format(self.user.username, self.plan.title if self.plan else 'None')
+        return f'<UserProfile: {self.id}>'
 
     @property
     def has_product(self):
@@ -660,7 +645,7 @@ class UserCompany(models.Model):
     vat = models.CharField(max_length=100, blank=True, default='')
 
     def __str__(self):
-        return self.name
+        return f'<UserCompany: {self.id}>'
 
 
 class SubuserPermission(models.Model):
@@ -673,10 +658,7 @@ class SubuserPermission(models.Model):
         unique_together = 'codename', 'store'
 
     def __str__(self):
-        if self.store:
-            return '{} - {}'.format(self.store.title, self.codename)
-        else:
-            return self.codename
+        return f'<SubuserPermission: {self.id}>'
 
 
 class SubuserCHQPermission(models.Model):
@@ -689,7 +671,7 @@ class SubuserCHQPermission(models.Model):
         unique_together = 'codename', 'store'
 
     def __str__(self):
-        return '{} - {}'.format(self.store.title, self.codename)
+        return f'<SubuserCHQPermission: {self.id}>'
 
 
 class SubuserWooPermission(models.Model):
@@ -702,7 +684,7 @@ class SubuserWooPermission(models.Model):
         unique_together = 'codename', 'store'
 
     def __str__(self):
-        return '{} - {}'.format(self.store.title, self.codename)
+        return f'<SubuserCHQPermission: {self.id}>'
 
 
 class SubuserGearPermission(models.Model):
@@ -715,7 +697,7 @@ class SubuserGearPermission(models.Model):
         unique_together = 'codename', 'store'
 
     def __str__(self):
-        return '{} - {}'.format(self.store.title, self.codename)
+        return f'<SubuserGearPermission: {self.id}>'
 
 
 class SubuserGKartPermission(models.Model):
@@ -728,93 +710,7 @@ class SubuserGKartPermission(models.Model):
         unique_together = 'codename', 'store'
 
     def __str__(self):
-        return '{} - {}'.format(self.store.title, self.codename)
-
-
-@add_to_class(User, 'get_first_name')
-def user_first_name(self):
-    return self.first_name.title() if self.first_name else self.username
-
-
-@add_to_class(User, 'get_access_token')
-def user_get_access_token(self):
-    try:
-        access_token = AccessToken.objects.filter(user=self).latest('created_at')
-    except:
-        token = get_random_string(32)
-        token = hashlib.md5(token.encode()).hexdigest()
-
-        access_token = AccessToken(user=self, token=token)
-        access_token.save()
-
-    return access_token.token
-
-
-@add_to_class(User, 'can')
-def user_can(self, perms, store_id=None):
-    return self.profile.can(perms, store_id)
-
-
-@add_to_class(User, 'get_config')
-def user_get_config(self, name=None, default_value=None):
-    return self.profile.get_config_value(name, default_value)
-
-
-@add_to_class(User, 'set_config')
-def user_set_config(self, name, value):
-    return self.profile.set_config_value(name, value)
-
-
-@add_to_class(User, 'get_boards')
-def user_get_boards(self):
-    if self.is_subuser:
-        return self.profile.subuser_parent.get_boards()
-    else:
-        return self.shopifyboard_set.all().order_by('title')
-
-
-@add_to_class(User, 'is_stripe_customer')
-def user_stripe_customer(self):
-    try:
-        return bool(self.stripe_customer and self.stripe_customer.customer_id)
-    except:
-        return False
-
-
-@add_to_class(User, 'have_stripe_billing')
-def user_have_stripe_billing(self):
-    try:
-        return bool(self.stripe_customer and self.stripe_customer.customer_id)
-    except:
-        return False
-
-
-@add_to_class(User, 'is_recurring_customer')
-def user_recurring_customer(self):
-    try:
-        return self.profile.plan.is_stripe()
-    except:
-        return False
-
-
-@add_to_class(User, 'have_billing_info')
-def user_have_billing_info(self):
-    try:
-        return bool(self.stripe_customer.source)
-    except:
-        return False
-
-
-@add_to_class(User, 'can_trial')
-def user_can_trial(self):
-    if self.profile.from_shopify_app_store():
-        return self.profile.get_config_value('_can_trial', True)
-
-    try:
-        return self.stripe_customer.can_trial
-    except User.stripe_customer.RelatedObjectDoesNotExist:
-        # If the customer object is not created yet, that mean the user didn't chose a Stripe plan yet
-        return True
+        return f'<SubuserGKartPermission: {self.id}>'
 
 
 class ShopifyStore(StoreBase):
@@ -866,7 +762,7 @@ class ShopifyStore(StoreBase):
         super(ShopifyStore, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.title
+        return f'<ShopifyStore: {self.id} | {self.shop}>'
 
     def get_link(self, page=None, api=False):
         if api:
@@ -1110,7 +1006,7 @@ class AccessToken(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.token
+        return f'<AccessToken: {self.id}>'
 
 
 class ShopifyProduct(ProductBase):
@@ -1152,16 +1048,7 @@ class ShopifyProduct(ProductBase):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        try:
-            title = self.title
-            if len(title) > 79:
-                return '{}...'.format(textwrap.wrap(title, width=79)[0])
-            elif title:
-                return title
-            else:
-                return '<ShopifyProduct: {}'.format(self.id)
-        except:
-            return '<ShopifyProduct: {}'.format(self.id)
+        return f'<ShopifyProduct: {self.id}>'
 
     def get_original_data(self):
         if self.original_data_key:
@@ -1739,12 +1626,7 @@ class ProductSupplier(SupplierBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        if self.supplier_name:
-            return self.supplier_name
-        elif self.supplier_url:
-            return self.supplier_url
-        else:
-            return '<ProductSupplier: {}>'.format(self.id)
+        return f'<ProductSupplier: {self.id}>'
 
     def get_source_id(self):
         try:
@@ -1837,7 +1719,7 @@ class ShopifyProductImage(models.Model):
     image = models.CharField(max_length=512, blank=True, default='')
 
     def __str__(self):
-        return '{} | {}'.format(self.product, self.variant)
+        return f'<ShopifyProductImage: {self.id}>'
 
 
 class ShopifyOrderTrack(models.Model):
@@ -1870,6 +1752,9 @@ class ShopifyOrderTrack(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
     status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
+
+    def __str__(self):
+        return f'<ShopifyOrderTrack: {self.id} | {self.order_id} - {self.line_id}>'
 
     def save(self, *args, **kwargs):
         try:
@@ -2077,9 +1962,6 @@ class ShopifyOrderTrack(models.Model):
 
         return list(set(data.get('errors', [])))
 
-    def __str__(self):
-        return '{} | {}'.format(self.order_id, self.line_id)
-
 
 class ShopifyBoard(models.Model):
     class Meta:
@@ -2096,7 +1978,7 @@ class ShopifyBoard(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.title
+        return f'<ShopifyBoard: {self.id} | {self.title}>'
 
     def saved_count(self, request=None):
         # Filter non-connected products
@@ -2136,7 +2018,7 @@ class ShopifyWebhook(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.token
+        return f'<ShopifyWebhook: {self.id}>'
 
     def detach(self):
         """ Remove the webhook from Shopify """
@@ -2157,7 +2039,7 @@ class AppPermission(models.Model):
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
 
     def __str__(self):
-        return self.description
+        return f'<AppPermission: {self.id} | {self.name}>'
 
 
 class ClippingMagicPlan(models.Model):
@@ -2165,7 +2047,7 @@ class ClippingMagicPlan(models.Model):
     amount = models.IntegerField(default=0, verbose_name='In USD')
 
     def __str__(self):
-        return '{} / {}'.format(self.allowed_credits, self.amount)
+        return f'<ClippingMagicPlan: {self.id} | {self.allowed_credits} / {self.amount}>'
 
 
 class ClippingMagic(models.Model):
@@ -2180,7 +2062,7 @@ class ClippingMagic(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return '{} / {} Credits'.format(self.user.username, self.remaining_credits)
+        return f'<ClippingMagic: {self.id} | {self.remaining_credits} Credits>'
 
 
 class CaptchaCreditPlan(models.Model):
@@ -2188,7 +2070,7 @@ class CaptchaCreditPlan(models.Model):
     amount = models.IntegerField(default=0, verbose_name='In USD')
 
     def __str__(self):
-        return '{} / {}'.format(self.allowed_credits, self.amount)
+        return f'<CaptchaCreditPlan: {self.id} | {self.allowed_credits}>'
 
 
 class CaptchaCredit(models.Model):
@@ -2203,7 +2085,7 @@ class CaptchaCredit(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return '{} / {} Credits'.format(self.user.username, self.remaining_credits)
+        return f'<CaptchaCredit: {self.id} | {self.remaining_credits} Credits>'
 
 
 class GroupPlan(models.Model):
@@ -2238,6 +2120,9 @@ class GroupPlan(models.Model):
     payment_interval = models.CharField(max_length=25, choices=PLAN_PAYMENT_TYPE, default='')
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     locked = models.BooleanField(default=False, verbose_name='Disable Direct Subscription')
+
+    def __str__(self):
+        return f'<GroupPlan: {self.id} | {self.title}>'
 
     def save(self, *args, **kwargs):
         if not self.register_hash:
@@ -2314,9 +2199,6 @@ class GroupPlan(models.Model):
     def large_badge_image(self):
         return self.badge_image.replace('_small.', '.')
 
-    def __str__(self):
-        return self.title
-
 
 class GroupPlanChangeLog(models.Model):
     user = models.OneToOneField(User, related_name='plan_change_log', on_delete=models.CASCADE)
@@ -2327,6 +2209,9 @@ class GroupPlanChangeLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f'<GroupPlanChangeLog: {self.id}>'
+
 
 class FeatureBundle(models.Model):
     title = models.CharField(max_length=30, verbose_name="Bundle Title")
@@ -2336,6 +2221,9 @@ class FeatureBundle(models.Model):
     hidden_from_user = models.BooleanField(default=False, verbose_name='Hide in User Profile')
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
+
+    def __str__(self):
+        return f'<FeatureBundle: {self.id} | {self.title}>'
 
     def save(self, *args, **kwargs):
         if not self.register_hash:
@@ -2348,9 +2236,6 @@ class FeatureBundle(models.Model):
 
     def get_description(self):
         return self.description if self.description else self.title
-
-    def __str__(self):
-        return self.title
 
 
 class UserUpload(models.Model):
@@ -2365,7 +2250,7 @@ class UserUpload(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        return self.url.replace('%2F', '/').split('/')[-1]
+        return f'<UserUpload: {self.id}>'
 
 
 class PlanRegistration(models.Model):
@@ -2384,6 +2269,15 @@ class PlanRegistration(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __str__(self):
+        desc = ''
+        if self.plan:
+            desc = f'Plan: {self.plan.title}'
+        elif self.bundle:
+            desc = f'Bundle: {self.bundle.title}'
+
+        return f'<PlanRegistration: {self.id} | {desc}>'
 
     def save(self, *args, **kwargs):
         if not self.register_hash:
@@ -2442,14 +2336,6 @@ class PlanRegistration(models.Model):
         else:
             return None
 
-    def __str__(self):
-        if self.plan:
-            return 'Plan: {}'.format(self.plan.title)
-        elif self.bundle:
-            return 'Bundle: {}'.format(self.bundle.title)
-        else:
-            return '<PlanRegistration: {}>'.format(self.id)
-
 
 class PlanPayment(models.Model):
     class Meta:
@@ -2466,7 +2352,7 @@ class PlanPayment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return '{} | {}'.format(self.provider, self.payment_id)
+        return f'<PlanPayment: {self.id}>'
 
 
 class DescriptionTemplate(models.Model):
@@ -2475,7 +2361,7 @@ class DescriptionTemplate(models.Model):
     description = models.TextField()
 
     def __str__(self):
-        return self.title
+        return f'<DescriptionTemplate: {self.id}>'
 
 
 class PriceMarkupRule(models.Model):
@@ -2488,7 +2374,7 @@ class PriceMarkupRule(models.Model):
     markup_type = models.CharField(max_length=25, choices=PRICE_MARKUP_TYPES, default=PRICE_MARKUP_TYPES[0][0])
 
     def __str__(self):
-        return self.name
+        return f'<PriceMarkupRule: {self.id}>'
 
     def save(self, *args, **kwargs):
         name = '{} for prices from {:0.2f} to {:0.2f}'.format(self.get_markup_type_display(), self.min_price, self.max_price)
@@ -2511,16 +2397,8 @@ class AdminEvent(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-
-def user_is_subsuser(self):
-    return self.profile.is_subuser
-
-
-def user_models_user(self):
-    if not self.profile.is_subuser:
-        return self
-    else:
-        return self.profile.subuser_parent
+    def __str__(self):
+        return f'<AdminEvent: {self.id}>'
 
 
 class DashboardVideo(models.Model):
@@ -2531,10 +2409,107 @@ class DashboardVideo(models.Model):
     display_order = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        return f'{self.title} | {self.url}'
+        return f'<DashboardVideo: {self.id}>'
 
     class Meta:
         ordering = 'display_order',
+
+
+@add_to_class(User, 'get_first_name')
+def user_first_name(self):
+    return self.first_name.title() if self.first_name else self.username
+
+
+@add_to_class(User, 'get_access_token')
+def user_get_access_token(self):
+    try:
+        access_token = AccessToken.objects.filter(user=self).latest('created_at')
+    except:
+        token = get_random_string(32)
+        token = hashlib.md5(token.encode()).hexdigest()
+
+        access_token = AccessToken(user=self, token=token)
+        access_token.save()
+
+    return access_token.token
+
+
+@add_to_class(User, 'can')
+def user_can(self, perms, store_id=None):
+    return self.profile.can(perms, store_id)
+
+
+@add_to_class(User, 'get_config')
+def user_get_config(self, name=None, default_value=None):
+    return self.profile.get_config_value(name, default_value)
+
+
+@add_to_class(User, 'set_config')
+def user_set_config(self, name, value):
+    return self.profile.set_config_value(name, value)
+
+
+@add_to_class(User, 'get_boards')
+def user_get_boards(self):
+    if self.is_subuser:
+        return self.profile.subuser_parent.get_boards()
+    else:
+        return self.shopifyboard_set.all().order_by('title')
+
+
+@add_to_class(User, 'is_stripe_customer')
+def user_stripe_customer(self):
+    try:
+        return bool(self.stripe_customer and self.stripe_customer.customer_id)
+    except:
+        return False
+
+
+@add_to_class(User, 'have_stripe_billing')
+def user_have_stripe_billing(self):
+    try:
+        return bool(self.stripe_customer and self.stripe_customer.customer_id)
+    except:
+        return False
+
+
+@add_to_class(User, 'is_recurring_customer')
+def user_recurring_customer(self):
+    try:
+        return self.profile.plan.is_stripe()
+    except:
+        return False
+
+
+@add_to_class(User, 'have_billing_info')
+def user_have_billing_info(self):
+    try:
+        return bool(self.stripe_customer.source)
+    except:
+        return False
+
+
+@add_to_class(User, 'can_trial')
+def user_can_trial(self):
+    if self.profile.from_shopify_app_store():
+        return self.profile.get_config_value('_can_trial', True)
+
+    try:
+        return self.stripe_customer.can_trial
+    except User.stripe_customer.RelatedObjectDoesNotExist:
+        # If the customer object is not created yet, that mean the user didn't chose a Stripe plan yet
+        return True
+
+
+def user_is_subsuser(self):
+    return self.profile.is_subuser
+
+
+def user_models_user(self):
+    if not self.profile.is_subuser:
+        return self
+    else:
+        return self.profile.subuser_parent
 
 
 User.add_to_class("is_subuser", cached_property(user_is_subsuser))
