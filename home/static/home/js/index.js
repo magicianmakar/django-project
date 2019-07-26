@@ -381,14 +381,6 @@
         e.preventDefault();
 
         var storeType = $(this).attr('store-type');
-        var useDomain = $(this).attr('tracking-domain');
-        if (useDomain) {
-            $('#custom-tracking-type').text('Domain');
-            $('#tracking-url-wrapper').css('display', 'none');
-        } else {
-            $('#custom-tracking-type').text('URL');
-            $('#tracking-url-wrapper').css('display', '');
-        }
         $.ajax({
             url: api_url('custom-tracking-url', storeType),
             type: 'GET',
@@ -468,6 +460,81 @@
             },
             error: function(data) {
                 displayAjaxError('Custom Tracking URL', data);
+            },
+            complete: function () {
+                btn.bootstrapBtn('reset');
+            }
+        });
+    });
+
+    $('.change-tracking-domain').click(function(e) {
+        e.preventDefault();
+
+        var storeType = $(this).attr('store-type');
+        $.ajax({
+            url: api_url('custom-tracking-url', storeType),
+            type: 'GET',
+            data: {
+                store: $(this).attr('store-id'),
+                storeType: storeType
+            },
+            success: function(data) {
+                var trackingInput = $('<input id="custom-tracking-domain" type="text">');
+                trackingInput.val(data.tracking_url);
+
+                // Use dropdown to show available domains
+                if (data.carriers) {
+                    trackingInput = $('<select id="custom-tracking-domain">');
+                    trackingInput.append($('<option>'));
+                    for (var i = 0, iLength = data.carriers.length; i < iLength; i++) {
+                        var carrier = data.carriers[i];
+                        var trackingOption = $('<option>');
+                        trackingOption.val(carrier.id);
+                        trackingOption.text(carrier.title);
+                        if (data.tracking_url == carrier.id) {
+                            trackingOption.attr('selected', true);
+                        }
+                        trackingInput.append(trackingOption);
+                    }
+                }
+
+                trackingInput.attr('store', data.store);
+                trackingInput.attr('store-type', storeType);
+                trackingInput.addClass('form-control');
+                $('#custom-tracking-domain-placeholder').children().remove();
+                $('#custom-tracking-domain-placeholder').append(trackingInput);
+            },
+            error: function(data) {
+                displayAjaxError('Custom Tracking URL', data);
+            }
+        });
+
+        $("#modal-store-tracking-domain").modal('show');
+    });
+
+    $('#save-custom-tracking-domain-btn').click(function (e) {
+        e.preventDefault();
+
+        var btn = $(this);
+        btn.bootstrapBtn('loading');
+
+        var tracking_url = $('#custom-tracking-domain').val().trim();
+        var store = $('#custom-tracking-domain').attr('store');
+        var storeType = $('#custom-tracking-domain').attr('store-type');
+
+        $.ajax({
+            url: api_url('custom-tracking-url', storeType),
+            type: 'POST',
+            data: {
+                store: store,
+                tracking_url: tracking_url
+            },
+            success: function(data) {
+                toastr.success('Carrier saved!', 'Custom Tracking Carrier');
+                $("#modal-store-tracking-domain").modal('hide');
+            },
+            error: function(data) {
+                displayAjaxError('Custom Tracking Carrier', data);
             },
             complete: function () {
                 btn.bootstrapBtn('reset');

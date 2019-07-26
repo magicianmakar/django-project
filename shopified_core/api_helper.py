@@ -80,3 +80,6 @@ class ApiHelperBase:
 
     def filter_productchange_by_store(self, store):
         pass
+
+    def get_store_tracking_carriers(self, store):
+        return []

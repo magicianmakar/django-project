@@ -712,7 +712,8 @@ class ApiBase(ApiResponseMixin, View):
 
         return self.api_success({
             'tracking_url': custom_tracking,
-            'store': store.id
+            'store': store.id,
+            'carriers': self.helper.get_store_tracking_carriers(store)
         })
 
     def post_custom_tracking_url(self, request, user, data):

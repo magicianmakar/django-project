@@ -823,7 +823,7 @@ def add_aftership_to_store_carriers(store):
         return None
 
 
-def get_shipping_carrier(shipping_carrier_name, store):
+def get_shipping_carrier(shipping_carrier_name, store, carrier_id=None):
     cache_key = 'chq_shipping_carriers_{}_{}'.format(store.id, shipping_carrier_name)
 
     shipping_carriers = cache.get(cache_key)
@@ -832,6 +832,9 @@ def get_shipping_carrier(shipping_carrier_name, store):
 
     shipping_carriers_map = {}
     for i in store_shipping_carriers(store):
+        # Shipping carrier id can be defined in user config
+        if carrier_id and safe_int(carrier_id) == i['id'] and not i.get('is_deleted', False):
+            return i
         shipping_carriers_map[i['title']] = i
 
     shipping_carrier = shipping_carriers_map.get(shipping_carrier_name, {})
@@ -956,10 +959,11 @@ def order_track_fulfillment(order_track, user_config=None):
             shipping_carrier_name = 'USPS'
 
     custom_tracking_carrier = user_config.get('chq_custom_tracking', {})
+    custom_tracking_carrier_id = None
     if custom_tracking_carrier:
-        shipping_carrier_name = custom_tracking_carrier.get(str(order_track.store_id))
+        custom_tracking_carrier_id = custom_tracking_carrier.get(str(order_track.store_id))
 
-    shipping_carrier = get_shipping_carrier(shipping_carrier_name, order_track.store)
+    shipping_carrier = get_shipping_carrier(shipping_carrier_name, order_track.store, carrier_id=custom_tracking_carrier_id)
 
     if fulfilment_id is None:
         store = order_track.store
