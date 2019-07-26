@@ -38,11 +38,12 @@
                 extension_version: dataLayer[0].extension_version,
 
                 {% cache 1800 all_stores_count user.id %}
-                stores_count: {{user.profile.get_shopify_stores.count}},
-                chq_count: {{user.profile.get_chq_stores.count}},
-                woo_count: {{user.profile.get_woo_stores.count}},
-                gear_count: {{user.profile.get_gear_stores.count}},
-                gkart_count: {{user.profile.get_gkart_stores.count}},
+                stores_count: {{user_stores.all|length}},
+                shopify_count: {{user_stores.shopify|length}},
+                chq_count: {{user_stores.chq|length}},
+                woo_count: {{user_stores.woo|length}},
+                gear_count: {{user_stores.gear|length}},
+                gkart_count: {{user_stores.gkart|length}},
                 {% endcache %}
 
                 {% cache 604800 total_orders user.id %}

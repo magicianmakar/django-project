@@ -20,7 +20,7 @@ class Command(DropifiedBaseCommand):
             self.write('Intercom API key is not set')
             return
 
-        profiles = UserProfile.objects.select_related('user').order_by('-updated_at')
+        profiles = UserProfile.objects.select_related('user').order_by('id')
         if options['days']:
             profiles = profiles.filter(updated_at__gte=arrow.utcnow().replace(days=-options['days']).datetime)
 
@@ -28,7 +28,12 @@ class Command(DropifiedBaseCommand):
             self.progress_total(profiles.count())
 
         for profile in profiles:
-            self.update_user(profile)
+            try:
+                self.update_user(profile)
+            except KeyboardInterrupt:
+                break
+            except:
+                raven_client.captureException()
 
     def update_user(self, profile):
         user = profile.user
@@ -53,7 +58,9 @@ class Command(DropifiedBaseCommand):
             }
         }
 
-        data['custom_attributes']['stores_count'] = data['custom_attributes']['shopify_count']
+        data['custom_attributes']['stores_count'] = sum(
+            data['custom_attributes'][i] for i in ['shopify_count', 'chq_count', 'woo_count', 'gkart_count', 'gear_count']
+        )
 
         try:
             r = requests.post(

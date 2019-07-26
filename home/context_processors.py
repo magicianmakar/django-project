@@ -7,11 +7,11 @@ def all_stores(request):
         return {}
 
     stores = {
-        'shopify': user.profile.get_shopify_stores(),
-        'chq': user.profile.get_chq_stores(),
-        'woo': user.profile.get_woo_stores(),
-        'gear': user.profile.get_gear_stores(),
-        'gkart': user.profile.get_gkart_stores(),
+        'shopify': list(user.profile.get_shopify_stores()),
+        'chq': list(user.profile.get_chq_stores()),
+        'woo': list(user.profile.get_woo_stores()),
+        'gear': list(user.profile.get_gear_stores()),
+        'gkart': list(user.profile.get_gkart_stores()),
         'all': [],
         'type_count': 0,
     }
