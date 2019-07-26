@@ -473,6 +473,7 @@ class ApiTestCase(BaseTestCase):
         self.store = WooStoreFactory(user=self.user)
         self.client.login(username=self.user.username, password=self.password)
 
+    @patch('woocommerce_core.models.WooProduct.update_weight_unit', Mock(return_value=None))
     @patch('woocommerce_core.models.WooProduct.retrieve')
     def test_post_product_connect(self, product_retrieve):
         product = WooProductFactory(

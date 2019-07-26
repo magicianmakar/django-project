@@ -68,3 +68,6 @@ class CHQApiHelper(ApiHelperBase):
 
     def filter_productchange_by_store(self, store):
         return ProductChange.objects.filter(chq_product__store=store)
+
+    def get_store_tracking_carriers(self, store):
+        return utils.store_shipping_carriers(store)

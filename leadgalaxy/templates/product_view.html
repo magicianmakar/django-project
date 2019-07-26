@@ -77,6 +77,18 @@
                     </a>
                 </li>
                 {% endif %}
+                {% if request.user|can:'aliextractor.use' %}
+                <li>
+                    <a data-toggle="tab" href="#tab-ae"
+                       data-auto-click="#ae"
+                       data-auto-click-onload="true"
+                       class="product-ae-tab"
+                       product-id="{{product.id}}"
+                    >
+                        <img src="{% static 'img/ae_small.png' %}" class="ae-tab-icon"> AliExtractor
+                    </a>
+                </li>
+                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -216,7 +228,12 @@
                     <div class="row" {% if shopify_product %}style="display:none"{% endif %}>
                         <div class="form-group col-xs-6">
                             <label for="">Variants</label>
+
+
                         </div>
+                        {% if request.user|can:'aliextractor.use' %}
+                            {% include 'aliextractor/get_pricing_data.html' %}
+                        {% endif %}
                     </div>
 
                     <div id="variants" class="row well"
@@ -811,7 +828,27 @@
         </div>
         {% endif %}
 
-    </div>
+        {% if request.user|can:'aliextractor.use' %}
+
+
+            <div id="tab-ae" class="tab-pane">
+                <div class="panel-body">
+                <!-- Product view -->
+                <div class=" row">
+
+                    <div class="col-md-12 ae-extension-check">
+                        {% include "partial/ae-tab-default.html" %}
+                    </div>
+
+                    <div class="col-md-12 ae-extension-content">
+                    </div>
+
+                </div>
+
+            </div>
+        {% endif %}
+
+        </div>
 </div>
     </div>
 </div>
@@ -1031,6 +1068,7 @@
     </div>
 </div>
 
+{% include 'partial/ae_product_info_modal.html' %}
 {% include 'partial/shopify_image_randomize_modal.html' %}
 
 <div id="blueimp-gallery" class="blueimp-gallery">
@@ -1055,6 +1093,9 @@
 <link href="{% static 'css/trix.css' %}" rel="stylesheet">
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 <link href="{% static 'shopified/css/product_view.css' %}" rel="stylesheet">
+
+<link href="{% static 'aliextractor/css/ae-tab.css' %}" rel="stylesheet">
+
 
 <style type="text/css">
     .select2.select2-container.select2-container--default {
@@ -1196,10 +1237,15 @@ $(function() {
         dragdrop: true,
         init: {
             BeforeUpload: function(up, file) {
-                up.settings.multipart_params['Content-Type'] = file.type;
+                var params = up.settings.multipart_params;
+                params['Content-Type'] = file.type;
+
+                var name = Math.round(Math.random() * 100) + file.name;
+                params.key = "uploads/u{{user.id}}/" + name;
             },
             FileUploaded: function(up, file, info) {
-                var url = "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/uploads/u{{user.id}}/"+file.name;
+                var key = up.settings.multipart_params.key;
+                var url = "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/" + key;
                 document.file_uploaded(url);
             },
             UploadComplete: function(up, files){
@@ -1237,6 +1283,9 @@ $(function() {
     <script type="text/javascript" src="{% static 'shopified/js/uploader.js' %}"></script>
     {% endcompress %}
 {% endif %}
-
+{% if request.user|can:'aliextractor.use' %}
+    <script src="{% static 'libs/bower_components/chart.js/dist/Chart.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'aliextractor/js/ae-tab.js' %}"></script>
+{% endif %}
 
 {% endblock %}
