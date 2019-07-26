@@ -1,0 +1,11 @@
+.ae-image {padding:20px;}
+.ae-toolbar {padding:0;}
+.ae-extension-check {display:none;}
+.chart-div {
+    position: relative;
+
+    height:90px;
+}
+.ae-modal-total-cost {color:red;font-weight:bold;}
+.ae-modal-markup {color:green;font-weight:bold;}
+.ae-tab-icon {height:16px;     vertical-align: bottom;}

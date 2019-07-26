@@ -32,6 +32,18 @@
                     {% endif %}
                     ><i class="fa fa-cogs"></i> Connections</a></li>
                 {% endif %}
+                {% if request.user|can:'aliextractor.use' %}
+                <li>
+                    <a data-toggle="tab" href="#tab-ae"
+                       data-auto-click="#ae"
+                       data-auto-click-onload="true"
+                       class="product-ae-tab"
+                       product-id="{{product.id}}"
+                    >
+                        <img src="{% static 'img/ae_small.png' %}" class="ae-tab-icon"> AliExtractor
+                    </a>
+                </li>
+                {% endif %}
             </ul>
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
@@ -160,6 +172,9 @@
                                 <div class="form-group col-xs-6">
                                     <label for="">Variants</label>
                                 </div>
+                                {% if request.user|can:'aliextractor.use' %}
+                                    {% include 'aliextractor/get_pricing_data.html' %}
+                                {% endif %}
                             </div>
 
                             <div id="variants" class="row well"
@@ -379,6 +394,26 @@
             </div>
         </div>
 
+        {% if request.user|can:'aliextractor.use' %}
+
+
+            <div id="tab-ae" class="tab-pane">
+                <div class="panel-body">
+                <!-- Product view -->
+                <div class=" row">
+
+                    <div class="col-md-12 ae-extension-check">
+                        {% include "partial/ae-tab-default.html" %}
+                    </div>
+
+                    <div class="col-md-12 ae-extension-content">
+                    </div>
+
+                </div>
+
+            </div>
+        {% endif %}
+
     </div>
 </div>
     </div>
@@ -480,6 +515,8 @@
 
 {% endverbatim %}
 
+{% include 'partial/ae_product_info_modal.html' %}
+
 <div id="modal-pick-variant" class="modal fade" aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -533,6 +570,7 @@
 <link href="{% static 'css/trix.css' %}" rel="stylesheet">
 <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 <link href="{% static 'gearbubble/css/product_detail.css' %}" rel="stylesheet">
+<link href="{% static 'aliextractor/css/ae-tab.css' %}" rel="stylesheet">
 {% endcompress %}
 {% endblock %}
 
@@ -592,6 +630,7 @@ var config = {
             id: {{item.id}},
             product: {{product.id}},
             is_default: {% if item.id == product.default_supplier_id %}true{% else %}false{% endif %},
+            is_aliexpress: {% if item.is_aliexpress %}true{% else %}false{% endif %},
             original: {
                 url: '{{item.product_url|escapejs}}'
             },
@@ -695,5 +734,12 @@ $(function() {
         <script type="text/javascript" src="{% static 'gearbubble/js/uploader.js' %}"></script>
         {% endcompress %}
     {% endif %}
+
+
+{% if request.user|can:'aliextractor.use' %}
+    <script src="{% static 'libs/bower_components/chart.js/dist/Chart.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'aliextractor/js/ae-tab.js' %}"></script>
+
+{% endif %}
 
 {% endblock %}

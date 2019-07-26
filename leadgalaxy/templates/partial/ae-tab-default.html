@@ -1,0 +1,61 @@
+ <p>
+To use this feature you need to install Aliextractor chrome extension
+</p>
+<p>
+    AliExtractor is #1 Tool For AliExpress Product Research. See a breakdown of your suppliers with key information after installing the chrome extension.
+</p>
+<p>AliExtractor is included with your Dropified plan for FREE ($29/mo. value)!</p>
+<p>
+    <a class="btn btn-info" href="https://chrome.google.com/webstore/detail/aliextractor/hhopcjpinbkkodkckglbhodepblakcle?hl=en-US&authuser=3" target="_blank">Get AliExtractor Google Chrome Extension</a>
+</p>
+<p>&nbsp;</p>
+<p>Have questions? Check our
+    <a href="http://help.dropified.com/aliextractor" target="_blank">AliExtractor Help Portal</a>
+</p>
+
+{% verbatim %}
+<script id="ae-product-item" type="text/x-handlebars-template">
+     <div class="area col-xs-12">
+         <div class="form-group col-xs-12 variant" style="display: block;">
+             <table class="ae-product-block row">
+                 <tr>
+                     <td class="ae-image col-md-2"><img src="{{image}}"/></td>
+                     <td class="ae-title col-md-10"><div class=""><a target="_blank" href="{{link}}">{{title}}</a></div></td>
+                 </tr>
+             </table>
+             <table class="well ae-product-table table table-bordered dataTables dataTable no-footer dtr-inline" role="grid" >
+                 <thead>
+                 <tr role="row">
+                     <th>Item ID</th>
+                     <th>Rating</th>
+                     <th>Reviews</th>
+                     <th>Total Sold</th>
+                     <th>Store</th>
+                     <th>Seller Rating</th>
+                     <th>Cost</th>
+                     <th>ePacket</th>
+                 </tr>
+                 </thead>
+                 <tbody>
+                 <tr role="row" class="odd">
+                     <td>{{product_id}}</td>
+                     <td><span class="badge badge-primary">{{rating}}</span></td>
+                     <td>{{review}}</td>
+                     <td>{{m_order}}</td>
+                     <td><a target="_blank" href="{{store_link}}'">{{store}}</a></td>
+                     <td><span class="badge badge-primary">{{store_feedbackx}}</span></td>
+                     <td>{{my_p_price}}</td>
+                     <td>{{eshipPriceValueToRender}}</td>
+                 </tr>
+                 </tbody>
+             </table>
+             <div class="ae-toolbar col-md-12 text-right">
+                 <a class="btn-outline btn btn-success btn-xs ae-open-in-ae" href="#" data-product-url="{{original_url}}">Open in AliExtractor</a>
+                 <a class="btn-outline btn btn-default btn-xs ae-open-topsells" href="#" data-store-link="{{store_link}}" >Top Sells</a>
+                 <a class="btn-outline btn btn-primary btn-xs ae-open-trending" href="#" data-company-id="{{company_id}}" data-store-link="{{store_link}}" data-product-id="{{product_id}}">Trending Products</a>
+             </div>
+         </div>
+
+     </div>
+</script>
+{%  endverbatim %}
