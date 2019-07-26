@@ -1196,10 +1196,15 @@ $(function() {
         dragdrop: true,
         init: {
             BeforeUpload: function(up, file) {
-                up.settings.multipart_params['Content-Type'] = file.type;
+                var params = up.settings.multipart_params;
+                params['Content-Type'] = file.type;
+
+                var name = Math.round(Math.random() * 100) + file.name;
+                params.key = "uploads/u{{user.id}}/" + name;
             },
             FileUploaded: function(up, file, info) {
-                var url = "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/uploads/u{{user.id}}/"+file.name;
+                var key = up.settings.multipart_params.key;
+                var url = "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/" + key;
                 document.file_uploaded(url);
             },
             UploadComplete: function(up, files){
