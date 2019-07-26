@@ -1,15 +1,19 @@
+import sys
 import traceback
-import requests
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import connection
 
+import requests
+from tqdm import tqdm
+
 from raven.contrib.django.raven_compat.models import client as raven_client
-import sys
 
 
 class DropifiedBaseCommand(BaseCommand):
+    progress_bar = None
+
     def handle(self, *args, **options):
         try:
             requests.head(settings.APP_URL, params={
@@ -40,11 +44,20 @@ class DropifiedBaseCommand(BaseCommand):
 
             raven_client.captureException()
 
-    def write(self, msg, style_func=None, ending=None):
-        self.stdout.write(msg, style_func, ending)
+        if self.progress_bar:
+            self.progress_bar.close()
 
-    def write_success(self, message):
-        self.stdout.write(self.style.SUCCESS(message))
+    def write(self, msg, style_func=None, ending=None):
+        if self.progress_bar:
+            self.progress_bar.write(msg)
+        else:
+            self.stdout.write(msg, style_func, ending)
+
+    def write_success(self, msg):
+        if self.progress_bar:
+            self.progress_bar.write(msg)
+        else:
+            self.stdout.write(self.style.SUCCESS(msg))
 
     def raven_context_from_store(self, client, store, tags={}):
         client.user_context({
@@ -63,3 +76,13 @@ class DropifiedBaseCommand(BaseCommand):
         if settings.COMMAND_STATEMENT_TIMEOUT and connection.vendor == 'postgresql':
             with connection.cursor() as cursor:
                 cursor.execute('SET statement_timeout TO {};'.format(settings.COMMAND_STATEMENT_TIMEOUT))
+
+    def progress_total(self, total):
+        self.progress_bar = tqdm(total=total, smoothing=0)
+
+    def progress_update(self, p=1, desc=None):
+        if self.progress_bar:
+            self.progress_bar.update(p)
+
+            if desc:
+                self.progress_bar.set_description(desc)
