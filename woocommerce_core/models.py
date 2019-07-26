@@ -254,9 +254,16 @@ class WooProduct(ProductBase):
 
         return variants
 
+    def update_weight_unit(self):
+        r = self.store.wcapi.get('settings/products/woocommerce_weight_unit')
+        r.raise_for_status()
+        self.update_data({'weight_unit': r.json().get('value', '')})
+
     def sync(self):
         if not self.source_id:
             return None
+
+        self.update_weight_unit()
 
         product_data = self.retrieve()
         product_data['tags'] = self.merge_tags(product_data)

@@ -87,8 +87,9 @@
                                     <option value="g" {% if product.parsed.weight_unit == 'g' %}selected="selected"{% endif %}>g</option>
                                     <option value="kg" {% if not product.parsed.weight_unit or product.parsed.weight_unit == 'kg' %}selected="selected"{% endif %}>kg</option>
                                     <option value="oz" {% if product.parsed.weight_unit == 'oz' %}selected="selected"{% endif %}>oz</option>
-                                    <option value="lb" {% if product.parsed.weight_unit == 'lb' %}selected="selected"{% endif %}>lb</option>
-                                    <option value="lb" {% if product.parsed.weight_unit == 'lbs' %}selected="selected"{% endif %}>lb</option>
+                                    <option value="lb" {% if product.parsed.weight_unit == 'lbs' %}selected="selected"{% endif %}>
+                                        {% if product.parsed.weight == "1" %}lb{% else %}lbs{% endif %}
+                                    </option>
                                 </select>
                             </div>
                         </div>
