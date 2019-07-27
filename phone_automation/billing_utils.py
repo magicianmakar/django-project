@@ -61,7 +61,6 @@ class CallflexOveragesBilling:
         # getting number of 'monthes' passed after last invoice date (to process yearly subs)
         subscription_period_start = utils.get_callflex_subscription_start(self.user)
         if not subscription_period_start:
-            raven_client.captureMessage("No Stripe Subscription for customer. Skipping this user.")
             return False
         else:
             invoices = []
