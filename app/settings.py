@@ -391,10 +391,11 @@ HOOK_EVENTS.update({
 HOOK_DELIVERER = 'zapier_core.tasks.deliver_hook_wrapper'
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
-if not DEBUG and SENTRY_DSN:
-    RAVEN_CONFIG = {
-        'dsn': SENTRY_DSN
-    }
+SENTRY_CLIENT = 'app.sentry.SentryClient'
+SENTRY_PROCESSORS = (
+    'raven.processors.SanitizePasswordsProcessor',
+    'app.sentry.SentryDataProcessor',
+)
 
 # default Aliexpress Affiliate
 DEFAULT_ALIEXPRESS_AFFILIATE = 'ali'
