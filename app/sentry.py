@@ -1,4 +1,3 @@
-import json
 import re
 
 from raven.processors import Processor
