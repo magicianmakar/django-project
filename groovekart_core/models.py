@@ -67,7 +67,7 @@ class GrooveKartStore(StoreBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'<GrooveKartStore: {self.id}>'
+        return self.title
 
     @property
     def request(self):

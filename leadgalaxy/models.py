@@ -762,7 +762,7 @@ class ShopifyStore(StoreBase):
         super(ShopifyStore, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'<ShopifyStore: {self.id} | {self.shop}>'
+        return self.title
 
     def get_link(self, page=None, api=False):
         if api:
@@ -2115,7 +2115,7 @@ class GroupPlan(models.Model):
     locked = models.BooleanField(default=False, verbose_name='Disable Direct Subscription')
 
     def __str__(self):
-        return f'<GroupPlan: {self.id} | {self.title}>'
+        return f'Plan: {self.title}'
 
     def save(self, *args, **kwargs):
         if not self.register_hash:
@@ -2216,7 +2216,7 @@ class FeatureBundle(models.Model):
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     def __str__(self):
-        return f'<FeatureBundle: {self.id} | {self.title}>'
+        return f'Bundle: {self.title}'
 
     def save(self, *args, **kwargs):
         if not self.register_hash:
@@ -2264,13 +2264,14 @@ class PlanRegistration(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
-        desc = ''
+        desc = f'<PlanRegistration: {self.id}>'
+
         if self.plan:
             desc = f'Plan: {self.plan.title}'
         elif self.bundle:
             desc = f'Bundle: {self.bundle.title}'
 
-        return f'<PlanRegistration: {self.id} | {desc}>'
+        return desc
 
     def save(self, *args, **kwargs):
         if not self.register_hash:

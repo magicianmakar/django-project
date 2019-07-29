@@ -48,7 +48,7 @@ class WooStore(StoreBase):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'<WooStore: {self.id}>'
+        return self.title
 
     def get_wcapi(self, timeout=30):
         return API(

@@ -43,7 +43,7 @@ class GearBubbleStore(StoreBase):
     mode = models.CharField(max_length=7, choices=MODE_CHOICES, default=LIVE)
 
     def __str__(self):
-        return f'<GearBubbleStore: {self.id}>'
+        return self.title
 
     def save(self, *args, **kwargs):
         if not self.store_hash:
