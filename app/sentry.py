@@ -7,7 +7,12 @@ from raven.contrib.django.client import DjangoClient
 class SentryClient(DjangoClient):
     def __init__(self, *args, **kwargs):
         kwargs['enable_breadcrumbs'] = False
+        kwargs['install_sql_hook'] = False
         DjangoClient.__init__(self, *args, **kwargs)
+
+    def update_data_from_request(self, request, result):
+        super().update_data_from_request(request, result)
+        result['request']['cookies'] = {}
 
 
 class SentryDataProcessor(Processor):
