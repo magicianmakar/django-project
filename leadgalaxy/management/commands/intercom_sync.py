@@ -20,9 +20,10 @@ class Command(DropifiedBaseCommand):
             self.write('Intercom API key is not set')
             return
 
-        profiles = UserProfile.objects.select_related('user').order_by('id')
+        profiles = UserProfile.objects.select_related('user').order_by('updated_at')
         if options['days']:
-            profiles = profiles.filter(updated_at__gte=arrow.utcnow().replace(days=-options['days']).datetime)
+            profiles = profiles.filter(updated_at__gte=arrow.utcnow().replace(days=-options['days']).datetime) \
+                               .exclude(updated_at=None)
 
         if options['progress']:
             self.progress_total(profiles.count())
@@ -39,7 +40,7 @@ class Command(DropifiedBaseCommand):
         user = profile.user
         plan = profile.plan
 
-        self.write(f'{user.email} | {profile.plan.title} | {profile.updated_at:%d-%m-%Y}')
+        self.progress_write(f'{user.email} | {profile.plan.title} | {profile.updated_at:%d-%m-%Y}')
         self.progress_update(desc=user.email)
 
         data = {

@@ -86,3 +86,7 @@ class DropifiedBaseCommand(BaseCommand):
 
             if desc:
                 self.progress_bar.set_description(desc)
+
+    def progress_write(self, msg):
+        if self.progress_bar:
+            self.progress_bar.write(msg)
