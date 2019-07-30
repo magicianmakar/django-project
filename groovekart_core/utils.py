@@ -290,7 +290,7 @@ def order_id_from_name(store, order_reference, default=None):
 
 
 def get_tracking_orders(store, tracker_orders):
-    # ids = [str(track.order_id) for track in tracker_orders]
+    ids = [str(track.order_id) for track in tracker_orders]
     orders = {}
     lines = {}
     page = 1
@@ -298,9 +298,10 @@ def get_tracking_orders(store, tracker_orders):
 
     while page:
         params = {
+            'action': 'search_orders',
             'offset': limit * (page - 1),
             'limit': limit,
-            # 'ids': ','.join(ids),
+            'ids': ','.join(ids),
         }
         r = store.request.post(store.get_api_url('orders.json'), json=params)
 

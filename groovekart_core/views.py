@@ -413,7 +413,7 @@ class OrdersList(ListView):
         default_date_range = self.get_default_date_range()
         created_at_daterange = self.request.GET.get('created_at_daterange', default_date_range)
         created_at_start, created_at_end = None, None
-        if created_at_daterange:
+        if created_at_daterange and not self.request.GET.get('query_order'):
             try:
                 daterange_list = created_at_daterange.split('-')
 
