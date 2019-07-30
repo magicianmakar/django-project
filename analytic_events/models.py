@@ -292,10 +292,26 @@ class SuccessfulPaymentEvent(Event):
 
         data = json.dumps(data)
 
-        return '''<script>
+        code = ['''<script>
             ga('send', 'event', {0});
             ga('clientTracker.send', 'event', {0});
-            </script>'''.format(data)
+            </script>'''.format(data)]
+
+        if data.get('shopify'):
+            code.append('''<!-- Global site tag (gtag.js) - Google Ads: 922441909 -->
+                <script async src="https://www.googletagmanager.com/gtag/js?id=AW-922441909"></script>
+                <script>
+                 window.dataLayer = window.dataLayer || [];
+                 function gtag(){dataLayer.push(arguments);}
+                 gtag('js', new Date());
+                 gtag('event', 'conversion', {
+                     'send_to': 'AW-922441909/GVC8CLWP0oQBELWx7bcD',
+                     'transaction_id': ''
+                 });
+                 gtag('config', 'AW-922441909');
+                </script>''')
+
+        return '\n'.join(code)
 
     @cached_property
     def mixpanel_script(self):

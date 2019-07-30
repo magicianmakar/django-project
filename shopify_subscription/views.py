@@ -1,3 +1,5 @@
+import json
+
 from django.conf import settings
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib import messages
@@ -10,7 +12,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from shopified_core import permissions
 from shopified_core.utils import app_link
 from leadgalaxy.models import GroupPlan, ShopifyStore, ClippingMagic, CaptchaCredit
-from analytic_events.models import PlanSelectionEvent
+from analytic_events.models import PlanSelectionEvent, SuccessfulPaymentEvent
 
 from .models import ShopifySubscription
 from phone_automation import billing_utils as billing
@@ -143,6 +145,12 @@ def subscription_activated(request):
         request.user.shopifysubscription_set.exclude(id=charge_id).update(status='cancelled')
 
         request.user.set_config('_can_trial', False)
+
+        SuccessfulPaymentEvent.objects.create(user=request.user, charge=json.dumps({
+            'shopify': True,
+            'charge': charge.to_dict(),
+            'count': 1
+        }))
 
     else:
         request.user.profile.change_plan(GroupPlan.objects.get(id=request.session['current_plan']))
