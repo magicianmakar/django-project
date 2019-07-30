@@ -431,8 +431,6 @@ FACEBOOK_PIXEL_ID = os.environ.get('FACEBOOK_PIXEL_ID')
 
 KEEN_PROJECT_ID = os.environ.get('KEEN_PROJECT_ID')
 
-WICKED_REPORTS_API = os.environ.get('WICKED_REPORTS_API')
-
 # GearBubble
 GEARBUBBLE_STAGING_URL = 'http://staging-gearbubble.com'
 GEARBUBBLE_LIVE_URL = 'https://www.gearbubble.com'

@@ -407,53 +407,6 @@ def verify_shopify_webhook(store, request, throw_excption=True):
     return webhook_hash == request_hash
 
 
-def wicked_report_add_user(request, user):
-    try:
-        if not settings.WICKED_REPORTS_API:
-            return
-
-        user_ip = request.META['HTTP_X_REAL_IP']
-
-        ipinfo = requests.get(
-            url='http://ipinfo.io/{}'.format(user_ip),
-            timeout=3
-        )
-
-        ipinfo = ipinfo.json() if ipinfo.ok else {}
-
-        data = {
-            'SourceSystem': 'ActiveCampaign',
-            'SourceID': user.id,
-            'CreateDate': arrow.get(user.date_joined).format("YYYY-MM-DD HH:mm:ss"),
-            'Email': user.email,
-            'FirstName': (user.first_name or ''),
-            'LastName': (user.last_name or ''),
-            'City': ipinfo.get('city'),
-            'State': ipinfo.get('region'),
-            'Country': country_from_code(ipinfo.get('country'), default=''),
-            'IP_Address': user_ip,
-        }
-
-        rep = requests.post(
-            url='https://api.wickedreports.com/contacts',
-            headers={'apikey': settings.WICKED_REPORTS_API},
-            json=data,
-            timeout=3
-        )
-
-        rep.raise_for_status()
-
-        if not user.profile.country and ipinfo.get('country'):
-            user.profile.country = ipinfo.get('country')
-            user.profile.save()
-
-    except Exception as e:
-        raven_client.captureException(
-            level='warning',
-            extra=http_exception_response(e)
-        )
-
-
 def aliexpress_shipping_info(aliexpress_id, country_code):
     shippement_key = 'shipping_info_{}_{}'.format(aliexpress_id, country_code)
     shippement_data = cache.get(shippement_key)

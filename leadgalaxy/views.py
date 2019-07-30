@@ -4970,8 +4970,6 @@ def register(request, registration=None, subscribe_plan=None):
 
             RegistrationEvent.objects.create(user=request.user)
 
-            utils.wicked_report_add_user(request, new_user)
-
             if subscribe_plan:
                 if not try_plan and not subscribe_plan.is_free:
                     return HttpResponseRedirect("/user/profile?auto={}#billing".format(subscribe_plan.id))
