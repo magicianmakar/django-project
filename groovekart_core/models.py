@@ -21,6 +21,7 @@ from shopified_core.utils import (
     safe_str,
     base64_encode,
     dict_val,
+    safe_int,
 )
 
 
@@ -42,6 +43,9 @@ class GrooveKartStoreSession(Session):
         return super().post(*args, **kwargs)
 
     def update_json_data(self, kwargs):
+        if not kwargs.get('json'):
+            kwargs['json'] = {}
+
         auth_token, api_key = self._store.api_token, self._store.api_key
         kwargs['json'].update({
             'auth_token': auth_token,
@@ -239,6 +243,7 @@ class GrooveKartProduct(ProductBase):
         self.update_data({'cover_image': product_data.get('cover_image', '')})
         self.update_data({'tags': product_data.get('tags', '')})
         self.update_data({'vendor': product_data.get('manufacturer_name', '')})
+        self.update_data({'type': safe_int(product_data['id_category_default'])})
         self.update_data({'variants': self.sync_variants(product_variants)})
         self.update_data({'images': {i.get('id'): i.get('url') for i in product_data.get('images', [])}})
         self.save()

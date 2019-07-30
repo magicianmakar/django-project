@@ -114,6 +114,39 @@ def groovekart_products(request, post_per_page=25, sort=None, board=None, store=
     return res
 
 
+def get_store_categories(store):
+    try:
+        categories_url = store.get_api_url('list_categories.json')
+        response = store.request.post(categories_url)
+        response.raise_for_status()
+
+        result = response.json()
+        return [c for c in result['categories'] if c.get('id')]
+    except:
+        raven_client.captureException()
+        return []
+
+
+def get_or_create_category_by_title(store, category_title):
+    category_title_lower = category_title.lower()
+
+    def search(categories, category_title_lower):
+        for category in categories:
+            if category['title'].lower() == category_title_lower:
+                return safe_int(category['id'])
+
+    categories = get_store_categories(store)
+    category_id = search(categories, category_title_lower)
+
+    if category_id is None:
+        result = store.request.post(store.get_api_url('create_categories.json'), json={'category': {'title': category_title}})
+        # Create Categories JSON is list of existing categories
+        categories = result.json()
+        category_id = search(categories.get('categories', []), category_title_lower)
+
+    return category_id
+
+
 def format_gkart_errors(e):
     if not hasattr(e, 'response'):
         return 'Server Error'

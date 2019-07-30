@@ -55,7 +55,8 @@ from .utils import (
     get_tracking_orders,
     order_id_from_name,
     get_gkart_products,
-    get_orders_page_default_date_range
+    get_orders_page_default_date_range,
+    get_store_categories,
 )
 
 from product_alerts.models import ProductChange
@@ -267,6 +268,7 @@ class ProductDetailView(DetailView):
         if self.object.store:
             store_title = self.object.store.title
             store_products_path = '{}?store={}'.format(products_path, self.object.store.id)
+            context['categories'] = get_store_categories(self.object.store)
             context['breadcrumbs'].insert(1, {'title': store_title, 'url': store_products_path})
 
         context.update(aws_s3_context())

@@ -28,6 +28,7 @@ from .utils import (
     format_gkart_errors,
     get_variant_value,
     update_product_images,
+    get_or_create_category_by_title,
 )
 
 
@@ -156,6 +157,7 @@ def product_export(store_id, product_id, user_id):
         images = product_data.get('images', [])
         variants = product_data.get('variants', [])
         variant_groups = []
+        category_id = get_or_create_category_by_title(store, product_data.get('type'))
 
         api_data = {
             'product': {
@@ -167,7 +169,7 @@ def product_export(store_id, product_id, user_id):
                 'price': product_data.get('price'),
                 'weight': product_data.get('weight'),
                 'compare_default_price': product_data.get('compare_at_price'),
-                'product_type': product_data.get('type'),
+                'category_id': category_id,
                 'sku': product_data.get('sku'),
                 'tags': ', '.join(tags),
             },
