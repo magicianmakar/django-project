@@ -19,7 +19,8 @@ services:
   web:
     build: ..
     container_name: dropified_web
-    command: bash
+    command: >
+      bash -c 'source .env; ./manage.py runserver 0.0.0.0:8000';
     volumes:
       - ..:/opt/dropified
     ports:
@@ -28,3 +29,12 @@ services:
       - db
       - redis
       - celery
+  nginx:
+    image: nginx
+    container_name: dropified_nginx
+    volumes:
+      - ../app/config/nginx/docker.dropified.com:/etc/nginx/nginx.conf:ro
+    ports:
+      - "9080:80"
+    depends_on:
+      - web
