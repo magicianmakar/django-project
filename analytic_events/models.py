@@ -297,7 +297,7 @@ class SuccessfulPaymentEvent(Event):
             ga('clientTracker.send', 'event', {0});
             </script>'''.format(data)]
 
-        if data.get('shopify'):
+        if self.get_data().get('shopify'):
             code.append('''<!-- Global site tag (gtag.js) - Google Ads: 922441909 -->
                 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-922441909"></script>
                 <script>
