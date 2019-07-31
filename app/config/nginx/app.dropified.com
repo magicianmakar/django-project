@@ -110,6 +110,7 @@ server {
 
     ### Dropified App Proxy
     location / {
+        rewrite /pages/terms-of-service https://www.dropified.com/terms-of-service permanent;
         rewrite /terms-of-service /pages/17 break;
         rewrite /pages/view/what-websites-will-shopified-app-import-products-from /pages/11 break;
         rewrite /pages/view/what-websites-will-dropified-import-products-from /pages/content/source-one_click_support permanent;
