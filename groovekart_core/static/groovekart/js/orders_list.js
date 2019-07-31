@@ -325,7 +325,7 @@ function addOrderSourceID(e) {
 
     var orderData = {
         order_id: btn.attr('order-id'),
-        line_id: btn.attr('product-id'),
+        line_id: btn.attr('line-id'),
         store: btn.attr('store'),
         supplier_type: btn.parents('.line').attr('supplier-type'),
     };
