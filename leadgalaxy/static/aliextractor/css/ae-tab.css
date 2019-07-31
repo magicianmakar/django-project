@@ -1,4 +1,5 @@
 .ae-image {padding:20px;}
+.ae-image img{max-height:80px;max-width:150px;}
 .ae-toolbar {padding:0;}
 .ae-extension-check {display:none;}
 .chart-div {

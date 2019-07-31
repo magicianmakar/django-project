@@ -4,44 +4,48 @@
 $('.ae-extension-check, .ae-modal-extension-check').show();
 $('.ae-extension-content, .ae-modal-extension-content').hide();
 
-setTimeout(function() {
-
+var ae_i = setInterval(function() {
         if (window.AE_extensionSendMessage) {
-
-            window.AE_extensionSendMessage({
-                method: 'getAEVersion',
-                from: 'website',
-            }, function(res) {
-
-               if (res.id) {
+            clearInterval(ae_i);
+            launchAE();
+        }
+    }, 1000);
 
 
+function launchAE(){
+    window.AE_extensionSendMessage({
+        method: 'getAEVersion',
+        from: 'website',
+    }, function(res) {
 
-                    $('.ae-extension-check, .ae-modal-extension-check').hide();
-
-                    $.each(config.exports, function () {
-                        if (this.is_aliexpress ){
-                            if (this.is_default) {
-                                renderAEmodal(this.original.url);
-                            }
-                            renderAETable(this);
-                        }
+       if (res.id) {
 
 
-                    });
 
-                    $('.ae-extension-content, .ae-modal-extension-content').show();
-               }
-               else {
-                    $('.ae-extension-check, .ae-modal-extension-check').show();
-                    $('.ae-extension-content, .ae-modal-extension-content').hide();
-               }
+            $('.ae-extension-check, .ae-modal-extension-check').hide();
+
+            $.each(config.exports, function () {
+                if (this.is_aliexpress ){
+                    if (this.is_default) {
+                        renderAEmodal(this.original.url);
+                    }
+                    renderAETable(this);
+                }
 
 
             });
 
-        }
-    }, 1000);
+            $('.ae-extension-content, .ae-modal-extension-content').show();
+       }
+       else {
+            $('.ae-extension-check, .ae-modal-extension-check').show();
+            $('.ae-extension-content, .ae-modal-extension-content').hide();
+       }
+
+
+    });
+}
+
 
 function renderAETable(export_template) {
 
