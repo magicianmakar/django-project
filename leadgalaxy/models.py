@@ -62,6 +62,7 @@ SUBUSER_PERMISSIONS = (
     ('view_help_and_support', 'View help and support'),
     ('view_bonus_training', 'View bonus training'),
     ('view_profit_dashboard', 'View profit dashboard'),
+    ('use_callflex', 'CallFlex Access'),
 )
 
 SUBUSER_STORE_PERMISSIONS_BASE = (
