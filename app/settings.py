@@ -303,10 +303,9 @@ if not DEBUG:
     if not USE_WHITENOISE:
         STATICFILES_STORAGE = 'app.storage.CachedS3BotoStorage'
         DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
+        STATIC_URL = "//%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, STATICFILES_LOCATION)
 
         COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
-
-        STATIC_URL = "//%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, STATICFILES_LOCATION)
 
 # Django Compressor
 COMPRESS_ENABLED = not DEBUG
