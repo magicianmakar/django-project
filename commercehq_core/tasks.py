@@ -242,14 +242,16 @@ def product_export(store_id, product_id, user_id, publish=None):
                     images.append(j['id'])
 
         is_multi = len(p['variants']) > 0
+
+        weight = p.get('weight', 1.0)
         if p['weight_unit'] == 'g':
-            weight = utils.safe_float(p['weight'], 0.0) / 1000.0
+            weight = utils.safe_float(weight, 0.0) / 1000.0
         elif p['weight_unit'] == 'lb':
-            weight = utils.safe_float(p['weight'], 0.0) * 0.45359237
+            weight = utils.safe_float(weight, 0.0) * 0.45359237
         elif p['weight_unit'] == 'oz':
-            weight = utils.safe_float(p['weight'], 0.0) * 0.0283495
+            weight = utils.safe_float(weight, 0.0) * 0.0283495
         else:
-            weight = utils.safe_float(p['weight'], 0.0)
+            weight = utils.safe_float(weight, 0.0)
 
         weight = '{:.02f}'.format(weight)
 
@@ -388,14 +390,16 @@ def product_update(product_id, data):
         p['compare_price'] = data['compare_price']
 
         if 'weight_unit' in p and 'weight' in p:
+            weight = p.get('weight', 1.0)
+
             if p['weight_unit'] == 'g':
-                weight = utils.safe_float(p['weight'], 0.0) / 1000.0
+                weight = utils.safe_float(weight, 0.0) / 1000.0
             elif p['weight_unit'] == 'lb':
-                weight = utils.safe_float(p['weight'], 0.0) * 0.45359237
+                weight = utils.safe_float(weight, 0.0) * 0.45359237
             elif p['weight_unit'] == 'oz':
-                weight = utils.safe_float(p['weight'], 0.0) * 0.0283495
+                weight = utils.safe_float(weight, 0.0) * 0.0283495
             else:
-                weight = utils.safe_float(p['weight'], 0.0)
+                weight = utils.safe_float(weight, 0.0)
 
             p['shipping_weight'] = '{:.02f}'.format(weight)
 
