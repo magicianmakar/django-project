@@ -708,6 +708,8 @@ class OrdersList(ListView):
             if not api_error:
                 context['orders'] = self.get_orders(context)
                 context['shipping_carriers'] = store_shipping_carriers(self.get_store())
+                context['queue_page_to'] = min(context['paginator'].num_pages, 10)
+
         except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
@@ -726,7 +728,6 @@ class OrdersList(ListView):
             messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
 
         context['api_error'] = api_error
-        context['queue_page_to'] = min(context['paginator'].num_pages, 10)
 
         return context
 
