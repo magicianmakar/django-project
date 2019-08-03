@@ -702,11 +702,20 @@ class GrooveKartApi(ApiBase):
             return self.api_success({'query': q, 'suggestions': results}, safe=False)
 
         elif target == 'types':
-            types = []
-            for product in request.user.models_user.groovekartproduct_set.only('product_type').filter(product_type__icontains=q)[:10]:
-                if product.product_type not in types:
-                    types.append(product.product_type)
+            try:
+                store = GrooveKartStore.objects.get(id=data.get('store'))
+                permissions.user_can_view(user, store)
 
-            return self.api_success({'query': q, 'suggestions': [{'value': i, 'data': i} for i in types]}, safe=False)
+            except GrooveKartStore.DoesNotExist:
+                return self.api_error('Store not found', status=404)
+
+            categories = utils.get_store_categories(store)
+            suggestions = []
+            q = q.lower()
+            for c in categories:
+                if q in c['title'].lower():
+                    suggestions.append({'value': c['title'], 'data': c['id']})
+
+            return self.api_success({'query': q, 'suggestions': suggestions}, safe=False)
 
         return self.api_error({'error': 'Target not found'}, status=404)
