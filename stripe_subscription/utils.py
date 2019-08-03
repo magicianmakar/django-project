@@ -614,12 +614,7 @@ def process_webhook_event(request, event_id, raven_client):
 
     elif event.type in ['invoice.created', 'invoice.updated']:
         customer = event.data.object.customer
-        try:
-            stripe_customer = StripeCustomer.objects.get(customer_id=customer)
-        except StripeCustomer.DoesNotExist:
-            return HttpResponse('Customer Not Found')
-
-        clear_invoice_cache(stripe_customer)
+        clear_invoice_cache(customer)
 
     elif event.type == 'charge.succeeded':
 
@@ -714,8 +709,8 @@ def refresh_invoice_cache(stripe_customer):
     cache.set(cache_key, invoices, timeout=900)
 
 
-def clear_invoice_cache(stripe_customer):
-    cache_key = 'invoices-' + stripe_customer.customer_id
+def clear_invoice_cache(stripe_customer_id):
+    cache_key = 'invoices-' + stripe_customer_id
     cache.delete(cache_key)
 
 
