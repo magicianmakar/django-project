@@ -802,7 +802,13 @@ def generate_gear_feed(self, feed_id, nocache=False, by_fb=False):
 def generate_gkart_feed(self, feed_id, nocache=False, by_fb=False):
     try:
         feed = GrooveKartFeedStatus.objects.get(id=feed_id)
+        # Generate Facebook feed
         generate_gkart_product_feed(feed, nocache=nocache)
+
+        if feed.store.user.can('google_product_feed.use'):
+            # Generate Google feed if the user set it's settings
+            if feed.get_google_settings():
+                generate_gkart_product_feed(feed, nocache=nocache, revision=3)
 
     except:
         feed.status = 0

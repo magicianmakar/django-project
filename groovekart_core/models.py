@@ -1,5 +1,6 @@
 import json
 import re
+from math import ceil
 
 from urllib.parse import urlparse
 
@@ -118,16 +119,26 @@ class GrooveKartStore(StoreBase):
     def connected_count(self):
         return self.products.exclude(source_id=0).count()
 
-    def get_groovekart_products(self):
+    def get_groovekart_products(self, limit=False):
+        """Return groovekart API products
+
+        :param limit: False or int
+        """
         products = []
-        limit = 100
+        chunk = 50
         page = 1
+
+        if limit is not False:
+            max_pages = ceil(limit / chunk)
+            if limit < chunk:
+                chunk = limit
+
         api_url = self.get_api_url('list_products.json')
 
         while True:
             params = {
-                'offset': limit * (page - 1),
-                'limit': limit,
+                'offset': chunk * (page - 1),
+                'limit': chunk,
                 'only_active': True
             }
             r = self.request.post(api_url, json=params)
@@ -138,6 +149,9 @@ class GrooveKartStore(StoreBase):
                     return products
 
                 products += result['products']
+                if max_pages is not False and page >= max_pages:
+                    return products
+
                 page += 1
 
             r.raise_for_status()

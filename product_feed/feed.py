@@ -29,6 +29,8 @@ from woocommerce_core.utils import (
     get_woo_products
 )
 
+from groovekart_core.utils import get_store_categories
+
 from .models import (
     FeedStatus,
     CommerceHQFeedStatus,
@@ -532,16 +534,25 @@ class GearBubbleProductFeed(object):
 
 
 class GrooveKartProductFeed(object):
-    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category=''):
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category='', feed=None):
         domain = urlparse(store.get_api_url('')).netloc
-        self.info = {'currency': self._get_store_currency(), 'domain': domain, 'name': store.title}
         self.store = store
+        self.info = {'currency': self._get_store_currency(), 'domain': domain, 'name': store.title}
+        self.store_categories = {c.get('id'): c.get('title') for c in get_store_categories(store)}
+
         self.currency = self.info['currency']
         self.domain = self.info['domain']
-        self.revision = safe_int(revision, 1)
+
+        self.revision = safe_int(revision, 1)  # 1,2: For FaceBook - 3: For Google
         self.all_variants = all_variants
         self.include_variants = include_variants
         self.default_product_category = default_product_category
+
+        self.feed = feed
+        if feed:
+            self.google_settings = self.feed.get_google_settings()
+        else:
+            self.google_settings = {}
 
     def _add_element(self, tag, text):
         self.writer.startTag(tag)
@@ -549,11 +560,14 @@ class GrooveKartProductFeed(object):
         self.writer.endTag()
 
     def init(self):
-        self.out = NamedTemporaryFile(suffix='.xml', prefix='gear_feed_', delete=False)
+        self.out = NamedTemporaryFile(suffix='.xml', prefix='gkart_feed_', delete=False)
         self.writer = XmlWriter(self.out, pretty=True, indent='')
+
         self.writer.addNamespace("g", "http://base.google.com/ns/1.0")
+
         self.writer.startTag("rss", {"version": "2.0"})
         self.writer.startTag("channel")
+
         self._add_element('title', self.store.title)
         self._add_element('link', self.store.get_store_url())
         self._add_element('description', '{} Products Feed'.format(self.store.title))
@@ -567,7 +581,7 @@ class GrooveKartProductFeed(object):
         return self.out
 
     def generate_feed(self):
-        for p in self.store.get_groovekart_products():
+        for p in self.store.get_groovekart_products(limit=5000):
             self.add_product(p)
 
     def add_product(self, product):
@@ -579,6 +593,9 @@ class GrooveKartProductFeed(object):
 
             for variant in variants:
                 self._add_variant(product, variant)
+
+                if not self.all_variants:
+                    break
         else:
             self._add_variant(product, None)
 
@@ -601,7 +618,12 @@ class GrooveKartProductFeed(object):
 
         self.writer.startTag('item')
 
-        self._add_element('g:id', 'store_{}_{}'.format(product_data['id'], variant_id))
+        if self.revision == 1:
+            self._add_element('g:id', 'store_{}_{}'.format(product_data['id'], variant_id))
+        else:
+            self._add_element('g:id', 'groovekart_{}'.format(variant_id))
+            self._add_element('g:item_group_id', '{}'.format(variant_id))
+
         self._add_element('g:link', product_data['product_url'])
         self._add_element('g:title', product_data['product_title'])
         self._add_element('g:description', description)
@@ -611,9 +633,18 @@ class GrooveKartProductFeed(object):
             self._add_element('g:price', '{amount} {currency}'.format(amount=variant['price'], currency=self.currency))
             self._add_element('g:shipping_weight', '{} {}'.format(variant['weight'], 'lb'))
 
-        self._add_element('g:google_product_category', self.default_product_category)
+        product_category = self.store_categories.get(product_data['id_category_default'])
+        self._add_element('g:google_product_category', safe_str(product_category or self.default_product_category))
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
+
+        if self.revision == 3:
+            self._add_element('g:age_group', self.google_settings.get('age_group') or 'Adult')
+            self._add_element('g:gender', self.google_settings.get('gender') or 'Unisex')
+            self._add_element('g:brand', self.google_settings.get('brand_name', self.store.title))
+            self._add_element('g:mpn', 'store_{}_{}'.format(product_data['id'], variant_id))
+        else:
+            self._add_element('g:brand', product_data.get('manufacturer_name') or '')
 
         self.writer.endTag()
 
@@ -667,8 +698,13 @@ def get_gear_store_feed(store):
 def get_gkart_store_feed(store):
     try:
         return GrooveKartFeedStatus.objects.get(store=store)
+
     except GrooveKartFeedStatus.DoesNotExist:
-        return GrooveKartFeedStatus.objects.create(store=store, updated_at=None)
+        return GrooveKartFeedStatus.objects.create(
+            store=store,
+            revision=2,
+            updated_at=None
+        )
 
 
 def generate_product_feed(feed_status, nocache=False, revision=None):
@@ -859,7 +895,7 @@ def generate_gear_product_feed(feed_status, nocache=False):
     return feed_s3_url
 
 
-def generate_gkart_product_feed(feed_status, nocache=False):
+def generate_gkart_product_feed(feed_status, nocache=False, revision=None):
     store = feed_status.store
 
     if not store.user.can('product_feeds.use'):
@@ -867,12 +903,16 @@ def generate_gkart_product_feed(feed_status, nocache=False):
 
     feed_start = time.time()
 
-    if not feed_status.feed_exists() or nocache:
+    if not feed_status.feed_exists(revision=revision) or nocache:
+        if revision is None:
+            revision = feed_status.revision
+
         feed = GrooveKartProductFeed(store,
-                                     feed_status.revision,
+                                     revision,
                                      feed_status.all_variants,
                                      feed_status.include_variants_id,
-                                     feed_status.default_product_category)
+                                     feed_status.default_product_category,
+                                     feed=feed_status)
 
         feed.init()
 
@@ -886,7 +926,7 @@ def generate_gkart_product_feed(feed_status, nocache=False):
         feed_status.updated_at = timezone.now()
 
         feed_s3_url, upload_time = aws_s3_upload(
-            filename=feed_status.get_filename(),
+            filename=feed_status.get_filename(revision=revision),
             input_filename=feed.out_filename(),
             mimetype='application/xml',
             upload_time=True,
@@ -897,7 +937,7 @@ def generate_gkart_product_feed(feed_status, nocache=False):
         feed.delete_out()
 
     else:
-        feed_s3_url = feed_status.get_url()
+        feed_s3_url = feed_status.get_url(revision=revision)
 
     feed_status.status = 1
     feed_status.save()

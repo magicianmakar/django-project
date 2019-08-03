@@ -121,6 +121,7 @@ def get_store_categories(store):
         response.raise_for_status()
 
         result = response.json()
+        # Id can be "int as string" or None
         return [c for c in result['categories'] if c.get('id')]
     except:
         raven_client.captureException()
