@@ -295,7 +295,13 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
             'count': User.objects.filter(email__iexact=email).count()
         })
 
-        return User.objects.get(email__iexact=email), False
+        user = None
+        try:
+            user = User.objects.get(email__iexact=email)
+        except User.MultipleObjectsReturned:
+            user = User.objects.get(email__iexact=email, profile__shopify_app_store=False)
+
+        return user, False
 
 
 def smart_board_by_product(user, product):

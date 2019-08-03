@@ -528,9 +528,7 @@ def process_webhook_event(request, event_id, raven_client):
 
         trial_delta = arrow.get(sub.trial_end) - arrow.utcnow()
         if not sub.trial_end or trial_delta.days <= 0:
-            customer = StripeCustomer.objects.get(customer_id=sub.customer)
-            customer.can_trial = False
-            customer.save()
+            StripeCustomer.objects.filter(customer_id=sub.customer).update(can_trial=False)
 
         return HttpResponse('ok')
 
