@@ -2033,7 +2033,7 @@ class AppPermission(models.Model):
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
 
     def __str__(self):
-        return f'<AppPermission: {self.id} | {self.name}>'
+        return self.name
 
 
 class ClippingMagicPlan(models.Model):
