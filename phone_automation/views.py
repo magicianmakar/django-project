@@ -433,7 +433,7 @@ def provision_release(request, twilio_phone_number_id):
 
 def status_callback(request):
     # searching related phone number
-    twilio_phone_number = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    twilio_phone_number = get_object_or_404(TwilioPhoneNumber, incoming_number=request.POST.get('To'))
 
     if twilio_phone_number and request.POST.get('CallStatus') in ('completed', 'busy', 'failed', 'no-answer'):
         # --- check for reaching limit warning
@@ -590,7 +590,7 @@ def upload(request, twilio_automation_id):
 
 
 def call_flow(request):
-    phone = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    phone = get_object_or_404(TwilioPhoneNumber, incoming_number=request.POST.get('To'))
     response = VoiceResponse()
 
     total_duration = get_month_totals(phone.user)
