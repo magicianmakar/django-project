@@ -56,6 +56,7 @@ from .utils import (
     order_id_from_name,
     get_gkart_products,
     get_orders_page_default_date_range,
+    fix_gkart_image,
     get_store_categories,
 )
 
@@ -587,6 +588,7 @@ class OrdersList(ListView):
                 item['product'] = product
                 item['total'] = safe_float(item['price'] * safe_int(item['quantity']))
                 item['image'] = item.get('variants', {}).get('image') or item.get('cover_image')
+                item['image'] = fix_gkart_image(item['image'])
 
                 if product and product.has_supplier:
                     item['supplier'] = supplier = product.default_supplier

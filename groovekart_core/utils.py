@@ -608,6 +608,13 @@ def update_product_images(product, images):
             r.raise_for_status()
 
 
+def fix_gkart_image(image):
+    if image:
+        return re.sub(r'(\d+)(\.\w+)$', r'\1-large_default\2', image)
+
+    return image
+
+
 class OrderListQuery(object):
     def __init__(self, store, params=None):
         self._endpoint = 'orders.json'
