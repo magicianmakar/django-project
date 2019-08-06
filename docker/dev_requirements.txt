@@ -1,0 +1,4 @@
+-r ../requirements.txt
+ipython==7.7.0
+pycodestyle==2.5.0
+flake8==3.7.8

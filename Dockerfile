@@ -10,10 +10,11 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     postgresql-client
 # We should give exact version to make caching work in a predictable manner.
-RUN pip install pip==19.1.1
+RUN pip install pip==19.2.1
 WORKDIR /opt/dropified
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+COPY docker/dev_requirements.txt docker/dev_requirements.txt
+RUN pip install -r docker/dev_requirements.txt
 COPY package.json package.json
 RUN echo "source /opt/dropified/.env" > /root/.bashrc
 EXPOSE 8000
