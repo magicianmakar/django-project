@@ -323,7 +323,7 @@ def get_sms_text(orders):
 def check_sms_abilities(phone):
     client = get_twilio_client()
 
-    if phone.twilio_metadata_json['capabilities']['sms'] is True and phone.twilio_metadata_json['sms_url'] == "":
+    if phone.twilio_metadata_json.get('capabilities', {}).get('sms') and phone.twilio_metadata_json['sms_url'] == "":
         # activating sms webhook
         client \
             .incoming_phone_numbers(phone.twilio_sid) \
@@ -334,7 +334,7 @@ def check_sms_abilities(phone):
         phone.twilio_metadata = twilio_metadata
         phone.save()
 
-    if phone.twilio_metadata['sms_url'] != "":
+    if phone.twilio_metadata.get('sms_url') != "":
         return True
     else:
         return False

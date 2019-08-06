@@ -116,6 +116,16 @@ class TwilioStep(models.Model):
     @cached_property
     def redirect(self):
         if self.next_step is None:
+            # Search next step backwards
+            parent = self.parent
+            current_step = self.step
+            while parent is not None:
+                if parent.next_step == current_step:
+                    parent = parent.parent
+                    current_step = parent.step
+                else:
+                    return parent.redirect
+
             return reverse('phone_automation_call_flow_hangup')
 
         next_step = self.automation.steps.get(step=self.next_step)
