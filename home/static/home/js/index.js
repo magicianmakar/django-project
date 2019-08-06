@@ -1,6 +1,34 @@
 (function(sub_conf, user_statistics) {
     'use strict';
 
+    $('.goal-step').click(function () {
+        var stepSlug = $(this).data('step-slug');
+        var goalId = $(this).data('goal-id');
+        $.ajax({
+            url: '/api/goals/step-is-completed',
+            type: 'POST',
+            data: {
+                step_slug: stepSlug,
+            },
+            success: function(data) {
+                $(this).removeClass('fa-circle clickable');
+                $(this).addClass('dropified-green fa-check-circle');
+
+                var stepCircle = '.' + stepSlug + '-circle';
+                $(stepCircle).removeClass('fa-circle disabled-gray');
+                $(stepCircle).addClass('dropified-green fa-check-circle');
+
+                var counter = '#total-steps-completed-' + goalId;
+                $(counter).text(data.steps);
+            }.bind(this),
+            error: function(data) {
+                displayAjaxError('Step completion', data);
+            },
+            complete: function () {
+            }
+        });
+    });
+
     isExtensionReady().done(function () {
         $('a.extension-link').hide();
         Cookies.set('ext_installed', 'true');

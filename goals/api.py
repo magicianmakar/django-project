@@ -16,3 +16,16 @@ class GoalsApi(ApiResponseMixin, View):
             return self.api_success({'added': True, 'slug': slug, 'goals': list(goals)})
 
         return self.api_success({'added': False})
+
+    def post_step_is_completed(self, request, user, data):
+        slug = data['step_slug']
+        step = Step.objects.filter(slug=slug).exclude(users=user).first()
+
+        if step:
+            user.completed_steps.add(step)
+            completed_steps = user.completed_steps.all().count()
+            return self.api_success({'added': True,
+                                     'slug': slug,
+                                     'steps': completed_steps})
+
+        return self.api_success({'added': False})

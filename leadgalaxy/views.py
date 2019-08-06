@@ -103,8 +103,6 @@ from product_alerts.utils import variant_index_from_supplier_sku, delete_product
 
 from profit_dashboard.models import FacebookAccess
 
-from goals.utils import update_completed_steps, get_dashboard_user_goals
-
 from . import tasks
 from . import utils
 from .forms import (
@@ -131,25 +129,10 @@ from .models import (
     ShopifyStore,
     UserProfile,
     UserUpload,
-    DashboardVideo,
 )
 from .templatetags.template_helper import money_format
 from functools import reduce
 from stripe_subscription.models import CustomStripePlan
-
-
-@login_required
-def dashboard(request):
-    update_completed_steps(request.user)
-    user_goals = get_dashboard_user_goals(request.user)
-    videos = DashboardVideo.objects.filter(is_active=True)[:4]
-
-    return render(request, 'dashboard.html', {
-        'user_goals': user_goals,
-        'videos': videos,
-        'selected_menu': 'business:overview',
-        'base_template': 'base.html'
-    })
 
 
 def webhook(request, provider, option):

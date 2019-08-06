@@ -44,7 +44,18 @@ class GoalStepRelationship(models.Model):
         unique_together = 'goal', 'step_number'
 
 
-class Step(models.Model):
+class ActionMixin:
+    """
+    Adding it till Step contains action url.
+    TODO: Remove when action is taken out of Step completely.
+    """
+    @property
+    def is_external(self):
+        return ('dropified' not in self.action_url
+                or not self.action_url.startswith("http"))
+
+
+class Step(models.Model, ActionMixin):
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, related_name='completed_steps')
     title = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='')
@@ -56,3 +67,20 @@ class Step(models.Model):
 
     def __str__(self):
         return self.slug
+
+
+class StepExtraAction(models.Model, ActionMixin):
+    """
+    TODO: Eventually we should remove the following fields from Step model:
+        action_url = models.URLField(blank=True, default='')
+        action_title = models.CharField(max_length=100, blank=True, default='')
+        icon_src = models.CharField(max_length=200, blank=True, default='')
+
+    Then we can solely use this model for managing actions.
+    """
+    step = models.ForeignKey(Step,
+                             on_delete=models.CASCADE,
+                             related_name='extra_actions')
+    action_url = models.URLField(blank=True, default='')
+    action_title = models.CharField(max_length=100, blank=True, default='')
+    icon_src = models.CharField(max_length=200, blank=True, default='')

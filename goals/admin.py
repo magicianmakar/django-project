@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.contrib import admin
-from .models import Goal, Step
+from .models import Goal, Step, StepExtraAction
 
 
 class GoalStepRelationshipInline(admin.TabularInline):
@@ -25,3 +25,8 @@ class GoalAdmin(admin.ModelAdmin):
 @admin.register(Step)
 class StepAdmin(admin.ModelAdmin):
     list_display = 'slug',
+
+
+@admin.register(StepExtraAction)
+class StepExtraActionAdmin(admin.ModelAdmin):
+    list_display = 'action_title',

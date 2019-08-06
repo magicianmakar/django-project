@@ -72,13 +72,6 @@
                 </a>
 
                 <ul class="nav nav-second-level {% if 'business:' not in selected_menu %}collapse{% endif %}">
-                    <li {% if selected_menu == 'business:overview' %}class="active"{% endif %}>
-                        <a href="{% url 'dashboard' %}">
-                            <!-- <i class="fa fa-briefcase"></i> -->
-                            <span class="nav-label">Business Overview</span>
-                        </a>
-                    </li>
-
                     {% if request.user|can:'profit_dashboard.view' and request.user|can:'view_profit_dashboard.sub' %}
                     <li {% if selected_menu == 'business:profit_dashboard' %}class="active"{% endif %}>
                         <a href="{% url 'profit_dashboard.views.index' %}" class="">

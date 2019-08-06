@@ -4,7 +4,8 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
 from shopified_core import permissions
-from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule
+from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule, DashboardVideo
+from goals.utils import get_dashboard_user_goals
 
 
 @login_required
@@ -33,6 +34,9 @@ def home_page_view(request):
     templates = DescriptionTemplate.objects.filter(user=user.models_user).defer('description')
     markup_rules = PriceMarkupRule.objects.filter(user=user.models_user)
 
+    user_goals = get_dashboard_user_goals(request.user)
+    videos = DashboardVideo.objects.filter(is_active=True)[:4]
+
     return render(request, 'home/index.html', {
         'config': config,
         'extra_stores': extra_stores,
@@ -43,5 +47,7 @@ def home_page_view(request):
         'page': 'index',
         'selected_menu': 'account:stores',
         'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
-        'breadcrumbs': ['Stores']
+        'breadcrumbs': ['Stores'],
+        'user_goals': user_goals,
+        'videos': videos,
     })

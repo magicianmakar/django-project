@@ -1,0 +1,119 @@
+.training-section {
+    margin-top: 20px;
+}
+
+.training-section .padded-row {
+    padding: 0 40px;
+}
+
+#dashboard-logo {
+    padding-top: 10px;
+    width: 30%;
+}
+
+#dashboard-welcome-message {
+    color: #999c9e;
+}
+
+h4.days-remaining {
+    color: rgb(147, 196, 125);
+}
+
+.dropified-green {
+    color: rgb(147, 196, 125);
+}
+
+.disabled-gray {
+    color: #999c9e;
+}
+
+.close-circle-gray {
+    color: #eee;
+}
+
+a.step-link {
+    color: #007bff;
+}
+
+span.step-label {
+    vertical-align: middle;
+}
+
+img.step-icon {
+    vertical-align: middle;
+    height: 14px;
+    width: 14px;
+    margin-right: 5px;
+}
+
+#view-all-training {
+    margin: 25px 0 10px;
+}
+
+#training-videos {
+    padding: 0 40px;
+}
+
+#training-videos .thumbnail {
+    padding: 15px 10px;
+    margin-bottom: 0;
+}
+
+#training-videos .training-video:nth-child(n+3) {
+    margin: 60px 0;
+}
+
+#training-videos .training-video:nth-child(odd) {
+    padding-right: 25px;
+}
+
+#training-videos .training-video:nth-child(even) {
+    padding-left: 25px;
+}
+
+#training-videos .training-video strong {
+    text-align: center;
+    width: 100%;
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 30px;
+}
+
+#training-videos .training-video small {
+    margin: 5px auto 0;
+    display: block;
+    float: none;
+    width: 71%;
+    font-size: 16px;
+}
+
+@media screen and (max-width: 600px) {
+    #training-videos {
+        padding: 0;
+    }
+
+    #training-videos .training-video:nth-child(n) {
+        padding: 0;
+        margin: 30px 0;
+    }
+
+    #training-videos .training-video:first-child {
+        margin-top: 0;
+    }
+
+    #training-videos .training-video strong {
+        font-size: 16px;
+    }
+    #training-videos .training-video small {
+        font-size: 85%;
+    }
+}
+
+
+.step-description {
+    min-height: 50px;
+}
+
+.goal-step.clickable {
+  cursor: pointer;
+}
