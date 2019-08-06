@@ -1315,7 +1315,8 @@ class ShopifyStoreApi(ApiBase):
         except:
             credits = 0
 
-        if user.can('unlimited_catpcha.use'):
+        if user.can('aliexpress_captcha.use'):
+            # Always retun credits now that plans have unlimited captcha
             credits = 1000
 
         return self.api_success({
@@ -1328,7 +1329,7 @@ class ShopifyStoreApi(ApiBase):
             raise PermissionDenied()
 
         remaining_credits = 0
-        if not user.can('unlimited_catpcha.use'):
+        if not user.can('aliexpress_captcha.use'):
             if user.models_user.captchacredit and user.models_user.captchacredit.remaining_credits > 0:
                 user.models_user.captchacredit.remaining_credits -= 1
                 user.models_user.captchacredit.save()

@@ -1091,7 +1091,7 @@ def webhook(request, provider, option):
 
             user = User.objects.get(email=email)
 
-            if is_review_bonus and user.can('unlimited_catpcha.use'):
+            if is_review_bonus and user.can('aliexpress_captcha.use'):
                 user.set_config('_double_orders_limit', arrow.utcnow().timestamp)
                 return HttpResponse('{} Double Orders Limit for *{}*'.format(credits, email))
 
