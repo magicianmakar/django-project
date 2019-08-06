@@ -398,7 +398,7 @@ SENTRY_PROCESSORS = (
 )
 
 # default Aliexpress Affiliate
-DEFAULT_ALIEXPRESS_AFFILIATE = 'ali'
+DEFAULT_ALIEXPRESS_AFFILIATE = 'admitad'
 
 # Auto Aliexpress fulfillment server API
 FULFILLBOX_API_URL = os.environ.get('FULFILLBOX_API_URL')
