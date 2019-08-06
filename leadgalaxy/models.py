@@ -2190,6 +2190,11 @@ class GroupPlan(models.Model):
         return self.slug in ['startup', 'startup-shopify', 'starter', 'starter-shopify']
 
     @property
+    def is_upgradable(self):
+        """ For plans that can be upgraded to a better version """
+        return self.slug in ['builder', 'builder-yearly', 'builder-shopify', 'builder-yearly-shopify']
+
+    @property
     def large_badge_image(self):
         return self.badge_image.replace('_small.', '.')
 

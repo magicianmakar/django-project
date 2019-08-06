@@ -144,7 +144,7 @@
                     {% if selected_menu and selected_menu in upsell_pages and request.user.is_staff %}
                     <li>
                         <span>
-                            <a href="{% url 'article-content-page' slug_article=selected_menu|slugify_menu %}" id="edit-upsell" class="btn btn-primary">See Upsell Page</a>
+                            <a href="{% url 'article-content-page' slug_article=selected_menu|slugify_menu %}" id="edit-upsell" class="btn btn-primary top-button">See Upsell Page</a>
                         </span>
                     </li>
                     {% endif %}
@@ -170,6 +170,20 @@
                             {% endif %}
                         </span>
                     </li>
+
+                    {% if request.user.profile.plan.is_upgradable %}
+                    <li>
+                        <span>
+                            <a href="{% url 'user_profile' %}#plan"
+                               class="btn btn-default btn-outline top-button itooltip"
+                               title="Get access to more features and import more products on the Premier plan. Click Upgrade to learn more."
+                               data-placement="bottom">
+                                Upgrade
+                            </a>
+                        </span>
+                    </li>
+                    {% endif %}
+
                     <li>
                         <div id="notification-bell"></div>
                     </li>

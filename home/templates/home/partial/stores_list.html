@@ -398,6 +398,12 @@
         </a>
 
         {% include 'partial/help_tooltip.html' with help="Click Add Store to get started.<br>For a full guide on adding your Shopify store view <a href='http://help.dropified.com/getting-started/connect-your-store/connect-a-shopify-store-in-dropified'>this article.</a>" qtipstyle="color:#BBB" %}
+
+        {% elif user.profile.plan.is_upgradable %}
+        <a href="{% url 'user_profile' %}#plan" class="btn btn-success">Upgrade</a>
+        <span class="m-l m-r-xs">Upgrade to the Premier plan to add up to 5 stores</span>
+
+        {% include 'partial/help_tooltip.html' with help="Connect 5 stores in one account with the Premier plan, Click Upgrade to learn more." qtipstyle="color:#BBB" %}
         {% endif %}
 
     <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"

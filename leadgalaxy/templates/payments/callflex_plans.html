@@ -4,6 +4,17 @@
 <div class="panel panel-default callflex-anchor">
     <div class="panel-heading">
         Manage CallFlex Subscriptions
+        {% if user.profile.plan.is_upgradable %}
+        <div class="pull-right panel-tooltip">
+            <span class="m-r">Get 200 Minutes Free</span>
+            <a href="{% url 'user_profile' %}#plan"
+               class="btn itooltip btn-success btn-sm update-to-premier"
+               title="The Premier plan includes a Toll free number and 200 minutes for free!"
+               data-placement="bottom">
+                Upgrade
+            </a>
+        </div>
+        {% endif %}
     </div>
     <div class="panel-body">
         <div class="row">

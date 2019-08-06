@@ -226,6 +226,16 @@
         });
     }
 
+    $('.update-to-premier').on('click', function(e) {
+        e.preventDefault();
+        // Select plan by premier plan slug
+        var premierPlan = $('.subsciption-plan.premier .choose-plan');
+        if (!premierPlan.length) {
+            premierPlan = $('.subsciption-plan.premier-prom .choose-plan');
+        }
+        premierPlan.trigger('click');
+    });
+
     $('.choose-plan').click(function(e) {
         var parent = $(this).parents('.subsciption-plan');
         var plan = parent.data('data-plan');
