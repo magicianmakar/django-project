@@ -19,12 +19,10 @@ from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
 from shopified_core.utils import (
     safe_int,
-    safe_str,
     get_domain,
     base64_encode,
     using_store_db,
     OrderErrors,
-    ALIEXPRESS_SOURCE_STATUS,
 )
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class, upsell_page_permissions
@@ -1871,24 +1869,6 @@ class ShopifyOrderTrack(OrderTrackBase):
             return status_map.get(self.source_status, '')
 
     get_source_status.admin_order_field = 'source_status'
-
-    def get_source_status_details(self):
-        if self.source_status_details and ',' in self.source_status_details:
-            source_status_details = []
-            for i in self.source_status_details.split(','):
-                source_status_details.append(ALIEXPRESS_SOURCE_STATUS.get(safe_str(i).lower()))
-
-            return ', '.join(set(source_status_details))
-        else:
-            return ALIEXPRESS_SOURCE_STATUS.get(safe_str(self.source_status_details).lower())
-
-    def get_source_status_color(self):
-        if not self.source_status:
-            return 'danger'
-        elif self.source_status == 'FINISH':
-            return 'primary'
-        else:
-            return 'warning'
 
     def get_source_url(self):
         if self.source_id:
