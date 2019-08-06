@@ -6,6 +6,10 @@
 {% load template_helper %}
 {% load compress %}
 
+{% block breadcrumb-right %}
+{% include 'partial/right_breadcrumbs.html' %}
+{% endblock %}
+
 {% block main-container %}
 
     <div class="tabs-container">

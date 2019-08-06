@@ -491,3 +491,28 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
 #bulk-order-steps.wizard > .content > .body h2 {
     margin: 10px 0 15px;
 }
+
+ul.breadcrumb-right-menu {
+  list-style-type: none;
+  margin: 0;
+  padding: 20px;
+  padding-bottom: 0;
+  overflow: hidden;
+  border-left: 1px solid #e7eaec;
+  display: flex;
+  justify-content: space-between;
+}
+
+ul.breadcrumb-right-menu li {
+  padding-bottom: 20px;
+}
+
+ul.breadcrumb-right-menu li:hover, ul.breadcrumb-right-menu li.active {
+  padding-bottom: 17px;
+  border-bottom: 3px solid #93c47d;
+  color: #93c47d;
+}
+
+ul.breadcrumb-right-menu li a {
+  color: inherit;
+}

@@ -193,8 +193,8 @@
         {% endblock nav %}
         {% block welcome-area %}{% endblock welcome-area %}
         {% block breadcrumb-area %}
-        <div class="row wrapper border-bottom white-bg page-heading">
-            <div class="col-lg-10">
+        <div class="row wrapper border-bottom white-bg">
+            <div class="col-lg-9 page-heading">
                 <h2>{% block page-title %}{% endblock %}</h2>
                 {% if breadcrumbs %}
                 <ol class="breadcrumb">
@@ -208,7 +208,7 @@
                 </ol>
                 {% endif %}
             </div>
-            <div class="col-lg-2"></div>
+            <div class="col-lg-3">{% block breadcrumb-right %}{% endblock %}</div>
         </div>
         {% endblock breadcrumb-area %}
 
