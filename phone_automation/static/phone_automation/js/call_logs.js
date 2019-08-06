@@ -124,4 +124,51 @@ $(function() {
     $('#company_id,#created_at_daterange2').change(function(e) {
         $('#search-form').submit();
     });
+
+    $('.delete-log').click(function(e) {
+        e.preventDefault();
+
+        var deleteLogURL = $(this).data('post-url');
+        var deleteLogID = $(this).data('log-id');
+        swal({
+            title: 'Delete Log',
+            text: 'Do you want to delete this log?',
+            type: 'warning',
+            html: true,
+            animation: false,
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Delete",
+            cancelButtonText: "Cancel",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+        },
+        function(isConfirmed) {
+            if (!isConfirmed) {
+                return;
+            }
+
+            $.ajax({
+                url: deleteLogURL,
+                type: 'POST',
+                data: {
+                    id: deleteLogID,
+                },
+                success: function(data) {
+                    if (data.status == 'ok') {
+                        $('#callflex-logs .callflex-log-' + data.id).hide('slow', function() {
+                            $(this).remove();
+                        });
+
+                        swal.close();
+                        toastr.success('Log have been deleted', 'Delete Log');
+                    }
+                },
+                error: function(data) {
+                    displayAjaxError('Delete Log', data);
+                }
+            });
+        });
+    });
 });

@@ -249,6 +249,7 @@ class TwilioLog(models.Model):
     notes = models.TextField(default='')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     @property
     def twilio_metadata_json(self):

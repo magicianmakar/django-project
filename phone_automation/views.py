@@ -68,7 +68,7 @@ def index(request):
     try:
         twilio_stats = {}
         twilio_logs = user.twilio_logs.filter(log_type='status-callback')
-        latest_twilio_logs = twilio_logs[:5]
+        latest_twilio_logs = twilio_logs.filter(deleted_at__isnull=True)[:5]
         twilio_stats['twilio_logs_total_count'] = twilio_logs.count()
         day_start = timezone.now().replace(hour=12, minute=0, second=0)
         today_twilio_logs = twilio_logs.filter(created_at__gte=day_start)
@@ -153,7 +153,7 @@ def call_logs(request):
 
     try:
         twilio_stats = {}
-        twilio_logs = user.twilio_logs.filter(log_type='status-callback')
+        twilio_logs = user.twilio_logs.filter(log_type='status-callback', deleted_at__isnull=True)
 
         if created_at_start:
             twilio_logs = twilio_logs.filter(created_at__gte=created_at_start)
@@ -217,6 +217,18 @@ def call_log_save(request, twilio_log_id):
     twilio_log.save()
 
     return JsonResponse({'status': 'ok'})
+
+
+@login_required
+def call_log_delete(request):
+    if not request.user.can('phone_automation.use') or not request.user.can('use_callflex.sub'):
+        return JsonResponse({'error': 'Permission Denied'}, status=403)
+
+    log_id = request.POST.get('id')
+    user = request.user.models_user
+    TwilioLog.objects.filter(pk=log_id, user_id=user.id).update(deleted_at=timezone.now())
+
+    return JsonResponse({'status': 'ok', 'id': log_id})
 
 
 @login_required

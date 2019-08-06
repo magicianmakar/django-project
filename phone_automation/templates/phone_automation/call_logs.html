@@ -80,7 +80,7 @@
                             <canvas id="calllogs_chart" width="300" height="50"></canvas>
                         </p>
                         <div class="_row grey-cont">
-                            <table class="table table-bordered dataTables responsive dt-responsive">
+                            <table class="table table-bordered dataTables responsive dt-responsive" id="callflex-logs">
                                 <thead>
                                     <tr>
                                         <th>Caller</th>
@@ -95,7 +95,7 @@
                                 </thead>
                                 <tbody>
                                     {% for twilio_log in twilio_logs %}
-                                    <tr>
+                                    <tr class="callflex-log-{{ twilio_log.id }}">
                                         <td class="text-center">{{ twilio_log.from_number|phone_number }}</td>
                                         <td class="text-center">
                                             {% if twilio_log.twilio_phone_number %}
@@ -134,6 +134,7 @@
                                         </td>
                                         <td class="text-center">
                                             <a href="#" data-toggle="modal" data-target="#note-edit" class="btn btn-xs btn-info log-edit btn-circled-adjust" data-post-url="{% url 'phone_automation_call_log_save' twilio_log_id=twilio_log.id %}" data-log-id="{{ twilio_log.id }}" title="Edit"><i class="fa fa-edit"></i></a>
+                                            <a href="#" class="btn btn-xs btn-danger btn-circled-adjust delete-log" data-post-url="{% url template_config.url.namespace|add:'phone_automation_call_log_delete' %}" data-log-id="{{ twilio_log.id }}" title="Delete"><i class="fa fa-close"></i></a>
                                         </td>
                                     </tr>
                                     {% endfor %}

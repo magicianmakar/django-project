@@ -11,6 +11,7 @@ urlpatterns = [
         name='phone_automation_provision_release'),
     url(r'^call-logs$', phone_automation.views.call_logs, name='phone_automation_call_logs'),
     url(r'^call-log/(?P<twilio_log_id>[\d]+)/save/?$', phone_automation.views.call_log_save, name='phone_automation_call_log_save'),
+    url(r'^call-log/delete$', phone_automation.views.call_log_delete, name='phone_automation_call_log_delete'),
 
     url(r'^reports-numbers$', phone_automation.views.reports_numbers, name='phone_automation_reports_numbers'),
     url(r'^reports-companies$', phone_automation.views.reports_companies, name='phone_automation_reports_companies'),
