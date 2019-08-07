@@ -218,7 +218,14 @@ def product_export(store_id, product_id, user_id):
 
         product.store = store
         groovekart_product = r.json()
-        product.source_id = groovekart_product['id_product']
+        try:
+            product.source_id = groovekart_product['id_product']
+        except KeyError:
+            raven_client.captureException(extra={'api_data': api_data})
+
+            pusher_data['error'] = utils.dict_val(groovekart_product, ['error', 'Error'])
+            return store.pusher_trigger('product-export', pusher_data)
+
         product.sync()
 
         if product.default_supplier:
