@@ -21,6 +21,73 @@
         });
     }
 
+    function orderBundle(order_data_id, order_name, store_type, fail_callback) {
+        fail_callback = typeof(fail_callback) !== 'undefined' ? fail_callback : function(data) {};
+
+        $.ajax({
+            url: api_url('order-data', 'shopify'),
+            type: 'GET',
+            data: {
+                order: order_data_id
+            },
+        }).done(function(data) {
+            if (!data.is_bundle) {
+                return displayAjaxError('Order Bundle', 'Not a bundle order');
+            }
+
+            var order = {
+                cart: true,
+                bundle: true,
+                items: []
+            };
+
+            $.each(data.products, function(i, product) {
+                order.items.push({
+                    url: product.order_url,
+                    order_data: order_data_id,
+                    order_name: order_name,
+                    order_id: data.order_id,
+                    line_id: data.line_id,
+                    line_title: product.title,
+                    supplier_type: product.supplier_type,
+                    store_type: store_type,
+                    product: product,
+                });
+            });
+
+            if (order.items.length > 0) {
+                order.order_data = order_data_id;
+                order.order_name = order.items[0].order_name;
+                order.order_id = order.items[0].order_id;
+                order.supplier_type = order.items[0].supplier_type;
+                order.store_type = order.items[0].store_type;
+
+                order.line_id = $.map(order.items, function(el) {
+                    return el.line_id;
+                });
+
+                order.line_title = '<ul style="padding:0px;overflow-x:hidden;">';
+
+                order.line_title += $.map(order.items.slice(0, 3), function(el) {
+                    return '<li>&bull; ' + el.line_title + '</li>';
+                }).join('');
+
+                if (order.items.length > 3) {
+                    var extra_count = order.items.length - 3;
+                    order.line_title += '<li>&bull; Plus ' + (extra_count) + ' Product' + (extra_count > 1 ? 's' : '') + '...</li>';
+                }
+
+                order.line_title += '</ul>';
+
+            }
+
+            addOrderToQueue(order);
+
+            ga('clientTracker.send', 'event', 'Ordered Bundle', 'Shopify', sub_conf.shop);
+
+        }).fail(fail_callback);
+    }
+
     function orderItems(current_order, supplier_type, exclude_lines) {
         supplier_type = typeof(supplier_type) !== 'undefined' ? supplier_type : null;
         exclude_lines = typeof(exclude_lines) !== 'undefined' ? exclude_lines : false;
@@ -45,16 +112,27 @@
                 }
             }
 
-            if ($(el).attr('line-data') && !$(el).attr('line-track')) {
-                order.items.push({
-                    url: $('.add-to-cart', el).data('href') || $('.add-to-cart', el).prop('href'),
-                    order_data: $(el).attr('order-data-id'),
-                    order_name: $(el).attr('order-number'),
-                    order_id: $(el).attr('order-id'),
-                    line_id: $(el).attr('line-id'),
-                    line_title: $(el).attr('line-title'),
-                    supplier_type: $(el).attr('supplier-type'),
+            if ($(el).hasClass('bundled')) {
+                var bundleBtn = $('.order-bundle', el);
+                var order_data_id = bundleBtn.attr('order-data');
+                var order_name = bundleBtn.attr('order-number');
+                var store_type = bundleBtn.attr('store-type');
+
+                orderBundle(order_data_id, order_name, store_type, function(data) {
+                    toastr.error(data, 'Order Bundle');
                 });
+            } else {
+                if ($(el).attr('line-data') && !$(el).attr('line-track')) {
+                    order.items.push({
+                        url: $('.add-to-cart', el).data('href') || $('.add-to-cart', el).prop('href'),
+                        order_data: $(el).attr('order-data-id'),
+                        order_name: $(el).attr('order-number'),
+                        order_id: $(el).attr('order-id'),
+                        line_id: $(el).attr('line-id'),
+                        line_title: $(el).attr('line-title'),
+                        supplier_type: $(el).attr('supplier-type'),
+                    });
+                }
             }
         });
 
@@ -155,68 +233,7 @@
         var order_name = $(e.target).attr('order-number');
         var store_type = $(e.target).attr('store-type');
 
-        $.ajax({
-            url: api_url('order-data', 'shopify'),
-            type: 'GET',
-            data: {
-                order: order_data_id
-            },
-        }).done(function(data) {
-            if (!data.is_bundle) {
-                return displayAjaxError('Order Bundle', 'Not a bundle order');
-            }
-
-            var order = {
-                cart: true,
-                bundle: true,
-                items: []
-            };
-
-            $.each(data.products, function(i, product) {
-                order.items.push({
-                    url: product.order_url,
-                    order_data: order_data_id,
-                    order_name: order_name,
-                    order_id: data.order_id,
-                    line_id: data.line_id,
-                    line_title: product.title,
-                    supplier_type: product.supplier_type,
-                    store_type: store_type,
-                    product: product,
-                });
-            });
-
-            if (order.items.length > 0) {
-                order.order_data = order.items[0].order_data.replace(/_[^_]+$/, '');
-                order.order_name = order.items[0].order_name;
-                order.order_id = order.items[0].order_id;
-                order.supplier_type = order.items[0].supplier_type;
-                order.store_type = order.items[0].store_type;
-
-                order.line_id = $.map(order.items, function(el) {
-                    return el.line_id;
-                });
-
-                order.line_title = '<ul style="padding:0px;overflow-x:hidden;">';
-
-                order.line_title += $.map(order.items.slice(0, 3), function(el) {
-                    return '<li>&bull; ' + el.line_title + '</li>';
-                }).join('');
-
-                if (order.items.length > 3) {
-                    var extra_count = order.items.length - 3;
-                    order.line_title += '<li>&bull; Plus ' + (extra_count) + ' Product' + (extra_count > 1 ? 's' : '') + '...</li>';
-                }
-
-                order.line_title += '</ul>';
-
-            }
-
-            addOrderToQueue(order);
-
-            ga('clientTracker.send', 'event', 'Ordered Bundle', 'Shopify', sub_conf.shop);
-
-        }).fail(function(data) {
+        orderBundle(order_data_id, order_name, store_type, function(data) {
             displayAjaxError('Order Bundle', data);
         });
     });

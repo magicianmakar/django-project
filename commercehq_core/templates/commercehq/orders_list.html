@@ -176,7 +176,7 @@
                                         {% endif %}
                                     </div>
                                     <div class="col-xs-2 text-right">
-                                        {% if order.lines_count and not order.have_bundle %}
+                                        {% if order.lines_count %}
                                             <div class="btn-group pull">
                                                 <button class="btn btn-success btn-xs order-items" order-id="{{order.id}}"
                                                         type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
@@ -290,7 +290,10 @@
                                     {% for item in order.items %}
                                     {% with original=item.product.get_original_info %}
 
-                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %}"
+                                    <div class="line
+                                                container-fluid
+                                                {% if item.is_bundle %}bundled{% endif %}
+                                                {% if not forloop.first %}multi-lines{% endif %}"
                                         line-id="{{item.id}}"
                                         order-id="{{order.id}}"
                                         order-data-id="{{ item.order_data_id }}"
@@ -376,7 +379,6 @@
                                                 <thead>
                                                     <tr>
                                                         <td class="product-preview">
-                                                            {% if not item.is_bundle %}
                                                             <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; ">
 
                                                             <img class="product-img cached-img no-img no-img-sm unveil"
@@ -386,9 +388,6 @@
                                                                 data-src="{{item.image}}"
                                                                 {% endif %}
                                                                 />
-
-                                                            {% endif %}
-
                                                          </td>
                                                         <td>
                                                             {% if item.product %}
