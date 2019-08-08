@@ -394,7 +394,7 @@
 
                                         {% if order.lines_count and not order.have_bundle %}
                                             <div class="btn-group pull">
-                                                <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
+                                                <button class="btn btn-success btn-xs order-items" order-id="{{order.id}}"
                                                         type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
                                                     Order Items
                                                 </button>
@@ -997,6 +997,7 @@
     <script src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/bulk_orders.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/order_items.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/shopify_product_selector.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}
