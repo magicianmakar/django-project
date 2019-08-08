@@ -86,11 +86,17 @@
             <li {% if 'tools:' in selected_menu %}class="active"{% endif %}>
                 <a href="{% url 'index' %}">
                     <i class="fa fa-file-text-o"></i>
-                    <span class="nav-label">Business Tools</span>
+                    <span class="nav-label">Business</span>
                     <span class="fa arrow"></span>
                 </a>
 
                 <ul class="nav nav-second-level {% if 'tools:' not in selected_menu %}collapse{% endif %}">
+                    <li {% if selected_menu == 'tools:business_tools' %}class="active"{% endif %}>
+                        <a href="{% url 'article-content-page' slug_article='tools-business-tools' %}">
+                            <span class="nav-label">Tools</span>
+                        </a>
+                    </li>
+
                     <li {% if selected_menu == 'tools:product_feeds' %}class="active"{% endif %}>
                         <a href="{% url 'product_feeds' %}">
                             <!-- <i class="fa fa-gift"></i> -->
