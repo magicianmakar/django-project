@@ -1,0 +1,98 @@
+.logo {
+  text-align: center;
+  margin-top: 22px;
+}
+
+.sidebar .profile {
+  margin: 20px;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.sidebar .profile .name {
+  font-family: Lato;
+  font-size: 16px;
+  color: white;
+  margin-left: 10px;
+}
+
+.sidebar .profile .name a {
+  color: inherit;
+}
+
+.sidebar .profile .icon {
+  font-family: Lato;
+  font-size: 16px;
+  color: white;
+}
+
+.sidebar ul {
+  list-style: none;
+  margin: 0;
+  margin-top: 20px;
+  padding-left: 20px;
+  font-family: Lato;
+  font-size: 16px;
+  color: rgb(167, 177, 194);
+  line-height: 1.5;
+}
+
+.sidebar ul a {
+  color: inherit;
+  display: block;
+}
+
+.sidebar .section {
+  margin-top: 33px;
+}
+
+.sidebar .section span,
+.sidebar .item,
+.sidebar .section-no-icon {
+  margin-left: 10px;
+  transition: all .15s ease;
+}
+
+.sidebar .section span:hover,
+.sidebar .item:hover,
+.sidebar .section-no-icon:hover,
+.sidebar .active,
+.sidebar .active span {
+  color: white;
+  opacity: 1;
+}
+
+.sidebar .spacer {
+  margin-top: 60px;
+}
+
+.sidebar ul li {
+  margin-top: 5px;
+}
+
+.sidebar ul .item {
+  margin-left: 40px;
+  transition: all .15s ease;
+}
+
+.sidebar ul .section a {
+  display: flex;
+}
+
+.sidebar ul .section div {
+  height: 21px;
+  width: 21px;
+}
+
+@media only screen and (min-height: 850px) {
+  .sidebar .navfooter {
+    position: fixed;
+    bottom: 20px;
+  }
+}
+
+#academy-span {
+  font-weight: 600;
+}

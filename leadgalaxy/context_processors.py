@@ -2,12 +2,18 @@ import hmac
 import hashlib
 
 from django.core.cache import cache
+from django.core.urlresolvers import resolve
 from django.conf import settings
 
 import arrow
 
 from shopified_core.permissions import can_add_store
 from shopified_core.decorators import upsell_pages
+from leadgalaxy.side_menu import (
+    get_menu_structure,
+    get_menu_item_data,
+    create_menu,
+)
 
 
 def extra_bundles(request):
@@ -108,3 +114,19 @@ def tapafilate_conversaion(request):
     return {
         'tapafilate_conversaion': affilaite
     }
+
+
+def add_side_menu(request):
+    request_path = request.path
+    url_obj = resolve(request_path)
+    namespace = url_obj.namespace
+    menu_data = get_menu_item_data(namespace)
+    user = request.user
+
+    menu_structure = get_menu_structure(namespace)
+
+    header = create_menu(menu_structure['header'], menu_data, request_path, user)
+    body = create_menu(menu_structure['body'], menu_data, request_path, user)
+    footer = create_menu(menu_structure['footer'], menu_data, request_path, user)
+
+    return {'sidemenu': {'header': header, 'body': body, 'footer': footer}}

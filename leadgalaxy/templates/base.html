@@ -74,6 +74,7 @@
     <link href="{% static 'libs/bower_components/qtip2/jquery.qtip.min.css' %}" rel="stylesheet">
     <link href="{% static 'css/bootstrap-tour.min.css' %}" rel="stylesheet">
     <link href="{% static 'css/extra.css' %}" rel="stylesheet">
+    <link href="{% static 'shopified/css/side_navigation.css' %}" rel="stylesheet">
     {% endcompress %}
 
     {% block extracss %}{% endblock %}
@@ -109,11 +110,7 @@
     {% endif %}
 
     {% block main-nav %}
-        {% if new_menu_active %}
-            {% include 'main_nav_new.html' %}
-        {% else %}
-            {% include 'main_nav.html' %}
-        {% endif %}
+      {% include 'side_navigation.html' %}
     {% endblock %}
 
    <div id="page-wrapper" class="gray-bg">

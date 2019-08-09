@@ -1,0 +1,80 @@
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load cache %}
+
+<nav id='side-menu' class='navbar-default sidebar navbar-static-side' role="navigation">
+  <div class="sidebar-collapse">
+    <div class='logo'>
+      <a href="{% url 'index' %}">
+        <img src="{% static 'dropified-logo-white-s.png' %}"/>
+      </a>
+    </div>
+
+    {% if user.is_authenticated %}
+    <div class='profile'>
+      <div class='name'>
+        <a href='{% url "user_profile" %}'>
+          <strong class="font-bold">{{user.get_full_name|default:'Profile'}}</strong>
+        </a>
+      </div>
+      <div class='icon'>
+        <img src="{% static 'vector-profile.svg' %}"/>
+      </div>
+    </div>
+    {% endif %}
+
+    <ul>
+      <!-- header -->
+      {% for section in sidemenu.header %}
+      {% for item in section.items %}
+
+      <li class='section-no-icon {{ item.classes }}'>
+        <a href="{{ item.url }}">{{ item.title | safe }}</a>
+      </li>
+
+      {% endfor %}
+      {% endfor %}
+
+      <!-- body -->
+      {% for section in sidemenu.body %}
+      <li class='section {{ section.classes }}'>
+        <a href="{{ section.url }}">
+          <div>
+            <img src="{{ section.icon }}"/>
+          </div>
+          <span>{{ section.title }}</span>
+        </a>
+      </li>
+
+        {% for item in section.items %}
+        <li class='item {{ item.classes }}'>
+          <a href="{{ item.url }}">{{ item.title }}</a>
+        </li>
+        {% endfor %}
+      {% endfor %}
+    </ul>
+
+    <!-- footer -->
+    <ul class='navfooter'>
+      {% for section in sidemenu.footer %}
+      {% for item in section.items %}
+
+      <li class='section-no-icon {{ item.classes }}'>
+        <a href="{{ item.url }}">{{ item.title | safe }}</a>
+      </li>
+
+      {% endfor %}
+      {% endfor %}
+
+      <li class='section-no-icon'>
+        <a id="product-update-fx" href="#">
+          <span class="nav-label">What’s New?</span>
+        </a>
+      </li>
+
+    </ul>
+
+
+  </div>
+</nav>
