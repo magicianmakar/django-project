@@ -9,6 +9,7 @@ from shopified_core.utils import send_email_from_template
 from django.urls import reverse
 from .models import CallflexShopifyUsageCharge
 from raven.contrib.django.raven_compat.models import client as raven_client
+from shopified_core.utils import last_executed
 
 
 class CallflexOveragesBilling:
@@ -128,14 +129,16 @@ class CallflexOveragesBilling:
                 # adjusting capped limit by $50 (to not ask to recap very often)
                 shopify_subscription.customize(capped_amount=safe_float(shopify_subscription.capped_amount) + 50)
                 profile_link = app_link(reverse('user_profile'))
-                send_email_from_template(
-                    tpl='callflex_shopify_capped_limit_warning.html',
-                    subject='CallFlex Subscription - actions required',
-                    recipient=self.user.email,
-                    data={
-                        'profile_link': f'{profile_link}?callflex_anchor#plan'
-                    }
-                )
+
+                if not self.user.profile.plan.is_free and not last_executed(f'callflex_capped_limit_u_{self.user.id}', 3600 * 24):
+                    send_email_from_template(
+                        tpl='callflex_shopify_capped_limit_warning.html',
+                        subject='CallFlex Subscription - actions required',
+                        recipient=self.user.email,
+                        data={
+                            'profile_link': f'{profile_link}?callflex_anchor#plan'
+                        }
+                    )
 
             store = self.user.profile.get_shopify_stores().first()
             # adding usage charge item
@@ -149,15 +152,16 @@ class CallflexOveragesBilling:
             charge_id = charge.id
         else:
             # no recurring subscription need to delete user's phones
-            profile_link = app_link(reverse('user_profile'))
-            send_email_from_template(
-                tpl='callflex_shopify_no_subscription_warning.html',
-                subject='CallFlex Subscription - actions required',
-                recipient=self.user.email,
-                data={
-                    'profile_link': f'{profile_link}?callflex_anchor#plan'
-                }
-            )
+            if not self.user.profile.plan.is_free and not last_executed(f'callflex_shopify_no_subscription_u_{self.user.id}', 3600 * 24):
+                profile_link = app_link(reverse('user_profile'))
+                send_email_from_template(
+                    tpl='callflex_shopify_no_subscription_warning.html',
+                    subject='CallFlex Subscription - actions required',
+                    recipient=self.user.email,
+                    data={
+                        'profile_link': f'{profile_link}?callflex_anchor#plan'
+                    }
+                )
             charge_id = False
 
         if not charge_id and not charge_only_flag:
