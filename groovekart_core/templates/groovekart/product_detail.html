@@ -260,9 +260,8 @@
                                 </a>
                                 {% endif %}
 
-                                <!--
-                                <button class="btn btn-success btn-xs add-images-btn">More images</button>
-                                -->
+                                <button class="btn btn-success btn-xs add-images-btn" original-product="{{product_data.original_url}}">More images</button>
+
                                 {% if request.user|can:'youtube_ads.use' %}
                                 <a class="btn btn-primary btn-xs" href="{% url 'youtube_ads.views.index' %}?type=all&q={{ product.title }}" target="_blank">
                                     <i class="fa fa-video-camera"></i> Find Product Videos
@@ -673,7 +672,7 @@
             <div class="modal-body">
                 <div class="row">
                     <div class="col-sm-12">
-                        <div class="row">
+                        <div class="row" id="images-row">
                         {% for item in original.extra_images %}
                             {% if forloop.counter0|divisibleby:"4" %}
                             <div class="col-xs-12"></div>
@@ -1005,5 +1004,5 @@ $(function() {
     <script type="text/javascript" src="{% static 'aliextractor/js/ae-tab.js' %}"></script>
 
 {% endif %}
-    
+
 {% endblock %}
