@@ -75,8 +75,8 @@ class Command(DropifiedBaseCommand):
                 if last_executed(f'order-auto-fulfill-{order.id}', 21600):
                     if not last_executed(f'order-auto-fulfill-sync-{order.id}', 21600):
                         utils.get_tracking_orders(order.store, [order])
+                        raven_client.captureMessage('Skipping Order with issue', tags={'track': order.id, 'store': order.store.shop})
 
-                    raven_client.captureMessage('Skipping Order with issue', tags={'track': order.id, 'store': order.store.shop})
                     self.progress_write(f'Skipping Order #{order.id} for {order.store.shop}')
                     counter['skipped'] += 1
                     continue
