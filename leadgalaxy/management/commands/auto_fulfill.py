@@ -76,8 +76,9 @@ class Command(DropifiedBaseCommand):
             try:
                 counter['need_fulfill'] += 1
 
-                if last_executed(f'order-fulfill-{order.id}', 21600):
+                if last_executed(f'order-auto-fulfill-{order.id}', 21600):
                     raven_client.captureMessage('Skipping Order', tags={'track': order.id, 'store': order.store.shop})
+                    self.progress_write(f'Skipping Order #{order.id} for {order.store.shop}')
                     counter['skipped'] += 1
                     continue
 
