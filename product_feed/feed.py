@@ -167,6 +167,11 @@ class ProductFeed():
         if len(text) == 0:
             text = product.get('title', '')
 
+        # Max 529 characters for user all stores at
+        # https://app.intercom.io/a/apps/k9cb5frr/conversations/23113213964
+        if self.store.user_id == 18267:
+            text = text[:529]
+
         return text
 
     def out_file(self):
