@@ -5,7 +5,6 @@ import time
 import arrow
 import requests
 
-from tqdm import tqdm
 from simplejson import JSONDecodeError
 
 from shopified_core.utils import http_exception_response, using_replica
@@ -58,7 +57,7 @@ class Command(DropifiedBaseCommand):
         self.write('Start Auto Fulfill')
 
         if options['progress']:
-            pbar = tqdm(total=orders.count())
+            self.progress_total(orders.count())
 
         counter = {
             'fulfilled': 0,
@@ -71,7 +70,7 @@ class Command(DropifiedBaseCommand):
 
         for order in orders[:fulfill_max]:
             if options['progress']:
-                pbar.update(1)
+                self.progress_update(desc=order.store.shop)
 
             try:
                 counter['need_fulfill'] += 1
@@ -178,6 +177,31 @@ class Command(DropifiedBaseCommand):
 
                         return False
 
+                    elif 'Invalid fulfillment order line item quantity requested' in rep.text:
+                        # This could mean it was fulfilled
+                        r = requests.get(url=store.get_link(f'/admin/orders/{order.order_id}/fulfillments.json', api=True))
+                        if r.ok:
+
+                            for fulfillment in r.json()['fulfillments']:
+                                for line in fulfillment['line_items']:
+                                    if line['id'] == order.line_id:
+                                        if line['fulfillment_status'] == 'fulfilled':
+                                            # Mark as fulfilled but not auto-fulfilled
+                                            self.write(f'Already have fulfillment #{order.order_id} in {order.store.shop}')
+                                            order.shopify_status = 'fulfilled'
+                                            order.save()
+
+                                            self.log_fulfill_error(order, 'Order is already fulfilled')
+
+                                            return False
+
+                        raven_client.captureMessage('Invalid fulfillment order line', extra={
+                            'shop': order.store.shop,
+                            'order_track': order.id,
+                            'r': r.text,
+                            'rep': rep.text
+                        })
+
                     elif 'This order has been canceled' in rep.text:
                         self.write('Order has been canceled #{} in [{}]'.format(order.order_id, order.store.title))
                         order.hidden = True
@@ -265,7 +289,7 @@ class Command(DropifiedBaseCommand):
                         if locations:
                             # We are trying locations one by one
                             location = locations.pop()
-                            self.write('Re-trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
+                            self.write(f"Re-trying location {location['name']} ({location['id']}) for order #{order.order_id} in {order.store.shop}")
 
                             if not locations:
                                 # Make sure we don't escape the last location is len(locations) > 3
@@ -278,16 +302,12 @@ class Command(DropifiedBaseCommand):
 
                             trying_locations = True
 
-                            self.write('Trying location {} for #{} in {}'.format(location['id'], order.order_id, order.store.shop))
+                            self.write(f"Trying location {location['name']} ({location['id']}) for order #{order.order_id} in {order.store.shop}")
 
                         if location:
                             api_data["fulfillment"]["location_id"] = location['id']
 
                             self.store_locations[order.store.id] = location['id']
-                            self.write('Change location to {} in #{} [{}]'.format(location['name'], order.order_id, order.store.shop))
-
-                            self.log_fulfill_error(order, 'Fulfill in location: {}'.format(location['name']), shopify_api=False)
-
                         else:
                             raven_client.captureMessage('No location found', extra={'track': order.id, 'store': order.store.shop})
 
