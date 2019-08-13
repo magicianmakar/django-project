@@ -787,6 +787,9 @@ def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_
 
     customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
 
+    if customer_address.get('company'):
+        customer_address['name'] = '{} {} - {}'.format(customer_address['first_name'], customer_address['last_name'], customer_address['company'])
+
     correction = {}
     if aliexpress_fix:
         valide, correction = valide_aliexpress_province(
