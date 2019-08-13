@@ -31,46 +31,6 @@
 </div>
 {% endblock nav %}
 
-{% block welcome-area %}
-    {% if user.profile.on_trial %}
-        <div id="trial_days_left" class="row wrapper border-bottom white-bg">
-            <p></p>
-            <div class="row">
-                <div class="col-md-12">
-                    <p class="text-center">
-                        <strong>
-                            You are on the Dropified {{ user.profile.plan }}.
-                            {% if user.profile.plan.dashboard_description %}
-                                <br />{{ user.profile.plan.dashboard_description }}
-                            {% endif %}
-                        </strong>
-                    </p>
-                    <h2 class="text-center">
-                        <strong>
-                            You are currently on trial.
-                        </strong>
-                    </h2>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-6 col-md-offset-3">
-                    <h4 class="text-center dropified-green">
-                        ({{ user.profile.trial_days_left }} Days Remaining)
-                    </h4>
-                </div>
-                <div class="col-md-3">
-                    <div class="text-right">
-                        <button type="button" class="big-btn btn btn-primary m-b">
-                            CLOSE&nbsp;&nbsp;&nbsp;
-                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-{% endblock welcome-area %}
-
 {% block breadcrumb-area %}
 {% endblock breadcrumb-area %}
 
