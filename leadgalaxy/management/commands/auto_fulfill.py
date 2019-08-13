@@ -7,7 +7,7 @@ import requests
 
 from simplejson import JSONDecodeError
 
-from shopified_core.utils import http_exception_response, using_replica
+from shopified_core.utils import http_exception_response, using_replica, last_executed
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
 from shopify_orders.models import ShopifyOrderLog
@@ -62,6 +62,7 @@ class Command(DropifiedBaseCommand):
         counter = {
             'fulfilled': 0,
             'need_fulfill': 0,
+            'skipped': 0,
         }
 
         self.store_countdown = {}
@@ -74,6 +75,11 @@ class Command(DropifiedBaseCommand):
 
             try:
                 counter['need_fulfill'] += 1
+
+                if last_executed(f'order-fulfill-{order.id}', 21600):
+                    raven_client.captureMessage('Skipping Order', tags={'track': order.id, 'store': order.store.shop})
+                    counter['skipped'] += 1
+                    continue
 
                 if self.fulfill_order(order):
                     order.shopify_status = 'fulfilled'
@@ -94,8 +100,7 @@ class Command(DropifiedBaseCommand):
             except:
                 raven_client.captureException()
 
-        self.write('Fulfilled Orders: {} / {}'.format(
-            counter['fulfilled'], counter['need_fulfill']))
+        self.write(f"Fulfilled Orders: {counter['fulfilled']} / {counter['need_fulfill']} - Skipped: {counter['skipped']}")
 
     def fulfill_order(self, order):
         store = order.store
@@ -121,6 +126,7 @@ class Command(DropifiedBaseCommand):
         while tries > 0 or locations:
             if tries < -3:
                 raven_client.captureMessage('Fulfillment Loop Detected')
+                break
 
             try:
                 rep = requests.post(
