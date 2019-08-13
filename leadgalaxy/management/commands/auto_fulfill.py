@@ -21,19 +21,12 @@ class Command(DropifiedBaseCommand):
     help = 'Auto fulfill tracked orders with a tracking number and unfulfilled status'
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            '--store', dest='store', action='store', type=int,
-            help='Fulfill orders for the given store')
+        parser.add_argument('--store', action='store', type=int, help='Fulfill orders for the given store')
+        parser.add_argument('--max', action='store', type=int, default=500, help='Fulfill orders count limit')
+        parser.add_argument('--uptime', action='store', type=float, default=8, help='Maximuim task uptime (minutes)')
 
-        parser.add_argument(
-            '--max', dest='max', action='store', type=int, default=500,
-            help='Fulfill orders count limit')
-
-        parser.add_argument(
-            '--uptime', dest='uptime', action='store', type=float, default=8,
-            help='Maximuim task uptime (minutes)')
-
-        parser.add_argument('--progress', dest='progress', action='store_true', help='Shopw Reset Progress')
+        parser.add_argument('--new', action='store_true', help='Fulfill newest orders first')
+        parser.add_argument('--progress', action='store_true', help='Show Reset Progress')
         parser.add_argument('--replica', dest='replica', action='store_true', help='Use Replica database if available')
 
     def start_command(self, *args, **options):
@@ -49,7 +42,7 @@ class Command(DropifiedBaseCommand):
             .filter(store__is_active=True) \
             .filter(store__auto_fulfill='enable') \
             .defer('data') \
-            .order_by('created_at')
+            .order_by('-created_at' if options['new'] else 'created_at')
 
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
@@ -69,7 +62,10 @@ class Command(DropifiedBaseCommand):
         self.store_locations = {}
         self.start_at = timezone.now()
 
-        for order in orders[:fulfill_max]:
+        if fulfill_max:
+            orders = orders[:fulfill_max]
+
+        for order in orders:
             if options['progress']:
                 self.progress_update(desc=order.store.shop)
 
