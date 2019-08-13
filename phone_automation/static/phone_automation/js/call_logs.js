@@ -125,7 +125,8 @@ $(function() {
         $('#search-form').submit();
     });
 
-    $('.delete-log').click(function(e) {
+    $('.table').on('click', '.delete-log', function(e) {
+        console.log('click');
         e.preventDefault();
 
         var deleteLogURL = $(this).data('post-url');
