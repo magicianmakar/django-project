@@ -76,7 +76,7 @@ $(function() {
             createdAtEnd.format(createdAtEnd.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
     }
 
-    $('.log-edit').click(function(e) {
+    $('body').on('click','.log-edit', function(e){
         var log_id = $(this).attr('data-log-id');
         var note = $('.note-text.log-id-' + log_id).html();
         var post_url = $(this).attr('data-post-url');
