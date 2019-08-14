@@ -58,8 +58,8 @@ td.variant-image .thumb {
     .option-item .option-item-select img {
       display: inline-block;
       margin-right: 5px;
-      max-height: 35px;
-      max-width: 35px; }
+      max-height: 70px;
+      max-width: 70px; }
 
 .supplier-config td {
   padding-top: 25px !important; }
