@@ -84,6 +84,8 @@ class Command(DropifiedBaseCommand):
         query += '\n  OR '.join([f"strpos(message,'{ip}') > 0 " for ip in json.loads(user.profile.ips)])
         query += f''') AND '{user.date_joined:%Y-%m-%d}' <= dt
                 AND strpos(message, '/api/all/orders-sync?since=') = 0
+                AND strpos(message, '/api/can?') = 0
+                AND strpos(message, '/api/search-shopify-products-cached') = 0
             ORDER BY generated_at'''
 
         self.write(f'Query:\n{query}\n')
