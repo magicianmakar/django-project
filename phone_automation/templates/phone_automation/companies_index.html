@@ -15,7 +15,7 @@
             <div class="ibox-title ibox-title-adjust">
                 <h5 class="content-tittle">Your CallFlex Companies<small></small></h5>
                 <div class="ibox-tools">
-                    <a class="btn-sm btn-primary " href="{% url 'phone_automation_companies_create' %}">
+                    <a class="btn-sm btn-primary " href="{% url template_config.url.namespace|add:'phone_automation_companies_create' %}">
                         <i class="fa fa-phone"></i> &nbsp; Add New Company</a>
                 </div>
             </div>
@@ -47,8 +47,8 @@
                                         </td>
                                         <td class="text-center">{{ twilio_company.get_config_users|length }}</td>
                                         <td class="text-center">
-                                            <a href="{% url 'phone_automation_companies_edit' company_id=twilio_company.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
-                                            <!-- <a data-twilio_company_id={{ twilio_company.id }} _href="{% url 'phone_automation_companies_delete' company_id=twilio_company.id %}" class="btn btn-xs btn-danger remove-company"><i class="fa fa-times"></i> Delete</a> -->
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_companies_edit' company_id=twilio_company.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
+                                            <!-- <a data-twilio_company_id={{ twilio_company.id }} _href="{% url template_config.url.namespace|add:'phone_automation_companies_delete' company_id=twilio_company.id %}" class="btn btn-xs btn-danger remove-company"><i class="fa fa-times"></i> Delete</a> -->
                                         </td>
                                     </tr>
                                 </tbody>
@@ -60,7 +60,7 @@
                             <h2>You do not have an CallFlex Companies.</h2>
                             <div>
                                 <br />
-                                <a class="btn btn-primary  invite-subuser" href="{% url 'phone_automation_companies_create' %}">
+                                <a class="btn btn-primary  invite-subuser" href="{% url template_config.url.namespace|add:'phone_automation_companies_create' %}">
                                     <i class="fa fa-phone"></i> &nbsp; Create new Company</a>
                                 <br />&nbsp;
                             </div>

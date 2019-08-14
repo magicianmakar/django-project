@@ -60,7 +60,7 @@
                                     {% for twilio_log in twilio_logs %}
                                     <tr>
                                         <td class="text-center">
-                                            <a href="{% url 'phone_automation_companies_edit' company_id=twilio_log.pk %}" class="" title="Edit Company">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_companies_edit' company_id=twilio_log.pk %}" class="" title="Edit Company">
                                                 {{ twilio_log.title|default:"Untitled Company" }}
                                             </a>
                                         </td>

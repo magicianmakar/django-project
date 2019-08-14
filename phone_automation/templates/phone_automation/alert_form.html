@@ -14,7 +14,7 @@
         </div>
         <div class="col-md-6 col-xs-12 text-right">
             {% if twilio_alert.pk %}
-            <a data-twilio-alert-id={{ twilio_alert.pk }} _href="{% url 'phone_automation_notifications_alert_delete' alert_id=twilio_alert.pk %}" class="btn-sm btn-danger remove-alert"><i class="fa fa-trash"></i> Delete</a>
+            <a data-twilio-alert-id={{ twilio_alert.pk }} _href="{% url template_config.url.namespace|add:'phone_automation_notifications_alert_delete' alert_id=twilio_alert.pk %}" class="btn-sm btn-danger remove-alert"><i class="fa fa-trash"></i> Delete</a>
             {% else %}
             {% endif %}
         </div>

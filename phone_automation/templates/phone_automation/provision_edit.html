@@ -11,7 +11,7 @@
     <div class="ibox-title ibox-title-adjust">
         <h5 class="content-tittle">Edit Your CallFlex Number<small> ( {{ twilio_phone_number.incoming_number }} ) </small></h5>
         <div class="ibox-tools">
-            <a data-twilio_phone_number_id={{ twilio_phone_number.pk }} _href="{% url 'phone_automation_provision_release' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn-sm btn-danger remove-provision"><i class="fa fa-trash"></i> Delete Number</a>
+            <a data-twilio_phone_number_id={{ twilio_phone_number.pk }} _href="{% url template_config.url.namespace|add:'phone_automation_provision_release' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn-sm btn-danger remove-provision"><i class="fa fa-trash"></i> Delete Number</a>
         </div>
     </div>
     <div class="ibox-content ibox-content-adjust edit-form-adjust ">
@@ -120,7 +120,7 @@
 
             $('#id_automation').on('select2:open', function(e) {
                 if ($('.select2-dropdown #add').length <= 0) {
-                    $('.select2-dropdown').append('<a style="margin:5px" class="select2-results btn btn-success btn-sm" id="add" href="{% url 'phone_automation_automate_create' %}" target=_blank> Add CallFlow</a>');
+                    $('.select2-dropdown').append('<a style="margin:5px" class="select2-results btn btn-success btn-sm" id="add" href="{% url template_config.url.namespace|add:'phone_automation_automate_create' %}" target=_blank> Add CallFlow</a>');
                 }
             });
 

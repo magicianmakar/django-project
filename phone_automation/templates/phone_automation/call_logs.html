@@ -99,14 +99,14 @@
                                         <td class="text-center">{{ twilio_log.from_number|phone_number }}</td>
                                         <td class="text-center">
                                             {% if twilio_log.twilio_phone_number %}
-                                            <a href="{% url 'phone_automation_provision_edit' twilio_phone_number_id=twilio_log.twilio_phone_number.id %}" class="">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_provision_edit' twilio_phone_number_id=twilio_log.twilio_phone_number.id %}" class="">
                                                 {{ twilio_log.twilio_phone_number.title}} ( {{ twilio_log.twilio_phone_number.incoming_number|phone_number }} )
                                             </a>
                                             <div>
                                                 {% if twilio_log.twilio_phone_number.company is None %}
                                                 <span class="color-red">Company is not assigned</span>
                                                 {% else %}
-                                                <a href="{% url 'phone_automation_companies_edit' company_id=twilio_log.twilio_phone_number.company.pk %}" class="" title="Edit Company">
+                                                <a href="{% url template_config.url.namespace|add:'phone_automation_companies_edit' company_id=twilio_log.twilio_phone_number.company.pk %}" class="" title="Edit Company">
                                                     {{ twilio_log.twilio_phone_number.company.title|default:"Untitled Company" }}
                                                 </a>
                                                 {% endif %}
@@ -133,7 +133,7 @@
                                             <div class="truncate2 note-text log-id-{{ twilio_log.id }}">{{twilio_log.notes|default:''}}</div>
                                         </td>
                                         <td class="text-center">
-                                            <a href="#" data-toggle="modal" data-target="#note-edit" class="btn btn-xs btn-info log-edit btn-circled-adjust" data-post-url="{% url 'phone_automation_call_log_save' twilio_log_id=twilio_log.id %}" data-log-id="{{ twilio_log.id }}" title="Edit"><i class="fa fa-edit"></i></a>
+                                            <a href="#" data-toggle="modal" data-target="#note-edit" class="btn btn-xs btn-info log-edit btn-circled-adjust" data-post-url="{% url template_config.url.namespace|add:'phone_automation_call_log_save' twilio_log_id=twilio_log.id %}" data-log-id="{{ twilio_log.id }}" title="Edit"><i class="fa fa-edit"></i></a>
                                             <a href="#" class="btn btn-xs btn-danger btn-circled-adjust delete-log" data-post-url="{% url template_config.url.namespace|add:'phone_automation_call_log_delete' %}" data-log-id="{{ twilio_log.id }}" title="Delete"><i class="fa fa-close"></i></a>
                                         </td>
                                     </tr>

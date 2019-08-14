@@ -18,7 +18,7 @@
                     {% if overages_warning %}
                     <div class="alert alert-warning">
                         You're adding a phone number which exceeds the limits of your plan. You'll be invoiced ${{ overages_extra_number_price }}/mo for each additional phone number.<br>
-                        <a href="{% url 'user_profile' %}?callflex_anchor#plan">View your CallFlex subscription</a>
+                        <a href="{% url template_config.url.namespace|add:'user_profile' %}?callflex_anchor#plan">View your CallFlex subscription</a>
                     </div>
                     {% endif %}
                     <form id="provision-form" method="POST" class="form-horizontal " role="form" action="{% url template_config.url.namespace|add:'phone_automation_provision'  %}">
@@ -138,7 +138,7 @@
                     <br>
                     <div class="row">
                         <div class="col-md-6">
-                            <a type="button" class="btn btn-danger align-right provision-cancel" href="{%  url 'phone_automation_index' %}">Cancel</a>
+                            <a type="button" class="btn btn-danger align-right provision-cancel" href="{% url template_config.url.namespace|add:'phone_automation_index' %}">Cancel</a>
                         </div>
                         <div class="col-md-6 text-right">
                             <input type="button" class="btn btn-primary text-left provision-submit" value="Submit">
@@ -229,7 +229,7 @@
 
             $('#id_automation').on('select2:open', function(e) {
                 if ($('.select2-dropdown #add').length <= 0) {
-                    $('.select2-dropdown').append('<a style="margin:5px" class="select2-results btn btn-success btn-sm" id="add" href="{% url 'phone_automation_automate_create' %}" target=_blank> Add CallFlow</a>');
+                    $('.select2-dropdown').append('<a style="margin:5px" class="select2-results btn btn-success btn-sm" id="add" href="{% url template_config.url.namespace|add:'phone_automation_automate_create' %}" target=_blank> Add CallFlow</a>');
                 }
             });
 

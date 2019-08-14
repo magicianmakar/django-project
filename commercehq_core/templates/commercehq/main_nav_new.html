@@ -80,58 +80,49 @@
                     </li>
 
                     {% if user|can:'phone_automation.use'  %}
-                        <li {% if selected_menu == 'tools:phone_automation' %}class="active"{% endif %}>
-                            <a href="{% url 'phone_automation_index' %}">
-                                <span class="nav-label">CallFlex</span>
-                                <span class="fa arrow"></span>
-                            </a>
+                    <li {% if 'tools:phone_automation:' in selected_menu %}class="active"{% endif %}>
+                        <a href="{% url 'chq:phone_automation_index' %}">
+                            <span class="nav-label">CallFlex</span>
+                            <span class="fa arrow"></span>
+                        </a>
 
-                            <ul class="nav nav-third-level {% if 'phone_automation' not in page %}collapse{% endif %}">
+                        <ul class="nav nav-third-level {% if 'phone_automation' not in selected_menu %}collapse{% endif %}">
+                            <li {% if selected_menu == 'tools:phone_automation:activity' %}class="active"{% endif %}>
+                                <a href="{% url 'chq:phone_automation_call_logs' %}">
+                                    <i class="fa fa-area-chart"></i>
+                                    <span class="nav-label">Activity</span>
+                                </a>
+                            </li>
 
+                            <li {% if selected_menu == 'tools:phone_automation:reports' %}class="active"{% endif %}>
+                                <a href="{% url 'chq:phone_automation_reports_numbers' %}">
+                                    <i class="fa fa-bar-chart-o"></i>
+                                    <span class="nav-label">Reports</span>
+                                </a>
+                            </li>
 
-                                <li {% if 'phone_automation_call_logs' in page %}class="active"{% endif %}>
-                                    <a href="{% url 'phone_automation_call_logs' %}">
-                                        <i class="fa fa-area-chart"></i>
-                                        <span class="nav-label">Activity</span>
-                                    </a>
-                                </li>
+                            <li {% if selected_menu == 'tools:phone_automation:index' %}class="active"{% endif %}>
+                                <a href="{% url 'chq:phone_automation_index' %}">
+                                    <i class="fa fa-phone"></i>
+                                    <span class="nav-label">Numbers</span>
+                                </a>
+                            </li>
 
-                                <li {% if 'phone_automation_reports' in page %}class="active"{% endif %}>
-                                    <a href="{% url 'phone_automation_reports_numbers' %}">
-                                        <i class="fa fa-bar-chart-o"></i>
-                                        <span class="nav-label">Reports</span>
-                                    </a>
-                                </li>
+                            <li {% if selected_menu == 'tools:phone_automation:settings' %}class="active"{% endif %}>
+                                <a href="{% url 'chq:phone_automation_notifications_alerts' %}">
+                                    <i class="fa fa-cogs"></i>
+                                    <span class="nav-label">Settings</span>
+                                </a>
+                            </li>
 
-                                <li {% if 'phone_automation_index' in page or 'phone_automations_index' in page %}class="active"{% endif %}>
-                                    <a href="{% url 'phone_automation_index' %}">
-                                        <i class="fa fa-phone"></i>
-                                        <span class="nav-label">Numbers</span>
-                                    </a>
-                                </li>
-
-
-                                <li {% if 'phone_automation_notifications' in page %}class="active"{% endif %}>
-                                    <a href="{% url 'phone_automation_notifications_alerts' %}">
-                                        <i class="fa fa-cogs"></i>
-                                        <span class="nav-label">Settings</span>
-                                    </a>
-                                </li>
-
-
-                                <li {% if 'phone_automation_companies_index' in page %}class="active"{% endif %}>
-                                    <a href="{% url 'phone_automation_companies_index' %}">
-                                        <i class="fa fa-users"></i>
-                                        <span class="nav-label">Account</span>
-                                    </a>
-                                </li>
-
-
-                             </ul>
-
-
-
-                        </li>
+                            <li {% if selected_menu == 'tools:phone_automation:account' %}class="active"{% endif %}>
+                                <a href="{% url 'chq:phone_automation_companies_index' %}">
+                                    <i class="fa fa-users"></i>
+                                    <span class="nav-label">Account</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                     {% endif %}
 
                     {% if request.user|can:'youtube_ads.use' %}

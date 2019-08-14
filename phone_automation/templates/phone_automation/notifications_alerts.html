@@ -70,7 +70,7 @@
                                             {% endfor %}
                                         </td>
                                         <td class="text-center">
-                                            <a href="{% url 'phone_automation_companies_edit' company_id=alert.company.pk %}" class="" title="Edit Company">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_companies_edit' company_id=alert.company.pk %}" class="" title="Edit Company">
                                                 {{ alert.company.title|default:"Untitled Company" }}
                                             </a>
                                         </td>
@@ -78,7 +78,7 @@
                                             {% if alert.twilio_phone_number is None %}
                                             <span class="color-red">All Numbers</span>
                                             {% else %}
-                                            <a href="{% url 'phone_automation_provision_edit' twilio_phone_number_id=alert.twilio_phone_number.id %}" class="">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_provision_edit' twilio_phone_number_id=alert.twilio_phone_number.id %}" class="">
                                                 {{ alert.twilio_phone_number.title }}
                                             </a>
                                             <br> ( {{ alert.twilio_phone_number.incoming_number|phone_number }} )
@@ -87,7 +87,7 @@
                                         <td class="text-center">{{ alert.alert_event }} </td>
                                         <td class="text-center">{{ alert.alert_type }} </td>
                                         <td class="text-center">
-                                            <a href="{% url 'phone_automation_notifications_alert_edit' alert_id=alert.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_notifications_alert_edit' alert_id=alert.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
                                         </td>
                                     </tr>
                                     <div> </div>

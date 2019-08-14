@@ -15,7 +15,7 @@
             <div class="ibox-title ibox-title-adjust">
                 <h5 class="content-tittle">Your CallFlex CallFlows<small></small></h5>
                 <div class="ibox-tools">
-                    <a class="btn-sm btn-primary " href="{% url 'phone_automation_automate_create'  %}">
+                    <a class="btn-sm btn-primary " href="{% url template_config.url.namespace|add:'phone_automation_automate_create'  %}">
                         <i class="fa fa-cogs"></i> &nbsp; Add New CallFlow</a>
                 </div>
             </div>
@@ -47,8 +47,8 @@
                                         </td>
                                         <td class="text-center">{{twilio_automation.updated_at|date}}</td>
                                         <td class="text-center">
-                                            <a href="{% url 'phone_automation_automate' twilio_automation_id=twilio_automation.pk %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
-                                            <a data-twilio-automation-id={{ twilio_automation.pk }} _href="{% url 'phone_automation_delete_automation' twilio_automation_id=twilio_automation.pk %}" class="btn btn-xs btn-danger remove-automation btn-circled-adjust" title="Delete"><i class="fa fa-times"></i> </a>
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_automate' twilio_automation_id=twilio_automation.pk %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
+                                            <a data-twilio-automation-id={{ twilio_automation.pk }} _href="{% url template_config.url.namespace|add:'phone_automation_delete_automation' twilio_automation_id=twilio_automation.pk %}" class="btn btn-xs btn-danger remove-automation btn-circled-adjust" title="Delete"><i class="fa fa-times"></i> </a>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -60,7 +60,7 @@
                             <h2>You do not have an any CallFlows yet.</h2>
                             <div>
                                 <br />
-                                <a class="btn btn-primary  invite-subuser" href="{% url 'phone_automation_automate_create' %}">
+                                <a class="btn btn-primary  invite-subuser" href="{% url template_config.url.namespace|add:'phone_automation_automate_create' %}">
                                     <i class="fa fa-phone"></i> &nbsp; Create new CallFlow</a>
                                 <br />&nbsp;
                             </div>

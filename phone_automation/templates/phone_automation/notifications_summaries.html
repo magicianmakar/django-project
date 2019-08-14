@@ -69,7 +69,7 @@
                                             {% endfor %}
                                         </td>
                                         <td class="text-center">
-                                            <a href="{% url 'phone_automation_companies_edit' company_id=summary.company.pk %}" class="" title="Edit Company">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_companies_edit' company_id=summary.company.pk %}" class="" title="Edit Company">
                                                 {{ summary.company.title|default:"Untitled Company" }}
                                             </a>
                                         </td>
@@ -83,7 +83,7 @@
                                             {% if summary.include_calllogs %} <div>Include CallLogs</div> {% endif %}
                                         </td>
                                         <td class="text-center">
-                                            <a href="{% url 'phone_automation_notifications_summary_edit' summary_id=summary.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_notifications_summary_edit' summary_id=summary.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
                                         </td>
                                     </tr>
                                     <div> </div>
@@ -167,7 +167,7 @@
 
             $('.add-summary').click(function() {
                 var company = $("#company_id").val();
-                var url = "{% url 'phone_automation_notifications_summary_create' %}" + company + '/';
+                var url = "{% url template_config.url.namespace|add:'phone_automation_notifications_summary_create' %}" + company + '/';
                 window.location.href = url;
             });
         });

@@ -127,7 +127,7 @@
                                             {% if twilio_phone_number.company is None %}
                                             <span class="color-red">Company is not assigned</span>
                                             {% else %}
-                                            <a href="{% url 'phone_automation_companies_edit' company_id=twilio_phone_number.company.pk %}" class="" title="Edit Company">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_companies_edit' company_id=twilio_phone_number.company.pk %}" class="" title="Edit Company">
                                                 {{ twilio_phone_number.company.title|default:"Untitled Company" }}
                                             </a>
                                             {% endif %}
@@ -136,7 +136,7 @@
                                             {% if twilio_phone_number.automation is None %}
                                             <span class="color-red">CallFlow Not Set</span>
                                             {% else %}
-                                            <a href="{% url 'phone_automation_automate' twilio_automation_id=twilio_phone_number.automation.pk %}" class="" title="Edit CallFlow">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_automate' twilio_automation_id=twilio_phone_number.automation.pk %}" class="" title="Edit CallFlow">
                                                 {{ twilio_phone_number.automation.title|default:"Untitled Callflow" }}
                                             </a>
                                             {% endif %}
@@ -146,8 +146,8 @@
                                             {% if twilio_phone_number.sms_allowed and twilio_phone_number.sms_enabled %}
                                             <a id="sms-automation" type="button" data-toggle="modal" data-target="#sms-automation-hint" class="btn btn-xs btn-info ">SMS Automation</a>
                                             {% endif %}
-                                            <a href="{% url 'phone_automation_provision_edit' twilio_phone_number_id=twilio_phone_number.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
-                                            <a data-twilio_phone_number_id={{ twilio_phone_number.pk }} _href="{% url 'phone_automation_provision_release' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-xs btn-danger remove-provision btn-circled-adjust" title="Delete"><i class="fa fa-times"></i></a>
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_provision_edit' twilio_phone_number_id=twilio_phone_number.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
+                                            <a data-twilio_phone_number_id={{ twilio_phone_number.pk }} _href="{% url template_config.url.namespace|add:'phone_automation_provision_release' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-xs btn-danger remove-provision btn-circled-adjust" title="Delete"><i class="fa fa-times"></i></a>
                                         </td>
                                     </tr>
                                 </tbody>

@@ -12,7 +12,7 @@
         <h5>Edit Your CallFlex Company<small></small></h5>
         <div class="ibox-tools">
             {% if twilio_company.pk %}
-            <a data-company-id="{{ twilio_phone_number.pk }}" _href="{% url 'phone_automation_companies_delete' company_id=twilio_company.pk %}" class="btn-sm btn-danger remove-company"><i class="fa fa-trash"></i> Delete</a>
+            <a data-company-id="{{ twilio_phone_number.pk }}" _href="{% url template_config.url.namespace|add:'phone_automation_companies_delete' company_id=twilio_company.pk %}" class="btn-sm btn-danger remove-company"><i class="fa fa-trash"></i> Delete</a>
             {% else %}
             {% endif %}
         </div>

@@ -76,7 +76,7 @@
                                     {% for twilio_log in twilio_logs %}
                                     <tr>
                                         <td class="text-center">
-                                            <a href="{% url 'phone_automation_provision_edit' twilio_phone_number_id=twilio_log.id %}" class="">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_provision_edit' twilio_phone_number_id=twilio_log.id %}" class="">
                                                 {{ twilio_log.title }}
                                             </a>
                                             <br> ( {{ twilio_log.incoming_number|phone_number }} )
@@ -85,7 +85,7 @@
                                             {% if twilio_log.company is None %}
                                             <span class="color-red">Company is not assigned</span>
                                             {% else %}
-                                            <a href="{% url 'phone_automation_companies_edit' company_id=twilio_log.company.pk %}" class="" title="Edit Company">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_companies_edit' company_id=twilio_log.company.pk %}" class="" title="Edit Company">
                                                 {{ twilio_log.company.title|default:"Untitled Company" }}
                                             </a>
                                             {% endif %}
@@ -94,7 +94,7 @@
                                             {% if twilio_log.automation is None %}
                                             <span class="color-red">CallFlow not Set</span>
                                             {% else %}
-                                            <a href="{% url 'phone_automation_automate' twilio_automation_id=twilio_log.automation.pk %}" class="" title="Edit CallFlow">
+                                            <a href="{% url template_config.url.namespace|add:'phone_automation_automate' twilio_automation_id=twilio_log.automation.pk %}" class="" title="Edit CallFlow">
                                                 {{ twilio_log.automation.title|default:"Untitled Callflow" }}
                                             </a>
                                             {% endif %}
