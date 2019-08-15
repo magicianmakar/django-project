@@ -3,6 +3,7 @@ import requests
 import time
 import tempfile
 import zipfile
+import re
 import os.path
 
 import simplejson as json
@@ -202,6 +203,9 @@ def export_product(req_data, target, user_id):
                         if image.get('src') and not image.get('filename'):
                             path, ext = os.path.splitext(image.get('src'))
                             api_data['product']['images'][i]['filename'] = '{}{}'.format(random_hash(), ext)
+
+                if user.id == 43981 and api_data['product'].get('body_html'):
+                    api_data['product']['body_html'] = re.sub(r'<(/?)i( [^>]+)?>', r'<\1em\2>', api_data['product']['body_html'])
 
                 r = requests.post(endpoint, json=api_data)
 
