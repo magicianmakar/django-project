@@ -25,7 +25,7 @@
         fail_callback = typeof(fail_callback) !== 'undefined' ? fail_callback : function(data) {};
 
         $.ajax({
-            url: api_url('order-data', 'shopify'),
+            url: api_url('order-data', window.storeType),
             type: 'GET',
             data: {
                 order: order_data_id
@@ -83,7 +83,9 @@
 
             addOrderToQueue(order);
 
-            ga('clientTracker.send', 'event', 'Ordered Bundle', 'Shopify', sub_conf.shop);
+            if (!window.storeType || window.storeType === 'shopify') {
+                ga('clientTracker.send', 'event', 'Ordered Bundle', 'Shopify', sub_conf.shop);
+            }
 
         }).fail(fail_callback);
     }
@@ -194,7 +196,9 @@
 
         orderItems(order, null, true);
 
-        ga('clientTracker.send', 'event', 'Ordered Selected Items', 'Shopify', sub_conf.shop);
+        if (!window.storeType || window.storeType === 'shopify') {
+            ga('clientTracker.send', 'event', 'Ordered Selected Items', 'Shopify', sub_conf.shop);
+        }
     });
 
     $('.order-seleted-suppliers').click(function(e) {
