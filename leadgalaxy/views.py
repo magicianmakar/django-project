@@ -4879,7 +4879,7 @@ def register(request, registration=None, subscribe_plan=None):
         messages.warning(request, 'You are already logged in')
         return HttpResponseRedirect('/')
 
-    funnel_url = 'https://go.dropified.com/choose-your-planxhh5m5e6'
+    funnel_url = 'https://www.dropified.com/pricing'
     if request.method == 'GET' and not request.GET and request.path == '/accounts/register':
         return HttpResponseRedirect(funnel_url)
 
