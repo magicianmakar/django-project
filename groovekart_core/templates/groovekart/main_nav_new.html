@@ -237,17 +237,10 @@
                 </a>
 
                 <ul class="nav nav-second-level {% if 'source:' not in selected_menu %}collapse{% endif %}">
-                    <li {% if selected_menu == 'source:full_automation' %}class="active"{% endif %}>
-                        <a href="{% url 'gkart:article-content-page' slug_article='source-full-automation' %}">
+                    <li {% if selected_menu == 'source:import_products' %}class="active"{% endif %}>
+                        <a href="{% url 'gkart:article-content-page' slug_article='source-import-products' %}">
                             <!-- <i class="fa fa-truck"></i> -->
-                            <span class="nav-label">Full Automation Suppliers</span>
-                        </a>
-                    </li>
-
-                    <li {% if selected_menu == 'source:one_click_support' %}class="active"{% endif %}>
-                        <a href="{% url 'gkart:article-content-page' slug_article='source-one-click-support' %}">
-                            <!-- <i class="fa fa-magic"></i> -->
-                            <span class="nav-label">One Click Supported Websites</span>
+                            <span class="nav-label">Import Products</span>
                         </a>
                     </li>
 

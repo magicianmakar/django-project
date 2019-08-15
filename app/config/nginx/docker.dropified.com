@@ -107,6 +107,9 @@ http {
             rewrite /pages/view/what-websites-will-dropified-import-products-from /pages/content/source-one_click_support permanent;
             rewrite /pages/what-websites-will-shopified-app-import-products-from /pages/11 break;
 
+            rewrite /pages/content/source-full-automation /pages/content/source-import-products permanent;
+            rewrite /pages/content/source-one_click_support /pages/content/source-import-products permanent;
+
             proxy_pass  http://dropified_backend;
         }
     }
