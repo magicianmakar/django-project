@@ -154,6 +154,36 @@
                 $('.variants-container').append(variantEl);
             });
 
+            // Extra varinats
+            var extraEl = $(variant_tpl({
+                title: 'Extra Options'
+            }));
+            var inputEl = $(extra_input_tpl({}));
+
+            extraEl.find('.options').append(inputEl);
+
+            var extra = parse_variant_map(variants_mapping[variant_id]).filter(function(e) {
+                return e.extra;
+            });
+
+            var extra_values = [];
+            $.each(extra, function(i, el) {
+                extra_values.push(el.title);
+            });
+
+            inputEl.find('.extra-input').val(extra_values.join(','));
+            inputEl.find('.extra-input').tagit({
+                availableTags: '',
+                autocomplete: {
+                    delay: 0,
+                    minLength: 0
+                },
+                showAutocompleteOnFocus: true,
+                allowSpaces: true
+            });
+
+            $('.variants-container').append(extraEl);
+
             $('#modal-variant-select').modal('show');
             $('.select-var-mapping').bootstrapBtn('reset');
 
