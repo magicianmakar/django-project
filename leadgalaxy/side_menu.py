@@ -26,6 +26,24 @@ def get_menu_structure(namespace):
             ]),
         ]
 
+    elif namespace == 'chq':
+        # CHQ
+        body = [
+            ('orders', ['place-orders', 'tracking']),
+            ('all-products', [
+                'non-connected',
+                'import-products',
+                'boards',
+                'alerts',
+            ]),
+            ('business', [
+                'callflex',
+                'tubehunt',
+                'subusers',
+                'tools',
+            ]),
+        ]
+
     header = [
         ('get-started', ['get-started']),
     ]
