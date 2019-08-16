@@ -1,13 +1,5 @@
 {% extends "base.html" %}
 
-{% block main-nav %}
-    {% if new_menu_active %}
-        {% include 'woocommerce/main_nav_new.html' with url_name=request.resolver_match.view_name %}
-    {% else %}
-        {% include 'woocommerce/main_nav.html' with url_name=request.resolver_match.view_name %}
-    {% endif %}
-{% endblock main-nav %}
-
 {% block search-form %}
     {% include 'woocommerce/search_form.html' %}
 {% endblock %}
