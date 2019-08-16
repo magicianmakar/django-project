@@ -5,7 +5,7 @@ import json
 from urllib.parse import urlsplit
 
 import boto.elastictranscoder
-
+from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
@@ -191,8 +191,7 @@ class TwilioPhoneNumber(models.Model):
         return f'{self.title} ({self.incoming_number})'
 
     def last_two_month_usage(self):
-        # TODO: for multiple numbers, change query from User to TwilioPhoneNumber
-        date_start = arrow.get('2018-12-10').replace(day=1, months=-1).datetime
+        date_start = arrow.get(timezone.now()).replace(hour=0, minute=0, second=0, day=1, months=-1).datetime
         queryset = self.user.twilio_logs.filter(
             log_type='status-callback',
             created_at__gte=date_start

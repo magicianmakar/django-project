@@ -14,6 +14,27 @@ from .models import (
     TwilioSummary,
     CallflexShopifyUsageCharge,
 )
+import csv
+from django.http import HttpResponse
+
+
+class ExportCsvMixin:
+    def export_as_csv(self, request, queryset):
+
+        meta = self.model._meta
+        field_names = [field.name for field in meta.fields]
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename={}.csv'.format(meta)
+        writer = csv.writer(response)
+
+        writer.writerow(field_names)
+        for obj in queryset:
+            writer.writerow([getattr(obj, field) for field in field_names])
+
+        return response
+
+    export_as_csv.short_description = "Export Selected"
 
 
 @admin.register(TwilioAutomation)
@@ -39,10 +60,16 @@ class TwilioAutomationAdmin(admin.ModelAdmin):
 
 @admin.register(TwilioPhoneNumber)
 class TwilioPhoneNumberAdmin(admin.ModelAdmin):
-    list_display = ('incoming_number', 'status', 'twilio_sid', 'created_at')
-    search_fields = ('user__email', 'incoming_number')
-    raw_id_fields = ('user', 'automation')
+    list_display = ('incoming_number', 'status', 'twilio_sid', 'created_at', 'user', 'plan', 'last_two_month_usage')
+    search_fields = ('user__email', 'incoming_number', 'user__profile__plan__title')
+    raw_id_fields = ('automation',)
     readonly_fields = ('last_two_month_usage', )
+    list_filter = ('status', 'user__profile__plan')
+    actions = (ExportCsvMixin.export_as_csv,)
+    list_max_show_all = 100
+
+    def plan(self, obj):
+        return obj.user.profile.plan
 
 
 @admin.register(TwilioStep)
@@ -64,9 +91,15 @@ class TwilioUploadAdmin(admin.ModelAdmin):
 
 @admin.register(TwilioLog)
 class TwilioLogAdmin(admin.ModelAdmin):
-    list_display = ('created_at', 'direction', 'from_number', 'call_duration', 'call_sid', 'call_status', 'log_type')
-    search_fields = ('user__email', 'from_number')
+    list_display = ('created_at', 'direction', 'from_number', 'call_duration', 'call_sid', 'call_status', 'log_type', 'to_number')
+    search_fields = ('user__email', 'from_number', 'to_number', 'call_sid')
     raw_id_fields = ('user',)
+    list_filter = ('direction', 'call_status', 'created_at')
+    actions = (ExportCsvMixin.export_as_csv,)
+    list_max_show_all = 100
+
+    def to_number(self, obj):
+        return obj.twilio_metadata['To']
 
 
 @admin.register(TwilioRecording)
