@@ -1955,6 +1955,8 @@ def get_admitad_credentials(user):
 def get_admitad_affiliate_url(site_id, url):
     api_url = 'https://alitems.com/g/{}/'.format(site_id)
 
+    url = set_url_query(url, '_t', 'coupon.my.feedback.logout')
+
     return affiliate_link_set_query(api_url, 'ulp', url)
 
 
