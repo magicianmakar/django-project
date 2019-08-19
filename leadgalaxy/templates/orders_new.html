@@ -392,9 +392,9 @@
                                            store="{{store.id}}" order-id="{{order.id}}"><i class="fa fa-bolt"></i> Quick Order</a>
                                         {% endif %}
 
-                                        {% if order.lines_count and not order.have_bundle %}
+                                        {% if order.lines_count %}
                                             <div class="btn-group pull">
-                                                <button class="btn btn-success btn-xs order-all" order-id="{{order.id}}"
+                                                <button class="btn btn-success btn-xs order-items" order-id="{{order.id}}"
                                                         type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
                                                     Order Items
                                                 </button>
@@ -550,7 +550,11 @@
                                     {% for item in order.line_items %}
                                     {% with image=item.image original=item.product.get_original_info excluded_product=item.product.is_excluded %}
 
-                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %} {% if excluded_product %}excluded{% endif %}"
+                                    <div class="line
+                                                container-fluid
+                                                {% if item.is_bundle %}bundled{% endif %}
+                                                {% if not forloop.first %}multi-lines{% endif %}
+                                                {% if excluded_product %}excluded{% endif %}"
                                         line-id="{{item.id}}"
                                         order-id="{{order.id}}"
                                         order-data-id="{{ item.order_data_id }}"
@@ -641,7 +645,6 @@
                                                 <thead>
                                                     <tr>
                                                         <td class="product-preview" style="width:64px">
-                                                            {% if not item.is_bundle %}
                                                             <input class="line-checkbox hidden-xs" type="checkbox" style="position: absolute; top: 0px; left: 5px; ">
 
                                                             <img class="product-img cached-img no-img no-img-sm unveil"
@@ -653,7 +656,6 @@
                                                                 {% else %}
                                                                     data-src="/api/product-variant-image?store={{store.id}}&product={{image.product}}&variant={{image.variant}}&redirect=1"
                                                                 {% endif %} />
-                                                            {% endif %}
                                                          </td>
                                                         <td class="no-text-overflow" style="max-width: 140px;">
                                                             {% if item.product %}
@@ -747,7 +749,7 @@
                                             </table>
 
                                             {% if item.is_bundle %}
-                                            <div class="well bundle-items">
+                                            <div class="well bundle-items" style="position: relative;">
                                                 {% for bundle in item.bundles %}
                                                 <div class="m-t-xs" style="display:flex">
                                                     <div>
@@ -997,6 +999,7 @@
     <script src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/bulk_orders.js' %}" type="text/javascript"></script>
+    <script src="{% static 'js/order_items.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/shopify_product_selector.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/orders.js' %}" type="text/javascript"></script>
 {% endcompress %}

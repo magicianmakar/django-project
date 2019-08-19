@@ -599,6 +599,8 @@
     };
 
     var STORE_ID = "{{ store.id }}";
+
+    window.storeType = 'gear';
 </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
@@ -606,6 +608,7 @@
 {% compress js %}
     <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
+    <script type="text/javascript" src="{% static 'js/order_items.js' %}"></script>
     <script type="text/javascript" src="{% static 'gearbubble/js/gearbubble_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'gearbubble/js/orders_list.js' %}"></script>
 {% endcompress %}
