@@ -176,14 +176,32 @@ def product_export(store_id, product_id, user_id, publish=None):
 
         r = store.get_wcapi(timeout=60).post('products', api_data)
         if not r.ok:
-            product_data = None
-            if '/products/' in r.url:
-                product_id = re.findall(r'/products/([0-9]+)', r.url)
-                if len(product_id) == 1:
-                    product.source_id = int(product_id[0])
+            is_image_error = False
+            try:
+                error_result = r.json()
+                if error_result.get('code') == 'woocommerce_product_image_upload_error':
+                    is_image_error = True
+            except:
+                pass
 
-            if not product.source_id:
-                r.raise_for_status()
+            # Retry using dropified helper to fetch image
+            if is_image_error:
+                api_data = add_product_images_to_api_data(api_data, saved_data, from_helper=True)
+                r = store.get_wcapi(timeout=60).post('products', api_data)
+
+                if r.ok:
+                    product_data = r.json()
+                    product.source_id = product_data['id']
+            else:
+                product_data = None
+
+                if '/products/' in r.url:
+                    product_id = re.findall(r'/products/([0-9]+)', r.url)
+                    if len(product_id) == 1:
+                        product.source_id = int(product_id[0])
+
+                if not product.source_id:
+                    r.raise_for_status()
         else:
             product_data = r.json()
             product.source_id = product_data['id']

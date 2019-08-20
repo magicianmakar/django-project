@@ -11,6 +11,7 @@ from measurement.measures import Weight
 from decimal import Decimal, ROUND_HALF_UP
 from unidecode import unidecode
 from collections import Counter
+from base64 import b64encode
 
 from django.db.models import Q
 from django.db import transaction
@@ -141,9 +142,11 @@ def update_product_api_data(api_data, data, store):
     return api_data
 
 
-def add_product_images_to_api_data(api_data, data):
+def add_product_images_to_api_data(api_data, data, from_helper=False):
     api_data['images'] = []
     for position, src in enumerate(data.get('images', [])):
+        if from_helper:
+            src = f"https://shopified-helper-app.herokuapp.com/api/ali/get-image/image.jpg?url={b64encode(src.encode('utf-8')).decode('utf-8')}"
         api_data['images'].append({'src': src, 'name': src, 'position': position})
 
     return api_data
