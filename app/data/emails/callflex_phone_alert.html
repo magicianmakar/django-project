@@ -9,7 +9,9 @@
 <body>
     <p>Hi, {{ user.profile.name }}</p>
 
-    <p>Your CallFlex Phone number "{{ twilio_phone.incoming_number }}" will expire soon because of inactivity (no incoming calls in past 90 days). It'll be removed from your profile.</p>
+
+    <p>Your CallFlex Phone number "{{ twilio_phone.incoming_number }}" will soon expire due to inactivity (no incoming calls in past 90 days) and will be removed from your account in {{ exp_days }} days.</p>
+    <p>If you wish to keep your number, you can simply make a call to it yourself before the final expiration date.</p>
 
 
     <p>

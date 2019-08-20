@@ -1,9 +1,7 @@
 from datetime import timedelta
-
 from django.utils import timezone
-
 from raven.contrib.django.raven_compat.models import client as raven_client
-
+import arrow
 from phone_automation.models import TwilioPhoneNumber
 from phone_automation.utils import get_twilio_client
 from shopified_core.management import DropifiedBaseCommand
@@ -27,7 +25,13 @@ class Command(DropifiedBaseCommand):
         )
 
     def start_command(self, *args, **options):
-        exp_date = timezone.now() + timedelta(days=-90)
+        # wait for launch date
+        if arrow.utcnow() < arrow.get('2019-09-04'):
+            self.write(f"Launch date not reached yet")
+            return
+
+        # Deleting phone which passed 90+14 days inactivity
+        exp_date = timezone.now() + timedelta(days=-104)
         user_phones = TwilioPhoneNumber.objects
         if options['user_id']:
             user_phones = user_phones.filter(user_id=options['user_id'])
