@@ -202,7 +202,7 @@
 
     var boardsMenu = {
     {% for item in request.user.get_gear_boards %}
-        "{{item.id}}": {name: "{{item.title}}"},
+        "{{item.id}}": {name: "{{item.title|safe}}"},
     {% endfor %}
         "sep1": "---------",
         "add": {name: "Add new board", icon: 'add'},
