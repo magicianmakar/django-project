@@ -244,7 +244,7 @@
                             <div class="header">
                                 <div class="row">
                                     <div class="col-xs-2">
-                                        <b>Order <a href="{{order.order_url}}" target="_blank">#{{order.id}}</a></b>
+                                        <b>Order <a href="{{order.order_url}}" target="_blank">#{{order.number}}</a></b>
                                     </div>
                                     <div class="col-xs-2">
                                         <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">
@@ -284,7 +284,7 @@
                                     </div>
                                     <div class="col-xs-2">
                                         {% if order.lines_count %}
-                                        <button class="btn btn-success btn-xs pull-right order-items" order-id="{{order.id}}"
+                                        <button class="btn btn-success btn-xs pull-right order-items" order-id="{{order.number}}"
                                                 type="button" style="border-right:1px solid #66a8cc">
                                             Order Items
                                         </button>
