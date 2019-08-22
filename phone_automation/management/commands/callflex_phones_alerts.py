@@ -50,10 +50,10 @@ class Command(DropifiedBaseCommand):
                                 tpl='callflex_phone_alert.html',
                                 subject='CallFlex PhoneNumber Alert',
                                 recipient=user_phone.user.email,
-                                exp_days=exp_days_item,
                                 data={
                                     'twilio_phone': user_phone,
-                                    'user': user_phone.user
+                                    'user': user_phone.user,
+                                    'exp_days': exp_days_item
                                 }
                             )
                             total_users_notified += 1
