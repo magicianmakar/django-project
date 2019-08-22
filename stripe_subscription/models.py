@@ -575,11 +575,10 @@ class CustomStripeSubscription(models.Model):
 
     def safe_delete(self, sub=None, commit=True):
         sub = stripe.Subscription.retrieve(self.subscription_id)
-
         count_items = len(sub['items']['data'])
         if count_items > 1:
             si = stripe.SubscriptionItem.retrieve(self.subscription_item_id)
             si.delete()
-        else:
+        elif count_items == 1 and sub['items']['data'][0].id == self.subscription_item_id:
             sub.delete()
         self.delete()
