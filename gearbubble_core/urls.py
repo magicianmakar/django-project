@@ -7,6 +7,7 @@ import home.views
 
 urlpatterns = [
     url(r'^$', home.views.home_page_view, name='index'),
+    url(r'^settings$', home.views.home_page_view, name='settings'),
 
     url(r'^products/?(?P<tpl>(grid|table))?$', gearbubble_core.views.ProductsList.as_view(), name='products_list'),
     url(r'^product/(?P<pk>[0-9]+)$', gearbubble_core.views.ProductDetailView.as_view(), name='product_detail'),

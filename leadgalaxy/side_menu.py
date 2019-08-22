@@ -248,7 +248,7 @@ def get_menu_item_data(namespace):
         'settings': {
             'title': 'Settings',
             'classes': '',
-            'url': reverse('settings'),  # We don't want to add namespace.
+            'url': get_url('settings'),
             'permissions': [],
             'match': re.compile(r'(/\w+)?/settings'),
         },
