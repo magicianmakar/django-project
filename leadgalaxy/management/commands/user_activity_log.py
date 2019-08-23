@@ -98,17 +98,20 @@ class Command(DropifiedBaseCommand):
 
         lines = ['\t'.join(["IP", "Time", "HTTP Method", "Path", "Status Code", "Response Bytes"])]
         for i in results:
-            message = re.sub(r'hmac=[A-Za-z0-9]+', 'hmac=secret', i['message'])
-            message = list(logfmt.parse(StringIO(message)))[0]
-            date = arrow.get(i['generated_at']).datetime
-            lines.append('\t'.join([
-                message['fwd'].split(',')[0],
-                f"{date:%d/%b/%Y:%H:%M:%S %z}",
-                message['method'],
-                f'"https://app.dropified.com{message["path"]}"',
-                message['status'],
-                message['bytes']
-            ]))
+            try:
+                message = re.sub(r'hmac=[A-Za-z0-9]+', 'hmac=secret', i['message'])
+                message = list(logfmt.parse(StringIO(message)))[0]
+                date = arrow.get(i['generated_at']).datetime
+                lines.append('\t'.join([
+                    message['fwd'].split(',')[0],
+                    f"{date:%d/%b/%Y:%H:%M:%S %z}",
+                    message['method'],
+                    f'"https://app.dropified.com{message["path"]}"',
+                    message['status'],
+                    message['bytes']
+                ]))
+            except:
+                self.write('Ignore line...')
 
         email_filename = re.sub(r"[@\.]", "_", user.email)
 
