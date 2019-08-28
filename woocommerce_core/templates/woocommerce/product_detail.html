@@ -32,6 +32,18 @@
                     {% endif %}
                     ><i class="fa fa-cogs"></i> Connections</a></li>
                 {% endif %}
+                {% if request.user|can:'price_changes.use' %}
+                <li>
+                    <a data-toggle="tab" href="#tab-7"
+                       data-auto-click="#alerts"
+                       data-auto-click-onload="true"
+                       class="product-alerts-tab"
+                       product-id="{{product.id}}"
+                    >
+                        <i class="fa fa-line-chart"></i> Alerts
+                    </a>
+                </li>
+                {% endif %}
                 {% if request.user|can:'youtube_ads.use' %}
                 <li>
                     <a href="{% url 'youtube_ads.views.index' %}?type=all&q={{ product.title }}" target="_blank">
@@ -405,6 +417,142 @@
             </div>
         </div>
 
+        {% if request.user|can:'price_change_options.use' %}
+        <div id="tab-7" class="tab-pane">
+            <div class="panel-body"  style="min-height:300px">
+                <form id="product-config-form" role="form">
+                    <input type="hidden" name="product" value="{{product.id}}" />
+                    <div class="setting-section">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <h3 class="setting-title">Alert Settings</h3>
+                            </div>
+                            <div class="col-sm-6 text-right">
+                                Last Check:
+                                <span class="badge badge-default">
+                                {% if not product.monitor_id > 0 %}
+                                    Not Monitored
+                                {% elif last_check %}
+                                    {% date_humanize last_check %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row m-t">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="alert_price_change" class="col-sm-2 text-right control-label">When the price changes</label>
+                                <div class="col-sm-3">
+                                    <select id="alert_price_change" name="alert_price_change" class="form-control">
+                                        <option value="">Use Global Default</option>
+                                        <option value="notify" {% if alert_config.alert_price_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                        <option value="update" {% if alert_config.alert_price_change == 'update' %} selected="selected"{% endif %}>Update Price in WooCommerce</option>
+                                        <option value="none" {% if alert_config.alert_price_change == 'none' %} selected="selected"{% endif %}>Do nothing</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row m-t price-update-option" data-value="update">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="price_update_method" class="col-sm-2 text-right control-label">Price Update Method</label>
+                                <div class="col-sm-3">
+                                    <select id="price_update_method" name="price_update_method" class="form-control">
+                                        <option value="global_markup" {% if alert_config.price_update_method == 'global_markup' %} selected="selected"{% endif %}>Update with Global "Price Markup"</option>
+                                        <option value="custom_markup" {% if alert_config.price_update_method == 'custom_markup' %} selected="selected"{% endif %}>Update with Advanced Markup Rules</option>
+                                        <option value="same_margin" {% if not alert_config.price_update_method or alert_config.price_update_method == 'same_margin' %} selected="selected"{% endif %}>Update with same margins</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row m-t price-update-option" data-value="update">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="price_update_for_increase" class="col-sm-2 text-right control-label">
+                                    Update only when price goes up
+                                </label>
+                                <div class="col-sm-3">
+                                    <input type="checkbox" class="js-switch" id="price_update_for_increase"
+                                           name="price_update_for_increase" {% if alert_config.price_update_for_increase %}checked="checked"{% endif %}>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="alert_quantity_change" class="col-sm-2 text-right control-label">When inventory changes</label>
+                                <div class="col-sm-3">
+                                    <select id="alert_quantity_change" name="alert_quantity_change" class="form-control">
+                                        <option value="">Use Global Default</option>
+                                        <option value="notify"{% if alert_config.alert_quantity_change == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                        <option value="update"{% if alert_config.alert_quantity_change == 'update' %} selected="selected"{% endif %}>Update automatically</option>
+                                        <option value="none"{% if alert_config.alert_quantity_change == 'none' %} selected="selected"{% endif %}>Do nothing</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="alert_product_disappears" class="col-sm-2 text-right control-label">When a product disappears</label>
+                                <div class="col-sm-3">
+                                    <select id="alert_product_disappears" name="alert_product_disappears" class="form-control">
+                                        <option value="">Use Global Default</option>
+                                        <option value="notify"{% if alert_config.alert_product_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                        <option value="unpublish"{% if alert_config.alert_product_disappears == 'unpublish' %} selected="selected"{% endif %}>Unpublish product</option>
+                                        <option value="zero_quantity"{% if alert_config.alert_product_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                        <option value="none"{% if alert_config.alert_product_disappears == 'none' %} selected="selected"{% endif %}>Do nothing</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-11">
+                            <div class="form-group">
+                                <label for="alert_variant_disappears" class="col-sm-2 text-right control-label">When a variant disappears</label>
+                                <div class="col-sm-3">
+                                    <select id="alert_variant_disappears" name="alert_variant_disappears" class="form-control">
+                                        <option value="">Use Global Default</option>
+                                        <option value="notify"{% if alert_config.alert_variant_disappears == 'notify' %} selected="selected"{% endif %}>Notify me</option>
+                                        <option value="remove"{% if alert_config.alert_variant_disappears == 'remove' %} selected="selected"{% endif %}>Remove the variant</option>
+                                        <option value="zero_quantity"{% if alert_config.alert_variant_disappears == 'zero_quantity' %} selected="selected"{% endif %}>Set the quantity to zero</option>
+                                        <option value="none"{% if alert_config.alert_variant_disappears == 'none' %} selected="selected"{% endif %}>Do nothing</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-9 text-right">
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="setting-section">
+                    <h3 class="setting-title">Alerts History</h3>
+                </div>
+                <div class="product-alerts-loading text-center" style="display:none">
+                    <i class='fa fa-circle-o-notch'></i>
+                </div>
+                <div class="product-alerts"></div>
+            </div>
+        </div>
+        {% endif %}
 
         {% if request.user|can:'aliextractor.use' %}
 

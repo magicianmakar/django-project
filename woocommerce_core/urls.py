@@ -10,6 +10,7 @@ urlpatterns = [
 
     url(r'^callback-endpoint/(?P<store_hash>[a-z0-9]+)$', woocommerce_core.views.CallbackEndpoint.as_view(), name='callback_endpoint'),
     url(r'^products/?(?P<tpl>(grid|table))?$', woocommerce_core.views.ProductsList.as_view(), name='products_list'),
+    url(r'^products/update$', woocommerce_core.views.product_alerts, name='product_alerts'),
     url(r'^product/(?P<pk>[0-9]+)$', woocommerce_core.views.ProductDetailView.as_view(), name='product_detail'),
     url(r'^product/mapping/(?P<pk>[0-9]+)$', woocommerce_core.views.ProductMappingView.as_view(), name='product_mapping'),
     url(r'^product/mapping/supplier/(?P<pk>[0-9]+)$', woocommerce_core.views.MappingSupplierView.as_view(), name='mapping_supplier'),

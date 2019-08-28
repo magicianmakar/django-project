@@ -20,6 +20,8 @@ class ProductChangeManager():
             manager = CommerceHQProductChangeManager(product_change)
         elif product_change.store_type == 'gkart':
             manager = GrooveKartProductChangeManager(product_change)
+        elif product_change.store_type == 'woo':
+            manager = WooProductChangeManager(product_change)
         return manager
 
     def __init__(self, product_change):
@@ -51,6 +53,7 @@ class ProductChangeManager():
             self.config['price_change'] = 'update'
             self.config['price_update_for_increase'] = True
 
+        self.removed_variants = []
         self.groovekart_changes = []
 
     def get_config(self, name, default='notify'):
@@ -71,13 +74,14 @@ class ProductChangeManager():
 
     def apply_changes(self):
         try:
-            product_data = self.get_product_data()
+            api_product_data = self.get_api_product_data()
+            product_data = self.product.parsed
 
             # Check if the user have any registered Hook before triggering the raw hook signal
             # This reduce the database call significantly because it check first if the user have (in general) any webhooks
             # Otherwise rest_hook will make a database call for each variant change
             if user_have_hooks(self.user):
-                self.product_change.send_hook_event(product_data)
+                self.product_change.send_hook_event(api_product_data)
                 self.product_change.send_hook_event_alert()
 
             if not self.need_update():
@@ -86,13 +90,13 @@ class ProductChangeManager():
                 self.product_change.save()
                 return
 
-            if product_data:
+            if api_product_data:
                 self.product_data_changed = False
-                product_data = self.apply_product_changes(product_data)
-                product_data = self.apply_variant_changes(product_data)
+                self.apply_product_changes(api_product_data, product_data)
+                self.apply_variant_changes(api_product_data, product_data)
 
                 if self.product_data_changed:
-                    self.update_product(product_data)
+                    self.update_product(api_product_data, product_data)
 
             self.product_change.status = 1  # Applied
             self.product_change.save()
@@ -108,57 +112,53 @@ class ProductChangeManager():
     def get_product_data(self):
         pass
 
-    def apply_product_changes(self, product_data):
+    def apply_product_changes(self, api_product_data, product_data):
         if self.product_changes:
             for product_change in self.product_changes:
                 if product_change.get('name') == 'offline':
                     if product_change.get('new_value') and not product_change.get('old_value'):  # disappeared
-                        product_data = self.handle_product_disappear(product_data)
+                        self.handle_product_disappear(api_product_data, product_data)
                     elif product_change.get('old_value') and not product_change.get('new_value'):  # appeared
-                        product_data = self.handle_product_appear(product_data)
+                        self.handle_product_appear(api_product_data, product_data)
 
-        return product_data
-
-    def apply_variant_changes(self, product_data):
+    def apply_variant_changes(self, api_product_data, product_data):
         if self.variant_changes:
             for variant_change in self.variant_changes:
                 if variant_change.get('name') == 'price':
-                    product_data = self.handle_variant_price_change(product_data, variant_change)
+                    self.handle_variant_price_change(api_product_data, product_data, variant_change)
                 elif variant_change.get('name') == 'quantity':
-                    product_data = self.handle_variant_quantity_change(product_data, variant_change)
+                    self.handle_variant_quantity_change(api_product_data, product_data, variant_change)
                 elif variant_change.get('name') == 'var_added':
-                    product_data = self.handle_variant_added(product_data, variant_change)
+                    self.handle_variant_added(api_product_data, product_data, variant_change)
                 elif variant_change.get('name') == 'var_removed':
-                    product_data = self.handle_variant_removed(product_data, variant_change)
+                    self.handle_variant_removed(api_product_data, product_data, variant_change)
 
-        return product_data
+    def handle_product_disappear(self, api_product_data, product_data):
+        pass
 
-    def handle_product_disappear(self, product_data):
-        return product_data
+    def handle_product_appear(self, api_product_data, product_data):
+        pass
 
-    def handle_product_appear(self, product_data):
-        return product_data
-
-    def get_variant(self, product_data, variant_change):
+    def get_variant(self, api_product_data, variant_change):
         # Example Aliexpress SKU: "15:173#66Blue;5:361386" match to "<OptionGroup>:<OptionID>#<OptionTitle>"
         sku = variant_change.get('sku')
         ships_from_id = variant_change.get('ships_from_id')
         ships_from_title = variant_change.get('ships_from_title')
-        return variant_index_from_supplier_sku(self.product, sku, product_data.get('variants', []), ships_from_id, ships_from_title)
+        return variant_index_from_supplier_sku(self.product, sku, api_product_data.get('variants', []), ships_from_id, ships_from_title)
 
-    def handle_variant_price_change(self, product_data, variant_change):
-        return product_data
+    def handle_variant_price_change(self, api_product_data, product_data, variant_change):
+        pass
 
-    def handle_variant_quantity_change(self, product_data, variant_change):
-        return product_data
+    def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
+        pass
 
-    def handle_variant_added(self, product_data, variant_change):
-        return product_data
+    def handle_variant_added(self, api_product_data, product_data, variant_change):
+        pass
 
-    def handle_variant_removed(self, product_data, variant_change):
-        return product_data
+    def handle_variant_removed(self, api_product_data, product_data, variant_change):
+        pass
 
-    def update_product(self, product_data):
+    def update_product(self, api_product_data, product_data):
         pass
 
     def changes_map(self):
@@ -190,6 +190,13 @@ class ProductChangeManager():
                 'title': self.product.title,
                 'url': app_link('gkart/product', self.product.id),
                 'target_url': self.product.groovekart_url,
+            }
+        elif self.product_change.store_type == 'woo':
+            common_data = {
+                'images': self.product.get_images(),
+                'title': self.product.title,
+                'url': app_link('woo/product', self.product.id),
+                'target_url': self.product.woocommerce_url,
             }
 
         if self.product_changes:
@@ -268,34 +275,32 @@ class ProductChangeManager():
 
 
 class ShopifyProductChangeManager(ProductChangeManager):
-    def get_product_data(self):
+    def get_api_product_data(self):
         return get_shopify_product(self.product.store, self.product.shopify_id)
 
-    def handle_product_disappear(self, product_data):
+    def handle_product_disappear(self, api_product_data, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
+            api_product_data['published'] = False
             product_data['published'] = False
         elif self.config['product_disappears'] == 'zero_quantity':
-            for idx, variant in enumerate(product_data.get('variants', [])):
+            for idx, variant in enumerate(api_product_data.get('variants', [])):
                 if variant.get('id'):
                     self.product_data_changed = True
                     self.product.set_variant_quantity(quantity=0, variant_id=variant['id'], variant=variant)
 
-        return product_data
-
-    def handle_product_appear(self, product_data):
+    def handle_product_appear(self, api_product_data, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
+            api_product_data['published'] = True
             product_data['published'] = True
         elif self.config['product_disappears'] == 'zero_quantity':
             pass
 
-        return product_data
-
-    def handle_variant_price_change(self, product_data, variant_change):
-        idx = self.get_variant(product_data, variant_change)
+    def handle_variant_price_change(self, api_product_data, product_data, variant_change):
+        idx = self.get_variant(api_product_data, variant_change)
         if idx is not None:
-            variant_id = product_data['variants'][idx]['id']
+            variant_id = api_product_data['variants'][idx]['id']
             self.add_price_history(variant_id, variant_change)
 
         new_value = variant_change.get('new_value')
@@ -303,8 +308,8 @@ class ShopifyProductChangeManager(ProductChangeManager):
 
         if self.config['price_change'] == 'update':
             if idx is not None:
-                current_price = safe_float(product_data['variants'][idx]['price'])
-                current_compare_at_price = safe_float(product_data['variants'][idx].get('compare_at_price'))
+                current_price = safe_float(api_product_data['variants'][idx]['price'])
+                current_compare_at_price = safe_float(api_product_data['variants'][idx].get('compare_at_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -319,67 +324,64 @@ class ShopifyProductChangeManager(ProductChangeManager):
                     if self.config['price_update_for_increase']:
                         if new_price > current_price:
                             self.product_data_changed = True
-                            product_data['variants'][idx]['price'] = new_price
-                            product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+                            api_product_data['variants'][idx]['price'] = new_price
+                            api_product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
                     else:
                         self.product_data_changed = True
-                        product_data['variants'][idx]['price'] = new_price
-                        product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+                        api_product_data['variants'][idx]['price'] = new_price
+                        api_product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
 
-        return product_data
-
-    def handle_variant_quantity_change(self, product_data, variant_change):
+    def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
         if self.config['quantity_change'] == 'update':
-            idx = self.get_variant(product_data, variant_change)
+            idx = self.get_variant(api_product_data, variant_change)
             if idx is not None:
                 self.product_data_changed = True
                 self.product.set_variant_quantity(
                     quantity=variant_change.get('new_value'),
-                    variant_id=product_data['variants'][idx]['id'],
-                    variant=product_data['variants'][idx],
+                    variant_id=api_product_data['variants'][idx]['id'],
+                    variant=api_product_data['variants'][idx],
                 )
 
-        return product_data
-
-    def handle_variant_added(self, product_data, variant_change):
+    def handle_variant_added(self, api_product_data, product_data, variant_change):
         # TODO: Handle this case (Add setting, update logic...)
         # This case is not covered with a setting
-        return product_data
+        pass
 
-    def handle_variant_removed(self, product_data, variant_change):
+    def handle_variant_removed(self, api_product_data, product_data, variant_change):
         if self.config['variant_disappears'] == 'remove':
-            idx = self.get_variant(product_data, variant_change)
+            idx = self.get_variant(api_product_data, variant_change)
             if idx is not None:
                 self.product_data_changed = True
-                del product_data['variants'][idx]
+                self.removed_variants.append(api_product_data['variants'][idx]['id'])
+                del api_product_data['variants'][idx]
         elif self.config['variant_disappears'] == 'zero_quantity':
-            idx = self.get_variant(product_data, variant_change)
+            idx = self.get_variant(api_product_data, variant_change)
             if idx is not None:
                 self.product_data_changed = True
                 self.product.set_variant_quantity(
                     quantity=0,
-                    variant_id=product_data['variants'][idx]['id'],
-                    variant=product_data['variants'][idx]
+                    variant_id=api_product_data['variants'][idx]['id'],
+                    variant=api_product_data['variants'][idx]
                 )
 
-        return product_data
-
-    def update_product(self, product_data):
+    def update_product(self, api_product_data, product_data):
         update_endpoint = self.product.store.get_link('/admin/products/{}.json'.format(
             self.product.get_shopify_id()), api=True)
 
-        if product_data and product_data.get('variants') == []:
-            del product_data['variants']
+        if api_product_data and api_product_data.get('variants') == []:
+            del api_product_data['variants']
 
-        r = requests.put(update_endpoint, json={'product': product_data})
+        r = requests.put(update_endpoint, json={'product': api_product_data})
 
         try:
             r.raise_for_status()
+
+            self.product.update_data(product_data)
         except:
             if r.status_code not in [401, 402, 403, 404, 429]:
                 raven_client.captureException(extra={
                     'rep': r.text,
-                    'data': product_data,
+                    'data': api_product_data,
                 }, tags={
                     'product': self.product.id,
                     'store': self.product.store,
@@ -390,34 +392,30 @@ class ShopifyProductChangeManager(ProductChangeManager):
 
 
 class CommerceHQProductChangeManager(ProductChangeManager):
-    def get_product_data(self):
+    def get_api_product_data(self):
         return self.product.retrieve()
 
-    def handle_product_disappear(self, product_data):
+    def handle_product_disappear(self, api_product_data, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
             product_data['published'] = False
-            product_data['is_draft'] = True
+            api_product_data['is_draft'] = True
         elif self.config['product_disappears'] == 'zero_quantity':
             # TODO: set quantity to zero
             pass
 
-        return product_data
-
-    def handle_product_appear(self, product_data):
+    def handle_product_appear(self, api_product_data, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
             product_data['published'] = True
-            product_data['is_draft'] = False
+            api_product_data['is_draft'] = False
         elif self.config['product_disappears'] == 'zero_quantity':
             pass
 
-        return product_data
-
-    def handle_variant_price_change(self, product_data, variant_change):
-        idx = self.get_variant(product_data, variant_change)
+    def handle_variant_price_change(self, api_product_data, product_data, variant_change):
+        idx = self.get_variant(api_product_data, variant_change)
         if idx is not None:
-            variant_id = product_data['variants'][idx]['id']
+            variant_id = api_product_data['variants'][idx]['id']
             self.add_price_history(variant_id, variant_change)
 
         new_value = variant_change.get('new_value')
@@ -425,8 +423,8 @@ class CommerceHQProductChangeManager(ProductChangeManager):
 
         if self.config['price_change'] == 'update':
             if idx is not None:
-                current_price = safe_float(product_data['variants'][idx]['price'])
-                current_compare_at_price = safe_float(product_data['variants'][idx].get('compare_price'))
+                current_price = safe_float(api_product_data['variants'][idx]['price'])
+                current_compare_at_price = safe_float(api_product_data['variants'][idx].get('compare_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -441,15 +439,15 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                     if self.config['price_update_for_increase']:
                         if new_price > current_price:
                             self.product_data_changed = True
-                            product_data['variants'][idx]['price'] = new_price
-                            product_data['variants'][idx]['compare_price'] = new_compare_at_price
+                            api_product_data['variants'][idx]['price'] = new_price
+                            api_product_data['variants'][idx]['compare_price'] = new_compare_at_price
                     else:
                         self.product_data_changed = True
-                        product_data['variants'][idx]['price'] = new_price
-                        product_data['variants'][idx]['compare_price'] = new_compare_at_price
-            elif product_data.get('is_multi') is False:
-                current_price = safe_float(product_data['price'])
-                current_compare_at_price = safe_float(product_data.get('compare_price'))
+                        api_product_data['variants'][idx]['price'] = new_price
+                        api_product_data['variants'][idx]['compare_price'] = new_compare_at_price
+            elif api_product_data.get('is_multi') is False:
+                current_price = safe_float(api_product_data['price'])
+                current_compare_at_price = safe_float(api_product_data.get('compare_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -466,51 +464,48 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                             self.product_data_changed = True
                             product_data['price'] = new_price
                             product_data['compare_at_price'] = new_compare_at_price
-                            product_data['compare_price'] = new_compare_at_price
+                            api_product_data['price'] = new_price
+                            api_product_data['compare_price'] = new_compare_at_price
                     else:
                         self.product_data_changed = True
                         product_data['price'] = new_price
                         product_data['compare_at_price'] = new_compare_at_price
-                        product_data['compare_price'] = new_compare_at_price
+                        api_product_data['price'] = new_price
+                        api_product_data['compare_price'] = new_compare_at_price
 
-        return product_data
-
-    def handle_variant_quantity_change(self, product_data, variant_change):
+    def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
         if self.config['quantity_change'] == 'update':
-            idx = self.get_variant(product_data, variant_change)
+            idx = self.get_variant(api_product_data, variant_change)
             if idx is not None:
                 # TODO: update quantity
                 pass
 
-        return product_data
-
-    def handle_variant_added(self, product_data, variant_change):
+    def handle_variant_added(self, api_product_data, product_data, variant_change):
         # TODO: Handle this case (Add setting, update logic...)
         # This case is not covered with a setting
-        return product_data
+        pass
 
-    def handle_variant_removed(self, product_data, variant_change):
+    def handle_variant_removed(self, api_product_data, product_data, variant_change):
         if self.config['variant_disappears'] == 'remove':
-            idx = self.get_variant(product_data, variant_change)
+            idx = self.get_variant(api_product_data, variant_change)
             if idx is not None:
                 self.product_data_changed = True
-                del product_data['variants'][idx]
+                self.removed_variants.append(api_product_data['variants'][idx]['id'])
+                del api_product_data['variants'][idx]
 
         elif self.config['variant_disappears'] == 'zero_quantity':
-            idx = self.get_variant(product_data, variant_change)
+            idx = self.get_variant(api_product_data, variant_change)
             if idx is not None:
                 # TODO: set quantity to zero
                 pass
 
-        return product_data
-
-    def update_product(self, product_data):
+    def update_product(self, api_product_data, product_data):
         store = self.product.store
         r = store.request.patch(
             url='{}/{}'.format(store.get_api_url('products'), self.product.source_id),
             json={
-                'is_draft': product_data['is_draft'],
-                'variants': product_data['variants'],
+                'is_draft': api_product_data['is_draft'],
+                'variants': api_product_data['variants'],
             }
         )
 
@@ -523,7 +518,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             if r.status_code not in [401, 402, 403, 404, 429]:
                 raven_client.captureMessage(extra={
                     'rep': r.text,
-                    'data': product_data,
+                    'data': api_product_data,
                 }, tags={
                     'product': self.product.id,
                     'store': self.product.store,
@@ -536,10 +531,10 @@ class CommerceHQProductChangeManager(ProductChangeManager):
 
 
 class GrooveKartProductChangeManager(ProductChangeManager):
-    def get_product_data(self):
+    def get_api_product_data(self):
         return self.product.retrieve()
 
-    def handle_product_disappear(self, product_data):
+    def handle_product_disappear(self, api_product_data, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
             product_data['published'] = False
@@ -557,9 +552,7 @@ class GrooveKartProductChangeManager(ProductChangeManager):
             # GrooveKart doesn't support quantity management
             pass
 
-        return product_data
-
-    def handle_product_appear(self, product_data):
+    def handle_product_appear(self, api_product_data, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
             product_data['published'] = True
@@ -577,12 +570,10 @@ class GrooveKartProductChangeManager(ProductChangeManager):
             # GrooveKart doesn't support quantity management
             pass
 
-        return product_data
-
-    def handle_variant_price_change(self, product_data, variant_change):
-        idx = self.get_variant(product_data, variant_change)
+    def handle_variant_price_change(self, api_product_data, product_data, variant_change):
+        idx = self.get_variant(api_product_data, variant_change)
         if idx is not None:
-            variant_id = product_data['variants'][idx]['id_product_variant']
+            variant_id = api_product_data['variants'][idx]['id_product_variant']
             self.add_price_history(variant_id, variant_change)
 
         new_value = variant_change.get('new_value')
@@ -590,8 +581,8 @@ class GrooveKartProductChangeManager(ProductChangeManager):
 
         if self.config['price_change'] == 'update':
             if idx is not None:
-                current_price = safe_float(product_data['variants'][idx]['price'])
-                current_compare_at_price = safe_float(product_data['variants'][idx].get('compare_at_price'))
+                current_price = safe_float(api_product_data['variants'][idx]['price'])
+                current_compare_at_price = safe_float(api_product_data['variants'][idx].get('compare_at_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -606,9 +597,8 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                     if self.config['price_update_for_increase']:
                         if new_price > current_price:
                             self.product_data_changed = True
-                            product_data['variants'][idx]['price'] = new_price
-                            product_data['variants'][idx]['compare_price'] = new_compare_at_price
-                            product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+                            api_product_data['variants'][idx]['price'] = new_price
+                            api_product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
                             self.groovekart_changes.append({
                                 'api_url': 'variants.json',
                                 'api_data': {
@@ -616,7 +606,7 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                                     'product_id': self.product.source_id,
                                     'variants': [
                                         {
-                                            'id': product_data['variants'][idx]['id_product_variant'],
+                                            'id': api_product_data['variants'][idx]['id_product_variant'],
                                             'price': new_price,
                                             'compare_at_price': new_compare_at_price
                                         }
@@ -625,9 +615,8 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                             })
                     else:
                         self.product_data_changed = True
-                        product_data['variants'][idx]['price'] = new_price
-                        product_data['variants'][idx]['compare_price'] = new_compare_at_price
-                        product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+                        api_product_data['variants'][idx]['price'] = new_price
+                        api_product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
                         self.groovekart_changes.append({
                             'api_url': 'variants.json',
                             'api_data': {
@@ -635,16 +624,16 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                                 'product_id': self.product.source_id,
                                 'variants': [
                                     {
-                                        'id': product_data['variants'][idx]['id_product_variant'],
+                                        'id': api_product_data['variants'][idx]['id_product_variant'],
                                         'price': new_price,
                                         'compare_at_price': new_compare_at_price
                                     }
                                 ],
                             }
                         })
-            elif len(product_data.get('variants', [])) == 0:
-                current_price = safe_float(product_data['price'])
-                current_compare_at_price = safe_float(product_data.get('compare_default_price'))
+            elif len(api_product_data.get('variants', [])) == 0:
+                current_price = safe_float(api_product_data['price'])
+                current_compare_at_price = safe_float(api_product_data.get('compare_default_price'))
 
                 new_price, new_compare_at_price = calculate_price(
                     self.user,
@@ -661,7 +650,8 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                             self.product_data_changed = True
                             product_data['price'] = new_price
                             product_data['compare_at_price'] = new_compare_at_price
-                            product_data['compare_default_price'] = new_compare_at_price
+                            api_product_data['price'] = new_price
+                            api_product_data['compare_default_price'] = new_compare_at_price
                             self.groovekart_changes.append({
                                 'api_url': 'products.json',
                                 'api_data': {
@@ -677,7 +667,8 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                         self.product_data_changed = True
                         product_data['price'] = new_price
                         product_data['compare_at_price'] = new_compare_at_price
-                        product_data['compare_default_price'] = new_compare_at_price
+                        api_product_data['price'] = new_price
+                        api_product_data['compare_default_price'] = new_compare_at_price
                         self.groovekart_changes.append({
                             'api_url': 'products.json',
                             'api_data': {
@@ -690,20 +681,18 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                             }
                         })
 
-        return product_data
-
-    def handle_variant_quantity_change(self, product_data, variant_change):
+    def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
         # GrooveKart doesn't support quantity management
-        return product_data
+        pass
 
-    def handle_variant_added(self, product_data, variant_change):
+    def handle_variant_added(self, api_product_data, product_data, variant_change):
         # TODO: Handle this case (Add setting, update logic...)
         # This case is not covered with a setting
-        return product_data
+        pass
 
-    def handle_variant_removed(self, product_data, variant_change):
+    def handle_variant_removed(self, api_product_data, product_data, variant_change):
         if self.config['variant_disappears'] == 'remove':
-            idx = self.get_variant(product_data, variant_change)
+            idx = self.get_variant(api_product_data, variant_change)
             if idx is not None:
                 # self.product_data_changed = True
                 # TODO
@@ -712,9 +701,7 @@ class GrooveKartProductChangeManager(ProductChangeManager):
             # GrooveKart doesn't support quantity management
             pass
 
-        return product_data
-
-    def update_product(self, product_data):
+    def update_product(self, api_product_data, product_data):
         store = self.product.store
         try:
             for groovekart_change in self.groovekart_changes:
@@ -727,13 +714,158 @@ class GrooveKartProductChangeManager(ProductChangeManager):
             if r.status_code not in [401, 402, 403, 404, 429]:
                 raven_client.captureMessage(extra={
                     'rep': r.text,
-                    'data': product_data,
+                    'data': api_product_data,
                 }, tags={
                     'product': self.product.id,
                     'store': self.product.store,
                 })
             else:
                 raven_client.captureException(extra=http_exception_response(e))
+
+    def add_price_history(self, variant_id, variant_change):
+        pass
+
+
+class WooProductChangeManager(ProductChangeManager):
+    def get_api_product_data(self):
+        return self.product.retrieve()
+
+    def handle_product_disappear(self, api_product_data, product_data):
+        if self.config['product_disappears'] == 'unpublish':
+            self.product_data_changed = True
+            product_data['published'] = False
+            api_product_data['status'] = 'draft'
+        elif self.config['product_disappears'] == 'zero_quantity':
+            api_product_data['stock_status'] = 'outofstock'
+
+    def handle_product_appear(self, api_product_data, product_data):
+        if self.config['product_disappears'] == 'unpublish':
+            self.product_data_changed = True
+            product_data['published'] = True
+            api_product_data['status'] = 'publish'
+        elif self.config['product_disappears'] == 'zero_quantity':
+            api_product_data['stock_status'] = 'instock'
+
+    def handle_variant_price_change(self, api_product_data, product_data, variant_change):
+        idx = self.get_variant(api_product_data, variant_change)
+        if idx is not None:
+            variant_id = api_product_data['variants'][idx]['id']
+            if variant_id > 0:
+                self.add_price_history(variant_id, variant_change)
+
+        new_value = variant_change.get('new_value')
+        old_value = variant_change.get('old_value')
+
+        if self.config['price_change'] == 'update':
+            if variant_id > 0:
+                current_price = safe_float(api_product_data['variants'][idx]['sale_price'])
+                current_compare_at_price = safe_float(api_product_data['variants'][idx].get('regular_price'))
+
+                new_price, new_compare_at_price = calculate_price(
+                    self.user,
+                    old_value,
+                    new_value,
+                    current_price,
+                    current_compare_at_price,
+                    self.config['price_update_method'],
+                    self.markup_rules
+                )
+                if self.config['price_update_for_increase']:
+                    if new_price > current_price:
+                        self.product_data_changed = True
+                        product_data['variants'][idx]['sale_price'] = new_price
+                        product_data['variants'][idx]['regular_price'] = new_compare_at_price
+                        api_product_data['variants'][idx]['sale_price'] = str(new_price)
+                        api_product_data['variants'][idx]['regular_price'] = str(new_compare_at_price)
+                else:
+                    self.product_data_changed = True
+                    product_data['variants'][idx]['sale_price'] = new_price
+                    product_data['variants'][idx]['regular_price'] = new_compare_at_price
+                    api_product_data['variants'][idx]['sale_price'] = str(new_price)
+                    api_product_data['variants'][idx]['regular_price'] = str(new_compare_at_price)
+            elif len(api_product_data.get('variants', [])) == 0 or variant_id < 0:
+                current_price = safe_float(api_product_data['sale_price'])
+                current_compare_at_price = safe_float(api_product_data.get('regular_price'))
+
+                new_price, new_compare_at_price = calculate_price(
+                    self.user,
+                    old_value,
+                    new_value,
+                    current_price,
+                    current_compare_at_price,
+                    self.config['price_update_method'],
+                    self.markup_rules
+                )
+                if self.config['price_update_for_increase']:
+                    if new_price > current_price:
+                        self.product_data_changed = True
+                        product_data['price'] = new_price
+                        product_data['compare_at_price'] = new_compare_at_price
+                        api_product_data['sale_price'] = str(new_price)
+                        api_product_data['regular_price'] = str(new_compare_at_price)
+                else:
+                    self.product_data_changed = True
+                    product_data['price'] = new_price
+                    product_data['compare_at_price'] = new_compare_at_price
+                    api_product_data['sale_price'] = str(new_price)
+                    api_product_data['regular_price'] = str(new_compare_at_price)
+
+    def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
+        if self.config['quantity_change'] == 'update':
+            idx = self.get_variant(api_product_data, variant_change)
+            if idx is not None:
+                variant_id = api_product_data['variants'][idx]['id']
+            if variant_id > 0:
+                self.product_data_changed = True
+                product_data['variants'][idx]['stock_quantity'] = variant_change.get('new_value')
+                api_product_data['variants'][idx]['stock_quantity'] = variant_change.get('new_value')
+            elif len(api_product_data.get('variants', [])) == 0 or variant_id < 0:
+                api_product_data['stock_quantity'] = variant_change.get('new_value')
+
+    def handle_variant_added(self, api_product_data, product_data, variant_change):
+        # TODO: Handle this case (Add setting, update logic...)
+        # This case is not covered with a setting
+        pass
+
+    def handle_variant_removed(self, api_product_data, product_data, variant_change):
+        idx = self.get_variant(api_product_data, variant_change)
+        if idx is not None:
+            variant_id = api_product_data['variants'][idx]['id']
+        if self.config['variant_disappears'] == 'remove':
+            if variant_id > 0:
+                self.product_data_changed = True
+                self.removed_variants.append(api_product_data['variants'][idx]['id'])
+                del product_data['variants'][idx]
+                del api_product_data['variants'][idx]
+        elif self.config['variant_disappears'] == 'zero_quantity':
+            if variant_id > 0:
+                self.product_data_changed = True
+                product_data['variants'][idx]['stock_quantity'] = 0
+                api_product_data['variants'][idx]['stock_quantity'] = 0
+
+    def update_product(self, api_product_data, product_data):
+        update_endpoint = 'products/{}'.format(self.product.source_id)
+        variants_update_endpoint = 'products/{}/variations/batch'.format(self.product.source_id)
+
+        try:
+            r = self.product.store.wcapi.put(update_endpoint, api_product_data)
+            r.raise_for_status()
+            r = self.product.store.wcapi.put(variants_update_endpoint, {
+                'update': api_product_data['variants'],
+                'delete': self.removed_variants,
+            })
+            r.raise_for_status()
+
+            self.product.update_data(product_data)
+        except:
+            if r.status_code not in [401, 402, 403, 404, 429]:
+                raven_client.captureException(extra={
+                    'rep': r.text,
+                    'data': api_product_data,
+                }, tags={
+                    'product': self.product.id,
+                    'store': self.product.store,
+                })
 
     def add_price_history(self, variant_id, variant_change):
         pass

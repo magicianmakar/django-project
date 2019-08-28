@@ -4,6 +4,7 @@ from shopified_core.api_helper import ApiHelperBase
 from shopified_core.utils import order_data_cache_key
 from . import tasks
 from . import utils
+from product_alerts.models import ProductChange
 
 
 class WooApiHelper(ApiHelperBase):
@@ -51,3 +52,6 @@ class WooApiHelper(ApiHelperBase):
 
     def set_product_default_supplier(self, product, supplier):
         return supplier
+
+    def filter_productchange_by_store(self, store):
+        return ProductChange.objects.filter(woo_product__store=store)

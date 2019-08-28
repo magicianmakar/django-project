@@ -11,6 +11,7 @@ from shopified_core.utils import app_link
 from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
 from groovekart_core.models import GrooveKartProduct
+from woocommerce_core.models import WooProduct
 from .utils import parse_supplier_sku, variant_index_from_supplier_sku
 from leadgalaxy.templatetags.template_helper import price_diff, money_format
 
@@ -30,6 +31,7 @@ class ProductChange(models.Model):
     shopify_product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
     chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE)
     gkart_product = models.ForeignKey(GrooveKartProduct, null=True, on_delete=models.CASCADE)
+    woo_product = models.ForeignKey(WooProduct, null=True, on_delete=models.CASCADE)
     store_type = models.CharField(max_length=255, blank=True, default='shopify')
     data = models.TextField(blank=True, default='')
     hidden = models.BooleanField(default=False, verbose_name='Archived change')
@@ -61,6 +63,8 @@ class ProductChange(models.Model):
             return self.chq_product
         if self.store_type == 'gkart':
             return self.gkart_product
+        if self.store_type == 'woo':
+            return self.woo_product
         return None
 
     @property
@@ -71,6 +75,8 @@ class ProductChange(models.Model):
             return app_link('chq/product', self.product.id)
         if self.store_type == 'gkart':
             return app_link('gkart/product', self.product.id)
+        if self.store_type == 'woo':
+            return app_link('woo/product', self.product.id)
         return None
 
     def get_data(self, category=None):
@@ -267,7 +273,7 @@ class ProductChange(models.Model):
                     user=self.user
                 )
 
-    def to_dict(self, product_data, category, change_index):
+    def to_dict(self, api_product_data, category, change_index):
         """ Return Product Change formatted for Zapier Subscription Hooks
 
         Because the Zapier hook data should have same structure as in response from fallback API endpoints
@@ -289,16 +295,16 @@ class ProductChange(models.Model):
         changes = self.get_data(category)
         if changes and len(changes):
             change = changes[change_index]
-            if product_data is not None and change.get('sku'):
-                variants = product_data.get('variants', None)
+            if api_product_data is not None and change.get('sku'):
+                variants = api_product_data.get('variants', None)
                 ships_from_id = change.get('ships_from_id')
                 ships_from_title = change.get('ships_from_title')
                 idx = variant_index_from_supplier_sku(self.product, change.get('sku'), variants, ships_from_id, ships_from_title)
                 if variants is not None and idx is not None:
-                    change['variant_id'] = product_data['variants'][idx]['id']
-                    title = product_data['variants'][idx].get('title')
+                    change['variant_id'] = api_product_data['variants'][idx]['id']
+                    title = api_product_data['variants'][idx].get('title')
                     if title is None:
-                        title = ' / '.join(product_data['variants'][idx].get('variant', []))
+                        title = ' / '.join(api_product_data['variants'][idx].get('variant', []))
                     change['variant_title'] = title
 
                 if variants is None and idx is not None:
@@ -313,11 +319,11 @@ class ProductChange(models.Model):
 
         return None
 
-    def send_hook_event(self, product_data):
+    def send_hook_event(self, api_product_data):
         for category in list(settings.PRICE_MONITOR_EVENTS.keys()):
             changes = self.get_data(category)
             for i, change in enumerate(changes):
-                payload = self.to_dict(product_data, category, i)
+                payload = self.to_dict(api_product_data, category, i)
                 if payload is not None:
                     raw_hook_event.send(
                         sender=None,

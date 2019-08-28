@@ -25,6 +25,8 @@ def reset_product_monitor(store):
         store.products.filter(monitor_id__gt=0).update(monitor_id=0)
     elif store.__class__.__name__ == 'GrooveKartStore' and store.products.count() < 2000:
         store.products.filter(monitor_id__gt=0).update(monitor_id=0)
+    elif store.__class__.__name__ == 'WooStore' and store.products.count() < 2000:
+        store.products.filter(monitor_id__gt=0).update(monitor_id=0)
 
 
 def unmonitor_store(store):
@@ -34,6 +36,8 @@ def unmonitor_store(store):
         dropified_type = 'chq'
     elif store.__class__.__name__ == 'GrooveKartStore':
         dropified_type = 'gkart'
+    elif store.__class__.__name__ == 'WooStore':
+        dropified_type = 'woo'
 
     rep = requests.delete(
         url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products'),
@@ -125,6 +129,8 @@ def monitor_product(product, stdout=None):
         dropified_type = 'chq'
     elif product.__class__.__name__ == 'GrooveKartProduct':
         dropified_type = 'gkart'
+    elif product.__class__.__name__ == 'WooProduct':
+        dropified_type = 'woo'
 
     webhook_url = app_link('webhook/price-monitor/product', product=product.id, dropified_type=dropified_type)
     rep = None
@@ -242,7 +248,7 @@ def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=N
 
     if found_variant_id is not None:
         for idx, variant in enumerate(variants):
-            # Shopify / CHQ
+            # Shopify / CHQ / Woo
             if variant.get('id') == safe_int(found_variant_id):
                 return idx
             # GrooveKart

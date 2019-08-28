@@ -1,0 +1,171 @@
+{% load static %}
+{% load template_helper %}
+
+<table class="table products-changes">
+    <thead>
+        <tr>
+            <th>Category</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in product_changes %}
+            {% for change in item.changes.product.offline %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">Availability</td>
+                    <td>
+                        {% if not change.new_value %}
+                            <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">This product</a> is now <b style="color:green">Online</b>
+                        {% else %}
+                            <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">This product</a> is now <b style="color:red">Offline</b>
+                        {% endif %}
+                    </td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td></td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+
+            {% for change in item.changes.variants.price %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">Price</td>
+                    <td>The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a> has changed</td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td><a class="view-details" href="#">View Details</a></td>
+                </tr>
+                <tr class="details">
+                    <td class="well" colspan="4">
+                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                            <div class="col-md-offset-1 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-2"></div>
+                            <div class="col-md-2"><b>Old Price</b></div>
+                            <div class="col-md-2"><b>New Price</b></div>
+                            <div class="col-md-2"><b>WooCommerce</b></div>
+                        </div>
+
+                {% endif %}
+                        <div class="row">
+                            <div class="col-md-offset-1 col-md-3">{{change.sku}}</div>
+                            <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
+                            <div class="col-md-2">{% money_format change.old_value store %}</div>
+                            <div class="col-md-2">{% money_format change.new_value store %}</div>
+                            <div class="col-md-2">
+                            {% if change.woo_value_label %}
+                            {{ change.woo_value_label }}
+                            {% else %}
+                            {% money_format change.woo_value store %}
+                            {% endif %}
+                            </div>
+                        </div>
+                {% if forloop.last %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+
+            {% for change in item.changes.variants.quantity %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">Quantity</td>
+                    <td>The <b>Quantity</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a> has changed</td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td><a class="view-details" href="#">View Details</a></td>
+                </tr>
+                <tr class="details">
+                    <td class="well" colspan="4">
+                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                            <div class="col-md-offset-1 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-2"></div>
+                            <div class="col-md-2"><b>Old Quantity</b></div>
+                            <div class="col-md-2"><b>New Quantity</b></div>
+                            <div class="col-md-2"><b>WooCommerce</b></div>
+                        </div>
+
+                {% endif %}
+                        <div class="row">
+                            <div class="col-md-offset-1 col-md-3">{{change.sku}}</div>
+                            <div class="col-md-2">{% price_diff change.old_value change.new_value True %}</div>
+                            <div class="col-md-2">{{change.old_value}}</div>
+                            <div class="col-md-2">{{change.new_value}}</div>
+                            <div class="col-md-2">{{change.woo_value}}</div>
+                        </div>
+                {% if forloop.last %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+            {% for change in item.changes.variants.var_added %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">New Variant</td>
+                    <td>A <b>new variant</b> has been added to <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a></td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td><a class="view-details" href="#">View Details</a></td>
+                </tr>
+                <tr class="details">
+                    <td class="well" colspan="4">
+                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                            <div class="col-md-offset-1 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-2"></div>
+                        </div>
+                {% endif %}
+                        <div class="row">
+                            <div class="col-md-offset-1 col-md-3" style="color:green">
+                                {{change.sku}}
+                            </div>
+                            <div class="col-md-2"></div>
+                        </div>
+                {% if forloop.last %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+            {% for change in item.changes.variants.var_removed %}
+                {% if forloop.first %}
+                <tr class="header">
+                    <td class="category">Removed Variant</td>
+                    <td>A variant has been removed from <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a></td>
+                    <td>{{item.qelem.updated_at|date}}</td>
+                    <td><a class="view-details" href="#">View Details</a></td>
+                </tr>
+                <tr class="details">
+                    <td class="well" colspan="4">
+                        <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
+                            <div class="col-md-offset-1 col-md-3"><b>Variant</b></div>
+                            <div class="col-md-2"></div>
+                        </div>
+                {% endif %}
+                        <div class="row">
+                            <div class="col-md-offset-1 col-md-3" style="color:red">
+                                {{change.sku}}
+                            </div>
+                            <div class="col-md-2"></div>
+                        </div>
+                {% if forloop.last %}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+        {% empty %}
+            <tr>
+                <td class="text-center" colspan="4">
+                    <i>No alerts to display at this time</i>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% include "partial/paginator.html" %}
+
+<script type="text/javascript">
+    $('.products-changes .view-details').click(function (e) {
+        e.preventDefault();
+
+        $(this).parents('tr').next('.details').toggle();
+    });
+</script>

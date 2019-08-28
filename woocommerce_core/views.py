@@ -5,6 +5,8 @@ import arrow
 import jwt
 import requests
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 from django.conf import settings
 from django.contrib import messages
 from django.db.models import Q
@@ -15,9 +17,10 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse, reverse_lazy
 from django.core.cache import cache, caches
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import get_user_model
+from django.core.cache.utils import make_template_fragment_key
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
@@ -47,6 +50,150 @@ from .utils import (
     woo_customer_address,
     get_product_data,
 )
+
+from . import utils
+
+from product_alerts.models import ProductChange
+from product_alerts.utils import variant_index_from_supplier_sku
+
+
+@login_required
+def product_alerts(request):
+    if not request.user.can('price_changes.use'):
+        return render(request, 'upgrade.html', {'selected_menu': 'products:alerts'})
+
+    show_hidden = True if request.GET.get('hidden') else False
+
+    product = request.GET.get('product')
+    if product:
+        product = get_object_or_404(WooProduct, id=product)
+        permissions.user_can_view(request.user, product)
+
+    post_per_page = settings.ITEMS_PER_PAGE
+    page = safe_int(request.GET.get('page'), 1)
+
+    store = utils.get_store_from_request(request)
+    if not store:
+        messages.warning(request, 'Please add at least one store before using the Alerts page.')
+        return HttpResponseRedirect('/woo/')
+
+    ProductChange.objects.filter(user=request.user.models_user,
+                                 woo_product__store=None).delete()
+
+    changes = ProductChange.objects.select_related('woo_product') \
+                                   .select_related('woo_product__default_supplier') \
+                                   .filter(user=request.user.models_user,
+                                           woo_product__store=store)
+
+    if request.user.is_subuser:
+        store_ids = request.user.profile.subuser_woo_permissions.filter(
+            codename='view_alerts'
+        ).values_list(
+            'store_id', flat=True
+        )
+        changes = changes.filter(woo_product__store_id__in=store_ids)
+
+    if product:
+        changes = changes.filter(woo_product=product)
+    else:
+        changes = changes.filter(hidden=show_hidden)
+
+    category = request.GET.get('category')
+    if category:
+        changes = changes.filter(categories__icontains=category)
+    product_type = request.GET.get('product_type', '')
+    if product_type:
+        changes = changes.filter(woo_product__product_type__icontains=product_type)
+
+    changes = changes.order_by('-updated_at')
+
+    paginator = SimplePaginator(changes, post_per_page)
+    page = min(max(1, page), paginator.num_pages)
+    page = paginator.page(page)
+    changes = page.object_list
+
+    products = []
+    product_variants = {}
+    for i in changes:
+        woo_id = i.product.source_id
+        if woo_id and str(woo_id) not in products:
+            products.append(str(woo_id))
+    try:
+        if len(products):
+            products = utils.get_woo_products(store=store, product_ids=products)
+            for p in products:
+                product_variants[str(p['id'])] = p
+    except:
+        raven_client.captureException()
+
+    product_changes = []
+    for i in changes:
+        change = {'qelem': i}
+        change['id'] = i.id
+        change['data'] = i.get_data()
+        change['changes'] = i.get_changes_map(category)
+        change['product'] = i.product
+        change['woo_link'] = i.product.woocommerce_url
+        change['original_link'] = i.product.get_original_info().get('url')
+        p = product_variants.get(str(i.product.source_id), {})
+        p['variants'] = i.product.retrieve_variants()
+        variants = p.get('variants', None)
+        for c in change['changes']['variants']['quantity']:
+            if variants is not None and len(variants) > 0:
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                if index is not None:
+                    if variants[index]['manage_stock']:
+                        c['woo_value'] = variants[index]['stock_quantity']
+                    else:
+                        c['woo_value'] = "Unmanaged"
+                else:
+                    c['woo_value'] = "Not Found"
+            elif len(variants) == 0:
+                if p['manage_stock']:
+                    c['woo_value'] = p['stock_quantity']
+                else:
+                    c['woo_value'] = "Unmanaged"
+            else:
+                c['woo_value'] = "Not Found"
+        for c in change['changes']['variants']['price']:
+            if variants is not None and len(variants) > 0:
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                if index is not None:
+                    c['woo_value'] = variants[index]['price']
+                else:
+                    c['woo_value_label'] = "Not Found"
+            elif len(variants) == 0:
+                c['woo_value'] = p['price']
+            else:
+                c['woo_value_label'] = "Not Found"
+
+        product_changes.append(change)
+
+    if not show_hidden:
+        ProductChange.objects.filter(user=request.user.models_user) \
+                             .filter(id__in=[i['id'] for i in product_changes]) \
+                             .update(seen=True)
+
+    # Allow sending notification for new changes
+    cache.delete('product_change_%d' % request.user.models_user.id)
+
+    # Delete sidebar alert info cache
+    cache.delete(make_template_fragment_key('alert_info', [request.user.id]))
+
+    tpl = 'woocommerce/product_alerts_tab.html' if product else 'woocommerce/product_alerts.html'
+    return render(request, tpl, {
+        'product_changes': product_changes,
+        'show_hidden': show_hidden,
+        'product': product,
+        'paginator': paginator,
+        'current_page': page,
+        'page': 'product_alerts',
+        'store': store,
+        'category': category,
+        'product_type': product_type,
+        'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
+        'selected_menu': 'products:alerts'
+    })
 
 
 class CallbackEndpoint(View):

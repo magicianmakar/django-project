@@ -214,6 +214,27 @@ def product_export(store_id, product_id, user_id, publish=None):
             path = 'products/{}/variations/batch'.format(product.source_id)
             r = store.get_wcapi(timeout=60).post(path, {'create': variant_list})
             r.raise_for_status()
+            variants = r.json()['create']
+
+            if product.default_supplier:
+                variants_mapping = {}
+                for variant in variants:
+                    variant_id = variant.get('id')
+                    if variant_id not in variants_mapping:
+                        variants_mapping[variant_id] = []
+
+                    variant_titles = [{'title': t.get('option')} for t in variant.get('attributes')]
+                    variants_mapping[variant_id].extend(variant_titles)
+
+                for variant_id in variants_mapping:
+                    variants_mapping[variant_id] = json.dumps(variants_mapping[variant_id])
+
+                if variants_mapping:
+                    product.default_supplier.variants_map = json.dumps(variants_mapping)
+                else:
+                    product.default_supplier.variants_map = None
+
+                product.default_supplier.save()
 
         store.pusher_trigger('product-export', {
             'success': True,

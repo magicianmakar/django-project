@@ -677,9 +677,12 @@ def get_woo_products_count(store):
     return WooListQuery(store, 'products').count()
 
 
-def get_woo_products(store, page=1, limit=50, all_products=False):
+def get_woo_products(store, page=1, limit=50, all_products=False, product_ids=None):
     if not all_products:
-        path = 'products?{}'.format(urlencode({'page': page, 'per_page': limit}))
+        params = {'page': page, 'per_page': limit}
+        if product_ids is not None:
+            params['include'] = ','.join(product_ids)
+        path = 'products?{}'.format(urlencode(params))
         r = store.wcapi.get(path)
         r.raise_for_status()
         for product in r.json():

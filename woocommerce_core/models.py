@@ -1,6 +1,6 @@
 import json
 import re
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 from pusher import Pusher
 from woocommerce import API
@@ -150,6 +150,9 @@ class WooProduct(ProductBase):
 
     parent_product = models.ForeignKey('WooProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Duplicate of product')
 
+    monitor_id = models.IntegerField(null=True)
+    config = models.TextField(null=True, blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -206,6 +209,12 @@ class WooProduct(ProductBase):
 
         super(WooProduct, self).save(*args, **kwargs)
 
+    def get_config(self):
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
+
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)
@@ -258,6 +267,39 @@ class WooProduct(ProductBase):
         r = self.store.wcapi.get('settings/products/woocommerce_weight_unit')
         r.raise_for_status()
         self.update_data({'weight_unit': r.json().get('value', '')})
+
+    def get_images(self):
+        try:
+            return json.loads(self.data)['images']
+        except:
+            return []
+
+    def get_image(self):
+        images = self.get_images()
+        return images[0] if images else None
+
+    def get_original_info(self):
+        if self.has_supplier():
+            url = self.default_supplier.product_url
+
+            try:
+                domain = urlparse(url).hostname
+            except:
+                domain = None
+
+            if domain is None:
+                return domain
+
+            for i in ['com', 'co.uk', 'org', 'net']:
+                domain = domain.replace('.%s' % i, '')
+
+            domain = domain.split('.')[-1]
+
+            return {
+                'domain': domain,
+                'source': domain.title(),
+                'url': url
+            }
 
     def sync(self):
         if not self.source_id:

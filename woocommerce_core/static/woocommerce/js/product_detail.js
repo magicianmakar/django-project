@@ -47,6 +47,12 @@ function showProductInfo(rproduct) {
     }
 }
 
+$("#alert_price_change").change(function() {
+    var alert_price_change = $(this).val();
+    $(".price-update-option").hide();
+    $(".price-update-option[data-value='" + alert_price_change + "']").show();
+});
+$("#alert_price_change").change();
 
 $("a.add-variant").click(function (e) {
     e.preventDefault();
@@ -747,7 +753,7 @@ $('.product-alerts-tab').click(function () {
         $('.product-alerts-loading i').addClass('fa-spin');
         $('.product-alerts-loading').show();
 
-        var url = '/products/update?product=' + $(this).attr('product-id');
+        var url = '/woo/products/update?product=' + $(this).attr('product-id');
         if ($(this).prop('page')) {
             url = url + '&page=' + $(this).prop('page');
         }
