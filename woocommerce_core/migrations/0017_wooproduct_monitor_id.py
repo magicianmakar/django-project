@@ -8,7 +8,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('woocommerce_core', '0017_wooproduct_config'),
+        ('woocommerce_core', '0016_auto_20190814_1537'),
     ]
 
     operations = [
