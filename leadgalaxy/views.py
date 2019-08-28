@@ -2224,6 +2224,8 @@ def get_shipping_info(request):
     country_code = aliexpress_country_code_map(country)
     country_name = country_from_code(country)
 
+    zip_code = request.GET.get('zip_code', '')
+
     if request.GET.get('selected'):
         request.user.set_config('_shipping_country', country)
 
@@ -2282,7 +2284,7 @@ def get_shipping_info(request):
 
     try:
         if supplier_type == 'ebay':
-            shippement_data = utils.ebay_shipping_info(item_id, country_name)
+            shippement_data = utils.ebay_shipping_info(item_id, country_name, zip_code)
         else:
             shippement_data = utils.aliexpress_shipping_info(item_id, country_code)
     except requests.Timeout:

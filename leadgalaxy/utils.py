@@ -466,7 +466,7 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
     return shippement_data
 
 
-def ebay_shipping_info(item_id, country_name):
+def ebay_shipping_info(item_id, country_name, zip_code=''):
     from shopified_core.shipping_helper import ebay_country_code
 
     country_code = ebay_country_code(country_name)
@@ -482,6 +482,7 @@ def ebay_shipping_info(item_id, country_name):
         params={
             'product': item_id,
             'country': country_code,
+            'zip': zip_code,
         })
 
     try:

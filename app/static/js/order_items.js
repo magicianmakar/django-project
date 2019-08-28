@@ -272,6 +272,7 @@
             'product': $(this).attr('product-id'),
             'country': $(this).attr('country-code'),
             'type': $(group).attr('supplier-type'),
+            'zip_code': btn.parents('.order').find('.zip-code').text(),
             'for': 'order'
         };
         if (window.storeType) {
