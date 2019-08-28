@@ -358,6 +358,28 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
+    def post_image_position(self, request, user, data):
+        try:
+            store = ShopifyStore.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ShopifyStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        api_url = '/admin/products/{}/images/{}.json'.format(data.get('product'), data.get('image_id'))
+        api_url = store.get_link(api_url, api=True)
+
+        api_data = {
+            'image': {
+                'id': data.get('image_id'),
+                'position': data.get('position')
+            }
+        }
+
+        requests.put(api_url, json=api_data)
+
+        return self.api_success()
+
     def post_variant_image(self, request, user, data):
         try:
             store = ShopifyStore.objects.get(id=data.get('store'))

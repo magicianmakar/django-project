@@ -259,7 +259,7 @@
             </div>
 
             <div class="buttons col-xs-12">
-                <div class="row text-center" id="var-images">
+                <div class="row text-center" id="var-images" data-store="{{product.qelem.store_id}}" data-productid="{{product.qelem.shopify_id}}">
                 </div>
 
                 <div class="row">
@@ -1103,6 +1103,7 @@
 <link href="//cdnjs.cloudflare.com/ajax/libs/blueimp-gallery/2.33.0/css/blueimp-gallery.min.css" rel="stylesheet" />
 
 {% compress css %}
+<link href="{% static 'libs/bower_components/dragula.js/dist/dragula.min.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
 <link href="{% static 'css/trix.css' %}" rel="stylesheet">
@@ -1278,6 +1279,7 @@ $(function() {
 
     {% compress js %}
     <script type="text/javascript" src="{% static 'js/tag-it.min.js' %}"></script>
+    <script src="{% static 'libs/bower_components/dragula.js/dist/dragula.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/csdk/4.x/js/editor.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/uuid-js/lib/uuid.js' %}"></script>

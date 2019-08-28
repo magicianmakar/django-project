@@ -50,6 +50,17 @@
     top: 5px;
 }
 
+.var-image-block .image-move {
+    background-color: #c2c2c2;
+    border-radius: 5px;
+    color: #FFFFFF;
+    cursor: move;
+    display: none;
+    font-weight: bolder;
+    position: absolute;
+    top: 5px;
+}
+
 .var-image-block .download-image {
     border-radius: 5px;
     cursor: pointer;

@@ -1006,6 +1006,49 @@ function indexOfImages(images, link) {
     return -1;
 }
 
+function reorderImages() {
+    $('#var-images .var-image-block').each(function(i, el) {
+        product.images[i] = $(el).attr('image-url');
+    });
+    renderImages();
+}
+
+dragula([document.getElementById('var-images')], {
+        moves: function(el, container, handle) {
+            return (/image\-move/).test(handle.className);
+        }
+    }).on('grag', function(el) {
+    }).on('drop', function(el) {
+        if (config.shopify_images) {
+            var f_img_id = $(el).find('img').attr('image-id');
+            var data = {
+                'store': $('#var-images').data('store'),
+                'product': $('#var-images').data('productid'),
+                'image_id': config['shopify_images'][parseInt(f_img_id)]['id'],
+                'position':  $(el).index() + 1
+            };
+            
+            $.ajax({
+                url: api_url('image-position', 'shopify'),
+                type: 'POST',
+                data: data,
+                dataType: 'json',
+                success: function(data) {
+                    reorderImages();
+                },
+                error: function(data) {
+                    renderImages();
+                },
+            });
+        } else {
+            reorderImages();
+        }
+    }).on('over', function(el, container) {
+        $(el).css('cursor', 'move');
+    }).on('out', function(el, container) {
+        $(el).css('cursor', 'inherit');
+    });
+
 function renderImages() {
     $('#var-images').empty();
 
@@ -1076,6 +1119,12 @@ function renderImages() {
                 'html': '<i class="fa fa-picture-o"></i></a>'
             }));
         }
+
+        buttons.push($('<button>', {
+            'title': "Move",
+            'class': "btn btn-default btn-xs itooltip image-move",
+            'html': '<i class="fa fa-bars order-handle"></i>'
+        }));
 
         $.each(buttons, function (i, el) {
             d.append(el.css({
