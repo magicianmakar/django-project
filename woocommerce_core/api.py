@@ -1,5 +1,6 @@
 import re
 import json
+from functools import cmp_to_key
 from lxml import etree
 from urllib.parse import urlencode, parse_qs, urlparse
 
@@ -274,6 +275,29 @@ class WooStoreApi(ApiBase):
                     product['image'] = {'src': product['images'][0]['src']}
                 products.append(product)
 
+            if data.get('connected') or data.get('hide_connected'):
+                connected = {}
+                for p in store.products.filter(source_id__in=[i['id'] for i in products]).values_list('id', 'source_id'):
+                    connected[p[1]] = p[0]
+
+                for idx, i in enumerate(products):
+                    products[idx]['connected'] = connected.get(i['id'])
+
+                def connected_cmp(a, b):
+                    if a['connected'] and b['connected']:
+                        return a['connected'] < b['connected']
+                    elif a['connected']:
+                        return 1
+                    elif b['connected']:
+                        return -1
+                    else:
+                        return 0
+
+                products = sorted(products, key=cmp_to_key(connected_cmp), reverse=True)
+
+                if data.get('hide_connected'):
+                    products = [p for p in products if not p.get('connected')]
+
             return self.api_success({
                 'products': products,
                 'page': page,
@@ -471,6 +495,15 @@ class WooStoreApi(ApiBase):
         product.save()
 
         return self.api_success({'reload': not data.get('export')})
+
+    def post_bundles_mapping(self, request, user, data):
+        product = WooProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        product.set_bundle_mapping(data.get('mapping'))
+        product.save()
+
+        return self.api_success()
 
     def post_supplier_default(self, request, user, data):
         product = WooProduct.objects.get(id=data.get('product'))

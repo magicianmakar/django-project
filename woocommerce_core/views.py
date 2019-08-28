@@ -17,7 +17,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse, reverse_lazy
 from django.core.cache import cache, caches
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import get_user_model
 from django.core.cache.utils import make_template_fragment_key
@@ -27,6 +27,7 @@ from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
+    app_link,
     aws_s3_context,
     safe_int,
     clean_query_id,
@@ -194,6 +195,56 @@ def product_alerts(request):
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
         'selected_menu': 'products:alerts'
     })
+
+
+def autocomplete(request, target):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'User login required'})
+
+    q = request.GET.get('query', '').strip()
+    if not q:
+        q = request.GET.get('term', '').strip()
+
+    if not q:
+        return JsonResponse({'query': q, 'suggestions': []}, safe=False)
+
+    if target == 'variants':
+        try:
+            store = WooStore.objects.get(id=request.GET.get('store'))
+            permissions.user_can_view(request.user, store)
+
+            product = WooProduct.objects.get(id=request.GET.get('product'))
+            permissions.user_can_edit(request.user, product)
+
+            api_product = product.sync()
+
+            first_image = api_product['images'][0] if len(api_product['images']) else ''
+            results = []
+            if 'variants' in api_product:
+                for v in api_product['variants']:
+                    results.append({
+                        'value': " / ".join(v['variant']),
+                        'data': v['id'],
+                        'image': v.get('image', {}).get('src', first_image),
+                    })
+
+            if not len(results):
+                results.append({
+                    'value': "Default",
+                    'data': api_product['id'],
+                    'image': first_image
+                })
+
+            return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
+        except WooStore.DoesNotExist:
+            return JsonResponse({'error': 'Store not found'}, status=404)
+
+        except WooProduct.DoesNotExist:
+            return JsonResponse({'error': 'Product not found'}, status=404)
+
+    else:
+        return JsonResponse({'error': 'Unknown target'})
 
 
 class CallbackEndpoint(View):
@@ -418,6 +469,51 @@ class MappingSupplierView(DetailView):
         context['selected_menu'] = 'products:all'
 
         self.add_supplier_info(woocommerce_product.get('variants', []), suppliers_map)
+
+        return context
+
+
+class MappingBundleView(DetailView):
+    model = WooProduct
+    template_name = 'woocommerce/mapping_bundle.html'
+    context_object_name = 'product'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('woocommerce.use'):
+            raise permissions.PermissionDenied()
+
+        return super(MappingBundleView, self).dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(MappingBundleView, self).get_context_data(**kwargs)
+
+        product = self.object
+        permissions.user_can_view(self.request.user, self.object)
+
+        context['api_product'] = product.sync()
+
+        bundle_mapping = []
+
+        for i, v in enumerate(context['api_product']['variants']):
+            v['products'] = product.get_bundle_mapping(v['id'], default=[])
+
+            bundle_mapping.append(v)
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('woo:products_list')},
+            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('woo:products_list'), self.object.store.id)},
+            {'title': self.object.title, 'url': reverse('woo:product_detail', args=[self.object.id])},
+            'Bundle Mapping'
+        ]
+
+        context.update({
+            'store': product.store,
+            'product_id': product.id,
+            'product': product,
+            'bundle_mapping': bundle_mapping,
+            'selected_menu': 'products:all',
+        })
 
         return context
 
@@ -726,25 +822,77 @@ class OrdersList(ListView):
                 item['image'] = next(iter(data['images']), {}).get('src') if data else None
                 variant_id = item.get('variation_id')
 
-                if product and product.has_supplier():
-                    supplier = self.get_product_supplier(product, variant_id)
-                    order_data = self.get_order_data(order, item, product, supplier)
-                    order_data['variant'] = self.get_order_data_variant(product, item)
-                    order_data_id = order_data['id']
-                    orders_cache['woo_order_{}'.format(order_data_id)] = order_data
-                    attributes = [variant['title'] for variant in order_data['variant']]
-                    item['attributes'] = ', '.join(attributes)
-                    item['order_data_id'] = order_data_id
-                    item['order_data'] = order_data
-                    item['supplier'] = supplier
-                    item['supplier_type'] = supplier.supplier_type()
-                    item['shipping_method'] = self.get_item_shipping_method(
-                        product, item, variant_id, country_code)
+                bundle_data = []
+                if product:
+                    bundles = product.get_bundle_mapping(variant_id)
+                    if bundles:
+                        product_bundles = []
+                        for idx, b in enumerate(bundles):
+                            b_product = WooProduct.objects.filter(id=b['id']).first()
+                            if not b_product:
+                                continue
 
-                key = '{}_{}_{}'.format(order['id'], item['id'], item['product_id'])
-                item['order_track'] = order_track_by_item.get(key)
-                if item['order_track']:
-                    order['tracked_lines'] += 1
+                            b_variant_id = b_product.get_real_variant_id(b['variant_id'])
+                            b_supplier = b_product.get_supplier_for_variant(b_variant_id)
+                            if b_supplier:
+                                b_shipping_method = b_product.get_shipping_for_variant(
+                                    supplier_id=b_supplier.id,
+                                    variant_id=b_variant_id,
+                                    country_code=country_code)
+                            else:
+                                continue
+
+                            b_variant_mapping = b_product.get_variant_mapping(name=b_variant_id, for_extension=True, mapping_supplier=True)
+                            if b_variant_id and b_variant_mapping:
+                                b_variants = b_variant_mapping
+                            else:
+                                b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
+
+                            product_bundles.append({
+                                'product': b_product,
+                                'supplier': b_supplier,
+                                'shipping_method': b_shipping_method,
+                                'quantity': b['quantity'] * item['quantity'],
+                                'data': b
+                            })
+
+                            bundle_data.append({
+                                'title': b_product.title,
+                                'quantity': b['quantity'] * item['quantity'],
+                                'product_id': b_product.id,
+                                'source_id': b_supplier.get_source_id(),
+                                'order_url': app_link('woo/orders/place', supplier=b_supplier.id, SABundle=True),
+                                'variants': b_variants,
+                                'shipping_method': b_shipping_method,
+                                'country_code': country_code,
+                                'supplier_type': b_supplier.supplier_type(),
+                            })
+
+                        item['bundles'] = product_bundles
+                        item['is_bundle'] = len(bundle_data) > 0
+                        order['have_bundle'] = True
+
+                    if product.has_supplier():
+                        supplier = self.get_product_supplier(product, variant_id)
+                        order_data = self.get_order_data(order, item, product, supplier)
+                        order_data['products'] = bundle_data
+                        order_data['is_bundle'] = len(bundle_data) > 0
+                        order_data['variant'] = self.get_order_data_variant(product, item)
+                        order_data_id = order_data['id']
+                        orders_cache['woo_order_{}'.format(order_data_id)] = order_data
+                        attributes = [variant['title'] for variant in order_data['variant']]
+                        item['attributes'] = ', '.join(attributes)
+                        item['order_data_id'] = order_data_id
+                        item['order_data'] = order_data
+                        item['supplier'] = supplier
+                        item['supplier_type'] = supplier.supplier_type()
+                        item['shipping_method'] = self.get_item_shipping_method(
+                            product, item, variant_id, country_code)
+
+                    key = '{}_{}_{}'.format(order['id'], item['id'], item['product_id'])
+                    item['order_track'] = order_track_by_item.get(key)
+                    if item['order_track']:
+                        order['tracked_lines'] += 1
 
             if order['tracked_lines'] != 0 and \
                     order['tracked_lines'] < order['lines_count'] and \

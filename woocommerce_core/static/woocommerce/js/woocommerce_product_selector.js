@@ -20,7 +20,8 @@ function woocommerceProductSearch (e) {
         data: {
             store: store,
             query: query,
-            page: $(this).prop('page')
+            page: $(this).prop('page'),
+            connected: true,
         },
         context: {
             store: store
@@ -42,7 +43,11 @@ function woocommerceProductSearch (e) {
                     e.preventDefault();
 
                     if (window.woocommerceProductSelected) {
-                        window.woocommerceProductSelected(store, $(this).data('product-id'));
+                        window.woocommerceProductSelected(store, $(this).data('product-id'), {
+                            title: $(this).data('product-title'),
+                            image: $(this).data('product-image'),
+                            shopified: $(this).data('shopified-id'),
+                        });
                     }
                 });
 

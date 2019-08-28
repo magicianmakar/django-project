@@ -143,9 +143,11 @@ class WooProduct(ProductBase):
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='WooCommerce Product ID')
     default_supplier = models.ForeignKey('WooSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
+    config = models.TextField(null=True, blank=True)
     variants_map = models.TextField(default='', blank=True)
     supplier_map = models.TextField(default='', null=True, blank=True)
     shipping_map = models.TextField(default='', null=True, blank=True)
+    bundle_map = models.TextField(null=True, blank=True)
     mapping_config = models.TextField(null=True, blank=True)
 
     parent_product = models.ForeignKey('WooProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Duplicate of product')
@@ -342,6 +344,23 @@ class WooProduct(ProductBase):
         supplier.is_default = True
         supplier.save()
 
+    def get_config(self):
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
+
+    def get_real_variant_id(self, variant_id):
+        """
+        Used to get current variant id from previously delete variant id
+        """
+
+        config = self.get_config()
+        if config.get('real_variant_map'):
+            return config.get('real_variant_map').get(str(variant_id), variant_id)
+
+        return variant_id
+
     def get_mapping_config(self):
         try:
             return json.loads(self.mapping_config)
@@ -386,6 +405,23 @@ class WooProduct(ProductBase):
 
         if commit:
             self.save()
+
+    def get_bundle_mapping(self, variant=None, default=[]):
+        try:
+            bundle_map = json.loads(self.bundle_map)
+        except:
+            bundle_map = {}
+
+        if variant:
+            return bundle_map.get(str(variant), default)
+        else:
+            return bundle_map
+
+    def set_bundle_mapping(self, mapping):
+        bundle_map = self.get_bundle_mapping()
+        bundle_map.update(mapping)
+
+        self.bundle_map = json.dumps(bundle_map)
 
     def get_supplier_for_variant(self, variant_id):
         """

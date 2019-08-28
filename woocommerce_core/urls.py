@@ -14,6 +14,8 @@ urlpatterns = [
     url(r'^product/(?P<pk>[0-9]+)$', woocommerce_core.views.ProductDetailView.as_view(), name='product_detail'),
     url(r'^product/mapping/(?P<pk>[0-9]+)$', woocommerce_core.views.ProductMappingView.as_view(), name='product_mapping'),
     url(r'^product/mapping/supplier/(?P<pk>[0-9]+)$', woocommerce_core.views.MappingSupplierView.as_view(), name='mapping_supplier'),
+    url(r'^product/mapping/bundle/(?P<pk>[0-9]+)$', woocommerce_core.views.MappingBundleView.as_view(), name='mapping_bundle'),
+    url(r'^autocomplete/(?P<target>[a-z-]+)$', woocommerce_core.views.autocomplete),
     url(r'^product/variants/(?P<store_id>[0-9]+)/(?P<pid>[0-9]+)$', woocommerce_core.views.VariantsEditView.as_view(), name='variants_edit'),
     url(r'^orders$', woocommerce_core.views.OrdersList.as_view(), name='orders_list'),
     url(r'^orders/track$', woocommerce_core.views.OrdersTrackList.as_view(), name='orders_track'),
