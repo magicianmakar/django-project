@@ -441,8 +441,8 @@ class OrdersList(ListView):
     def get_order_data(self, order, item, product, supplier):
         store = self.get_store()
         models_user = self.request.user.models_user
-        fix_aliexpress_address = models_user.get_config('fix_aliexpress_address', False)
-        fix_aliexpress_city = models_user.get_config('fix_aliexpress_city', False)
+        fix_aliexpress_address = models_user.get_config('fix_aliexpress_address', True)
+        fix_aliexpress_city = models_user.get_config('fix_aliexpress_city', True)
         german_umlauts = models_user.get_config('_use_german_umlauts', False)
 
         country = order['shipping']['country'] or order['billing']['country']

@@ -332,7 +332,7 @@
                                 <div class="col-sm-3">
                                     <select id="auto_shopify_fulfill" name="auto_shopify_fulfill" class="form-control">
                                         <option value="disable" {% if not config.auto_shopify_fulfill or config.auto_shopify_fulfill == 'disable' %}selected="selected"{% endif %}>Disable</option>
-                                        <option value="enable" {% if config.auto_shopify_fulfill == 'enable' or config.auto_shopify_fulfill == 'hourly' or config.auto_shopify_fulfill == 'daily' %}selected="selected"{% endif %}>Enable</option>
+                                        <option value="enable" {% if config.auto_ordered_mark == None or config.auto_shopify_fulfill == 'enable' %}selected="selected"{% endif %}>Enable</option>
                                     </select>
                                 </div>
                             </div>
@@ -416,7 +416,7 @@
                                 </label>
                                 <div class="col-sm-6 col-xs-4">
                                     <input id="aliexpress_captcha" name="aliexpress_captcha" type="checkbox"
-                                           class="js-switch" {% if config.aliexpress_captcha %}checked{% endif %} />
+                                           class="js-switch" {% if config.aliexpress_captcha == None or config.aliexpress_captcha %}checked{% endif %} />
                                 </div>
                             </div>
                         </div>
@@ -433,7 +433,7 @@
                                 </label>
                                 <div class="col-sm-6 col-xs-4">
                                     <input type="checkbox" class="js-switch" id="fix_aliexpress_address"
-                                           name="fix_aliexpress_address" {% if config.fix_aliexpress_address %}checked="checked"{% endif %}>
+                                           name="fix_aliexpress_address" {% if config.fix_aliexpress_address == None or config.fix_aliexpress_address %}checked="checked"{% endif %}>
                                 </div>
                             </div>
                         </div>
@@ -448,7 +448,7 @@
                                 </label>
                                 <div class="col-sm-6 col-xs-4">
                                     <input type="checkbox" class="js-switch" id="fix_aliexpress_city"
-                                           name="fix_aliexpress_city" {% if config.fix_aliexpress_city %}checked="checked"{% endif %}>
+                                           name="fix_aliexpress_city" {% if config.fix_aliexpress_city == None or config.fix_aliexpress_city %}checked="checked"{% endif %}>
                                 </div>
                             </div>
                         </div>

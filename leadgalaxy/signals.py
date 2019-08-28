@@ -59,8 +59,8 @@ def invalidate_acp_users(sender, instance, created, **kwargs):
     cache.set('template.cache.acp_users.invalidate', True, timeout=3600)
 
     if not created and not instance.is_subuser:
-        instance.get_shopify_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
-        instance.get_chq_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', ''))
+        instance.get_shopify_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', 'enable'))
+        instance.get_chq_stores().update(auto_fulfill=instance.get_config_value('auto_shopify_fulfill', 'enable'))
 
 
 @receiver(post_save, sender=ShopifyOrderTrack)

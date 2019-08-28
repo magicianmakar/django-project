@@ -3411,8 +3411,8 @@ def orders_view(request):
     order_custom_line_attr = bool(models_user.get_config('order_custom_line_attr'))
     use_relative_dates = bool(models_user.get_config('use_relative_dates', True))
     fix_order_variants = models_user.get_config('fix_order_variants')
-    fix_aliexpress_address = models_user.get_config('fix_aliexpress_address', False)
-    fix_aliexpress_city = models_user.get_config('fix_aliexpress_city', False)
+    fix_aliexpress_address = models_user.get_config('fix_aliexpress_address', True)
+    fix_aliexpress_city = models_user.get_config('fix_aliexpress_city', True)
     german_umlauts = models_user.get_config('_use_german_umlauts', False)
     show_actual_supplier = models_user.get_config('_show_actual_supplier', False) or models_user.id in [883, 21064, 24767]
     order_risk_all_getaways = models_user.get_config('_order_risk_all_getaways', False)

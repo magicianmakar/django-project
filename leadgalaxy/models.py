@@ -747,7 +747,7 @@ class ShopifyStore(StoreBase):
             self.store_hash = get_random_string(32, 'abcdef0123456789')
 
         try:
-            auto_fulfill = self.user.get_config('auto_shopify_fulfill')
+            auto_fulfill = self.user.get_config('auto_shopify_fulfill', 'enable')
 
             if auto_fulfill and self.auto_fulfill != auto_fulfill:
                 self.auto_fulfill = auto_fulfill

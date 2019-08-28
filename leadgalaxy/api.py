@@ -1913,7 +1913,7 @@ class ShopifyStoreApi(ApiBase):
         if not len(aliexpress_ids):
             return self.api_error('Aliexpress ID not set', status=422)
 
-        fix_aliexpress_address = user.models_user.get_config('fix_aliexpress_address')
+        fix_aliexpress_address = user.models_user.get_config('fix_aliexpress_address', True)
         german_umlauts = user.models_user.get_config('_use_german_umlauts')
 
         aliexpress_ids = [int(j) for j in aliexpress_ids]
