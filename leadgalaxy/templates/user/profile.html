@@ -17,7 +17,6 @@
                     <a data-toggle="tab" href="#tab-2" data-auto-hash="email" data-auto-click="true" aria-expanded="false">
                         Email {% if not shopify_apps_customer %}&amp; Password{% endif %}</a>
                 </li>
-                {% if not user.is_subuser %}
                 <li class="plan-tab">
                     <a data-toggle="tab" href="#tab-3" data-auto-hash="plan" data-auto-click="true" aria-expanded="false">
                         Plan &amp;
@@ -28,7 +27,6 @@
                         {% endif %}
                     </a>
                 </li>
-                {% endif %}
 
                 <li class="billing-tab" {% if shopify_apps_customer %}style="display:none"{% endif %}>
                     <a data-toggle="tab" href="#tab-4" data-auto-hash="billing" data-auto-click="true" aria-expanded="false">Billing</a>
@@ -222,7 +220,13 @@
                         </div>
                     </div>
                 </div>
-                {% if not user.is_subuser %}
+                {% if user.is_subuser %}
+                <div id="tab-3" class="tab-pane">
+                    <div class="panel-body">
+                        {% include "partial/plans/sub_user.html" %}
+                    </div>
+                </div>
+                {% else %}
                 <div id="tab-3" class="tab-pane">
                     <div class="panel-body">
                         <div class="row">

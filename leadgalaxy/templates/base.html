@@ -184,6 +184,12 @@
                     </li>
                     {% endif %}
 
+                    {% if user.is_subuser %}
+                    <li>
+                        <a href="/user/profile#plan">Sub User Plan</a>
+                    </li>
+                    {% endif %}
+
                     <li>
                         <div id="notification-bell"></div>
                     </li>
