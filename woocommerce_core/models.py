@@ -344,12 +344,6 @@ class WooProduct(ProductBase):
         supplier.is_default = True
         supplier.save()
 
-    def get_config(self):
-        try:
-            return json.loads(self.config)
-        except:
-            return {}
-
     def get_real_variant_id(self, variant_id):
         """
         Used to get current variant id from previously delete variant id

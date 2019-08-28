@@ -168,7 +168,7 @@ class ProductsApiTestCase(BaseTestCase):
             "variant": [{"sku": "sku-1-193", "title": "black"}, {"sku": "sku-2-201336106", "title": "United States"}],
             "ordered": False,
             "fast_checkout": True,
-            "solve": False
+            "solve": True
         }
 
         caches['orders'].set(f'order_{order_key}', data)
