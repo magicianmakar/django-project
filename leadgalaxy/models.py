@@ -717,7 +717,6 @@ class ShopifyStore(StoreBase):
         ordering = ['list_index', '-created_at']
 
     title = models.CharField(max_length=512, blank=True, default='')
-    currency_format = models.CharField(max_length=512, blank=True, null=True)
     api_url = models.CharField(max_length=512)
 
     # For OAuth App

@@ -8,6 +8,7 @@ class StoreBase(models.Model):
         abstract = True
 
     list_index = models.IntegerField(default=0)
+    currency_format = models.CharField(max_length=512, blank=True, null=True)
 
 
 class SupplierBase(models.Model):

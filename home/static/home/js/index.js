@@ -429,6 +429,30 @@
         $("#modal-store-tracking-url").modal('show');
     });
 
+    $('.change-currency').click(function(e) {
+        e.preventDefault();
+
+        var storeType = $(this).attr('store-type');
+        $.ajax({
+            url: api_url('currency', storeType),
+            type: 'GET',
+            data: {
+                store: $(this).attr('store-id'),
+                storeType: storeType
+            },
+            success: function(data) {
+                $('#currency-input').val(data.currency);
+                $('#currency-input').attr('store', data.store);
+                $('#currency-input').attr('store-type', storeType);
+            },
+            error: function(data) {
+                displayAjaxError('Store Currency', data);
+            }
+        });
+
+        $("#modal-store-currency").modal('show');
+    });
+
     $('.change-default-location').click(function(e) {
         e.preventDefault();
 
@@ -488,6 +512,36 @@
             },
             error: function(data) {
                 displayAjaxError('Custom Tracking URL', data);
+            },
+            complete: function () {
+                btn.bootstrapBtn('reset');
+            }
+        });
+    });
+
+    $('#save-currency-btn').click(function (e) {
+        e.preventDefault();
+
+        var btn = $(this);
+        btn.bootstrapBtn('loading');
+
+        var currency = $('#currency-input').val().trim();
+        var store = $('#currency-input').attr('store');
+        var storeType = $('#currency-input').attr('store-type');
+
+        $.ajax({
+            url: api_url('currency', storeType),
+            type: 'POST',
+            data: {
+                store: store,
+                currency: currency
+            },
+            success: function(data) {
+                toastr.success('Currency saved!', 'Store Currency');
+                $("#modal-store-currency").modal('hide');
+            },
+            error: function(data) {
+                displayAjaxError('Store Currency', data);
             },
             complete: function () {
                 btn.bootstrapBtn('reset');
@@ -604,6 +658,12 @@
         e.preventDefault();
 
         $('#custom-tracking-url-input').val($(this).data('url'));
+    });
+
+    $('.currency-example').click(function (e) {
+        e.preventDefault();
+
+        $('#currency-input').val($(this).data('amt'));
     });
 
     $('input[name="order_phone_number"]').on('keyup', function() {

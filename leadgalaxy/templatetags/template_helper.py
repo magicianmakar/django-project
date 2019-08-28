@@ -3,6 +3,7 @@ from django.utils.safestring import mark_safe
 from django.conf import settings
 from django.utils.html import escapejs
 
+from article.utils import xss_clean
 from shopified_core.utils import (
     decode_params,
     app_link as utils_app_link,
@@ -248,7 +249,7 @@ def money_format(amount=None, store=None, allow_empty=False, just_value=False):
         amount_no_decimals = ''
 
         if allow_empty:
-            return amount
+            return mark_safe(amount)
 
     currency_format = currency_format.replace('{{amount}}', amount)
 
@@ -260,7 +261,10 @@ def money_format(amount=None, store=None, allow_empty=False, just_value=False):
     if negative and amount != '0.00':
         currency_format = '- {}'.format(currency_format)
 
-    return currency_format.strip()
+    if currency_format and '<' in currency_format:
+        currency_format = xss_clean(currency_format)
+
+    return mark_safe(currency_format.strip())
 
 
 @register.filter

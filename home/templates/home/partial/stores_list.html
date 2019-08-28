@@ -167,6 +167,12 @@
                                 </li>
 
                                 <li>
+                                    <a store-id="{{item.pk}}" store-type="chq" class="change-currency btn-success btn-outline">
+                                        <i class="fa fa-dollar"></i> Store Currency
+                                    </a>
+                                </li>
+
+                                <li>
                                     <a
                                         class="chq-edit-store-btn"
                                         data-store-update-url="{% url 'chq:store_update' item.pk %}"
@@ -232,6 +238,12 @@
                                 </li>
 
                                 <li>
+                                    <a store-id="{{item.pk}}" store-type="woo" class="change-currency btn-success btn-outline">
+                                        <i class="fa fa-dollar"></i> Store Currency
+                                    </a>
+                                </li>
+
+                                <li>
                                     <a
                                         class="woo-edit-store-btn"
                                         data-store-id="{{ item.pk }}">
@@ -286,6 +298,12 @@
                                 <li>
                                     <a store-id="{{item.pk}}" store-type="gear" class="change-tracking-url btn-success btn-outline">
                                         <i class="fa fa-chain"></i> Custom Tracking URL
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a store-id="{{item.pk}}" store-type="gear" class="change-currency btn-success btn-outline">
+                                        <i class="fa fa-dollar"></i> Store Currency
                                     </a>
                                 </li>
 
@@ -346,6 +364,12 @@
                                     <a data-store-id="{{item.pk}}" class="gkart-verify-api-url btn-success btn-outline"
                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
                                         <i class="fa fa-check-circle-o"></i> Verify
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a store-id="{{item.pk}}" store-type="gkart" class="change-currency btn-success btn-outline">
+                                        <i class="fa fa-dollar"></i> Store Currency Symbol
                                     </a>
                                 </li>
 

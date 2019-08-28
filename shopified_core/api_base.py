@@ -744,3 +744,35 @@ class ApiBase(ApiResponseMixin, View):
         user.models_user.set_config(tracking_config_key, tracking_config)
 
         return self.api_success()
+
+    def get_currency(self, request, user, data):
+        try:
+            store = self.store_model.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        return self.api_success({
+            'currency': store.currency_format or '',
+            'store': store.id
+        })
+
+    def post_currency(self, request, user, data):
+        try:
+            store = self.store_model.objects.get(id=data.get('store'))
+            permissions.user_can_view(user, store)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        if not user.can('edit_settings.sub'):
+            raise PermissionDenied()
+
+        if '{{' in data.get('currency'):
+            store.currency_format = data.get('currency')
+        else:
+            store.currency_format = '{}{{{{amount}}}}'.format(data.get('currency'))
+        store.save()
+
+        return self.api_success()
