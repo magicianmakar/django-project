@@ -57,19 +57,28 @@
                         <tr data-store="{{item.store.id}}" data-feed="{{item.id}}">
                             <td>{{item.store.title}}</td>
                             <td>
-                                <div class="input-group">
-                                    <input type="text" class="form-control"
-                                            value="">
-
-                                    <span class="input-group-addon copy-feed-url" style="cursor:pointer" data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash store_type='woo' %}/2">
-                                        <i class="fa fa-files-o itooltip" title="Copy link"></i>
-                                    </span>
+                                <div>
+                                    <a class="copy-feed-url" style="cursor:pointer"
+                                        data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash store_type='woo' %}/2">
+                                        <i class="fa fa-files-o itooltip"></i> Facebook Feed
+                                    </a>
                                 </div>
                             </td>
                             <td><input type="checkbox" class="js-switch all-variants-switch" {% if item.all_variants %}checked{% endif %} /></td>
                             <td><input type="checkbox" class="js-switch include-variants-id" {% if item.include_variants_id %}checked{% endif %} /></td>
                             <td>
-                                <input name="type" type="text" class="form-control default-product-category" value="{{item.default_product_category|default:''}}" placeholder="">
+                                <div class="input-group">
+                                    <input name="type" type="text" class="form-control default-product-category" value="{{item.default_product_category|default:''}}" placeholder="">
+                                    <span class="input-group-btn">
+                                        <a
+                                            href="#"
+                                            class="btn btn-white save-feeds"
+                                            title="Save"
+                                            style="display: none;"
+                                            ><i class="fa fa-floppy-o"></i
+                                        ></a>   
+                                    </span>
+                                </div>
                             </td>
                             <td>
                                 {% if item.status == 2 %}
@@ -126,6 +135,10 @@
 
 <script type="text/javascript">
     $(function () {
+        $('.default-product-category').keyup(function() {
+            $(this).parents('tr').find('.save-feeds').show();
+        });
+
         $('.copy-feed-url').each(function (i, el) {
             var url = $(el).attr('data-clipboard-text').replace('http://', 'https://');
 
@@ -182,6 +195,25 @@
             });
         });
 
+        $('.save-feeds').click(function(e) {
+            e.preventDefault();
+            var el = $(this);
+            $.ajax({
+                type: 'POST',
+                data: {
+                    feed: $(this).parents('tr').data('feed'),
+                    default_product_category: ($(this).parents('tr').find('.default-product-category').val() || ' ')
+                },
+                success: function (data) {
+                    toastr.success('Settings will be applied in the next feed update.', 'Feed Settings Changed', 'success');
+                    el.parents('tr').find('.save-feeds').hide();
+                },
+                error: function (data) {
+                    displayAjaxError('Feed Settings', data);
+                }
+            });
+        });
+
         $('.default-product-category').autocomplete({
             serviceUrl: '/autocomplete/types',
             minChars: 1,
@@ -207,7 +239,7 @@
                     type: 'POST',
                     data: {
                         feed: $(this).parents('tr').data('feed'),
-                        default_product_category: ($('.default-product-category').val() || ' ')
+                        default_product_category: ($(this).parents('tr').find('.default-product-category').val() || ' ')
                     },
                     success: function (data) {
                         toastr.success('Settings will be applied in the next feed update.', 'Feed Settings Changed', 'success');

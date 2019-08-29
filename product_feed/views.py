@@ -212,6 +212,12 @@ def chq_product_feeds(request):
 
                 return JsonResponse({'status': 'ok'})
 
+            elif request.POST.get('default_product_category'):
+                feed.default_product_category = request.POST['default_product_category'].strip()
+                feed.save()
+
+                return JsonResponse({'status': 'ok'})
+
             elif request.POST.get('update_feed'):
                 if feed.status == 2:
                     return JsonResponse({'error': 'Feed is being updated'}, status=500)
