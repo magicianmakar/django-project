@@ -1405,19 +1405,7 @@
         });
     });
 
-    $('.nav-link').click(function (e) {
-        if($(this).attr('href') === '#stores') {
-            $('#goals_and_videos').show();
-        } else {
-            $('#goals_and_videos').hide();
-        }
-    });
-
     $(function () {
-        if ($('.nav-link.active').attr('href') === '#settings') {
-            $('#goals_and_videos').hide();
-        }
-
         showDescriptionHelp();
         $('#auto_shopify_fulfill').trigger('change');
 

@@ -21,6 +21,8 @@
                 <div class="panel-body">
                     {% include 'home/partial/stores_list.html' %}
                 </div>
+
+                {% include 'home/partial/training_and_goals.html' %}
             </div>
             <div role="tabpanel" id="settings" class="tab-pane {% if settings_tab %}active{% endif %}">
                 <div class="panel-body">
@@ -35,144 +37,6 @@
     {% include 'home/partial/markup_price_modals.html' %}
     {% include 'home/partial/product_template_modals.html' %}
     {% include 'home/partial/store_config_modals.html' %}
-
-    <div id='goals_and_videos'>
-    {% for user_goal in user_goals %}
-        <div class="ibox training-section">
-            <div class='ibox-title'>
-                <div class='row'>
-                    <div class="col-md-6">
-                        <h3>
-                            <strong>
-                                Goal {{ forloop.counter }}: {{ user_goal.goal.title }}
-                            </strong>
-                        </h3>
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <span class="simple_tag">
-                            <h3>
-                                <span>
-                                    {% for step in user_goal.goal.steps.all %}
-                                        {% if step in user_goal.user.completed_steps.all %}
-                                            <i class="fa fa-check-circle dropified-green {{ step.slug }}-circle"></i>
-                                        {% else %}
-                                            <i class="fa fa-circle disabled-gray {{ step.slug }}-circle"></i>
-                                        {% endif %}
-                                    {% endfor %}
-                                </span>
-                                &nbsp;
-                                &nbsp;
-                                &nbsp;
-                                <span class="dropified-green">
-                                    <strong>
-                                        <span id="total-steps-completed-{{ user_goal.goal.id }}">{{ user_goal.total_steps_completed }}</span>/{{ user_goal.goal.steps.count }} completed
-                                    </strong>
-                                </span>
-                            </h3>
-                        </span>
-                        <div class="ibox-tools">
-                            <a class="collapse-link">
-                              <i class="fa fa-chevron-up"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="ibox-content">
-                <div class="row">
-                    <div class="col-md-12">
-                        <p>
-                            {{ user_goal.goal.description }}
-                        </p>
-                        <p class="dropified-green">
-                            Tip: {{ user_goal.goal.tip }}
-                        </p>
-                    </div>
-                </div>
-                <br />
-                <div class="row">
-                    {% for step in user_goal.goal.steps.all %}
-                        <div class="col-md-4">
-                            <div class="ibox">
-                                <div class="ibox-content product-box">
-                                    <div class="product-desc">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <p class="text-muted">
-                                                    Step {{ forloop.counter }}
-                                                </p>
-                                            </div>
-                                            <div class="col-md-6 text-right">
-                                              <i data-step-slug="{{ step.slug }}"
-                                                 data-goal-id="{{ user_goal.id }}"
-                                                 class="goal-step fa-lg fa
-                                                 {% if step in user_goal.user.completed_steps.all %}dropified-green fa-check-circle{% else %}fa-circle clickable{% endif %}">
-                                                </i>
-                                            </div>
-                                        </div>
-                                        <a href="#" class="product-name">
-                                            {{ step.title }}
-                                        </a>
-                                        <div class="m-t-xs step-description">
-                                            {{ step.description }}
-                                        </div>
-                                        <div class="m-t">
-                                            <a href="{{ step.show_me_how_url }}" class="step-link" target="_blank">
-                                                Show me how
-                                            </a>
-                                        </div>
-                                        <div class="m-t">
-                                            {% include "home/partial/step_action.html" with action=step %}
-                                            {% for extra_action in step.extra_actions.all %}
-                                              {% include "home/partial/step_action.html" with action=extra_action %}
-                                            {% endfor %}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    {% endfor %}
-
-        <div class="ibox training-section">
-            <div class="ibox-content">
-                <div class="row padded-row">
-                    <div class="col-md-6">
-                        <h3>
-                            <strong>
-                                Start Automating Your Life Back
-                            </strong>
-                        </h3>
-                        <p>
-                            Dropified saves time, makes running your business simple and gives you your life back.
-                        </p>
-                    </div>
-                    <div class="col-md-6 text-right">
-                        <a href="https://academy.dropified.com/training/" target="_blank" id="view-all-training" class="btn btn-primary btn-rounded">View All Training</a>
-                    </div>
-                </div>
-                <br>
-                <div id="training-videos" class="row">
-                    {% for video in videos %}
-                    <div class="col-md-6 training-video">
-                        <div class="thumbnail">
-                            <div class="embed-responsive embed-responsive-16by9">
-                                <iframe class="embed-responsive-item" src="{{ video.url }}" allow="fullscreen" allowfullscreen></iframe>
-                            </div>
-                            <h3>
-                                <strong>{{ video.title }}</strong><br>
-                            </h3>
-                            <p>{{ video.description }}</p>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
 
 {% endblock %}
 
