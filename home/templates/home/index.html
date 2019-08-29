@@ -36,6 +36,7 @@
     {% include 'home/partial/product_template_modals.html' %}
     {% include 'home/partial/store_config_modals.html' %}
 
+    <div id='goals_and_videos'>
     {% for user_goal in user_goals %}
         <div class="ibox training-section">
             <div class='ibox-title'>
@@ -136,38 +137,39 @@
         </div>
     {% endfor %}
 
-    <div class="ibox training-section">
-        <div class="ibox-content">
-            <div class="row padded-row">
-                <div class="col-md-6">
-                    <h3>
-                        <strong>
-                            Start Automating Your Life Back
-                        </strong>
-                    </h3>
-                    <p>
-                        Dropified saves time, makes running your business simple and gives you your life back.
-                    </p>
-                </div>
-                <div class="col-md-6 text-right">
-                    <a href="https://academy.dropified.com/training/" target="_blank" id="view-all-training" class="btn btn-primary btn-rounded">View All Training</a>
-                </div>
-            </div>
-            <br>
-            <div id="training-videos" class="row">
-                {% for video in videos %}
-                <div class="col-md-6 training-video">
-                    <div class="thumbnail">
-                        <div class="embed-responsive embed-responsive-16by9">
-                            <iframe class="embed-responsive-item" src="{{ video.url }}" allow="fullscreen" allowfullscreen></iframe>
-                        </div>
+        <div class="ibox training-section">
+            <div class="ibox-content">
+                <div class="row padded-row">
+                    <div class="col-md-6">
                         <h3>
-                            <strong>{{ video.title }}</strong><br>
+                            <strong>
+                                Start Automating Your Life Back
+                            </strong>
                         </h3>
-                        <p>{{ video.description }}</p>
+                        <p>
+                            Dropified saves time, makes running your business simple and gives you your life back.
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-right">
+                        <a href="https://academy.dropified.com/training/" target="_blank" id="view-all-training" class="btn btn-primary btn-rounded">View All Training</a>
                     </div>
                 </div>
-                {% endfor %}
+                <br>
+                <div id="training-videos" class="row">
+                    {% for video in videos %}
+                    <div class="col-md-6 training-video">
+                        <div class="thumbnail">
+                            <div class="embed-responsive embed-responsive-16by9">
+                                <iframe class="embed-responsive-item" src="{{ video.url }}" allow="fullscreen" allowfullscreen></iframe>
+                            </div>
+                            <h3>
+                                <strong>{{ video.title }}</strong><br>
+                            </h3>
+                            <p>{{ video.description }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>
