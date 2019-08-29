@@ -58,21 +58,25 @@ def get_product_feed(request, *args, **kwargs):
     if 'store_type' in kwargs:
         del kwargs['store_type']
 
+    feed = None
+    if not store_type:
+        feed = get_shopify_product_feed(request, *args, **kwargs)
+    if store_type == 'chq':
+        feed = get_chq_product_feed(request, *args, **kwargs)
+    if store_type == 'woo':
+        feed = get_woo_product_feed(request, *args, **kwargs)
+    if store_type == 'gear':
+        feed = get_gear_product_feed(request, *args, **kwargs)
+    if store_type == 'gkart':
+        feed = get_gkart_product_feed(request, *args, **kwargs)
+
+    if not feed:
+        raise Http404('Feed Type is not found')
+
     if not is_bot_useragent(request):
         return HttpResponse('Your feed works, please copy/paste this link to your Facebook or Google product feed to see it\'s content')
 
-    if not store_type:
-        return get_shopify_product_feed(request, *args, **kwargs)
-    if store_type == 'chq':
-        return get_chq_product_feed(request, *args, **kwargs)
-    if store_type == 'woo':
-        return get_woo_product_feed(request, *args, **kwargs)
-    if store_type == 'gear':
-        return get_gear_product_feed(request, *args, **kwargs)
-    if store_type == 'gkart':
-        return get_gkart_product_feed(request, *args, **kwargs)
-
-    raise Http404('Feed Type is not found')
+    return feed
 
 
 def shopify_product_feeds(request):

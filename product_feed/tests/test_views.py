@@ -390,7 +390,8 @@ class GetProductFeed(BaseTestCase):
         generate_product_feed.return_value = 'https://test-url.com'
         self.login()
         store = ShopifyStoreFactory(user=self.user)
-        r = self.client.get(reverse('get_product_feed', kwargs={'store_id': store.store_hash[:8]}))
+        headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
+        r = self.client.get(reverse('get_product_feed', kwargs={'store_id': store.store_hash[:8]}), **headers)
         self.assertEqual(r.status_code, 302)
         self.assertTrue(generate_product_feed.called)
 
@@ -399,7 +400,8 @@ class GetProductFeed(BaseTestCase):
         generate_chq_product_feed.return_value = 'https://test-url.com'
         self.login()
         store = CommerceHQStoreFactory(user=self.user)
-        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'chq', 'store_id': store.store_hash[:8]}))
+        headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
+        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'chq', 'store_id': store.store_hash[:8]}), **headers)
         self.assertEqual(r.status_code, 302)
         self.assertTrue(generate_chq_product_feed.called)
 
@@ -408,7 +410,8 @@ class GetProductFeed(BaseTestCase):
         generate_woo_product_feed.return_value = 'https://test-url.com'
         self.login()
         store = WooStoreFactory(user=self.user)
-        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'woo', 'store_id': store.store_hash[:8]}))
+        headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
+        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'woo', 'store_id': store.store_hash[:8]}), **headers)
         self.assertEqual(r.status_code, 302)
         self.assertTrue(generate_woo_product_feed.called)
 
@@ -417,7 +420,8 @@ class GetProductFeed(BaseTestCase):
         generate_gear_product_feed.return_value = 'https://test-url.com'
         self.login()
         store = GearBubbleStoreFactory(user=self.user)
-        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'gear', 'store_id': store.store_hash[:8]}))
+        headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
+        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'gear', 'store_id': store.store_hash[:8]}), **headers)
         self.assertEqual(r.status_code, 302)
         self.assertTrue(generate_gear_product_feed.called)
 
@@ -426,7 +430,8 @@ class GetProductFeed(BaseTestCase):
         generate_gkart_product_feed.return_value = 'https://test-url.com'
         self.login()
         store = GrooveKartStoreFactory(user=self.user)
-        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'gkart', 'store_id': store.store_hash[:8]}))
+        headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
+        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'gkart', 'store_id': store.store_hash[:8]}), **headers)
         self.assertEqual(r.status_code, 302)
         self.assertTrue(generate_gkart_product_feed.called)
 
