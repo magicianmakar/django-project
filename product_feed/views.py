@@ -2,7 +2,7 @@ import json
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.utils import timezone
 from django.http import JsonResponse
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -33,7 +33,7 @@ from .models import (
     GearBubbleFeedStatus,
     GrooveKartFeedStatus,
 )
-from .utils import update_feed_social_access_at
+from .utils import is_bot_useragent, update_feed_social_access_at
 
 
 @login_required
@@ -57,6 +57,9 @@ def get_product_feed(request, *args, **kwargs):
 
     if 'store_type' in kwargs:
         del kwargs['store_type']
+
+    if not is_bot_useragent(request):
+        return HttpResponse('Your feed works, please copy/paste this link to your Facebook or Google product feed to see it\'s content')
 
     if not store_type:
         return get_shopify_product_feed(request, *args, **kwargs)
