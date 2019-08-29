@@ -1015,7 +1015,7 @@ function reorderImages() {
 
 dragula([document.getElementById('var-images')], {
         moves: function(el, container, handle) {
-            return (/image\-move/).test(handle.className);
+            return (/image\-move/).test(handle.className) || (/order\-handle/).test(handle.className);
         }
     }).on('grag', function(el) {
     }).on('drop', function(el) {
