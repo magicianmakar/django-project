@@ -334,3 +334,8 @@ def sec_to_min(s):
     mins = math.floor(s / 60)
     secs = math.floor(s - (mins * 60))
     return "%d:%02d" % (mins, secs)
+
+
+@register.filter
+def min_value(amount, minimum):
+    return min(amount, minimum)
