@@ -1,3 +1,5 @@
+{% load template_helper %}
+
 <div class="row m-t hidden-xs">
     <div class="col-md-2 col-md-offset-10 text-right">
         <a class="btn  btn-success btn-rounded btn-sm itooltip bulk-order-btn"
@@ -33,7 +35,7 @@
                             <div class="col-md-3">
                                 <div class="form-group">
                                     <label>To</label>
-                                    <input type="text" class="form-control" name="queue_page_to" value="{{ queue_page_to }}">
+                                    <input type="text" class="form-control" name="queue_page_to" value="{{ paginator.num_pages|min_value:10 }}">
                                 </div>
                             </div>
 
