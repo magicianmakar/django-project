@@ -156,7 +156,6 @@ def product_export(store_id, product_id, user_id):
         variants_images = product_data.get('variants_images') or {}
         images = product_data.get('images', [])
         variants = product_data.get('variants', [])
-        variant_groups = []
         category_id = get_or_create_category_by_title(store, product_data.get('type'))
 
         api_data = {
@@ -175,17 +174,17 @@ def product_export(store_id, product_id, user_id):
             },
         }
 
-        if variants:
-            for variant in variants:
-                if variant['title'].lower() == 'color':
-                    variant_groups.append({"name": variant['title'], "group_type": "color"})
-                else:
-                    variant_groups.append({"name": variant['title'], "group_type": "select"})
-
-            api_data['product']['variant_groups'] = variant_groups
-
         product_variants = []
         if variants:
+            # Prepare color textures
+            color_textures = {}
+            if variants_images:
+                for image in images:
+                    hash_ = utils.hash_url_filename(image)
+                    variant_name = variants_images.get(hash_)
+                    if variant_name:
+                        color_textures[variant_name] = image
+
             # e.g. Color, Size
             titles = []
             # e.g. Red, LARGE
@@ -207,8 +206,8 @@ def product_export(store_id, product_id, user_id):
                     'variant_values': {}
                 }
 
-                for label, value in zip(titles, attributes):
-                    label, value = get_variant_value(label, value)
+                for label, value in zip(list(reversed(titles)), list(reversed(attributes))):
+                    label, value = get_variant_value(label, value, color_textures)
                     variant_data['variant_values'][label] = value
 
                 product_variants.append(variant_data)

@@ -18,7 +18,7 @@ from .factories import GrooveKartStoreFactory, GrooveKartProductFactory
 class GetVariantValueTestCase(BaseTestCase):
     def test_must_return_dict_for_non_color_values(self):
         label, value = get_variant_value('Size', 'S')
-        new_value = {'variant_group_type': 'select', 'variant_name': 'S'}
+        new_value = {'variant_group_type': 'radio', 'variant_name': 'S'}
         self.assertEqual((label, value), ('Size', new_value))
 
     def test_must_include_color_hash_for_color_label(self):
