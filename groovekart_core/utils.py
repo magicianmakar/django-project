@@ -575,10 +575,16 @@ def order_track_fulfillment(order_track, user_config=None):
     }
 
 
-def get_variant_value(label, value):
+def get_variant_value(label, value, color_textures={}):
     if label.lower() == 'color':
-        return ('Color', {'variant_group_type': 'color', 'variant_name': value, 'color': '#FFFFFF'})
-    return (label, {'variant_group_type': 'select', 'variant_name': value})
+        variant_info = {'variant_group_type': 'color', 'variant_name': value}
+        texture = color_textures.get(value)
+        if texture:
+            variant_info['texture'] = texture
+        else:
+            variant_info['color'] = '#FFFFFF'
+        return ('Color', variant_info)
+    return (label, {'variant_group_type': 'radio', 'variant_name': value})
 
 
 def get_orders_page_default_date_range(timezone):

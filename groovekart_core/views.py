@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.cache import cache, caches
 from django.core.urlresolvers import reverse, reverse_lazy
 from django.db.models import Q
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils.decorators import method_decorator
 from django.utils import timezone
@@ -35,6 +35,7 @@ from shopified_core.utils import (
     url_join,
     http_excption_status_code,
     order_data_cache,
+    format_queueable_orders,
 )
 from shopified_core.tasks import keen_order_event
 
@@ -381,7 +382,18 @@ class OrdersList(ListView):
             messages.warning(request, "You don't have access to this store orders")
             return HttpResponseRedirect('/gkart/')
 
+        bulk_queue = bool(request.GET.get('bulk_queue'))
+        if bulk_queue and not request.user.can('bulk_order.use'):
+            return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."}, status=402)
+
         return super(ListView, self).dispatch(request, *args, **kwargs)
+
+    def render_to_response(self, context, **response_kwargs):
+        bulk_queue = bool(self.request.GET.get('bulk_queue'))
+        if bulk_queue:
+            return format_queueable_orders(self.request, context['orders'], context['page_obj'], store_type='gkart')
+
+        return super().render_to_response(context, **response_kwargs)
 
     def get_store(self):
         if not hasattr(self, 'store'):
@@ -567,6 +579,7 @@ class OrdersList(ListView):
         for order in orders:
             order_id = order.get('id')
             date_created = self.get_order_date_created(order)
+            order['name'] = order_id
             order['date_paid'] = self.get_order_date_paid(order)
             order['date'] = date_created.datetime
             order['date_str'] = date_created.format('MM/DD/YYYY')
@@ -580,11 +593,15 @@ class OrdersList(ListView):
             order['shipped'] = order['trackings']['shipped_at'] if order.get('trackings') else False
             order['supplier_types'] = set()
 
+            order['pending_payment'] = 'payment error' in order['order_status'].lower()
+            order['is_fulfilled'] = order['order_status'] in ['Canceled', 'Refunded', 'Delivered', 'Shipped']
+
             for item in order.get('items', []):
                 product_id = safe_int(item['product_id'])
                 product = products_by_source_id.get(product_id)
                 # product_data = product_data_by_source_id.get(product_id)
 
+                item['title'] = item['name']
                 item['product'] = product
                 item['total'] = safe_float(item['price'] * safe_int(item['quantity']))
                 item['image'] = item.get('variants', {}).get('image') or item.get('cover_image')
@@ -607,7 +624,8 @@ class OrdersList(ListView):
 
             order['mixed_supplier_types'] = len(order['supplier_types']) > 1
 
-        caches['orders'].set_many(orders_cache, timeout=21600)
+        bulk_queue = bool(self.request.GET.get('bulk_queue'))
+        caches['orders'].set_many(orders_cache, timeout=86400 if bulk_queue else 21600)
 
         return orders
 
