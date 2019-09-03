@@ -2,7 +2,7 @@
 {% url 'bulk_edit' 'saved' as bulk_edit %}
 {% url 'shopify_migration' as shopify_migration %}
 
-<ul class='breadcrumb-right-menu'>
+<ul class="breadcrumb-right-menu">
   <li class="{% if request.path == us_db %}active{% endif %}"><a href="{{ us_db }}">US Supplier Database</a></li>
   <li class="{% if request.path == bulk_edit %}active{% endif %}"><a href="{{ bulk_edit }}">Bulk Editor</a></li>
   <li class="{% if request.path == shopify_migration %}active{% endif %}"><a href="{{ shopify_migration }}">Migration</a></li>

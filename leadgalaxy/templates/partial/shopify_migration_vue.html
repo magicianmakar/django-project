@@ -61,10 +61,10 @@
           <td><a :href="product.original_url" target="_blank">{{product.supplier_name}}</a></td>
           <td>
               <template v-if="product.status == 'connected'">
-              <span class="no-wrap"><i class='fa fa-circle text-success'></i> Connected</span>
+              <span class="no-wrap"><i class="fa fa-circle text-success"></i> Connected</span>
               </template>
               <template v-else>
-              <span class="no-wrap"><i class='fa fa-circle text-danger'></i> Not Connected</span>
+              <span class="no-wrap"><i class="fa fa-circle text-danger"></i> Not Connected</span>
               </template>
           </td>
           <td>

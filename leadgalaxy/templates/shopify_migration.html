@@ -35,9 +35,9 @@
                         <label>Items Per Page</label>
                         {% for value in items_per_page_list %}
                             {% if value == ppp %}
-                            <span class='btn btn-primary btn-rounded' >{% if value == 'all' %}ALL{% else %}{{ value }}{% endif %}</span>
+                            <span class="btn btn-primary btn-rounded" >{% if value == 'all' %}ALL{% else %}{{ value }}{% endif %}</span>
                             {% else %}
-                            <a href='?store={{ store.id }}&ppp={{ value }}' class='btn btn-default btn-outline btn-rounded'>{% if value == 'all' %}ALL{% else %}{{ value }}{% endif %}</a>
+                            <a href="?store={{ store.id }}&ppp={{ value }}" class="btn btn-default btn-outline btn-rounded">{% if value == 'all' %}ALL{% else %}{{ value }}{% endif %}</a>
                             {% endif %}
                         {% endfor %}
 
