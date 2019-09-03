@@ -1,6 +1,6 @@
-{% extends template_config.base|default:'base.html' %}
+{% extends 'youtube_ads/base.html' %}
 {% load static %}
-{% block main-container %}
+{% block tubehunt-content %}
 <div class="ibox float-e-margins">
     <div class="ibox-content">
         <div class="row">
@@ -114,7 +114,7 @@
 </div>
 {% endblock %}
 
-{% block extracss %}
+{% block extracss-tubehunt %}
 <link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
 <link href="{% static 'youtube/index.css' %}" rel="stylesheet">
 {% endblock %}

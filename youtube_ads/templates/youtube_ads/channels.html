@@ -1,11 +1,11 @@
-{% extends template_config.base|default:'base.html' %}
+{% extends 'youtube_ads/base.html' %}
 
 {% load static %}
 
-{% block main-container %}
+{% block tubehunt-content %}
     {% if not channels %}
         <div class="row">
-            <div class="col-md-offset-3 col-md-6">
+            <div class="col-md-offset-1 col-md-6">
                 <div class="ibox float-e-margins">
                     <div class="ibox-title">
                         <h5>Channel Search</h5>
@@ -114,7 +114,7 @@
     <textarea id="copy-videos" style="position: absolute; left: -9999px;" readonly></textarea>
 {% endblock %}
 
-{% block extracss %}
+{% block extracss-tubehunt %}
 <link href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.5/jquery.fancybox.min.css" rel="stylesheet">
 <link href="{% static 'youtube/index.css' %}" rel="stylesheet">
 {% endblock %}

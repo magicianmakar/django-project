@@ -1,0 +1,44 @@
+{% extends template_config.base|default:'base.html' %}
+{% load static %}
+
+{% block main-container %}
+<div class='row'>
+  <div class="col-md-2">
+    <div class="_ibox-content leftnav">
+      <h5 class="content-tittle">TubeHunt</h5>
+      <div>
+        <a href="{% url template_config.url.namespace|add:'youtube_ads.views.index' %}"
+          class="btn btn-default btn-adjust {% if 'youtube_search' in page %}btn-selected-adjust{% endif %}">
+          Search
+        </a>
+      </div>
+      <div>
+        <a href="{% url template_config.url.namespace|add:'youtube_ads.views.index' %}?r"
+          class="btn btn-default btn-adjust {% if 'youtube_related' in page %}btn-selected-adjust{% endif %}">
+          Related
+        </a>
+      </div>
+      <div>
+        <a href="{% url template_config.url.namespace|add:'youtube_ads.views.channels' %}?r"
+          class="btn btn-default btn-adjust {% if 'youtube_channels' in page %}btn-selected-adjust{% endif %}">
+          Channels
+        </a>
+      </div>
+      <div>
+        <a href="{% url template_config.url.namespace|add:'youtube_ads.views.lists' %}?r"
+          class="btn btn-default btn-adjust {% if 'youtube_lists' in page %}btn-selected-adjust{% endif %}">
+          Lists
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class='col-md-10'>
+    {% block tubehunt-content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+<link href="{% static 'youtube/base.css' %}" rel="stylesheet">
+{% block extracss-tubehunt %}{% endblock %}
+{% endblock %}

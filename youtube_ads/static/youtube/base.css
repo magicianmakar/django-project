@@ -1,0 +1,32 @@
+h5.content-tittle {
+    font-weight: bold;
+    font-size: 22px;
+    font-family: Lato;
+    color: #696F8A;
+}
+
+.btn-adjust {
+
+        background-color: transparent;
+        color: #94C47D;
+        border:none;
+        font-weight:bold;
+        white-space: initial;
+        font-size:13px;
+        text-align: left;
+}
+.btn-selected-adjust {
+
+        background-color: #F3F3F4;
+        color: #94C47D;
+        border:none;
+        font-weight:bold;
+
+}
+
+.leftnav {
+  background-color: white;
+  padding: 15px;
+}
+
+.leftnav a {text-transform: uppercase;}
