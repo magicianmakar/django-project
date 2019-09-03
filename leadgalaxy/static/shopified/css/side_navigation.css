@@ -45,7 +45,7 @@
 }
 
 .sidebar .section {
-  margin-top: 33px;
+  margin-top: 15px;
 }
 
 .sidebar .section span,
@@ -66,10 +66,6 @@
 
 .sidebar .spacer {
   margin-top: 60px;
-}
-
-.sidebar ul li {
-  margin-top: 5px;
 }
 
 .sidebar ul .item {

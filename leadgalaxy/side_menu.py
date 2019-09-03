@@ -18,10 +18,11 @@ def get_menu_structure(namespace):
             ]),
             ('business', [
                 'profit-dashboard',
-                'callflex',
                 'marketing-feeds',
-                'tubehunt',
                 'subusers',
+                'callflex',
+                'tubehunt',
+                'us-product-database',
                 'tools',
             ]),
         ]
@@ -37,9 +38,11 @@ def get_menu_structure(namespace):
                 'alerts',
             ]),
             ('business', [
+                'marketing-feeds',
+                'subusers',
                 'callflex',
                 'tubehunt',
-                'subusers',
+                'us-product-database',
                 'tools',
             ]),
         ]
@@ -54,9 +57,10 @@ def get_menu_structure(namespace):
                 'boards',
             ]),
             ('business', [
+                'subusers',
                 'callflex',
                 'tubehunt',
-                'subusers',
+                'us-product-database',
                 'tools',
             ]),
         ]
@@ -72,9 +76,11 @@ def get_menu_structure(namespace):
                 'alerts',
             ]),
             ('business', [
+                'marketing-feeds',
+                'subusers',
                 'callflex',
                 'tubehunt',
-                'subusers',
+                'us-product-database',
                 'tools',
             ]),
         ]
@@ -89,9 +95,11 @@ def get_menu_structure(namespace):
                 'boards',
             ]),
             ('business', [
+                'marketing-feeds',
+                'subusers',
                 'callflex',
                 'tubehunt',
-                'subusers',
+                'us-product-database',
                 'tools',
             ]),
         ]
@@ -209,6 +217,13 @@ def get_menu_item_data(namespace):
             'permissions': ['youtube_ads.use'],
             'match': re.compile(r'(/\w+)?/tubehunt'),
         },
+        'us-product-database': {
+            'title': 'US Products',
+            'classes': '',
+            'url': get_url('products_collections', collection='us'),
+            'permissions': [],
+            'match': re.compile(r'/products/collections/\w+'),
+        },
         'subusers': {
             'title': 'Sub Users',
             'classes': '',
@@ -310,7 +325,7 @@ def create_get_url(namespace):
 
         # Creating a lambda function will delay execution. We want to calculate
         # this once we have the structure to avoid unnecessary lookups.
-        return lambda: reverse(url_name, args=args, kwargs=kwargs)
+        return lambda: reverse(url_name.strip(':'), args=args, kwargs=kwargs)
 
     return get_url
 
@@ -325,6 +340,8 @@ def fix_url_name(url_name, namespace):
         url_name = 'orders'
     elif url_name == 'products_list' and not namespace:
         url_name = 'product'
+    elif url_name == 'product_feeds' and namespace:
+        url_name = f':{url_name}'
 
     return url_name
 
