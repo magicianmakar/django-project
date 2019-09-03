@@ -118,7 +118,11 @@ def tapafilate_conversaion(request):
 
 def add_side_menu(request):
     request_path = request.path
-    url_obj = resolve(request_path)
+    try:
+        url_obj = resolve(request_path)
+    except:
+        return {}
+
     namespace = url_obj.namespace
     menu_data = get_menu_item_data(namespace)
     user = request.user

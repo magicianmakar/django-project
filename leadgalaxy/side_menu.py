@@ -234,7 +234,7 @@ def get_menu_item_data(namespace):
         'account': {
             'title': 'Manage Account',
             'classes': '',
-            'url': get_url('user_profile')() + '#plan',
+            'url': get_url('user_profile'),
             'permissions': [],
             'match': re.compile(r'(/\w+)?/user/profile'),
         },
