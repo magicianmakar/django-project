@@ -200,7 +200,7 @@ def get_menu_item_data(namespace):
             'title': 'CallFlex',
             'classes': '',
             'url': get_url('phone_automation_index'),
-            'permissions': ['phone_automation_index.use'],
+            'permissions': [],
             'match': re.compile(r'(/\w+)?/callflex'),
         },
         'marketing-feeds': {
@@ -214,7 +214,7 @@ def get_menu_item_data(namespace):
             'title': 'TubeHunt',
             'classes': '',
             'url': get_url('youtube_ads.views.index'),
-            'permissions': ['youtube_ads.use'],
+            'permissions': [],
             'match': re.compile(r'(/\w+)?/tubehunt'),
         },
         'us-product-database': {
@@ -271,7 +271,7 @@ def get_menu_item_data(namespace):
             'title': 'Get Started',
             'classes': '',
             'url': get_url('index'),
-            'permissions': ['one'],
+            'permissions': [],
             'match': re.compile(r'(/\w+)?/$'),
         },
     }
