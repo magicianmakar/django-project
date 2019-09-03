@@ -888,15 +888,10 @@ function indexOfImages(images, link) {
 function renderImages() {
     $('#var-images').empty();
 
-    var count = 0;
     $.each(product.images, function (i, el) {
-        if (count !== 0 && count % 4 === 0) {
-            $('#var-images').append($('<div class="col-xs-12"></div>'));
-        }
-        count += 1;
 
         var d = $('<div>', {
-            'class': 'col-xs-3 var-image-block',
+            'class': 'var-image-block',
             'image-url': el
         });
 

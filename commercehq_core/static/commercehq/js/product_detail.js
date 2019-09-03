@@ -808,12 +808,9 @@ function renderImages() {
     $('#var-images').empty();
 
     $.each(product.images, function (i, el) {
-        if (i !== 0 && i % 4 === 0) {
-            $('#var-images').append($('<div class="col-xs-12"></div>'));
-        }
 
         var d = $('<div>', {
-            'class': 'col-xs-3 var-image-block',
+            'class': 'var-image-block',
             'image-url': el
         });
 

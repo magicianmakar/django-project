@@ -19,6 +19,10 @@
     background-color: rgb(213, 255, 253);
 }
 
+#var-images {
+    display: flex;
+    flex-wrap: wrap;
+}
 
 .var-image, .add-var-image {
     border: 1px solid #ccc;
@@ -35,8 +39,14 @@
     opacity: 0.3;
 }
 
+.var-image-block {
+    position: relative;
+}
+
 .var-image-block, .add-var-image-block {
     margin-top: 15px;
+    padding-left: 50px;
+    padding-right: 50px;
 }
 
 .var-image-block .image-delete {
