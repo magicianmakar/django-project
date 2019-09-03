@@ -2,7 +2,6 @@
 {% load template_helper %}
 
 <script src="//fast.appcues.com/20262.js"></script>
-<script src="//fast.appcues.com/widget-bundle.js"></script>
 
 <script>
     {% if user.is_authenticated and not DEBUG %}
@@ -152,14 +151,6 @@
                 plan: intercomSettings.plan,
                 extension_version: intercomSettings.extension_version
 
-            });
-        }
-
-        if (typeof(AppcuesWidget) !== 'undefined') {
-            var widget = AppcuesWidget(Appcues.user());
-            widget.init("#notification-bell", {
-                position: "left",
-                filterBy: "page"
             });
         }
     }
