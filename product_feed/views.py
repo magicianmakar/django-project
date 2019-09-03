@@ -282,6 +282,30 @@ def woo_product_feeds(request):
     if not request.user.can('product_feeds.use'):
         return render(request, 'woocommerce/upgrade.html')
 
+    if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
+        if request.method == 'GET':
+            try:
+                feed = WooFeedStatus.objects.get(id=request.GET['feed'])
+                permissions.user_can_view(request.user, feed.store)
+
+            except WooFeedStatus.DoesNotExist:
+                return JsonResponse({'error': 'Feed Not Found'}, status=500)
+
+            return JsonResponse(feed.get_google_settings())
+
+        elif request.method == 'POST':
+            try:
+                feed = WooFeedStatus.objects.get(id=request.POST['feed'])
+                permissions.user_can_view(request.user, feed.store)
+
+            except WooFeedStatus.DoesNotExist:
+                return JsonResponse({'error': 'Feed Not Found'}, status=500)
+
+            settings = json.loads(request.POST['settings'])
+            feed.set_google_settings(settings)
+
+            return JsonResponse(feed.get_google_settings())
+
     if request.method == 'POST':
         if request.POST.get('feed'):
 
@@ -453,6 +477,30 @@ def get_gear_product_feed(request, store_id, revision=None):
 def gkart_product_feeds(request):
     if not request.user.can('product_feeds.use'):
         return render(request, 'groovekart/upgrade.html')
+
+        if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
+            if request.method == 'GET':
+                try:
+                    feed = GrooveKartFeedStatus.objects.get(id=request.GET['feed'])
+                    permissions.user_can_view(request.user, feed.store)
+
+                except GrooveKartFeedStatus.DoesNotExist:
+                    return JsonResponse({'error': 'Feed Not Found'}, status=500)
+
+                return JsonResponse(feed.get_google_settings())
+
+        elif request.method == 'POST':
+            try:
+                feed = GrooveKartFeedStatus.objects.get(id=request.POST['feed'])
+                permissions.user_can_view(request.user, feed.store)
+
+            except GrooveKartFeedStatus.DoesNotExist:
+                return JsonResponse({'error': 'Feed Not Found'}, status=500)
+
+            settings = json.loads(request.POST['settings'])
+            feed.set_google_settings(settings)
+
+            return JsonResponse(feed.get_google_settings())
 
     if request.method == 'POST':
         if request.POST.get('feed'):

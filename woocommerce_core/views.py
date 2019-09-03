@@ -243,6 +243,14 @@ def autocomplete(request, target):
         except WooProduct.DoesNotExist:
             return JsonResponse({'error': 'Product not found'}, status=404)
 
+    elif target == 'types':
+        types = []
+        for product in request.user.models_user.wooproduct_set.only('product_type').filter(product_type__icontains=q).order_by()[:10]:
+            if product.product_type not in types:
+                types.append(product.product_type)
+
+        return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in types]}, safe=False)
+
     else:
         return JsonResponse({'error': 'Unknown target'})
 
