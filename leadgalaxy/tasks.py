@@ -780,6 +780,11 @@ def generate_woo_feed(self, feed_id, nocache=False, by_fb=False):
         feed = WooFeedStatus.objects.get(id=feed_id)
         generate_woo_product_feed(feed, nocache=nocache)
 
+        if feed.store.user.can('google_product_feed.use'):
+            # Generate Google feed if the user set it's settings
+            if feed.get_google_settings():
+                generate_woo_product_feed(feed, nocache=nocache, revision=3)
+
     except:
         feed.status = 0
         feed.generation_time = -1

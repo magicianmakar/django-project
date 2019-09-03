@@ -303,7 +303,7 @@ class CommerceHQProductFeed():
 
 
 class WooProductFeed():
-    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category=''):
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category='', feed=None):
         self.store = store
 
         domain = urlparse(store.api_url).netloc
@@ -317,6 +317,12 @@ class WooProductFeed():
         self.include_variants = include_variants
         self.default_product_category = default_product_category
         self.weight_unit = self._get_store_weight_unit()
+
+        self.feed = feed
+        if feed:
+            self.google_settings = self.feed.get_google_settings()
+        else:
+            self.google_settings = {}
 
     def _add_element(self, tag, text):
         self.writer.startTag(tag)
@@ -364,8 +370,10 @@ class WooProductFeed():
 
         if self.include_variants and len(product['variations']) > 0:
             variants = self._get_variants(product['id'])
+
             for variant in variants:
                 self._add_variant(product, variant)
+
                 if not self.all_variants:
                     break
 
@@ -399,7 +407,7 @@ class WooProductFeed():
 
         return r.json()['value']
 
-    def _add_variant(self, product, variant, variant_id=None):
+    def _add_variant(self, product, variant):
         if variant:
             image = variant['image'].get('src')
         else:
@@ -412,16 +420,28 @@ class WooProductFeed():
 
         self.writer.startTag('item')
 
-        self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
+        if self.revision == 1:
+            self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
+        else:
+            self._add_element('g:id', 'woocommerce_{}'.format(variant['id']))
+            self._add_element('g:item_group_id', '{}'.format(variant['id']))
+
         self._add_element('g:link', element['permalink'])
         self._add_element('g:title', product.get('name', ''))
         self._add_element('g:description', element['description'])
         self._add_element('g:image_link', image)
+
         self._add_element('g:price', '{amount} {currency}'.format(amount=element['price'], currency=self.currency))
         self._add_element('g:shipping_weight', '{} {}'.format(element['weight'], self.weight_unit))
         self._add_element('g:google_product_category', self.default_product_category)
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
+
+        if self.revision == 3:
+            self._add_element('g:age_group', self.google_settings.get('age_group') or 'Adult')
+            self._add_element('g:gender', self.google_settings.get('gender') or 'Unisex')
+            self._add_element('g:brand', self.google_settings.get('brand_name', self.store.title))
+            self._add_element('g:mpn', 'store_{}_{}'.format(element['id'], variant['id']))
 
         self.writer.endTag()
 
@@ -684,8 +704,13 @@ def get_chq_store_feed(store):
 def get_woo_store_feed(store):
     try:
         return WooFeedStatus.objects.get(store=store)
+
     except WooFeedStatus.DoesNotExist:
-        return WooFeedStatus.objects.create(store=store, updated_at=None)
+        return WooFeedStatus.objects.create(
+            store=store,
+            revision=2,
+            updated_at=None
+        )
 
 
 def get_gear_store_feed(store):
@@ -803,7 +828,7 @@ def generate_chq_product_feed(feed_status, nocache=False):
     return feed_s3_url
 
 
-def generate_woo_product_feed(feed_status, nocache=False):
+def generate_woo_product_feed(feed_status, nocache=False, revision=None):
     store = feed_status.store
 
     if not store.user.can('product_feeds.use'):
@@ -811,12 +836,16 @@ def generate_woo_product_feed(feed_status, nocache=False):
 
     feed_start = time.time()
 
-    if not feed_status.feed_exists() or nocache:
+    if not feed_status.feed_exists(revision=revision) or nocache:
+        if revision is None:
+            revision = feed_status.revision
+
         feed = WooProductFeed(store,
-                              feed_status.revision,
+                              revision,
                               feed_status.all_variants,
                               feed_status.include_variants_id,
-                              feed_status.default_product_category)
+                              feed_status.default_product_category,
+                              feed=feed_status)
 
         feed.init()
 
@@ -830,7 +859,7 @@ def generate_woo_product_feed(feed_status, nocache=False):
         feed_status.updated_at = timezone.now()
 
         feed_s3_url, upload_time = aws_s3_upload(
-            filename=feed_status.get_filename(),
+            filename=feed_status.get_filename(revision=revision),
             input_filename=feed.out_filename(),
             mimetype='application/xml',
             upload_time=True,
@@ -841,7 +870,7 @@ def generate_woo_product_feed(feed_status, nocache=False):
         feed.delete_out()
 
     else:
-        feed_s3_url = feed_status.get_url()
+        feed_s3_url = feed_status.get_url(revision=revision)
 
     feed_status.status = 1
     feed_status.save()
