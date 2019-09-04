@@ -296,7 +296,7 @@
                                         <br>
                                         {{order.city}}
                                         {% if order.shipping_address.zip %}
-                                        {{order.shipping_address.province}}, {{order.shipping_address.zip}}
+                                        {{order.shipping_address.province|default:'N/A'}}, {{order.shipping_address.zip}}
                                         {% endif %}
                                         <br>
                                         {% if order.shipping_address.phone %}

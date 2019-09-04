@@ -512,11 +512,12 @@ class OrdersList(ListView):
     def get_order_data(self, order, item, product, supplier):
         store = self.get_store()
         models_user = self.request.user.models_user
+        aliexpress_fix = models_user.get_config('fix_aliexpress_city', True)
 
         return {
             'id': '{}_{}_{}'.format(store.id, order['id'], item['id']),
             'quantity': safe_int(item['quantity']),
-            'shipping_address': gkart_customer_address(order),
+            'shipping_address': gkart_customer_address(order, aliexpress_fix=aliexpress_fix),
             'order_id': safe_int(order['id']),
             'line_id': safe_int(item['id']),
             'product_id': product.id,

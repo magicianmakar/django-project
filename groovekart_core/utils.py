@@ -24,7 +24,10 @@ from shopified_core.utils import (
 )
 from shopified_core.shipping_helper import (
     load_uk_provincess,
-    province_from_code
+    province_from_code,
+    get_uk_province,
+    valide_aliexpress_province,
+    support_other_in_province,
 )
 import leadgalaxy.utils as leadgalaxy_utils
 
@@ -201,7 +204,7 @@ def get_shipping_carrier_name(store, carrier_id):
             return carrier['title']
 
 
-def gkart_customer_address(order):
+def gkart_customer_address(order, aliexpress_fix=False):
     customer_address = {}
 
     shipping_address = order.get('shipping_address', {})
@@ -221,6 +224,7 @@ def gkart_customer_address(order):
         if customer_address[key] is str:
             customer_address[key] = unidecode(customer_address[key])
 
+    customer_province = customer_address['province']
     if not customer_address.get('province'):
         if customer_address['country'] == 'United Kingdom' and customer_address['city']:
             province = load_uk_provincess().get(customer_address['city'].lower().strip(), '')
@@ -265,6 +269,26 @@ def gkart_customer_address(order):
     if customer_address['country_code'] == 'PL':
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
+
+    correction = {}
+    if aliexpress_fix:
+        valide, correction = valide_aliexpress_province(
+            customer_address['country'],
+            customer_address['province'],
+            customer_address['city'],
+            auto_correct=True)
+
+        if not valide:
+            if support_other_in_province(customer_address['country']):
+                customer_address['province'] = 'Other'
+
+                if customer_address['country'].lower() == 'united kingdom' and customer_address['city']:
+                    province = get_uk_province(customer_address['city'])
+                    if province:
+                        customer_address['province'] = province
+
+                if customer_province and customer_address['province'] == 'Other':
+                    customer_address['city'] = '{}, {}'.format(customer_address['city'], customer_province)
 
     return customer_address
 
