@@ -228,7 +228,7 @@ def get_menu_item_data(namespace):
             'title': 'Sub Users',
             'classes': '',
             'url': get_url('subusers'),
-            'permissions': ['subusers.use'],
+            'permissions': ['sub_users.use'],
             'match': re.compile(r'(/\w+)?/subusers'),
         },
         'tools': {
