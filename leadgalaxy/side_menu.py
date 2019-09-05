@@ -125,217 +125,141 @@ def get_menu_structure(namespace):
 
 
 def get_menu_item_data():
+    """
+    Entry structure:
+        'title': 'Place Orders',
+        'classes': '',
+        'url': None,
+        'url_name': 'orders_list',
+        'url_args': None,
+        'url_kwargs': None,
+        'permissions': ['orders.view'],
+        'match': re.compile(r'/orders$'),
+    - title: Text of link.
+    - classes: The classes applied when active
+    - url: URL in string
+    - url_name: Name in Django.
+    - url_args: Args to reverse
+    - url_kwargs: kwargs to reverse
+    - permission: Will be used user.can
+    - match: Will be used to apply classes.
+    """
     return {
         'orders': {
             'title': 'Orders',
             'icon': get_static('vector-orders.svg'),
-            'classes': '',
-            'url': '',
             'permissions': ['orders.view'],
         },
         'place-orders': {
             'title': 'Place Orders',
-            'classes': '',
-            'url': None,
             'url_name': 'orders_list',
-            'url_args': None,
-            'url_kwargs': None,
             'permissions': ['orders.view'],
             'match': re.compile(r'(/\w+)?/orders$'),
         },
         'tracking': {
             'title': 'Tracking',
-            'classes': '',
-            'url': None,
             'url_name': 'orders_track',
-            'url_args': None,
-            'url_kwargs': None,
             'permissions': ['orders.view'],
             'match': re.compile(r'(/\w+)?/orders/track'),
         },
         'all-products': {
             'title': 'All Products',
             'icon': get_static('vector-products.svg'),
-            'classes': '',
-            'url': '',
-            'permissions': [],
         },
         'non-connected': {
             'title': 'Non Connected',
-            'classes': '',
-            'url': None,
             'url_name': 'products_list',
-            'url_args': None,
-            'url_kwargs': None,
-            'permissions': [],
             'match': re.compile(r'(/\w+)?/products?$'),
         },
         'import-products': {
             'title': 'Import Products',
-            'classes': '',
-            'url': None,
             'url_name': 'article-content-page',
-            'url_args': None,
             'url_kwargs': {"slug_article": "source-import-products"},
-            'permissions': [],
             'match': re.compile(r'(/\w+)?/pages/content/source-import-products'),
         },
         'boards': {
             'title': 'Boards',
-            'classes': '',
-            'url': None,
             'url_name': 'boards_list',
-            'url_args': None,
-            'url_kwargs': None,
             'permissions': ['view_product_boards.sub'],
             'match': re.compile(r'(/\w+)?/boards/list'),
         },
         'alerts': {
             'title': 'Alerts',
-            'classes': '',
-            'url': None,
             'url_name': 'product_alerts',
-            'url_args': None,
-            'url_kwargs': None,
             'permissions': ['price_changes.use'],
             'match': re.compile(r'(/\w+)?/products/update'),
         },
         'business': {
             'title': 'Business',
             'icon': get_static('vector-business.svg'),
-            'classes': '',
-            'url': '',
-            'permissions': [],
-            'match': re.compile(r'$'),
         },
         'profit-dashboard': {
             'title': 'Profit Dashboard',
-            'classes': '',
-            'url': None,
             'url_name': 'profit_dashboard.views.index',
-            'url_args': None,
-            'url_kwargs': None,
             'permissions': ['profit_dashboard.view'],
             'match': re.compile(r'(/\w+)?/profit-dashboard'),
         },
         'callflex': {
             'title': 'CallFlex',
-            'classes': '',
-            'url': None,
             'url_name': 'phone_automation_index',
-            'url_args': None,
-            'url_kwargs': None,
-            'permissions': [],
             'match': re.compile(r'(/\w+)?/callflex'),
             'is_ns_aware': False,
         },
         'marketing-feeds': {
             'title': 'Marketing Feeds',
-            'classes': '',
-            'url': None,
             'url_name': 'product_feeds',
-            'url_args': None,
-            'url_kwargs': None,
-            'permissions': [],
             'match': re.compile(r'(/\w+)?/marketing/feeds'),
         },
         'tubehunt': {
             'title': 'TubeHunt',
-            'classes': '',
-            'url': None,
             'url_name': 'youtube_ads.views.index',
-            'url_args': None,
-            'url_kwargs': None,
-            'permissions': [],
             'match': re.compile(r'(/\w+)?/tubehunt'),
             'is_ns_aware': False,
         },
         'us-product-database': {
             'title': 'US Products',
-            'classes': '',
-            'url': None,
             'url_name': 'products_collections',
-            'url_args': None,
             'url_kwargs': {'collection': 'us'},
-            'permissions': [],
             'match': re.compile(r'/products/collections/\w+'),
         },
         'subusers': {
             'title': 'Sub Users',
-            'classes': '',
-            'url': None,
             'url_name': 'subusers',
-            'url_args': None,
-            'url_kwargs': None,
             'permissions': ['sub_users.use'],
             'match': re.compile(r'(/\w+)?/subusers'),
         },
         'tools': {
             'title': 'Tools',
-            'classes': '',
-            'url': None,
             'url_name': 'article-content-page',
-            'url_args': None,
             'url_kwargs': {"slug_article": "tools-business-tools"},
-            'permissions': [],
             'match': re.compile(r'(/\w+)?/pages/content/tools-business-tools'),
         },
         'academy': {
             'title': 'Dropified <span id="academy-span">Academy</span>',
-            'classes': '',
             'url': 'https://academy.dropified.com/',
-            'url_name': None,
-            'url_args': None,
-            'url_kwargs': None,
-            'permissions': [],
-            'match': re.compile(r'$'),
         },
         'video_training': {
             'title': 'Video Training',
-            'classes': '',
             'url': 'https://academy.dropified.com/training/',
-            'permissions': [],
-            'match': re.compile(r'$'),
         },
         'account': {
             'title': 'Manage Account',
-            'classes': '',
-            'url': None,
             'url_name': 'user_profile',
-            'url_args': None,
-            'url_kwargs': None,
-            'permissions': [],
             'match': re.compile(r'(/\w+)?/user/profile'),
         },
         'help': {
             'title': 'Get Support',
-            'classes': '',
             'url': 'https://help.dropified.com/',
-            'url_name': None,
-            'url_args': None,
-            'url_kwargs': None,
-            'permissions': [],
-            'match': re.compile(r'$'),
         },
         'settings': {
             'title': 'Settings',
-            'classes': '',
-            'url': None,
             'url_name': 'settings',
-            'url_args': None,
-            'url_kwargs': None,
-            'permissions': [],
             'match': re.compile(r'(/\w+)?/settings'),
             'is_ns_aware': False,
         },
         'get-started': {
             'title': 'Get Started',
-            'classes': '',
-            'url': None,
             'url_name': 'index',
-            'url_args': None,
-            'url_kwargs': None,
-            'permissions': [],
             'match': re.compile(r'(/\w+)?/$'),
         },
     }
@@ -359,12 +283,13 @@ def create_menu(menu_structure, menu_data, request, namespace):
         for item_key in item_keys:
             item = menu_data[item_key]
 
-            if any([not has_perm(p) for p in item['permissions']]):
+            permissions = item.get('permissions', [])
+            if any([not has_perm(p) for p in permissions]):
                 # User doesn't have the permission to access this resource.
                 continue
 
-            check_active = item['match']
-            if check_active.match(request_path):
+            check_active = item.get('match')
+            if check_active and check_active.match(request_path):
                 item['classes'] = 'active'
 
             item['url'] = create_url(item, namespace)
@@ -376,7 +301,7 @@ def create_menu(menu_structure, menu_data, request, namespace):
 
         section['items'] = items
         section['url'] = items[0]['url']
-        section['classes'] = items[0]['classes']
+        section['classes'] = items[0].get('classes', '')
         menu.append(section)
 
     return menu
@@ -388,20 +313,20 @@ def create_named_menu(menu_structure, menu_data, request, namespace):
     for name, item in zip(menu_structure, raw):
         menu[name[0]] = dict(
             title=item['title'],
-            classes=item['classes'],
-            url=item['url'],
+            classes=item.get('classes', ''),
+            url=create_url(item, namespace),
         )
 
     return menu
 
 
 def create_url(item, namespace):
-    if item['url']:
+    if item.get('url'):
         return item['url']
 
     url_name = item['url_name']
-    args = item['url_args'] or tuple()
-    kwargs = item['url_kwargs'] or {}
+    args = item.get('url_args', tuple())
+    kwargs = item.get('url_kwargs', {})
 
     url_name = fix_url_name(url_name, namespace)
 
