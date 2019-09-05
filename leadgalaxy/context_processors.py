@@ -118,7 +118,10 @@ def tapafilate_conversaion(request):
 
 
 def add_side_menu(request):
-    namespace = get_namespace(request)
+    try:
+        namespace = get_namespace(request)
+    except:
+        namespace = ''
 
     menu_data = get_menu_item_data()
     menu_structure = get_menu_structure(namespace)
