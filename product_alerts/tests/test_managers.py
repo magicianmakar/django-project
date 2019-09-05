@@ -495,7 +495,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product = WooProduct.objects.get(pk=2)
         woo_product = product.retrieve()
 
-        price = round(float(woo_product['sale_price']), 2)
+        price = round(float(woo_product['regular_price']), 2)
 
         # Reset price to a reasonable amount
         price = 100.0 if price < 0.02 else price
@@ -504,7 +504,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         old_price = round(price - (price / 2.0), 2)
         api_endpoint = 'products/{}'.format(product.source_id)
         r = product.store.wcapi.put(api_endpoint, {
-            'sale_price': str(old_price)
+            'regular_price': str(old_price)
         })
         self.assertTrue(r.ok)
 
@@ -525,7 +525,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         woo_product = product.retrieve()
 
-        updated_price = round(float(woo_product['sale_price']), 2)
+        updated_price = round(float(woo_product['regular_price']), 2)
 
         # check if price was updated back and preserved the margin
         self.assertEqual(updated_price, round(old_price * new_value / old_value, 2))
