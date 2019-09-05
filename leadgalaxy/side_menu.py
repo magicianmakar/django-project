@@ -5,106 +5,24 @@ from django.core.urlresolvers import resolve
 
 
 def get_menu_structure(namespace):
-    body = []
-
-    if namespace == '':
-        # Shopify
-        body = [
-            ('orders', ['place-orders', 'tracking']),
-            ('all-products', [
-                'non-connected',
-                'import-products',
-                'boards',
-                'alerts',
-            ]),
-            ('business', [
-                'profit-dashboard',
-                'marketing-feeds',
-                'subusers',
-                'callflex',
-                'tubehunt',
-                'us-product-database',
-                'tools',
-            ]),
-        ]
-
-    elif namespace == 'chq':
-        # CHQ
-        body = [
-            ('orders', ['place-orders', 'tracking']),
-            ('all-products', [
-                'non-connected',
-                'import-products',
-                'boards',
-                'alerts',
-            ]),
-            ('business', [
-                'marketing-feeds',
-                'subusers',
-                'callflex',
-                'tubehunt',
-                'us-product-database',
-                'tools',
-            ]),
-        ]
-
-    elif namespace == 'gear':
-        # GearBubble
-        body = [
-            ('orders', ['place-orders', 'tracking']),
-            ('all-products', [
-                'non-connected',
-                'import-products',
-                'boards',
-            ]),
-            ('business', [
-                'marketing-feeds',
-                'subusers',
-                'callflex',
-                'tubehunt',
-                'us-product-database',
-                'tools',
-            ]),
-        ]
-
-    elif namespace == 'gkart':
-        # GrooveKart
-        body = [
-            ('orders', ['place-orders', 'tracking']),
-            ('all-products', [
-                'non-connected',
-                'import-products',
-                'boards',
-                'alerts',
-            ]),
-            ('business', [
-                'marketing-feeds',
-                'subusers',
-                'callflex',
-                'tubehunt',
-                'us-product-database',
-                'tools',
-            ]),
-        ]
-
-    elif namespace == 'woo':
-        # WooCommerce
-        body = [
-            ('orders', ['place-orders', 'tracking']),
-            ('all-products', [
-                'non-connected',
-                'import-products',
-                'boards',
-            ]),
-            ('business', [
-                'marketing-feeds',
-                'subusers',
-                'callflex',
-                'tubehunt',
-                'us-product-database',
-                'tools',
-            ]),
-        ]
+    body = [
+        ('orders', ['place-orders', 'tracking']),
+        ('all-products', [
+            'non-connected',
+            'import-products',
+            'boards',
+            'alerts',
+        ]),
+        ('business', [
+            'profit-dashboard',
+            'marketing-feeds',
+            'subusers',
+            'callflex',
+            'tubehunt',
+            'us-product-database',
+            'tools',
+        ]),
+    ]
 
     header = [
         ('get-started', ['get-started']),
@@ -143,6 +61,7 @@ def get_menu_item_data():
     - url_kwargs: kwargs to reverse
     - permission: Will be used user.can
     - match: Will be used to apply classes.
+    - platforms: Only show on the specified platforms (ex: Shopify, chq, gkart...)
     """
     return {
         'orders': {
@@ -188,6 +107,7 @@ def get_menu_item_data():
             'url_name': 'product_alerts',
             'permissions': ['price_changes.use'],
             'match': re.compile(r'(/\w+)?/products/update'),
+            'platforms': ['shopify', 'chq', 'woo', 'gkart']
         },
         'business': {
             'title': 'Business',
@@ -198,6 +118,7 @@ def get_menu_item_data():
             'url_name': 'profit_dashboard.views.index',
             'permissions': ['profit_dashboard.view'],
             'match': re.compile(r'(/\w+)?/profit-dashboard'),
+            'platforms': ['shopify', 'gkart']
         },
         'callflex': {
             'title': 'CallFlex',
@@ -288,6 +209,11 @@ def create_menu(menu_structure, menu_data, request, namespace):
                 # User doesn't have the permission to access this resource.
                 continue
 
+            if item.get('platforms'):
+                search_ns = namespace if namespace else 'shopify'
+                if search_ns not in item['platforms']:
+                    continue
+
             check_active = item.get('match')
             if check_active and check_active.match(request_path):
                 item['classes'] = 'active'
@@ -347,10 +273,13 @@ def fix_url_name(url_name, namespace):
     stores. Ideally, orders list page should be named orders_list for all store
     types.
     """
+
     if url_name == 'orders_list' and not namespace:
         url_name = 'orders'
     elif url_name == 'products_list' and not namespace:
         url_name = 'product'
+    elif url_name == 'profit_dashboard.views.index' and namespace:
+        url_name = 'profits'
 
     return url_name
 

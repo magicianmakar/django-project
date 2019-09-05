@@ -78,16 +78,6 @@
   opacity: 1;
 }
 
-.sidebar ul li.item.active {
-  background-color: #394d5e;
-  border-radius: 5px 0 0 5px;
-}
-
-.sidebar ul li.item:hover {
-  background-color: #394d5e;
-  border-radius: 5px 0 0 5px;
-}
-
 .sidebar .spacer {
   margin-top: 60px;
 }
