@@ -28,6 +28,7 @@ from shopified_core.decorators import PlatformPermissionRequired, HasSubuserPerm
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
+    app_link,
     aws_s3_context,
     safe_int,
     safe_float,
@@ -509,6 +510,12 @@ class OrdersList(ListView):
             timezone = self.request.session.get('django_timezone')
             return order_at.to(timezone).datetime if timezone else order_at.datetime
 
+    def get_item_shipping_method(self, product, item, variant_id, country_code):
+        if item.get('supplier'):
+            return product.get_shipping_for_variant(supplier_id=item['supplier'].id,
+                                                    variant_id=variant_id,
+                                                    country_code=country_code)
+
     def get_order_data(self, order, item, product, supplier):
         store = self.get_store()
         models_user = self.request.user.models_user
@@ -596,29 +603,86 @@ class OrdersList(ListView):
 
             order['pending_payment'] = 'payment error' in order['order_status'].lower()
             order['is_fulfilled'] = order['order_status'] in ['Canceled', 'Refunded', 'Delivered', 'Shipped']
+            country_code = order.get('shipping_address', {}).get('country_code')
 
             for item in order.get('items', []):
                 product_id = safe_int(item['product_id'])
                 product = products_by_source_id.get(product_id)
                 # product_data = product_data_by_source_id.get(product_id)
 
+                variant_id = safe_int(item.get('variants', {}).get('variant_id', '0'))
                 item['title'] = item['name']
                 item['product'] = product
-                item['total'] = safe_float(item['price'] * safe_int(item['quantity']))
+                item['quantity'] = safe_int(item['quantity'])
+                item['total'] = safe_float(item['price'] * item['quantity'])
                 item['image'] = item.get('variants', {}).get('image') or item.get('cover_image')
                 item['image'] = fix_gkart_image(item['image'])
 
-                if product and product.has_supplier:
-                    item['supplier'] = supplier = product.default_supplier
-                    item['supplier_type'] = supplier.supplier_type()
-                    order['supplier_types'].add(item['supplier_type'])
-                    order_data = self.get_order_data(order, item, product, supplier)
-                    order_data['variant'] = self.get_order_data_variant(item)
-                    order_data_id = order_data['id']
-                    orders_cache['gkart_order_{}'.format(order_data_id)] = order_data
-                    item['order_data_id'] = order_data_id
-                    item['order_data'] = order_data
-                    order['connected_lines'] += 1
+                bundle_data = []
+                if product:
+                    bundles = product.get_bundle_mapping(variant_id)
+                    if bundles:
+                        product_bundles = []
+                        for idx, b in enumerate(bundles):
+                            b_product = GrooveKartProduct.objects.filter(id=b['id']).first()
+                            if not b_product:
+                                continue
+
+                            b_variant_id = b_product.get_real_variant_id(b['variant_id'])
+                            b_supplier = b_product.get_supplier_for_variant(b_variant_id)
+                            if b_supplier:
+                                b_shipping_method = b_product.get_shipping_for_variant(
+                                    supplier_id=b_supplier.id,
+                                    variant_id=b_variant_id,
+                                    country_code=country_code)
+                            else:
+                                continue
+
+                            b_variant_mapping = b_product.get_variant_mapping(name=b_variant_id, for_extension=True, mapping_supplier=True)
+                            if b_variant_id and b_variant_mapping:
+                                b_variants = b_variant_mapping
+                            else:
+                                b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
+
+                            product_bundles.append({
+                                'product': b_product,
+                                'supplier': b_supplier,
+                                'shipping_method': b_shipping_method,
+                                'quantity': b['quantity'] * item['quantity'],
+                                'data': b
+                            })
+
+                            bundle_data.append({
+                                'title': b_product.title,
+                                'quantity': b['quantity'] * item['quantity'],
+                                'product_id': b_product.id,
+                                'source_id': b_supplier.get_source_id(),
+                                'order_url': app_link('gkart/orders/place', supplier=b_supplier.id, SABundle=True),
+                                'variants': b_variants,
+                                'shipping_method': b_shipping_method,
+                                'country_code': country_code,
+                                'supplier_type': b_supplier.supplier_type(),
+                            })
+
+                        item['bundles'] = product_bundles
+                        item['is_bundle'] = len(bundle_data) > 0
+                        order['have_bundle'] = True
+
+                    if product.has_supplier:
+                        item['supplier'] = supplier = product.default_supplier
+                        item['supplier_type'] = supplier.supplier_type()
+                        order['supplier_types'].add(item['supplier_type'])
+                        order_data = self.get_order_data(order, item, product, supplier)
+                        order_data['products'] = bundle_data
+                        order_data['is_bundle'] = len(bundle_data) > 0
+                        order_data['variant'] = self.get_order_data_variant(item)
+                        order_data_id = order_data['id']
+                        orders_cache['gkart_order_{}'.format(order_data_id)] = order_data
+                        item['order_data_id'] = order_data_id
+                        item['order_data'] = order_data
+                        item['shipping_method'] = self.get_item_shipping_method(
+                            product, item, variant_id, country_code)
+                        order['connected_lines'] += 1
 
                 key = '{}_{}'.format(order['id'], item['id'])
                 item['order_track'] = order_tracks_by_item.get(key)
@@ -1093,5 +1157,48 @@ class MappingSupplierView(DetailView):
         context['selected_menu'] = 'products:all'
 
         self.add_supplier_info(groovekart_product.get('variants', []), suppliers_map)
+
+        return context
+
+
+class MappingBundleView(DetailView):
+    model = GrooveKartProduct
+    template_name = 'groovekart/mapping_bundle.html'
+    context_object_name = 'product'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('groovekart.use'):
+            raise permissions.PermissionDenied()
+
+        return super(MappingBundleView, self).dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super(MappingBundleView, self).get_context_data(**kwargs)
+        permissions.user_can_view(self.request.user, self.object)
+
+        product = self.object
+        context['api_product'] = product.sync()
+
+        bundle_mapping = []
+        for i, v in enumerate(context['api_product']['variants']):
+            v['products'] = product.get_bundle_mapping(v['id'], default=[])
+
+            bundle_mapping.append(v)
+
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('gkart:products_list')},
+            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('gkart:products_list'), self.object.store.id)},
+            {'title': self.object.title, 'url': reverse('gkart:product_detail', args=[self.object.id])},
+            'Bundle Mapping'
+        ]
+
+        context.update({
+            'store': product.store,
+            'product_id': product.id,
+            'product': product,
+            'bundle_mapping': bundle_mapping,
+            'selected_menu': 'products:all',
+        })
 
         return context

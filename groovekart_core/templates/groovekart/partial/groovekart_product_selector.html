@@ -82,14 +82,22 @@
 {% verbatim %}
 
 <script id="product-select-template" type="text/x-handlebars-template">
-    <div class="product-item row">
+    <div class="product-item row"
+        {{#connected_only}}
+            {{^product.connected}}
+                style="opacity: 0.3"
+                title="Product is not connected"
+            {{/product.connected}}
+        {{/connected_only}}>
         <div class="product-thumb col-md-1">
-            <a class="groovekart-product" href="#" data-product-id="{{product.id}}">
+            <a class="groovekart-product" href="#" data-product-id="{{product.id}}" data-gkart-id="{{product.connected}}"
+                data-product-title="{{product.product_title}}" data-product-image="{{product.cover_image}}">
                 <img src="{{product.cover_image}}" style="width:45px">
             </a>
         </div>
         <div class="col-md-11">
-            <a class="groovekart-product" href="#" data-product-id="{{product.id}}">
+            <a class="groovekart-product" href="#" data-product-id="{{product.id}}" data-gkart-id="{{product.connected}}"
+                data-product-title="{{product.product_title}}" data-product-image="{{product.cover_image}}">
                 {{product.product_title}}
             </a>
         </div>

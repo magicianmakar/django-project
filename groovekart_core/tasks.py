@@ -289,7 +289,11 @@ def product_export_images(store_id, product_id, images, variants_images):
             pusher_data['success'] = True
             return store.pusher_trigger('product-export', pusher_data)
 
-        image_id_by_hash = {}
+        update_variants_api_data = {
+            'action': 'update',
+            'product_id': utils.safe_int(product.source_id),
+            'variants': []
+        }
         total = len(images)
         for index, image in enumerate(images):
             api_data = {
@@ -310,32 +314,27 @@ def product_export_images(store_id, product_id, images, variants_images):
             r.raise_for_status()
 
             json_image = r.json()
+            image_id = utils.safe_int(json_image.get('id_image'))
             hash_ = utils.hash_url_filename(image)
-            image_id_by_hash[hash_] = json_image.get('id_image')
 
-            # Assign images and default images to variants
-            if variants_images:
-                api_data = {
-                    'image_id': json_image.get('id_image'),
-                    'variants': []
-                }
+            # Assign default image to variant
+            if variants_images.get(hash_):
+                variant_name = variants_images.get(hash_)
+                for variant in product_data.get('variants', []):
+                    if variant_name in GrooveKartProduct.get_variant_options(variant):
+                        update_variants_api_data['variants'].append({
+                            'id': utils.safe_int(variant['id']),
+                            'image_id': [image_id]
+                        })
 
-                if not variants_images.get(hash_):
-                    # TODO: Not correctly assigning images yet [GKart BUG]
-                    pass
-                else:
-                    variant_name = variants_images.get(hash_)
-                    for variant in product_data.get('variants', []):
-                        if variant_name in GrooveKartProduct.get_variant_options(variant):
-                            api_data['variants'].append(variant['id'])
-
-                if len(api_data['variants']) > 0:
-                    variants_endpoint = store.get_api_url('variants.json')
-                    r = store.request.post(variants_endpoint, json=api_data)
-                    r.raise_for_status()
+        # Update variants with default image
+        variants_endpoint = store.get_api_url('variants.json')
+        if len(update_variants_api_data['variants']) > 0:
+            r = store.request.post(variants_endpoint, json=update_variants_api_data)
+            r.raise_for_status()
 
         product.update_data({'exporting': False})
-        product.save()
+        product.sync()
 
         pusher_data['success'] = True
 

@@ -1,6 +1,7 @@
 import json
 import re
 import requests
+from functools import cmp_to_key
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
@@ -247,8 +248,34 @@ class GrooveKartApi(ApiBase):
             r = store.request.post(url, json=params)
             if r.ok:
                 products = r.json()['products']
+                if isinstance(products, dict):
+                    del products['products_count']
+                    products = list(products.values())
             else:
                 products = []
+
+            if data.get('connected') or data.get('hide_connected'):
+                connected = {}
+                for p in store.products.filter(source_id__in=[i['id'] for i in products]).values_list('id', 'source_id'):
+                    connected[p[1]] = p[0]
+
+                for idx, i in enumerate(products):
+                    products[idx]['connected'] = connected.get(safe_int(i['id']))
+
+                def connected_cmp(a, b):
+                    if a['connected'] and b['connected']:
+                        return a['connected'] < b['connected']
+                    elif a['connected']:
+                        return 1
+                    elif b['connected']:
+                        return -1
+                    else:
+                        return 0
+
+                products = sorted(products, key=cmp_to_key(connected_cmp), reverse=True)
+
+                if data.get('hide_connected'):
+                    products = [p for p in products if not p.get('connected')]
 
             return self.api_success({'products': products, 'page': page, 'next': page + 1})
 
@@ -388,6 +415,15 @@ class GrooveKartApi(ApiBase):
 
         permissions.user_can_delete(user, product_supplier)
         product_supplier.delete()
+
+        return self.api_success()
+
+    def post_bundles_mapping(self, request, user, data):
+        product = GrooveKartProduct.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        product.set_bundle_mapping(data.get('mapping'))
+        product.save()
 
         return self.api_success()
 
@@ -697,6 +733,41 @@ class GrooveKartApi(ApiBase):
                     'value': (truncatewords(product.title, 10) if data.get('trunc') else product.title),
                     'data': product.source_id,
                     'image': product.get_image()
+                })
+
+            return self.api_success({'query': q, 'suggestions': results}, safe=False)
+
+        elif target == 'variants':
+            try:
+                store = GrooveKartStore.objects.get(id=request.GET.get('store'))
+                permissions.user_can_view(request.user, store)
+
+            except GrooveKartStore.DoesNotExist:
+                return self.api_error('Store not found', status=404)
+
+            try:
+                product = GrooveKartProduct.objects.get(id=request.GET.get('product'))
+                permissions.user_can_edit(request.user, product)
+
+            except GrooveKartProduct.DoesNotExist:
+                return self.api_error('Product not found', status=404)
+
+            api_product = product.sync()
+
+            results = []
+            if 'variants' in api_product:
+                for v in api_product['variants']:
+                    results.append({
+                        'value': v['description'],
+                        'data': v['id'],
+                        'image': v.get('image', {}).get('src', api_product.get('cover_image')),
+                    })
+
+            if not len(results):
+                results.append({
+                    'value': "Default",
+                    'data': api_product['id'],
+                    'image': api_product.get('cover_image')
                 })
 
             return self.api_success({'query': q, 'suggestions': results}, safe=False)

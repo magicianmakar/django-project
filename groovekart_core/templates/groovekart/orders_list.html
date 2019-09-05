@@ -347,7 +347,10 @@
 
                                 <div class="row">
                                     {% for item in order.items %}
-                                    <div class="line container-fluid {% if not forloop.first %}multi-lines{% endif %}"
+                                    <div class="line
+                                                container-fluid
+                                                {% if item.is_bundle %}bundled{% endif %}
+                                                {% if not forloop.first %}multi-lines{% endif %}"
                                         line-id="{{item.id}}"
                                         product-id="{{item.product_id}}"
                                         order-id="{{order.id}}"
@@ -428,12 +431,16 @@
                                                             <b>{% money_format item.price store %}</b>
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
-                                                            {% include 'groovekart/partial/place_order_btn.html' %}
+                                                            {% if item.is_bundle %}
+                                                                <span class="badge badge-primary">Bundle</span>
+                                                            {% else %}
+                                                                {% include 'groovekart/partial/place_order_btn.html' %}
+                                                            {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% comment %}
                                                             <div id="fulfill-line-btn-{{ order.id }}-{{ item.id }}">
-                                                            {% if not item.fulfillment_status %}
+                                                            {% if not item.is_bundle and not item.fulfillment_status %}
                                                                 <div class="btn-group dropup">
                                                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
                                                                         Unfulfilled
@@ -459,6 +466,55 @@
                                                     </tr>
                                                 </thead>
                                             </table>
+                                            {% if item.is_bundle %}
+                                            <div class="well bundle-items" style="position: relative;">
+                                                {% for bundle in item.bundles %}
+                                                <div class="m-t-xs" style="display:flex">
+                                                    <div>
+                                                        <img class="product-img cached-img no-img no-img-sm unveil"
+                                                            store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}" no-img-width="32px"
+
+                                                            {% if bundle.data.variant_image %}
+                                                                src="{% shopify_image_thumb bundle.data.variant_image '32x32' 'center' %}"
+                                                            {% elif bundle.data.image %}
+                                                                src="{% shopify_image_thumb bundle.data.image '32x32' 'center' %}"
+                                                            {% endif %} style="max-width: 32px;"/>
+                                                    </div>
+
+                                                    <div>
+                                                        <a href="{% url 'gkart:product_detail' bundle.product.id %}" target="_blank" title="{{bundle.product.title}}">
+                                                            {{bundle.product.title|truncatewords:9}}
+                                                        </a>
+                                                    </div>
+
+                                                    <div class="m-l">
+                                                        <span class="badge">{{bundle.quantity}} &times; {{bundle.data.variant_title}}</span>
+                                                    </div>
+
+                                                    <div class="m-l">
+                                                        <span class="badge badge-white">
+                                                            <a {% if bundle.supplier.supplier_url %}
+                                                                href="{{bundle.supplier.supplier_url|default:'#'}}" target="_blank"
+                                                            {% else %}
+                                                                href="#"
+                                                            {% endif %}
+
+                                                            >{{bundle.supplier.supplier_name|truncatechars:25}}</a>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+
+                                                <button class="btn btn-success btn-xs order-bundle"
+                                                        store-type="gkart"
+                                                        supplier-type="{{item.supplier_type}}"
+                                                        order-data="{{item.order_data_id}}"
+                                                        order-number="{{order.name}}"
+                                                        style="position:absolute;right:25px;top:50px;"
+                                                        >Order Bundle</button>
+                                            </div>
+                                            {% endif %}
+
                                             </div>
                                         </div>
                                     </div>
