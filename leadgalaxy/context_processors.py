@@ -2,7 +2,6 @@ import hmac
 import hashlib
 
 from django.core.cache import cache
-from django.core.urlresolvers import resolve
 from django.conf import settings
 
 import arrow
@@ -13,6 +12,7 @@ from leadgalaxy.side_menu import (
     get_menu_structure,
     get_menu_item_data,
     create_menu,
+    get_namespace,
     create_named_menu,
 )
 
@@ -118,13 +118,12 @@ def tapafilate_conversaion(request):
 
 
 def add_side_menu(request):
-    request_path = request.path
     try:
-        url_obj = resolve(request_path)
+        namespace = get_namespace(request)
     except:
         return {}
 
-    namespace = url_obj.namespace
+    request_path = request.path
     menu_data = get_menu_item_data(namespace)
     user = request.user
 

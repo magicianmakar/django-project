@@ -1,6 +1,7 @@
 import re
 from django.conf import settings
 from django.urls import reverse
+from django.core.urlresolvers import resolve
 
 
 def get_menu_structure(namespace):
@@ -57,6 +58,7 @@ def get_menu_structure(namespace):
                 'boards',
             ]),
             ('business', [
+                'marketing-feeds',
                 'subusers',
                 'callflex',
                 'tubehunt',
@@ -343,13 +345,17 @@ def create_get_url(namespace):
     def get_url(url_name, *args, **kwargs):
         url_name = fix_url_name(url_name, namespace)
 
-        if ":" not in url_name and namespace:
+        if url_name == 'product_feeds':
+            if namespace:
+                kwargs['store_type'] = namespace
+
+        elif ":" not in url_name and namespace:
             # Add namespace
             url_name = f"{namespace}:{url_name}"
 
         # Creating a lambda function will delay execution. We want to calculate
         # this once we have the structure to avoid unnecessary lookups.
-        return lambda: reverse(url_name.strip(':'), args=args, kwargs=kwargs)
+        return lambda: reverse(url_name, args=args, kwargs=kwargs)
 
     return get_url
 
@@ -364,11 +370,20 @@ def fix_url_name(url_name, namespace):
         url_name = 'orders'
     elif url_name == 'products_list' and not namespace:
         url_name = 'product'
-    elif url_name == 'product_feeds' and namespace:
-        url_name = f':{url_name}'
 
     return url_name
 
 
 def get_static(path):
     return f"{settings.STATIC_URL}{path}"
+
+
+def get_namespace(request):
+    request_path = request.path
+    url_obj = resolve(request_path)
+
+    namespace = url_obj.namespace
+    if url_obj.url_name == 'product_feeds':
+        namespace = url_obj.kwargs.get('store_type', '') or ''
+
+    return namespace
