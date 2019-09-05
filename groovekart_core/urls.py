@@ -7,7 +7,6 @@ import home.views
 
 urlpatterns = [
     url(r'^$', home.views.home_page_view, name='index'),
-    url(r'^settings$', home.views.home_page_view, name='settings'),
 
     url(r'^dashboard$', groovekart_core.views.dashboard, name='dashboard'),
     url(r'^products/?(?P<tpl>(grid|table))?$', groovekart_core.views.ProductsList.as_view(), name='products_list'),

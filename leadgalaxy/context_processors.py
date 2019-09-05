@@ -118,21 +118,15 @@ def tapafilate_conversaion(request):
 
 
 def add_side_menu(request):
-    try:
-        namespace = get_namespace(request)
-    except:
-        return {}
+    namespace = get_namespace(request)
 
-    request_path = request.path
-    menu_data = get_menu_item_data(namespace)
-    user = request.user
-
+    menu_data = get_menu_item_data()
     menu_structure = get_menu_structure(namespace)
 
-    header = create_menu(menu_structure['header'], menu_data, request_path, user)
-    body = create_menu(menu_structure['body'], menu_data, request_path, user)
-    footer = create_menu(menu_structure['footer'], menu_data, request_path, user)
-    named = create_named_menu(menu_structure['named'], menu_data, request_path, user)
+    header = create_menu(menu_structure['header'], menu_data, request, namespace)
+    body = create_menu(menu_structure['body'], menu_data, request, namespace)
+    footer = create_menu(menu_structure['footer'], menu_data, request, namespace)
+    named = create_named_menu(menu_structure['named'], menu_data, request, namespace)
 
     return {'sidemenu': {'header': header,
                          'body': body,

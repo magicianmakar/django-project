@@ -7,7 +7,6 @@ import home.views
 
 urlpatterns = [
     url(r'^$', home.views.home_page_view, name='index'),
-    url(r'^settings$', home.views.home_page_view, name='settings'),
 
     url(r'^callback-endpoint/(?P<store_hash>[a-z0-9]+)$', woocommerce_core.views.CallbackEndpoint.as_view(), name='callback_endpoint'),
     url(r'^products/?(?P<tpl>(grid|table))?$', woocommerce_core.views.ProductsList.as_view(), name='products_list'),
