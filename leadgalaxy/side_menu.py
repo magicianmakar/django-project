@@ -6,13 +6,13 @@ from django.core.urlresolvers import resolve
 
 def get_menu_structure(namespace):
     body = [
-        ('orders', ['place-orders', 'tracking']),
         ('all-products', [
             'non-connected',
             'import-products',
             'boards',
             'alerts',
         ]),
+        ('orders', ['place-orders', 'tracking']),
         ('business', [
             'profit-dashboard',
             'marketing-feeds',
