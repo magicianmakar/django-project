@@ -227,6 +227,7 @@ def get_menu_item_data():
             'url_kwargs': None,
             'permissions': [],
             'match': re.compile(r'(/\w+)?/callflex'),
+            'is_ns_aware': False,
         },
         'marketing-feeds': {
             'title': 'Marketing Feeds',
@@ -247,6 +248,7 @@ def get_menu_item_data():
             'url_kwargs': None,
             'permissions': [],
             'match': re.compile(r'(/\w+)?/tubehunt'),
+            'is_ns_aware': False,
         },
         'us-product-database': {
             'title': 'US Products',

@@ -39,7 +39,5 @@ urlpatterns = [
     url(r'^user/profile/invoices$', leadgalaxy.views.user_profile_invoices, name='user_profile_invoices'),
     url(r'^products/collections/(?P<collection>[a-z]+)$', leadgalaxy.views.products_collections, name='products_collections'),
 
-    url(r'^callflex/', include('phone_automation.urls')),
-    url(r'^tubehunt/', include('youtube_ads.urls')),
     url(r'^pages/', include('article.urls')),
 ]
