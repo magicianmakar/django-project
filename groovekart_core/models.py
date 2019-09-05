@@ -181,6 +181,7 @@ class GrooveKartProduct(ProductBase):
     variants_map = models.TextField(default='', blank=True)
     supplier_map = models.TextField(default='', null=True, blank=True)
     shipping_map = models.TextField(default='', null=True, blank=True)
+    bundle_map = models.TextField(null=True, blank=True)
     mapping_config = models.TextField(null=True, blank=True)
 
     parent_product = models.ForeignKey('GrooveKartProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Duplicate of product')
@@ -301,7 +302,7 @@ class GrooveKartProduct(ProductBase):
         return variants
 
     def retrieve(self, attempts=1):
-        # TODO: Change URL to products.json when it start returning the images
+        # TODO: Change URL to products.json when it start returning Vendor/Manufacturer Name
         endpoint = self.store.get_api_url('search_products.json')
         json_data = {'ids': self.source_id}
 
@@ -350,6 +351,17 @@ class GrooveKartProduct(ProductBase):
 
         supplier.is_default = True
         supplier.save()
+
+    def get_real_variant_id(self, variant_id):
+        """
+        Used to get current variant id from previously delete variant id
+        """
+
+        config = self.get_config()
+        if config.get('real_variant_map'):
+            return config.get('real_variant_map').get(str(variant_id), variant_id)
+
+        return variant_id
 
     def get_mapping_config(self):
         try:
@@ -483,6 +495,23 @@ class GrooveKartProduct(ProductBase):
         if commit:
             self.save()
 
+    def get_bundle_mapping(self, variant=None, default=[]):
+        try:
+            bundle_map = json.loads(self.bundle_map)
+        except:
+            bundle_map = {}
+
+        if variant:
+            return bundle_map.get(str(variant), default)
+        else:
+            return bundle_map
+
+    def set_bundle_mapping(self, mapping):
+        bundle_map = self.get_bundle_mapping()
+        bundle_map.update(mapping)
+
+        self.bundle_map = json.dumps(bundle_map)
+
     def get_shipping_mapping(self, supplier=None, variant=None, default=None):
         mapping = {}
         try:
@@ -525,6 +554,27 @@ class GrooveKartProduct(ProductBase):
 
         if commit:
             self.save()
+
+    def get_shipping_for_variant(self, supplier_id, variant_id, country_code):
+        """ Return Shipping Method for the given variant_id and country_code """
+        variant_id = -1 if variant_id == 0 else variant_id  # Default variant use -1 as id
+        mapping = self.get_shipping_mapping(supplier=supplier_id, variant=variant_id)
+
+        if variant_id and country_code and mapping and type(mapping) is list:
+            for method in mapping:
+                if country_code == method.get('country'):
+                    short_name = method.get('method_name').split(' ')
+                    if len(short_name) > 1 and short_name[1].lower() in ['post', 'seller\'s', 'aliexpress']:
+                        method['method_short'] = ' '.join(short_name[:2])
+                    else:
+                        method['method_short'] = short_name[0]
+
+                    if method['country'] == 'GB':
+                        method['country'] = 'UK'
+
+                    return method
+
+        return None
 
     def get_image(self):
         return self.parsed.get('cover_image', '')

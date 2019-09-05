@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^products/update$', groovekart_core.views.product_alerts, name='product_alerts'),
     url(r'^product/mapping/(?P<pk>[0-9]+)$', groovekart_core.views.ProductMappingView.as_view(), name='product_mapping'),
     url(r'^product/mapping/supplier/(?P<pk>[0-9]+)$', groovekart_core.views.MappingSupplierView.as_view(), name='mapping_supplier'),
+    url(r'^product/mapping/bundle/(?P<pk>[0-9]+)$', groovekart_core.views.MappingBundleView.as_view(), name='mapping_bundle'),
 
     url(r'^subusers$', subusers.views.subusers, name='subusers'),
     url(r'^subusers/permissions/(?P<user_id>[0-9]+)$', subusers.views.subusers_perms, name='subusers_perms'),

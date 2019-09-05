@@ -18,13 +18,16 @@ function groovekartProductSearch (e) {
         }
     }
 
+    var connectedOnly = $('#modal-groovekart-product').prop('connected');
+
     $.ajax({
         url: api_url('groovekart-products', 'gkart'),
         type: 'POST',
         data: {
             store: store,
             query: query,
-            page: $(this).prop('page')
+            page: $(this).prop('page'),
+            connected: connectedOnly,
         },
         context: {
             store: store
@@ -40,13 +43,20 @@ function groovekartProductSearch (e) {
 
             var store = this.store;
             $.each(data.products, function () {
-                var el = $(product_template({product: this}));
+                var el = $(product_template({
+                    product: this,
+                    connected_only: connectedOnly
+                }));
 
                 $('a.groovekart-product', el).click(function (e) {
                     e.preventDefault();
 
                     if (window.groovekartProductSelected) {
-                        window.groovekartProductSelected(store, $(this).data('product-id'));
+                        window.groovekartProductSelected(store, $(this).data('product-id'), {
+                            title: $(this).data('product-title'),
+                            image: $(this).data('product-image'),
+                            shopified: $(this).data('gkart-id'),
+                        });
                     }
                 });
 
