@@ -22,6 +22,12 @@
         <img src="{% static 'vector-profile.svg' %}"/>
       </div>
     </div>
+    <div class="account {{ sidemenu.named.account.classes }}">
+      <a href='{{ sidemenu.named.account.url }}'>
+        {{ sidemenu.named.account.title }}
+      </a>
+    </div>
+
     {% endif %}
 
     <ul>
@@ -57,7 +63,7 @@
       {% if request.user.is_superuser or request.user.is_staff %}
         <li class="section">
             <a href="#">
-              <span class="fa fa-cog m-t-xs" style="color:#8bb670"></span>
+              <span class="fa fa-cog m-t-xs icon"></span>
               <span>Admin</span>
             </a>
         </li>
@@ -82,6 +88,18 @@
 
     <!-- footer -->
     <ul class="navfooter">
+      <li class="section-no-icon">
+        <a href="{{ sidemenu.named.academy.url }}" target="_blank">
+          {{ sidemenu.named.academy.title | safe }}
+        </a>
+      </li>
+
+      <li class="section-no-icon">
+        <a href="{{ sidemenu.named.video_training.url }}" target="_black">
+          {{ sidemenu.named.video_training.title }}
+        </a>
+      </li>
+
       {% for section in sidemenu.footer %}
       {% for item in section.items %}
 

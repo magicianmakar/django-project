@@ -109,13 +109,17 @@ def get_menu_structure(namespace):
     ]
 
     footer = [
-        ('academy', ['academy']),
-        ('account', ['account']),
         ('help', ['help']),
         ('settings', ['settings']),
     ]
 
-    return {'body': body, 'header': header, 'footer': footer}
+    named = [
+        ('account', ['account']),
+        ('academy', ['academy']),
+        ('video_training', ['video_training']),
+    ]
+
+    return {'body': body, 'header': header, 'footer': footer, 'named': named}
 
 
 def get_menu_item_data(namespace):
@@ -246,10 +250,17 @@ def get_menu_item_data(namespace):
             'permissions': [],
             'match': re.compile(r'$'),
         },
+        'video_training': {
+            'title': 'Video Training',
+            'classes': '',
+            'url': 'https://academy.dropified.com/training/',
+            'permissions': [],
+            'match': re.compile(r'$'),
+        },
         'account': {
             'title': 'Manage Account',
             'classes': '',
-            'url': get_url('user_profile'),
+            'url': get_url('user_profile')() + '#plan',
             'permissions': [],
             'match': re.compile(r'(/\w+)?/user/profile'),
         },
@@ -311,6 +322,19 @@ def create_menu(menu_structure, menu_data, request_path, user):
         section['url'] = items[0]['url']
         section['classes'] = items[0]['classes']
         menu.append(section)
+
+    return menu
+
+
+def create_named_menu(menu_structure, menu_data, request_path, user):
+    raw = create_menu(menu_structure, menu_data, request_path, user)
+    menu = {}
+    for name, item in zip(menu_structure, raw):
+        menu[name[0]] = dict(
+            title=item['title'],
+            classes=item['classes'],
+            url=item['url'],
+        )
 
     return menu
 

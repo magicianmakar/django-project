@@ -13,6 +13,7 @@ from leadgalaxy.side_menu import (
     get_menu_structure,
     get_menu_item_data,
     create_menu,
+    create_named_menu,
 )
 
 
@@ -132,5 +133,9 @@ def add_side_menu(request):
     header = create_menu(menu_structure['header'], menu_data, request_path, user)
     body = create_menu(menu_structure['body'], menu_data, request_path, user)
     footer = create_menu(menu_structure['footer'], menu_data, request_path, user)
+    named = create_named_menu(menu_structure['named'], menu_data, request_path, user)
 
-    return {'sidemenu': {'header': header, 'body': body, 'footer': footer}}
+    return {'sidemenu': {'header': header,
+                         'body': body,
+                         'footer': footer,
+                         'named': named}}

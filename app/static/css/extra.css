@@ -505,6 +505,7 @@ ul.breadcrumb-right-menu {
 
 ul.breadcrumb-right-menu li {
   padding-bottom: 20px;
+  padding-right: 10px;
 }
 
 ul.breadcrumb-right-menu li:hover, ul.breadcrumb-right-menu li.active {

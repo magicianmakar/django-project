@@ -5,10 +5,19 @@
 
 .sidebar .profile {
   margin: 20px;
-  margin-top: 40px;
-  margin-bottom: 40px;
+  margin-top: 30px;
+  margin-bottom: 0;
   display: flex;
   justify-content: space-between;
+}
+
+.sidebar .account {
+  margin: 20px;
+  margin-top: 0;
+  font-family: Lato;
+  font-size: 12px;
+  color: rgb(167, 177, 194);
+  margin-left: 30px;
 }
 
 .sidebar .profile .name {
@@ -18,7 +27,8 @@
   margin-left: 10px;
 }
 
-.sidebar .profile .name a {
+.sidebar .profile .name a,
+.sidebar .account a {
   color: inherit;
 }
 
@@ -45,7 +55,11 @@
 }
 
 .sidebar .section {
-  margin-top: 15px;
+  margin-top: 10px;
+}
+
+.sidebar .section .icon {
+  color: #8bb670;
 }
 
 .sidebar .section span,
@@ -64,12 +78,26 @@
   opacity: 1;
 }
 
+.sidebar ul li.item.active {
+  background-color: #394d5e;
+  border-radius: 5px 0 0 5px;
+}
+
+.sidebar ul li.item:hover {
+  background-color: #394d5e;
+  border-radius: 5px 0 0 5px;
+}
+
 .sidebar .spacer {
   margin-top: 60px;
 }
 
+.sidebar ul li {
+  margin-top: 2px;
+}
+
 .sidebar ul .item {
-  margin-left: 40px;
+  padding-left: 30px;
   transition: all .15s ease;
 }
 
