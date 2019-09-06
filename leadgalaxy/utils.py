@@ -1766,7 +1766,7 @@ def get_mapping_from_product(product):
         options = [j for j in [v['option1'], v['option2'], v['option3']] if bool(j)]
 
         if len(options):
-            options = [{'title': j} for j in options]
+            options = [{'title': j, 'sku': v['sku']} for j in options]
 
             var_map[str(v['id'])] = options
 

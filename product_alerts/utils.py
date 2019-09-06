@@ -220,11 +220,20 @@ def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=N
             exists = False
             for option in options:
                 option_id = option['option_id']
+                option_group = option['option_group']
                 option_title = option['option_title']
-                if mapped_sku and re.search(r"\b{}\b".format(option_id), mapped_sku):
-                    exists = True
-                if mapped_title and mapped_title == option_title:
-                    exists = True
+                option_sku = f'{option_group}:{option_id}'
+                if mapped_sku:
+                    # matching by sku
+                    if mapped_sku == option_sku:
+                        exists = True
+                    elif mapped_sku and re.search(r"\b{}\b".format(option_id), mapped_sku):
+                        exists = True
+                else:
+                    # matching by title
+                    if mapped_title and mapped_title == option_title:
+                        exists = True
+
                 if exists:
                     if ships_from_id == option_id:
                         ships_from_mapped = True
