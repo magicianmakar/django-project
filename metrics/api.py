@@ -32,6 +32,8 @@ class MetricsApi(ApiResponseMixin, View):
             keen_send_event.delay('auto_fulfill_timing', {
                 'supplier_type': data.get('supplier'),
                 'order_type': data.get('type'),
+                'productVersion': data.get('productVersion'),
+                'checkoutVersion': data.get('checkoutVersion'),
                 'user_country': user_country,
                 'user_id': user.id,
                 'user_name': user.username,
