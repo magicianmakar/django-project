@@ -2,10 +2,7 @@ import simplejson as json
 import arrow
 
 from django.db import models
-from django.conf import settings
 from django.contrib.auth.models import User
-
-from rest_hooks.signals import raw_hook_event
 
 from shopified_core.utils import app_link
 from leadgalaxy.models import ShopifyProduct
@@ -255,24 +252,6 @@ class ProductChange(models.Model):
                     ret['body_text'] += (' {:' + length + 's}  ').format(str(value))
         return ret
 
-    def send_hook_event_alert(self):
-        """
-        Events are filtered in zapier_core.tasks.deliver_hook_wrapper.
-        Query params of hook's target url are used to filter events to be triggered.
-        Following url is hook's target url to get specific event for one shopify product
-        https://hooks.zapier.com/hooks/standard/xxx/xxxxx/?store_type=shopify&store_id=1&product_id=10
-        """
-
-        for category in list(settings.PRICE_MONITOR_EVENTS.keys()):
-            payload = self.to_alert(category)
-            if payload is not None:
-                raw_hook_event.send(
-                    sender=None,
-                    event_name='alert_created',
-                    payload=payload,
-                    user=self.user
-                )
-
     def to_dict(self, api_product_data, category, change_index):
         """ Return Product Change formatted for Zapier Subscription Hooks
 
@@ -318,16 +297,3 @@ class ProductChange(models.Model):
             return ret
 
         return None
-
-    def send_hook_event(self, api_product_data):
-        for category in list(settings.PRICE_MONITOR_EVENTS.keys()):
-            changes = self.get_data(category)
-            for i, change in enumerate(changes):
-                payload = self.to_dict(api_product_data, category, i)
-                if payload is not None:
-                    raw_hook_event.send(
-                        sender=None,
-                        event_name=category,
-                        payload=payload,
-                        user=self.user
-                    )

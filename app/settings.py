@@ -41,7 +41,6 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 
     'rest_framework',
-    'rest_hooks',
 
     'raven.contrib.django.raven_compat',
     'widget_tweaks',
@@ -82,7 +81,6 @@ INSTALLED_APPS = (
     'woocommerce_core',
     'gearbubble_core',
     'groovekart_core',
-    'zapier_core',
     'phone_automation',
     'funnels',
     'aliextractor'
@@ -378,18 +376,6 @@ PRICE_MONITOR_EVENTS = {
     'variant:var_added': None,
     'variant:var_removed': None,
 }
-
-HOOK_EVENTS = PRICE_MONITOR_EVENTS.copy()
-HOOK_EVENTS.update({
-    'shopify_order_created': None,
-    'shopify_order_cancelled': None,
-    'shopify_order_status_changed': None,
-    'alert_created': None,
-    'order_track_source_status_changed': None,
-    'order_track_source_tracking_changed': None,
-})
-
-HOOK_DELIVERER = 'zapier_core.tasks.deliver_hook_wrapper'
 
 SENTRY_DSN = os.environ.get('SENTRY_DSN')
 SENTRY_CLIENT = 'app.sentry.SentryClient'

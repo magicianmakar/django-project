@@ -22,7 +22,6 @@ urlpatterns = [
     url(r'^order/imports/', include('order_imports.urls')),
     url(r'^profit-dashboard/', include('profit_dashboard.urls')),
     url(r'^subusers/', include('subusers.urls')),
-    url(r'^zapier/', include('zapier_core.urls')),
     url(r'^tubehunt/', include('youtube_ads.urls')),
     url(r'^callflex/', include('phone_automation.urls')),
     url(r'^aliextractor/', include('aliextractor.urls')),
