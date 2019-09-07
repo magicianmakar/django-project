@@ -334,10 +334,23 @@ class ShopifyProductChangeManager(ProductChangeManager):
     def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
         if self.config['quantity_change'] == 'update':
             idx = self.get_variant(api_product_data, variant_change)
+            new_quantity = variant_change.get('new_value')
             if idx is not None:
-                self.product_data_changed = True
+                if not new_quantity:
+                    raven_client.captureMessage(
+                        'Zero quantity inventory',
+                        level='warning',
+                        extra={
+                            'idx': idx,
+                            'product': self.product,
+                            'new_quantity': new_quantity,
+                            'variant_change': variant_change,
+                            'api_product_data': api_product_data,
+                        })
+                    return
+
                 self.product.set_variant_quantity(
-                    quantity=variant_change.get('new_value'),
+                    quantity=new_quantity,
                     variant_id=api_product_data['variants'][idx]['id'],
                     variant=api_product_data['variants'][idx],
                 )
