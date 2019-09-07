@@ -153,7 +153,7 @@ class Command(DropifiedBaseCommand):
                     continue
 
                 elif e.response.status_code == 422:
-                    if 'is already fulfilled' in rep.text:
+                    if 'already fulfilled' in rep.text:
                         # Mark as fulfilled but not auto-fulfilled
                         self.write('Already fulfilled #{} in [{}]'.format(first_order.order_id, store.title))
                         data['api'], fulfilled_line_ids = self.fix_api_line_items(first_order, data['api'], rep.json()['errors']['base'])

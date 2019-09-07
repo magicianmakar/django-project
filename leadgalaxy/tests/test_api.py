@@ -399,7 +399,7 @@ class ProductsApiTestCase(BaseTestCase):
         # Already fulfilled
         requests_mock.post = Mock(return_value=Mock(
             raise_for_status=Mock(side_effect=Exception()),
-            text='is already fulfilled'
+            text='already fulfilled'
         ))
         r = self.client.post('/api/shopify/fulfill-order', data)
 

@@ -173,7 +173,7 @@ class Command(DropifiedBaseCommand):
                             else:
                                 check_order_exist = False
 
-                    if 'is already fulfilled' in rep.text:
+                    if 'already fulfilled' in rep.text:
                         # Mark as fulfilled but not auto-fulfilled
                         self.write('Already fulfilled #{} in [{}]'.format(order.order_id, order.store.title))
                         order.shopify_status = 'fulfilled'

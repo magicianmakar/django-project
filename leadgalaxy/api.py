@@ -1431,7 +1431,7 @@ class ShopifyStoreApi(ApiBase):
             return self.api_success()
 
         except:
-            if 'is already fulfilled' not in rep.text and \
+            if 'already fulfilled' not in rep.text and \
                'please try again' not in rep.text and \
                'Internal Server Error' not in rep.text:
                 raven_client.captureException(
