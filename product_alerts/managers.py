@@ -329,6 +329,17 @@ class ShopifyProductChangeManager(ProductChangeManager):
             new_quantity = variant_change.get('new_value')
             if idx is not None:
                 if not new_quantity:
+                    raven_client.user_context({
+                        'id': self.product.user.id,
+                        'username': self.product.user.username,
+                        'email': self.product.user.email
+                    })
+
+                    raven_client.extra_context({
+                        'store': self.product.store,
+                        'product': self.product.id
+                    })
+
                     raven_client.captureMessage(
                         'Zero quantity inventory',
                         level='warning',
