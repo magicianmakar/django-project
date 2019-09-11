@@ -903,9 +903,14 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
             d.append(img);
 
             img.click(function (e) {
-                var imageIdx = indexOfImages(product.images, $(this).attr('src'));
+                var src = $(this).attr('src');
+                if (src.indexOf('?') === -1) {
+                    src = src + '?ext';
+                }
+
+                var imageIdx = indexOfImages(product.images, src);
                 if (imageIdx == -1) {
-                    product.images.push($(this).attr('src'));
+                    product.images.push(src);
                 } else {
                     var images = [];
 
@@ -930,9 +935,14 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
 });
 
 $(document).on('click', '#modal-add-image .add-var-image, #modal-upload-image .add-var-image', function (e) {
-    var imageIdx = indexOfImages(product.images, $(this).attr('src'));
+    var src = $(this).attr('src');
+    if (src.indexOf('?') === -1) {
+        src = src + '?ext';
+    }
+
+    var imageIdx = indexOfImages(product.images, src);
     if (imageIdx == -1) {
-        product.images.push($(this).attr('src'));
+        product.images.push(src);
     } else {
         var images = [];
 
