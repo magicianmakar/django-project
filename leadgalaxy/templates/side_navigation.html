@@ -32,6 +32,34 @@
 
     <ul>
       <!-- header -->
+
+      {% if request.user.is_superuser or request.user.is_staff %}
+        <li class="section">
+            <a href="#">
+              <span class="fa fa-cog m-t-xs icon"></span>
+              <span>Admin</span>
+            </a>
+        </li>
+        <li class="item">
+            <a href="#" onclick="javascript:setTimeout(
+                    function(){
+                        var q=prompt('Query Dropified Users');
+                        if(q.length) {
+                            window.location.href='{% url 'acp_users_list' %}?q=' + encodeURIComponent(q.trim());
+                        }
+                    }, 10);
+                    return false;">Users</a>
+        </li>
+
+        <li class="item"><a href="{% url 'acp_groups' %}">Plans</a></li>
+        {% if request.user.is_superuser %}
+        <li class="item m-b"><a href="/pages/">Pages</a></li>
+        {% else %}
+        <li class="item m-b"></li>
+        {% endif %}
+
+      {% endif %}
+
       {% for section in sidemenu.header %}
       {% for item in section.items %}
 
@@ -59,31 +87,6 @@
         </li>
         {% endfor %}
       {% endfor %}
-
-      {% if request.user.is_superuser or request.user.is_staff %}
-        <li class="section">
-            <a href="#">
-              <span class="fa fa-cog m-t-xs icon"></span>
-              <span>Admin</span>
-            </a>
-        </li>
-        <li class="item">
-            <a href="#" onclick="javascript:setTimeout(
-                    function(){
-                        var q=prompt('Query Dropified Users');
-                        if(q.length) {
-                            window.location.href='{% url 'acp_users_list' %}?q=' + encodeURIComponent(q.trim());
-                        }
-                    }, 10);
-                    return false;">Users</a>
-        </li>
-
-        <li class="item"><a href="{% url 'acp_groups' %}">Plans</a></li>
-        {% if request.user.is_superuser %}
-        <li class="item"><a href="/pages/">Pages</a></li>
-        {% endif %}
-
-      {% endif %}
     </ul>
 
     <!-- footer -->
