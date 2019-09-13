@@ -118,6 +118,9 @@ class TagsTestCase(BaseTestCase):
         store.currency_format = "${{   amount_with_comma_separator    }}"
         self.assertEqual(template_helper.money_format(12.34, store), '$12.34')
 
+        store.currency_format = "${{   amount_with_period_separartor    }}"
+        self.assertEqual(template_helper.money_format(12.34, store), '$12.34')
+
     def test_money_format_amount_no_decimals_with_comma_separator(self):
         store = Mock()
         store.currency_format = "${{amount_no_decimals_with_comma_separator}}"
