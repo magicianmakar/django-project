@@ -257,7 +257,7 @@ def money_format(amount=None, store=None, allow_empty=False, just_value=False):
         currency_format = currency_format.replace('{{amount_no_decimals}}', amount_no_decimals)
         currency_format = currency_format.replace('{{amount_no_decimals_with_comma_separator}}', amount_no_decimals)
         currency_format = currency_format.replace('{{amount_with_comma_separator}}', amount)
-        currency_format = currency_format.replace('{{amount_with_period_separartor}}', amount)
+        currency_format = currency_format.replace('{{amount_with_period_separator}}', amount)
 
     if negative and amount != '0.00':
         currency_format = '- {}'.format(currency_format)
