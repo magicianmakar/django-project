@@ -207,7 +207,7 @@ def get_profits(store, start, end, store_timezone=''):
 
     # Other Costs
     other_costs = OtherCost.objects.filter(store_id=store_id,
-                                           date__range=(start, end)) \
+                                           date__range=(start.date(), end.date())) \
                                    .extra({'date_key': 'date(date)'}) \
                                    .values('date_key') \
                                    .annotate(Sum('amount')) \

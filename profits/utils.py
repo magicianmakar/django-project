@@ -448,7 +448,7 @@ def get_profits(store, store_type, start, end, user_timezone):
     # Other Costs
     other_costs = models.OtherCost.objects.filter(store_content_type=store_content_type,
                                                   store_object_id=store.id,
-                                                  date__range=(start, end)) \
+                                                  date__range=(start.date(), end.date())) \
                                           .extra({'date_key': 'date(date)'}) \
                                           .values('date_key') \
                                           .annotate(Sum('amount')) \
