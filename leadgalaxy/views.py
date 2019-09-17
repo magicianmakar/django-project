@@ -3252,6 +3252,12 @@ def save_image_s3(request):
         if not user.can('pixlr_photo_editor.use'):
             return render(request, 'upgrade.html')
 
+        if request.method == 'OPTIONS':
+            response = HttpResponse()
+            response["Access-Control-Allow-Origin"] = "https://www.photopea.com"
+            response['Access-Control-Allow-Headers'] = 'Content-Type'
+            return response
+
         fp = io.BytesIO(request.body)
         fp.read(2000)  # First 2000 bytes are json settings
 
