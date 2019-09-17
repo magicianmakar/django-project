@@ -153,7 +153,7 @@
                 <div class="childs" style="">
                     {% if shopify_product %}
                         <div class="panel panel-default m-b-lg">
-                            <div class="panel-heading">Variants</div>
+                            <div class="panel-heading">Variants ({{shopify_product.variants|length}})</div>
                             <div class="panel-body" style="padding-bottom:0">
                         <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
                             <thead>
@@ -162,6 +162,7 @@
                                     <th>Title</th>
                                     <th>Price</th>
                                     <th>Compare at price</th>
+                                    <th>SKU</th>
                                     <th>Weight</th>
                                 </tr>
                             </thead>
@@ -202,6 +203,10 @@
                                                   data-number-to-fixed="2" data-number-stepfactor="100"
                                                   class="form-control currency" />
                                         </div>
+                                    </td>
+
+                                    <td style="white-space:nowrap">
+                                       <input name="sku" value="{{item.sku|default:''}}" class="form-control" />
                                     </td>
 
                                     <td style="white-space:nowrap">
