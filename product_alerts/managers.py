@@ -132,11 +132,7 @@ class ProductChangeManager():
         pass
 
     def get_variant(self, api_product_data, variant_change):
-        # Example Aliexpress SKU: "15:173#66Blue;5:361386" match to "<OptionGroup>:<OptionID>#<OptionTitle>"
-        sku = variant_change.get('sku')
-        ships_from_id = variant_change.get('ships_from_id')
-        ships_from_title = variant_change.get('ships_from_title')
-        return variant_index_from_supplier_sku(self.product, sku, api_product_data.get('variants', []), ships_from_id, ships_from_title)
+        return variant_index_from_supplier_sku(self.product, variant_change.get('sku'), api_product_data.get('variants', []))
 
     def handle_variant_price_change(self, api_product_data, product_data, variant_change):
         pass

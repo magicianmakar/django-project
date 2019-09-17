@@ -1,7 +1,10 @@
 import re
-import requests
+
 from django.conf import settings
 from raven.contrib.django.raven_compat.models import client as raven_client
+
+import requests
+from munch import Munch
 
 from shopified_core.utils import app_link, url_join, safe_float, safe_int
 
@@ -170,7 +173,7 @@ def monitor_product(product, stdout=None):
         return
 
 
-def parse_supplier_sku(sku):
+def parse_supplier_sku(sku, sort=False, remove_shipping=False):
     options = []
     if sku:
         for s in sku.split(';'):
@@ -179,104 +182,132 @@ def parse_supplier_sku(sku):
             if not option.get('option_title'):
                 option['option_title'] = ''
             options.append(option)
+
+    if sort:
+        options = sorted(options, key=lambda k: k['option_group'])
+
+    if remove_shipping:
+        options = [k for k in options if k['option_group'] != '200007763']
+
     return options
 
 
-def variant_index_from_supplier_sku(product, sku, variants=None, ships_from_id=None, ships_from_title=None):
-    original_sku = sku or ''
-    found_variant_id = None
-    variants_map = product.get_variant_mapping(for_extension=True)
+def match_sku_with_mapping_sku(sku, mapping):
+    """ Match a SKU str with a mapping return by get_variant_mapping
+
+    Args:
+        sku: str
+        mapping: list(dict), ex: [{title: Red, sku: 1:1}, {title: XL, sku: 2:10}]
+    """
+
+    remove_shipping = len(parse_supplier_sku(sku)) != len(mapping)
+
+    # Remove title from Aliexpress SKU
+    clean_ali_sku = ';'.join(f"{option['option_group']}:{option['option_id']}"
+                             for option in parse_supplier_sku(sku, sort=True, remove_shipping=remove_shipping))
+
+    # Remove title and groupd ID for older Aliexpress products mapping
+    clean_ali_sku_ids = ';'.join(sorted(option['option_id']
+                                 for option in parse_supplier_sku(sku, sort=True, remove_shipping=remove_shipping)))
+
+    # Remove "sku-n-" from old Aliexpress mapping and join them to look like Aliexpress SKU
+    mapping_skus = ';'.join(sorted([i['sku'].split('-').pop() for i in mapping if i.get('sku')]))
+
+    return clean_ali_sku == mapping_skus or \
+        clean_ali_sku_ids == mapping_skus
+
+
+def match_sku_title_with_mapping_title(sku, mapping):
+    """ Match a title with a mapping return by get_variant_mapping
+
+    Args:
+        title: str
+        mapping: list(dict), ex: [{title: Red, sku: 1:1}, {title: XL, sku: 2:10}]
+    """
+
+    ali_sku_titles = ';'.join(sorted(option['option_title'] for option in parse_supplier_sku(sku, sort=True)))
+
+    mapping_titles = ';'.join(sorted([i['title'] for i in mapping if i.get('title')]))
+
+    return ali_sku_titles.lower() == mapping_titles.lower()
+
+
+def match_sku_with_shopify_sku(sku, shopify_sku):
+    remove_shipping = len(parse_supplier_sku(sku)) != len(parse_supplier_sku(shopify_sku))
+
+    clean_sku = ';'.join(f"{option['option_group']}:{option['option_id']}"
+                         for option in parse_supplier_sku(sku, sort=True, remove_shipping=remove_shipping))
+
+    clean_shopify_sku = ';'.join(f"{option['option_group']}:{option['option_id']}"
+                                 for option in parse_supplier_sku(shopify_sku, sort=True, remove_shipping=remove_shipping))
+
+    # clean_first_sku_ids = ';'.join(sorted(option['option_id'] for option in parse_supplier_sku(sku, sort=True)))
+    # clean_second_sku_ids = ';'.join(sorted(option['option_id'] for option in parse_supplier_sku(shopify_sku, sort=True)))
+
+    return clean_sku == clean_shopify_sku
+
+
+def match_sku_title_with_shopify_variant_title(sku, variant):
+    """ Match a title with a mapping return by get_variant_mapping
+
+    Args:
+        title: str
+        mapping: list(dict), ex: [{title: Red, sku: 1:1}, {title: XL, sku: 2:10}]
+    """
+
+    ali_sku_titles = ';'.join(sorted(option['option_title'] for option in parse_supplier_sku(sku, sort=True)))
+
+    options = []
+    if 'option1' in variant:
+        # Shopify
+        options = [j for j in [variant['option1'], variant['option2'], variant['option3']] if bool(j)]
+    elif 'variant' in variant:
+        # CHQ
+        options = variant['variant']
+    elif 'variant_name' in variant:
+        # GKart, TODO: need handling other variant names, also SKU
+        options = [j for j in [variant['variant_name']] if bool(j)]
+
+    shopify_titles = ';'.join(sorted(options))
+
+    return ali_sku_titles.lower() == shopify_titles.lower()
+
+
+def variant_index_from_supplier_sku(product, sku, variants=None):
+    match = Munch(dict(
+        sku_mapping_sku=[],
+        sku_shopify_sku=[],
+        title_mapping_title=[],
+        title_shopify_title=[],
+    ))
 
     if not sku:
-        if variants is None:
-            if len(variants_map) == 1:
-                return list(variants_map.keys())[0]
-            else:
-                return None
-        elif len(variants) == 1:
+        if variants and len(variants) == 1:
             return 0
-        else:
-            return None
 
-    options = parse_supplier_sku(sku)
-    sku = ';'.join('{}:{}'.format(option['option_group'], option['option_id']) for option in options)
+    for idx, variant in enumerate(variants):
+        variant_id = variant['id'] if 'id' in variant else variant.get('id_product_variant')  # TODO: excption for GKart
+        mapping = product.get_variant_mapping(variant_id, for_extension=True)
+        if mapping and match_sku_with_mapping_sku(sku, mapping):
+            match.sku_mapping_sku.append(idx)
 
-    for variant_id, variant in variants_map.items():
-        found = True
-        ships_from_mapped = True if ships_from_id is None else False
-        no_variant = False
-        for variant_option in variant:
-            if type(variant_option) is dict:
-                mapped_title = variant_option.get('title')
-                mapped_sku = variant_option.get('sku')
-                if len(variant) == 1 and mapped_title == 'Default Title':
-                    no_variant = True
-                if variant_option.get('extra', False):
-                    continue
-            else:
-                mapped_title = variant_option
-                mapped_sku = ''
+        elif variant.get('sku') and match_sku_with_shopify_sku(sku, variant.get('sku')):
+            match.sku_shopify_sku.append(idx)
 
-            exists = False
-            for option in options:
-                option_id = option['option_id']
-                option_group = option['option_group']
-                option_title = option['option_title']
-                option_sku = f'{option_group}:{option_id}'
-                if mapped_sku:
-                    # matching by sku
-                    if mapped_sku == option_sku:
-                        exists = True
-                    elif mapped_sku and re.search(r"\b{}\b".format(option_id), mapped_sku):
-                        exists = True
-                else:
-                    # matching by title
-                    if mapped_title and mapped_title == option_title:
-                        exists = True
+        elif mapping and match_sku_title_with_mapping_title(sku, mapping):
+            match.title_mapping_title.append(idx)
 
-                if exists:
-                    if ships_from_id == option_id:
-                        ships_from_mapped = True
-                    break
-            if not exists:
-                found = False
-                break
-        if no_variant and not found:
-            if len(options) == 0:  # no variant option
-                found = True
-            elif len(options) == 1 and ships_from_id is not None:  # ships from is the only option
-                found = True
-        if found:
-            if ships_from_mapped:
-                found_variant_id = variant_id
-            elif ships_from_title == 'China':
-                found_variant_id = variant_id
-            break
-    if variants is None:
-        return found_variant_id
+        elif match_sku_title_with_shopify_variant_title(sku, variant):
+            match.title_shopify_title.append(idx)
 
-    if found_variant_id is not None:
-        for idx, variant in enumerate(variants):
-            # Shopify / CHQ / Woo
-            if variant.get('id') == safe_int(found_variant_id):
-                return idx
-            # GrooveKart
-            if variant.get('id_product_variant') == found_variant_id:
-                return idx
-    else:
-        for idx, variant in enumerate(variants):
-            variant_values = variant.get('variant')
-            if variant_values:  # CHQ Product
-                found = True
-                for i, value in enumerate(variant_values):
-                    if value != options[i]['option_title']:
-                        found = False
-                if found:
-                    return idx
-            elif variant.get('sku') and (variant['sku'] in sku or variant['sku'] in original_sku):
-                if ships_from_id is None or ships_from_title == 'China':
-                    return idx
-    return None
+    if match.sku_mapping_sku:
+        return match.sku_mapping_sku.pop()
+    elif match.sku_shopify_sku:
+        return match.sku_shopify_sku.pop()
+    elif match.title_mapping_title:
+        return match.title_mapping_title.pop()
+    elif match.title_shopify_title:
+        return match.title_shopify_title.pop()
 
 
 def calculate_price(user, old_value, new_value, current_price, current_compare_at, price_update_method, markup_rules):

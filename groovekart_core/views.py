@@ -171,7 +171,7 @@ def product_alerts(request):
         variants = p.get('variants', [])
         for c in change['changes']['variants']['quantity']:
             if len(variants) > 0:
-                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                index = variant_index_from_supplier_sku(i.product, c['sku'])
                 if index is not None:
                     c['gkart_value'] = "Unmanaged"
                 else:
@@ -180,7 +180,7 @@ def product_alerts(request):
                 c['gkart_value'] = "Unmanaged"
         for c in change['changes']['variants']['price']:
             if len(variants) > 0:
-                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                index = variant_index_from_supplier_sku(i.product, c['sku'])
                 if index is not None:
                     c['gkart_value'] = variants[index]['price']
                 else:

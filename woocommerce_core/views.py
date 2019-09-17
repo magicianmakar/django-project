@@ -141,7 +141,7 @@ def product_alerts(request):
         variants = p.get('variants', None)
         for c in change['changes']['variants']['quantity']:
             if variants is not None and len(variants) > 0:
-                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants)
                 if index is not None:
                     if variants[index]['manage_stock']:
                         c['woo_value'] = variants[index]['stock_quantity']
@@ -158,7 +158,7 @@ def product_alerts(request):
                 c['woo_value'] = "Not Found"
         for c in change['changes']['variants']['price']:
             if variants is not None and len(variants) > 0:
-                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants)
                 if index is not None:
                     c['woo_value'] = variants[index]['price']
                 else:

@@ -166,7 +166,7 @@ def product_alerts(request):
         variants = p.get('variants', None)
         for c in change['changes']['variants']['quantity']:
             if variants is not None:
-                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants)
                 if index is not None:
                     # TODO: check track_inventory status
                     if p.get('track_inventory'):
@@ -186,7 +186,7 @@ def product_alerts(request):
                 c['chq_value'] = "Not Found"
         for c in change['changes']['variants']['price']:
             if variants is not None:
-                index = variant_index_from_supplier_sku(i.product, c['sku'], variants, c.get('ships_from_id'), c.get('ships_from_title'))
+                index = variant_index_from_supplier_sku(i.product, c['sku'], variants)
                 if index is not None:
                     c['chq_value'] = variants[index]['price']
                 else:

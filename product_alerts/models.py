@@ -276,9 +276,7 @@ class ProductChange(models.Model):
             change = changes[change_index]
             if api_product_data is not None and change.get('sku'):
                 variants = api_product_data.get('variants', None)
-                ships_from_id = change.get('ships_from_id')
-                ships_from_title = change.get('ships_from_title')
-                idx = variant_index_from_supplier_sku(self.product, change.get('sku'), variants, ships_from_id, ships_from_title)
+                idx = variant_index_from_supplier_sku(self.product, change.get('sku'), variants)
                 if variants is not None and idx is not None:
                     change['variant_id'] = api_product_data['variants'][idx]['id']
                     title = api_product_data['variants'][idx].get('title')

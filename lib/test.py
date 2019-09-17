@@ -10,6 +10,16 @@ from leadgalaxy.tests.factories import (
 class BaseTestCase(TestCase):
     maxDiff = None
 
+    def assertEqualCaseInsensitive(self, expected, actual):
+        expected_lower = expected.lower()
+        actual_lower = actual.lower()
+        if expected_lower != actual_lower:
+            self.fail('str did not match:\n+{!r}\n-{!r}\n\nComparing:\n+{!r}\n-{!r}'.format(
+                expected,
+                actual,
+                expected_lower,
+                actual_lower))
+
 
 class ProductAlertsBase(BaseTestCase):
     store_factory = None
