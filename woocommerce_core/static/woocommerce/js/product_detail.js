@@ -711,10 +711,15 @@ $('#modal-add-image').on('show.bs.modal', function (e) {
     matchImagesWithExtra();
 });
 
-$('#modal-add-image .add-var-image').click(function (e) {
-    var imageIdx = indexOfImages(product.images, $(this).attr('src'));
+$(document).on('click', '#modal-add-image .add-var-image, #modal-upload-image .add-var-image', function (e) {
+    var src = $(this).attr('src');
+    if (src.indexOf('?') === -1) {
+        src = src + '?ext';
+    }
+
+    var imageIdx = indexOfImages(product.images, src);
     if (imageIdx == -1) {
-        product.images.push($(this).attr('src'));
+        product.images.push(src);
     } else {
         var images = [];
 
