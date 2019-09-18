@@ -92,6 +92,22 @@ def dict_val(data, name, default=None):
         return data.get(name, default)
 
 
+def prefix_from_model(model):
+    prefix = model._meta.app_label
+    if prefix == 'leadgalaxy':
+        return 'shopify'
+    elif prefix == 'commercehq_core':
+        return 'chq'
+    elif prefix == 'woocommerce_core':
+        return 'woo'
+    elif prefix == 'groovekart_core':
+        return 'gkart'
+    elif prefix == 'gearbubble_core':
+        return 'gear'
+    else:
+        return None
+
+
 def list_chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):

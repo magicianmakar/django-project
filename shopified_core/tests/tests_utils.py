@@ -13,6 +13,7 @@ from shopified_core.utils import (
     app_link,
     url_join,
     random_hash,
+    prefix_from_model,
     order_data_cache,
     order_phone_number,
     unique_username,
@@ -171,6 +172,22 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(app_link('orders/track'), settings.APP_URL + '/orders/track')
         self.assertEqual(app_link('orders', qurey=1001), settings.APP_URL + '/orders?qurey=1001')
         self.assertEqual(app_link('orders', 'place', SAStep=True, product=123456), settings.APP_URL + '/orders/place?SAStep=true&product=123456')
+
+    def test_prefix_from_model(self):
+        from leadgalaxy.models import ShopifyStore, GroupPlan, ShopifyProduct
+        from commercehq_core.models import CommerceHQProduct
+        from groovekart_core.models import GrooveKartProduct
+        from woocommerce_core.models import WooProduct
+
+        self.assertEqual(prefix_from_model(ShopifyStore()), 'shopify')
+        self.assertEqual(prefix_from_model(GroupPlan()), 'shopify')
+        self.assertEqual(prefix_from_model(ShopifyProduct()), 'shopify')
+
+        self.assertEqual(prefix_from_model(CommerceHQProduct()), 'chq')
+
+        self.assertEqual(prefix_from_model(GrooveKartProduct()), 'gkart')
+
+        self.assertEqual(prefix_from_model(WooProduct()), 'woo')
 
     def test_order_data(self):
         orders = {

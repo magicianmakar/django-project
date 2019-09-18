@@ -1,11 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
+from django.contrib import messages
 from django.http import HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from django.views.generic import View
 
 from shopified_core import permissions
 from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule, DashboardVideo
 from goals.utils import get_dashboard_user_goals
+
+from .context_processors import all_stores
 
 
 @login_required
@@ -51,3 +55,26 @@ def home_page_view(request):
         'user_goals': user_goals,
         'videos': videos,
     })
+
+
+class GotoPage(View):
+    def get_failure_url(self, url_name):
+        messages.warning(self.request, 'Please connect your store first.')
+        return redirect('/')
+
+    def get(self, request, url_name='index'):
+        user = request.user
+        if not user.is_authenticated:
+            return self.get_failure_url(url_name)
+
+        try:
+            stores = all_stores(self.request)['user_stores']['all']
+        except:
+            stores = []
+
+        if not stores:
+            return self.get_failure_url(url_name)
+
+        store = stores[0]
+        url = store.get_page_url(url_name)
+        return redirect(url)

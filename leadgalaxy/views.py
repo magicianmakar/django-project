@@ -3398,8 +3398,7 @@ def orders_view(request):
 
     store = utils.get_store_from_request(request)
     if not store:
-        messages.warning(request, 'Please add at least one store before using the Orders page.')
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'orders_list'}))
 
     if not request.user.can('place_orders.sub', store):
         messages.warning(request, "You don't have access to this store orders")
@@ -4346,8 +4345,7 @@ def orders_track(request):
 
     store = utils.get_store_from_request(request)
     if not store:
-        messages.warning(request, 'Please add at least one store before using the Tracking page.')
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'orders_track'}))
 
     if not request.user.can('place_orders.sub', store):
         messages.warning(request, "You don't have access to this store orders")
@@ -4675,8 +4673,7 @@ def product_alerts(request):
 
     store = utils.get_store_from_request(request)
     if not store:
-        messages.warning(request, 'Please add at least one store before using the Alerts page.')
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'product_alerts'}))
 
     ProductChange.objects.filter(user=request.user.models_user,
                                  shopify_product__store=None).delete()

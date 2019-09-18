@@ -1,6 +1,7 @@
 from django.db import models
+from django.urls import reverse
 
-from .utils import ALIEXPRESS_SOURCE_STATUS, safe_str
+from .utils import ALIEXPRESS_SOURCE_STATUS, safe_str, prefix_from_model
 
 
 class StoreBase(models.Model):
@@ -9,6 +10,18 @@ class StoreBase(models.Model):
 
     list_index = models.IntegerField(default=0)
     currency_format = models.CharField(max_length=512, blank=True, null=True)
+
+    def get_url(self, name):
+        prefix = prefix_from_model(self)
+        if prefix and prefix != 'shopify':
+            url = reverse(f'{prefix}:{name}')
+        else:
+            url = reverse(name)
+
+        return f'{url}?store={self.id}'
+
+    def get_page_url(self, url_name):
+        return self.get_url(url_name)
 
 
 class SupplierBase(models.Model):
