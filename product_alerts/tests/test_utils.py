@@ -193,6 +193,12 @@ class MappingUtilsTestCase(BaseTestCase):
 
         self.assertFalse(match_sku_with_shopify_sku(ali_sku, shopify_sku))
 
+    def test_sku_compare_with_random_sku(self):
+        ali_sku = '5:201441335#20x25cm'
+        shopify_sku = '9421179-20x30cm-bag-pack'
+
+        self.assertFalse(match_sku_with_shopify_sku(ali_sku, shopify_sku))
+
     def test_sku_title_compare_with_mapping(self):
         ali_sku = '1100:472496#Red;774888:361385#L'
         mapping = [

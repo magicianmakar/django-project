@@ -178,6 +178,9 @@ def parse_supplier_sku(sku, sort=False, remove_shipping=False):
     if sku:
         for s in sku.split(';'):
             m = re.match(r"(?P<option_group>\w+):(?P<option_id>\w+)#?(?P<option_title>.+)?", s)
+            if not m:
+                continue
+
             option = m.groupdict()
             if not option.get('option_title'):
                 option['option_title'] = ''
