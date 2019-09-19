@@ -88,6 +88,7 @@ def user_can_view(user, obj, raise_on_error=True, superuser_can=True):
             if isinstance(obj, ShopifyStore) or \
                     isinstance(obj, CommerceHQStore) or \
                     isinstance(obj, WooStore) or \
+                    isinstance(obj, GrooveKartStore) or \
                     isinstance(obj, GearBubbleStore):
                 store = obj
             elif hasattr(obj, 'store'):
@@ -104,6 +105,8 @@ def user_can_view(user, obj, raise_on_error=True, superuser_can=True):
                     stores = user.profile.get_woo_stores(flat=True)
                 elif isinstance(store, GearBubbleStore):
                     stores = user.profile.get_gear_stores(flat=True)
+                elif isinstance(store, GrooveKartStore):
+                    stores = user.profile.get_gkart_stores(flat=True)
                 else:
                     return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
 
@@ -125,6 +128,7 @@ def user_can_edit(user, obj, raise_on_error=True):
         if isinstance(obj, ShopifyStore) or \
                 isinstance(obj, CommerceHQStore) or \
                 isinstance(obj, WooStore) or \
+                isinstance(obj, GrooveKartStore) or \
                 isinstance(obj, GearBubbleStore):
             return raise_or_return_result("Sub-User can not edit stores", raise_on_error=raise_on_error)
 
@@ -144,6 +148,8 @@ def user_can_edit(user, obj, raise_on_error=True):
                     stores = user.profile.get_woo_stores(flat=True)
                 elif isinstance(store, GearBubbleStore):
                     stores = user.profile.get_gear_stores(flat=True)
+                elif isinstance(store, GrooveKartStore):
+                    stores = user.profile.get_gkart_stores(flat=True)
                 else:
                     return raise_or_return_result("Unknow Store Type", raise_on_error=raise_on_error)
 
@@ -165,6 +171,7 @@ def user_can_delete(user, obj, raise_on_error=True):
         if isinstance(obj, ShopifyStore) or \
                 isinstance(obj, CommerceHQStore) or \
                 isinstance(obj, WooStore) or \
+                isinstance(obj, GrooveKartStore) or \
                 isinstance(obj, GearBubbleStore):
             return raise_or_return_result("Sub-User can not delete stores", raise_on_error=raise_on_error)
 
@@ -226,6 +233,7 @@ def can_add_product(user, ignore_daily_limit=False):
         user_count += profile.user.commercehqproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
         user_count += profile.user.wooproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
         user_count += profile.user.gearbubbleproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
+        user_count += profile.user.groovekartproduct_set.filter(Q(store=None) | Q(store__is_active=True)).count()
 
         cache.set(products_count_key, user_count, timeout=600)
 
@@ -273,6 +281,7 @@ def can_add_board(user):
     user_count += profile.user.commercehqboard_set.count()
     user_count += profile.user.wooboard_set.count()
     user_count += profile.user.gearbubbleboard_set.count()
+    user_count += profile.user.groovekartboard_set.count()
     can_add = True
 
     if (total_allowed > -1) and (user_count + 1 > total_allowed):
