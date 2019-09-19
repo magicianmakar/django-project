@@ -549,7 +549,6 @@ class ApiBase(ApiResponseMixin, View):
             'products_ids': splitted_product_ids
         })
 
-    @method_decorator(HasSubuserPermission('save_for_later.sub'))
     def post_save_for_later(self, request, user, data):
         # DEPRECATE: user pusher-based product save
         # Backward compatibly with Shopify save for later
