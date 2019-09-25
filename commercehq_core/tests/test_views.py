@@ -678,7 +678,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
 
     @patch('commercehq_core.tasks.product_save', Mock(return_value=None))
     def test_subuser_can_not_save_for_later_with_permission(self):
-        self.user.profile.subuser_chq_stores.add(self.store)
+        self.user.profile.subuser_chq_stores.remove(self.store)
         data = {'store': self.store.id}
         r = self.client.post('/api/chq/save-for-later', data, **self.headers)
         self.assertEqual(r.status_code, 403)
