@@ -1,6 +1,19 @@
 (function(sub_conf, user_statistics) {
     'use strict';
 
+    $('.ibox .dismiss-link').click(function() {
+        var parentBox = $(this).parents('.ibox');
+        var userGoalId = $(this).data('user-goal');
+        parentBox.hide();
+        $.ajax({
+            url: '/api/goals/goal-is-viewed',
+            type: 'POST',
+            data: {
+                user_goal_id: userGoalId
+            },
+        });
+    });
+
     $('.goal-step').click(function () {
         var stepSlug = $(this).data('step-slug');
         var goalId = $(this).data('goal-id');
@@ -32,6 +45,7 @@
     isExtensionReady().done(function () {
         $('a.extension-link').hide();
         Cookies.set('ext_installed', 'true');
+        $('.goal-step[data-step-slug="install-chrome-extension"]').trigger('click');
     });
 
     function syncConfig() {

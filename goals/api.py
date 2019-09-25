@@ -1,7 +1,7 @@
 from django.views.generic import View
 
 from shopified_core.mixins import ApiResponseMixin
-from .models import Step
+from .models import Step, UserGoalRelationship
 from . import step_slugs
 
 
@@ -29,3 +29,19 @@ class GoalsApi(ApiResponseMixin, View):
                                      'steps': completed_steps})
 
         return self.api_success({'added': False})
+
+    def post_goal_is_viewed(self, request, user, data):
+        user_goal_id = data['user_goal_id']
+        try:
+            user_goal = UserGoalRelationship.objects.get(id=user_goal_id)
+        except UserGoalRelationship.DoesNotExist:
+            return self.api_error('Not found', status=404)
+
+        if user_goal.viewed:
+            return self.api_success()
+
+        if user_goal.total_steps_completed == user_goal.goal.steps.count():
+            user_goal.viewed = True
+            user_goal.save()
+
+        return self.api_success()

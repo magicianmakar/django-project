@@ -6,6 +6,7 @@ from .models import Step
 
 def get_dashboard_user_goals(user):
     user_goals = user.usergoalrelationship_set.all()
+    user_goals = user_goals.filter(viewed=False)
     user_goals = user_goals.select_related('user', 'goal')
     user_goals = user_goals.order_by('goal__goal_number')
     user_goals = user_goals.prefetch_related('user__completed_steps')

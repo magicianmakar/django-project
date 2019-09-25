@@ -21,6 +21,7 @@ class Goal(models.Model):
 class UserGoalRelationship(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
     goal = models.ForeignKey('goals.Goal')
+    viewed = models.BooleanField(default=False)
 
     class Meta:
         unique_together = 'user', 'goal'
