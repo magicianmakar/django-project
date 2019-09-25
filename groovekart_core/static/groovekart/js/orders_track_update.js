@@ -108,6 +108,8 @@
                 error: 0
             };
 
+            $('.pending-orders', modal).text(data.pending + ' ' + 'Order' + (data.pending > 1 ? 's' : ''));
+
             disable_config_sync = true;
 
             if (data.pending > 100) {

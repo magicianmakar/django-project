@@ -9,8 +9,8 @@
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="pending-msg">
-                            <p>Update <b class="pending-orders"></b> in this store <span class="aliexpress-account"></span></p>
-                            <p>Make sure you are logged in Aliexpress with the right account.</p>
+                            <p>Update <b class="pending-orders"></b> in your store.</p>
+                            <p>Make sure you are logged in your supplier with the right account.</p>
                         </div>
                     </div>
                 </div>
@@ -131,7 +131,7 @@
             {{/if}}
         </td>
         <td>
-            <a href="https://trade.aliexpress.com/order_detail.htm?orderId={{order.source_id}}" target="_blank">
+            <a href="{{order.source_url}}" target="_blank">
                 #{{order.source_id}}
             </a>
         </td>

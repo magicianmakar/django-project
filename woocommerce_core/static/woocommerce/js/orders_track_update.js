@@ -68,16 +68,6 @@
 
         btn.button('loading');
 
-        window.extensionSendMessage({
-            subject: 'AliexpessAccount',
-        }, function(rep) {
-            if (rep && rep.name) {
-                $('.aliexpress-account').html(' - Update using <b>' + rep.name + '</b> Aliexpress Account.').show();
-            } else {
-                $('.aliexpress-account').hide();
-            }
-        });
-
         $.ajax({
             url: api_url('order-fulfill', 'woo'),
             data: {
@@ -310,6 +300,12 @@
 
         if (source && source.orderStatus && status_map.hasOwnProperty(source.orderStatus)) {
             source.order_status = status_map[source.orderStatus];
+        }
+
+        if (order.source_type == 'ebay') {
+            order.source_url = 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId=' + order.source_id;
+        } else {
+            order.source_url = 'https://trade.aliexpress.com/order_detail.htm?orderId=' + order.source_id;
         }
 
         var trItem = $(order_update_tpl({
