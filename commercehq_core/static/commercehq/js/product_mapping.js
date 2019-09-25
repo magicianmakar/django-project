@@ -157,6 +157,7 @@
 
             // Extra varinats
             var extraEl = $(variant_tpl({
+                className: 'extra-mapping-options',
                 title: 'Extra Options'
             }));
             var inputEl = $(extra_input_tpl({}));

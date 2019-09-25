@@ -517,3 +517,7 @@ ul.breadcrumb-right-menu li:hover, ul.breadcrumb-right-menu li.active {
 ul.breadcrumb-right-menu li a {
   color: inherit;
 }
+
+.row.well.variant.extra-mapping-options {
+    display: none !important;
+}

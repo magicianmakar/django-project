@@ -175,7 +175,7 @@
 {% verbatim %}
 
 <script id="variant-template" type="text/x-handlebars-template">
-    <div class="row well variant" style="padding: 5px 10px">
+    <div class="row well variant {{className}}" style="padding: 5px 10px">
         <h3>{{title}}:</h3>
         <div class="options col-xs-12"></div>
     </div>
@@ -200,7 +200,7 @@
 </script>
 
 <script id="extra-input-template" type="text/x-handlebars-template">
-    <div class="" style="padding: 5px 0">
+    <div style="padding: 5px 0">
         <input class="extra-input form-control" type="text">
     </div>
 </script>
