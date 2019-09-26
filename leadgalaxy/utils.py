@@ -224,6 +224,8 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
         if len(fullname):
             first_name = fullname[0]
             last_name = ' '.join(fullname[1:])
+    else:
+        fullname = []
 
     username = unique_username(email, fullname=fullname)
     password = get_random_string(12)
