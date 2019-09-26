@@ -2,7 +2,7 @@
 	"model": "stripe_subscription.customstripeplan",
 	"pk": 9,
 	"fields": {
-		"name": "CallFlex Local",
+		"name": "CallFlex Local 1",
 		"amount": "12.00",
 		"currency": "usd",
 		"retail_amount": "12.00",
@@ -10,7 +10,7 @@
 		"interval_count": 1,
 		"trial_period_days": 0,
 		"statement_descriptor": null,
-		"hidden": false,
+		"hidden": true,
 		"type": "callflex_subscription",
 		"credits_data": "{\"credits_local\": 1, \"credits_tollfree\": 0, \"credits_minutes_local\": 200, \"credits_minutes_tollfree\": 0}",
 		"stripe_id": "CP_e8d4cca5",
@@ -20,7 +20,7 @@
 	"model": "stripe_subscription.customstripeplan",
 	"pk": 10,
 	"fields": {
-		"name": "CallFlex Toll Free Plus",
+		"name": "CallFlex Toll Free Plus 1",
 		"amount": "19.00",
 		"currency": "usd",
 		"retail_amount": "19.00",
@@ -28,7 +28,7 @@
 		"interval_count": 1,
 		"trial_period_days": 0,
 		"statement_descriptor": null,
-		"hidden": false,
+		"hidden": true,
 		"type": "callflex_subscription",
 		"credits_data": "{\"credits_local\": 0, \"credits_tollfree\": 1, \"credits_minutes_local\": 0, \"credits_minutes_tollfree\": 200}",
 		"stripe_id": "CP_fdba0f22",
@@ -38,7 +38,7 @@
 	"model": "stripe_subscription.customstripeplan",
 	"pk": 11,
 	"fields": {
-		"name": "CallFlex Toll Free Plus (Premier Users Only)",
+		"name": "CallFlex Toll Free Plus (Premier Users Only) 1",
 		"amount": "0.00",
 		"currency": "usd",
 		"retail_amount": "0.00",
@@ -51,5 +51,41 @@
 		"credits_data": "{\"credits_local\": 0, \"credits_tollfree\": 1, \"credits_minutes_local\": 0, \"credits_minutes_tollfree\": 200}",
 		"stripe_id": "CP_4a6a198a",
 		"created_at": "2019-05-17T14:40:41.936Z"
+	}
+}, {
+	"model": "stripe_subscription.customstripeplan",
+	"pk": 12,
+	"fields": {
+		"name": "CallFlex Local 2",
+		"amount": "12.00",
+		"currency": "usd",
+		"retail_amount": "12.00",
+		"interval": "month",
+		"interval_count": 1,
+		"trial_period_days": 0,
+		"statement_descriptor": null,
+		"hidden": false,
+		"type": "callflex_subscription",
+		"credits_data": "{\"credits_local\": 1, \"credits_tollfree\": 0, \"credits_minutes_local\": 100, \"credits_minutes_tollfree\": 0}",
+		"stripe_id": "CP_a98bae46",
+		"created_at": "2019-09-03T19:38:07.956Z"
+	}
+}, {
+	"model": "stripe_subscription.customstripeplan",
+	"pk": 13,
+	"fields": {
+		"name": "CallFlex Toll Free Plus 2",
+		"amount": "19.00",
+		"currency": "usd",
+		"retail_amount": "19.00",
+		"interval": "month",
+		"interval_count": 1,
+		"trial_period_days": 0,
+		"statement_descriptor": null,
+		"hidden": false,
+		"type": "callflex_subscription",
+		"credits_data": "{\"credits_local\": 0, \"credits_tollfree\": 1, \"credits_minutes_local\": 0, \"credits_minutes_tollfree\": 100}",
+		"stripe_id": "CP_0fc81734",
+		"created_at": "2019-09-03T14:39:19.562Z"
 	}
 }]

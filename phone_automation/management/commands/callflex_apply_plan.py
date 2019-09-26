@@ -41,6 +41,7 @@ class Command(DropifiedBaseCommand):
 
         for user in users.iterator():
             try:
+                self.write(f"Processing User ID:{user.pk} ")
                 plan = CustomStripePlan.objects.get(id=options['plan_id'])
 
                 subscription = user.stripesubscription_set.latest('created_at')

@@ -452,8 +452,8 @@ else:
     AWS_AUDIO_TRANSCODE_PIPELINE_ID = os.environ.get('AWS_AUDIO_TRANSCODE_PIPELINE_ID', '1545230355460-asr0hb')
 EXTRA_TOLLFREE_NUMBER_PRICE = 5  # USD
 EXTRA_LOCAL_NUMBER_PRICE = 3  # USD
-EXTRA_TOLLFREE_MINUTE_PRICE = 0.05  # USD per minute
-EXTRA_LOCAL_MINUTE_PRICE = 0.02  # USD per minute
+EXTRA_TOLLFREE_MINUTE_PRICE = 0.2  # USD per minute
+EXTRA_LOCAL_MINUTE_PRICE = 0.1  # USD per minute
 CALLFLEX_OVERAGES_MAX_NUMBERS = 10  # user can never go over this limit  of phone number when adding as overages
 CALLFLEX_OVERAGES_MAX_MINUTES = 1000  # user can never go over this limit of minutes when adding as overages
 
