@@ -72,7 +72,7 @@ class Command(DropifiedBaseCommand):
             try:
                 counter['need_fulfill'] += 1
 
-                if last_executed(f'order-auto-fulfill-{order.id}', 21600):
+                if last_executed(f'order-auto-fulfill2-{order.id}', 21600):
                     if not last_executed(f'order-auto-fulfill-sync-{order.id}', 21600):
                         utils.get_tracking_orders(order.store, [order])
                         raven_client.captureMessage('Skipping Order with issue', tags={'track': order.id, 'store': order.store.shop})
@@ -170,6 +170,15 @@ class Command(DropifiedBaseCommand):
                                 order.save()
 
                                 return False
+
+                            elif r.ok and order.line_id not in [i['id'] for i in r.json()['order']['line_items']]:
+                                self.log_fulfill_error(order, 'Order Line Not Found')
+                                self.write('Line Not found #{} in [{}]'.format(order.order_id, order.store.title))
+                                order.hidden = True
+                                order.save()
+
+                                return False
+
                             else:
                                 check_order_exist = False
 
