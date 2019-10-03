@@ -5,10 +5,12 @@ from django.utils import timezone
 import arrow
 
 from leadgalaxy.models import UserProfile
+from leadgalaxy.utils import get_plan
 from product_alerts.models import ProductChange
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import send_email_from_template
 from stripe_subscription.utils import invoice_extra_stores
+from shopify_subscription.models import ShopifySubscription
 
 
 class Command(DropifiedBaseCommand):
@@ -35,6 +37,7 @@ class Command(DropifiedBaseCommand):
 
         self.stdout.write('Delete Old Alerts', self.style.HTTP_INFO)
         self.delete_alerts()
+        self.cancel_yearly()
 
     def profile_changed(self, profile, expired_plan, new_plan):
         send_email_from_template(
@@ -62,3 +65,19 @@ class Command(DropifiedBaseCommand):
             ProductChange.objects.filter(id__in=order_ids).delete()
 
             start += steps
+
+    def cancel_yearly(self):
+        cancel_date = arrow.utcnow().replace(years=-1, days=-1).span('day')[1]
+        users = ShopifySubscription.objects.filter(
+            charge_type='single',
+            plan__payment_gateway='shopify',
+            plan__payment_interval='yearly',
+            user__profile__plan__free_plan=False,
+            status='active',
+            created_at__lt=cancel_date.datetime)
+
+        for i in users:
+            self.stdout.write(f'Cancel yearly subscription for {i.user.email} from {i.created_at:%Y-%m-%d}')
+            i.user.profile.change_plan(get_plan(
+                payment_gateway='shopify',
+                plan_slug='shopify-free-plan'))
