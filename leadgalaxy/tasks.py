@@ -427,16 +427,17 @@ def export_product(req_data, target, user_id):
                     utils.attach_boards_with_product(user, product, boards)
 
                 supplier_info = product.get_supplier_info()
-                supplier = ProductSupplier.objects.create(
-                    store=store,
-                    product=product,
-                    product_url=original_url[:512],
-                    supplier_name=supplier_info.get('name'),
-                    supplier_url=supplier_info.get('url'),
-                    is_default=True
-                )
+                if supplier_info:
+                    supplier = ProductSupplier.objects.create(
+                        store=store,
+                        product=product,
+                        product_url=original_url[:512],
+                        supplier_name=supplier_info.get('name'),
+                        supplier_url=supplier_info.get('url'),
+                        is_default=True
+                    )
 
-                product.set_default_supplier(supplier, commit=True)
+                    product.set_default_supplier(supplier, commit=True)
 
             except PermissionDenied as e:
                 raven_client.captureException()
