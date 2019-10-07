@@ -2263,7 +2263,7 @@ class ShopifyStoreApi(ApiBase):
                 if len(found_products) == 1 and not found_products[0].have_supplier():
                     product = found_products[0]
                 else:
-                    return self.api_error('Product is already imported/connected', status=422)
+                    return self.api_error('Product is already imported/connected', status=489)
         else:
             return self.api_error('Shopify Product ID is missing', status=422)
 
