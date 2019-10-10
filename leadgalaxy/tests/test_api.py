@@ -475,7 +475,7 @@ class ProductsApiTestCase(BaseTestCase):
         self.assertTrue(product.have_supplier())
 
         r = self.client.post('/api/shopify/import-product', data)
-        self.assertEqual(r.status_code, 422)
+        self.assertEqual(r.status_code, 489)
         self.assertIn('connected', r.json().get('error'))
 
     def test_post_order_fulfill_update(self):
