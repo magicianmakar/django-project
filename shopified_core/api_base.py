@@ -2,6 +2,7 @@ import simplejson as json
 import arrow
 import itertools
 
+import phonenumbers
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.views.generic import View
@@ -327,8 +328,14 @@ class ApiBase(ApiResponseMixin, View):
                 order['order']['phone'] = phone_number
                 order['order']['phoneCountry'] = phone_country
 
-            if not order['order']['phone'] and order.get('supplier_type') == 'ebay':
+            if not order['order']['phone']:
                 order['order']['phone'] = '0000000000'
+
+            if not order['order']['phoneCountry']:
+                try:
+                    order['order']['phoneCountry'] = f"+{phonenumbers.country_code_for_region(order['shipping_address']['country_code'])}"
+                except:
+                    raven_client.captureException()
 
             if user.models_user.get_config('_aliexpress_telephone_workarround'):
                 order['order']['telephone_workarround'] = True
