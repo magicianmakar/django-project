@@ -6,9 +6,10 @@ from django.core.urlresolvers import resolve
 
 def get_menu_structure(namespace):
     body = [
-        ('all-products', [
-            'non-connected',
+        ('products', [
+            'all-products',
             'import-products',
+            'us-product-database',
             'boards',
             'alerts',
         ]),
@@ -19,7 +20,6 @@ def get_menu_structure(namespace):
             'subusers',
             'callflex',
             'tubehunt',
-            'us-product-database',
             'tools',
         ]),
     ]
@@ -81,12 +81,12 @@ def get_menu_item_data():
             'permissions': ['orders.view'],
             'match': re.compile(r'(/\w+)?/orders/track'),
         },
-        'all-products': {
-            'title': 'All Products',
+        'products': {
+            'title': 'Products',
             'icon': get_static('vector-products.svg'),
         },
-        'non-connected': {
-            'title': 'Non Connected',
+        'all-products': {
+            'title': 'Saved Products',
             'url_name': 'products_list',
             'match': re.compile(r'(/\w+)?/products?$'),
         },

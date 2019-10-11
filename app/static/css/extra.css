@@ -501,6 +501,8 @@ ul.breadcrumb-right-menu {
   border-left: 1px solid #e7eaec;
   display: flex;
   justify-content: space-between;
+  width: 350px;
+  float: right;
 }
 
 ul.breadcrumb-right-menu li {
