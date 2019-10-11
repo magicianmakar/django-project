@@ -73,12 +73,26 @@ class CallflexOveragesBilling:
         phonenumber_usage_local = utils.get_phonenumber_usage(self.user, "local")
 
         if phonenumber_usage_tollfree['total'] is not False and phonenumber_usage_tollfree['used'] >= phonenumber_usage_tollfree['total']:
-            overages_phone_number += (phonenumber_usage_tollfree['used'] - phonenumber_usage_tollfree['total']) * \
-                settings.EXTRA_TOLLFREE_NUMBER_PRICE * (month_passed + 1)
+            overage_phones = self.user.twilio_phone_numbers.filter(type="tollfree").all()[safe_int(phonenumber_usage_tollfree['total']):]
+            # going thru each "overage" number and calculating monther passed (after provisioining or subscription start, which was first
+            for overage_phone in overage_phones:
+                if overage_phone.created_at > subscription_period_start:
+                    month_passed_phone = utils.get_monthes_passed(overage_phone.created_at)
+                else:
+                    month_passed_phone = month_passed
+                overages_phone_number += (phonenumber_usage_tollfree['used'] - phonenumber_usage_tollfree['total']) * \
+                    settings.EXTRA_TOLLFREE_NUMBER_PRICE * (month_passed_phone + 1)
 
         if phonenumber_usage_local['total'] is not False and phonenumber_usage_local['used'] >= phonenumber_usage_local['total']:
-            overages_phone_number += (phonenumber_usage_local['used'] - phonenumber_usage_local['total']) * \
-                settings.EXTRA_LOCAL_NUMBER_PRICE * (month_passed + 1)
+            overage_phones = self.user.twilio_phone_numbers.filter(type="local").all()[safe_int(phonenumber_usage_tollfree['total']):]
+            # now the same for local numbers
+            for overage_phone in overage_phones:
+                if overage_phone.created_at > subscription_period_start:
+                    month_passed_phone = utils.get_monthes_passed(overage_phone.created_at)
+                else:
+                    month_passed_phone = month_passed
+                overages_phone_number += (phonenumber_usage_local['used'] - phonenumber_usage_local['total']) * \
+                    settings.EXTRA_LOCAL_NUMBER_PRICE * (month_passed_phone + 1)
 
         invoice_numbers = self.add_invoice('extra_number', overages_phone_number, True)
         invoices.append(invoice_numbers)
