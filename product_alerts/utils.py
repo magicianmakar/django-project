@@ -58,14 +58,15 @@ def is_monitorable(product):
     try:
         supplier = product.default_supplier
 
-        if not supplier.is_aliexpress:
+        if supplier.is_aliexpress or supplier.is_ebay:
+            product_id = supplier.get_source_id()
+            if not product_id:
+                # Product doesn't have Source Product ID
+                monitor_id = -3
+        else:
             #  Not connected or not an Aliexpress product
             monitor_id = -1
 
-        product_id = supplier.get_source_id()
-        if not product_id:
-            # Product doesn't have Source Product ID
-            monitor_id = -3
     except:
         monitor_id = -5
 
@@ -146,6 +147,7 @@ def monitor_product(product, stdout=None):
             'dropified_store': product.store_id,
             'dropified_user': product.user_id,
             'url': product.default_supplier.product_url,
+            'product_type': product.default_supplier.supplier_type(),
             'webhook': webhook_url,
         }
 
