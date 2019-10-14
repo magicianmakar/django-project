@@ -27,7 +27,7 @@ urlpatterns = [
     url(r'^acp/graph$', leadgalaxy.views.acp_graph, name='acp_graph'),
     url(r'^autocomplete/(?P<target>[a-z-]+)$', leadgalaxy.views.autocomplete),
     url(r'^upgrade-required$', leadgalaxy.views.upgrade_required, name='upgrade_required'),
-    url(r'^orders$', leadgalaxy.views.orders_view, name='orders'),
+    url(r'^orders/?$', leadgalaxy.views.orders_view, name='orders'),
     url(r'^orders/track$', leadgalaxy.views.orders_track, name='orders_track'),
     url(r'^orders/place$', leadgalaxy.views.orders_place, name='orders_place'),
     url(r'^locate/(?P<what>[a-z-]+)$', leadgalaxy.views.locate),
