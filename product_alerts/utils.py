@@ -179,7 +179,7 @@ def parse_supplier_sku(sku, sort=False, remove_shipping=False):
     options = []
     if sku:
         for s in sku.split(';'):
-            m = re.match(r"(?P<option_group>\w+):(?P<option_id>\w+)#?(?P<option_title>.+)?", s)
+            m = re.match(r"(?P<option_group>\w+):(?P<option_id>[\w-]+)#?(?P<option_title>.+)?", s)
             if not m:
                 continue
 
