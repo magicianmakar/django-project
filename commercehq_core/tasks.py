@@ -195,7 +195,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
             store.pusher_trigger('product-export', {
                 'product': product.id,
-                'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(p['images'])) - 1),
+                'progress': 'Uploading Images ({:,.2f}%)'.format(((idx + 1) * 100 / len(p['images'])) - 1),
             })
 
             content = requests.get(utils.add_http_schema(img))
@@ -441,7 +441,7 @@ def product_update(product_id, data):
         for idx, img in enumerate(images_need_upload):
             store.pusher_trigger('product-update', {
                 'product': product.id,
-                'progress': 'Uploading Images ({}%)'.format(((idx + 1) * 100 / len(images_need_upload)) - 1),
+                'progress': 'Uploading Images ({:,.2f}%)'.format(((idx + 1) * 100 / len(images_need_upload)) - 1),
             })
 
             content = requests.get(utils.add_http_schema(img))
