@@ -320,7 +320,7 @@ class ApiBase(ApiResponseMixin, View):
 
             order['ordered'] = False
             order['fast_checkout'] = user.get_config('_fast_checkout', True)
-            order['solve'] = user.models_user.get_config('aliexpress_captcha', True)
+            order['solve'] = user.models_user.get_config('aliexpress_solve_captcha', True)
 
             phone = order['order']['phone']
             if type(phone) is dict:

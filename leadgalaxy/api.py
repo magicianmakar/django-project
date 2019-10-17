@@ -1199,12 +1199,12 @@ class ShopifyStoreApi(ApiBase):
 
         if form_webapp:
             bool_config += [
-                'aliexpress_captcha',
                 'validate_tracking_number',
                 'aliexpress_as_notes',
                 'aliexpress_as_order_tag',
                 'aliexpress_as_custom_note',
                 'order_custom_line_attr',
+                'aliexpress_solve_captcha',
                 'aliexpress_fix_address',
                 'aliexpress_fix_city',
                 'initial_inventory_sync',
