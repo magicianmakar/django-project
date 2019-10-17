@@ -439,7 +439,7 @@
                         </div>
                     </div>
 
-                    <div class="row option-config-row" {% if config.aliexpress_fix_address == None or not config.aliexpress_fix_address %}style="display:none"{% endif %}>
+                    <div class="row option-config-row" {% if config.aliexpress_fix_address != None and not config.aliexpress_fix_address %}style="display:none"{% endif %}>
                         <div class="col-sm-offset-1 col-sm-11">
                             <div class="form-group">
                                 <label for="aliexpress_fix_city" class="col-sm-4 col-xs-8 control-label">
