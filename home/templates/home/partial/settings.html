@@ -427,43 +427,28 @@
                     <div class="row">
                         <div class="col-sm-offset-1 col-sm-11">
                             <div class="form-group">
-                                <label for="fix_aliexpress_address" class="col-sm-4 col-xs-8 control-label">
+                                <label for="aliexpress_fix_address" class="col-sm-4 col-xs-8 control-label">
                                     Fix Aliexpress Address Province Selection issues
                                     {% include 'partial/help_tooltip.html' with help="Select 'Other' in Aliexpress province if the customer entered province is not found" qtipstyle="color:#BBB" %}
                                 </label>
                                 <div class="col-sm-6 col-xs-4">
-                                    <input type="checkbox" class="js-switch" id="fix_aliexpress_address"
-                                           name="fix_aliexpress_address" {% if config.fix_aliexpress_address == None or config.fix_aliexpress_address %}checked="checked"{% endif %}>
+                                    <input type="checkbox" class="js-switch" id="aliexpress_fix_address"
+                                           name="aliexpress_fix_address" {% if config.aliexpress_fix_address == None or config.aliexpress_fix_address %}checked="checked"{% endif %}>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="row option-config-row" {% if not config.fix_aliexpress_address %}style="display:none"{% endif %}>
+                    <div class="row option-config-row" {% if config.aliexpress_fix_address == None or not config.aliexpress_fix_address %}style="display:none"{% endif %}>
                         <div class="col-sm-offset-1 col-sm-11">
                             <div class="form-group">
-                                <label for="fix_aliexpress_city" class="col-sm-4 col-xs-8 control-label">
+                                <label for="aliexpress_fix_city" class="col-sm-4 col-xs-8 control-label">
                                     Fix Aliexpress Address City Selection issues
                                     {% include 'partial/help_tooltip.html' with help="If the U.S. City the user entered is not found in the AliExpress dropdown, the app will select “Other” from the dropdown and add the City name to second address input (Also apply to Spain customers).<br><br>This option is only a workaround the AliExpress limitation. <b>Please enable it only if you understand the behavior and it works for you. We do not recommend or guarantee your packages will be delivered because of this.</b>" qtipstyle="color:#BBB" %}
                                 </label>
                                 <div class="col-sm-6 col-xs-4">
-                                    <input type="checkbox" class="js-switch" id="fix_aliexpress_city"
-                                           name="fix_aliexpress_city" {% if config.fix_aliexpress_city == None or config.fix_aliexpress_city %}checked="checked"{% endif %}>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row option-config-row">
-                        <div class="col-sm-offset-1 col-sm-11">
-                            <div class="form-group">
-                                <label for="aliexpress_edit_address" class="col-sm-4 col-xs-8 control-label">
-                                    Edit Aliexpress Address instead of adding new one
-                                    {% include 'partial/help_tooltip.html' with help="Only enable this option if you do not want Dropified to add a new address for each Aliexpress order. Not recommended unless you have an issue with adding new address in Aliexpress." qtipstyle="color:#BBB" %}
-                                </label>
-                                <div class="col-sm-6 col-xs-4">
-                                    <input type="checkbox" class="js-switch" id="aliexpress_edit_address"
-                                           name="aliexpress_edit_address" {% if config.aliexpress_edit_address %}checked="checked"{% endif %}>
+                                    <input type="checkbox" class="js-switch" id="aliexpress_fix_city"
+                                           name="aliexpress_fix_city" {% if config.aliexpress_fix_city == None or config.aliexpress_fix_city %}checked="checked"{% endif %}>
                                 </div>
                             </div>
                         </div>

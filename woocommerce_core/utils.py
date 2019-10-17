@@ -706,7 +706,7 @@ def get_woo_products(store, page=1, limit=50, all_products=False, product_ids=No
                 yield product
 
 
-def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_aliexpress_city=False, return_corrections=False):
+def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, aliexpress_fix_city=False, return_corrections=False):
     customer_address = {}
     shipping_address = order['shipping'] if any(order['shipping'].values()) else order['billing']
 
@@ -821,7 +821,7 @@ def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, fix_
                 if customer_province and customer_address['province'] == 'Other':
                     customer_address['city'] = '{}, {}'.format(customer_address['city'], customer_province)
 
-            elif fix_aliexpress_city:
+            elif aliexpress_fix_city:
                 city = safe_str(customer_address['city']).strip().strip(',')
                 customer_address['city'] = 'Other'
 

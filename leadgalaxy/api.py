@@ -1200,13 +1200,13 @@ class ShopifyStoreApi(ApiBase):
         if form_webapp:
             bool_config += [
                 'aliexpress_captcha',
-                'aliexpress_edit_address',
                 'validate_tracking_number',
                 'aliexpress_as_notes',
                 'aliexpress_as_order_tag',
                 'aliexpress_as_custom_note',
                 'order_custom_line_attr',
-                'fix_aliexpress_address',
+                'aliexpress_fix_address',
+                'aliexpress_fix_city',
                 'initial_inventory_sync',
                 'supplier_change_inventory_sync',
                 'update_product_vendor',
@@ -1935,7 +1935,7 @@ class ShopifyStoreApi(ApiBase):
         if not len(aliexpress_ids):
             return self.api_error('Aliexpress ID not set', status=422)
 
-        fix_aliexpress_address = user.models_user.get_config('fix_aliexpress_address', True)
+        aliexpress_fix_address = user.models_user.get_config('aliexpress_fix_address', True)
         german_umlauts = user.models_user.get_config('_use_german_umlauts')
 
         aliexpress_ids = [int(j) for j in aliexpress_ids]
@@ -1993,7 +1993,7 @@ class ShopifyStoreApi(ApiBase):
                     info.update({
                         'shopify_number': track.order['name'],
                         'shopify_status': track.order['fulfillment_status'],
-                        'shopify_customer': utils.shopify_customer_address(track.order, aliexpress_fix=fix_aliexpress_address,
+                        'shopify_customer': utils.shopify_customer_address(track.order, aliexpress_fix=aliexpress_fix_address,
                                                                            german_umlauts=german_umlauts)[1],
                         'shopify_summary': "<br>".join(shopify_summary),
                     })

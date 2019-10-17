@@ -369,11 +369,11 @@
         }
     });
 
-    $('#fix_aliexpress_address').change(function (e) {
+    $('#aliexpress_fix_address').change(function (e) {
         if(!e.target.checked) {
-            $('#fix_aliexpress_city').parents('.option-config-row').hide();
+            $('#aliexpress_fix_city').parents('.option-config-row').hide();
         } else {
-            $('#fix_aliexpress_city').parents('.option-config-row').show();
+            $('#aliexpress_fix_city').parents('.option-config-row').show();
         }
     });
 

@@ -3425,8 +3425,8 @@ def orders_view(request):
     order_custom_line_attr = bool(models_user.get_config('order_custom_line_attr'))
     use_relative_dates = bool(models_user.get_config('use_relative_dates', True))
     fix_order_variants = models_user.get_config('fix_order_variants')
-    fix_aliexpress_address = models_user.get_config('fix_aliexpress_address', True)
-    fix_aliexpress_city = models_user.get_config('fix_aliexpress_city', True)
+    aliexpress_fix_address = models_user.get_config('aliexpress_fix_address', True)
+    aliexpress_fix_city = models_user.get_config('aliexpress_fix_city', True)
     german_umlauts = models_user.get_config('_use_german_umlauts', False)
     show_actual_supplier = models_user.get_config('_show_actual_supplier', False) or models_user.id in [883, 21064, 24767]
     order_risk_all_getaways = models_user.get_config('_order_risk_all_getaways', False)
@@ -4145,8 +4145,8 @@ def orders_view(request):
 
             order, customer_address, order['corrections'] = utils.shopify_customer_address(
                 order=order,
-                aliexpress_fix=fix_aliexpress_address and supplier and supplier.is_aliexpress,
-                fix_aliexpress_city=fix_aliexpress_city,
+                aliexpress_fix=aliexpress_fix_address and supplier and supplier.is_aliexpress,
+                aliexpress_fix_city=aliexpress_fix_city,
                 german_umlauts=german_umlauts,
                 return_corrections=True)
 

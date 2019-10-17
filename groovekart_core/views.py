@@ -519,7 +519,7 @@ class OrdersList(ListView):
     def get_order_data(self, order, item, product, supplier):
         store = self.get_store()
         models_user = self.request.user.models_user
-        aliexpress_fix = models_user.get_config('fix_aliexpress_city', True)
+        aliexpress_fix = models_user.get_config('aliexpress_fix_city', True)
 
         return {
             'id': '{}_{}_{}'.format(store.id, order['id'], item['id']),
