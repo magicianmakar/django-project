@@ -206,6 +206,10 @@ class GrooveKartProduct(ProductBase):
 
             if type(data['images']) is dict:
                 data['images'] = list(data['images'].values())
+            data['images'] = list([self.get_large_image_url(i) for i in data.get('images', [])])
+
+            if data.get('cover_image'):
+                data['cover_image'] = self.get_large_image_url(data['cover_image'])
 
             return data
 
@@ -228,6 +232,14 @@ class GrooveKartProduct(ProductBase):
             return self.default_supplier is not None
         except:
             return False
+
+    def get_large_image_url(self, image):
+        image = image.replace('-large_default2x', '')
+        if image:
+            # Matches: "945.jpg?v=1571331426" or "945.jpg"
+            return re.sub(r'(\d+)(\.\w+(\?v=\S+)?)$', r'\1-large_default\2', image)
+
+        return image
 
     def get_gkart_id(self):
         return self.source_id if self.store else None
