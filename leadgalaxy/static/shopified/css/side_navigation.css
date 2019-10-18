@@ -62,20 +62,23 @@
   color: #8bb670;
 }
 
-.sidebar .section span,
+.sidebar .section span.item-title,
 .sidebar .item,
 .sidebar .section-no-icon {
   margin-left: 10px;
   transition: all .15s ease;
 }
 
-.sidebar .section span:hover,
 .sidebar .item:hover,
 .sidebar .section-no-icon:hover,
 .sidebar .active,
-.sidebar .active span {
+.sidebar .active span.item-title {
   color: white;
   opacity: 1;
+}
+
+.sidebar .section span.item-title:hover {
+  cursor: default;
 }
 
 .sidebar .spacer {
@@ -91,7 +94,7 @@
   transition: all .15s ease;
 }
 
-.sidebar ul .section a {
+.sidebar ul .section .section-header {
   display: flex;
 }
 

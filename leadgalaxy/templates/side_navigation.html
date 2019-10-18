@@ -35,9 +35,9 @@
 
       {% if request.user.is_superuser or request.user.is_staff %}
         <li class="section">
-            <a href="#">
+            <a class="section-header" href="{% if request.user.is_superuser %}/admin{% else %}#{% endif %}">
               <span class="fa fa-cog m-t-xs icon"></span>
-              <span>Admin</span>
+              <span class="item-title" style="cursor:pointer">Admin</span>
             </a>
         </li>
         <li class="item">
@@ -72,13 +72,13 @@
 
       <!-- body -->
       {% for section in sidemenu.body %}
-      <li class="section {{ section.classes }}">
-        <a href="{{ section.url }}">
+      <li class="section">
+        <span class="section-header">
           <div>
             <img src="{{ section.icon }}"/>
           </div>
-          <span>{{ section.title }}</span>
-        </a>
+          <span class="item-title">{{ section.title }}</span>
+        </span>
       </li>
 
         {% for item in section.items %}
@@ -115,7 +115,7 @@
 
       <li class="section-no-icon">
         <a id="product-update-fx" href="#">
-          <span class="nav-label">What’s New?</span>
+          <span class="nav-label item-title">What’s New?</span>
         </a>
       </li>
 
