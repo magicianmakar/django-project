@@ -537,6 +537,7 @@ class OrdersList(ListView):
             'order': {
                 'note': models_user.get_config('order_custom_note'),
                 'epacket': bool(models_user.get_config('epacket_shipping')),
+                'aliexpress_shipping_method': models_user.get_config('aliexpress_shipping_method'),
                 'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
                 'phone': {
                     'number': order.get('shipping_address', {}).get('phone'),
