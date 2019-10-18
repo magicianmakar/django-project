@@ -558,8 +558,6 @@ class CustomStripeSubscription(models.Model):
         return sub['status'] in ['trialing', 'active']
 
     def get_status(self):
-        import arrow
-
         sub = self.subscription
 
         status = {

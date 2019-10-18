@@ -40,6 +40,17 @@ from shopified_core.utils import (
     format_queueable_orders,
 )
 from shopified_core.tasks import keen_order_event
+from product_alerts.models import ProductChange
+from product_alerts.utils import variant_index_from_supplier_sku
+from leadgalaxy.utils import (
+    get_aliexpress_credentials,
+    get_admitad_credentials,
+    get_aliexpress_affiliate_url,
+    get_admitad_affiliate_url,
+    get_ebay_affiliate_url,
+    affiliate_link_set_query,
+    set_url_query
+)
 
 from .forms import CommerceHQStoreForm
 from .decorators import no_subusers, must_be_authenticated, ajax_only
@@ -63,9 +74,6 @@ from .utils import (
 )
 
 from . import utils
-
-from product_alerts.models import ProductChange
-from product_alerts.utils import variant_index_from_supplier_sku
 
 
 @ajax_only
@@ -1117,6 +1125,9 @@ class OrderPlaceRedirectView(RedirectView):
         product = None
         supplier = None
 
+        if not self.request.GET.get('SAStore'):
+            return set_url_query(self.request.get_full_path(), 'SAStore', 'chq')
+
         disable_affiliate = self.request.user.get_config('_disable_affiliate', False)
 
         if self.request.GET.get('nff'):
@@ -1139,15 +1150,6 @@ class OrderPlaceRedirectView(RedirectView):
 
         if self.request.GET.get('m'):
             product = product.replace('www.aliexpress.com', 'm.aliexpress.com')
-
-        from leadgalaxy.utils import (
-            get_aliexpress_credentials,
-            get_admitad_credentials,
-            get_aliexpress_affiliate_url,
-            get_admitad_affiliate_url,
-            get_ebay_affiliate_url,
-            affiliate_link_set_query
-        )
 
         ali_api_key, ali_tracking_id, user_ali_credentials = get_aliexpress_credentials(self.request.user.models_user)
         admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
