@@ -3421,6 +3421,7 @@ def orders_view(request):
     # User settings
     order_custom_note = models_user.get_config('order_custom_note')
     epacket_shipping = bool(models_user.get_config('epacket_shipping'))
+    aliexpress_shipping_method = models_user.get_config('aliexpress_shipping_method')
     auto_ordered_mark = bool(models_user.get_config('auto_ordered_mark', True))
     order_custom_line_attr = bool(models_user.get_config('order_custom_line_attr'))
     use_relative_dates = bool(models_user.get_config('use_relative_dates', True))
@@ -4171,6 +4172,7 @@ def orders_view(request):
                             },
                             'note': order_custom_note,
                             'epacket': epacket_shipping,
+                            'aliexpress_shipping_method': aliexpress_shipping_method,
                             'auto_mark': auto_ordered_mark,  # Auto mark as Ordered
                         },
                         'products': bundle_data,

@@ -295,13 +295,36 @@
                     <div class="row">
                         <div class="col-sm-offset-1 col-sm-11">
                             <div class="form-group">
-                                <label for="epacket_shipping" class="col-sm-4 col-xs-8 control-label">
-                                    Select ePacket when available
-                                    {% include 'partial/help_tooltip.html' with help="Automatically selects the ePacket shipping method on AliExpress for all items." qtipstyle="color:#BBB" %}
+                                <label for="aliexpress_shipping_method" class="col-sm-4 control-label">
+                                    Aliexpress Shipping Method
+                                    {% include 'partial/help_tooltip.html' with help="Automatically selects the chosen shipping method on AliExpress for all items." qtipstyle="color:#BBB" %}
                                 </label>
-                                <div class="col-sm-6 col-xs-4">
-                                    <input type="checkbox" class="js-switch" id="epacket_shipping"
-                                           name="epacket_shipping" {% if config.epacket_shipping %}checked="checked"{% endif %}>
+                                <div class="col-sm-3">
+                                    <select id="aliexpress_shipping_method" name="aliexpress_shipping_method" class="form-control">
+                                        <option value="" {% if config.aliexpress_shipping_method == '' %}selected="selected"{% endif %}>Default</option>
+                                        <option value="CAINIAO_STANDARD" {% if config.aliexpress_shipping_method == 'CAINIAO_STANDARD' %}selected="selected"{% endif %}>AliExpress Standard Shipping</option>
+                                        <option value="CPAM" {% if config.aliexpress_shipping_method == 'CPAM' %}selected="selected"{% endif %}>China Post Registered Air Mail</option>
+                                        <option value="YANWEN_JYT" {% if config.aliexpress_shipping_method == 'YANWEN_JYT' %}selected="selected"{% endif %}>China Post Ordinary Small Packet Plus</option>
+                                        <option value="EMS" {% if config.aliexpress_shipping_method == 'EMS' %}selected="selected"{% endif %}>EMS</option>
+                                        <option value="DHL" {% if config.aliexpress_shipping_method == 'DHL' %}selected="selected"{% endif %}>DHL</option>
+                                        <option value="TNT" {% if config.aliexpress_shipping_method == 'TNT' %}selected="selected"{% endif %}>TNT</option>
+                                        <option value="UPSE" {% if config.aliexpress_shipping_method == 'UPSE' %}selected="selected"{% endif %}>UPS Expedited</option>
+                                        <option value="UPS" {% if config.aliexpress_shipping_method == 'UPS' %}selected="selected"{% endif %}>UPS Express Saver</option>
+                                    </select>
+
+                                    {# <div class="row"> #}
+                                        <div class="col-sm-offset-1 col-sm-11" style="margin-left:0">
+                                            <div class="form-group">
+                                                <input type="checkbox" class="js-switch" id="epacket_shipping"
+                                                       name="epacket_shipping" {% if config.epacket_shipping %}checked="checked"{% endif %}>
+
+                                                <label for="epacket_shipping" class=" control-label">
+                                                    Always Select ePacket when available
+                                                    {% include 'partial/help_tooltip.html' with help="Automatically selects the ePacket shipping method on AliExpress for all items." qtipstyle="color:#BBB" %}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    {# </div> #}
                                 </div>
                             </div>
                         </div>
