@@ -234,8 +234,9 @@ class GrooveKartProduct(ProductBase):
             return False
 
     def get_large_image_url(self, image):
-        image = image.replace('-large_default2x', '')
         if image:
+            image = image.replace('-large_default2x', '')
+
             # Matches: "945.jpg?v=1571331426" or "945.jpg"
             return re.sub(r'(\d+)(\.\w+(\?v=\S+)?)$', r'\1-large_default\2', image)
 
