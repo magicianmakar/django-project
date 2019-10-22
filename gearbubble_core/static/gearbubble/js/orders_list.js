@@ -248,9 +248,20 @@ function deleteOrderID(tr_parent, order_id, line_id) {
     });
 }
 
-$('#modal-add-order-id form').submit(function(e) {
-    e.preventDefault();
-    $('#modal-add-order-id .save-order-id-btn').trigger('click');
+$('#modal-add-order-id .supplier-type').on('change', function (e) {
+    var supplierType = $(e.target).val();
+    var placeholder = '';
+
+    if (supplierType === 'ebay') {
+        placeholder = 'https://www.ebay.com/vod/FetchOrderDetails?itemid=XXXX&transId=XXXX';
+    } else if (supplierType === 'aliexpress') {
+        placeholder = 'http://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
+    } else {
+        placeholder = '';
+    }
+
+    $('#modal-add-order-id .order-id').attr('placeholder', placeholder);
+    $('#modal-add-order-id .order-id').focus();
 });
 
 $('#modal-add-order-id .save-order-id-btn').click(function (e) {
@@ -276,9 +287,9 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
         btn.button('reset');
     };
 
-    if (supplierType === 'aliexpress') {
+    if (supplierType === 'aliexpress' || supplierType === 'other') {
         var order_link = orderId.match(/orderId=([0-9]+)/);
-        if (order_link && order_link.length == 2) {
+        if (supplierType !== 'other' && order_link && order_link.length == 2) {
             orderId = order_link[1];
         }
 

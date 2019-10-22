@@ -1,4 +1,4 @@
-/* global $, toastr, swal, displayAjaxError */
+/* global $, toastr, swal, displayAjaxError, cleanUrlPatch */
 
 (function(user_filter, sub_conf) {
 'use strict';
@@ -60,11 +60,15 @@ $('.fulfill-btn').click(function (e) {
 
 $('#fullfill-order-btn').click(function (e) {
     e.preventDefault();
+
     localStorage.fulfill_notify_customer = $('#fulfill-notify-customer').val();
+
     $(this).button('loading');
 
     var orderId = $('#modal-fulfillment #fulfill-order-id').val();
     var lineId = $('#modal-fulfillment #fulfill-line-id').val();
+
+    ga('clientTracker.send', 'event', 'Order Manual Fulfillment', 'WooCommerce', sub_conf.shop);
 
     $.ajax({
         url: api_url('fulfill-order', 'woo'),
@@ -116,6 +120,8 @@ $('#fullfill-order-btn').click(function (e) {
 $('.filter-btn').click(function (e) {
     Cookies.set('orders_filter', !$('.filter-form').is(':visible'));
 
+    ga('clientTracker.send', 'event', 'Order Filter Toggle', 'WooCommerce', sub_conf.shop);
+
     if (!$('.filter-form').is(':visible')) {
         $('.filter-form').fadeIn('fast');
     } else {
@@ -150,6 +156,8 @@ $('.save-filter-btn').click(function (e) {
             $(el).prop('filtred', true);
         }
     });
+
+    ga('clientTracker.send', 'event', 'Order Save Filter', 'WooCommerce', sub_conf.shop);
 
     $.ajax({
         url: api_url('save-orders-filter', 'woo'),
@@ -206,6 +214,8 @@ function confirmDeleteOrderID(e) {
     function(isConfirm) {
         if (isConfirm) {
             deleteOrderID(tr_parent, order_id, line_id);
+
+            ga('clientTracker.send', 'event', 'Delete Order ID', 'WooCommerce', sub_conf.shop);
         }
     });
 }
@@ -248,9 +258,20 @@ function deleteOrderID(tr_parent, order_id, line_id) {
     });
 }
 
-$('#modal-add-order-id form').submit(function(e) {
-    e.preventDefault();
-    $('#modal-add-order-id .save-order-id-btn').trigger('click');
+$('#modal-add-order-id .supplier-type').on('change', function (e) {
+    var supplierType = $(e.target).val();
+    var placeholder = '';
+
+    if (supplierType === 'ebay') {
+        placeholder = 'https://www.ebay.com/vod/FetchOrderDetails?itemid=XXXX&transId=XXXX';
+    } else if (supplierType === 'aliexpress') {
+        placeholder = 'http://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
+    } else {
+        placeholder = '';
+    }
+
+    $('#modal-add-order-id .order-id').attr('placeholder', placeholder);
+    $('#modal-add-order-id .order-id').focus();
 });
 
 $('#modal-add-order-id .save-order-id-btn').click(function (e) {
@@ -276,9 +297,11 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
         btn.button('reset');
     };
 
-    if (supplierType === 'aliexpress') {
+    ga('clientTracker.send', 'event', 'Add Order ID', supplierType, sub_conf.shop);
+
+    if (supplierType === 'aliexpress' || supplierType === 'other') {
         var order_link = orderId.match(/orderId=([0-9]+)/);
-        if (order_link && order_link.length == 2) {
+        if (supplierType !== 'other' && order_link && order_link.length == 2) {
             orderId = order_link[1];
         }
 
@@ -332,6 +355,7 @@ function addOrderSourceID(e) {
     $('#modal-add-order-id').data('order', orderData);
 
     $('#modal-add-order-id .supplier-type').val(orderData.supplier_type);
+    $('#modal-add-order-id .supplier-type').trigger('change');
     $('#modal-add-order-id .order-id').val('');
     $('#modal-add-order-id .save-order-id-btn').button('reset');
 
@@ -512,6 +536,8 @@ $('.note-panel .note-edit-save').click(function (e) {
     var order_id = $(this).attr('order-id');
     var store = $(this).attr('store-id');
 
+    ga('clientTracker.send', 'event', 'Edit Order Note', 'WooCommerce', sub_conf.shop);
+
     $.ajax({
         url: api_url('order-note', 'woo'),
         type: 'POST',
@@ -621,6 +647,8 @@ $('.hide-ordered-btn').click(function () {
             }
         });
     }
+
+    ga('clientTracker.send', 'event', 'Hide Ordered Click', 'WooCommerce', sub_conf.shop);
 });
 
 $('.hide-non-connected-btn').click(function () {
@@ -655,11 +683,15 @@ $('.hide-non-connected-btn').click(function () {
             }
         });
     }
+
+    ga('clientTracker.send', 'event', 'Hide Non-Connected Click', 'WooCommerce', sub_conf.shop);
 });
 
 /* Connect Product */
 $('.add-supplier-btn').click(function (e) {
     e.preventDefault();
+
+    ga('clientTracker.send', 'event', 'Order Add Supplier', 'WooCommerce', sub_conf.shop);
 
     $('#modal-supplier-link').prop('woo-store', $(this).attr('store-id'));
     $('#modal-supplier-link').prop('woo-product', $(this).attr('woo-product'));
@@ -688,6 +720,7 @@ $('.add-supplier-info-btn').click(function (e) {
                 vendor_name: $('.product-supplier-name').val(),
                 vendor_url: $('.product-supplier-link').val(),
                 product: $('#modal-supplier-link').prop('woo-product'),
+                from: 'orders'
             },
         }).done(function (data) {
             toastr.success('Product is Connected!', 'Product Connect');
@@ -737,7 +770,7 @@ function pusherSub() {
         line.find('.line-order-id').find('a').remove();
         line.find('.line-order-id').append($('<a>', {
             'class': 'placed-order-details',
-            'text': '#' + data.source_id.split(',').join(' #'),
+            'text': '#' + String(data.source_id).split(',').join(' #'),
             'order-id': data.order_id,
             'line-id': data.line_id,
             'source-order-id': data.source_id,
@@ -890,6 +923,7 @@ $(function () {
         deferRequestBy: 1000,
         onSelect: function(suggestion) {
             $('#supplier_name').val(suggestion.value);
+            ga('clientTracker.send', 'event', 'Order Autocomplete', 'Supplier', sub_conf.shop);
         }
     });
 
@@ -899,6 +933,7 @@ $(function () {
         deferRequestBy: 1000,
         onSelect: function(suggestion) {
             $('#shipping_method_name').val(suggestion.value);
+            ga('clientTracker.send', 'event', 'Order Autocomplete', 'Shipping Method', sub_conf.shop);
         }
     });
 */

@@ -48,6 +48,8 @@ $(".ignore-error").click(function (e) {
 });
 
 $('.fulfill-btn').click(function (e) {
+    $('#modal-fulfillment form').trigger('reset');
+
     $('#modal-fulfillment #fulfill-order-id').val($(this).attr('order-id'));
     $('#modal-fulfillment #fulfill-line-id').val($(this).attr('line-id'));
     $('#modal-fulfillment #fulfill-store').val($(this).attr('store'));
@@ -76,7 +78,7 @@ $('#fullfill-order-btn').click(function (e) {
     ga('clientTracker.send', 'event', 'Order Manual Fulfillment', 'Shopify', sub_conf.shop);
 
     $.ajax({
-        url: '/api/fulfill-order',
+        url: api_url('fulfill-order', 'shopify'),
         type: 'POST',
         data:  $('#modal-fulfillment form').serialize(),
         context: {btn: $(this), line: line_btn},
@@ -161,7 +163,7 @@ $('.save-filter-btn').click(function (e) {
     ga('clientTracker.send', 'event', 'Order Save Filter', 'Shopify', sub_conf.shop);
 
     $.ajax({
-        url: '/api/save-orders-filter',
+        url: api_url('save-orders-filter', 'shopify'),
         type: 'POST',
         data: $('.filter-form').serialize(),
         success: function (data) {
@@ -239,7 +241,7 @@ function deleteOrderID(tr_parent, order_id, line_id) {
     function(isConfirm) {
         if (isConfirm) {
             $.ajax({
-                url: '/api/order-fulfill' + '?' + $.param({'order_id': order_id, 'line_id': line_id, }),
+                url: api_url('order-fulfill', 'shopify') + '?' + $.param({'order_id': order_id, 'line_id': line_id, }),
                 type: 'DELETE',
                 context: {tr: tr_parent},
                 success: function (data) {
@@ -288,10 +290,13 @@ function placeOrder(e) {
 $('#modal-add-order-id .supplier-type').on('change', function (e) {
     var supplierType = $(e.target).val();
     var placeholder = '';
+
     if (supplierType === 'ebay') {
         placeholder = 'https://www.ebay.com/vod/FetchOrderDetails?itemid=XXXX&transId=XXXX';
-    } else {
+    } else if (supplierType === 'aliexpress') {
         placeholder = 'http://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
+    } else {
+        placeholder = '';
     }
 
     $('#modal-add-order-id .order-id').attr('placeholder', placeholder);
@@ -323,9 +328,9 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
 
     ga('clientTracker.send', 'event', 'Add Order ID', supplierType, sub_conf.shop);
 
-    if (supplierType === 'aliexpress') {
+    if (supplierType === 'aliexpress' || supplierType === 'other') {
         var order_link = orderId.match(/orderId=([0-9]+)/);
-        if (order_link && order_link.length == 2) {
+        if (supplierType !== 'other' && order_link && order_link.length == 2) {
             orderId = order_link[1];
         }
 
@@ -392,7 +397,7 @@ function addOrderSourceRequest(data_api, callback) {
     callback = typeof(callback) === 'undefined' ? function() {} : callback;
 
     $.ajax({
-        url: '/api/order-fulfill',
+        url: api_url('order-fulfill', 'shopify'),
         type: 'POST',
         data: data_api,
         context: {
@@ -406,6 +411,7 @@ function addOrderSourceRequest(data_api, callback) {
             callback(true);
         } else {
             displayAjaxError('Mark as Ordered', data);
+
             callback(false);
         }
     }).fail(function(data) {
@@ -466,7 +472,7 @@ $('.add-order-note').click(function (e) {
         }
 
         $.ajax({
-            url: '/api/order-add-note',
+            url: api_url('order-add-note', 'shopify'),
             type: 'POST',
             data: {
                 'order_id': order_id,
@@ -549,7 +555,7 @@ $('.note-panel .note-edit-save').click(function (e) {
     ga('clientTracker.send', 'event', 'Edit Order Note', 'Shopify', sub_conf.shop);
 
     $.ajax({
-        url: '/api/order-note',
+        url: api_url('order-note', 'shopify'),
         type: 'POST',
         data: {
             'order_id': order_id,
@@ -731,7 +737,7 @@ $('.add-supplier-info-btn').click(function (e) {
     e.preventDefault();
 
     $.ajax({
-            url: '/api/import-product',
+            url: api_url('import-product', 'shopify'),
             type: 'POST',
             data: {
                 store: $('#modal-supplier-link').prop('shopify-store'),
@@ -820,7 +826,7 @@ function pusherSub() {
         line.find('.line-order-id').find('a').remove();
         line.find('.line-order-id').append($('<a>', {
             'class': 'placed-order-details',
-            'text': '#' + data.source_id.split(',').join(' #'),
+            'text': '#' + String(data.source_id).split(',').join(' #'),
             'order-id': data.order_id,
             'line-id': data.line_id,
             'source-order-id': data.source_id,
@@ -1363,6 +1369,5 @@ $(function () {
     setTimeout(function() {
         window.location.reload();
     }, 3500 * 1000);
-
 });
 })(user_filter, sub_conf);

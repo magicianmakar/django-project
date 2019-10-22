@@ -1,4 +1,4 @@
-/* global $, toastr, swal, displayAjaxError */
+/* global $, toastr, swal, displayAjaxError, cleanUrlPatch */
 
 (function(user_filter, sub_conf) {
 'use strict';
@@ -61,11 +61,15 @@ $('.fulfill-btn').click(function (e) {
 
 $('#fullfill-order-btn').click(function (e) {
     e.preventDefault();
+
     localStorage.fulfill_notify_customer = $('#fulfill-notify-customer').val();
+
     $(this).button('loading');
 
     var orderId = $('#modal-fulfillment #fulfill-order-id').val();
     var lineId = $('#modal-fulfillment #fulfill-product-id').val();
+
+    ga('clientTracker.send', 'event', 'Order Manual Fulfillment', 'GrooveKart', sub_conf.shop);
 
     $.ajax({
         url: api_url('fulfill-order', 'gkart'),
@@ -152,6 +156,8 @@ $('.save-filter-btn').click(function (e) {
         }
     });
 
+    ga('clientTracker.send', 'event', 'Order Save Filter', 'GrooveKart', sub_conf.shop);
+
     $.ajax({
         url: api_url('save-orders-filter', 'gkart'),
         type: 'POST',
@@ -207,6 +213,8 @@ function confirmDeleteOrderID(e) {
     function(isConfirm) {
         if (isConfirm) {
             deleteOrderID(tr_parent, order_id, line_id);
+
+            ga('clientTracker.send', 'event', 'Delete Order ID', 'GrooveKart', sub_conf.shop);
         }
     });
 }
@@ -249,9 +257,20 @@ function deleteOrderID(tr_parent, order_id, line_id) {
     });
 }
 
-$('#modal-add-order-id form').submit(function(e) {
-    e.preventDefault();
-    $('#modal-add-order-id .save-order-id-btn').trigger('click');
+$('#modal-add-order-id .supplier-type').on('change', function (e) {
+    var supplierType = $(e.target).val();
+    var placeholder = '';
+
+    if (supplierType === 'ebay') {
+        placeholder = 'https://www.ebay.com/vod/FetchOrderDetails?itemid=XXXX&transId=XXXX';
+    } else if (supplierType === 'aliexpress') {
+        placeholder = 'http://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
+    } else {
+        placeholder = '';
+    }
+
+    $('#modal-add-order-id .order-id').attr('placeholder', placeholder);
+    $('#modal-add-order-id .order-id').focus();
 });
 
 $('#modal-add-order-id .save-order-id-btn').click(function (e) {
@@ -277,9 +296,11 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
         btn.button('reset');
     };
 
-    if (supplierType === 'aliexpress') {
+    ga('clientTracker.send', 'event', 'Add Order ID', supplierType, sub_conf.shop);
+
+    if (supplierType === 'aliexpress' || supplierType === 'other') {
         var order_link = orderId.match(/orderId=([0-9]+)/);
-        if (order_link && order_link.length == 2) {
+        if (supplierType !== 'other' && order_link && order_link.length == 2) {
             orderId = order_link[1];
         }
 
@@ -300,6 +321,7 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
         }
 
         btn.button('loading');
+
         window.extensionSendMessage({
             subject: 'getEbayOrderId',
             url: orderId,
@@ -312,6 +334,7 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
                     'source_type': supplierType,
                     'aliexpress_order_id': data.purchaseOrderId,
                 }, callback);
+
             } else {
                 swal('Could not get eBay Order ID');
             }
@@ -333,6 +356,7 @@ function addOrderSourceID(e) {
     $('#modal-add-order-id').data('order', orderData);
 
     $('#modal-add-order-id .supplier-type').val(orderData.supplier_type);
+    $('#modal-add-order-id .supplier-type').trigger('change');
     $('#modal-add-order-id .order-id').val('');
     $('#modal-add-order-id .save-order-id-btn').button('reset');
 
@@ -380,7 +404,7 @@ function addOrderSourceRequest(data_api, callback) {
                 },
                 function(isConfirm) {
                     if (isConfirm) {
-                        addOrderSourceRequest(api);
+                        addOrderSourceRequest(api, callback);
                     } else {
                         callback(false);
                     }
@@ -506,13 +530,14 @@ $('.note-panel .note-edit-cancel').click(function (e) {
 
 $('.note-panel .note-edit-save').click(function (e) {
     var parent = $(this).parents('.note-panel');
-
     parent.find('.note-edit-cancel').hide();
     $(this).button('loading');
 
     var note = $('.edit-note textarea.note', parent).val();
     var order_id = $(this).attr('order-id');
     var store = $(this).attr('store-id');
+
+    ga('clientTracker.send', 'event', 'Edit Order Note', 'GrooveKart', sub_conf.shop);
 
     $.ajax({
         url: api_url('order-note', 'gkart'),
@@ -623,6 +648,8 @@ $('.hide-ordered-btn').click(function () {
             }
         });
     }
+
+    ga('clientTracker.send', 'event', 'Hide Ordered Click', 'GrooveKart', sub_conf.shop);
 });
 
 $('.hide-non-connected-btn').click(function () {
@@ -657,6 +684,8 @@ $('.hide-non-connected-btn').click(function () {
             }
         });
     }
+
+    ga('clientTracker.send', 'event', 'Hide Non-Connected Click', 'GrooveKart', sub_conf.shop);
 });
 
 /* Connect Product */
@@ -667,6 +696,7 @@ $('.add-supplier-btn').click(function (e) {
 
     $('#modal-supplier-link').modal('show');
 });
+
 
 $('.product-original-link').bindWithDelay('keyup', function (e) {
     var input = $(e.target);
@@ -771,7 +801,7 @@ function pusherSub() {
         line.find('.line-order-id').find('a').remove();
         line.find('.line-order-id').append($('<a>', {
             'class': 'placed-order-details',
-            'text': '#' + data.source_id.split(',').join(' #'),
+            'text': '#' + String(data.source_id).split(',').join(' #'),
             'order-id': data.order_id,
             'line-id': data.line_id,
             'source-order-id': data.source_id,
@@ -912,6 +942,7 @@ $(function () {
         deferRequestBy: 1000,
         onSelect: function(suggestion) {
             $('#supplier_name').val(suggestion.value);
+            ga('clientTracker.send', 'event', 'Order Autocomplete', 'Supplier', sub_conf.shop);
         }
     });
 
@@ -921,6 +952,7 @@ $(function () {
         deferRequestBy: 1000,
         onSelect: function(suggestion) {
             $('#shipping_method_name').val(suggestion.value);
+            ga('clientTracker.send', 'event', 'Order Autocomplete', 'Shipping Method', sub_conf.shop);
         }
     });
 */

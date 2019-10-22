@@ -291,12 +291,6 @@ class CHQStoreApi(ApiBase):
             assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
 
-            assert safe_int(order_id), 'Order ID is not a numbers'
-            # assert safe_int(source_id), 'Aliexpress ID is not a numbers'
-            # assert re.match('^[0-9]{10,}$', source_id) is not None, 'Not a valid Aliexpress Order ID: {}'.format(source_id)
-
-            # source_id = int(source_id)
-
         except AssertionError as e:
             raven_client.captureException(level='warning')
 

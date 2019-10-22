@@ -711,6 +711,8 @@ def serializers_orders_track(tracks, store_type, humanize=False):
 
         if not fields['source_type']:
             fields['source_type'] = 'aliexpress'
+        elif fields['source_type'] == 'other':
+            continue
 
         if fields['source_id'] and ',' in fields['source_id']:
             for j in fields['source_id'].split(','):
