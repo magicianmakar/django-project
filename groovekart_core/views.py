@@ -476,6 +476,7 @@ class OrdersList(ListView):
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             api_error = 'Store API Error'
+            raven_client.captureException()
 
         context['status'] = self.request.GET.get('status', 'any')
         context['fulfillment'] = self.request.GET.get('fulfillment', 'any')
@@ -861,6 +862,7 @@ class OrdersTrackList(ListView):
             error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             error = 'Store API Error'
+            raven_client.captureException()
 
         if error:
             messages.error(self.request, f'Error while trying to show your Store Orders: {error}')

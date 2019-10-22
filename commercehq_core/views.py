@@ -700,6 +700,7 @@ class OrdersList(ListView):
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             api_error = 'Store API Error'
+            raven_client.captureException()
 
         context['store'] = self.get_store()
         context['selected_menu'] = 'orders:all'
@@ -721,6 +722,7 @@ class OrdersList(ListView):
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             api_error = 'Store API Error'
+            raven_client.captureException()
 
         context['user_filter'] = self.filter_data
 
