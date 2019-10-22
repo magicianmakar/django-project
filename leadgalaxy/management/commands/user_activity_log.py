@@ -85,6 +85,7 @@ class Command(DropifiedBaseCommand):
         query += f''') AND '{user.date_joined:%Y-%m-%d}' <= dt
                 AND strpos(message, '/api/all/orders-sync?since=') = 0
                 AND strpos(message, '/api/can?') = 0
+                AND strpos(message, '/api/captcha-credits') = 0
                 AND strpos(message, '/api/search-shopify-products-cached') = 0
             ORDER BY generated_at'''
 
