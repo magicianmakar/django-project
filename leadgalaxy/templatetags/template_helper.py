@@ -299,7 +299,10 @@ def order_track_status(context, track, html=True):
 
         return mark_safe('<b class="{}">{}</b>'.format(color, track.get_source_status()))
     else:
-        return mark_safe('<i>Awaiting Sync with {}</i>'.format('eBay' if is_ebay else 'Aliexpress'))
+        if track.source_type == 'other':
+            return mark_safe('<i>Manual Order</i>')
+        else:
+            return mark_safe('<i>Awaiting Sync with {}</i>'.format('eBay' if is_ebay else 'Aliexpress'))
 
 
 @register.simple_tag(takes_context=True)
@@ -314,6 +317,8 @@ def order_track_tracking_urls(context, track, html=True):
             return mark_safe('<br>'.join(urls))
         else:
             return mark_safe(u'<a href="{}" target="_blank">{}</a>'.format(tracking, track.source_tracking))
+    else:
+        return ''
 
 
 @register.filter
