@@ -4843,39 +4843,11 @@ def bundles_bonus(request, bundle_id):
 
 @login_required
 def products_collections(request, collection):
-    post_per_page = settings.ITEMS_PER_PAGE
-    page = safe_int(request.GET.get('page'), 1)
-    page = max(1, page)
-
-    paginator = utils.ProductsCollectionPaginator([], post_per_page)
-    paginator.set_product_per_page(post_per_page)
-    paginator.set_current_page(page)
-    paginator.set_query(request.GET.get('title'))
-
-    extra_filter = {}
-    filter_map = {
-        'price_min': 'price_min',
-        'price_max': 'price_max',
-        'type': 'category',
-        'sort': 'order'
-    }
-
-    for k, v in list(filter_map.items()):
-        if request.GET.get(k):
-            extra_filter[v] = request.GET.get(k)
-
-    paginator.set_extra_filter(extra_filter)
-
-    page = paginator.page(page)
+    aliexpress_categories = json.load(open(settings.ALIEXPRESS_CATEGORIES_PATH))
 
     return render(request, 'products_collections.html', {
-        'products': page.object_list,
-        'paginator': paginator,
-        'current_page': page,
-        'selected_menu': 'source:collections-us',
-
-        'page': 'products_collections',
-        'breadcrumbs': ['Products', 'Collections', 'US']
+        'aliexpress_categories': aliexpress_categories,
+        'breadcrumbs': ['Products', 'Collections', {'title': 'US', 'url': request.path}]
     })
 
 

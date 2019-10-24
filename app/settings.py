@@ -392,6 +392,8 @@ FULFILLBOX_API_URL = os.environ.get('FULFILLBOX_API_URL')
 if FULFILLBOX_API_URL:
     FULFILLBOX_API_URL = FULFILLBOX_API_URL.rstrip('/')
 
+ALIEXPRESS_CATEGORIES_PATH = os.path.join(BASE_DIR, 'app/data/shipping/aliexpress_categories.json')
+
 # Stripe
 STRIPE_PUBLIC_KEY = os.environ['STRIPE_PUBLIC_KEY']
 STRIPE_SECRET_KEY = os.environ['STRIPE_SECRET_KEY']
