@@ -41,6 +41,10 @@
         var searchSort = $('#product-search-sort option:selected').val();
         var searchText = encodeURIComponent($('#product-search-input').val());
         var category = '';
+        var shipFrom = $('#product-search-shipfrom option:selected').val();
+        var freeShipping = $('#product-search-freeship').is(':checked') ? 'y' : 'n';
+        var priceMin = $('#product-search-pricemin').val();
+        var priceMax = $('#product-search-pricemax').val();
 
         try {
             if ($('#product-search-cat option:selected').val()) {
@@ -53,6 +57,10 @@
                 category: category,
                 search: searchText,
                 sort: searchSort,
+                shipFrom: shipFrom,
+                freeShipping: freeShipping,
+                priceMin: priceMin,
+                priceMax: priceMax,
                 _: $.now(),
             });
         } else {
@@ -60,8 +68,14 @@
         }
     });
 
-    $('#product-search-input').keyup(function(e) {
+    $('.update-on-change').keyup(function(e) {
         if (e.keyCode == 13) {
+            $('#product-search-btn').trigger('click');
+        }
+    });
+
+    $('.update-on-change').on('change ifChanged', function (e) {
+        if(location.hash) {
             $('#product-search-btn').trigger('click');
         }
     });
@@ -78,17 +92,26 @@
         });
 
         var info = getHashUrl();
+        var extra = {
+            shipFromCountry: info.shipFrom,
+            isFreeShip: info.freeShipping,
+        };
 
-        var catId = info.category;
-        var searchText = info.search;
-        var searchSort = info.sort;
+        if(info.priceMin) {
+            extra.minPrice = info.priceMin;
+        }
+
+        if (info.priceMax) {
+            extra.maxPrice = info.priceMax;
+        }
 
         window.extensionSendMessage({
             subject: 'aliexpressProductSearch',
             from: 'website',
-            catId: catId,
-            searchText: searchText,
-            searchSort: searchSort,
+            catId: info.category,
+            searchText: info.search,
+            searchSort: info.sort,
+            extra: extra,
         }, function(rep) {
             $('body').LoadingOverlay("hide", true);
 
@@ -152,6 +175,20 @@
             $('#product-search-sort option').filter(function(i, el) {
                 return $(el).val().indexOf(info.sort) !== -1;
             }).prop('selected', 'selected');
+
+            $('#product-search-shipfrom option').filter(function(i, el) {
+                return $(el).val().indexOf(info.shipFrom) !== -1;
+            }).prop('selected', 'selected');
+
+            $('#product-search-freeship').prop('checked', info.freeShipping);
+
+            if (info.priceMin) {
+                $('#product-search-pricemin').val(info.priceMin);
+            }
+
+            if (info.priceMax) {
+                $('#product-search-pricemax').val(info.priceMax);
+            }
 
             $(window).hashchange();
         }

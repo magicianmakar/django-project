@@ -17,9 +17,9 @@
             <div id="tab-1" class="tab-pane active">
                 <div class="panel-body">
                     <div class="row">
-                        <div class="col-xs-12" style="display:flex;margin-bottom:50px;">
-                            <input id="product-search-input" type="text" placeholder="Search US Products Database..." class="form-control input-lg m-r">
-                            <select id="product-search-cat" class="form-control input-lg m-r" style="flex-shrink:2">
+                        <div class="col-xs-12" style="display:flex;margin-bottom:5px;">
+                            <input id="product-search-input" type="text" placeholder="Search US Products Database..." class="update-on-change form-control input-lg m-r">
+                            <select id="product-search-cat" class="update-on-change form-control input-lg m-r" style="flex-shrink:2">
                                 <option value="">Any Category</option>
                                 {% for cat in aliexpress_categories %}
                                 <option value="{{cat.url}}">{{cat.name}}</option>
@@ -29,18 +29,46 @@
                                 {% endfor %}
                             </select>
 
-                            <select id="product-search-sort" class="form-control input-lg m-r" style="flex-shrink:2">
+                            <button id="product-search-btn" class="btn btn-lg btn-success"><i class="fa fa-search m-r-xs"></i> Search</button>
+                        </div>
+                    </div>
+
+                    <div class="row" style="display:flex;margin-bottom:50px;justify-content: center;margin-top: 10px;">
+                        <div class="col-xs-12 col-md-2" style="display:flex;align-items: baseline">
+                            <label for="product-search-sort" class="m-r">Sorting</label>
+                            <select id="product-search-sort" class="update-on-change form-control input-lg m-r" style="flex-shrink:2">
                                 <option value="default">Best Match</option>
                                 <option value="total_tranpro_desc" selected>Orders</option>
                                 <option value="create_desc">Newest</option>
                                 <option value="price_asc">Price - low first</option>
                                 <option value="price_desc">Price - high first</option>
                             </select>
+                        </div>
 
-                            <button id="product-search-btn" class="btn btn-lg btn-success"><i class="fa fa-search m-r-xs"></i> Search</button>
+                        <div class="col-xs-12 col-md-2" style="display:flex;align-items: baseline;">
+                            <label for="product-search-shipfrom" class="m-r" style="flex-grow: 2;display: inline-flex;white-space: nowrap;">Ship from</label>
+                            <select id="product-search-shipfrom" class="update-on-change form-control input-lg m-r" style="flex-shrink: 1; ">
+                                <option value="US" selected>United States</option>
+                                <option value="TR">Turkey</option>
+                                <option value="CN">China</option>
+                            </select>
+                        </div>
+
+                        <div class="col-xs-12 col-md-2" style="display:flex;align-items: baseline;">
+                            <label for="product-search-price" class="m-r" style="flex-grow: 2;display: inline-flex;white-space: nowrap;">Price</label>
+                            <input id="product-search-pricemin" type="text" placeholder="Min" class="update-on-change form-control input-lg">
+                            <span class="m-l-xs m-r-xs">-</span>
+                            <input id="product-search-pricemax" type="text" placeholder="Max" class="update-on-change form-control input-lg">
+                        </div>
+
+
+                        <div class="col-xs-12 col-md-2" style="display:flex;align-items: center;">
+                            <label for="product-search-freeship" class="m-r" style="margin: 5px 0 0 0;flex-grow: 2;display: inline-flex;white-space: nowrap;">
+                                <input id="product-search-freeship" type="checkbox" class="update-on-change icheck">
+                                Free Shipping
+                            </label>
                         </div>
                     </div>
-
 
                     <div class="category-list">
                         {% for cat in aliexpress_categories %}
@@ -161,9 +189,10 @@
 {% block extracss %}
     <style type="text/css">
         .icheckbox_square-blue {
-            position: absolute;
-            margin: 0;
+            position: initial;
+            margin: 0 5px 0 0;
             background-color: #fff;
+            display: flex;
         }
 
         h3.cat-title {
