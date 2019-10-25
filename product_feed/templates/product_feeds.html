@@ -9,7 +9,7 @@
 {% block main-container %}
 <div class="tabs-container">
     {% include 'home/partial/tabs/feeds.html' %}
-    <div class="tab-content">
+    <div class="tab-content margin-before-banner">
         <div id="tab-1" class="tab-pane active">
             <div class="panel-body">
                 <p>
@@ -130,6 +130,8 @@
         </div>
     </div>
 </div>
+
+{% include "product_feed/partial/banner.html" %}
 
 <div id="modal-google-feed-settings" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">

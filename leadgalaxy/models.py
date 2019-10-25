@@ -167,6 +167,14 @@ class UserProfile(models.Model):
             self.user.groovekartboard_set.filter(products__isnull=False).exists(),
         ])
 
+    @property
+    def show_order_banner(self):
+        config = {}
+        if self.config:
+            config = json.loads(self.config)
+
+        return config.get('show_order_banner', False)
+
     def save(self, *args, **kwargs):
         if self.config:
             config = json.loads(self.config)

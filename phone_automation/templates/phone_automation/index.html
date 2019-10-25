@@ -9,7 +9,7 @@
 
 {% block main-container %}
 
-<div class="row">
+<div class="row margin-before-banner">
     <div class="col-md-12 callflex-index-cont">
         {% if twilio_stats %}
         <div class="row">
@@ -171,6 +171,9 @@
         </div>
     </div>
 </div>
+
+{% include "phone_automation/partial/banner.html" %}
+
 <div class="modal inmodal" id="sms-automation-hint" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
     <div class="modal-dialog">
         <div class="modal-content animated fadeIn">

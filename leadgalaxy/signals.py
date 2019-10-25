@@ -83,7 +83,14 @@ def userprofile_creation(sender, instance, created, **kwargs):
             if not plan:
                 plan = GroupPlan.objects.create(title='Default Plan', slug='default-plan', default_plan=1)
 
-            profile = UserProfile.objects.create(user=instance, plan=plan)
+            # only show order banner to new users.
+            config = json.dumps(dict(
+                show_order_banner=True,
+            ))
+            profile = UserProfile.objects.create(user=instance,
+                                                 plan=plan,
+                                                 config=config,
+                                                 )
 
             if plan.is_stripe():
                 profile.apply_subscription(plan)

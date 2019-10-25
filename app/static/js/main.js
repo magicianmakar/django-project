@@ -1092,7 +1092,28 @@ $('.scrolling-tabs').scrollingTabs({
     cssClassRightArrow: 'fa fa-chevron-right',
 });
 
+function getBannerKey(slug) {
+    return 'banner_' + slug;
+}
+
+$('.training-banner .dismiss').click(function () {
+    $(this).parents('.training-banner').hide();
+    var slug = $(this).data('banner-slug');
+    localStorage[getBannerKey(slug)] = true;
+});
+
+function showBanners() {
+    $('.training-banner').each(function (i, obj) {
+        var slug = $(obj).find('i').data('banner-slug');
+        if (!localStorage[getBannerKey(slug)]) {
+            $(obj).removeClass('hide');
+        }
+    });
+}
+
 $(function() {
+    showBanners();
+
     setTimeout(function() {
         var version = $('.extension-version').data('extension-version');
         if (version && window.extensionSendMessage) {

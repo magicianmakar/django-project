@@ -523,3 +523,24 @@ ul.breadcrumb-right-menu li a {
 .row.well.variant.extra-mapping-options {
     display: none !important;
 }
+
+.training-banner {
+  display: flex;
+  justify-content: center;
+}
+
+.margin-before-banner {
+  margin-bottom: 25px;
+}
+
+.training-banner.hide {
+  display: none;
+}
+
+.training-banner .container {
+  max-width: 900px;
+}
+
+.training-banner .dismiss {
+  cursor: pointer;
+}

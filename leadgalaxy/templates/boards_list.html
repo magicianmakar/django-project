@@ -7,7 +7,7 @@
 
 <div class="tabs-container">
     {% include 'home/partial/tabs/boards.html' %}
-    <div class="tab-content">
+    <div class="tab-content margin-before-banner">
         <div id="tab-1" class="tab-pane active">
             <div class="panel-body">
                 <form id="board-search-form" method="get" role="form" class="form-inline">
@@ -69,6 +69,8 @@
         </div>
     </div>
 </div>
+
+{% include "partial/board_banner.html" %}
 
 <div id="smartboard-modal" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
