@@ -415,13 +415,13 @@
             Add Store
         </a>
 
-        <span class="m-l m-r-xs">Need a new Shopify store?</span>
-        <a href="http://bit.ly/2k0FdOI" class="itooltip" title=""
-            data-toggle="tooltip" data-placement="bottom" data-original-title="14 Day Free Trial">
-            Get your Free Trial here
+        <span class="m-l m-r-xs">Need a new store?</span>
+        <a href="javascript:Appcues.show('-Lou_L2msSvhV-1vHbqI')" class="itooltip" title=""
+            data-toggle="tooltip" data-placement="bottom" data-original-title="Choose plans">
+            Help me choose
         </a>
 
-        {% include 'partial/help_tooltip.html' with help="Click Add Store to get started.<br>For a full guide on adding your Shopify store view <a href='http://help.dropified.com/getting-started/connect-your-store/connect-a-shopify-store-in-dropified'>this article.</a>" qtipstyle="color:#BBB" %}
+        {% include 'partial/help_tooltip.html' with help="Dropified supports multiple eCommerce platforms, learn about which one is best for you." qtipstyle="color:#BBB" %}
 
         {% elif user.profile.plan.is_upgradable %}
         <a href="{% url 'user_profile' %}#plan" class="btn btn-success">Upgrade</a>
