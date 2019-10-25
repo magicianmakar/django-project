@@ -1647,6 +1647,8 @@ class ProductSupplier(SupplierBase):
         if source_id:
             if self.is_aliexpress:
                 return 'https://www.aliexpress.com/item//{}.html'.format(source_id)
+            if self.is_ebay_au:
+                return 'https://www.ebay.com.au/itm/{}'.format(source_id)
             if self.is_ebay:
                 return 'https://www.ebay.com/itm/{}'.format(source_id)
 
@@ -1692,7 +1694,14 @@ class ProductSupplier(SupplierBase):
     @property
     def is_ebay_us(self):
         try:
-            return 'ebay.com' in get_domain(self.product_url, full=True)
+            return bool(re.search(r'ebay\.(com|co.uk|de|fr)', get_domain(self.product_url, full=True)))
+        except:
+            return False
+
+    @property
+    def is_ebay_au(self):
+        try:
+            return 'ebay.com.au' in get_domain(self.product_url, full=True)
         except:
             return False
 
