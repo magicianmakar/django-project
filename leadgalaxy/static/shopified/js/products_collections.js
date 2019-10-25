@@ -30,6 +30,11 @@
         var url = btn.data('url');
         var catId = catIdFromUrl(url);
 
+
+        $('#product-search-cat option').filter(function(i, el) {
+            return catIdFromUrl($(el).val()) === catId;
+        }).prop('selected', 'selected');
+
         changeHashUrl({
             category: catId,
         });
@@ -80,7 +85,7 @@
         }
     });
 
-    function showCategory(hash) {
+    function showCategory() {
         if (!window.extensionSendMessage) {
             swal('Please reload the page and make sure you are using the latest version of the extension.');
             return;
@@ -124,9 +129,41 @@
 
             $('.products-list').empty();
 
+            if (rep.data.refineShipFromCountries) {
+                $('#product-search-shipfrom option').filter(function(i, el) {
+                    return $(el).val() !== 'US';
+                }).attr('disabled', 'disabled');
+
+                $.each(rep.data.refineShipFromCountries, function (i, el) {
+                    $('#product-search-shipfrom option').filter(function(j, opt) {
+                        return $(opt).val() === el.countryCode;
+                    }).removeAttr('disabled');
+                });
+            }
+
             if (!rep.data.items || !rep.data.items.length) {
+                var countryName = '';
+
+                if(extra.shipFromCountry) {
+                    var matchCountry = $('#product-search-shipfrom option').filter(function(i, el) {
+                        return $(el).val() === extra.shipFromCountry && !$(el).attr('disabled');
+                    });
+
+
+                    if(!matchCountry || !matchCountry.length) {
+                        countryName = $('#product-search-shipfrom option').filter(function(i, el) {
+                            return $(el).val() === extra.shipFromCountry;
+                        }).text();
+                    }
+                }
+
                 $('.products-list').append($('<h3 class="text-center" style="display:block;width: 100%;text-align: center;">' +
                     'Your search did not match any products.</h3>'));
+
+                if(countryName.length) {
+                    $('.products-list').append($('<h3 class="text-center" style="display:block;width: 100%;text-align: center;">' +
+                        'Note: Try to change Your Aliexpress country to ' + countryName + '</h3>'));
+                }
             } else {
                 $.each(rep.data.items, function (i, item) {
                     if (!item.tradeDesc) {
@@ -144,10 +181,13 @@
                 });
             }
 
+
             $('.products-list').show();
             $('.category-list').hide();
 
             $('.unveil').unveil();
+
+            $('#product-search-shipfrom option').removeAttr('disabled');
 
             window.scrollTo(0,0);
         });
@@ -169,7 +209,7 @@
 
             $('#product-search-input').val(info.search);
             $('#product-search-cat option').filter(function(i, el) {
-                return $(el).val().indexOf(info.category) !== -1;
+                return catIdFromUrl($(el).val()) === info.category;
             }).prop('selected', 'selected');
 
             $('#product-search-sort option').filter(function(i, el) {
