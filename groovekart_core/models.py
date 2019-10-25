@@ -206,10 +206,12 @@ class GrooveKartProduct(ProductBase):
 
             if type(data['images']) is dict:
                 data['images'] = list(data['images'].values())
-            data['images'] = list([self.get_large_image_url(i) for i in data.get('images', [])])
 
-            if data.get('cover_image'):
-                data['cover_image'] = self.get_large_image_url(data['cover_image'])
+            if self.source_id:
+                data['images'] = list([self.get_large_image_url(i) for i in data.get('images', [])])
+
+                if data.get('cover_image'):
+                    data['cover_image'] = self.get_large_image_url(data['cover_image'])
 
             return data
 

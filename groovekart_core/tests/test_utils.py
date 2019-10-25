@@ -22,8 +22,8 @@ class GetVariantValueTestCase(BaseTestCase):
         self.assertEqual((label, value), ('Size', new_value))
 
     def test_must_include_color_hash_for_color_label(self):
-        label, value = get_variant_value('Color', 'red')
-        self.assertIn('color', value)
+        label, value = get_variant_value('Color', 'red', {'red': 'http://example.com/image.jpg'})
+        self.assertIn('texture', value)
 
     def test_must_use_color_for_variant_group_for_color_label(self):
         label, value = get_variant_value('Color', 'red')

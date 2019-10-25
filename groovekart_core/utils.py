@@ -136,7 +136,7 @@ def get_or_create_category_by_title(store, category_title):
 
     def search(categories, category_title_lower):
         for category in categories:
-            if category['title'].lower() == category_title_lower:
+            if category['title'] and category['title'].lower() == category_title_lower:
                 return safe_int(category['id'])
 
     categories = get_store_categories(store)
@@ -600,15 +600,12 @@ def order_track_fulfillment(order_track, user_config=None):
 
 
 def get_variant_value(label, value, color_textures={}):
-    if label.lower() == 'color':
-        variant_info = {'variant_group_type': 'color', 'variant_name': value}
-        texture = color_textures.get(value)
-        if texture:
-            variant_info['texture'] = texture
-        else:
-            variant_info['color'] = '#FFFFFF'
-        return ('Color', variant_info)
-    return (label, {'variant_group_type': 'radio', 'variant_name': value})
+    texture = color_textures.get(value)
+    if texture:
+        # TODO: Sending correct label(not Color) erases variant_name
+        return ('Color', {'variant_group_type': 'color', 'variant_name': value, 'texture': texture})
+    else:
+        return (label, {'variant_group_type': 'radio', 'variant_name': value})
 
 
 def get_orders_page_default_date_range(timezone):

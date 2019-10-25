@@ -118,6 +118,7 @@
                 <div class="row">
                     <div class="form-group col-xs-3">
                         <label for="product-type">Type</label>
+                        {% if product.source_id %}
                         <!-- GKart doesn't allow editing default category yet -->
                         <select class="form-control" id="product-type" disabled>
                             <option></option>
@@ -125,6 +126,9 @@
                             <option value="{{ category.id }}">{{ category.title }}</option>
                             {% endfor %}
                         </select>
+                        {% else %}
+                        <input type="text" class="form-control" id="product-type" placeholder="Product Type">
+                        {% endif %}
                     </div>
                     <div class="form-group col-xs-6">
                         <label for="product-tag">Tags</label>

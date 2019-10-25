@@ -156,7 +156,11 @@ def product_export(store_id, product_id, user_id):
         variants_images = product_data.get('variants_images') or {}
         images = product_data.get('images', [])
         variants = product_data.get('variants', [])
-        category_id = get_or_create_category_by_title(store, product_data.get('type'))
+        # variants_sku = product_data.get('variants_sku', {})
+
+        category_id = None
+        if product_data.get('type'):
+            category_id = get_or_create_category_by_title(store, product_data.get('type'))
 
         api_data = {
             'product': {
@@ -172,6 +176,13 @@ def product_export(store_id, product_id, user_id):
                 'sku': product_data.get('sku'),
                 'tags': ', '.join(tags),
             },
+        }
+
+        first_image = images[0]
+        images = images[1:]
+        api_data['product']['image'] = {
+            'src': first_image,
+            'position': 0
         }
 
         product_variants = []
@@ -203,13 +214,16 @@ def product_export(store_id, product_id, user_id):
                     'compare_at_price': utils.safe_float(data_variants_info.get('price'), product_data.get('compare_at_price')),
                     'price': utils.safe_float(data_variants_info.get('price'), product_data.get('price')),
                     'default_on': 1 if index == 0 else 0,
-                    'variant_values': {}
+                    'variant_values': {},
+                    'sku': [],
                 }
 
                 for label, value in zip(list(reversed(titles)), list(reversed(attributes))):
+                    # variant_data['sku'].append(variants_sku.get(value))  # TODO: max-length of 32 for now
                     label, value = get_variant_value(label, value, color_textures)
                     variant_data['variant_values'][label] = value
 
+                variant_data['sku'] = ';'.join(variant_data['sku'])
                 product_variants.append(variant_data)
             api_data['product']['variants'] = product_variants
 
@@ -224,7 +238,11 @@ def product_export(store_id, product_id, user_id):
         except KeyError:
             raven_client.captureException(extra={'api_data': api_data})
 
-            pusher_data['error'] = utils.dict_val(groovekart_product, ['error', 'Error'])
+            error = utils.dict_val(groovekart_product, ['error', 'Error'])
+            if isinstance(error, dict):
+                error = error.get('message')
+
+            pusher_data['error'] = str(error)
             return store.pusher_trigger('product-export', pusher_data)
 
         product.sync()
@@ -289,13 +307,14 @@ def product_export_images(store_id, product_id, images, variants_images):
             pusher_data['success'] = True
             return store.pusher_trigger('product-export', pusher_data)
 
+        unassigned_images = []
         update_variants_api_data = {
             'action': 'update',
             'product_id': utils.safe_int(product.source_id),
             'variants': []
         }
         total = len(images)
-        for index, image in enumerate(images):
+        for index, image in enumerate(images[::-1]):
             api_data = {
                 'product': {
                     'id': product.source_id,
@@ -305,7 +324,7 @@ def product_export_images(store_id, product_id, images, variants_images):
 
             store.pusher_trigger('product-export', {
                 'product': product.id,
-                'progress': 'Uploading Images ({:,.2f}%)'.format(((index + 1) * 100 / total) - 1),
+                'progress': 'Updating Images ({:,.2f}%)'.format(((index + 1) * 100 / total) - 1),
             })
 
             # The API only allows images to be uploaded one at a time
@@ -324,8 +343,19 @@ def product_export_images(store_id, product_id, images, variants_images):
                     if variant_name in GrooveKartProduct.get_variant_options(variant):
                         update_variants_api_data['variants'].append({
                             'id': utils.safe_int(variant['id']),
-                            'image_id': [image_id]
+                            'image_id': [image_id],
+                            'price': variant.get('price'),
+                            'compare_at_price': variant.get('compare_price'),
+                            'weight': variant.get('weight'),
+                            'default_on': variant.get('default_on'),
+                            'update_all_fields': False,
+                            # 'sku': variant.get('sku'),  # Not working
                         })
+            else:
+                unassigned_images.append(image_id)
+
+        for v in update_variants_api_data['variants']:
+            v['image_id'] += unassigned_images
 
         # Update variants with default image
         variants_endpoint = store.get_api_url('variants.json')
