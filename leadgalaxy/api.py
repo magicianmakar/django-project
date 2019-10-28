@@ -1173,6 +1173,9 @@ class ShopifyStoreApi(ApiBase):
 
             config = named_config
 
+        # Workaround for DROP-1608
+        config['aliexpress_captcha'] = config.get('aliexpress_solve_captcha', True)
+
         return JsonResponse(config)
 
     def post_user_config(self, request, user, data):
