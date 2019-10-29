@@ -4,7 +4,11 @@ from unittest.mock import patch, Mock
 
 from lib.test import BaseTestCase
 
-from ..utils import WooListQuery, woo_customer_address
+from ..utils import (
+    WooListQuery,
+    woo_customer_address,
+    add_product_images_to_api_data,
+)
 from .factories import WooStoreFactory, WooProductFactory
 
 from shopified_core.utils import hash_url_filename, update_product_data_images
@@ -110,3 +114,27 @@ class UpdateProductDataImageVariantsTestCase(BaseTestCase):
         self.product = update_product_data_images(self.product, self.old_url, self.new_url)
         hashed_new_url = hash_url_filename(self.new_url)
         self.assertEqual(self.product.parsed.get('variants_images')[hashed_new_url], self.variant)
+
+
+class TestAddProductImagesToAPIData(BaseTestCase):
+    def test_non_childrens_place(self):
+        test_src = 'https://avatars3.githubusercontent.com/u/36484923?s=60&v=4'
+        data = {'images': [test_src]}
+        api_data = {}
+
+        add_product_images_to_api_data(api_data, data, user_id=1)
+        expected = {'src': test_src, 'name': test_src, 'position': 0}
+        self.assertDictEqual(api_data['images'][0], expected)
+
+    def test_childrens_place(self):
+        test_src = 'http://childrensplace.com/images/product/1111.jpg'
+        data = {'images': [test_src]}
+        api_data = {}
+
+        s3_src = 'http://s3.jpg'
+
+        with patch('leadgalaxy.utils.upload_file_to_s3', return_value=s3_src):
+            add_product_images_to_api_data(api_data, data, user_id=1)
+
+        expected = {'src': s3_src, 'name': s3_src, 'position': 0}
+        self.assertDictEqual(api_data['images'][0], expected)

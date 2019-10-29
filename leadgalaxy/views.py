@@ -3,7 +3,6 @@ import traceback
 
 import io
 import hmac
-import mimetypes
 import random
 import time
 
@@ -3286,17 +3285,7 @@ def save_image_s3(request):
         old_url = request.POST.get('old_url')
         fp = request.FILES.get('image')
 
-    # Randomize filename in order to not overwrite an existing file
-    img_name = utils.random_filename(img_url.split('/')[-1])
-    img_name = 'uploads/u%d/%s' % (user.id, img_name)
-    mimetype = mimetypes.guess_type(img_url)[0]
-
-    upload_url = utils.aws_s3_upload(
-        filename=img_name,
-        fp=fp,
-        mimetype=mimetype,
-        bucket_name=settings.S3_UPLOADS_BUCKET
-    )
+    upload_url = utils.upload_file_to_s3(img_url, user.id, fp=fp)
 
     if request.GET.get('chq') or request.POST.get('chq'):
         from commercehq_core.models import CommerceHQProduct, CommerceHQUserUpload

@@ -142,16 +142,20 @@ def update_product_api_data(api_data, data, store):
     return api_data
 
 
-def add_product_images_to_api_data(api_data, data, from_helper=False):
+def add_product_images_to_api_data(api_data, data, from_helper=False, user_id=None):
     api_data['images'] = []
     for position, src in enumerate(data.get('images', [])):
-        try:
-            r = requests.head(src)
-            r.raise_for_status()
-        except Exception:
-            continue
-        if from_helper:
-            src = f"https://shopified-helper-app.herokuapp.com/api/ali/get-image/image.jpg?url={b64encode(src.encode('utf-8')).decode('utf-8')}"
+        if user_id and 'childrensplace.com' in src.lower():
+            src = leadgalaxy_utils.upload_file_to_s3(src, user_id)
+        else:
+            try:
+                r = requests.head(src)
+                r.raise_for_status()
+            except Exception:
+                continue
+
+            if from_helper:
+                src = f"https://shopified-helper-app.herokuapp.com/api/ali/get-image/image.jpg?url={b64encode(src.encode('utf-8')).decode('utf-8')}"
         api_data['images'].append({'src': src, 'name': src, 'position': position})
 
     return api_data
