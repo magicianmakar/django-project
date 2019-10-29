@@ -1764,12 +1764,28 @@ def product_view(request, pid):
         'exp': arrow.utcnow().replace(hours=6).timestamp
     }, settings.API_SECRECT_KEY, algorithm='HS256')
 
+    if product.parent_product is None:
+        original_images = original.get('images', [])
+    else:
+        parent_product = product.parent_product
+        while parent_product.parent_product:
+            parent_product = parent_product.parent_product
+        try:
+            parent_original_data = json.loads(parent_product.get_original_data())
+        except Exception:
+            parent_original_data = {}
+        else:
+            original_images = parent_original_data.get('images', [])
+
+    extra_images = original.get('extra_images', []) + original_images
+
     return render(request, 'product_view.html', {
         'product': p,
         'board': board,
         'original': original,
         'collections': collections,
         'shopify_product': shopify_product,
+        'extra_images': extra_images,
         'aws_available': aws['aws_available'],
         'aws_policy': aws['aws_policy'],
         'aws_signature': aws['aws_signature'],
