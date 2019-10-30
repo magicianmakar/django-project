@@ -212,10 +212,21 @@
             flex-flow: wrap;
         }
 
+        .product-box:hover, .product-box.active {
+            border: 1px solid #ddd;
+            -webkit-box-shadow: none;
+            -moz-box-shadow: none;
+            box-shadow: none;
+        }
+
         .product-name {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        .product-name:hover {
+            cursor: pointer;
         }
 
         .product-price {

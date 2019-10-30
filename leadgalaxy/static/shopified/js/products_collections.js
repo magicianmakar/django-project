@@ -111,6 +111,10 @@
             extra.maxPrice = info.priceMax;
         }
 
+        if (info.page) {
+            extra.page = info.page;
+        }
+
         window.extensionSendMessage({
             subject: 'aliexpressProductSearch',
             from: 'website',
@@ -180,8 +184,24 @@
 
                     $('.products-list').append(productEl);
                 });
-            }
 
+
+                if(rep.data.resultCount > rep.data.resultSizePerPage) {
+                    $('.products-list').append($('<button>', {
+                        'text': 'Load More',
+                        'class': 'btn btn-block btn-lg btn-success m-t',
+                        'href': '#',
+                        'click': function(e) {
+                            e.preventDefault();
+
+                            var info = getHashUrl();
+                            info.page = info.page ? parseInt(info.page) + 1 : 2;
+
+                            changeHashUrl(info);
+                        }
+                    }));
+                }
+            }
 
             $('.products-list').show();
             $('.category-list').hide();
@@ -208,7 +228,10 @@
         if (location.hash.length) {
             var info = getHashUrl();
 
-            $('#product-search-input').val(decodeURIComponent(info.search));
+            if(info.search && info.search.length) {
+                $('#product-search-input').val(decodeURIComponent(info.search));
+            }
+
             $('#product-search-cat option').filter(function(i, el) {
                 return catIdFromUrl($(el).val()) === info.category;
             }).prop('selected', 'selected');
