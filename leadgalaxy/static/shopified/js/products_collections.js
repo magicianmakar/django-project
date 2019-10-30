@@ -2,6 +2,7 @@
     'use strict';
 
     var initForms = false;
+    var loadingContainer = document.querySelector("#page-wrapper > div.wrapper.wrapper-content > div");
 
     function changeHashUrl(param) {
         location.hash = encodeURIComponent(btoa(JSON.stringify(param)));
@@ -91,7 +92,7 @@
             return;
         }
 
-        $('body').LoadingOverlay("show", {
+        $(loadingContainer).LoadingOverlay("show", {
             background: "rgba(200, 200, 200, 0.6)",
             zIndex: 9990
         });
@@ -118,7 +119,7 @@
             searchSort: info.sort,
             extra: extra,
         }, function(rep) {
-            $('body').LoadingOverlay("hide", true);
+            $(loadingContainer).LoadingOverlay("hide", true);
 
             if (!rep.success) {
                 swal('Products Database', 'Could not get products list, please try agian', 'error');
@@ -207,7 +208,7 @@
         if (location.hash.length) {
             var info = getHashUrl();
 
-            $('#product-search-input').val(info.search);
+            $('#product-search-input').val(decodeURIComponent(info.search));
             $('#product-search-cat option').filter(function(i, el) {
                 return catIdFromUrl($(el).val()) === info.category;
             }).prop('selected', 'selected');
