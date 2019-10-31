@@ -423,10 +423,11 @@ def product_update(product_id, data):
         have_variant_images = len(set(variant_images)) > len(product_images)
 
         images_need_delete = []
+        common_images = product.get_common_images()
         if have_variant_images:
             for j in p.get('variants', []):
                 for k in j['images']:
-                    if k['path'] not in data['images']:
+                    if k['path'] not in data['images'] and k['path'] in common_images:
                         images_need_delete.append(k['id'])
         else:
             for j in p['images']:
