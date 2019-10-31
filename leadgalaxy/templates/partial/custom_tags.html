@@ -152,6 +152,11 @@
                 extension_version: intercomSettings.extension_version
 
             });
+
+            Appcues.on("nps_score", function(event) {
+                intercomSettings.nps_score = event.score;
+                Intercom('update');
+            })
         }
     }
     {% endif %}
