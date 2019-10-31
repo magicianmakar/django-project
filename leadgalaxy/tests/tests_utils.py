@@ -1,6 +1,6 @@
 import re
 import random
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, MagicMock
 import json
 from django.conf import settings
 from django.test import tag
@@ -1333,3 +1333,41 @@ class ShopifyBoardTestCase(BaseTestCase):
         utils.smart_board_by_product(self.user, self.connected_product)
         utils.smart_board_by_product(self.user, self.saved_product)
         self.assertEqual(self.board.saved_count(), 1)
+
+
+class TestUploadFileToS3(BaseTestCase):
+    def test_with_fp(self):
+        url = 'http://example.com/test.jpg'
+        user_id = 1
+        fp = 'test fp'
+
+        with patch('leadgalaxy.utils.aws_s3_upload') as mock_aws_upload, \
+                patch('leadgalaxy.utils.random_filename', return_value='rand'):
+            utils.upload_file_to_s3(url, user_id, fp=fp)
+
+            mock_aws_upload.assert_called_with(
+                filename='uploads/u1/rand',
+                fp=fp,
+                mimetype='image/jpeg',
+                bucket_name=settings.S3_UPLOADS_BUCKET
+            )
+
+    def test_without_fp(self):
+        url = 'http://example.com/test.jpg'
+        user_id = 1
+        data = b'test fp'
+
+        mock_get = MagicMock()
+        mock_get.content = data
+        with patch('leadgalaxy.utils.aws_s3_upload') as mock_aws_upload, \
+                patch('requests.get', return_value=mock_get), \
+                patch('io.BytesIO', return_value='bytes'), \
+                patch('leadgalaxy.utils.random_filename', return_value='rand'):
+            utils.upload_file_to_s3(url, user_id)
+
+            mock_aws_upload.assert_called_with(
+                filename='uploads/u1/rand',
+                fp='bytes',
+                mimetype='image/jpeg',
+                bucket_name=settings.S3_UPLOADS_BUCKET
+            )

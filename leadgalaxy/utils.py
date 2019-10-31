@@ -1,3 +1,4 @@
+import io
 import os
 import hashlib
 import pytz
@@ -2197,6 +2198,27 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
         return upload_url, time.time() - upload_start
     else:
         return upload_url
+
+
+def upload_file_to_s3(url, user_id, fp=None):
+    # Randomize filename in order to not overwrite an existing file
+    name = random_filename(url.split('/')[-1])
+    name = 'uploads/u%d/%s' % (user_id, name)
+    mimetype = mimetypes.guess_type(url)[0]
+
+    if fp is None:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:64.0)'
+                          ' Gecko/20100101 Firefox/64.0'
+        }
+        fp = io.BytesIO(requests.get(url, headers=headers).content)
+
+    return aws_s3_upload(
+        filename=name,
+        fp=fp,
+        mimetype=mimetype,
+        bucket_name=settings.S3_UPLOADS_BUCKET
+    )
 
 
 def attach_boards_with_product(user, product, ids):

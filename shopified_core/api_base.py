@@ -778,7 +778,11 @@ class ApiBase(ApiResponseMixin, View):
         if '{{' in data.get('currency'):
             store.currency_format = data.get('currency')
         else:
-            store.currency_format = '{}{{{{amount}}}}'.format(data.get('currency'))
+            if not data.get('currency'):
+                currency = '$'
+            else:
+                currency = data.get('currency')
+            store.currency_format = '{}{{{{amount}}}}'.format(currency)
         store.save()
 
         return self.api_success()
