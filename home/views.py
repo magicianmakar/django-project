@@ -1,7 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.contrib import messages
-from django.http import HttpResponseRedirect
 from django.shortcuts import render, redirect
 from django.views.generic import View
 
@@ -27,13 +26,6 @@ def home_page_view(request):
     add_store_btn = not user.is_subuser \
         and (can_add or user.profile.plan.extra_stores) \
         and not user.profile.from_shopify_app_store()
-
-    pending_sub = user.shopifysubscription_set.filter(status='pending')
-    if len(pending_sub):
-        charge = pending_sub[0].refresh()
-        if charge.status == 'pending':
-            request.session['active_subscription'] = charge.id
-            return HttpResponseRedirect(charge.confirmation_url)
 
     templates = DescriptionTemplate.objects.filter(user=user.models_user).defer('description')
     markup_rules = PriceMarkupRule.objects.filter(user=user.models_user)
