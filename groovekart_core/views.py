@@ -588,6 +588,7 @@ class OrdersList(ListView):
         store = self.get_store()
         orders = context.get('orders', [])
         groovekart_site = store.get_store_url()
+        groovekart_admin = store.get_admin_url().rstrip('/')
         product_ids = self.get_product_ids(orders)
         products_by_source_id = self.get_products_by_source_id(product_ids)
         order_ids = [order['id'] for order in orders]
@@ -626,6 +627,8 @@ class OrdersList(ListView):
                 item['total'] = safe_float(item['price'] * item['quantity'])
                 item['image'] = item.get('variants', {}).get('image') or item.get('cover_image')
                 item['image'] = fix_gkart_image(item['image'])
+                item['variant_title'] = ' / '.join([o.get('value') for o in item.get('variants', {}).get('options', [])])
+                item['variant_link'] = '{}/v2/index.php/product/form/{}'.format(groovekart_admin, product_id)
 
                 bundle_data = []
                 if product:

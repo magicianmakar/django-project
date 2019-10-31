@@ -422,7 +422,9 @@
                                                             </span>
                                                             {% endif %}
                                                         </td>
-                                                        <td class="text-center no-wrap" style="width:10%"></td>
+                                                        <td class="text-center no-wrap hidden-xs" style="width:10%">
+                                                            <a href="{{item.variant_link}}" target="_blank">{{item.variant_title|default:'&lt;Default&gt;'}}</a>
+                                                        </td>
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             <span style="font-weight:bolder;{% if item.quantity > 1 %}color:blue{% endif %}">
                                                                 {{item.quantity}}
