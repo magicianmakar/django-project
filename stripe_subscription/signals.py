@@ -38,6 +38,7 @@ def create_extra_store(sender, instance, created):
             return
 
         if instance.user.profile.plan.is_stripe() \
+                and not instance.user.profile.plan.is_paused \
                 and total_allowed > -1 \
                 and total_allowed < stores_count:
             extra_store_model = get_extra_model_from_store(instance)

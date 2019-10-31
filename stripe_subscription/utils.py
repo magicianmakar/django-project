@@ -186,7 +186,7 @@ def resubscribe_customer(customer_id):
 def have_extra_stores(user):
     stores_count = user.profile.get_stores_count()
 
-    return user.profile.plan.stores != -1 and stores_count > user.profile.plan.stores
+    return user.profile.plan.stores != -1 and stores_count > user.profile.plan.stores and not user.profile.plan.is_paused
 
 
 def have_wrong_extra_stores_count(extra):
@@ -268,7 +268,9 @@ def get_active_extra_stores(extra_queryset, current_period=True):
 def get_subscribed_extra_stores(extra_model):
     for extra in get_active_extra_stores(extra_model.objects.all()):
         ignore = False
-        if not extra.store.is_active or extra.user.profile.plan.is_free:
+        if not extra.store.is_active \
+                or extra.user.profile.plan.is_free \
+                or extra.user.profile.plan.is_paused:
             extra.status = 'disabled'
             extra.save()
             ignore = True

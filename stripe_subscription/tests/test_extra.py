@@ -53,11 +53,16 @@ class ExtraStoreTestCase(BaseTestCase):
             title='Elite', slug='elite', stores=1,
             payment_gateway=1)
 
+        self.paused_plan = GroupPlan.objects.create(
+            title='Paused', slug='paused-plan', stores=1,
+            payment_gateway=1)
+
         self.user.profile.change_plan(self.plan)
 
         self.customer = StripeCustomer.objects.create(
             user=self.user, customer_id='cus_8iACZcJQJuxOta')
 
+        self.paused_plan.is_stripe = MagicMock(return_value=True)
         self.user.profile.plan.is_stripe = MagicMock(return_value=True)
 
     def test_have_extra_stores(self):
@@ -79,6 +84,28 @@ class ExtraStoreTestCase(BaseTestCase):
 
         self.assertTrue(have_extra_stores(self.user))
         self.assertEqual(self.user.extrastore_set.count(), 1)
+
+    def test_paused_doesnt_have_extra_stores(self):
+        self.user.profile.change_plan(self.paused_plan)
+
+        self.assertEqual(self.user.profile.plan, self.paused_plan)
+
+        self.assertTrue(self.user.profile.plan.is_stripe())
+        self.assertFalse(have_extra_stores(self.user))
+
+        can_add, total_allowed, user_count = permissions.can_add_store(self.user)
+        self.assertTrue(can_add)
+        self.assertEqual(total_allowed, self.user.profile.plan.stores)
+        self.assertEqual(user_count, self.user.profile.get_shopify_stores().count())
+
+        self.assertEqual(self.user.extrastore_set.count(), 0)
+
+        ShopifyStore.objects.create(
+            user=self.user, title="test2", api_url=SHOPIFY_APP_URL,
+            version=2, shop=MYSHOPIFY_DOMAIN)
+
+        self.assertFalse(have_extra_stores(self.user))
+        self.assertEqual(self.user.extrastore_set.count(), 0)
 
     def test_extra_store_invoice(self):
         self.assertEqual(self.user.extrastore_set.count(), 0)
