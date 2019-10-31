@@ -4,7 +4,7 @@ import requests
 from urllib.parse import unquote
 
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.core.paginator import Paginator
 from django.core.validators import URLValidator
@@ -15,6 +15,9 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from .utils import Youtube, get_videos_info, get_channels_info
 from .models import VideosList
 from .decorators import feature_permission_required
+
+
+PREMISSION_REDIRECT_URL = 'https://help.dropified.com/en/articles/2772062-find-videos-with-tubehunt'
 
 
 def JsonResponse(data):
@@ -51,6 +54,9 @@ def autocomplete(request):
 @login_required
 @feature_permission_required
 def index(request):
+    if not request.user.can('youtube_ads.use'):
+        return HttpResponseRedirect(PREMISSION_REDIRECT_URL)
+
     error = None
     current_page = ('youtube_related' if 'r' in request.GET else 'youtube_search')
     selected_menu = ('tools:youtube:related' if 'r' in request.GET else 'tools:youtube:search')
@@ -133,6 +139,9 @@ def index(request):
 @login_required
 @feature_permission_required
 def channels(request):
+    if not request.user.can('youtube_ads.use'):
+        return HttpResponseRedirect(PREMISSION_REDIRECT_URL)
+
     error = None
     breadcrumbs = [
         {'url': reverse('youtube_ads.views.index'), 'title': 'TubeHunt'},
@@ -221,6 +230,9 @@ def lists(request):
 @login_required
 @feature_permission_required
 def list_detail(request, pk):
+    if not request.user.can('youtube_ads.use'):
+        return HttpResponseRedirect(PREMISSION_REDIRECT_URL)
+
     video_list = get_object_or_404(VideosList, pk=pk)
     video_ids = video_list.get_videos()
 
