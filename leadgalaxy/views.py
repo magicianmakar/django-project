@@ -1765,19 +1765,19 @@ def product_view(request, pid):
     }, settings.API_SECRECT_KEY, algorithm='HS256')
 
     if product.parent_product is None:
-        original_images = original.get('images', [])
+        if original:
+            original_images = original.get('images', [])
     else:
-        parent_product = product.parent_product
-        while parent_product.parent_product:
-            parent_product = parent_product.parent_product
         try:
-            parent_original_data = json.loads(parent_product.get_original_data())
-        except Exception:
-            parent_original_data = {}
-        else:
+            parent_original_data = json.loads(product.parent_product.get_original_data())
             original_images = parent_original_data.get('images', [])
+        except:
+            pass
 
-    extra_images = original.get('extra_images', []) + original_images
+    try:
+        extra_images = original.get('extra_images', []) + original_images
+    except:
+        extra_images = []
 
     return render(request, 'product_view.html', {
         'product': p,
