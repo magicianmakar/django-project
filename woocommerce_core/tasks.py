@@ -33,6 +33,9 @@ from .utils import (
 )
 
 
+WOOCOMMERCE_API_TIMEOUT = 120
+
+
 @celery_app.task(base=CaptureFailure)
 def product_save(req_data, user_id):
     store = req_data.get('store')
@@ -158,9 +161,6 @@ def product_export(store_id, product_id, user_id, publish=None):
         store = WooStore.objects.get(id=store_id)
         product = WooProduct.objects.get(id=product_id)
 
-        if product.source_id and product.store.id == store.id:
-            raise ValueError('Product already connected to WooCommerce store.')
-
         permissions.user_can_view(user, store)
         permissions.user_can_edit(user, product)
 
@@ -174,7 +174,7 @@ def product_export(store_id, product_id, user_id, publish=None):
         api_data = add_product_attributes_to_api_data(api_data, saved_data)
         api_data = add_store_tags_to_api_data(api_data, store, saved_data.get('tags', []))
 
-        r = store.get_wcapi(timeout=60).post('products', api_data)
+        r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post('products', api_data)
         if not r.ok:
             is_image_error = False
             try:
@@ -187,7 +187,7 @@ def product_export(store_id, product_id, user_id, publish=None):
             # Retry using dropified helper to fetch image
             if is_image_error:
                 api_data = add_product_images_to_api_data(api_data, saved_data, from_helper=True)
-                r = store.get_wcapi(timeout=60).post('products', api_data)
+                r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post('products', api_data)
 
                 if r.ok:
                     product_data = r.json()
@@ -212,7 +212,7 @@ def product_export(store_id, product_id, user_id, publish=None):
             image_id_by_hash = get_image_id_by_hash(product_data)
             variant_list = create_variants_api_data(saved_data, image_id_by_hash)
             path = 'products/{}/variations/batch'.format(product.source_id)
-            r = store.get_wcapi(timeout=60).post(path, {'create': variant_list})
+            r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post(path, {'create': variant_list})
             r.raise_for_status()
             variants = r.json()['create']
 
@@ -243,14 +243,6 @@ def product_export(store_id, product_id, user_id, publish=None):
             'woocommerce_url': product.woocommerce_url
         })
 
-    except ValueError as e:
-        store.pusher_trigger('product-export', {
-            'success': False,
-            'error': str(e),
-            'product': product.id,
-            'product_url': reverse('woo:product_detail', kwargs={'pk': product.id}),
-        })
-
     except Exception as e:
         raven_client.captureException(extra=utils.http_exception_response(e))
 
@@ -276,7 +268,7 @@ def product_update(product_id, data):
         if variants_data:
             api_data['type'] = 'variable'
 
-        r = store.get_wcapi(timeout=60).put('products/{}'.format(product.source_id), api_data)
+        r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).put('products/{}'.format(product.source_id), api_data)
         r.raise_for_status()
 
         product.update_data({'type': data.get('type', '')})
@@ -286,7 +278,7 @@ def product_update(product_id, data):
         if variants_data:
             variants = update_variants_api_data(variants_data)
             path = 'products/%s/variations/batch' % product.source_id
-            r = store.get_wcapi(timeout=60).post(path, {'update': variants})
+            r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post(path, {'update': variants})
             r.raise_for_status()
 
         store.pusher_trigger('product-update', {

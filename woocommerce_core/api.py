@@ -425,6 +425,9 @@ class WooStoreApi(ApiBase):
         else:
             permissions.user_can_view(user, product)
 
+        if product.source_id and product.store.id == store.id:
+            return self.api_error('Product already connected to a WooCommerce store.')
+
         try:
             publish = data.get('publish')
             publish = publish if publish is None else publish == 'true'
