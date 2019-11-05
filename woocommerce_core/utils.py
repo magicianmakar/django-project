@@ -145,8 +145,10 @@ def update_product_api_data(api_data, data, store):
 def add_product_images_to_api_data(api_data, data, from_helper=False, user_id=None):
     api_data['images'] = []
     for position, src in enumerate(data.get('images', [])):
+        name = src
         if user_id and 'childrensplace.com' in src.lower():
             src = leadgalaxy_utils.upload_file_to_s3(src, user_id)
+            name = src
         else:
             try:
                 r = requests.head(src)
@@ -154,9 +156,15 @@ def add_product_images_to_api_data(api_data, data, from_helper=False, user_id=No
             except Exception:
                 continue
 
+            # For image src without image extension
             if from_helper:
                 src = f"https://shopified-helper-app.herokuapp.com/api/ali/get-image/image.jpg?url={b64encode(src.encode('utf-8')).decode('utf-8')}"
-        api_data['images'].append({'src': src, 'name': src, 'position': position})
+
+        # From intercom conversation: 24384422520
+        if user_id == 76793:
+            name = ' '
+
+        api_data['images'].append({'src': src, 'name': name, 'position': position})
 
     return api_data
 

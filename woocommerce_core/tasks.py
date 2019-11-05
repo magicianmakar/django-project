@@ -186,7 +186,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
             # Retry using dropified helper to fetch image
             if is_image_error:
-                api_data = add_product_images_to_api_data(api_data, saved_data, from_helper=True)
+                api_data = add_product_images_to_api_data(api_data, saved_data, user_id=user_id, from_helper=True)
                 r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post('products', api_data)
 
                 if r.ok:
