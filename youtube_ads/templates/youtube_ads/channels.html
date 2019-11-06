@@ -4,43 +4,39 @@
 
 {% block tubehunt-content %}
     {% if not channels %}
-        <div class="row">
-            <div class="col-md-offset-1 col-md-6">
-                <div class="ibox float-e-margins">
-                    <div class="ibox-title">
-                        <h5>Channel Search</h5>
-                        <div class="ibox-tools">
-                            {% if user.is_superuser %}
-                            <a href="{% url template_config.url.namespace|add:'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
-                            {% endif %}
-                            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                            <!--<a class="close-link"><i class="fa fa-times"></i></a>-->
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        {% if error %}
-                        <div id="loginErrorMsg" class="alert alert-danger" role="alert">{{error}}</div>
-                        {% endif %}
-
-                        <form class="form-horizontal" method="GET">
-                            <!-- {% csrf_token %} -->
-                          <div class="form-group">
-                            <label for="q" class="col-sm-2 control-label">
-                                Search
-                            </label>
-                            <div class="col-sm-8">
-                              <input  name="{% if related %}r{% else %}q{% endif %}" id="{% if related %}r{% else %}q{% endif %}" type="text" class="form-control" placeholder="" value="">
-                            </div>
-                          </div>
-
-                          <div class="form-group">
-                            <div class="col-sm-offset-2 col-sm-10">
-                              <button id="userLogin" type="submit" class="btn btn-primary">Search</button>
-                            </div>
-                          </div>
-                        </form>
-                    </div>
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>Channel Search</h5>
+                <div class="ibox-tools">
+                    {% if user.is_superuser %}
+                    <a href="{% url template_config.url.namespace|add:'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
+                    {% endif %}
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                    <!--<a class="close-link"><i class="fa fa-times"></i></a>-->
                 </div>
+            </div>
+            <div class="ibox-content">
+                {% if error %}
+                <div id="loginErrorMsg" class="alert alert-danger" role="alert">{{error}}</div>
+                {% endif %}
+
+                <form class="form-horizontal" method="GET">
+                    <!-- {% csrf_token %} -->
+                  <div class="form-group">
+                    <label for="q" class="col-sm-2 control-label">
+                        Search
+                    </label>
+                    <div class="col-sm-8">
+                      <input  name="{% if related %}r{% else %}q{% endif %}" id="{% if related %}r{% else %}q{% endif %}" type="text" class="form-control" placeholder="" value="">
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <div class="col-sm-offset-2 col-sm-10">
+                      <button id="userLogin" type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                  </div>
+                </form>
             </div>
         </div>
 

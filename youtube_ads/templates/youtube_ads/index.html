@@ -2,68 +2,63 @@
 {% load static %}
 {% block tubehunt-content %}
 {% if not videos %}
-<div class="row">
-    <div class="col-md-offset-1 col-md-6">
-        <div class="ibox float-e-margins">
-            <div class="ibox-title">
-                <h5>
-                    {% if related %}
-                    Related Videos
-                    {% else %}
-                    YouTube Video Search
-                    {% endif %}
-                </h5>
-                <div class="ibox-tools">
-                    {% if user.is_superuser %}
-                    <a href="{% url template_config.url.namespace|add:'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
-                    {% endif %}
-                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                    <!--<a class="close-link"><i class="fa fa-times"></i></a>-->
-                </div>
-            </div>
-            <div class="ibox-content">
-                {% if error %}
-                <div id="loginErrorMsg" class="alert alert-danger" role="alert">{{error}}</div>
-                {% endif %}
-                <form class="form-horizontal" method="GET">
-                    <!-- {% csrf_token %} -->
-                    <div class="form-group">
-                        <label for="q" class="col-sm-3 control-label">
-                            {% if related %}
-                            Video URL:
-                            {% else %}
-                            Query:
-                            {% endif %}
-                        </label>
-                        <div class="col-sm-6">
-                            {% if related %}
-                                <input name="r" id="r" type="text" class="form-control" placeholder="" value="" />
-                            {% else %}
-                                <input name="q" id="q" type="text" class="form-control" placeholder="" value="{{ request.GET.q|default:'' }}" />
-                            {% endif %}
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" for="type">Search For:</label>
-                        <div class="col-sm-4">
-                            <select name="type" class="form-control">
-                                <option value="ads">Videos with Ads</option>
-                                <option value="all">All videos</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <div class="col-sm-offset-2 col-sm-10">
-                            <button id="userLogin" type="submit" class="btn btn-primary">Search</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+
+<div class="ibox float-e-margins">
+    <div class="ibox-title">
+        <h5>
+            {% if related %}
+            Related Videos
+            {% else %}
+            YouTube Video Search
+            {% endif %}
+        </h5>
+        <div class="ibox-tools">
+            {% if user.is_superuser %}
+            <a href="{% url template_config.url.namespace|add:'youtube_ads.views.auth' %}" class="btn btn-primary btn-xs">Auth Google User</a>
+            {% endif %}
+            <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+            <!--<a class="close-link"><i class="fa fa-times"></i></a>-->
         </div>
     </div>
+    <div class="ibox-content">
+        {% if error %}
+        <div id="loginErrorMsg" class="alert alert-danger" role="alert">{{error}}</div>
+        {% endif %}
+        <form class="form-horizontal" method="GET">
+            <!-- {% csrf_token %} -->
+            <div class="form-group">
+                <label for="q" class="col-sm-3 control-label">
+                    {% if related %}
+                    Video URL:
+                    {% else %}
+                    Query:
+                    {% endif %}
+                </label>
+                <div class="col-sm-6">
+                    {% if related %}
+                        <input name="r" id="r" type="text" class="form-control" placeholder="" value="" />
+                    {% else %}
+                        <input name="q" id="q" type="text" class="form-control" placeholder="" value="{{ request.GET.q|default:'' }}" />
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-sm-3 control-label" for="type">Search For:</label>
+                <div class="col-sm-4">
+                    <select name="type" class="form-control">
+                        <option value="ads">Videos with Ads</option>
+                        <option value="all">All videos</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button id="userLogin" type="submit" class="btn btn-primary">Search</button>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
-
-{% include "youtube_ads/partial/banner.html" %}
 
 {% else %}
 <div class="ibox float-e-margins">

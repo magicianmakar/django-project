@@ -4,8 +4,7 @@
 {% block main-container %}
 <div class='row'>
   <div class="col-md-2">
-    <div class="_ibox-content leftnav">
-      <h5 class="content-tittle">TubeHunt</h5>
+    <div class="ibox-content leftnav">
       <div>
         <a href="{% url template_config.url.namespace|add:'youtube_ads.views.index' %}"
           class="btn btn-default btn-adjust {% if 'youtube_search' in page %}btn-selected-adjust{% endif %}">
@@ -36,6 +35,9 @@
     {% block tubehunt-content %}{% endblock %}
   </div>
 </div>
+
+{% include "youtube_ads/partial/banner.html" %}
+
 {% endblock %}
 
 {% block extracss %}
