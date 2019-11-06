@@ -1018,7 +1018,7 @@ class ApiTestCase(BaseTestCase):
 
     @patch('woocommerce_core.tasks.product_export.apply_async')
     def test_post_product_export(self, product_export):
-        product = WooProductFactory(store=self.store, user=self.user, source_id=12345678)
+        product = WooProductFactory(store=self.store, user=self.user)
         data = {
             'store': self.store.id,
             'product': product.id,
