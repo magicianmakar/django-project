@@ -39,6 +39,10 @@ class WooStore(StoreBase):
     api_key = models.CharField(max_length=300)
     api_password = models.CharField(max_length=300)
 
+    api_version = models.CharField(max_length=50, default='wc/v2')
+    api_string_auth = models.BooleanField(default=True)
+    api_timeout = models.IntegerField(default=30)
+
     is_active = models.BooleanField(default=True)
     store_hash = models.CharField(default='', max_length=50, editable=False)
 
@@ -51,15 +55,19 @@ class WooStore(StoreBase):
         return self.title
 
     def get_wcapi(self, timeout=30):
+        version = self.api_version
+        api_string_auth = self.api_string_auth
+        api_timeout = max(self.api_timeout, timeout)
+
         return API(
             url=self.api_url,
             consumer_key=self.api_key,
             consumer_secret=self.api_password,
             wp_api=True,
-            version='wc/v2',
+            version=version,
             verify_ssl=False,
-            query_string_auth=True,
-            timeout=timeout)
+            query_string_auth=api_string_auth,
+            timeout=api_timeout)
 
     wcapi = property(get_wcapi)
 
