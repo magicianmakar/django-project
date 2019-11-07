@@ -34,15 +34,13 @@
 
     <script type="text/x-template" id="product-row-tpl">
       <tr :product-id="product.id">
-          <td>
+          <td style="padding-left:10px" colspan="6">
               <img
                 class=""
                 style="width: 50px"
                 :src="product.image.src" alt="">
-          </td>
-          <td style="padding-left:10px">
               <input type="hidden" name="product" v-model="product.id" />
-              <span>{{product.title}}</span>
+              <span style="font-weight: bold; ">{{product.title}}</span>
           </td>
 
           <template v-if="product.variants.length <= 1">
@@ -59,9 +57,6 @@
               </td>
               <td class="text-left"><input style="text-align:left" v-model="product.product_type" /></td>
           </template>
-          <template v-else>
-              <td v-for="n in 4" class="text-right" style="padding:5px">&mdash;</td>
-          </template>
 
           <td class="no-wrap"><input class="text-left" placeholder="Vendor" v-model="product.vendor"/></td>
           <td class="no-wrap"><input class="text-left" placeholder="Tags" v-model="product.tags"/></td>
@@ -70,7 +65,7 @@
 
     <script type="text/x-template" id="variant-row-tpl">
       <tr :variant-id="variant.id">
-          <td></td>
+          <td style="width:20px"></td>
           <td>{{variant.title}}</td>
 
           <td class="text-right no-wrap"><span class="currency">$</span><input v-model="variant.price" /></td>
