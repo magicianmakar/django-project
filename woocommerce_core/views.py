@@ -167,7 +167,7 @@ def product_alerts(request):
         for c in change['changes']['variants']['price']:
             if variants is not None and len(variants) > 0:
                 index = variant_index_from_supplier_sku(i.product, c['sku'], variants)
-                if index is not None:
+                if index is not None and variants[index].get('price') is not None:
                     c['woo_value'] = variants[index]['price']
                 else:
                     c['woo_value_label'] = "Not Found"
