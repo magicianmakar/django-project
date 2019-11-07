@@ -26,6 +26,10 @@
                     return a - b;
                 };
             }
+        } else if (exp[0] == '.' && exp.length > 1) {
+            return function fixed(a, b) {
+                return String(a).split('.')[0] + '.' + String(b).split('.').pop();
+            };
         } else if (/[0-9]/.test(exp[0])) {
             return function fixed(a, b) {
                 return b;
