@@ -71,7 +71,7 @@ class FacebookAccess(models.Model):
             settings.FACEBOOK_APP_ID,
             settings.FACEBOOK_APP_SECRET,
             self.access_token,
-            api_version='v3.3'
+            api_version='v4.0'
         )
 
     @property
@@ -299,6 +299,12 @@ class ProfitOrder(models.Model):
     order_name = models.CharField(max_length=255, null=True, blank=True)
     amount = models.DecimalField(decimal_places=2, max_digits=9, default=0)
     items = models.TextField(blank=True, null=True, default='')
+
+    def get_items_dict(self):
+        try:
+            return json.loads(self.items)
+        except:
+            return []
 
 
 class ProfitRefund(models.Model):

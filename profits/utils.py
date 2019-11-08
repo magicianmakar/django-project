@@ -93,7 +93,7 @@ def calculate_profit_margin(revenue, profit):
     if revenue < profit or revenue == 0 or profit < 0:
         percentage = 0
     else:
-        percentage = profit / revenue * 100
+        percentage = profit / float(revenue) * 100
     return '{}%'.format(int(percentage))
 
 
@@ -121,7 +121,7 @@ def get_order_mappings(order, user_timezone):
         'total_price': float(order.amount),
         'total_refund': 0.0,
         'profit': float(order.amount),
-        'products': order.items,
+        'products': order.get_items_dict(),
         'refunded_products': [],
         'aliexpress_track': [],
         'order_name': order.order_name

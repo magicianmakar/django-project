@@ -1387,7 +1387,7 @@ window.fbAsyncInit = function() {
         cookie     : true,  // enable cookies to allow the server to access the session
         xfbml      : true,  // parse social plugins on this page
         status     : true,  // force status refresh on init
-        version    : 'v3.1' // use graph api version 2.8
+        version    : 'v5.0' // use graph api version 2.8
     });
 
     FB.getLoginStatus(function(response) {
