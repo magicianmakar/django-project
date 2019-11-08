@@ -95,7 +95,7 @@ def remove_link_query(context, link):
     if not link.startswith('http'):
         link = 'http://{}'.format(link)
 
-    return re.sub('([?#].*)$', r'', link)
+    return re.sub('([?#].*)$', r'', link).strip()
 
 
 @register.simple_tag

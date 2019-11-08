@@ -1776,6 +1776,7 @@ def product_view(request, pid):
 
     try:
         extra_images = original.get('extra_images', []) + original_images
+        extra_images = [i.strip() for i in extra_images]
     except:
         extra_images = []
 

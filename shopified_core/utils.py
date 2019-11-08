@@ -246,7 +246,7 @@ def remove_link_query(link):
     if not link.startswith('http'):
         link = 'http://{}'.format(re.sub('^([:/]*)', r'', link))
 
-    return re.sub('([?#].*)$', r'', link)
+    return re.sub('([?#].*)$', r'', link).strip()
 
 
 def get_filename_from_url(url):
