@@ -1700,7 +1700,7 @@ class ProductSupplier(SupplierBase):
     @property
     def is_ebay_us(self):
         try:
-            return bool(re.search(r'ebay\.(com|co.uk|com.au|de|fr)', get_domain(self.product_url, full=True)))
+            return bool(re.search(r'ebay\.(com|co.uk|com.au|de|fr|ca)', get_domain(self.product_url, full=True)))
         except:
             return False
 
