@@ -387,6 +387,8 @@ SENTRY_PROCESSORS = (
 # default Aliexpress Affiliate
 DEFAULT_ALIEXPRESS_AFFILIATE = 'admitad'
 
+DROPIFIED_ADMITAD_ID = '1e8d114494c02ea3d6a016525dc3e8'
+
 # Auto Aliexpress fulfillment server API
 FULFILLBOX_API_URL = os.environ.get('FULFILLBOX_API_URL')
 if FULFILLBOX_API_URL:

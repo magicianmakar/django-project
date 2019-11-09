@@ -30,7 +30,7 @@ from . import permissions
 
 
 class ShopifiedApi(ApiResponseMixin, View):
-    login_non_required = ['login']
+    login_non_required = ['login', 'extension-settings']
 
     def post_login(self, request, user, data):
         email = data.get('username')
@@ -343,3 +343,23 @@ class ShopifiedApi(ApiResponseMixin, View):
                 })
             else:
                 return self.api_error('Permission denied', status=403)
+
+    def get_extension_settings(self, request, user, data):
+        subid = 'aliexpress'
+
+        if user:
+            if not user.profile.plan.is_free:
+                return JsonResponse({
+                    'status': 'ok'
+                })
+
+            subid = f'r{user.id}'
+
+        return JsonResponse({
+            'ptr': 'https://',
+            'base': 'alitems.com',
+            'sid': f'/g/{settings.DROPIFIED_ADMITAD_ID}/?subid={subid}&ulp=',
+            'mch': r"^https://.+\.aliexpress\.com/item/",
+            'ematch': r"(aff_platform=|alitems\.com)",
+            'status': 'ok'
+        })

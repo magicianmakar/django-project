@@ -1951,7 +1951,7 @@ def get_admitad_credentials(user):
 
     if not site_id:
         user_credentials = False
-        site_id = '1e8d114494c02ea3d6a016525dc3e8'
+        site_id = settings.DROPIFIED_ADMITAD_ID
 
     return site_id, user_credentials
 
