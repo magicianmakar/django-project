@@ -16,6 +16,8 @@ upstream aliextractor_backend  {
     server api.aliextractor.com;
 }
 
+proxy_cache_path /tmp/nginx-cache levels=1:2 keys_zone=cache_ext_config:10m max_size=1g inactive=90m use_temp_path=off;
+
 server {
     listen 80;
     listen [::]:80;
@@ -106,6 +108,17 @@ server {
 
         proxy_set_header Host api.aliextractor.com;
         proxy_pass  http://aliextractor_backend/;
+    }
+
+    ### Extension Settings API
+    location /api/extension-settings {
+        proxy_cache cache_ext_config;
+        proxy_cache_key "$host$request_uri$cookie_user";
+        proxy_cache_valid any 5m;
+
+        add_header X-Cached $upstream_cache_status;
+
+        proxy_pass  http://dropified_backend;
     }
 
     ### Dropified App Proxy

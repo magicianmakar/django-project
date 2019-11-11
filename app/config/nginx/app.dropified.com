@@ -1,27 +1,13 @@
 # Configuration for production server
 
-upstream dropified_backend  {
-    server shopifytools.herokuapp.com;
-}
-
-upstream dropifiedhelper_backend  {
-    server shopified-helper-app.herokuapp.com;
-}
-
-upstream captchasolver_backend  {
-    server dropified-captcha.herokuapp.com;
-}
-
-upstream aliextractor_backend  {
-    server api.aliextractor.com;
-}
+proxy_cache_path /tmp/nginx-cache levels=1:2 keys_zone=cache_ext_config:10m max_size=1g inactive=150m use_temp_path=off;
 
 server {
     listen 80;
     listen [::]:80;
 
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    listen [::]:443 ssl;
 
     server_name app.dropified.com;
 
@@ -87,7 +73,7 @@ server {
         error_log   /var/log/nginx/captcha.error;
 
         proxy_set_header Host dropified-captcha.herokuapp.com;
-        proxy_pass  http://captchasolver_backend;
+        proxy_pass  http://dropified-captcha.herokuapp.com;
     }
 
     ### Dropified Helper App Proxy
@@ -96,7 +82,7 @@ server {
         error_log   /var/log/nginx/helperapp.error.log;
 
         proxy_set_header Host shopified-helper-app.herokuapp.com;
-        proxy_pass  http://dropifiedhelper_backend;
+        proxy_pass  http://shopified-helper-app.herokuapp.com;
     }
 
     ### Aliextractor App Proxy
@@ -104,18 +90,33 @@ server {
         access_log  /var/log/nginx/aliextractor.access.log;
         error_log   /var/log/nginx/aliextractor.error.log;
 
-        proxy_set_header Host api.aliextractor.com;
-        proxy_pass  http://aliextractor_backend/;
+        proxy_set_header Host api.aliexractor.com;
+        proxy_pass  http://api.aliextractor.com/;
+    }
+
+    ### Extension Settings API
+    location /api/extension-settings {
+        proxy_cache cache_ext_config;
+        proxy_cache_key "$host$request_uri$cookie_user";
+        proxy_cache_valid 150m;
+
+        add_header X-Cached $upstream_cache_status;
+
+        proxy_pass  http://shopifytools.herokuapp.com;
     }
 
     ### Dropified App Proxy
     location / {
-        rewrite /pages/terms-of-service https://www.dropified.com/terms-of-service permanent;
-        rewrite /terms-of-service /pages/17 break;
-        rewrite /pages/view/what-websites-will-shopified-app-import-products-from /pages/11 break;
-        rewrite /pages/view/what-websites-will-dropified-import-products-from /pages/content/source-one_click_support permanent;
-        rewrite /pages/what-websites-will-shopified-app-import-products-from /pages/11 break;
+        rewrite /pages/terms-of-service https://www.dropified.com/terms-of-service/ redirect;
+        rewrite /terms-of-service https://www.dropified.com/terms-of-service/ redirect;
 
-        proxy_pass  http://dropified_backend;
+        rewrite /pages/view/what-websites-will-dropified-import-products-from /pages/source-import-products redirect;
+        rewrite /pages/view/what-websites-will-shopified-app-import-products-from /pages/source-import-products redirect;
+        rewrite /pages/what-websites-will-dropified-import-products-from /pages/source-import-products redirect;
+        rewrite /pages/what-websites-will-shopified-app-import-products-from /pages/source-import-products redirect;
+        rewrite /pages/content/source-full-automation /pages/source-import-products redirect;
+        rewrite /pages/content/source-one_click_support /pages/source-import-products redirect;
+
+        proxy_pass  http://shopifytools.herokuapp.com;
     }
 }
