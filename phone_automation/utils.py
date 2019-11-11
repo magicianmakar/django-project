@@ -48,8 +48,28 @@ def get_callflex_subscription_start(user):
     return subscription_period_start
 
 
+def get_callflex_subscription_period(user):
+    try:
+        # getting callflex subscription
+        subscription_interval = user.customstripesubscription_set.filter(custom_plan__type='callflex_subscription'). \
+            latest('created_at').custom_plan.interval
+    except CustomStripeSubscription.DoesNotExist:
+        # getting callflex subscription
+        try:
+            subscription_interval = user.stripesubscription_set.latest('created_at').plan.stripe_plan.interval
+        except:
+            subscription_interval = False
+    except:
+        subscription_interval = False
+
+    return subscription_interval
+
+
 def get_monthes_passed(subscription_period_start, cur_date=timezone.now()):
     diff_days = (cur_date - subscription_period_start).days
+    if diff_days >= 1:
+        diff_days = diff_days - 1
+
     month_passed = int(diff_days / 30)
     return month_passed
 

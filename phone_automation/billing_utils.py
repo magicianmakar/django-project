@@ -65,7 +65,12 @@ class CallflexOveragesBilling:
             return False
         else:
             invoices = []
-        month_passed = utils.get_monthes_passed(subscription_period_start)
+
+        subscription_interval = utils.get_callflex_subscription_period(self.user)
+        if subscription_interval == 'year':
+            month_passed = utils.get_monthes_passed(subscription_period_start)
+        else:
+            month_passed = 0
 
         overages_phone_number = 0
 
