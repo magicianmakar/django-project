@@ -81,3 +81,6 @@ class Command(DropifiedBaseCommand):
             i.user.profile.change_plan(get_plan(
                 payment_gateway='shopify',
                 plan_slug='shopify-free-plan'))
+
+            i.charge_type = 'xexpired'
+            i.save()
