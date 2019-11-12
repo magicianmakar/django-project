@@ -286,6 +286,21 @@ class CallbackEndpoint(View):
     def set_credentials(self, store):
         store.api_key = self.data['consumer_key']
         store.api_password = self.data['consumer_secret']
+
+        try:
+            currency_settings = store.wcapi.get('settings/general/woocommerce_currency').json()
+            currency_val = currency_settings.get('value')
+
+            if not currency_val:
+                currency_val = currency_settings.get('default')
+
+            option = currency_settings['options'][currency_val]
+            option = re.findall(r'\((\S+)\)$', option).pop()
+
+            store.currency_format = f'{option} {{{{ amount }}}}'
+        except:
+            pass
+
         store.save()
 
         return store
