@@ -12,7 +12,6 @@
                     <li><a href="#shopify-section" data-toggle="tab"></a></li>
                     <li><a href="#chq-section" data-toggle="tab"></a></li>
                     <li><a href="#woo-section" data-toggle="tab"></a></li>
-                    <li><a href="#gear-section" data-toggle="tab"></a></li>
                     <li><a href="#gk-section" data-toggle="tab"></a></li>
                 </ul>
                 <div class="tab-content">
@@ -34,11 +33,6 @@
                                 <label style="display: block; margin-bottom: 5px;">
                                     <input name="amt" value="#woo-section" type="radio">
                                     <span class="label-text"><strong>Woocommerce</strong></span>
-                                </label>
-
-                                <label style="display: block; margin-bottom: 5px;">
-                                    <input name="amt" value="#gear-section" type="radio">
-                                    <span class="label-text"><strong>GearBubble</strong></span>
                                 </label>
 
                                 <label style="display: block;">
@@ -125,34 +119,6 @@
                                         <label>Store URL</label>
                                         <input type="url" name="api_url" placeholder="https://your-shop-url.com" class="form-control" required />
                                     </div>
-                                    <div>
-                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                            <strong>Add store</strong>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- GearBubble -->
-                    <div id="gear-section" class="tab-pane fade">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <h3 class="m-t-none m-b">Add GearBubble Store</h3>
-                                <form id="gear-store-create-form" method="post" role="form">
-                                    <div class="form-group">
-                                        <label>Title</label>
-                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
-                                    </div>
-                                    <div class="form-group">
-                                        <label>API Token</label>
-                                        <input type="password" name="api_token" class="form-control" autocomplete="off" required />
-                                        <input type="hidden" name="gear_store_mode" value="staging" />
-                                    </div>
-
-                                    <hr style="margin:20px -30px">
-
                                     <div>
                                         <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
                                             <strong>Add store</strong>
