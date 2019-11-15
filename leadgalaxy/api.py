@@ -1192,8 +1192,6 @@ class ShopifyStoreApi(ApiBase):
         except:
             config = {}
 
-        form_webapp = (data.get('from', False) == 'webapp')
-
         if data.get('single'):
             config[data.get('name')] = data.get('value')
             profile.config = json.dumps(config)
@@ -1201,30 +1199,29 @@ class ShopifyStoreApi(ApiBase):
 
             return self.api_success()
 
-        bool_config = ['make_visisble', 'epacket_shipping', 'auto_ordered_mark']
-
-        if form_webapp:
-            bool_config += [
-                'validate_tracking_number',
-                'aliexpress_as_notes',
-                'aliexpress_as_order_tag',
-                'aliexpress_as_custom_note',
-                'order_custom_line_attr',
-                'aliexpress_solve_captcha',
-                'aliexpress_fix_address',
-                'aliexpress_fix_city',
-                'initial_inventory_sync',
-                'supplier_change_inventory_sync',
-                'update_product_vendor',
-                'order_risk_levels_enabled',
-                'send_alerts_to_subusers',
-                'sync_delay_notify',
-                'sync_delay_notify_email',
-                'sync_delay_notify_push',
-                'sync_delay_notify_highlight',
-                'randomize_image_names',
-                'price_update_for_increase',
-            ]
+        bool_config = [
+            'make_visisble',
+            'auto_ordered_mark',
+            'validate_tracking_number',
+            'aliexpress_as_notes',
+            'aliexpress_as_order_tag',
+            'aliexpress_as_custom_note',
+            'order_custom_line_attr',
+            'aliexpress_solve_captcha',
+            'aliexpress_fix_address',
+            'aliexpress_fix_city',
+            'initial_inventory_sync',
+            'supplier_change_inventory_sync',
+            'update_product_vendor',
+            'order_risk_levels_enabled',
+            'send_alerts_to_subusers',
+            'sync_delay_notify',
+            'sync_delay_notify_email',
+            'sync_delay_notify_push',
+            'sync_delay_notify_highlight',
+            'randomize_image_names',
+            'price_update_for_increase',
+        ]
 
         for key in data:
             if key == 'from':
@@ -1282,6 +1279,8 @@ class ShopifyStoreApi(ApiBase):
         if phone_number and '2056577766' in re.sub('[^0-9]', '', phone_number) and user.models_user.username != 'chase':
             return self.api_error('The entered phone number is not allowed to be used. '
                                   'Please use a good contact number for you or your company.', status=422)
+
+        config['epacket_shipping'] = config.get('aliexpress_shipping_method') == 'EMS_ZX_ZX_US'
 
         profile.config = json.dumps(config)
         profile.save()

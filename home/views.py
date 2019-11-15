@@ -17,6 +17,12 @@ def home_page_view(request):
 
     config = user.models_user.profile.get_config()
 
+    aliexpress_shipping_method = config.get('aliexpress_shipping_method')
+    epacket_shipping = config.get('epacket_shipping')
+
+    if epacket_shipping:
+        aliexpress_shipping_method = 'EMS_ZX_ZX_US'
+
     can_add, total_allowed, user_count = permissions.can_add_store(user)
 
     extra_stores = can_add and user.profile.plan.is_stripe() and \
@@ -35,6 +41,8 @@ def home_page_view(request):
 
     return render(request, 'home/index.html', {
         'config': config,
+        'epacket_shipping': epacket_shipping,
+        'aliexpress_shipping_method': aliexpress_shipping_method,
         'extra_stores': extra_stores,
         'add_store_btn': add_store_btn,
         'templates': templates,

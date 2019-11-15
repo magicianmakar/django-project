@@ -301,30 +301,17 @@
                                 </label>
                                 <div class="col-sm-3">
                                     <select id="aliexpress_shipping_method" name="aliexpress_shipping_method" class="form-control">
-                                        <option value="" {% if config.aliexpress_shipping_method == '' %}selected="selected"{% endif %}>Default</option>
-                                        <option value="CAINIAO_STANDARD" {% if config.aliexpress_shipping_method == 'CAINIAO_STANDARD' %}selected="selected"{% endif %}>AliExpress Standard Shipping</option>
-                                        <option value="CPAM" {% if config.aliexpress_shipping_method == 'CPAM' %}selected="selected"{% endif %}>China Post Registered Air Mail</option>
-                                        <option value="YANWEN_JYT" {% if config.aliexpress_shipping_method == 'YANWEN_JYT' %}selected="selected"{% endif %}>China Post Ordinary Small Packet Plus</option>
-                                        <option value="EMS" {% if config.aliexpress_shipping_method == 'EMS' %}selected="selected"{% endif %}>EMS</option>
-                                        <option value="DHL" {% if config.aliexpress_shipping_method == 'DHL' %}selected="selected"{% endif %}>DHL</option>
-                                        <option value="TNT" {% if config.aliexpress_shipping_method == 'TNT' %}selected="selected"{% endif %}>TNT</option>
-                                        <option value="UPSE" {% if config.aliexpress_shipping_method == 'UPSE' %}selected="selected"{% endif %}>UPS Expedited</option>
-                                        <option value="UPS" {% if config.aliexpress_shipping_method == 'UPS' %}selected="selected"{% endif %}>UPS Express Saver</option>
+                                        <option value="" {% if aliexpress_shipping_method == '' %}selected="selected"{% endif %}>Default</option>
+                                        <option value="EMS_ZX_ZX_US" {% if aliexpress_shipping_method == 'EMS_ZX_ZX_US' %}selected="selected"{% endif %}>ePacket</option>
+                                        <option value="CAINIAO_STANDARD" {% if aliexpress_shipping_method == 'CAINIAO_STANDARD' %}selected="selected"{% endif %}>AliExpress Standard Shipping</option>
+                                        <option value="CPAM" {% if aliexpress_shipping_method == 'CPAM' %}selected="selected"{% endif %}>China Post Registered Air Mail</option>
+                                        <option value="YANWEN_JYT" {% if aliexpress_shipping_method == 'YANWEN_JYT' %}selected="selected"{% endif %}>China Post Ordinary Small Packet Plus</option>
+                                        <option value="EMS" {% if aliexpress_shipping_method == 'EMS' %}selected="selected"{% endif %}>EMS</option>
+                                        <option value="DHL" {% if aliexpress_shipping_method == 'DHL' %}selected="selected"{% endif %}>DHL</option>
+                                        <option value="TNT" {% if aliexpress_shipping_method == 'TNT' %}selected="selected"{% endif %}>TNT</option>
+                                        <option value="UPSE" {% if aliexpress_shipping_method == 'UPSE' %}selected="selected"{% endif %}>UPS Expedited</option>
+                                        <option value="UPS" {% if aliexpress_shipping_method == 'UPS' %}selected="selected"{% endif %}>UPS Express Saver</option>
                                     </select>
-
-                                    {# <div class="row"> #}
-                                        <div class="col-sm-offset-1 col-sm-11" style="margin-left:0">
-                                            <div class="form-group">
-                                                <input type="checkbox" class="js-switch" id="epacket_shipping"
-                                                       name="epacket_shipping" {% if config.epacket_shipping %}checked="checked"{% endif %}>
-
-                                                <label for="epacket_shipping" class=" control-label">
-                                                    Always Select ePacket when available
-                                                    {% include 'partial/help_tooltip.html' with help="Automatically selects the ePacket shipping method on AliExpress for all items." qtipstyle="color:#BBB" %}
-                                                </label>
-                                            </div>
-                                        </div>
-                                    {# </div> #}
                                 </div>
                             </div>
                         </div>
