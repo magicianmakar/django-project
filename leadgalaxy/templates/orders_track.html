@@ -28,7 +28,7 @@
 
                             {% if not request.user.is_subuser %}
                             <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r-xs export-tracked-orders"
-                                title="Export Supplier IDs &amp; Tracking Numbers" data-store="{{ store.id }}"><i class="fa fa-upload"></i> Export </a>
+                                title="Clicking Export will export this page with Tracking numbers to a CSV file" data-store="{{ store.id }}"><i class="fa fa-upload"></i> Export </a>
                             {% endif %}
 
                             <div class="btn-group ">
@@ -56,7 +56,8 @@
                                     </ul>
                             </div>
 
-                            <button class="btn btn-success btn-rounded btn-outline btn-sm aliexpress-sync-btn" data-store="{{store.id}}">
+                            <button class="btn btn-success btn-rounded btn-outline btn-sm itooltip aliexpress-sync-btn" data-store="{{store.id}}"
+                            title="Click Sync with Supplier to fetch updates for these from AliExpress.">
                                 <i class="fa fa-refresh"></i> Sync with Supplier</button>
                         </div>
                     </div>
