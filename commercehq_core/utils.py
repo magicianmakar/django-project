@@ -21,6 +21,7 @@ from shopified_core.utils import (
     safe_str,
     hash_url_filename,
     decode_params,
+    ensure_title,
     http_exception_response,
     http_excption_status_code
 )
@@ -395,11 +396,10 @@ def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False, alie
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
 
     customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name'])
-    # customer_address['name'] = utils.ensure_title(customer_address['name'])
+    customer_address['name'] = ensure_title(customer_address['name'])
 
-    # if customer_address['company']:
-    #     customer_address['name'] = '{} - {}'.format(customer_address['name'],
-    #                                                 customer_address['company'])
+    if customer_address.get('company'):
+        customer_address['name'] = '{} - {}'.format(customer_address['name'], customer_address['company'])
 
     correction = {}
     if aliexpress_fix:

@@ -11,7 +11,7 @@ import simplejson as json
 from elasticsearch import Elasticsearch
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
-from shopified_core.utils import OrderErrors, delete_model_from_db, safe_int
+from shopified_core.utils import OrderErrors, delete_model_from_db, safe_int, ensure_title
 from shopified_core.shipping_helper import country_from_code
 
 
@@ -26,20 +26,6 @@ def get_customer_name(customer):
     return '{} {}'.format(
         customer.get('first_name', ''),
         customer.get('last_name', '')).strip()
-
-
-def ensure_title(text):
-    """ Ensure the given string start with an upper case letter """
-
-    try:
-        if text.encode().strip():
-            is_lower = all([c.islower() or not c.isalpha() for c in text])
-            if is_lower:
-                return text.title()
-    except:
-        pass
-
-    return text
 
 
 def get_datetime(isodate, default=None):

@@ -62,6 +62,7 @@ from shopified_core.utils import (
     extension_hash_text,
     get_top_most_commons,
     get_first_valid_option,
+    ensure_title,
 )
 from leadgalaxy.models import (
     GroupPlan,
@@ -2050,20 +2051,6 @@ def fix_product_url(data, request):
             data['product']['url'] = request.build_absolute_uri(data['product']['url'])
 
     return data
-
-
-def ensure_title(text):
-    """ Ensure the given string start with an upper case letter """
-
-    try:
-        if text.encode().strip():
-            is_lower = all([c.islower() or not c.isalpha() for c in text])
-            if is_lower:
-                return text.title()
-    except:
-        pass
-
-    return text
 
 
 def get_shopify_products_filter(request, name=None, default=None):

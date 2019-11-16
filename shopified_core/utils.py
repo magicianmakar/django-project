@@ -108,6 +108,20 @@ def prefix_from_model(model):
         return None
 
 
+def ensure_title(text):
+    """ Ensure the given string start with an upper case letter """
+
+    try:
+        if text.encode().strip():
+            is_lower = all([c.islower() or not c.isalpha() for c in text])
+            if is_lower:
+                return text.title()
+    except:
+        pass
+
+    return text
+
+
 def list_chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):

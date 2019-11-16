@@ -19,7 +19,7 @@ from shopified_core.shipping_helper import (
     valide_aliexpress_province,
     support_other_in_province,
 )
-from shopified_core.utils import hash_url_filename, get_domain, remove_link_query, random_hash
+from shopified_core.utils import ensure_title, hash_url_filename, get_domain, remove_link_query, random_hash
 
 from leadgalaxy.tests.factories import UserFactory, ShopifyProductFactory, ShopifyBoardFactory
 
@@ -751,15 +751,15 @@ class UtilsTestCase(BaseTestCase):
         self.assertIsNone(utils.get_store_from_url(user, url))
 
     def test_ensure_title_word(self):
-        self.assertEqual(utils.ensure_title('james'), 'James')
-        self.assertEqual(utils.ensure_title('James'), 'James')
-        self.assertEqual(utils.ensure_title('JAMES'), 'JAMES')
+        self.assertEqual(ensure_title('james'), 'James')
+        self.assertEqual(ensure_title('James'), 'James')
+        self.assertEqual(ensure_title('JAMES'), 'JAMES')
 
     def test_ensure_title_str(self):
-        self.assertEqual(utils.ensure_title('james bond'), 'James Bond')
+        self.assertEqual(ensure_title('james bond'), 'James Bond')
 
     def test_ensure_title_unicode(self):
-        self.assertEqual(utils.ensure_title('vari\xe9t\xe9'), 'Vari\xe9t\xe9')
+        self.assertEqual(ensure_title('vari\xe9t\xe9'), 'Vari\xe9t\xe9')
 
 
 class CustomerAddressTestCase(BaseTestCase):
