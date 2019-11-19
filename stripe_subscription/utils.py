@@ -442,6 +442,9 @@ def process_webhook_event(request, event_id, raven_client):
                     "register_medium": 'webhook',
                 }
 
+                if stripe_customer.metadata and 'phone' in stripe_customer.metadata:
+                    intercom_attrs['phone'] = stripe_customer.metadata.phone
+
                 if stripe_customer.sources and stripe_customer.sources.data:
                     fullname = stripe_customer.sources.data[0].name
 
@@ -641,6 +644,9 @@ def process_webhook_event(request, event_id, raven_client):
                     "register_source": 'clickfunnels',
                     "register_medium": 'webhook',
                 }
+
+                if stripe_customer.metadata and 'phone' in stripe_customer.metadata:
+                    intercom_attrs['phone'] = stripe_customer.metadata.phone
 
                 if stripe_customer.sources and stripe_customer.sources.data:
                     fullname = stripe_customer.sources.data[0].name

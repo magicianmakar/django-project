@@ -275,6 +275,10 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
                 "custom_attributes": {}
             }
 
+            if intercom_attributes.get('phone'):
+                data['phone'] = intercom_attributes['phone']
+                del intercom_attributes['phone']
+
             try:
                 data['custom_attributes'].update({
                     'plan': user.profile.plan.title
