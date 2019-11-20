@@ -1,6 +1,8 @@
 import json
+import re
 
 from django.db import models
+from django.db.models import Q
 from django.urls import reverse
 from django.contrib.auth.models import User
 
@@ -51,6 +53,15 @@ class BoardBase(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
+    def saved_count(self):
+        products = self.products.filter(Q(store__is_active=True) | Q(store__isnull=True))
+        products = products.filter(source_id=0)
+
+        return products.count()
+
+    def connected_count(self):
+        return self.products.filter(store__is_active=True).exclude(source_id=0).count()
+
 
 class OrderTrackBase(models.Model):
     class Meta:
@@ -80,6 +91,46 @@ class OrderTrackBase(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
     status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
 
+    def save(self, *args, **kwargs):
+        try:
+            data = json.loads(self.data)
+        except:
+            data = None
+
+        if data:
+            if data.get('bundle'):
+                status = []
+                source_tracking = []
+                end_reasons = []
+
+                for key, val in list(data.get('bundle').items()):
+                    if val.get('source_status'):
+                        status.append(val.get('source_status'))
+
+                    if val.get('source_tracking'):
+                        source_tracking.append(val.get('source_tracking'))
+
+                    if val.get('end_reason'):
+                        end_reasons.append(val.get('end_reason'))
+
+                self.source_status = ','.join(status)
+                self.source_tracking = ','.join(source_tracking)
+                self.source_status_details = ','.join(end_reasons)
+
+            else:
+                self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
+
+        if self.source_id:
+            source_id = str(self.source_id).strip(' ,')
+            if ',' in source_id:
+                source_id = [i.strip() for i in list(filter(len, re.split('[, ]+', self.source_id)))]
+                source_id = ','.join(source_id)
+
+            if self.source_id != source_id:
+                self.source_id = source_id
+
+        super().save(*args, **kwargs)
+
     def encoded(self):
         return base64_encode(json.dumps(self.data))
 
@@ -100,6 +151,10 @@ class OrderTrackBase(models.Model):
             return 'primary'
         else:
             return 'warning'
+
+    def get_source_ids(self):
+        if self.source_id:
+            return ', '.join(set(['#{}'.format(i) for i in self.source_id.split(',')]))
 
     def get_source_url(self):
         if self.source_id:

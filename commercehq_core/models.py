@@ -755,12 +755,6 @@ class CommerceHQBoard(BoardBase):
     def __str__(self):
         return f'<CommerceHQBoard: {self.id}>'
 
-    def saved_count(self):
-        return self.products.filter(store__is_active=True, source_id=0).count()
-
-    def connected_count(self):
-        return self.products.exclude(store__is_active=True, source_id=0).count()
-
 
 class CommerceHQOrderTrack(OrderTrackBase):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -769,46 +763,6 @@ class CommerceHQOrderTrack(OrderTrackBase):
 
     def __str__(self):
         return f'<CommerceHQOrderTrack: {self.id}>'
-
-    def save(self, *args, **kwargs):
-        try:
-            data = json.loads(self.data)
-        except:
-            data = None
-
-        if data:
-            if data.get('bundle'):
-                status = []
-                source_tracking = []
-                end_reasons = []
-
-                for key, val in list(data.get('bundle').items()):
-                    if val.get('source_status'):
-                        status.append(val.get('source_status'))
-
-                    if val.get('source_tracking'):
-                        source_tracking.append(val.get('source_tracking'))
-
-                    if val.get('end_reason'):
-                        end_reasons.append(val.get('end_reason'))
-
-                self.source_status = ','.join(status)
-                self.source_tracking = ','.join(source_tracking)
-                self.source_status_details = ','.join(end_reasons)
-
-            else:
-                self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
-
-        if self.source_id:
-            source_id = str(self.source_id).strip(' ,')
-            if ',' in source_id:
-                source_id = [i.strip() for i in list(filter(len, re.split('[, ]+', self.source_id)))]
-                source_id = ','.join(source_id)
-
-            if self.source_id != source_id:
-                self.source_id = source_id
-
-        super(CommerceHQOrderTrack, self).save(*args, **kwargs)
 
     def get_commercehq_link(self):
         return self.store.get_admin_url('orders', self.order_id)
@@ -825,10 +779,6 @@ class CommerceHQOrderTrack(OrderTrackBase):
                 aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
 
         return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
-
-    def get_source_ids(self):
-        if self.source_id:
-            return ', '.join(set(['#{}'.format(i) for i in self.source_id.split(',')]))
 
 
 class CommerceHQUserUpload(UserUploadBase):

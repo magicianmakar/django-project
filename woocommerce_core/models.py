@@ -723,14 +723,6 @@ class WooOrderTrack(OrderTrackBase):
     def __str__(self):
         return f'<WooOrderTrack: {self.id}>'
 
-    def save(self, *args, **kwargs):
-        try:
-            self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
-        except:
-            pass
-
-        super(WooOrderTrack, self).save(*args, **kwargs)
-
     def get_tracking_link(self):
         if self.user.id in [49354, 15508, 66350, 57881]:
             aftership_domain = 'http://17track.net/?nums={{tracking_number}}'
@@ -763,12 +755,6 @@ class WooBoard(BoardBase):
 
     def __str__(self):
         return f'<WooBoard: {self.id}>'
-
-    def saved_count(self):
-        return self.products.filter(store__is_active=True, source_id=0).count()
-
-    def connected_count(self):
-        return self.products.filter(store__is_active=True).exclude(source_id=0).count()
 
 
 class WooUserUpload(UserUploadBase):

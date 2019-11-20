@@ -1741,46 +1741,6 @@ class ShopifyOrderTrack(OrderTrackBase):
     def __str__(self):
         return f'<ShopifyOrderTrack: {self.id} | {self.order_id} - {self.line_id}>'
 
-    def save(self, *args, **kwargs):
-        try:
-            data = json.loads(self.data)
-        except:
-            data = None
-
-        if data:
-            if data.get('bundle'):
-                status = []
-                source_tracking = []
-                end_reasons = []
-
-                for key, val in list(data.get('bundle').items()):
-                    if val.get('source_status'):
-                        status.append(val.get('source_status'))
-
-                    if val.get('source_tracking'):
-                        source_tracking.append(val.get('source_tracking'))
-
-                    if val.get('end_reason'):
-                        end_reasons.append(val.get('end_reason'))
-
-                self.source_status = ','.join(status)
-                self.source_tracking = ','.join(source_tracking)
-                self.source_status_details = ','.join(end_reasons)
-
-            else:
-                self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
-
-        if self.source_id:
-            source_id = str(self.source_id).strip(' ,')
-            if ',' in source_id:
-                source_id = [i.strip() for i in list(filter(len, re.split('[, ]+', self.source_id)))]
-                source_id = ','.join(source_id)
-
-            if self.source_id != source_id:
-                self.source_id = source_id
-
-        super(ShopifyOrderTrack, self).save(*args, **kwargs)
-
     def get_shopify_link(self):
         return self.store.get_link('/admin/orders/{}'.format(self.order_id))
 
@@ -1804,10 +1764,6 @@ class ShopifyOrderTrack(OrderTrackBase):
                 return urls
             else:
                 return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
-
-    def get_source_ids(self):
-        if self.source_id:
-            return ', '.join(set(['#{}'.format(i) for i in self.source_id.split(',')]))
 
     def add_error(self, error, commit=False):
         try:

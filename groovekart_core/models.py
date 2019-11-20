@@ -8,7 +8,6 @@ from requests import Session
 from pusher import Pusher
 
 from django.db import models
-from django.db.models import Q
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
@@ -764,15 +763,6 @@ class GrooveKartBoard(BoardBase):
     def __str__(self):
         return f'<GrooveKartBoard: {self.id}>'
 
-    def saved_count(self):
-        products = self.products.filter(Q(store__is_active=True) | Q(store__isnull=True))
-        products = products.filter(source_id=0)
-
-        return products.count()
-
-    def connected_count(self):
-        return self.products.filter(store__is_active=True).exclude(source_id=0).count()
-
 
 class GrooveKartOrderTrack(OrderTrackBase):
     store = models.ForeignKey('GrooveKartStore', null=True)
@@ -780,14 +770,6 @@ class GrooveKartOrderTrack(OrderTrackBase):
 
     def __str__(self):
         return f'<GrooveKartOrderTrack: {self.id}>'
-
-    def save(self, *args, **kwargs):
-        try:
-            self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
-        except:
-            pass
-
-        super(GrooveKartOrderTrack, self).save(*args, **kwargs)
 
     def get_tracking_link(self):
         aftership_domain = 'http://track.aftership.com/{{tracking_number}}'

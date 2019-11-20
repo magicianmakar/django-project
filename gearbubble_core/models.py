@@ -5,7 +5,6 @@ import re
 from pusher import Pusher
 
 from django.db import models
-from django.db.models import Q
 from django.utils.functional import cached_property
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -617,28 +616,11 @@ class GearBubbleBoard(BoardBase):
     def __str__(self):
         return f'<GearBubbleBoard: {self.id}>'
 
-    def saved_count(self):
-        products = self.products.filter(Q(store__is_active=True) | Q(store__isnull=True))
-        products = products.filter(source_id=0)
-
-        return products.count()
-
-    def connected_count(self):
-        return self.products.filter(store__is_active=True).exclude(source_id=0).count()
-
 
 class GearBubbleOrderTrack(OrderTrackBase):
     user = models.ForeignKey(User)
     store = models.ForeignKey('GearBubbleStore', null=True)
     gearbubble_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="GearBubble Fulfillment Status")
-
-    def save(self, *args, **kwargs):
-        try:
-            self.source_status_details = json.loads(self.data)['aliexpress']['end_reason']
-        except:
-            pass
-
-        super(GearBubbleOrderTrack, self).save(*args, **kwargs)
 
     def get_tracking_link(self):
         aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
