@@ -14,10 +14,9 @@ from shopified_core.utils import (
     hash_url_filename,
     get_domain,
     safe_str,
-    base64_encode,
 )
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 from product_alerts.utils import monitor_product
 
 
@@ -751,14 +750,7 @@ class CommerceHQSupplier(SupplierBase):
 
 
 class CommerceHQBoard(BoardBase):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=512)
     products = models.ManyToManyField('CommerceHQProduct', blank=True)
-    config = models.CharField(max_length=512, blank=True, default='')
-    favorite = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
         return f'<CommerceHQBoard: {self.id}>'
@@ -773,8 +765,6 @@ class CommerceHQBoard(BoardBase):
 class CommerceHQOrderTrack(OrderTrackBase):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     store = models.ForeignKey(CommerceHQStore, null=True, on_delete=models.CASCADE)
-    order_id = models.BigIntegerField()
-    line_id = models.BigIntegerField()
     commercehq_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="CHQ Fulfillment Status")
 
     def __str__(self):
@@ -820,9 +810,6 @@ class CommerceHQOrderTrack(OrderTrackBase):
 
         super(CommerceHQOrderTrack, self).save(*args, **kwargs)
 
-    def encoded(self):
-        return base64_encode(json.dumps(self.data))
-
     def get_commercehq_link(self):
         return self.store.get_admin_url('orders', self.order_id)
 
@@ -844,16 +831,5 @@ class CommerceHQOrderTrack(OrderTrackBase):
             return ', '.join(set(['#{}'.format(i) for i in self.source_id.split(',')]))
 
 
-class CommerceHQUserUpload(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+class CommerceHQUserUpload(UserUploadBase):
     product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE)
-    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
-
-    def __str__(self):
-        return f'<CommerceHQUserUpload: {self.id}>'

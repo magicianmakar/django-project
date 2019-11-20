@@ -12,9 +12,9 @@ from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 from django.core.urlresolvers import reverse
 
-from shopified_core.utils import get_domain, safe_str, base64_encode
+from shopified_core.utils import get_domain, safe_str
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 
 
 @add_to_class(User, 'get_gear_boards')
@@ -607,30 +607,12 @@ class GearBubbleSupplier(SupplierBase):
             return False
 
 
-class GearUserUpload(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-
-    user = models.ForeignKey(User)
+class GearUserUpload(UserUploadBase):
     product = models.ForeignKey('GearBubbleProduct', null=True)
-    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
-
-    def __str__(self):
-        return f'<GearUserUpload: {self.id}>'
 
 
 class GearBubbleBoard(BoardBase):
-    user = models.ForeignKey(User)
-    title = models.CharField(max_length=512)
     products = models.ManyToManyField('GearBubbleProduct', blank=True)
-    config = models.CharField(max_length=512, blank=True, default='')
-    favorite = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
         return f'<GearBubbleBoard: {self.id}>'
@@ -648,8 +630,6 @@ class GearBubbleBoard(BoardBase):
 class GearBubbleOrderTrack(OrderTrackBase):
     user = models.ForeignKey(User)
     store = models.ForeignKey('GearBubbleStore', null=True)
-    order_id = models.BigIntegerField()
-    line_id = models.BigIntegerField()
     gearbubble_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="GearBubble Fulfillment Status")
 
     def save(self, *args, **kwargs):
@@ -659,9 +639,6 @@ class GearBubbleOrderTrack(OrderTrackBase):
             pass
 
         super(GearBubbleOrderTrack, self).save(*args, **kwargs)
-
-    def encoded(self):
-        return base64_encode(json.dumps(self.data))
 
     def get_tracking_link(self):
         aftership_domain = 'http://track.aftership.com/{{tracking_number}}'

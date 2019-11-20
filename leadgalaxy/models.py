@@ -20,13 +20,12 @@ from data_store.models import DataStore
 from shopified_core.utils import (
     safe_int,
     get_domain,
-    base64_encode,
     using_store_db,
     OrderErrors,
 )
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class, upsell_page_permissions
-from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 
 
 ENTITY_STATUS_CHOICES = (
@@ -1782,9 +1781,6 @@ class ShopifyOrderTrack(OrderTrackBase):
 
         super(ShopifyOrderTrack, self).save(*args, **kwargs)
 
-    def encoded(self):
-        return base64_encode(json.dumps(self.data))
-
     def get_shopify_link(self):
         return self.store.get_link('/admin/orders/{}'.format(self.order_id))
 
@@ -1871,15 +1867,7 @@ class ShopifyOrderTrack(OrderTrackBase):
 
 
 class ShopifyBoard(BoardBase):
-    title = models.CharField(max_length=512, blank=True, default='')
-    config = models.CharField(max_length=512, blank=True, default='')
-    favorite = models.BooleanField(default=False)
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     products = models.ManyToManyField(ShopifyProduct, blank=True)
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
         return f'<ShopifyBoard: {self.id} | {self.title}>'
@@ -2147,19 +2135,8 @@ class FeatureBundle(models.Model):
         return self.description if self.description else self.title
 
 
-class UserUpload(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+class UserUpload(UserUploadBase):
     product = models.ForeignKey(ShopifyProduct, null=True, on_delete=models.CASCADE)
-    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
-
-    def __str__(self):
-        return f'<UserUpload: {self.id}>'
 
 
 class PlanRegistration(models.Model):

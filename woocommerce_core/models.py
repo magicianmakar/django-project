@@ -14,11 +14,10 @@ from django.urls import reverse
 from shopified_core.utils import (
     get_domain,
     safe_str,
-    base64_encode,
     ALIEXPRESS_SOURCE_STATUS,
 )
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 
 
 @add_to_class(User, 'get_woo_boards')
@@ -732,9 +731,6 @@ class WooOrderTrack(OrderTrackBase):
 
         super(WooOrderTrack, self).save(*args, **kwargs)
 
-    def encoded(self):
-        return base64_encode(json.dumps(self.data))
-
     def get_tracking_link(self):
         if self.user.id in [49354, 15508, 66350, 57881]:
             aftership_domain = 'http://17track.net/?nums={{tracking_number}}'
@@ -763,14 +759,7 @@ class WooOrderTrack(OrderTrackBase):
 
 
 class WooBoard(BoardBase):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=512)
     products = models.ManyToManyField('WooProduct', blank=True)
-    config = models.CharField(max_length=512, blank=True, default='')
-    favorite = models.BooleanField(default=False)
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
         return f'<WooBoard: {self.id}>'
@@ -782,16 +771,5 @@ class WooBoard(BoardBase):
         return self.products.filter(store__is_active=True).exclude(source_id=0).count()
 
 
-class WooUserUpload(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+class WooUserUpload(UserUploadBase):
     product = models.ForeignKey(WooProduct, null=True, on_delete=models.CASCADE)
-    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
-
-    def __str__(self):
-        return f'<WooUserUpload: {self.id}>'

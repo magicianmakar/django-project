@@ -16,11 +16,10 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 from shopified_core.utils import (
     get_domain,
     safe_str,
-    base64_encode,
     dict_val,
     safe_int,
 )
@@ -755,29 +754,12 @@ class GrooveKartSupplier(SupplierBase):
         super(GrooveKartSupplier, self).save(*args, **kwargs)
 
 
-class GrooveKartUserUpload(models.Model):
-    class Meta:
-        ordering = ['-created_at']
-
-    user = models.ForeignKey(User)
+class GrooveKartUserUpload(UserUploadBase):
     product = models.ForeignKey('GrooveKartProduct', null=True)
-    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
-
-    def __str__(self):
-        return f'<GrooveKartUserUpload: {self.id}>'
 
 
 class GrooveKartBoard(BoardBase):
-    user = models.ForeignKey(User)
-    title = models.CharField(max_length=512)
     products = models.ManyToManyField('GrooveKartProduct', blank=True, related_name='boards')
-    config = models.CharField(max_length=512, blank=True, default='')
-    favorite = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
     def __str__(self):
         return f'<GrooveKartBoard: {self.id}>'
@@ -806,9 +788,6 @@ class GrooveKartOrderTrack(OrderTrackBase):
             pass
 
         super(GrooveKartOrderTrack, self).save(*args, **kwargs)
-
-    def encoded(self):
-        return base64_encode(json.dumps(self.data))
 
     def get_tracking_link(self):
         aftership_domain = 'http://track.aftership.com/{{tracking_number}}'

@@ -1,8 +1,10 @@
+import json
+
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from .utils import ALIEXPRESS_SOURCE_STATUS, safe_str, prefix_from_model
+from .utils import ALIEXPRESS_SOURCE_STATUS, safe_str, prefix_from_model, base64_encode
 
 
 class StoreBase(models.Model):
@@ -40,6 +42,15 @@ class BoardBase(models.Model):
         abstract = True
         ordering = ['title']
 
+    title = models.CharField(max_length=512, blank=True, default='')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    config = models.CharField(max_length=512, blank=True, default='')
+    favorite = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
 
 class OrderTrackBase(models.Model):
     class Meta:
@@ -68,6 +79,9 @@ class OrderTrackBase(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
     status_updated_at = models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')
+
+    def encoded(self):
+        return base64_encode(json.dumps(self.data))
 
     def get_source_status_details(self):
         if self.source_status_details and ',' in self.source_status_details:
@@ -149,3 +163,18 @@ class OrderTrackBase(models.Model):
             return status_map.get(self.source_status, '')
 
     get_source_status.admin_order_field = 'source_status'
+
+
+class UserUploadBase(models.Model):
+    class Meta:
+        abstract = True
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __str__(self):
+        return f'<UserUploadBase: {self.id}>'
