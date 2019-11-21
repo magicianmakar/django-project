@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from .utils import ALIEXPRESS_SOURCE_STATUS, safe_str, prefix_from_model, base64_encode
+from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, prefix_from_model, base64_encode
 
 
 class StoreBase(models.Model):
@@ -69,6 +69,8 @@ class OrderTrackBase(models.Model):
         ordering = ['-created_at']
         index_together = ['store', 'order_id', 'line_id']
 
+    CUSTOM_TRACKING_KEY = 'aftership_domain'
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     order_id = models.BigIntegerField()
@@ -86,6 +88,7 @@ class OrderTrackBase(models.Model):
     check_count = models.IntegerField(default=0)
 
     data = models.TextField(blank=True, default='')
+    errors = models.IntegerField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
@@ -216,6 +219,83 @@ class OrderTrackBase(models.Model):
 
         else:
             return status_map.get(self.source_status, '')
+
+    def get_tracking_link(self):
+        custom_tracking = 'http://track.aftership.com/{{tracking_number}}'
+
+        if type(self.user.get_config(self.CUSTOM_TRACKING_KEY)) is dict:
+            custom_tracking = self.user.get_config(self.CUSTOM_TRACKING_KEY).get(str(self.store_id), custom_tracking)
+
+            if '{{tracking_number}}' not in custom_tracking:
+                custom_tracking = "http://{}.aftership.com/{{{{tracking_number}}}}".format(custom_tracking)
+            elif not custom_tracking.startswith('http'):
+                custom_tracking = 'http://{}'.format(re.sub('^([:/]*)', r'', custom_tracking))
+
+        if self.source_tracking:
+            if ',' in self.source_tracking:
+                urls = []
+                for tracking in self.source_tracking.split(','):
+                    urls.append([tracking, custom_tracking.replace('{{tracking_number}}', tracking)])
+
+                return urls
+            else:
+                return custom_tracking.replace('{{tracking_number}}', self.source_tracking)
+
+    def add_error(self, error, commit=False):
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
+
+        if 'errors' not in data:
+            data['errors'] = []
+
+        if error in data['errors']:
+            return
+
+        data['errors'].append(error)
+
+        self.data = json.dumps(data)
+
+        if commit:
+            self.commit()
+
+    def get_errors(self):
+        errors = []
+
+        if self.errors > 0:
+            if self.errors & OrderErrors.NAME:
+                errors.append('Customer Name')
+
+            if self.errors & OrderErrors.CITY:
+                errors.append('City')
+
+            if self.errors & OrderErrors.COUNTRY:
+                errors.append('Country')
+
+        return errors
+
+    def clear_errors(self, commit=False):
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
+
+        if 'errors' in data:
+            del data['errors']
+
+            self.data = json.dumps(data)
+
+            if commit:
+                self.commit()
+
+    def get_errors_details(self):
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
+
+        return list(set(data.get('errors', [])))
 
     get_source_status.admin_order_field = 'source_status'
 

@@ -14,7 +14,6 @@ from django.urls import reverse
 from shopified_core.utils import (
     get_domain,
     safe_str,
-    ALIEXPRESS_SOURCE_STATUS,
 )
 from shopified_core.decorators import add_to_class
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
@@ -716,38 +715,14 @@ class WooSupplier(SupplierBase):
 
 
 class WooOrderTrack(OrderTrackBase):
+    CUSTOM_TRACKING_KEY = 'woo_custom_tracking'
+
     store = models.ForeignKey(WooStore, null=True, on_delete=models.CASCADE)
     product_id = models.BigIntegerField()
     woocommerce_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="WooCommerce Fulfillment Status")
 
     def __str__(self):
         return f'<WooOrderTrack: {self.id}>'
-
-    def get_tracking_link(self):
-        if self.user.id in [49354, 15508, 66350, 57881]:
-            aftership_domain = 'http://17track.net/?nums={{tracking_number}}'
-        else:
-            aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
-
-        if type(self.user.get_config('woo_custom_tracking')) is dict:
-            aftership_domain = self.user.get_config('woo_custom_tracking').get(str(self.store_id), aftership_domain)
-
-            if '{{tracking_number}}' not in aftership_domain:
-                aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
-            elif not aftership_domain.startswith('http'):
-                aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
-
-        return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
-
-    def get_source_status_details(self):
-        if self.source_status_details and ',' in self.source_status_details:
-            source_status_details = []
-            for i in self.source_status_details.split(','):
-                source_status_details.append(ALIEXPRESS_SOURCE_STATUS.get(safe_str(i).lower()))
-
-            return ', '.join(set(source_status_details))
-        else:
-            return ALIEXPRESS_SOURCE_STATUS.get(safe_str(self.source_status_details).lower())
 
 
 class WooBoard(BoardBase):

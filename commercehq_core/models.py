@@ -757,6 +757,8 @@ class CommerceHQBoard(BoardBase):
 
 
 class CommerceHQOrderTrack(OrderTrackBase):
+    CUSTOM_TRACKING_KEY = 'chq_custom_tracking'
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     store = models.ForeignKey(CommerceHQStore, null=True, on_delete=models.CASCADE)
     commercehq_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="CHQ Fulfillment Status")
@@ -766,19 +768,6 @@ class CommerceHQOrderTrack(OrderTrackBase):
 
     def get_commercehq_link(self):
         return self.store.get_admin_url('orders', self.order_id)
-
-    def get_tracking_link(self):
-        aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
-
-        if self.user.get_config('chq_custom_tracking'):
-            aftership_domain = self.user.get_config('chq_custom_tracking', {}).get(str(self.store_id), aftership_domain)
-
-            if '{{tracking_number}}' not in aftership_domain:
-                aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
-            elif not aftership_domain.startswith('http'):
-                aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
-
-        return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
 
 
 class CommerceHQUserUpload(UserUploadBase):

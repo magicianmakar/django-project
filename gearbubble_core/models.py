@@ -622,18 +622,5 @@ class GearBubbleOrderTrack(OrderTrackBase):
     store = models.ForeignKey('GearBubbleStore', null=True)
     gearbubble_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="GearBubble Fulfillment Status")
 
-    def get_tracking_link(self):
-        aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
-
-        if type(self.user.get_config('aftership_domain')) is dict:
-            aftership_domain = self.user.get_config('aftership_domain').get(str(self.store_id), aftership_domain)
-
-            if '{{tracking_number}}' not in aftership_domain:
-                aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
-            elif not aftership_domain.startswith('http'):
-                aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
-
-        return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
-
     def __str__(self):
         return f'<GearBubbleOrderTrack: {self.id}>'

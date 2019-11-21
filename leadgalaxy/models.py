@@ -21,7 +21,6 @@ from shopified_core.utils import (
     safe_int,
     get_domain,
     using_store_db,
-    OrderErrors,
 )
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class, upsell_page_permissions
@@ -1734,8 +1733,6 @@ class ShopifyOrderTrack(OrderTrackBase):
 
     source_tracking = models.CharField(max_length=128, blank=True, default='', db_index=True, verbose_name="Source Tracking Number")
 
-    errors = models.IntegerField(null=True, blank=True)
-
     created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Submission date')
 
     def __str__(self):
@@ -1743,83 +1740,6 @@ class ShopifyOrderTrack(OrderTrackBase):
 
     def get_shopify_link(self):
         return self.store.get_link('/admin/orders/{}'.format(self.order_id))
-
-    def get_tracking_link(self):
-        aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
-
-        if type(self.user.get_config('aftership_domain')) is dict:
-            aftership_domain = self.user.get_config('aftership_domain').get(str(self.store_id), aftership_domain)
-
-            if '{{tracking_number}}' not in aftership_domain:
-                aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
-            elif not aftership_domain.startswith('http'):
-                aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
-
-        if self.source_tracking:
-            if ',' in self.source_tracking:
-                urls = []
-                for tracking in self.source_tracking.split(','):
-                    urls.append([tracking, aftership_domain.replace('{{tracking_number}}', tracking)])
-
-                return urls
-            else:
-                return aftership_domain.replace('{{tracking_number}}', self.source_tracking)
-
-    def add_error(self, error, commit=False):
-        try:
-            data = json.loads(self.data)
-        except:
-            data = {}
-
-        if 'errors' not in data:
-            data['errors'] = []
-
-        if error in data['errors']:
-            return
-
-        data['errors'].append(error)
-
-        self.data = json.dumps(data)
-
-        if commit:
-            self.commit()
-
-    def get_errors(self):
-        errors = []
-
-        if self.errors > 0:
-            if self.errors & OrderErrors.NAME:
-                errors.append('Customer Name')
-
-            if self.errors & OrderErrors.CITY:
-                errors.append('City')
-
-            if self.errors & OrderErrors.COUNTRY:
-                errors.append('Country')
-
-        return errors
-
-    def clear_errors(self, commit=False):
-        try:
-            data = json.loads(self.data)
-        except:
-            data = {}
-
-        if 'errors' in data:
-            del data['errors']
-
-            self.data = json.dumps(data)
-
-            if commit:
-                self.commit()
-
-    def get_errors_details(self):
-        try:
-            data = json.loads(self.data)
-        except:
-            data = {}
-
-        return list(set(data.get('errors', [])))
 
 
 class ShopifyBoard(BoardBase):
