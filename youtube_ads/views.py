@@ -1,10 +1,9 @@
 import re
-import json
 import requests
 from urllib.parse import unquote
 
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, redirect, reverse, get_object_or_404
 from django.core.paginator import Paginator
 from django.core.validators import URLValidator
@@ -18,11 +17,6 @@ from .decorators import feature_permission_required
 
 
 PREMISSION_REDIRECT_URL = 'https://help.dropified.com/en/articles/2772062-find-videos-with-tubehunt'
-
-
-def JsonResponse(data):
-    return HttpResponse(json.dumps(data, sort_keys=True, indent=4),
-                        content_type='application/json; charset=UTF-8')
 
 
 @login_required
