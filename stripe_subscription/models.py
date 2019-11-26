@@ -13,6 +13,7 @@ import simplejson as json
 import arrow
 import stripe.error
 
+from shopified_core.utils import safe_json
 from .stripe_api import stripe
 
 
@@ -309,10 +310,7 @@ class StripeSubscription(models.Model):
 
     @property
     def subscription(self):
-        try:
-            return json.loads(self.data)
-        except:
-            return {}
+        return safe_json(self.data)
 
     @property
     def customer_id(self):
@@ -492,10 +490,7 @@ class CustomStripePlan(models.Model):
 
     @property
     def get_credits_data(self):
-        try:
-            return json.loads(self.credits_data)
-        except:
-            return {}
+        return safe_json(self.credits_data)
 
 
 class CustomStripeSubscription(models.Model):
@@ -540,10 +535,7 @@ class CustomStripeSubscription(models.Model):
 
     @property
     def subscription(self):
-        try:
-            return json.loads(self.data)
-        except:
-            return {}
+        return safe_json(self.data)
 
     @property
     def customer_id(self):
