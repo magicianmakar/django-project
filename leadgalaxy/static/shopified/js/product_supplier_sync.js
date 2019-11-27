@@ -64,7 +64,9 @@
             store: $(e.target).attr('data-store'),
             price_markup: $('#modal-product-supplier-sync .price_markup').val(),
             compare_markup: $('#modal-product-supplier-sync .compare_markup').val(),
+            products: [],
         };
+
         if ($('#modal-product-supplier-sync .sync_inventory').is(':checked')) {
             post_data['sync_inventory'] = 1;
         }
@@ -72,7 +74,25 @@
             post_data['sync_price'] = 1;
         }
         if (!post_data['sync_inventory'] && !post_data['sync_price']) {
+            swal(
+                'No sync option is selected',
+                'Please select "Update Products Price" or "Update Products Inventory" or both',
+                'warning');
+
             return;
+        }
+
+        $('input.item-select[type=checkbox]').each(function(i, el) {
+            if (el.checked) {
+                post_data.products.push($(el).parents('.product-box').attr('product-id'));
+            }
+        });
+
+        if (!post_data.products.length) {
+            swal('No product selected', 'Please select products.', 'warning');
+            return;
+        } else {
+            post_data.products = post_data.products.join(',');
         }
 
         $.ajax({

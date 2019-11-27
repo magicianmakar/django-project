@@ -38,6 +38,7 @@ from shopified_core.utils import (
     safe_float,
     safe_json,
     app_link,
+    hash_list,
     get_domain,
     remove_link_query,
     send_email_from_template,
@@ -2566,9 +2567,13 @@ class ShopifyStoreApi(ApiBase):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        user_store_supplier_sync_key = 'user_store_supplier_sync_{}_{}'.format(user.id, store.id)
+        products = [safe_int(i) for i in data.get('products').split(',') if safe_int(i)]
+        if not products:
+            return self.api_error('No selected products to sync', status=422)
+
+        user_store_supplier_sync_key = f'user_store_supplier_sync_{user.id}_{store.id}_{hash_list(products)}'
         if cache.get(user_store_supplier_sync_key) is not None:
-            return self.api_error('Sync in progress', status=404)
+            return self.api_error('Sync in progress for selected products', status=404)
 
         sync_price = data.get('sync_price', False)
         price_markup = safe_float(data['price_markup'])
@@ -2576,8 +2581,11 @@ class ShopifyStoreApi(ApiBase):
         sync_inventory = data.get('sync_inventory', False)
 
         task = tasks.products_supplier_sync.apply_async(
-            args=[store.id, sync_price, price_markup, compare_markup, sync_inventory, user_store_supplier_sync_key], expires=180)
-        cache.set(user_store_supplier_sync_key, task.id, timeout=3600 * 60)
+            args=[store.id, products, sync_price, price_markup, compare_markup, sync_inventory, user_store_supplier_sync_key],
+            expires=180)
+
+        cache.set(user_store_supplier_sync_key, task.id, timeout=3600)
+
         return self.api_success({'task': task.id})
 
     def post_products_supplier_sync_stop(self, request, user, data):

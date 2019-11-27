@@ -1248,10 +1248,10 @@ def shopify_orders_risk(self, store, order_ids):
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def products_supplier_sync(self, store_id, sync_price, price_markup, compare_markup, sync_inventory, cache_key):
+def products_supplier_sync(self, store_id, products, sync_price, price_markup, compare_markup, sync_inventory, cache_key):
     store = ShopifyStore.objects.get(id=store_id)
 
-    products = ShopifyProduct.objects.filter(user=store.user, store=store, shopify_id__gt=0)
+    products = ShopifyProduct.objects.filter(id__in=products, user=store.user, store=store, shopify_id__gt=0)
     total_count = 0
     for product in products:
         if product.have_supplier() and product.default_supplier.is_aliexpress:
