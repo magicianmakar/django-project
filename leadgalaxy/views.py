@@ -4640,9 +4640,6 @@ def product_alerts(request):
     if not store:
         return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'product_alerts'}))
 
-    ProductChange.objects.filter(user=request.user.models_user,
-                                 shopify_product__store=None).delete()
-
     changes = ProductChange.objects.select_related('shopify_product') \
                                    .select_related('shopify_product__default_supplier') \
                                    .filter(user=request.user.models_user,
@@ -4740,11 +4737,6 @@ def product_alerts(request):
                 c['shopify_value_label'] = "Not Found"
 
         product_changes.append(change)
-
-    if not show_hidden:
-        ProductChange.objects.filter(user=request.user.models_user) \
-                             .filter(id__in=[i['id'] for i in product_changes]) \
-                             .update(seen=True)
 
     # Allow sending notification for new changes
     cache.delete('product_change_%d' % request.user.models_user.id)
