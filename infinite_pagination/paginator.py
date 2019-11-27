@@ -48,7 +48,7 @@ class InfinitePaginator(Paginator):
             if number == 1 and self.allow_empty_first_page:
                 pass
             else:
-                raise EmptyPage("That page contains no results")
+                return InfinitePage([], number, self, False)
 
         has_next = len(window_items) > len(page_items)
         return InfinitePage(page_items, number, self, has_next)
