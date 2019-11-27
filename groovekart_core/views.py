@@ -111,9 +111,6 @@ def product_alerts(request):
         messages.warning(request, 'Please add at least one store before using the Alerts page.')
         return HttpResponseRedirect('/gkart/')
 
-    ProductChange.objects.filter(user=request.user.models_user,
-                                 gkart_product__store=None).delete()
-
     changes = ProductChange.objects.select_related('gkart_product') \
                                    .select_related('gkart_product__default_supplier') \
                                    .filter(user=request.user.models_user,
@@ -197,11 +194,6 @@ def product_alerts(request):
                 c['gkart_value'] = p['price']
 
         product_changes.append(change)
-
-    if not show_hidden:
-        ProductChange.objects.filter(user=request.user.models_user) \
-                             .filter(id__in=[i['id'] for i in product_changes]) \
-                             .update(seen=True)
 
     # Allow sending notification for new changes
     cache.delete('product_change_%d' % request.user.models_user.id)

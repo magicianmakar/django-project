@@ -86,9 +86,6 @@ def product_alerts(request):
         messages.warning(request, 'Please add at least one store before using the Alerts page.')
         return HttpResponseRedirect('/woo/')
 
-    ProductChange.objects.filter(user=request.user.models_user,
-                                 woo_product__store=None).delete()
-
     changes = ProductChange.objects.select_related('woo_product') \
                                    .select_related('woo_product__default_supplier') \
                                    .filter(user=request.user.models_user,
@@ -177,11 +174,6 @@ def product_alerts(request):
                 c['woo_value_label'] = "Not Found"
 
         product_changes.append(change)
-
-    if not show_hidden:
-        ProductChange.objects.filter(user=request.user.models_user) \
-                             .filter(id__in=[i['id'] for i in product_changes]) \
-                             .update(seen=True)
 
     # Allow sending notification for new changes
     cache.delete('product_change_%d' % request.user.models_user.id)
