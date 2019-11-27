@@ -20,8 +20,7 @@ import leadgalaxy.utils as leadgalaxy_utils
 from shopified_core import permissions
 from shopified_core.utils import (
     safe_int,
-    safe_float,
-    decode_params,
+    products_filter,
     hash_url_filename,
 )
 from shopified_core.shipping_helper import (
@@ -31,36 +30,6 @@ from shopified_core.shipping_helper import (
 )
 
 from .models import GearBubbleStore, GearBubbleProduct, GearBubbleBoard
-
-
-def filter_products(res, fdata):
-    if fdata.get('title'):
-        title = decode_params(fdata.get('title'))
-        res = res.filter(title__icontains=title)
-
-    if fdata.get('price_min') or fdata.get('price_max'):
-        min_price = safe_float(fdata.get('price_min'), -1)
-        max_price = safe_float(fdata.get('price_max'), -1)
-
-        if (min_price > 0 and max_price > 0):
-            res = res.filter(price__gte=min_price, price__lte=max_price)
-
-        elif (min_price > 0):
-            res = res.filter(price__gte=min_price)
-
-        elif (max_price > 0):
-            res = res.filter(price__lte=max_price)
-
-    if fdata.get('type'):
-        res = res.filter(product_type__icontains=fdata.get('type'))
-
-    if fdata.get('tag'):
-        res = res.filter(tags__icontains=fdata.get('tag'))
-
-    if fdata.get('vendor'):
-        res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
-
-    return res
 
 
 def gearbubble_products(request, post_per_page=25, sort=None, board=None, store='n'):
@@ -94,7 +63,7 @@ def gearbubble_products(request, post_per_page=25, sort=None, board=None, store=
         res = res.filter(gearbubbleboard=board)
         permissions.user_can_view(request.user, get_object_or_404(GearBubbleBoard, id=board))
 
-    res = filter_products(res, request.GET)
+    res = products_filter(res, request.GET)
 
     if sort:
         if re.match(r'^-?(title|price)$', sort):

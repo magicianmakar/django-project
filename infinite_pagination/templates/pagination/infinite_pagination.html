@@ -1,0 +1,29 @@
+{% load url_tools %}
+
+{% if paginator %}
+<div class="row">
+    <nav style="text-align: center;">
+        <ul class="pagination pagination-lg">
+            {% if current_page.has_previous %}
+            <li>
+                <a href="{% url_replace 'page' 1 %}" aria-label="Previous">
+                    <span aria-hidden="true">&laquo; First</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url_replace 'page' current_page.previous_page_number %}" aria-label="Previous">
+                    <span aria-hidden="true">&larr; Previous</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if current_page.has_next %}
+            <li>
+                <a href="{% url_replace 'page' current_page.next_page_number %}" aria-label="Next">
+                    <span aria-hidden="true">Next &rarr;</span>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}

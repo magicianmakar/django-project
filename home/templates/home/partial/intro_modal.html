@@ -1,0 +1,152 @@
+{% load template_helper %}
+
+<div id="welcome-intro-modal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <!--
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Bulk Order Processing</h4>
+            </div>
+            -->
+            <div class="modal-body">
+                <div id="intro-order-steps">
+                    <div id="intro-order-steps-p-0" class="dailog-step">
+                        {# <h1>Select Pages</h1> #}
+                        <div class="intro-order-step">
+                            <div class="intro-dev">
+                                <h1>Welcome to Dropified</h1>
+                                <h3>Let’s get you setup for success</h3>
+                                <button id="intro-start-btn" class="btn btn-success btn-lg">Start</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="intro-order-steps-p-1" class="dailog-step" style="display:none">
+
+                        {# <h1>Load Orders</h1> #}
+                        <div class="intro-order-step">
+                        <h2>Step 1 of 3</h2>
+                        <h1>Complete Your Profile</h1>
+
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h3>What is your experience with dropshipping?</h3>
+                            </div>
+                            <div class="col-sm-12" style="padding-left: 35px;">
+                                <label class="checked" style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#shopify-section" checked="" type="radio" class="xicheck">
+                                    <span class="label-text">I’m Just Starting Out</span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#chq-section" type="radio" class="xicheck">
+                                    <span class="label-text">I’ve Tried Before Without Success</span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#woo-section" type="radio" class="xicheck">
+                                    <span class="label-text">I’ve Had Some Success</span>
+                                </label>
+
+                                <label style="display: block;">
+                                    <input name="amt" value="#gk-section" type="radio" class="xicheck">
+                                    <span class="label-text">I’m Crushing It</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row m-t">
+                            <div class="col-sm-12">
+                                <h3>What is your experience with dropshipping?</h3>
+                            </div>
+                            <div class="col-sm-12" style="padding-left: 35px;">
+                                <label class="checked" style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#shopify-section" checked="" type="radio" class="xicheck">
+                                    <span class="label-text">No</span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#chq-section" type="radio" class="xicheck">
+                                    <span class="label-text">Yes - I’ve made some but not a lot</span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#woo-section" type="radio" class="xicheck">
+                                    <span class="label-text">Yes - I’ve made quite a lot of money online</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="row m-t">
+                            <div class="col-sm-12">
+                                <h3>How would you describe your commitment level to this business?</h3>
+                            </div>
+                            <div class="col-sm-12" style="padding-left: 35px;">
+                                <label class="checked" style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#shopify-section" checked="" type="radio" class="xicheck">
+                                    <span class="label-text">I’m not very committed to this. I’m just checking it out.</span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#chq-section" type="radio" class="xicheck">
+                                    <span class="label-text">I’m very committed and serious about putting in the effort to grow a real business.</span>
+                                </label>
+                            </div>
+                        </div>
+
+                         <div class="row m-t">
+                            <div class="col-sm-12 text-center">
+                                <button id="intro-next-btn" class="btn btn-success btn-lg">Next &gt;</button>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                    <div id="intro-order-steps-p-2" class="dailog-step" style="display:none">
+                        {# <h1>Load Orders</h1> #}
+                        <div class="intro-order-step">
+                        <h2>Step 2 of 3</h2>
+                        <h1>Committed To Your Success</h1>
+
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h3>What is your experience with dropshipping?</h3>
+                            </div>
+                            <div class="col-sm-12" style="padding-left: 35px;">
+                                <label class="checked" style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#shopify-section" type="radio" class="xicheck" disabled>
+                                    <span class="label-text">I commit to setting up Dropified with my store and spending time learning what all it can do in the first week</span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#chq-section" type="radio" class="xicheck" disabled>
+                                    <span class="label-text">I commit to spending time going through any relevant training in the Dropified Academy</span>
+                                </label>
+
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#woo-section" type="radio" class="xicheck" disabled>
+                                    <span class="label-text">I commit to investing some funds to spend on testing advertisements to drive traffic to my store(s)</span>
+                                </label>
+
+                                <label style="display: block;">
+                                    <input name="amt" value="#gk-section" type="radio" class="xicheck" disabled>
+                                    <span class="label-text">I commit to reaching out to a Dropified product specialist to fast track my success with using Dropified</span>
+                                </label>
+                            </div>
+                        </div>
+
+                         <div class="row m-t">
+                            <div class="col-sm-12 text-center">
+                                <button id="intro-next-btn" class="btn btn-success btn-lg">YES, I COMMIT TO SUCCESS</button>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

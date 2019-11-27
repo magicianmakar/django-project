@@ -40,9 +40,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'rest_framework',
-
     'raven.contrib.django.raven_compat',
+    'rest_framework',
     'widget_tweaks',
     'hijack',
     'compat',
@@ -50,9 +49,11 @@ INSTALLED_APPS = (
     'storages',
     'django_extensions',
     'test_without_migrations',
-    'last_seen',
     'polymorphic',
     'adminsortable2',
+
+    'last_seen',
+    'infinite_pagination',
 
     'article',
     'home',

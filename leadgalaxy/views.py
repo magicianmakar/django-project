@@ -43,14 +43,14 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 
-from analytic_events.models import RegistrationEvent
+from infinite_pagination.paginator import InfinitePaginator
 
+from analytic_events.models import RegistrationEvent
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.exceptions import ApiLoginException
-
 from shopify_orders import utils as shopify_orders_utils
 from commercehq_core.models import CommerceHQProduct
 from groovekart_core.models import GrooveKartProduct
@@ -82,6 +82,7 @@ from shopified_core.utils import (
     base64_decode,
     using_replica,
     format_queueable_orders,
+    products_filter,
 )
 from shopified_core.tasks import keen_order_event
 
@@ -1408,7 +1409,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         permissions.user_can_view(user, get_object_or_404(ShopifyBoard, id=board))
 
     if filter_products:
-        res = accept_product(res, request.GET)
+        res = products_filter(res, request.GET, tags_field='tag')
 
     sort = sort if sort else '-date'
     if sort:
@@ -1427,9 +1428,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         elif request.GET.get('product_board') == "not_added":
             res = res.exclude(shopifyboard__in=board_list)
 
-    paginator = SimplePaginator(res, post_per_page)
-
-    page = min(max(1, page), paginator.num_pages)
+    paginator = InfinitePaginator(res, post_per_page)
     page = paginator.page(page)
     res = page
 
@@ -1498,36 +1497,6 @@ def link_product_board(products, boards):
         products[i]['board'] = boards.get(v['id'])
 
     return products
-
-
-def accept_product(res, fdata):
-    if fdata.get('title'):
-        title = decode_params(fdata.get('title'))
-        res = res.filter(title__icontains=title)
-
-    if fdata.get('price_min') or fdata.get('price_max'):
-        min_price = safe_float(fdata.get('price_min'), -1)
-        max_price = safe_float(fdata.get('price_max'), -1)
-
-        if (min_price > 0 and max_price > 0):
-            res = res.filter(price__gte=min_price, price__lte=max_price)
-
-        elif (min_price > 0):
-            res = res.filter(price__gte=min_price)
-
-        elif (max_price > 0):
-            res = res.filter(price__lte=max_price)
-
-    if fdata.get('type'):
-        res = res.filter(product_type__icontains=fdata.get('type'))
-
-    if fdata.get('tag'):
-        res = res.filter(tag__icontains=fdata.get('tag'))
-
-    if fdata.get('vendor'):
-        res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
-
-    return res
 
 
 @login_required

@@ -997,3 +997,33 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
         'next': next_page_url,
         'pages': current_page.paginator.num_pages,
     })
+
+
+def products_filter(res, fdata, tags_field='tags'):
+    if fdata.get('title'):
+        title = decode_params(fdata.get('title'))
+        res = res.filter(title__icontains=title)
+
+    if fdata.get('price_min') or fdata.get('price_max'):
+        min_price = safe_float(fdata.get('price_min'), -1)
+        max_price = safe_float(fdata.get('price_max'), -1)
+
+        if (min_price > 0 and max_price > 0):
+            res = res.filter(price__gte=min_price, price__lte=max_price)
+
+        elif (min_price > 0):
+            res = res.filter(price__gte=min_price)
+
+        elif (max_price > 0):
+            res = res.filter(price__lte=max_price)
+
+    if fdata.get('type'):
+        res = res.filter(product_type__icontains=fdata.get('type'))
+
+    if fdata.get('tag'):
+        res = res.filter(**{f'{tags_field}__icontains': fdata.get('tag')})
+
+    if fdata.get('vendor'):
+        res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
+
+    return res
