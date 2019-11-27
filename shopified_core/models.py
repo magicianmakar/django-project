@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, prefix_from_model, base64_encode
+from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, safe_json, prefix_from_model, base64_encode
 
 
 class StoreBase(models.Model):
@@ -242,10 +242,7 @@ class OrderTrackBase(models.Model):
                 return custom_tracking.replace('{{tracking_number}}', self.source_tracking)
 
     def add_error(self, error, commit=False):
-        try:
-            data = json.loads(self.data)
-        except:
-            data = {}
+        data = safe_json(self.data)
 
         if 'errors' not in data:
             data['errors'] = []
@@ -276,10 +273,7 @@ class OrderTrackBase(models.Model):
         return errors
 
     def clear_errors(self, commit=False):
-        try:
-            data = json.loads(self.data)
-        except:
-            data = {}
+        data = safe_json(self.data)
 
         if 'errors' in data:
             del data['errors']
@@ -290,10 +284,7 @@ class OrderTrackBase(models.Model):
                 self.commit()
 
     def get_errors_details(self):
-        try:
-            data = json.loads(self.data)
-        except:
-            data = {}
+        data = safe_json(self.data)
 
         return list(set(data.get('errors', [])))
 

@@ -4,6 +4,7 @@ import simplejson as json
 from django.db import models
 from django.contrib.auth.models import User
 
+from shopified_core.utils import safe_json
 from leadgalaxy.models import (
     ShopifyStore,
     ShopifyProduct,
@@ -177,10 +178,7 @@ class ShopifyOrderRisk(models.Model):
         return 'OrderRisk #{}'.format(self.order_id)
 
     def get_data(self):
-        try:
-            return json.loads(self.data)
-        except:
-            return {}
+        return safe_json(self.data)
 
     def set_data(self, data):
         if type(data) is not str:

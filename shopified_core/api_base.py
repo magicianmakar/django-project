@@ -23,6 +23,7 @@ from shopified_core.utils import (
     dict_val,
     safe_int,
     safe_float,
+    safe_json,
     order_data_cache,
     order_phone_number,
     orders_update_limit,
@@ -63,10 +64,7 @@ class ApiBase(ApiResponseMixin, View):
         return self.store_slug == 'shopify'
 
     def post_toggle_menu_layout(self, request, user, data):
-        try:
-            config = json.loads(user.profile.config)
-        except:
-            config = {}
+        config = safe_json(user.profile.config)
 
         config['_new-menu-active'] = data.get('value')
         user.profile.config = json.dumps(config)
@@ -678,10 +676,7 @@ class ApiBase(ApiResponseMixin, View):
         else:
             return self.api_error('Product not found', status=404)
 
-        try:
-            config = json.loads(product.config)
-        except:
-            config = {}
+        config = safe_json(product.config)
 
         for key in data:
             if key == 'product':

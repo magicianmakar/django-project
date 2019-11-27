@@ -21,6 +21,7 @@ from shopified_core.utils import (
     safe_str,
     dict_val,
     safe_int,
+    safe_json,
 )
 
 
@@ -333,19 +334,13 @@ class GrooveKartProduct(ProductBase):
                 raise
 
     def get_config(self):
-        try:
-            return json.loads(self.config)
-        except:
-            return {}
+        return safe_json(self.config)
 
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)
 
-        try:
-            product_data = json.loads(self.data)
-        except:
-            product_data = {}
+        product_data = safe_json(self.data)
 
         product_data.update(data)
 
@@ -377,10 +372,7 @@ class GrooveKartProduct(ProductBase):
         return variant_id
 
     def get_mapping_config(self):
-        try:
-            return json.loads(self.mapping_config)
-        except:
-            return {}
+        return safe_json(self.mapping_config)
 
     def set_mapping_config(self, config):
         if type(config) is not str:
@@ -454,10 +446,7 @@ class GrooveKartProduct(ProductBase):
             supplier = self.default_supplier
 
         if update:
-            try:
-                current = json.loads(supplier.variants_map)
-            except:
-                current = {}
+            current = safe_json(supplier.variants_map)
 
             for k, v in list(mapping.items()):
                 current[k] = v
@@ -509,10 +498,7 @@ class GrooveKartProduct(ProductBase):
             self.save()
 
     def get_bundle_mapping(self, variant=None, default=[]):
-        try:
-            bundle_map = json.loads(self.bundle_map)
-        except:
-            bundle_map = {}
+        bundle_map = safe_json(self.bundle_map)
 
         if variant:
             return bundle_map.get(str(variant), default)
@@ -550,10 +536,7 @@ class GrooveKartProduct(ProductBase):
 
     def set_shipping_mapping(self, mapping, update=True, commit=True):
         if update:
-            try:
-                current = json.loads(self.shipping_map)
-            except:
-                current = {}
+            current = safe_json(self.shipping_map)
 
             for k, v in list(mapping.items()):
                 current[k] = v

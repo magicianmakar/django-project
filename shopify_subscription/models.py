@@ -7,6 +7,7 @@ import arrow
 import simplejson as json
 
 from leadgalaxy.models import GroupPlan, ShopifyStore
+from shopified_core.utils import safe_json
 
 SHOPIFY_CHARGE_TYPE = (
     ('recurring', 'Recurring'),
@@ -61,10 +62,7 @@ class ShopifySubscription(models.Model):
 
     @property
     def subscription(self):
-        try:
-            return json.loads(self.data)
-        except:
-            return {}
+        return safe_json(self.data)
 
     @property
     def is_active(self):

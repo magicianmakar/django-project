@@ -76,6 +76,13 @@ def safe_str(v, default=''):
         return default
 
 
+def safe_json(v, default={}):
+    try:
+        return json.loads(v)
+    except:
+        return default
+
+
 def dict_val(data, name, default=None):
     """ Return dict value or default value if no key is found
 
