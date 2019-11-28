@@ -398,7 +398,7 @@ class WooProduct(ProductBase):
     def get_bundle_mapping(self, variant=None, default=[]):
         bundle_map = safe_json(self.bundle_map)
 
-        if variant:
+        if variant or variant == 0:
             return bundle_map.get(str(variant), default)
         else:
             return bundle_map
