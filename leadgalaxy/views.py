@@ -4281,7 +4281,12 @@ def orders_track(request):
     completed = request.GET.get('completed')
     source_reason = request.GET.get('reason')
     days_passed = request.GET.get('days_passed', '')
-    date = request.GET.get('date', '{}-'.format(arrow.get(timezone.now()).replace(days=-30).format('MM/DD/YYYY')))
+
+    default_date = '{}-'.format(arrow.get(timezone.now()).replace(days=-30).format('MM/DD/YYYY'))
+    if settings.DEBUG:
+        default_date = None
+
+    date = request.GET.get('date', default_date)
 
     if query:
         date = None
@@ -4316,7 +4321,8 @@ def orders_track(request):
         messages.warning(request, "You don't have access to this store orders")
         return HttpResponseRedirect('/')
 
-    orders = using_replica(ShopifyOrderTrack).select_related('store').filter(user=request.user.models_user, store=store).defer('data')
+    orders = using_replica(ShopifyOrderTrack).select_related('store', 'user', 'user__profile') \
+                                             .filter(user=request.user.models_user, store=store)
 
     if query:
         order_id = shopify_orders_utils.order_id_from_name(store, query)
