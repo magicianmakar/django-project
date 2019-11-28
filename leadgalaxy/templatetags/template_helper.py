@@ -93,7 +93,18 @@ def remove_link_query(context, link):
         return ''
 
     if not link.startswith('http'):
-        link = 'http://{}'.format(link)
+        link = 'https://{}'.format(link)
+
+    return re.sub('([?#].*)$', r'', link).strip()
+
+
+@register.filter(name='remove_url_query')
+def remove_url_query(link):
+    if not link:
+        return ''
+
+    if not link.startswith('http'):
+        link = 'https://{}'.format(link)
 
     return re.sub('([?#].*)$', r'', link).strip()
 

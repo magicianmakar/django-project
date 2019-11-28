@@ -1186,7 +1186,7 @@ var config = {
 
     product_extra_images: [
     {% for item in extra_images %}
-        '{% remove_link_query item %}',
+        '{{ item | remove_url_query | escapejs }}',
     {% endfor %}
     ],
 
