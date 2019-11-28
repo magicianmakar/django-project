@@ -1,6 +1,6 @@
 {% load url_tools %}
 
-{% if paginator %}
+{% if paginator and current_page.has_previous or current_page.has_next or page_obj.has_previous or page_obj.has_next %}
 <div class="row">
     {% if current_page.is_infinte or page_obj.is_infinte %}
     <span style="position: relative;top: 50px;left: 20px;font-size: 18px;">
