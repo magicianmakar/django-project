@@ -1,15 +1,45 @@
 {% load url_tools %}
 
-{% if paginator and paginator.num_pages > 1 %}
+{% if paginator %}
 <div class="row">
+    {% if current_page.is_infinte or page_obj.is_infinte %}
+    <span style="position: relative;top: 50px;left: 20px;font-size: 18px;">
+        Page: {% if current_page %} {{current_page.number}} {% elif page_obj %} {{page_obj.number}} {% endif %}
+    </span>
+    {% endif %}
+
     <nav style="text-align: center;">
       <ul class="pagination pagination-lg">
-        {% if current_page.has_previous %}
-        <li>
-          <a href="{% url_replace 'page' current_page.previous_page_number %}" aria-label="Previous">
-            <span aria-hidden="true">&laquo;</span>
-          </a>
-        </li>
+        {% if current_page %}
+            {% if current_page.has_previous %}
+                {% if current_page.previous_page_number != 1 %}
+                    <li>
+                        <a href="{% url_replace 'page' 1 %}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo; First</span>
+                        </a>
+                    </li>
+                {% endif %}
+
+                <li>
+                    <a href="{% url_replace 'page' current_page.previous_page_number %}" aria-label="Previous">
+                        <span aria-hidden="true">&larr; Previous</span>
+                    </a>
+                </li>
+            {% else %}
+                {% if current_page.previous_page_number != 1 %}
+                <li class="disabled">
+                    <span href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo; First</span>
+                    </span>
+                </li>
+                {% endif %}
+
+                <li class="disabled">
+                    <span aria-label="Previous">
+                        <span aria-hidden="true">&larr; Previous</span>
+                    </span>
+                </li>
+            {% endif %}
         {% endif %}
 
         {% if page_obj.has_previous %}
@@ -20,24 +50,38 @@
         </li>
         {% endif %}
 
-        {% for pa in paginator.page_range %}
+        {% if not page_obj.is_infinte and not current_page.is_infinte and paginator.num_pages > 1 %}
+            {% for pa in paginator.page_range %}
 
-            {% if pa == None %}
-            <li class="paginator-goto" data-href="{% url_replace 'page' 'paginator-goto' %}"><span>...</span></li>
-            {% elif pa == current_page.number or pa == page_obj.number %}
-            <li class="active"><span>{{pa}}</span></li>
-            {% else %}
-            <li><a href="{% url_replace 'page' pa %}">{{pa}}</a></li>
+                {% if pa == None %}
+                <li class="paginator-goto" data-href="{% url_replace 'page' 'paginator-goto' %}"><span>...</span></li>
+                {% elif pa == current_page.number or pa == page_obj.number %}
+                <li class="active"><span>{{pa}}</span></li>
+                {% else %}
+                <li><a href="{% url_replace 'page' pa %}">{{pa}}</a></li>
+                {% endif %}
+
+            {% endfor %}
+        {% else %}
+            {% if current_page.has_previous or current_page.has_next %}
+                <li class="paginator-goto" data-href="{% url_replace 'page' 'paginator-goto' %}"><span>...</span></li>
             {% endif %}
+        {% endif %}
 
-        {% endfor %}
-
-        {% if current_page.has_next %}
-        <li>
-          <a href="{% url_replace 'page' current_page.next_page_number %}" aria-label="Next">
-            <span aria-hidden="true">&raquo;</span>
-          </a>
-        </li>
+        {% if current_page %}
+            {% if current_page.has_next %}
+                <li>
+                    <a href="{% url_replace 'page' current_page.next_page_number %}" aria-label="Next">
+                        <span aria-hidden="true">Next &rarr;</span>
+                    </a>
+                </li>
+            {% else %}
+            <li class="disabled">
+                <span aria-label="Next">
+                    <span aria-hidden="true">Next &rarr;</span>
+                </span>
+            </li>
+            {% endif %}
         {% endif %}
 
         {% if page_obj.has_next %}

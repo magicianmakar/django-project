@@ -8,10 +8,10 @@ def get_menu_structure(namespace):
     body = [
         ('products', [
             'all-products',
-            'import-products',
-            'us-product-database',
             'boards',
             'alerts',
+            'us-product-database',
+            'import-products',
         ]),
         ('orders', ['place-orders', 'tracking']),
         ('business', [

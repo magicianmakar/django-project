@@ -3828,7 +3828,7 @@ def orders_view(request):
 
         open_orders = paginator.count
 
-        if open_orders:
+        if page.object_list:
             cache_list = ['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page]
             cache_key = 'saved_orders_%s' % hash_list(cache_list)
             shopify_orders = cache.get(cache_key)
@@ -4393,8 +4393,7 @@ def orders_track(request):
 
     orders = orders.order_by(sorting)
 
-    paginator = SimplePaginator(orders, post_per_page)
-    page = min(max(1, page), paginator.num_pages)
+    paginator = InfinitePaginator(orders, post_per_page)
     page = paginator.page(page)
     orders = page.object_list
 
@@ -4667,8 +4666,7 @@ def product_alerts(request):
 
     changes = changes.order_by('-updated_at')
 
-    paginator = SimplePaginator(changes, post_per_page)
-    page = min(max(1, page), paginator.num_pages)
+    paginator = InfinitePaginator(changes, post_per_page)
     page = paginator.page(page)
     changes = page.object_list
 

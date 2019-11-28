@@ -11,6 +11,8 @@ class InfinitePaginator(Paginator):
     check the availability of successive page.
     """
 
+    is_infinte = True
+
     def __init__(self, object_list, per_page, orphans=None,
                  allow_empty_first_page=True):
         super(InfinitePaginator, self).__init__(object_list, per_page,
@@ -67,6 +69,7 @@ class InfinitePaginator(Paginator):
 
 
 class InfinitePage(Page):
+    is_infinte = True
 
     def __init__(self, object_list, number, paginator, has_next):
         super(InfinitePage, self).__init__(object_list, number, paginator)
