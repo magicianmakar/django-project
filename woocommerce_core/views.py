@@ -975,7 +975,7 @@ class OrdersTrackList(ListView):
 
         store = self.get_store()
 
-        orders = WooOrderTrack.objects.select_related('store') \
+        orders = WooOrderTrack.objects.select_related('store', 'user', 'user__profile') \
                                       .filter(user=self.request.user.models_user, store=store) \
                                       .defer('data')
         if query:

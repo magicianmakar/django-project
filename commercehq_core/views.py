@@ -1312,9 +1312,8 @@ class OrdersTrackList(ListView):
 
         store = self.get_store()
 
-        orders = CommerceHQOrderTrack.objects.select_related('store') \
-                                             .filter(user=self.request.user.models_user, store=store) \
-                                             .defer('data')
+        orders = CommerceHQOrderTrack.objects.select_related('store', 'user', 'user__profile') \
+                                             .filter(user=self.request.user.models_user, store=store)
 
         if query:
             order_id = order_id_from_name(store, query)
