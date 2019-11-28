@@ -42,7 +42,7 @@ def autocomplete(request):
     r = requests.get(url, headers=headers)
     res = re.findall(r'\["([^"]+)"', r.text)
 
-    return JsonResponse(res)
+    return JsonResponse(res, safe=False)
 
 
 @login_required
