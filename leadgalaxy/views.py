@@ -1507,7 +1507,7 @@ def products_list(request, tpl='grid'):
     args = {
         'request': request,
         'filter_products': (request.GET.get('f') == '1'),
-        'post_per_page': settings.ITEMS_PER_PAGE,
+        'post_per_page': min(safe_int(request.GET.get('ppp'), settings.ITEMS_PER_PAGE), 100),
         'sort': request.GET.get('sort'),
         'store': store,
         'load_boards': (tpl is None or tpl == 'grid'),
