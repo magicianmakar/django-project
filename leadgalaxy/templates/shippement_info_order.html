@@ -18,17 +18,17 @@
             <tr company="{{ item.company }}" country="{{ country_code }}">
                 <td>
                     {% if item.company == 'CPAM' %}
-                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/china-post-air-mail.jpg" alt="China Post Registered Air Mail">
+                    <img src="//i00.i.aliimg.com/wimg/buyer/single/china-post-air-mail.jpg" alt="China Post Registered Air Mail">
                     {% elif item.company == 'EMS' %}
-                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-ems.jpg" alt="EMS">
+                    <img src="//i00.i.aliimg.com/wimg/buyer/single/icon-ems.jpg" alt="EMS">
                     {% elif item.company == 'UPS' %}
-                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-ups-s.gif" alt="UPS Express Saver">
+                    <img src="//i00.i.aliimg.com/wimg/buyer/single/icon-ups-s.gif" alt="UPS Express Saver">
                     {% elif item.company == 'DHL' %}
-                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-dhl.jpg" alt="DHL">
+                    <img src="//i00.i.aliimg.com/wimg/buyer/single/icon-dhl.jpg" alt="DHL">
                     {% elif item.company == 'FEDEX' %}
-                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-fedex.jpg" alt="Fedex IP">
+                    <img src="//i00.i.aliimg.com/wimg/buyer/single/icon-fedex.jpg" alt="Fedex IP">
                     {% elif item.company == 'UPSE' %}
-                    <img src="http://i00.i.aliimg.com/wimg/buyer/single/icon-ups-e.gif" alt="UPS Expedited">
+                    <img src="//i00.i.aliimg.com/wimg/buyer/single/icon-ups-e.gif" alt="UPS Expedited">
                     {% else %}
                         {{item.companyDisplayName}}
                     {% endif %}
