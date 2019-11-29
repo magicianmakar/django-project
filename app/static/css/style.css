@@ -5113,9 +5113,6 @@ del {
 .product-box:hover .product-name {
   color: #93c47d
 }
-.product-name {
-  cursor: default
-}
 .product-imitation {
   text-align: center;
   padding: 90px 0;
