@@ -367,6 +367,9 @@ def order_save_changes(self, data):
         })
 
     except Exception as e:
+        if utils.http_excption_status_code(e) in [401, 402, 403, 404]:
+            return
+
         raven_client.captureException(extra=utils.http_exception_response(e))
 
         if not self.request.called_directly:
