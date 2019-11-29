@@ -26,11 +26,11 @@ def get_menu_structure(namespace):
 
     header = [
         ('get-started', ['get-started']),
+        ('settings', ['settings']),
     ]
 
     footer = [
         ('help', ['help']),
-        ('settings', ['settings']),
     ]
 
     named = [
