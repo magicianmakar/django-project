@@ -4645,10 +4645,9 @@ def product_alerts(request):
     if not store:
         return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'product_alerts'}))
 
-    changes = ProductChange.objects.select_related('shopify_product') \
-                                   .select_related('shopify_product__default_supplier') \
-                                   .filter(user=request.user.models_user,
-                                           shopify_product__store=store)
+    changes = using_replica(ProductChange, request.GET.get('rep')).select_related('shopify_product') \
+        .select_related('shopify_product__default_supplier') \
+        .filter(user=request.user.models_user, shopify_product__store=store)
 
     if request.user.is_subuser:
         store_ids = request.user.profile.subuser_permissions.filter(
