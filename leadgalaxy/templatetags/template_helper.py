@@ -2,6 +2,7 @@ from django import template
 from django.utils.safestring import mark_safe
 from django.conf import settings
 from django.utils.html import escapejs
+from django.template.defaultfilters import slugify
 
 from article.utils import xss_clean
 from shopified_core.utils import (
@@ -356,3 +357,12 @@ def sec_to_min(s):
 @register.filter
 def min_value(amount, minimum):
     return min(amount, minimum)
+
+
+@register.filter(takes_context=True)
+def show_closeable_view(user, view_id):
+    view_id = f"closable_{slugify(view_id).replace('-', '_')}"
+
+    print(f'{view_id} :=> {user.get_config(view_id)}')
+
+    return not user.get_config(view_id)

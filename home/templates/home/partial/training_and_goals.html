@@ -1,4 +1,6 @@
-{% if not user.get_config.closable_goals_and_videos %}
+{% load template_helper %}
+
+{% if user|show_closeable_view:'goals-and-videos' %}
 <div id="goals_and_videos">
     {% for user_goal in user_goals %}
     <div class="ibox training-section">
@@ -105,7 +107,7 @@
 </div>
 {% endif %}
 
-{% if not user.get_config.closable_training_videos %}
+{% if user|show_closeable_view:'training-videos' %}
     <div id="ibox-training-section-videos" class="ibox training-section">
         <div class="ibox-title">
             <h5 class="product-title"></h5>

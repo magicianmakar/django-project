@@ -1,5 +1,6 @@
-{% if not user.get_config.closable_training_banner %}
+{% load template_helper %}
 
+{% if user|show_closeable_view:banner_slug %}
 <div id="training-banner-container" class="row training-banner">
     <div class="col-md-6 container">
         <div class="ibox">
@@ -12,7 +13,7 @@
                         <div class="col-md-6 text-right">
                             <i data-banner-slug="{{ banner_slug }}"
                                 class="fa-lg fa dropified-green fa-times"
-                                data-closable-id="training-banner"
+                                data-closable-id="{{ banner_slug }}"
                                 data-closable-target="#training-banner-container"></i>
                         </div>
                     </div>
