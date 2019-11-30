@@ -361,8 +361,5 @@ def min_value(amount, minimum):
 
 @register.filter(takes_context=True)
 def show_closeable_view(user, view_id):
-    view_id = f"closable_{slugify(view_id).replace('-', '_')}"
-
-    print(f'{view_id} :=> {user.get_config(view_id)}')
-
+    view_id = f"_dismissible_{slugify(view_id).replace('-', '_')}"
     return not user.get_config(view_id)

@@ -898,23 +898,20 @@ $(function() {
         window.location.hash = $(this).data('auto-hash');
     });
 
-    $('[data-closable-id]').click(function (e) {
+    $('[data-dismissible-id]').click(function (e) {
         e.preventDefault();
 
         var btn = $(e.currentTarget);
 
         $.ajax({
-            url: api_url('closable-view'),
+            url: api_url('dismissible-view'),
             type: 'POST',
             data: {
-                id: btn.data('closable-id'),
+                id: btn.data('dismissible-id'),
                 hide: true,
             },
-        }).done(function (data) {
-        }).fail(function(data) {
-            displayAjaxError('Closable View', data);
         }).always(function() {
-            $(btn.data('closable-target')).remove();
+            $(btn.data('dismissible-target')).remove();
         });
     });
 });

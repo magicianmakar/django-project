@@ -544,3 +544,7 @@ ul.breadcrumb-right-menu li a {
 .training-banner .dismiss {
   cursor: pointer;
 }
+
+[data-dismissible-id] {
+    cursor: pointer;
+}

@@ -365,8 +365,8 @@ class ShopifiedApi(ApiResponseMixin, View):
             'status': 'ok'
         })
 
-    def post_closable_view(self, request, user, data):
-        view_id = f"closable_{slugify(data.get('id')).replace('-', '_')}"
+    def post_dismissible_view(self, request, user, data):
+        view_id = f"_dismissible_{slugify(data.get('id')).replace('-', '_')}"
 
         user.set_config(view_id, arrow.now().timestamp)
 
