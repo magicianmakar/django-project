@@ -1,3 +1,4 @@
+{% if not user.get_config.closable_goals_and_videos %}
 <div id="goals_and_videos">
     {% for user_goal in user_goals %}
     <div class="ibox training-section">
@@ -36,7 +37,7 @@
                         <a class="collapse-link">
                           <i class="fa fa-chevron-up"></i>
                         </a>
-                        <a class="dismiss-link" data-user-goal="{{ user_goal.id }}">
+                        <a data-closable-id="goals-and-videos" data-closable-target="#goals_and_videos">
                           <i class="fa fa-times"></i>
                         </a>
                     </div>
@@ -101,8 +102,19 @@
         </div>
     </div>
     {% endfor %}
+</div>
+{% endif %}
 
-    <div class="ibox training-section">
+{% if not user.get_config.closable_training_videos %}
+    <div id="ibox-training-section-videos" class="ibox training-section">
+        <div class="ibox-title">
+            <h5 class="product-title"></h5>
+            <div class="ibox-tools">
+                <a data-closable-id="training-videos" data-closable-target="#ibox-training-section-videos">
+                    <i class="fa fa-times"></i>
+                </a>
+            </div>
+        </div>
         <div class="ibox-content">
             <div class="row padded-row">
                 <div class="col-md-6">
@@ -137,4 +149,4 @@
             </div>
         </div>
     </div>
-</div>
+{% endif %}

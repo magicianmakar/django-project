@@ -1,50 +1,46 @@
-<div class="row training-banner hide">
-  <div class="col-md-6 container">
-    <div class="ibox">
-      <div class="ibox-content product-box">
-        <div class="product-desc">
-          <div class="row">
-            <div class="col-md-6">
-              <p class="text-muted">TRAINING</p>
-            </div>
-            <div class="col-md-6 text-right">
-              <i
-                 data-banner-slug="{{ banner_slug }}"
-                 class="dismiss fa-lg fa dropified-green fa-times">
-              </i>
-            </div>
-          </div>
+{% if not user.get_config.closable_training_banner %}
 
-          <div class="row">
-            <div class="col-md-4">
-              <div class="m-t-sm">
-                <img class="img-responsive" src="https://challengedev.wpengine.com/wp-content/uploads/2019/04/dropified-academy-logo-new-2.png" />
-              </div>
+<div id="training-banner-container" class="row training-banner">
+    <div class="col-md-6 container">
+        <div class="ibox">
+            <div class="ibox-content product-box">
+                <div class="product-desc">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="text-muted">TRAINING</p>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <i data-banner-slug="{{ banner_slug }}"
+                                class="fa-lg fa dropified-green fa-times"
+                                data-closable-id="training-banner"
+                                data-closable-target="#training-banner-container"></i>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="m-t-sm">
+                                <img class="img-responsive" src="https://challengedev.wpengine.com/wp-content/uploads/2019/04/dropified-academy-logo-new-2.png" />
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <a href="{{ banner_url }}" target="_blank" class="product-name">{{ banner_title }}</a>
+                            <div class="m-t-xs step-description">{{ banner_description }}</div>
+                            <div class="m-t text-right">
+                                <a href="{{ banner_url }}" target="_blank" class="btn btn-default btn-outline btn-rounded dropified-green m-r-sm">
+                                    <span class="step-label">{{ banner_url_text|default:"VIEW LESSON" }}</span>
+                                </a>
+                                {% if banner_url_2 %}
+                                <a href="{{ banner_url_2 }}" target="_blank" class="btn btn-default btn-outline btn-rounded dropified-green m-r-sm">
+                                    <span class="step-label">{{ banner_url_2_text|default:"VIEW LESSON" }}</span>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="col-md-8">
-              <a href="{{ banner_url }}"
-                 target="_blank"
-                 class="product-name">{{ banner_title }}</a>
-              <div class="m-t-xs step-description">{{ banner_description }}</div>
-
-              <div class="m-t text-right">
-                <a href="{{ banner_url }}"
-                   target="_blank"
-                   class="btn btn-default btn-outline btn-rounded dropified-green m-r-sm">
-                  <span class="step-label">{{ banner_url_text|default:"VIEW LESSON" }}</span>
-                </a>
-                {% if banner_url_2 %}
-                <a href="{{ banner_url_2 }}"
-                   target="_blank"
-                   class="btn btn-default btn-outline btn-rounded dropified-green m-r-sm">
-                  <span class="step-label">{{ banner_url_2_text|default:"VIEW LESSON" }}</span>
-                </a>
-                {% endif %}
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
+
+{% endif %}

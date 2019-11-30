@@ -897,6 +897,26 @@ $(function() {
     $('a[data-auto-hash]').click(function (e) {
         window.location.hash = $(this).data('auto-hash');
     });
+
+    $('[data-closable-id]').click(function (e) {
+        e.preventDefault();
+
+        var btn = $(e.currentTarget);
+
+        $.ajax({
+            url: api_url('closable-view'),
+            type: 'POST',
+            data: {
+                id: btn.data('closable-id'),
+                hide: true,
+            },
+        }).done(function (data) {
+        }).fail(function(data) {
+            displayAjaxError('Closable View', data);
+        }).always(function() {
+            $(btn.data('closable-target')).remove();
+        });
+    });
 });
 
 $('a[data-auto-click]').each(function (i, el) {
@@ -1092,28 +1112,7 @@ $('.scrolling-tabs').scrollingTabs({
     cssClassRightArrow: 'fa fa-chevron-right',
 });
 
-function getBannerKey(slug) {
-    return 'banner_' + slug;
-}
-
-$('.training-banner .dismiss').click(function () {
-    $(this).parents('.training-banner').hide();
-    var slug = $(this).data('banner-slug');
-    localStorage[getBannerKey(slug)] = true;
-});
-
-function showBanners() {
-    $('.training-banner').each(function (i, obj) {
-        var slug = $(obj).find('i').data('banner-slug');
-        if (!localStorage[getBannerKey(slug)]) {
-            $(obj).removeClass('hide');
-        }
-    });
-}
-
 $(function() {
-    showBanners();
-
     setTimeout(function() {
         var version = $('.extension-version').data('extension-version');
         if (version && window.extensionSendMessage) {

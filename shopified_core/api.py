@@ -7,6 +7,7 @@ from django.core.cache import cache
 from django.core.validators import validate_email, ValidationError
 from django.http import JsonResponse
 from django.views.generic import View
+from django.template.defaultfilters import slugify
 
 import arrow
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -362,4 +363,13 @@ class ShopifiedApi(ApiResponseMixin, View):
             'mch': r"^https://.+\.aliexpress\.com/item/",
             'ematch': r"(aff_platform=|alitems\.com)",
             'status': 'ok'
+        })
+
+    def post_closable_view(self, request, user, data):
+        view_id = f"closable_{slugify(data.get('id')).replace('-', '_')}"
+
+        user.set_config(view_id, arrow.now().timestamp)
+
+        return self.api_success({
+            'view_id': view_id
         })
