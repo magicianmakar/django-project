@@ -110,7 +110,7 @@
 {% if user|show_closeable_view:'training-videos' %}
     <div id="ibox-training-section-videos" class="ibox training-section">
         <div class="ibox-title">
-            <h5 class="product-title"></h5>
+            <h5 class="product-title">Start Automating Your Life Back</h5>
             <div class="ibox-tools">
                 <a data-dismissible-id="training-videos" data-dismissible-target="#ibox-training-section-videos">
                     <i class="fa fa-times"></i>
@@ -118,35 +118,34 @@
             </div>
         </div>
         <div class="ibox-content">
-            <div class="row padded-row">
+            <div class="row">
                 <div class="col-md-6">
-                    <h3>
-                        <strong>
-                            Start Automating Your Life Back
-                        </strong>
-                    </h3>
-                    <p>
+                    <h4>
                         Dropified saves time, makes running your business simple and gives you your life back.
-                    </p>
+                    </h4>
                 </div>
                 <div class="col-md-6 text-right">
                     <a href="https://academy.dropified.com/training/" target="_blank" id="view-all-training" class="btn btn-primary btn-rounded">View All Training</a>
                 </div>
             </div>
             <br>
-            <div id="training-videos" class="row">
+            <div class="row training-videos">
                 {% for video in videos %}
                 <div class="col-md-6 training-video">
-                    <div class="thumbnail">
-                        <div class="embed-responsive embed-responsive-16by9">
-                            <iframe class="embed-responsive-item" src="{{ video.url }}" allow="fullscreen" allowfullscreen></iframe>
-                        </div>
-                        <h3>
-                            <strong>{{ video.title }}</strong><br>
-                        </h3>
-                        <p>{{ video.description }}</p>
+                    <div class="embed-responsive embed-responsive-16by9" style="background-color:#93c47d">
+                        <iframe class="embed-responsive-item" src="{{ video.url }}" allow="fullscreen" allowfullscreen></iframe>
                     </div>
+                    <h3 class="text-center">
+                        <strong>{{ video.title }}</strong><br>
+                    </h3>
+                    <p class="text-center">{{ video.description }}</p>
                 </div>
+
+                {% if forloop.counter|divisibleby:"2" %}
+                </div>
+                <div class="row training-videos m-t-xl">
+                {% endif %}
+
                 {% endfor %}
             </div>
         </div>
