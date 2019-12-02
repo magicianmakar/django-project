@@ -178,14 +178,14 @@ class UserProfile(models.Model):
         if self.config:
             config = json.loads(self.config)
 
-            if 'extra_images' in config or 'import' in config:
-                # make sure product data is not saved to profile config
-                raise Exception('Profile contain an error')
-
+            have_issue = []
             for k in config.keys():
-                if re.match(r'^[0-9]+$', k):
-                    # make sure product mapping is not saved to profile config
-                    raise Exception('Profile contain an error')
+                if re.match(r'^[0-9_]+$', k) or k in ['extra_images', 'import']:
+                    # make sure product mapping/config is not saved to profile config
+                    have_issue.append(k)
+
+            if have_issue:
+                print(f'Profile containx an error {self.user.email} keys: {",".join(have_issue)}')
 
             sync_delay_notify = safe_int(config.get('sync_delay_notify_days'))
             if not config.get('sync_delay_notify'):
