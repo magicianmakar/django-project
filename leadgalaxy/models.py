@@ -178,6 +178,15 @@ class UserProfile(models.Model):
         if self.config:
             config = json.loads(self.config)
 
+            if 'extra_images' in config or 'import' in config:
+                # make sure product data is not saved to profile config
+                raise Exception('Profile contain an error')
+
+            for k in config.keys():
+                if re.match(r'^[0-9]+$', k):
+                    # make sure product mapping is not saved to profile config
+                    raise Exception('Profile contain an error')
+
             sync_delay_notify = safe_int(config.get('sync_delay_notify_days'))
             if not config.get('sync_delay_notify'):
                 sync_delay_notify = 0
@@ -185,7 +194,9 @@ class UserProfile(models.Model):
             if self.sync_delay_notify != sync_delay_notify:
                 self.sync_delay_notify = sync_delay_notify
 
-        super(UserProfile, self).save(*args, **kwargs)
+            self.config = json.dumps(config, indent=2)
+
+        super().save(*args, **kwargs)
 
     def get_plan(self):
         try:
