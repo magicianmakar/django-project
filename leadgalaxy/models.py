@@ -1508,21 +1508,6 @@ class ShopifyProduct(ProductBase):
 
         return mapping
 
-    def get_bundle_mapping(self, variant=None, default=[]):
-        bundle_map = safe_json(self.bundle_map)
-
-        if variant:
-            return bundle_map.get(str(variant), default)
-        else:
-            return bundle_map
-
-    #
-    def set_bundle_mapping(self, mapping):
-        bundle_map = self.get_bundle_mapping()
-        bundle_map.update(mapping)
-
-        self.bundle_map = json.dumps(bundle_map)
-
     def update_data(self, data):
         if type(data) is not dict:
             data = json.loads(data)

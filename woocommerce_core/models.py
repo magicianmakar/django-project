@@ -395,20 +395,6 @@ class WooProduct(ProductBase):
         if commit:
             self.save()
 
-    def get_bundle_mapping(self, variant=None, default=[]):
-        bundle_map = safe_json(self.bundle_map)
-
-        if variant or variant == 0:
-            return bundle_map.get(str(variant), default)
-        else:
-            return bundle_map
-
-    def set_bundle_mapping(self, mapping):
-        bundle_map = self.get_bundle_mapping()
-        bundle_map.update(mapping)
-
-        self.bundle_map = json.dumps(bundle_map)
-
     def get_supplier_for_variant(self, variant_id):
         """
             Return the mapped Supplier for the given variant_id

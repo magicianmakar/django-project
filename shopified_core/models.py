@@ -38,6 +38,20 @@ class ProductBase(models.Model):
     class Meta:
         abstract = True
 
+    def get_bundle_mapping(self, variant=None, default=[]):
+        bundle_map = safe_json(self.bundle_map)
+
+        if variant is None:
+            return bundle_map
+        else:
+            return bundle_map.get(str(variant), default)
+
+    def set_bundle_mapping(self, mapping):
+        bundle_map = self.get_bundle_mapping()
+        bundle_map.update(mapping)
+
+        self.bundle_map = json.dumps(bundle_map)
+
 
 class BoardBase(models.Model):
     class Meta:
