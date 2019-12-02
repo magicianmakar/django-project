@@ -1023,28 +1023,6 @@ $('.tos-update .close-btn').click(function (e) {
     });
 });
 
-$('#switch-menu-layout').click(function (e) {
-    e.preventDefault();
-    var value = '';
-    if ($(this).attr('data-active')) {
-        value = Math.floor(Date.now() / 1000);
-    }
-    $.ajax({
-        url: '/api/toggle-menu-layout',
-        type: 'POST',
-        data: {
-            'value': value
-        },
-        success: function (data) {
-            $('.new-menu').remove();
-            window.location.reload();
-        },
-        error: function (data) {
-            displayAjaxError('Error', data);
-        }
-    });
-});
-
 $('.dropified-challenge .close-btn').click(function (e) {
     $.ajax({
         url: '/api/user-config',
