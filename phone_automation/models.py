@@ -20,7 +20,6 @@ from .utils import (
 )
 from leadgalaxy.utils import aws_s3_get_key
 from stripe_subscription.models import CustomStripeSubscription
-from shopified_core.utils import safe_json
 
 PHONE_NUMBER_STATUSES = (
     ('active', 'Incoming calls allowed'),
@@ -79,7 +78,10 @@ class TwilioStep(models.Model):
         ordering = ('pk',)
 
     def get_config(self):
-        return safe_json(self.config)
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
 
     def serializable_object(self):
         step = model_to_dict(self)
@@ -137,7 +139,10 @@ class TwilioCompany(models.Model):
     config = models.TextField(default='{}')
 
     def get_config(self):
-        return safe_json(self.config)
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
 
     def get_profile_users(self):
         profile_user = {"email": self.user.email, "name": self.user.get_full_name()}
@@ -323,7 +328,10 @@ class TwilioAlert(models.Model):
     alert_type = models.CharField(max_length=50, default='', choices=ALERT_TYPES)
 
     def get_config(self):
-        return safe_json(self.config)
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
 
     def get_config_users(self):
         config_users = []
@@ -351,7 +359,10 @@ class TwilioSummary(models.Model):
     include_calllogs = models.BooleanField(default=False)
 
     def get_config(self):
-        return safe_json(self.config)
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
 
     def get_config_users(self):
         config_users = []

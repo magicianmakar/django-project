@@ -23,7 +23,6 @@ from shopified_core.utils import (
     dict_val,
     safe_int,
     safe_float,
-    safe_json,
     order_data_cache,
     order_phone_number,
     orders_update_limit,
@@ -667,7 +666,10 @@ class ApiBase(ApiResponseMixin, View):
         else:
             return self.api_error('Product not found', status=404)
 
-        config = safe_json(product.config)
+        try:
+            config = json.loads(product.config)
+        except:
+            config = {}
 
         for key in data:
             if key == 'product':

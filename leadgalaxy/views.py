@@ -66,7 +66,6 @@ from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     safe_int,
     safe_float,
-    safe_json,
     app_link,
     url_join,
     hash_text,
@@ -1627,7 +1626,10 @@ def product_view(request, pid):
         product.store = product.user.profile.get_shopify_stores().first()
         product.save()
 
-    alert_config = safe_json(product.config)
+    try:
+        alert_config = json.loads(product.config)
+    except:
+        alert_config = {}
 
     try:
         board = ShopifyBoard.objects.filter(products=product)

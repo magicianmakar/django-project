@@ -6,7 +6,6 @@ from django.conf import settings
 
 from leadgalaxy.models import ShopifyStore
 from leadgalaxy.utils import aws_s3_get_key
-from shopified_core.utils import safe_json
 
 STATUS_CHOICES = (
     (0, 'Pending'),
@@ -59,7 +58,10 @@ class FeedStatusAbstract(models.Model):
         return data.get('google_settings') or {}
 
     def set_google_settings(self, google_settings):
-        data = safe_json(self.feed_options)
+        try:
+            data = json.loads(self.feed_options)
+        except:
+            data = {}
 
         data['google_settings'] = google_settings
 

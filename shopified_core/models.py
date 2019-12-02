@@ -6,7 +6,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, safe_json, prefix_from_model, base64_encode
+from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, prefix_from_model, base64_encode
 
 
 class StoreBase(models.Model):
@@ -39,7 +39,10 @@ class ProductBase(models.Model):
         abstract = True
 
     def get_bundle_mapping(self, variant=None, default=[]):
-        bundle_map = safe_json(self.bundle_map)
+        try:
+            bundle_map = json.loads(self.bundle_map)
+        except:
+            bundle_map = {}
 
         if variant is None:
             return bundle_map
@@ -256,7 +259,10 @@ class OrderTrackBase(models.Model):
                 return custom_tracking.replace('{{tracking_number}}', self.source_tracking)
 
     def add_error(self, error, commit=False):
-        data = safe_json(self.data)
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
 
         if 'errors' not in data:
             data['errors'] = []
@@ -287,7 +293,10 @@ class OrderTrackBase(models.Model):
         return errors
 
     def clear_errors(self, commit=False):
-        data = safe_json(self.data)
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
 
         if 'errors' in data:
             del data['errors']
@@ -298,7 +307,10 @@ class OrderTrackBase(models.Model):
                 self.commit()
 
     def get_errors_details(self):
-        data = safe_json(self.data)
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
 
         return list(set(data.get('errors', [])))
 

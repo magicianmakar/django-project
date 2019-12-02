@@ -36,7 +36,6 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     safe_int,
     safe_float,
-    safe_json,
     app_link,
     hash_list,
     get_domain,
@@ -1189,7 +1188,10 @@ class ShopifyStoreApi(ApiBase):
 
         profile = user.models_user.profile
 
-        config = safe_json(profile.config)
+        try:
+            config = json.loads(profile.config)
+        except:
+            config = {}
 
         if data.get('single'):
             config[data.get('name')] = data.get('value')
@@ -1381,7 +1383,10 @@ class ShopifyStoreApi(ApiBase):
         else:
             return self.api_error('Product not found', status=404)
 
-        config = safe_json(product.config)
+        try:
+            config = json.loads(product.config)
+        except:
+            config = {}
 
         return JsonResponse(config)
 

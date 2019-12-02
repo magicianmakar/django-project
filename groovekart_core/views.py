@@ -32,7 +32,6 @@ from shopified_core.utils import (
     aws_s3_context,
     safe_int,
     safe_float,
-    safe_json,
     clean_query_id,
     url_join,
     http_excption_status_code,
@@ -279,7 +278,10 @@ class ProductDetailView(DetailView):
             pass
         context['last_check'] = last_check
 
-        context['alert_config'] = safe_json(self.object.config)
+        try:
+            context['alert_config'] = json.loads(self.object.config)
+        except:
+            context['alert_config'] = {}
 
         context['token'] = jwt.encode({
             'id': self.request.user.id,

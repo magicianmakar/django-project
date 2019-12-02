@@ -19,7 +19,6 @@ from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
 from shopified_core.utils import (
     safe_int,
-    safe_json,
     get_domain,
     using_store_db,
 )
@@ -435,7 +434,10 @@ class UserProfile(models.Model):
         return self.user.is_superuser
 
     def get_config(self):
-        return safe_json(self.config)
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
 
     def get_config_value(self, name=None, default=None):
         if name is None:
@@ -1111,11 +1113,17 @@ class ShopifyProduct(ProductBase):
         super(ShopifyProduct, self).save(*args, **kwargs)
 
     def get_config(self):
-        return safe_json(self.config)
+        try:
+            return json.loads(self.config)
+        except:
+            return {}
 
     @property
     def parsed(self):
-        return safe_json(self.data)
+        try:
+            return json.loads(self.data)
+        except:
+            return {}
 
     @property
     def source_id(self):
@@ -1246,7 +1254,10 @@ class ShopifyProduct(ProductBase):
             supplier = self.default_supplier
 
         if update:
-            current = safe_json(supplier.variants_map)
+            try:
+                current = json.loads(supplier.variants_map)
+            except:
+                current = {}
 
             for k, v in list(mapping.items()):
                 current[k] = v
@@ -1390,7 +1401,10 @@ class ShopifyProduct(ProductBase):
         return self.productsupplier_set.all().order_by('-is_default')
 
     def get_mapping_config(self):
-        return safe_json(self.mapping_config)
+        try:
+            return json.loads(self.mapping_config)
+        except:
+            return {}
 
     def set_mapping_config(self, config):
         if type(config) is not str:
@@ -1470,7 +1484,10 @@ class ShopifyProduct(ProductBase):
 
     def set_shipping_mapping(self, mapping, update=True, commit=True):
         if update:
-            current = safe_json(self.shipping_map)
+            try:
+                current = json.loads(self.shipping_map)
+            except:
+                current = {}
 
             for k, v in list(mapping.items()):
                 current[k] = v
@@ -1515,14 +1532,20 @@ class ShopifyProduct(ProductBase):
         if data.get('weight_unit') == 'lbs':
             data['weight_unit'] = 'lb'
 
-        product_data = safe_json(self.data)
+        try:
+            product_data = json.loads(self.data)
+        except:
+            product_data = {}
 
         product_data.update(data)
 
         self.data = json.dumps(product_data)
 
     def get_data(self):
-        product_data = safe_json(self.data)
+        try:
+            product_data = json.loads(self.data)
+        except:
+            product_data = {}
         return product_data
 
     def get_inventory_item_by_variant(self, variant_id, variant=None, ensure_tracking=True):
@@ -2019,7 +2042,10 @@ class PlanRegistration(models.Model):
         super(PlanRegistration, self).save(*args, **kwargs)
 
     def get_data(self):
-        return safe_json(self.data)
+        try:
+            return json.loads(self.data)
+        except:
+            return {}
 
     def get_email(self):
         email = self.email
