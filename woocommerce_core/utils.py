@@ -900,6 +900,21 @@ def update_order_status(store, order_id, status, tries=3):
             break
 
 
+def send_review_to_woocommerce_store(store, product_id, review):
+    date_created = arrow.get(review['dateCreated'], "DD MMM YYYY HH:mm").isoformat()
+    data = {
+        "product_id": product_id,
+        "review": review['body'],
+        "reviewer": review['author'],
+        "reviewer_email": '',
+        "rating": review['stars'],
+        'date_created': date_created}
+
+    r = store.wcapi.post('products/reviews', data)
+    if r.ok:
+        return r.json()
+
+
 class WooListQuery(object):
     def __init__(self, store, endpoint, params=None):
         self._store = store

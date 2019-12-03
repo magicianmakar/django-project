@@ -32,6 +32,12 @@
                     {% endif %}
                     ><i class="fa fa-cogs"></i> Connections</a></li>
                 {% endif %}
+                {% if product.is_connected %}
+                <li><a
+                    data-auto-click="#reviews"
+                    data-toggle="tab" href="#tab-6"
+                    ><i class="fa fa-file-o"></i> Reviews</a></li>
+                {% endif %}
                 {% if request.user|can:'price_changes.use' %}
                 <li>
                     <a data-toggle="tab" href="#tab-7"
@@ -71,7 +77,8 @@
                 <div class=" row">
                     <div class="form-group col-xs-12">
                         <label for="product-title">Title</label>
-                        <textarea class="form-control" id="product-title" placeholder="Product Title"></textarea>
+                        <textarea class="form-control" id="product-title" placeholder="Product Title" data-handle="{{product.parsed.title}}">
+                        </textarea>
                     </div>
                 </div>
                 {% if not woocommerce_product or woocommerce_product.product_type == 'simple' %}
@@ -414,6 +421,102 @@
                         </div>
                     {% endif %}
                 </div>
+            </div>
+        </div>
+
+        <div id="tab-6" class="tab-pane">
+            <div class="panel-body" style="min-height:300px">
+                <div class="alert alert-info alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    Import reviews from AliExpress, then download or send to store.
+                </div>
+                <form id="review-form" method="get">
+                    <input type="hidden" id="reviews_product" value={{product.id}} />
+                    <input type="hidden" id="reviews_product_source_id" value={{product.source_id}} />
+                    <input type="hidden" id="reviews_product_url" value={{product.parsed.original_url}} />
+                    <div class="row">
+                        <div class="form-group col-xs-6">
+                            <select id="reviews_star" class="form-control">
+                                <option value="all">All Stars</option>
+                                <option value="5">5 Stars</option>
+                                <option value="4">4 Stars</option>
+                                <option value="3">3 Stars</option>
+                                <option value="2">2 Stars</option>
+                                <option value="1">1 Star</option>
+                                <option value="positive">All Positive</option>
+                                <option value="critical">All Negative</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-xs-6">
+                            <select id="reviews_sort" class="form-control">
+                                <option value="default">Sort by default</option>
+                                <option value="latest">Sort by latest</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group">
+                            <div class="form-control" style="border:none;box-shadow:0 0;background-color:inherit;">
+                                <input type="checkbox" id="reviews_with_images" />
+                                <label for="reviews_with_images">With pictures</label>
+                            </div>
+
+                            <div class="form-control" style="border:none;box-shadow:0 0;background-color:inherit;">
+                                <input type="checkbox" id="reviews_personal_info" />
+                                <label for="reviews_personal_info">With personal information</label>
+                            </div>
+
+                            <div class="form-control" style="border:none;box-shadow:0 0;background-color:inherit;">
+                                <input type="checkbox" id="reviews_my_country" />
+                                <label for="reviews_my_country">Reviews from my country</label>
+                            </div>
+
+                            <div class="form-control" style="border:none;box-shadow:0 0;background-color:inherit;">
+                                <input type="checkbox" id="only_text_reviews" />
+                                <label for="only_text_reviews">Keep text only (reviews body without html tags and images)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-xs-12">
+                            <label for="reviews_pages">Pages:</label>
+                            <input type="number" id="reviews_pages" class="text-center" value="1" min="1" />
+                        </div>
+                    </div>
+
+                    <button id="import-reviews-btn" type="submit" class="btn btn-success">
+                        <i class="fa fa-plus"></i>
+                        Import
+                    </button>
+                    <div class="btn-group dropup">
+                        <button id="download-reviews" class="btn btn-success dropdown-toggle disabled" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class='fa fa-download'></i>
+                            Download
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li class="dropdown-header">
+                                Choose format
+                            </li>
+                            <li role="separator" class="divider">
+                            </li>
+                            <li>
+                                <a href="" id="download-normal-reviews">Normal</a>
+                            </li>
+                            <li>
+                                <a href="" id="download-reviews-for-woocommerce">WooCommerce</a>
+                            </li>
+                        </ul>
+                    </div>
+                    <button id="send-reviews-to-store" type="button" class="btn btn-danger disabled" data-loading-text="<i class='fa fa-arrow-circle-right'></i> Sending reviews to store..." data-store-id="{{product.store.id}}" data-product-id="{{product.source_id}}" data-reviews-sent-text="<i class='fa fa-arrow-circle-right'></i> Sent reviews to store">
+                        <i class="fa fa-arrow-circle-right"></i>
+                        Send reviews to store
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -896,6 +999,7 @@ $(function() {
     <script type="text/javascript" src="{% static 'woocommerce/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'woocommerce/js/woocommerce_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'woocommerce/js/product_detail.js' %}"></script>
+    <script type="text/javascript" src="{% static 'woocommerce/js/reviews.js' %}"></script>
     {% endcompress %}
 
     {% if request.user|can:'image_uploader.use' %}
