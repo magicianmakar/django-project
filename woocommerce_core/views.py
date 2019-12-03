@@ -30,8 +30,10 @@ from shopified_core.utils import (
     app_link,
     aws_s3_context,
     safe_int,
+    url_join,
     clean_query_id,
     safe_float,
+    safe_json,
     http_excption_status_code,
     order_data_cache,
 )
@@ -143,32 +145,35 @@ def product_alerts(request):
         change['original_link'] = i.product.get_original_info().get('url')
         p = product_variants.get(str(i.product.source_id), {})
         p['variants'] = i.product.retrieve_variants()
-        variants = p.get('variants', None)
+        variants = p.get('variants', [])
         for c in change['changes']['variants']['quantity']:
-            if variants is not None and len(variants) > 0:
-                index = variant_index_from_supplier_sku(i.product, c['sku'], variants)
-                if index is not None:
-                    if variants[index]['manage_stock']:
-                        c['woo_value'] = variants[index]['stock_quantity']
-                    else:
-                        c['woo_value'] = "Unmanaged"
+            variant_id = 0
+            index = variant_index_from_supplier_sku(i.product, c['sku'], variants)
+            if index is not None:
+                variant_id = variants[index]['id']
+            if variant_id > 0:
+                if variants[index]['manage_stock']:
+                    c['woo_value'] = variants[index]['stock_quantity']
                 else:
-                    c['woo_value'] = "Not Found"
-            elif len(variants) == 0:
-                if p['manage_stock']:
+                    c['woo_value'] = "Unmanaged"
+            elif len(variants) == 0 or variant_id < 0:
+                if p.get('manage_stock'):
                     c['woo_value'] = p['stock_quantity']
                 else:
                     c['woo_value'] = "Unmanaged"
             else:
                 c['woo_value'] = "Not Found"
         for c in change['changes']['variants']['price']:
-            if variants is not None and len(variants) > 0:
-                index = variant_index_from_supplier_sku(i.product, c['sku'], variants)
-                if index is not None and variants[index].get('price') is not None:
+            variant_id = 0
+            index = variant_index_from_supplier_sku(i.product, c['sku'], variants)
+            if index is not None:
+                variant_id = variants[index]['id']
+            if variant_id > 0:
+                if variants[index].get('price') is not None:
                     c['woo_value'] = variants[index]['price']
                 else:
                     c['woo_value_label'] = "Not Found"
-            elif len(variants) == 0:
+            elif len(variants) == 0 or variant_id < 0:
                 c['woo_value'] = p['price']
             else:
                 c['woo_value_label'] = "Not Found"
@@ -376,6 +381,27 @@ class ProductDetailView(DetailView):
             context['breadcrumbs'].insert(1, {'title': store_title, 'url': store_products})
 
         context.update(aws_s3_context())
+
+        last_check = None
+        try:
+            if self.object.monitor_id > 0:
+                cache_key = 'woocommerce_product_last_check_{}'.format(self.object.id)
+                last_check = cache.get(cache_key)
+
+                if last_check is None:
+                    response = requests.get(
+                        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/', self.object.monitor_id),
+                        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD),
+                        timeout=10,
+                    )
+
+                    last_check = arrow.get(response.json()['updated_at'])
+                    cache.set(cache_key, last_check, timeout=3600)
+        except:
+            pass
+        context['last_check'] = last_check
+
+        context['alert_config'] = safe_json(self.object.config)
 
         context['token'] = jwt.encode({
             'id': self.request.user.id,

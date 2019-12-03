@@ -4704,9 +4704,10 @@ def product_alerts(request):
                         inventory_item_ids.append(inventory_item_id)
 
     variant_quantities = {}
-    inventories = utils.get_shopify_inventories(store, inventory_item_ids)
-    for inventory in inventories:
-        variant_quantities[str(inventory['inventory_item_id'])] = inventory['available']
+    if len(inventory_item_ids) > 0:
+        inventories = utils.get_shopify_inventories(store, inventory_item_ids)
+        for inventory in inventories:
+            variant_quantities[str(inventory['inventory_item_id'])] = inventory['available']
 
     product_changes = []
     for i in changes:

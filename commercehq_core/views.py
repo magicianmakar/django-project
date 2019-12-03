@@ -154,7 +154,8 @@ def product_alerts(request):
         if len(products):
             products = utils.get_chq_products(store=store, product_ids=products, expand='variants')
             for p in products:
-                product_variants[str(p['id'])] = p
+                if p.get('id') is not None:
+                    product_variants[str(p['id'])] = p
     except:
         raven_client.captureException()
 
