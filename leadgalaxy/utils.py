@@ -446,7 +446,7 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
 
     if product_price is None:
         prices_response = requests.get(
-            url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/price/', aliexpress_id),
+            url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/aliexpress/products/price/', aliexpress_id),
             auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD),
             timeout=10)
 

@@ -539,11 +539,10 @@ def sync_shopify_product_quantities(self, product_id):
         product = ShopifyProduct.objects.get(pk=product_id)
         product_data = utils.get_shopify_product(product.store, product.shopify_id)
 
-        if not product.default_supplier or not product.default_supplier.is_aliexpress:
+        if not product.default_supplier:
             return
 
         variant_quantities = get_supplier_variants(product.default_supplier.supplier_type(), product.default_supplier.get_source_id())
-
         if product_data and variant_quantities:
             for variant in variant_quantities:
                 sku = variant.get('sku')

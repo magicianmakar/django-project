@@ -10,10 +10,10 @@ from shopified_core.utils import app_link, url_join, safe_float, safe_int
 
 
 def get_supplier_variants(supplier_type, product_id):
-    if supplier_type != 'aliexpress':
+    if supplier_type != 'aliexpress' and supplier_type != 'ebay':
         return []
     rep = requests.get(
-        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products', product_id, '/variants'),
+        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api', supplier_type, '/products', product_id, '/variants'),
         auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
     )
 

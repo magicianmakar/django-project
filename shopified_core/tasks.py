@@ -77,7 +77,10 @@ def keen_order_event(self, event_name, event_data):
                 product_price = cache.get(cache_key)
 
                 if product_price is None:
-                    url = url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products/price/', event_data.get('product'))
+                    supplier_type = 'aliexpress'
+                    if event_data.get('supplier_type'):
+                        supplier_type = event_data.get('supplier_type')
+                    url = url_join(settings.PRICE_MONITOR_HOSTNAME, '/api', supplier_type, '/products/price/', event_data.get('product'))
                     prices_response = requests.get(
                         url=url,
                         auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD),
