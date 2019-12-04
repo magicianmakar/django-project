@@ -34,6 +34,7 @@ from shopified_core.utils import (
     safe_float,
     aws_s3_context,
     url_join,
+    http_exception_response,
     clean_query_id,
     http_excption_status_code,
     order_data_cache,
@@ -1015,8 +1016,8 @@ class OrdersList(ListView):
 
                     r = store.request.post(url=fulfilments_url, json={'items': tracked_unfulfilled})
                     r.raise_for_status()
-                except:
-                    raven_client.captureException(level='warning')
+                except Exception as e:
+                    raven_client.captureException(level='warning', extra=http_exception_response(e))
 
             order['mixed_supplier_types'] = len(order['supplier_types']) > 1
 
