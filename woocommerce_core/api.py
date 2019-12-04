@@ -801,11 +801,6 @@ class WooStoreApi(ApiBase):
         product_id = data['product']
         reviews = json.loads(data['reviews'])
 
-        if not store.api_version == 'wc/v3':
-            return self.api_error("Sorry, sending reviews to WooCommerce stores only works with "
-                                  "WooCommerce version 3.5 (or later) and WordPress version 4.4 "
-                                  "(or later).")
-
         for review in reviews:
             utils.send_review_to_woocommerce_store(store, product_id, review)
 

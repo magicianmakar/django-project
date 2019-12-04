@@ -52,8 +52,8 @@ class WooStore(StoreBase):
     def __str__(self):
         return self.title
 
-    def get_wcapi(self, timeout=30):
-        version = self.api_version
+    def get_wcapi(self, timeout=30, version=None):
+        version = self.api_version if version is None else version
         api_string_auth = self.api_string_auth
         api_timeout = max(self.api_timeout, timeout)
 

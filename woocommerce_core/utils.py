@@ -910,7 +910,7 @@ def send_review_to_woocommerce_store(store, product_id, review):
         "rating": review['stars'],
         'date_created': date_created}
 
-    r = store.wcapi.post('products/reviews', data)
+    r = store.get_wcapi(version='wc/v3').post('products/reviews', data)
     if r.ok:
         return r.json()
 
