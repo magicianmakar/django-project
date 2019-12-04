@@ -216,7 +216,7 @@ def match_sku_with_mapping_sku(sku, mapping):
                                  for option in parse_supplier_sku(sku, sort=True, remove_shipping=remove_shipping)))
 
     # Remove "sku-n-" from old Aliexpress mapping and join them to look like Aliexpress SKU
-    mapping_skus = ';'.join(sorted([i['sku'].split('-').pop() for i in mapping if i.get('sku')]))
+    mapping_skus = ';'.join(sorted([i['sku'].split('-').pop() for i in mapping if isinstance(i, dict) and i.get('sku')]))
 
     return clean_ali_sku == mapping_skus or \
         clean_ali_sku_ids == mapping_skus
@@ -367,5 +367,8 @@ def calculate_price(user, old_value, new_value, current_price, current_compare_a
     if new_compare_at is not None and auto_compare_at_cents is not None and auto_compare_at_cents >= 0:
         new_compare_at = safe_float(str(int(new_compare_at)) + '.' + ('0' if auto_compare_at_cents <= 9 else '') + str(auto_compare_at_cents))
         new_compare_at = round(new_compare_at, 2)
+
+    if new_price is None and new_compare_at is None:
+        return [current_price, current_compare_at]
 
     return [new_price, new_compare_at]

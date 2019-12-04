@@ -7,6 +7,7 @@ from shopified_core.utils import app_link, safe_float, http_exception_response
 from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import variant_index_from_supplier_sku, calculate_price
+from shopified_core.utils import http_excption_status_code
 
 
 class ProductChangeManager():
@@ -95,10 +96,11 @@ class ProductChangeManager():
 
             return product_data
 
-        except:
+        except Exception as e:
             self.product_change.status = 2  # Failed
             self.product_change.save()
-            raven_client.captureException()
+            if http_excption_status_code(e) not in [400, 401, 402, 403, 404, 429]:
+                raven_client.captureException()
 
         return None
 
@@ -493,7 +495,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
             url='{}/{}'.format(store.get_api_url('products'), self.product.source_id),
             json={
                 'is_draft': api_product_data['is_draft'],
-                'variants': api_product_data['variants'],
+                'variants': api_product_data.get('variants'),
             }
         )
 
@@ -765,14 +767,10 @@ class WooProductChangeManager(ProductChangeManager):
                 if self.config['price_update_for_increase']:
                     if new_price > current_price:
                         self.product_data_changed = True
-                        product_data['variants'][idx]['sale_price'] = new_price if new_compare_at_price else None
-                        product_data['variants'][idx]['regular_price'] = new_compare_at_price if new_compare_at_price else new_price
                         api_product_data['variants'][idx]['sale_price'] = str(new_price) if new_compare_at_price else None
                         api_product_data['variants'][idx]['regular_price'] = str(new_compare_at_price) if new_compare_at_price else str(new_price)
                 else:
                     self.product_data_changed = True
-                    product_data['variants'][idx]['sale_price'] = new_price if new_compare_at_price else None
-                    product_data['variants'][idx]['regular_price'] = new_compare_at_price if new_compare_at_price else new_price
                     api_product_data['variants'][idx]['sale_price'] = str(new_price) if new_compare_at_price else None
                     api_product_data['variants'][idx]['regular_price'] = str(new_compare_at_price) if new_compare_at_price else str(new_price)
             elif len(api_product_data.get('variants', [])) == 0 or variant_id < 0:
@@ -813,7 +811,6 @@ class WooProductChangeManager(ProductChangeManager):
                 variant_id = api_product_data['variants'][idx]['id']
             if variant_id > 0:
                 self.product_data_changed = True
-                product_data['variants'][idx]['stock_quantity'] = variant_change.get('new_value')
                 api_product_data['variants'][idx]['stock_quantity'] = variant_change.get('new_value')
             elif len(api_product_data.get('variants', [])) == 0 or variant_id < 0:
                 api_product_data['stock_quantity'] = variant_change.get('new_value')
@@ -832,12 +829,10 @@ class WooProductChangeManager(ProductChangeManager):
             if variant_id > 0:
                 self.product_data_changed = True
                 self.removed_variants.append(api_product_data['variants'][idx]['id'])
-                del product_data['variants'][idx]
                 del api_product_data['variants'][idx]
         elif self.config['variant_disappears'] == 'zero_quantity':
             if variant_id > 0:
                 self.product_data_changed = True
-                product_data['variants'][idx]['stock_quantity'] = 0
                 api_product_data['variants'][idx]['stock_quantity'] = 0
 
     def update_product(self, api_product_data, product_data):
