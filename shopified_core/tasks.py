@@ -103,6 +103,7 @@ def keen_order_event(self, event_name, event_data):
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=30)
 def keen_send_event(self, event_name, event_data):
     try:
-        keen.add_event(event_name, event_data)
+        if not settings.DEBUG and settings.KEEN_PROJECT_ID:
+            keen.add_event(event_name, event_data)
     except:
         raven_client.captureException(level='warning')
