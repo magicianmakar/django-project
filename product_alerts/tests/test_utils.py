@@ -226,6 +226,12 @@ class MappingUtilsTestCase(BaseTestCase):
 
         self.assertTrue(match_sku_title_with_mapping_title(ali_sku, mapping))
 
+    def test_sku_title_compare_with_mapping_list(self):
+        ali_sku = '1100:472496#red;774888:361385#l'
+        mapping = ["L", "RED"]
+
+        self.assertTrue(match_sku_title_with_mapping_title(ali_sku, mapping))
+
     def test_sku_title_compare_with_shopify_variant_title(self):
         ali_sku = '1100:472496#Red;774888:361385#L'
         variant = {

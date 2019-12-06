@@ -232,7 +232,14 @@ def match_sku_title_with_mapping_title(sku, mapping):
 
     ali_sku_titles = ';'.join(sorted(option['option_title'] for option in parse_supplier_sku(sku, sort=True)))
 
-    mapping_titles = ';'.join(sorted([i['title'] for i in mapping if i.get('title')]))
+    mapping_titles = []
+    for i in mapping:
+        if type(i) is dict and i.get('title'):
+            mapping_titles.append(i['title'])
+        elif type(i) is str:
+            mapping_titles.append(i)
+
+    mapping_titles = ';'.join(sorted(mapping_titles))
 
     return ali_sku_titles.lower() == mapping_titles.lower()
 
