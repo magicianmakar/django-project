@@ -18,7 +18,7 @@
                         <div class="form-group">
                             <label for="auto_margin" class="col-sm-4 control-label">
                                 Price Markup
-                                {% include 'partial/help_tooltip.html' with help="For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00. For example: If set to <b>50%</b>, a product that costs <i>(after Auto Margin)</i> $10.00 will be compared to $15.00." qtipstyle="color:#BBB" %}
+                                {% include 'partial/help_tooltip.html' with help="For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00." qtipstyle="color:#BBB" %}
                             </label>
                             <div class="col-sm-3">
                             <input style="padding:5px 2px;text-align:center" type="text"
@@ -106,7 +106,7 @@
                         <div class="form-group">
                             <label class="control-label">
                                 <a class="edit-markup-rules-btn m-l" href="#">Advanced Markup Rules...</a>
-                                {% include 'partial/help_tooltip.html' with help="Create several markup rules which are applied to to items based on their price." qtipstyle="color:#BBB" %}
+                                {% include 'partial/help_tooltip.html' with help="Create several markup rules which are applied to items based on their price." qtipstyle="color:#BBB" %}
                             </label>
                         </div>
                     </div>
@@ -322,7 +322,7 @@
                             <div class="form-group">
                                 <label for="auto_ordered_mark" class="col-sm-4 col-xs-8 control-label">
                                     Automatically Mark as Ordered
-                                    {% include 'partial/help_tooltip.html' with help="After you click on <b>'Place Order'</b> button, the order will be marked as Ordered and linked with Supplier Order ID." qtipstyle="color:#BBB" %}
+                                    {% include 'partial/help_tooltip.html' with help="Automatically add the supplier Order ID back to Dropified when you click <b>'Place Order'</b>. Enabling this is recommended." qtipstyle="color:#BBB" %}
                                 </label>
                                 <div class="col-sm-6 col-xs-4">
                                     <input type="checkbox" class="js-switch" id="auto_ordered_mark"
@@ -337,7 +337,7 @@
                             <div class="form-group">
                                 <label for="auto_shopify_fulfill" class="col-sm-4 control-label">
                                     Automatically Fulfill
-                                    {% include 'partial/help_tooltip.html' with help="Tracked orders will be fulfilled in Shopify if Dropified detects a tracking number." qtipstyle="color:#BBB" %}
+                                    {% include 'partial/help_tooltip.html' with help="Tracked orders will be automatically fulfilled in your store when Dropified detects a tracking number from the supplier." qtipstyle="color:#BBB" %}
                                 </label>
                                 <div class="col-sm-3">
                                     <select id="auto_shopify_fulfill" name="auto_shopify_fulfill" class="form-control">
@@ -354,7 +354,7 @@
                             <div class="form-group shiping-confirmation">
                                 <label for="send_shipping_confirmation" class="col-sm-4 control-label">
                                     Send Shipping Confirmation
-                                    {% include 'partial/help_tooltip.html' with help="Select <b>Auto</b> to notify the customer if all items in his order have been shipped." qtipstyle="color:#BBB" %}
+                                    {% include 'partial/help_tooltip.html' with help="Select <b>Auto</b> to notify the customer once all the items in their order have been shipped. Select <b>Always</b> to send an email as each item is shipped." qtipstyle="color:#BBB" %}
                                 </label>
                                 <div class="col-sm-3">
                                     <select id="send_shipping_confirmation" name="send_shipping_confirmation" class="form-control">
