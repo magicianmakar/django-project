@@ -925,7 +925,7 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                     continue
 
                 # Line item is refunded
-                if not line_item.get('refunded'):
+                if line_item.get('refunded'):
                     continue
 
                 # Product is excluded from Dropified auto fulfill feature
