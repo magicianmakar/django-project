@@ -18,7 +18,7 @@
 
         style="margin: 4px 0;"
     >
-    {% if item.shipping_method and not order.pending_payment %}
+    {% if item.shipping_method and not order.pending_payment and not item.refunded %}
         <a type="button" class="btn btn-success btn-xs itooltip place-order-btn queue-order-btn" data-container="body" data-html="true"
             title="Ship to <b>{{item.shipping_method.country_name}}</b> using <br><b>{{item.shipping_method.method_name}}</b>"
             data-href="{% app_link 'orders/place' supplier=item.supplier.id SAPlaceOrder=item.order_data_id SACompany=item.shipping_method.method SACountry=item.shipping_method.country %}"
