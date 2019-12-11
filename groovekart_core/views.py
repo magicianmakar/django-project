@@ -136,13 +136,13 @@ def product_alerts(request):
         if len(products):
             products = get_gkart_products(store=store, product_ids=products)
             if isinstance(products, dict):
-                for i, product in products.items():
-                    if isinstance(product, dict) and product.get('id'):
-                        product_variants[str(product['id'])] = product
+                for i, p in products.items():
+                    if isinstance(p, dict) and p.get('id'):
+                        product_variants[str(p['id'])] = p
             else:
-                for product in products:
-                    if isinstance(product, dict) and product.get('id'):
-                        product_variants[str(product['id'])] = product
+                for p in products:
+                    if isinstance(p, dict) and p.get('id'):
+                        product_variants[str(p['id'])] = p
     except:
         raven_client.captureException()
 
