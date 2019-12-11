@@ -153,7 +153,14 @@
                 <div class="childs" style="">
                     {% if shopify_product %}
                         <div class="panel panel-default m-b-lg">
-                            <div class="panel-heading">Variants ({{shopify_product.variants|length}})</div>
+                            <div class="panel-heading" style="height: 40px;">
+
+                                <div class="col-xs-6"> Variants ({{shopify_product.variants|length}})</div>
+
+                            {% if request.user|can:'aliextractor.use' %}
+                                {% include 'aliextractor/get_pricing_data.html' %}
+                            {% endif %}
+                            </div>
                             <div class="panel-body" style="padding-bottom:0">
                         <table id="shopify-variants" class="table table-condensed no-border" style="margin-bottom:0">
                             <thead>

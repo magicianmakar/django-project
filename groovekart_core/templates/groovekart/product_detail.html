@@ -145,7 +145,12 @@
                         <div class="childs" style="">
                             {% if groovekart_product and groovekart_product.variants and groovekart_product.variants.0.id != -1 %}
                                 <div class="panel panel-default m-b-lg">
-                                    <div class="panel-heading">Variants</div>
+                                    <div class="panel-heading" style="height: 40px;">
+                                        <div class="col-xs-6"> Variants </div>
+                                        {% if request.user|can:'aliextractor.use' %}
+                                            {% include 'aliextractor/get_pricing_data.html' %}
+                                        {% endif %}
+                                    </div>
                                     <div class="panel-body" style="padding-bottom:0">
                                 <table id="groovekart-variants" class="table table-condensed no-border" style="margin-bottom:0">
                                     <thead>
