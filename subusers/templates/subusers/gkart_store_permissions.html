@@ -17,7 +17,7 @@
     <div class="col-md-12">
         <div class="ibox collapsed border-bottom">
             <div class="ibox-title">
-                <h5>GearBubble Store Permissions</h5>
+                <h5>GrooveKart Store Permissions</h5>
             </div>
             <div class="ibox-content" style="display:block">
                 {% for error in form.permissions.errors %}
@@ -26,7 +26,7 @@
                 <form
                     method="POST"
                     role="form"
-                    action="{% url template_config.url.namespace|add:'subuser_gear_store_permissions' subuser.id form.initial.store.id %}"
+                    action="{% url template_config.url.namespace|add:'subuser_gkart_store_permissions' subuser.id form.initial.store.id %}"
                 >
                     <div class="form-group">
                         {% render_field form.permissions %}
