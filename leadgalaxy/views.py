@@ -4750,7 +4750,7 @@ def product_alerts(request):
     # Delete sidebar alert info cache
     cache.delete(make_template_fragment_key('alert_info', [request.user.id]))
 
-    tpl = 'product_alerts_tab.html' if product else 'product_alerts.html'
+    tpl = 'product_alerts_tab.html' if request.GET.get('product') else 'product_alerts.html'
     return render(request, tpl, {
         'product_changes': product_changes,
         'show_hidden': show_hidden,
