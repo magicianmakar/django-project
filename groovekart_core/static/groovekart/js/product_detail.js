@@ -1019,48 +1019,6 @@ function renderImages() {
     });
 }
 
-var PusherSubscription = {
-    imagesDownload: function() {
-        var pusher = new Pusher(config.sub_conf.key);
-        var channel = pusher.subscribe(config.sub_conf.channel);
-        channel.bind('images-download', function(data) {
-            if (data.product == config.product_id) {
-                $('#download-images').bootstrapBtn('reset');
-                pusher.unsubscribe(config.sub_conf.channel);
-
-                if (data.success) {
-                    setTimeout(function() {
-                        window.location.href = data.url;
-                    }, 500);
-                } else {
-                    displayAjaxError('Images Download', data);
-                }
-            }
-        });
-    }
-};
-
-$('#download-images').on('click', function(e) {
-    e.preventDefault();
-
-    var btn = $(e.target);
-    btn.bootstrapBtn('loading');
-
-    $.ajax({
-        url: api_url('product-image-download', 'gkart'),
-        type: 'GET',
-        data: {
-            product: btn.attr('product')
-        },
-        success: function(result) {
-            PusherSubscription.imagesDownload();
-        },
-        error: function(data) {
-            displayAjaxError('Images Download', data);
-        }
-    });
-});
-
 $('.add-images-btn').click(function (e) {
     e.preventDefault();
 

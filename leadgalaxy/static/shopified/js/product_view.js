@@ -1200,28 +1200,6 @@ function launchEditor(image) {
     }
 }
 
-$('#download-images').on('click', function(e) {
-    e.preventDefault();
-
-    PusherSubscription.imagesDownload();
-
-    var btn = $(e.target);
-    btn.bootstrapBtn('loading');
-
-    $.ajax({
-        url: api_url('product-image-download', 'shopify'),
-        type: 'GET',
-        data: {
-            product: btn.attr('product')
-        },
-        success: function(result) {
-        },
-        error: function(data) {
-            displayAjaxError('Images Download', data);
-        }
-    });
-});
-
 $('.add-images-btn').click(function (e) {
     e.preventDefault();
 
@@ -1532,23 +1510,6 @@ var PusherSubscription = {
             window.pusher = new Pusher(config.sub_conf.key);
             window.channel = window.pusher.subscribe(config.sub_conf.channel);
         }
-    },
-    imagesDownload: function() {
-        this.init();
-
-        window.channel.bind('images-download', function(data) {
-            if (data.product == config.product_id) {
-                $('#download-images').bootstrapBtn('reset');
-
-                if (data.success) {
-                    setTimeout(function() {
-                        window.location.href = data.url;
-                    }, 500);
-                } else {
-                    displayAjaxError('Images Download', data);
-                }
-            }
-        });
     },
     productRandomizeImageNames: function() {
         this.init();

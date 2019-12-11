@@ -1061,6 +1061,35 @@ $('.dropified-challenge, .dropified-challenge-open').click(function (e) {
     });
 });
 
+$('#download-images').on('click', function(e) {
+    e.preventDefault();
+
+    function urlToPromise(url) {
+        return new Promise(function(resolve, reject) {
+            JSZipUtils.getBinaryContent(url, function(err, data) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(data);
+                }
+            });
+        });
+    }
+
+    var zip = new JSZip();
+    $.each(product.images, function (i, src) {
+        var filename = i + '-' + src.split('/').pop().split('?')[0];
+
+        zip.file(filename, urlToPromise(src), {
+            binary: true
+        });
+    });
+
+    zip.generateAsync({type: 'blob'}).then(function(blob) {
+        saveAs(blob, 'product-images-' + config.product_id + '.zip');
+    });
+});
+
 function versionCompare(left, right) {
     if (typeof left + typeof right != 'stringstring')
         return false;

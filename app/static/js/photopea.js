@@ -52,7 +52,6 @@
 
         window.channel.bind('advanced-editor', function(data) {
             if (data.product == config.product_id) {
-                $('#download-images').bootstrapBtn('reset');
 
                 if (data.success) {
                     setTimeout(function() {
