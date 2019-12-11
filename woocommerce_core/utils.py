@@ -755,6 +755,16 @@ def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, alie
     if customer_address['country_code'] == 'BR':
         customer_address = fix_br_address(customer_address)
 
+        cpf = None
+        for data in order.get('meta_data', []):
+            if data['key'] in ['_billing_cpf', 'cpf']:
+                # Can be "257.696.520-20" or "25769652020"
+                cpf = ''.join(re.findall(r'[\d]+', data['value']))
+                break
+
+        if cpf and len(cpf) == 11:
+            customer_address['company'] = cpf if not customer_address.get('company') else f"{customer_address['company']} - {cpf}"
+
     if customer_address['country_code'] == 'IL':
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip']).strip().rjust(7, '0')
