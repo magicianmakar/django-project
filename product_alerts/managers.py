@@ -850,7 +850,7 @@ class WooProductChangeManager(ProductChangeManager):
 
             self.product.update_data(product_data)
         except:
-            if r.status_code not in [401, 402, 403, 404, 429]:
+            if r.status_code not in [400, 401, 402, 403, 404, 429]:
                 raven_client.captureException(extra={
                     'rep': r.text,
                     'data': api_product_data,
