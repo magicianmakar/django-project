@@ -54,6 +54,13 @@
           font-weight: normal;
           font-style: normal;
         }
+
+        {# Dropified Black #}
+        {% if user.profile.plan.is_black %}
+        .navbar-default {
+            background-color: #000000ad !important;
+        }
+        {% endif %}
     </style>
 
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700,700i|Roboto+Slab:400,700" rel="stylesheet">

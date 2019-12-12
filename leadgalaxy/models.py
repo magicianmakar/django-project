@@ -1962,6 +1962,10 @@ class GroupPlan(models.Model):
         return self.slug in ['builder', 'builder-yearly', 'builder-shopify', 'builder-yearly-shopify']
 
     @property
+    def is_black(self):
+        return 'black' in self.slug
+
+    @property
     def large_badge_image(self):
         return self.badge_image.replace('_small.', '.')
 

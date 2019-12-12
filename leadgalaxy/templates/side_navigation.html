@@ -4,12 +4,16 @@
 {% load cache %}
 
 <nav id="side-menu" class="navbar-default sidebar navbar-static-side" role="navigation">
-  <div class="sidebar-collapse">
-    <div class="logo">
-      <a href="{% url 'index' %}">
-        <img src="{% static 'dropified-logo-white-s.png' %}"/>
-      </a>
-    </div>
+    <div class="sidebar-collapse">
+        <div class="logo">
+            <a href="{% url 'index' %}">
+                {% if user.profile.plan.is_black %}
+                <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white.png"/>
+                {% else %}
+                <img src="{% static 'dropified-logo-white-s.png' %}"/>
+                {% endif %}
+            </a>
+        </div>
 
     {% if user.is_authenticated %}
     <div class="profile">
@@ -31,7 +35,7 @@
     {% endif %}
 
     <ul>
-      <!-- header -->
+      {# header #}
 
       {% if request.user.is_superuser or request.user.is_staff %}
         <li class="section">
@@ -70,7 +74,7 @@
       {% endfor %}
       {% endfor %}
 
-      <!-- body -->
+      {# body #}
       {% for section in sidemenu.body %}
       <li class="section">
         <span class="section-header">
@@ -89,7 +93,18 @@
       {% endfor %}
     </ul>
 
-    <!-- footer -->
+    {# Dropified Black #}
+    {% if user.profile.plan.is_black %}
+    <ul style="padding:0 10px;margin:0;">
+        <li>
+            <a href="https://app.dropified.com/pages/black">
+                <img class="img-responsive" src="https://cdn.dropified.com/static/img/black/dropified_black_text_white2.png"/>
+            </a>
+        </li>
+    </ul>
+    {% endif %}
+
+    {# footer #}
     <ul class="navfooter">
       <li class="section-no-icon">
         <a href="{{ sidemenu.named.academy.url }}" target="_blank">
@@ -118,9 +133,6 @@
           <span class="nav-label item-title">What’s New?</span>
         </a>
       </li>
-
     </ul>
-
-
   </div>
 </nav>
