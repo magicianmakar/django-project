@@ -2,7 +2,7 @@ from leadgalaxy.signals import main_subscription_canceled, main_subscription_upd
 from raven.contrib.django.raven_compat.models import client as raven_client
 from stripe_subscription.models import StripeSubscription
 from shopify_subscription.models import ShopifySubscription
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
@@ -56,22 +56,6 @@ def process_sub_upd_stripe(sender, instance, created, **kwargs):
                 custom_plan__type='callflex_subscription')
             for custom_callflex_subscription in custom_callflex_subscriptions:
                 custom_callflex_subscription.safe_delete()
-    except:
-        raven_client.captureException(level='warning')
-
-
-@receiver(post_delete, sender=StripeSubscription)
-def process_sub_del_stripe(sender, instance, **kwargs):
-    user = instance.user
-    try:
-        # deleting phones
-        for phone in user.twilio_phone_numbers.all():
-            phone.delete()
-        # deleting callflex subscriptions
-        custom_callflex_subscriptions = user.customstripesubscription_set.filter(
-            custom_plan__type='callflex_subscription')
-        for custom_callflex_subscription in custom_callflex_subscriptions:
-            custom_callflex_subscription.safe_delete()
     except:
         raven_client.captureException(level='warning')
 
