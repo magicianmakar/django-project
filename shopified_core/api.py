@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.validators import validate_email, ValidationError
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.views.generic import View
 from django.template.defaultfilters import slugify
 
@@ -346,24 +346,7 @@ class ShopifiedApi(ApiResponseMixin, View):
                 return self.api_error('Permission denied', status=403)
 
     def get_extension_settings(self, request, user, data):
-        subid = 'aliexpress'
-
-        if user:
-            if not user.profile.plan.is_free:
-                return JsonResponse({
-                    'status': 'ok'
-                })
-
-            subid = f'r{user.id}'
-
-        return JsonResponse({
-            'ptr': 'https://',
-            'base': 'alitems.com',
-            'sid': f'/g/{settings.DROPIFIED_ADMITAD_ID}/?subid={subid}&ulp=',
-            'mch': r"^https://.+\.aliexpress\.com/item/",
-            'ematch': r"(aff_platform=|alitems\.com)",
-            'status': 'ok'
-        })
+        raise Http404('Not found')
 
     def post_dismissible_view(self, request, user, data):
         view_id = f"_dismissible_{slugify(data.get('id')).replace('-', '_')}"
