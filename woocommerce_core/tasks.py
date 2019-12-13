@@ -6,6 +6,7 @@ from zipfile import ZipFile
 
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.core.cache import cache
 from django.urls import reverse
 from django.utils.text import slugify
 from django.conf import settings
@@ -30,6 +31,11 @@ from .utils import (
     create_variants_api_data,
     get_latest_order_note,
     WooOrderUpdater
+)
+
+from product_alerts.utils import (
+    get_supplier_variants,
+    variant_index_from_supplier_sku,
 )
 
 
@@ -374,4 +380,49 @@ def order_save_changes(self, data):
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def sync_woo_product_quantities(self, product_id):
+    try:
+        product = WooProduct.objects.get(pk=product_id)
+        product_data = product.retrieve()
+
+        if not product.default_supplier:
+            return
+
+        variant_quantities = get_supplier_variants(product.default_supplier.supplier_type(), product.default_supplier.get_source_id())
+        if product_data and variant_quantities:
+            for variant in variant_quantities:
+                sku = variant.get('sku')
+                variant_id = 0
+                idx = variant_index_from_supplier_sku(product, sku, product_data['variants'])
+                if idx is not None:
+                    variant_id = product_data['variants'][idx]['id']
+                if variant_id > 0:
+                    product_data['variants'][idx]['stock_quantity'] = variant['availabe_qty']
+                    product_data['variants'][idx]['manage_stock'] = True
+                elif len(product_data.get('variants', [])) == 0 or variant_id < 0:
+                    product_data['stock_quantity'] = variant['availabe_qty']
+                    product_data['manage_stock'] = True
+
+            update_endpoint = 'products/{}'.format(product.source_id)
+            variants_update_endpoint = 'products/{}/variations/batch'.format(product.source_id)
+            r = product.store.wcapi.put(update_endpoint, product_data)
+            r.raise_for_status()
+            r = product.store.wcapi.put(variants_update_endpoint, {
+                'update': product_data['variants'],
+            })
+            r.raise_for_status()
+
+        cache.delete('product_inventory_sync_woo_{}_{}'.format(product.id, product.default_supplier.id))
+
+    except WooProduct.DoesNotExist:
+        pass
+    except Exception as e:
+        raven_client.captureException()
+
+        if not self.request.called_directly:
+            countdown = retry_countdown('retry_sync_woo_{}'.format(product_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)

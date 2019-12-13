@@ -83,3 +83,6 @@ class ApiHelperBase:
 
     def get_store_tracking_carriers(self, store):
         return []
+
+    def sync_product_quantities(self, product, supplier):
+        raise NotImplementedError('Sync Product Quantities')

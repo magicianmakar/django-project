@@ -55,3 +55,6 @@ class WooApiHelper(ApiHelperBase):
 
     def filter_productchange_by_store(self, store):
         return ProductChange.objects.filter(woo_product__store=store)
+
+    def sync_product_quantities(self, product_id):
+        tasks.sync_woo_product_quantities.apply_async(args=[product_id], expires=600)

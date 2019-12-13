@@ -774,3 +774,21 @@ class ApiBase(ApiResponseMixin, View):
         store.save()
 
         return self.api_success()
+
+    def post_sync_with_supplier(self, request, user, data):
+        product = self.product_model.objects.get(id=data.get('product'))
+        permissions.user_can_edit(user, product)
+
+        limit_key = 'product_inventory_sync_{}_{}_{}'.format(self.store_slug, product.id, product.default_supplier.id)
+
+        if cache.get(limit_key):
+            return self.api_error('Sync is in progress', status=422)
+
+        if product.is_connected:
+            self.helper.sync_product_quantities(product.id)
+        else:
+            return self.api_error('Product is not connected', status=422)
+
+        cache.set(limit_key, True, timeout=500)
+
+        return self.api_success()

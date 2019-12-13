@@ -976,24 +976,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def post_sync_with_supplier(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        limit_key = 'product_inventory_sync_{}_{}'.format(product.id, product.default_supplier.id)
-
-        if cache.get(limit_key):
-            return self.api_error('Sync is in progress', status=422)
-
-        if product.is_connected:
-            tasks.sync_shopify_product_quantities.apply_async(args=[product.id], expires=600)
-        else:
-            return self.api_error('Product is not connected', status=422)
-
-        cache.set(limit_key, True, timeout=500)
-
-        return self.api_success()
-
     def post_add_user_upload(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)

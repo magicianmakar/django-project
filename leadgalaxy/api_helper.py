@@ -133,3 +133,6 @@ class ShopifyApiHelper(ApiHelperBase):
 
     def filter_productchange_by_store(self, store):
         return ProductChange.objects.filter(shopify_product__store=store)
+
+    def sync_product_quantities(self, product_id):
+        tasks.sync_shopify_product_quantities.apply_async(args=[product_id], expires=600)

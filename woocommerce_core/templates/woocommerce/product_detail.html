@@ -774,9 +774,19 @@
 
                 {{#if id}}
                     {{#if is_default}}
-                    <a class="btn btn-default btn-xs is-default-btn" href="#">
-                        <i class="fa fa-check"></i> Default
-                    </a>
+                        {{#if is_aliexpress}}
+                        <a class="btn btn-success btn-xs sync-inventory-btn pull-left" href="#">
+                            <i class="fa fa-refresh"></i> Sync Inventory with Supplier
+                        </a>
+                        {{/if}}
+                        {{#if is_ebay}}
+                        <a class="btn btn-success btn-xs sync-inventory-btn pull-left" href="#">
+                            <i class="fa fa-refresh"></i> Sync Inventory with Supplier
+                        </a>
+                        {{/if}}
+                        <a class="btn btn-default btn-xs is-default-btn" href="#">
+                            <i class="fa fa-check"></i> Default
+                        </a>
                     {{else}}
                     <button class="btn btn-primary btn-xs export-default-btn">
                         <i class="fa fa-check"></i> Make Default
@@ -910,6 +920,7 @@ var config = {
             product: {{product.id}},
             is_default: {% if item.id == product.default_supplier_id %}true{% else %}false{% endif %},
             is_aliexpress: {% if item.is_aliexpress %}true{% else %}false{% endif %},
+            is_ebay: {% if item.is_ebay %}true{% else %}false{% endif %},
             original: {
                 url: '{{item.product_url|escapejs}}'
             },
