@@ -26,12 +26,12 @@
         {% block title %}
             {% for item in breadcrumbs %}
 
-                {% if not forloop.first %} · {% endif %}
+                {% if not forloop.first %} &middot; {% endif %}
 
                 {% if item.url %}
-                    {{item.title|truncatewords:10}}
+                    {{item.title|truncatewords:10|safe}}
                 {% else %}
-                    {{item|truncatewords:10}}
+                    {{item|truncatewords:10|safe}}
                 {% endif %}
             {% endfor %}
 

@@ -2368,13 +2368,13 @@ def acp_users_list(request):
         users = users.distinct()
 
         if not request.user.is_superuser:
-            if len(users) > 10:
+            if len(users) > 100:
                 limited_users = []
 
                 for i in users:
                     limited_users.append(i)
 
-                    if len(limited_users) > 10:
+                    if len(limited_users) > 100:
                         break
 
                 users = limited_users
@@ -2391,9 +2391,7 @@ def acp_users_list(request):
             data=json.dumps({'query': q}))
 
     else:
-        if not request.user.is_superuser:
-            users = User.objects.none()
-        profiles = UserProfile.objects.all()
+        profiles = UserProfile.objects.filter(user__in=users)
 
     charges = []
     subscribtions = []
@@ -2767,7 +2765,7 @@ def acp_groups(request):
 
             return JsonResponse(data, safe=False)
 
-    plans = GroupPlan.objects.all().order_by('-payment_gateway', 'id')
+    plans = GroupPlan.objects.all().order_by('-id')
 
     return render(request, 'acp/groups.html', {
         'plans': plans,
