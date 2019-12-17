@@ -717,7 +717,20 @@
                                                         </td>
                                                         <td class="text-right hidden-xs" style="width:26%">
                                                             {% if item.is_bundle %}
-                                                                <span class="badge badge-primary">Bundle</span>
+                                                                {% if not order.pending_payment and not item.refunded %}
+                                                                    <span class="badge badge-primary">Bundle</span>
+                                                                {% else %}
+                                                                    <span class="badge badge-danger">
+                                                                        Bundle
+                                                                        {% if item.refunded %}
+                                                                            {% include 'partial/help_tooltip.html' with help="This Item was Refunded" qtipstyle="color:#fff" qtipicon="exclamation-triangle" %}
+                                                                        {% endif %}
+
+                                                                        {% if order.pending_payment %}
+                                                                            {% include 'partial/help_tooltip.html' with help="Auto Fulfill is disabled because payment is still pending" qtipstyle="color:#fff" qtipicon="exclamation-triangle" %}
+                                                                        {% endif %}
+                                                                    </span>
+                                                                {% endif %}
                                                             {% else %}
                                                                 {% include 'partial/place_order_btn.html' %}
                                                             {% endif %}
@@ -787,13 +800,16 @@
                                                 </div>
                                                 {% endfor %}
 
-                                                <button class="btn btn-success btn-xs order-bundle"
-                                                        store-type="shopify"
-                                                        supplier-type="{{item.supplier_type}}"
-                                                        order-data="{{item.order_data_id}}"
-                                                        order-number="{{order.name}}"
-                                                        style="position:absolute;right:25px;top:50px;"
-                                                        >Order Bundle</button>
+                                                {% if not order.pending_payment and not item.refunded %}
+                                                    <button class="btn btn-success btn-xs order-bundle"
+                                                            store-type="shopify"
+                                                            supplier-type="{{item.supplier_type}}"
+                                                            order-data="{{item.order_data_id}}"
+                                                            order-number="{{order.name}}"
+                                                            style="position:absolute;right:25px;top:50px;">
+                                                        Order Bundle
+                                                    </button>
+                                                {% endif %}
                                             </div>
                                             {% endif %}
 
