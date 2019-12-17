@@ -196,6 +196,30 @@ def chq_product_feeds(request):
     if not request.user.can('product_feeds.use'):
         return render(request, 'commercehq/upgrade.html')
 
+    if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
+        if request.method == 'GET':
+            try:
+                feed = CommerceHQFeedStatus.objects.get(id=request.GET['feed'])
+                permissions.user_can_view(request.user, feed.store)
+
+            except CommerceHQFeedStatus.DoesNotExist:
+                return JsonResponse({'error': 'Feed Not Found'}, status=500)
+
+            return JsonResponse(feed.get_google_settings())
+
+        elif request.method == 'POST':
+            try:
+                feed = CommerceHQFeedStatus.objects.get(id=request.POST['feed'])
+                permissions.user_can_view(request.user, feed.store)
+
+            except CommerceHQFeedStatus.DoesNotExist:
+                return JsonResponse({'error': 'Feed Not Found'}, status=500)
+
+            settings = json.loads(request.POST['settings'])
+            feed.set_google_settings(settings)
+
+            return JsonResponse(feed.get_google_settings())
+
     if request.method == 'POST':
         if request.POST.get('feed'):
 
