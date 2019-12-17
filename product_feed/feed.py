@@ -187,7 +187,7 @@ class ProductFeed():
 
 
 class CommerceHQProductFeed():
-    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category=''):
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category='', feed=None):
         self.store = store
 
         domain = urlparse(store.api_url).netloc
@@ -200,6 +200,12 @@ class CommerceHQProductFeed():
         self.all_variants = all_variants
         self.include_variants = include_variants
         self.default_product_category = default_product_category
+
+        self.feed = feed
+        if feed:
+            self.google_settings = self.feed.get_google_settings()
+        else:
+            self.google_settings = {}
 
     def _add_element(self, tag, text):
         self.writer.startTag(tag)
@@ -285,10 +291,17 @@ class CommerceHQProductFeed():
         self._add_element('g:image_link', image)
         self._add_element('g:price', '{amount} {currency}'.format(amount=variant.get('price'), currency=self.currency))
         self._add_element('g:shipping_weight', '{product[shipping_weight]} kg'.format(product=product))
-        self._add_element('g:brand', product.get('vendor') or '')
         self._add_element('g:google_product_category', safe_str(product.get('type') or self.default_product_category))
         self._add_element('g:availability', 'in stock')
         self._add_element('g:condition', 'new')
+
+        if self.revision == 3:
+            self._add_element('g:age_group', self.google_settings.get('age_group') or 'Adult')
+            self._add_element('g:gender', self.google_settings.get('gender') or 'Unisex')
+            self._add_element('g:brand', self.google_settings.get('brand_name', self.store.title))
+            self._add_element('g:mpn', 'store_{}_{}'.format(product['id'], variant['id']))
+        else:
+            self._add_element('g:brand', product.get('vendor') or '')
 
         self.writer.endTag()
 
@@ -795,7 +808,8 @@ def generate_chq_product_feed(feed_status, nocache=False):
                                      feed_status.revision,
                                      feed_status.all_variants,
                                      feed_status.include_variants_id,
-                                     feed_status.default_product_category)
+                                     feed_status.default_product_category,
+                                     feed=feed_status)
 
         feed.init()
 
