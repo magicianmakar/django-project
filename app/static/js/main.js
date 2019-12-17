@@ -1068,7 +1068,15 @@ $('#download-images').on('click', function(e) {
         return new Promise(function(resolve, reject) {
             JSZipUtils.getBinaryContent(url, function(err, data) {
                 if (err) {
-                    reject(err);
+                    // Might be blocked by CORS policy
+                    url = 'https://app.dropified.com/api/ali/get-image/?' + $.param({url: btoa(url)});
+                    JSZipUtils.getBinaryContent(url, function(err, data) {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(data);
+                        }
+                    });
                 } else {
                     resolve(data);
                 }
