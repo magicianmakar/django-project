@@ -43,6 +43,11 @@ DJANGO_ADMIN_ERROR=""
 for i in */models.py; do
     app_name="$(dirname $i)"
     admins_file="$(dirname $i)/admin.py"
+
+    if [ "$app_name" == "shopified_core" ]; then
+        continue
+    fi
+
     if [ ! -f $admins_file ]; then
         echo "[-] Admin file is missing: $admins_file"
         echo "    Generate with:"
@@ -57,6 +62,10 @@ for i in */models.py; do
     for c in $(grep models.Model $i | grep -E 'class (+[^(]+)\(' -o | cut -d ' ' -f 2 | tr -d '('); do
 
         if [ "$c" == "FeedStatusAbstract" ]; then
+            continue
+        fi
+
+        if [ "$c" == "AddressBase" ]; then
             continue
         fi
 

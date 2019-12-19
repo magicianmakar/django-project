@@ -31,6 +31,7 @@ from .models import (
     SubuserWooPermission,
     SubuserGearPermission,
     SubuserGKartPermission,
+    UserAddress,
     UserCompany,
     UserProfile,
     UserUpload,
@@ -312,6 +313,12 @@ class AdminEventAdmin(admin.ModelAdmin):
 @admin.register(UserCompany)
 class UserCompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'address_line1', 'address_line2', 'city', 'state', 'country', 'zip_code', 'vat', )
+    search_fields = ('name',)
+
+
+@admin.register(UserAddress)
+class UserAddressAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'address_line1', 'address_line2', 'city', 'state', 'country', 'zip_code', 'phone', )
     search_fields = ('name',)
 
 
