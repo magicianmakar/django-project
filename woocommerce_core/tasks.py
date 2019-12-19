@@ -242,6 +242,10 @@ def product_export(store_id, product_id, user_id, publish=None):
 
                 product.default_supplier.save()
 
+        # Initial Products Inventory Sync
+        if user.models_user.get_config('initial_inventory_sync', True):
+            sync_woo_product_quantities.apply_async(args=[product.id], countdown=0)
+
         store.pusher_trigger('product-export', {
             'success': True,
             'product': product.id,
