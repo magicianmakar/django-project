@@ -48,12 +48,16 @@ class Command(DropifiedBaseCommand):
 
         start = 0
         steps = 5000
+        first_track = None
 
         while start < count:
             aliexpress_fulfillment_costs = []
             source_ids = []
 
             for track in tracks[start:start + steps]:
+                if first_track is None:
+                    first_track = track
+
                 try:
                     costs = get_costs_from_track(track)
                     if not costs or track.source_id in source_ids:
@@ -80,6 +84,15 @@ class Command(DropifiedBaseCommand):
             start += steps
 
             AliexpressFulfillmentCost.objects.bulk_create(aliexpress_fulfillment_costs)
+
+            # Duplicated costs happen when first track is already imported
+            is_duplicated = AliexpressFulfillmentCost.objects.filter(
+                store=first_track.store,
+                order_id=first_track.order_id,
+                source_id=first_track.source_id
+            ).count() > 1
+            if is_duplicated:
+                self.write('Duplicated cost found! Reset costs before sync is advise. (--reset)')
 
         if progress:
             obar.close()

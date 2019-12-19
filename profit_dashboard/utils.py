@@ -114,6 +114,10 @@ def get_profits(store, start, end, store_timezone=''):
                                          created_at__range=(start, end),
                                          financial_status__in=['authorized', 'partially_paid', 'paid', 'partially_refunded', 'refunded'])
 
+    # https://app.intercom.io/a/apps/k9cb5frr/inbox/inbox/conversation/24951703596
+    if store.user_id == 81339:
+        orders = orders.filter(cancelled_at__isnull=True)
+
     orders_map = {}
     totals_orders_count = 0
     for order in orders.values('created_at', 'total_price', 'order_id'):
