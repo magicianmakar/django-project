@@ -134,6 +134,8 @@ class UserProfile(models.Model):
                                           on_delete=models.SET_NULL, verbose_name="Plan to user after Expire Date")
 
     company = models.ForeignKey('UserCompany', null=True, blank=True, on_delete=models.CASCADE)
+    address = models.ForeignKey('UserAddress', null=True, blank=True, on_delete=models.CASCADE)
+
     subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True)
     subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
     subuser_woo_permissions = models.ManyToManyField('SubuserWooPermission', blank=True)
@@ -650,7 +652,10 @@ class UserProfile(models.Model):
             self.sync_tags()
 
 
-class UserCompany(models.Model):
+class AddressBase(models.Model):
+    class Meta:
+        abstract = True
+
     name = models.CharField(max_length=100, blank=True, default='')
     address_line1 = models.CharField(max_length=255, blank=True, default='')
     address_line2 = models.CharField(max_length=255, blank=True, default='')
@@ -658,7 +663,23 @@ class UserCompany(models.Model):
     state = models.CharField(max_length=100, blank=True, default='')
     country = models.CharField(max_length=100, blank=True, default='')
     zip_code = models.CharField(max_length=100, blank=True, default='')
+
+    def vat_support(self):
+        return False
+
+
+class UserAddress(AddressBase):
+    phone = models.CharField(max_length=100, blank=True, default='')
+
+    def __str__(self):
+        return f'<UserAddress: {self.id}>'
+
+
+class UserCompany(AddressBase):
     vat = models.CharField(max_length=100, blank=True, default='')
+
+    def vat_support(self):
+        return True
 
     def __str__(self):
         return f'<UserCompany: {self.id}>'

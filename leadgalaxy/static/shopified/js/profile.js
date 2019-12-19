@@ -42,7 +42,7 @@ $(function () {
         $('[data-plan="' + getQueryVariable('try') + '"] button').trigger('click');
     }
 
-    $('#company_country').chosen({
+    $('.country_list').chosen({
         search_contains: true,
         width: '250px'
     });

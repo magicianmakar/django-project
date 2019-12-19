@@ -1,0 +1,72 @@
+<div>
+    <div class="hr-line-dashed"></div>
+
+    <h4>{{title}}</h4>
+
+    <div class="form-group"><label class="col-sm-2 control-label">Name</label>
+        <div class="col-sm-4">
+            <input type="text" name="{{ slug }}_name" value="{{ company.name }}" class="form-control" placeholder="Name">
+        </div>
+        <div class="col-sm-4">
+
+        </div>
+    </div>
+    <div class="form-group"><label class="col-sm-2 control-label">Address</label>
+        <div class="col-sm-4">
+            <input type="text" name="{{ slug }}_address_line1" value="{{ company.address_line1 }}" class="form-control" placeholder="Address line 1">
+        </div>
+        <div class="col-sm-4">
+            <input type="text" name="{{ slug }}_address_line2" value="{{ company.address_line2 }}" class="form-control" placeholder="Address line 2">
+        </div>
+    </div>
+    <div class="form-group"><label class="col-sm-2 control-label"></label>
+        <div class="col-sm-4">
+            <input type="text" name="{{ slug }}_city" value="{{ company.city }}" class="form-control" placeholder="City">
+        </div>
+        <div class="col-sm-4">
+            <input type="text" name="{{ slug }}_state" value="{{ company.state }}" class="form-control" placeholder="State or Province">
+        </div>
+    </div>
+    <div class="form-group"><label class="col-sm-2 control-label"></label>
+        <div class="col-sm-4">
+            <input type="text" name="{{ slug }}_zip_code" value="{{ company.zip_code }}" class="form-control" placeholder="Zip or Postal">
+        </div>
+        <div class="col-sm-6">
+            <select class="country_list" name="{{ slug }}_country" current="{{timezone}}" style="width:350px;">
+                <option value=""></option>
+                {% for item in countries %}
+                <option value="{{item.0}}"
+                    {% if company.country == item.0 %}selected="selected"{% endif %}
+                    >{{item.1}}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    {% if company.vat_support %}
+    <div class="form-group"><label class="col-sm-2 control-label">VAT</label>
+        <div class="col-sm-4">
+            <input type="text" name="vat" value="{{ company.vat }}" class="form-control" placeholder="VAT Number">
+        </div>
+        <div class="col-sm-4">
+
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-offset-2 col-sm-6">
+            <div class="checkbox">
+                <label><input type="checkbox" name="invoice_to_company" {% if get_config.invoice_to_company %}checked{% endif %}>Send invoice to company</label>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="form-group"><label class="col-sm-2 control-label">Phone Number</label>
+        <div class="col-sm-4">
+            <input type="text" name="{{ slug }}_phone" value="{{ company.phone }}" class="form-control" placeholder="">
+        </div>
+        <div class="col-sm-4">
+
+        </div>
+    </div>
+    {% endif %}
+</div>

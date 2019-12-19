@@ -78,6 +78,7 @@ from .models import (
     ShopifyProduct,
     ShopifyProductImage,
     ShopifyStore,
+    UserAddress,
     UserCompany,
     UserProfile,
     UserUpload,
@@ -2134,8 +2135,21 @@ class ShopifyStoreApi(ApiBase):
             profile.company.zip_code = form.cleaned_data['company_zip_code']
             profile.company.country = form.cleaned_data['company_country']
             profile.company.vat = form.cleaned_data['vat']
-
             profile.company.save()
+
+            if not profile.address:
+                profile.address = UserAddress.objects.create()
+
+            profile.address.name = form.cleaned_data['user_address_name']
+            profile.address.address_line1 = form.cleaned_data['user_address_address_line1']
+            profile.address.address_line2 = form.cleaned_data['user_address_address_line2']
+            profile.address.city = form.cleaned_data['user_address_city']
+            profile.address.state = form.cleaned_data['user_address_state']
+            profile.address.zip_code = form.cleaned_data['user_address_zip_code']
+            profile.address.country = form.cleaned_data['user_address_country']
+            profile.address.phone = form.cleaned_data['user_address_phone']
+            profile.address.save()
+
             profile.save()
 
             invoice_to_company = form.cleaned_data.get('invoice_to_company')
