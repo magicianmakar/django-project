@@ -133,8 +133,8 @@ class UserProfile(models.Model):
     plan_after_expire = models.ForeignKey('GroupPlan', blank=True, null=True, related_name="expire_plan",
                                           on_delete=models.SET_NULL, verbose_name="Plan to user after Expire Date")
 
-    company = models.ForeignKey('UserCompany', null=True, blank=True, on_delete=models.CASCADE)
-    address = models.ForeignKey('UserAddress', related_name='profile', null=True, blank=True, on_delete=models.CASCADE)
+    company = models.ForeignKey('UserCompany', null=True, blank=True, on_delete=models.SET_NULL)
+    address = models.ForeignKey('UserAddress', related_name='profile', null=True, blank=True, on_delete=models.SET_NULL)
 
     subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True)
     subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
