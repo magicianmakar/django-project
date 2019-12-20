@@ -1,8 +1,12 @@
+import csv
+
 import simplejson as json
 from adminsortable2.admin import SortableAdminMixin
+
 from django import forms
 from django.contrib import admin
 from django.urls import reverse
+from django.http import HttpResponse
 
 from .models import (
     AccessToken,
@@ -318,8 +322,33 @@ class UserCompanyAdmin(admin.ModelAdmin):
 
 @admin.register(UserAddress)
 class UserAddressAdmin(admin.ModelAdmin):
-    list_display = ('id', 'name', 'address_line1', 'address_line2', 'city', 'state', 'country', 'zip_code', 'phone', )
-    search_fields = ('name',)
+    list_display = ('id', 'email', 'name', 'address_line1', 'address_line2', 'city', 'state', 'country', 'zip_code', 'phone', )
+    search_fields = ('profile__user__id', 'profile__user__username', 'profile__user__email', 'name')
+
+    actions = ["export_as_csv"]
+
+    def export_as_csv(self, request, queryset):
+
+        meta = self.model._meta
+        field_names = [field.name for field in meta.fields]
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename=users-address-export.csv'
+        writer = csv.writer(response)
+
+        writer.writerow(field_names + ['email'])
+        for obj in queryset:
+            row = [getattr(obj, field) for field in field_names]
+            row.append(obj.profile.first().user.email)
+
+            writer.writerow(row)
+
+        return response
+
+    export_as_csv.short_description = "Export Selected"
+
+    def email(self, instance):
+        return instance.profile.first().user.email
 
 
 @admin.register(SubuserPermission)

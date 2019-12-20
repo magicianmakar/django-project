@@ -105,7 +105,7 @@
                                     {% include 'partial/profile_address.html' with title='Company' slug='company' company=user.profile.company countries=countries only %}
 
                                     {% if user.profile.plan.is_black %}
-                                        {% include 'partial/profile_address.html' with title='Simples Shipping Address' slug='user_address' company=user.profile.address countries=countries only %}
+                                        {% include 'partial/profile_address.html' with title='Shipping Address' slug='user_address' company=user.profile.address countries=countries only %}
 
                                     {% endif %}
 

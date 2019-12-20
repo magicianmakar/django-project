@@ -134,7 +134,7 @@ class UserProfile(models.Model):
                                           on_delete=models.SET_NULL, verbose_name="Plan to user after Expire Date")
 
     company = models.ForeignKey('UserCompany', null=True, blank=True, on_delete=models.CASCADE)
-    address = models.ForeignKey('UserAddress', null=True, blank=True, on_delete=models.CASCADE)
+    address = models.ForeignKey('UserAddress', related_name='profile', null=True, blank=True, on_delete=models.CASCADE)
 
     subuser_permissions = models.ManyToManyField('SubuserPermission', blank=True)
     subuser_chq_permissions = models.ManyToManyField('SubuserCHQPermission', blank=True)
