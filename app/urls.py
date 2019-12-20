@@ -1,4 +1,5 @@
 from django.conf.urls import include, url
+from django.conf import settings
 
 from django.contrib import admin
 admin.autodiscover()
@@ -30,6 +31,10 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
 ]
 
+if settings.DEBUG:
+    import debug_toolbar
+
+    urlpatterns.append(url(r'^__debug__/', include(debug_toolbar.urls)))
 
 admin.site.site_header = 'Dropified'
 admin.site.login_template = 'registration/login.html'
