@@ -922,6 +922,24 @@ def webhook(request, provider, option):
         except:
             raven_client.captureException()
 
+    elif provider == 'clickfunnels' and option == 'checklogin':
+        try:
+            email = request.GET['email']
+            try:
+                user = User.objects.get(email=email)
+                data = {'user': {'email': user.email, "is_stripe": user.profile.plan.is_stripe()}}
+            except User.DoesNotExist:
+                data = {'user': False}
+            if 'callback' in request.GET:
+                # a jsonp response!
+                data = '%s(%s);' % (request.GET['callback'], json.dumps(data))
+                return HttpResponse(data, "text/javascript")
+            else:
+                return HttpResponse({}, "text/javascript")
+        except:
+            raven_client.captureException()
+            return HttpResponse({}, "text/javascript")
+
     elif provider == 'price-monitor' and request.method == 'POST':
         product_id = request.GET['product']
         dropified_type = request.GET['dropified_type']  # shopify or chq
