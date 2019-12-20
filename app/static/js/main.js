@@ -1066,7 +1066,10 @@ $('#download-images').on('click', function(e) {
 
     function urlToPromise(url) {
         return new Promise(function(resolve, reject) {
-            url = 'https://app.dropified.com/api/ali/get-image/?' + $.param({url: btoa(url)});
+            if (!url.match(/^https:/) || !(url.match(/\.shopify\.com\//) || url.match(/cdn\.dropified\.com/) || url.match(/shopifiedapp-assets/))) {
+                url = 'https://app.dropified.com/api/ali/get-image/?' + $.param({url: url});
+            }
+
             JSZipUtils.getBinaryContent(url, function(err, data) {
                 if (err) {
                     reject(err);
