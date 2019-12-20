@@ -2,6 +2,10 @@
 
 proxy_cache_path /tmp/nginx-cache levels=1:2 keys_zone=cache_ext_config:10m max_size=1g inactive=150m use_temp_path=off;
 
+limit_req_zone $binary_remote_addr zone=iplimit:10m rate=1r/s;
+limit_req_zone $uri zone=urilimit:10m rate=10r/s;
+limit_req_zone $request_uri zone=requrilimit:100m rate=6r/s;
+
 server {
     listen 80;
     listen [::]:80;
@@ -19,6 +23,8 @@ server {
     client_header_buffer_size 4K;
     client_header_timeout 5s;
     client_max_body_size 10m;
+    #proxy_buffer_size 4096k;
+    #proxy_buffers 5 4096k;
 
     ### SSL Settings
     ssl_certificate     /etc/nginx/ssl/app.dropified.com/app_dropified_com-bundle.crt;
@@ -90,7 +96,7 @@ server {
         access_log  /var/log/nginx/aliextractor.access.log;
         error_log   /var/log/nginx/aliextractor.error.log;
 
-        proxy_set_header Host api.aliexractor.com;
+        proxy_set_header Host api.aliextractor.com;
         proxy_pass  http://api.aliextractor.com/;
     }
 
@@ -99,8 +105,20 @@ server {
         proxy_cache cache_ext_config;
         proxy_cache_key "$host$request_uri$cookie_user";
         proxy_cache_valid 150m;
+        #add_header X-Cached $upstream_cache_status;
 
-        add_header X-Cached $upstream_cache_status;
+        proxy_pass  http://shopifytools.herokuapp.com;
+    }
+
+    ### Request limit
+    location /webhook/shopify/orders-update {
+        limit_req zone=requrilimit burst=20 nodelay;
+
+        proxy_pass  http://shopifytools.herokuapp.com;
+    }
+
+    location /api/shopify/import-product {
+        limit_req zone=iplimit;
 
         proxy_pass  http://shopifytools.herokuapp.com;
     }
