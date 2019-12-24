@@ -287,13 +287,13 @@
         });
     });
 
-    $('#modal-subscription-cancel .confirm-cancel-btn').click(function(e) {
+    $('#modal-subscription-cancel-or-pause .confirm-cancel-btn').click(function(e) {
         var parent = $(this).parents('.subsciption-plan');
         var plan = parent.data('data-plan');
 
         $(this).button('loading');
 
-        var subscription_type = $('#modal-subscription-cancel').data('subscription-type');
+        var subscription_type = $('#modal-subscription-cancel-or-pause').data('subscription-type');
 
         if ( subscription_type=="custom" ){
             ajax_url = config.custom_subscription_cancel;
@@ -306,13 +306,13 @@
             url: ajax_url,
             type: 'POST',
             data: {
-                subscription: $('#modal-subscription-cancel').data('subscription'),
-                subscription_type: $('#modal-subscription-cancel').data('subscription-type'),
+                subscription: $('#modal-subscription-cancel-or-pause').data('subscription'),
+                subscription_type: $('#modal-subscription-cancel-or-pause').data('subscription-type'),
                 when: 'period_end'
             },
             success: function(data) {
                 toastr.success("Your Subscription has been canceled.", "Cancel Subscription");
-                $('#modal-subscription-cancel').modal('hide');
+                $('#modal-subscription-cancel-or-pause').modal('hide');
 
                 setTimeout(function() {
                     window.location.reload();
@@ -399,6 +399,21 @@
         );
     });
 
+    $('.cancel-or-pause-sub-btn').click(function(e) {
+        $('#modal-subscription-cancel-or-pause').data('subscription', $(this).data('subscription'));
+        $('#modal-subscription-cancel-or-pause').data('subscription-type', $(this).data('subscription-type'));
+
+        $('#modal-subscription-cancel-or-pause .plan-name').text($(this).data('plan'));
+        $('#modal-subscription-cancel-or-pause .billing-end').text($(this).data('period-end'));
+
+        if ($(this).data('status') != 'active') {
+            $('#modal-subscription-cancel-or-pause .part-refund').hide();
+            $('#modal-subscription-cancel-or-pause .period-name').text('trial');
+        }
+
+        $('#modal-subscription-cancel-or-pause').modal('show');
+    });
+
     $('.cancel-sub-btn').click(function(e) {
         $('#modal-subscription-cancel').data('subscription', $(this).data('subscription'));
         $('#modal-subscription-cancel').data('subscription-type', $(this).data('subscription-type'));
@@ -440,7 +455,7 @@
     });
 
     $(".confirm-pause-btn").click(function(e) {
-        var plan = $('#modal-pause-account').data('plan');
+        var plan = $(this).data('plan');
         var btn = $(e.target);
         btn.button('loading');
 

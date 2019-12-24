@@ -26,3 +26,38 @@
         </div>
     </div>
 </div>
+
+<div id="modal-subscription-cancel-or-pause" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Would you like to pause your account instead for only $12/mo?</h4>
+            </div>
+            <div class="modal-body" style="padding:10px">
+                <div class="row">
+                    <div class="col-md-12">
+                        <p>
+                            If you need to pause your Dropified account temporarily instead of canceling, we can save your data and keep all of your stores and accounts connected for $12/month. You can select a new plan at any time to activate your account again.
+                        </p>
+                        <p>When you choose the Pause Plan, you will keep access to: </p>
+                        <ul>
+                            <li><p>All of your store data, so it will be kept safe for when you’re ready to re-start your Dropified account again… </p></li>
+                            <li><p>The Dropified Academy where you can learn everything you need for running a successful drop shipping business… </p></li>
+                            <li><p>The AliExtractor software where you can search for hot new products to sell… </p></li>
+                            <li><p>The ability to add up to 1000 products to Dropified (although there will be no auto order feature or store connection)… allowing you to have products ready to sell when you decide to go live again…</p></li>
+                            <li><p>Up to 50 Product Boards so you can organize your products as you research them… The CallFlex phone system so you can organize your support call systems for when you're ready to re-launch your store again…</p></li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="barecancel-trigger" class="btn confirm-cancel-btn pull-left btn-default" style="filter: brightness(115%); color: #035b9f;">
+                        No, please continue to cancel my account</button>
+                <button type="button" class="btn confirm-pause-btn btn-success" style="filter: brightness(115%);" data-plan="{{stripe_paused_plan.id}}">
+                        Yes, pause my account for only $12/mo.</button>
+              </div>
+        </div>
+    </div>
+</div>

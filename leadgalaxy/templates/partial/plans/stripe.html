@@ -39,12 +39,27 @@
 
                             {% if item.can_cancel %}
                             {% if baremetrics_form_enabled %}
-                            <button class="btn btn-danger btn-outline btn-xs pull-right itooltip"
+                            <button class="btn
+                                           btn-danger
+                                           btn-outline
+                                           btn-xs
+                                           pull-right
+                                           {% if not item.plan.is_paused %}cancel-or-pause-sub-btn{% endif %}
+                                           itooltip"
+                                    {% if item.plan.is_paused %}
+                                    {# Shows at pause modal Cancel button or here #}
+                                    id="barecancel-trigger"
+                                    {% endif %}
                             {% else %}
-                            <button class="btn btn-danger btn-outline btn-xs pull-right cancel-sub-btn itooltip"
+                            <button class="btn
+                                           btn-danger
+                                           btn-outline
+                                           btn-xs
+                                           pull-right
+                                           {% if item.plan.is_paused %}cancel-sub-btn{% else %}cancel-or-pause-sub-btn{% endif %}
+                                           itooltip"
                             {% endif %}
                                     title="Cancel Your Subscription"
-                                    id="barecancel-trigger"
                                     data-subscription="{{item.id}}"
                                     data-status="{{status.status}}"
                                     data-period-end="{{item.period_end|date:'SHORT_DATE_FORMAT'}}"
