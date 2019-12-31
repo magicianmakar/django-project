@@ -142,8 +142,9 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product_change = ProductChange.objects.get(pk=8)
         manager = ProductChangeManager.initialize(product_change)
         product_data = product_change.product.retrieve()
-        idx = manager.get_variant(product_data, manager.variant_changes[0])
-        self.assertEqual(idx, 6)
+        if product_data:
+            idx = manager.get_variant(product_data, manager.variant_changes[0])
+            self.assertEqual(idx, 6)
 
     @tag('slow')
     @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
@@ -622,6 +623,8 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product_changes = []
         product = BigCommerceProduct.objects.get(pk=2)
         bigcommerce_product = product.retrieve()
+        if not bigcommerce_product:
+            return
 
         price = round(float(bigcommerce_product['price']), 2)
 
@@ -669,6 +672,9 @@ class ProductChangeManagerTestCase(BaseTestCase):
         product_changes = []
         product = BigCommerceProduct.objects.get(pk=1)
         bigcommerce_product = product.retrieve()
+        if not bigcommerce_product:
+            return
+
         variant = bigcommerce_product['variants'][0]
         if 'price' not in variant:
             return
