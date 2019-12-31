@@ -107,7 +107,7 @@ def get_menu_item_data():
             'url_name': 'product_alerts',
             'permissions': ['price_changes.use'],
             'match': re.compile(r'(/\w+)?/products/update'),
-            'platforms': ['shopify', 'chq', 'woo', 'gkart']
+            'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']
         },
         'business': {
             'title': 'Business',
@@ -181,7 +181,7 @@ def get_menu_item_data():
         'get-started': {
             'title': 'Get Started',
             'url_name': 'index',
-            'match': re.compile(r'(/chq|/gear|/gkart|/woo)?/$'),
+            'match': re.compile(r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$'),
         },
     }
 

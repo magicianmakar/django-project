@@ -35,6 +35,7 @@ from .models import (
     SubuserWooPermission,
     SubuserGearPermission,
     SubuserGKartPermission,
+    SubuserBigCommercePermission,
     UserAddress,
     UserCompany,
     UserProfile,
@@ -374,6 +375,13 @@ class SubuserWooPermissionAdmin(admin.ModelAdmin):
 
 @admin.register(SubuserGearPermission)
 class SubuserGearPermissionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'codename', 'name', 'store')
+    raw_id_fields = ('store',)
+    search_fields = ('name',)
+
+
+@admin.register(SubuserBigCommercePermission)
+class SubuserBigCommercePermissionAdmin(admin.ModelAdmin):
     list_display = ('id', 'codename', 'name', 'store')
     raw_id_fields = ('store',)
     search_fields = ('name',)

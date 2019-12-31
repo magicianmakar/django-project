@@ -38,4 +38,12 @@
             <li><a href="{% url 'gkart:boards_list' %}">GrooveKart</a></li>
         {% endif %}
     {% endif %}
+
+    {% if user_stores.bigcommerce %}
+        {% if 'bigcommerce' in request.path %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">BigCommerce</a></li>
+        {% else %}
+            <li><a href="{% url 'bigcommerce:boards_list' %}">BigCommerce</a></li>
+        {% endif %}
+    {% endif %}
 </ul>

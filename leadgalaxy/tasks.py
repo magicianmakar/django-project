@@ -64,6 +64,7 @@ from product_feed.feed import (
     generate_woo_product_feed,
     generate_gear_product_feed,
     generate_gkart_product_feed,
+    generate_bigcommerce_product_feed,
 )
 from product_feed.models import (
     FeedStatus,
@@ -71,6 +72,7 @@ from product_feed.models import (
     WooFeedStatus,
     GearBubbleFeedStatus,
     GrooveKartFeedStatus,
+    BigCommerceFeedStatus,
 )
 
 from order_exports.models import OrderExport
@@ -816,6 +818,25 @@ def generate_gkart_feed(self, feed_id, nocache=False, by_fb=False):
             # Generate Google feed if the user set it's settings
             if feed.get_google_settings():
                 generate_gkart_product_feed(feed, nocache=nocache, revision=3)
+
+    except:
+        feed.status = 0
+        feed.generation_time = -1
+        feed.save()
+
+        raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
+def generate_bigcommerce_feed(self, feed_id, nocache=False, by_fb=False):
+    try:
+        feed = BigCommerceFeedStatus.objects.get(id=feed_id)
+        generate_bigcommerce_product_feed(feed, nocache=nocache)
+
+        if feed.store.user.can('google_product_feed.use'):
+            # Generate Google feed if the user set it's settings
+            if feed.get_google_settings():
+                generate_bigcommerce_product_feed(feed, nocache=nocache, revision=3)
 
     except:
         feed.status = 0

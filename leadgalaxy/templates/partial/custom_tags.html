@@ -43,6 +43,7 @@
                 woo_count: {{user_stores.woo|length}},
                 gear_count: {{user_stores.gear|length}},
                 gkart_count: {{user_stores.gkart|length}},
+                bigcommerce_count: {{user_stores.bigcommerce|length}},
                 {% endcache %}
 
                 {% cache 604800 total_orders user.id %}

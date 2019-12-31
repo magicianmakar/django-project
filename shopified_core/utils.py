@@ -111,6 +111,8 @@ def prefix_from_model(model):
         return 'gkart'
     elif prefix == 'gearbubble_core':
         return 'gear'
+    elif prefix == 'bigcommerce_core':
+        return 'bigcommerce'
     else:
         return None
 

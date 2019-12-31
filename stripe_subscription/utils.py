@@ -13,7 +13,15 @@ from django.db.models import Q
 
 import arrow
 
-from .models import StripeCustomer, StripeSubscription, ExtraStore, ExtraCHQStore, ExtraWooStore, ExtraGearStore, CustomStripeSubscription
+from .models import (
+    StripeCustomer,
+    StripeSubscription,
+    ExtraStore, ExtraCHQStore,
+    ExtraWooStore,
+    ExtraGearStore,
+    ExtraBigCommerceStore,
+    CustomStripeSubscription
+)
 from .stripe_api import stripe
 
 from shopified_core.utils import safe_str
@@ -202,11 +210,13 @@ def have_wrong_extra_stores_count(extra):
     extra_stores = get_active_extra_stores(ExtraStore.objects.filter(user=user), current_period=False)
     extra_chq_stores = get_active_extra_stores(ExtraCHQStore.objects.filter(user=user), current_period=False)
     extra_woo_stores = get_active_extra_stores(ExtraWooStore.objects.filter(user=user), current_period=False)
+    extra_bigcommerce_stores = get_active_extra_stores(ExtraBigCommerceStore.objects.filter(user=user), current_period=False)
     extra_gear_stores = get_active_extra_stores(ExtraGearStore.objects.filter(user=user), current_period=False)
     current_extra_count = len(extra_stores)
     current_extra_count += len(extra_chq_stores)
     current_extra_count += len(extra_woo_stores)
     current_extra_count += len(extra_gear_stores)
+    current_extra_count += len(extra_bigcommerce_stores)
 
     stores_count = user.profile.get_stores_count()
     stores_limit = user.profile.plan.stores
@@ -247,6 +257,12 @@ def have_wrong_extra_stores_count(extra):
                 extra_stores_ignored.append(extra_store.id)
                 extra_store.delete()
 
+        for extra_store in extra_bigcommerce_stores:
+            if current_limit_increase > 0:
+                current_limit_increase -= 1
+                extra_stores_ignored.append(extra_store.id)
+                extra_store.delete()
+
         cache.set(cache_key, extra_stores_ignored, timeout=900)
         return True
 
@@ -279,6 +295,7 @@ def get_subscribed_extra_stores(extra_model):
             extra.user.extrastore_set.all().update(status='disabled')
             extra.user.extrachqstore_set.all().update(status='disabled')
             extra.user.extrawoostore_set.all().update(status='disabled')
+            extra.user.extrabigcommercestore_set.all().update(status='disabled')
             extra.user.extragearstore_set.all().update(status='disabled')
             ignore = True
 
@@ -344,6 +361,10 @@ def invoice_extra_stores():
         invoiced += 1
 
     for extra in get_subscribed_extra_stores(ExtraGearStore):
+        extra_store_invoice(extra.store, extra=extra)
+        invoiced += 1
+
+    for extra in get_subscribed_extra_stores(ExtraBigCommerceStore):
         extra_store_invoice(extra.store, extra=extra)
         invoiced += 1
 

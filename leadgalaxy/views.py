@@ -42,6 +42,7 @@ from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from infinite_pagination.paginator import InfinitePaginator
 
@@ -55,6 +56,7 @@ from shopify_orders import utils as shopify_orders_utils
 from commercehq_core.models import CommerceHQProduct
 from groovekart_core.models import GrooveKartProduct
 from woocommerce_core.models import WooProduct
+from bigcommerce_core.models import BigCommerceProduct
 from product_alerts.models import ProductChange
 from stripe_subscription.stripe_api import stripe
 from shopify_subscription.tasks import cancel_baremetrics_subscriptions
@@ -963,6 +965,11 @@ def webhook(request, provider, option):
                 product = WooProduct.objects.get(id=product_id)
             except WooProduct.DoesNotExist:
                 return JsonResponse({'error': 'Product Not Found'}, status=404)
+        elif dropified_type == 'bigcommerce':
+            try:
+                product = BigCommerceProduct.objects.get(id=product_id)
+            except BigCommerceProduct.DoesNotExist:
+                return JsonResponse({'error': 'Product Not Found'}, status=404)
         else:
             return JsonResponse({'error': 'Unknown Product Type'}, status=500)
 
@@ -977,6 +984,7 @@ def webhook(request, provider, option):
                 chq_product=product if dropified_type == 'chq' else None,
                 gkart_product=product if dropified_type == 'gkart' else None,
                 woo_product=product if dropified_type == 'woo' else None,
+                bigcommerce_product=product if dropified_type == 'bigcommerce' else None,
                 user=product.user,
                 data=request.body,
             )
@@ -2198,6 +2206,8 @@ def get_shipping_info(request):
         from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier
     if request.GET.get('gkart'):
         from groovekart_core.models import GrooveKartProduct, GrooveKartSupplier
+    if request.GET.get('bigcommerce'):
+        from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier
 
     request_url = request.GET.get('url')
     if request_url:
@@ -2269,6 +2279,15 @@ def get_shipping_info(request):
             else:
                 supplier = GrooveKartSupplier.objects.get(id=supplier)
 
+        elif request.GET.get('bigcommerce'):
+
+            if int(supplier) == 0:
+                product = BigCommerceProduct.objects.get(id=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = BigCommerceSupplier.objects.get(id=supplier)
+
         else:
 
             if int(supplier) == 0:
@@ -2313,6 +2332,8 @@ def get_shipping_info(request):
         product = get_object_or_404(GearBubbleProduct, id=request.GET.get('product'))
     elif request.GET.get('gkart'):
         product = get_object_or_404(GrooveKartProduct, id=request.GET.get('product'))
+    elif request.GET.get('bigcommerce'):
+        product = get_object_or_404(BigCommerceProduct, id=request.GET.get('product'))
     else:
         product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
 
@@ -2362,6 +2383,7 @@ def acp_users_list(request):
                 | Q(shopifystore__shop__iexact=q)
                 | Q(commercehqstore__api_url__icontains=q)
                 | Q(woostore__api_url__icontains=q)
+                | Q(bigcommercestore__api_url__icontains=q)
                 | Q(shopifystore__title__icontains=q)
             )
         elif request.GET.get('user') and safe_int(request.GET.get('user')):
@@ -2380,6 +2402,7 @@ def acp_users_list(request):
                     | Q(shopifystore__shop__iexact=q)
                     | Q(commercehqstore__api_url__icontains=q)
                     | Q(woostore__api_url__icontains=q)
+                    | Q(bigcommercestore__api_url__icontains=q)
                     | Q(shopifystore__title__icontains=q)
                 )
 
@@ -3316,6 +3339,17 @@ def save_image_s3(request):
         product = GrooveKartProduct.objects.get(id=product_id)
         permissions.user_can_edit(user, product)
         GrooveKartUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
+
+        if old_url and not old_url == upload_url:
+            update_product_data_images(product, old_url, upload_url)
+
+    elif request.GET.get('bigcommerce') or request.POST.get('bigcommerce'):
+        from bigcommerce_core.models import BigCommerceProduct, BigCommerceUserUpload
+
+        product = BigCommerceProduct.objects.get(id=product_id)
+        permissions.user_can_edit(user, product)
+
+        BigCommerceUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
 
         if old_url and not old_url == upload_url:
             update_product_data_images(product, old_url, upload_url)
@@ -5004,6 +5038,11 @@ def sudo_login(request):
             'target_user': target_user
         }
     )
+
+
+@xframe_options_exempt
+def login_xframe_options_exempt(*args, **kwargs):
+    return login_view(*args, **kwargs)
 
 
 @require_http_methods(['GET'])

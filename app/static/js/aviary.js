@@ -48,7 +48,7 @@ window.asi = function(img, blob, imageBytes, type) {
     fd.append('old_url', oldURL);
     fd.append('url', newURL);
 
-    var storeType = window.location.href.match('(chq|woo|gear|gkart)');
+    var storeType = window.location.href.match('(chq|woo|gear|gkart|bigcommerce)');
     if (storeType) {
         fd.append(storeType[0], 1);
     }

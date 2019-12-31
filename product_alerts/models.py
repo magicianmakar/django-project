@@ -9,6 +9,7 @@ from leadgalaxy.models import ShopifyProduct
 from commercehq_core.models import CommerceHQProduct
 from groovekart_core.models import GrooveKartProduct
 from woocommerce_core.models import WooProduct
+from bigcommerce_core.models import BigCommerceProduct
 from .utils import parse_supplier_sku, variant_index_from_supplier_sku
 from leadgalaxy.templatetags.template_helper import price_diff, money_format
 
@@ -29,6 +30,7 @@ class ProductChange(models.Model):
     chq_product = models.ForeignKey(CommerceHQProduct, null=True, on_delete=models.CASCADE)
     gkart_product = models.ForeignKey(GrooveKartProduct, null=True, on_delete=models.CASCADE)
     woo_product = models.ForeignKey(WooProduct, null=True, on_delete=models.CASCADE)
+    bigcommerce_product = models.ForeignKey(BigCommerceProduct, null=True, on_delete=models.CASCADE)
     store_type = models.CharField(max_length=255, blank=True, default='shopify')
     data = models.TextField(blank=True, default='')
     hidden = models.BooleanField(default=False, verbose_name='Archived change')
@@ -62,6 +64,8 @@ class ProductChange(models.Model):
             return self.gkart_product
         if self.store_type == 'woo':
             return self.woo_product
+        if self.store_type == 'bigcommerce':
+            return self.bigcommerce_product
         return None
 
     @property
@@ -74,6 +78,8 @@ class ProductChange(models.Model):
             return app_link('gkart/product', self.product.id)
         if self.store_type == 'woo':
             return app_link('woo/product', self.product.id)
+        if self.store_type == 'bigcommerce':
+            return app_link('bigcommerce/product', self.product.id)
         return None
 
     def get_data(self, category=None):

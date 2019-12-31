@@ -14,6 +14,7 @@ from commercehq_core.tests.factories import CommerceHQStoreFactory
 from woocommerce_core.tests.factories import WooStoreFactory
 from gearbubble_core.tests.factories import GearBubbleStoreFactory
 from groovekart_core.tests.factories import GrooveKartStoreFactory
+from bigcommerce_core.tests.factories import BigCommerceStoreFactory
 
 from ..models import (
     FeedStatus,
@@ -21,6 +22,7 @@ from ..models import (
     WooFeedStatus,
     GearBubbleFeedStatus,
     GrooveKartFeedStatus,
+    BigCommerceFeedStatus,
 )
 from .factories import (
     FeedStatusFactory,
@@ -28,6 +30,7 @@ from .factories import (
     WooFeedStatusFactory,
     GearBubbleFeedStatusFactory,
     GrooveKartFeedStatusFactory,
+    BigCommerceFeedStatusFactory,
 )
 
 
@@ -72,6 +75,11 @@ class ProductFeeds(BaseTestCase):
         r = self.client.get(path)
         self.assertRedirects(r, '%s?next=%s' % (reverse('login'), path))
 
+    def test_must_be_logged_in_for_bigcommerce_store_feeds(self):
+        path = reverse('product_feeds', kwargs={'store_type': 'bigcommerce'})
+        r = self.client.get(path)
+        self.assertRedirects(r, '%s?next=%s' % (reverse('login'), path))
+
     def test_must_use_shopify_product_feeds_template(self):
         self.login()
         r = self.client.get(reverse('product_feeds'))
@@ -96,6 +104,11 @@ class ProductFeeds(BaseTestCase):
         self.login()
         r = self.client.get(reverse('product_feeds', kwargs={'store_type': 'gkart'}))
         self.assertTemplateUsed(r, 'gkart_product_feeds.html')
+
+    def test_must_use_bigcommerce_product_feeds_template(self):
+        self.login()
+        r = self.client.get(reverse('product_feeds', kwargs={'store_type': 'bigcommerce'}))
+        self.assertTemplateUsed(r, 'bigcommerce_product_feeds.html')
 
     def test_must_set_all_variants_of_shopify_store(self):
         self.login()
@@ -147,6 +160,16 @@ class ProductFeeds(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         self.assertFalse(feed.all_variants)
 
+    def test_must_set_all_variants_of_bigcommerce_store(self):
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        feed = BigCommerceFeedStatusFactory(store=store)
+        data = {'feed': feed.id, 'all_variants': False}
+        r = self.client.post(reverse('product_feeds', kwargs={'store_type': 'bigcommerce'}), data)
+        feed.refresh_from_db()
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(feed.all_variants)
+
     def test_must_set_include_variants_id_of_shopify_store(self):
         self.login()
         store = ShopifyStoreFactory(user=self.user)
@@ -193,6 +216,16 @@ class ProductFeeds(BaseTestCase):
         feed = GrooveKartFeedStatusFactory(store=store)
         data = {'feed': feed.id, 'include_variants_id': False}
         r = self.client.post(reverse('product_feeds', kwargs={'store_type': 'gkart'}), data)
+        feed.refresh_from_db()
+        self.assertEqual(r.status_code, 200)
+        self.assertFalse(feed.include_variants_id)
+
+    def test_must_set_include_variants_id_of_bigcommerce_store(self):
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        feed = BigCommerceFeedStatusFactory(store=store)
+        data = {'feed': feed.id, 'include_variants_id': False}
+        r = self.client.post(reverse('product_feeds', kwargs={'store_type': 'bigcommerce'}), data)
         feed.refresh_from_db()
         self.assertEqual(r.status_code, 200)
         self.assertFalse(feed.include_variants_id)
@@ -252,6 +285,17 @@ class ProductFeeds(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         self.assertTrue(generate_gkart_feed.called)
 
+    @patch('leadgalaxy.tasks.generate_bigcommerce_feed.delay')
+    def test_must_update_feed_of_bigcommerce_store(self, generate_bigcommerce_feed):
+        generate_bigcommerce_feed.return_value = None
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        feed = BigCommerceFeedStatusFactory(store=store)
+        data = {'feed': feed.id, 'update_feed': True}
+        r = self.client.post(reverse('product_feeds', kwargs={'store_type': 'bigcommerce'}), data)
+        self.assertEqual(r.status_code, 200)
+        self.assertTrue(generate_bigcommerce_feed.called)
+
     def test_must_return_error_of_missing_parameters_for_shopify_store(self):
         self.login()
         store = ShopifyStoreFactory(user=self.user)
@@ -297,6 +341,15 @@ class ProductFeeds(BaseTestCase):
         self.assertEqual(r.status_code, 500)
         self.assertIn('Missing parameters', r.content.decode())
 
+    def test_must_return_error_of_missing_parameters_for_bigcommerce_store(self):
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        feed = BigCommerceFeedStatusFactory(store=store)
+        data = {'feed': feed.id}
+        r = self.client.post(reverse('product_feeds', kwargs={'store_type': 'bigcommerce'}), data)
+        self.assertEqual(r.status_code, 500)
+        self.assertIn('Missing parameters', r.content.decode())
+
     def test_must_return_feed_for_shopify_store(self):
         self.login()
         store = ShopifyStoreFactory(user=self.user)
@@ -337,6 +390,14 @@ class ProductFeeds(BaseTestCase):
         feeds = GrooveKartFeedStatus.objects.filter(store__user=self.user)
         self.assertEqual(list(feeds), r.context['feeds'])
 
+    def test_must_return_feed_for_bigcommerce_store(self):
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        feed = BigCommerceFeedStatusFactory(store=store) # noqa
+        r = self.client.get(reverse('product_feeds', kwargs={'store_type': 'bigcommerce'}))
+        feeds = BigCommerceFeedStatus.objects.filter(store__user=self.user)
+        self.assertEqual(list(feeds), r.context['feeds'])
+
     def test_must_show_upgrade_page_for_shopify_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
@@ -366,6 +427,12 @@ class ProductFeeds(BaseTestCase):
         self.user.profile.plan.permissions.remove(self.permission)
         self.client.get(reverse('product_feeds', kwargs={'store_type': 'gkart'}))
         self.assertTemplateUsed('groovekart/upgrade.html')
+
+    def test_must_show_upgrade_page_for_bigcommerce_store(self):
+        self.login()
+        self.user.profile.plan.permissions.remove(self.permission)
+        self.client.get(reverse('product_feeds', kwargs={'store_type': 'bigcommerce'}))
+        self.assertTemplateUsed('bigcommerce/upgrade.html')
 
 
 class GetProductFeed(BaseTestCase):
@@ -435,6 +502,16 @@ class GetProductFeed(BaseTestCase):
         self.assertEqual(r.status_code, 302)
         self.assertTrue(generate_gkart_product_feed.called)
 
+    @patch('product_feed.views.generate_bigcommerce_product_feed')
+    def test_must_generate_bigcommerce_product_feed(self, generate_bigcommerce_product_feed):
+        generate_bigcommerce_product_feed.return_value = 'https://test-url.com'
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
+        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'bigcommerce', 'store_id': store.store_hash[:8]}), **headers)
+        self.assertEqual(r.status_code, 302)
+        self.assertTrue(generate_bigcommerce_product_feed.called)
+
     def test_must_have_permissions_to_generate_shopify_feed(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
@@ -468,6 +545,13 @@ class GetProductFeed(BaseTestCase):
         self.user.profile.plan.permissions.remove(self.permission)
         store = GrooveKartStoreFactory(user=self.user)
         r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'gkart', 'store_id': store.store_hash[:8]}))
+        self.assertEqual(r.status_code, 404)
+
+    def test_must_have_permissions_to_generate_bigcommerce_feed(self):
+        self.login()
+        self.user.profile.plan.permissions.remove(self.permission)
+        store = BigCommerceStoreFactory(user=self.user)
+        r = self.client.get(reverse('get_product_feed', kwargs={'store_type': 'bigcommerce', 'store_id': store.store_hash[:8]}))
         self.assertEqual(r.status_code, 404)
 
     @patch('product_feed.models.ShopifyStore.get_info', Mock(return_value=True))
@@ -517,6 +601,16 @@ class GetProductFeed(BaseTestCase):
         self.login()
         store = GrooveKartStoreFactory(user=self.user)
         path = reverse('get_product_feed', kwargs={'store_type': 'gkart', 'store_id': store.store_hash[:8]})
+        self.client.get(path + '/9')
+        store.feedstatus.refresh_from_db()
+        self.assertEqual(store.feedstatus.revision, 9)
+
+    @patch('product_feed.views.generate_bigcommerce_product_feed')
+    def test_must_change_revision_for_bigcommerce_product_feed(self, generate_bigcommerce_product_feed):
+        generate_bigcommerce_product_feed.return_value = 'https://test-url.com'
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        path = reverse('get_product_feed', kwargs={'store_type': 'bigcommerce', 'store_id': store.store_hash[:8]})
         self.client.get(path + '/9')
         store.feedstatus.refresh_from_db()
         self.assertEqual(store.feedstatus.revision, 9)
@@ -577,6 +671,17 @@ class GetProductFeed(BaseTestCase):
         feed.refresh_from_db()
         self.assertIsNotNone(feed.fb_access_at)
 
+    @patch('product_feed.views.generate_bigcommerce_product_feed')
+    def test_must_update_fb_access_date_for_bigcommerce_product_feed(self, generate_bigcommerce_product_feed):
+        generate_bigcommerce_product_feed.return_value = 'https://test-url.com'
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        feed = BigCommerceFeedStatusFactory(fb_access_at=None, store=store)
+        headers = {'HTTP_USER_AGENT': 'facebookexternalhit'}
+        self.client.get(reverse('get_product_feed', kwargs={'store_type': 'bigcommerce', 'store_id': store.store_hash[:8]}), **headers)
+        feed.refresh_from_db()
+        self.assertIsNotNone(feed.fb_access_at)
+
     @patch('product_feed.models.ShopifyStore.get_info', Mock(return_value=True))
     @patch('product_feed.views.generate_product_feed')
     def test_must_able_to_generate_feed_nocache_for_shopify_product_feed(self, generate_product_feed):
@@ -622,6 +727,15 @@ class GetProductFeed(BaseTestCase):
         path = reverse('get_product_feed', kwargs={'store_type': 'gkart', 'store_id': store.store_hash[:8]}) + '?nocache=1'
         self.client.get(path)
         generate_gkart_product_feed.assert_called_with(store.feedstatus, nocache=True)
+
+    @patch('product_feed.views.generate_bigcommerce_product_feed')
+    def test_must_able_to_generate_feed_nocache_for_bigcommerce_product_feed(self, generate_bigcommerce_product_feed):
+        generate_bigcommerce_product_feed.return_value = 'https://test-url.com'
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        path = reverse('get_product_feed', kwargs={'store_type': 'bigcommerce', 'store_id': store.store_hash[:8]}) + '?nocache=1'
+        self.client.get(path)
+        generate_bigcommerce_product_feed.assert_called_with(store.feedstatus, nocache=True)
 
     @patch('product_feed.models.ShopifyStore.get_info', Mock(return_value=True))
     @patch('product_feed.views.generate_product_feed')
@@ -676,5 +790,16 @@ class GetProductFeed(BaseTestCase):
         feed = GrooveKartFeedStatusFactory(google_access_at=None, store=store)
         headers = {'HTTP_USER_AGENT': 'Googlebot/2.1 (+http://www.google.com/bot.html)'}
         self.client.get(reverse('get_product_feed', kwargs={'store_type': 'gkart', 'store_id': store.store_hash[:8]}), **headers)
+        feed.refresh_from_db()
+        self.assertIsNotNone(feed.google_access_at)
+
+    @patch('product_feed.views.generate_bigcommerce_product_feed')
+    def test_must_update_g_access_date_for_bigcommerce_product_feed(self, generate_bigcommerce_product_feed):
+        generate_bigcommerce_product_feed.return_value = 'https://test-url.com'
+        self.login()
+        store = BigCommerceStoreFactory(user=self.user)
+        feed = BigCommerceFeedStatusFactory(google_access_at=None, store=store)
+        headers = {'HTTP_USER_AGENT': 'Googlebot/2.1 (+http://www.google.com/bot.html)'}
+        self.client.get(reverse('get_product_feed', kwargs={'store_type': 'bigcommerce', 'store_id': store.store_hash[:8]}), **headers)
         feed.refresh_from_db()
         self.assertIsNotNone(feed.google_access_at)

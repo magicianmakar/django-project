@@ -435,6 +435,28 @@ class ExtraGearStore(models.Model):
         return "{}".format(self.store.title)
 
 
+class ExtraBigCommerceStore(models.Model):
+    class Meta:
+        verbose_name = "Extra BigCommerce Store"
+        verbose_name_plural = "Extra BigCommerce Stores"
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey('bigcommerce_core.BigCommerceStore', related_name='extra', on_delete=models.CASCADE)
+
+    status = models.CharField(max_length=64, null=True, blank=True, default='pending')
+    period_start = models.DateTimeField(null=True)
+    period_end = models.DateTimeField(null=True)
+    last_invoice = models.CharField(max_length=64, null=True, blank=True, verbose_name='Last Invoice Item')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    _invoice_name = 'BigCommerce'
+
+    def __str__(self):
+        return "{}".format(self.store.title)
+
+
 class CustomStripePlan(models.Model):
     class Meta:
         verbose_name = "Custom Plan"

@@ -111,14 +111,23 @@
         $('#wizard-nav a[href="#select-section"]').tab('show');
     });
 
-    $('#install-store-form').on('submit', function(e) {
-        $('#install-store').trigger('click');
+    $('.install-store-form').on('submit', function(e) {
+        $(this).parents('.tab-pane').find('.install-store').trigger('click');
 
         return false;
     });
 
-    $('#install-store').click(function (e) {
-        var shop = $('#shop-url').val().trim().match(/(?:https?:\/\/)?(?:[^:]*:[^@]*@)?([^\/\.]+)(?:\.myshopify\.com)?/);
+    $('.install-store').click(function (e) {
+        var store_type = $(this).data('store-type');
+        var shop_url = $('#' + store_type + '-shop-url').val().trim();
+        var shop = null;
+        var install_url = null;
+        if (store_type === 'shopify') {
+            shop = shop_url.match(/(?:https?:\/\/)?(?:[^:]*:[^@]*@)?([^\/\.]+)(?:\.myshopify\.com)?/);
+        }
+        if (store_type === 'bigcommerce') {
+            shop = shop_url.match(/(?:https?:\/\/)?(?:[^:]*:[^@]*@)?([^\/\.]+)(?:\.mybigcommerce\.com)?/);
+        }
         if (!shop || shop.length != 2) {
             swal('Add Store', 'Store URL is not correct!', 'error');
             return;
@@ -126,6 +135,12 @@
             shop = shop.pop();
         }
 
+        if (store_type === 'shopify') {
+            install_url = '/shopify/install/' + shop;
+        }
+        if (store_type === 'bigcommerce') {
+            install_url = 'https://' + shop + '.mybigcommerce.com/manage/marketplace/apps/' + bigcommerce_app_id;
+        }
         if($('.add-store-btn').data('extra')) {
             swal({
                 title: "Additional Store",
@@ -144,11 +159,11 @@
                     return;
                 }
 
-                window.location.href = '/shopify/install/' + shop;
+                window.location.href = install_url;
             });
         } else {
             $(this).bootstrapBtn('loading');
-            window.location.href = '/shopify/install/' + shop;
+            window.location.href = install_url;
         }
     });
 
@@ -1374,6 +1389,53 @@
             },
             complete: function () {
                 this.btn.bootstrapBtn('reset');
+            }
+        });
+    });
+
+    $('.bigcommerce-delete-store-btn').click(function(e) {
+        e.preventDefault();
+        var storeId = $(this).data('store-id');
+
+        swal({
+            title: 'Are you sure?',
+            text: 'Please, confirm if you want to delete this store.',
+            type: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: 'Yes, delete it!',
+            closeOnConfirm: false
+        }, function() {
+            $.ajax({
+                url: api_url('store', 'bigcommerce') + '?' + $.param({id: storeId}),
+                method: 'DELETE',
+                success: function() {
+                    $('#bigcommerce-store-row-' + storeId).hide();
+                    swal('Deleted!', 'The store has been deleted.', 'success');
+                }
+            });
+        });
+    });
+
+    $('.bigcommerce-verify-api-url').click(function (e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: api_url('store-verify', 'bigcommerce'),
+            type: 'GET',
+            data: {
+                store: $(this).data('store-id')
+            },
+            context: {
+                btn: $(this)
+            },
+            success: function (data) {
+                swal('API URL', 'The API URL is working properly for BigCommerce store:\n' + data.store, 'success');
+            },
+            error: function (data) {
+                displayAjaxError('API URL', data);
+            },
+            complete: function () {
             }
         });
     });

@@ -82,6 +82,7 @@ INSTALLED_APPS = (
     'woocommerce_core',
     'gearbubble_core',
     'groovekart_core',
+    'bigcommerce_core',
     'phone_automation',
     'funnels',
     'aliextractor'
@@ -145,6 +146,7 @@ DROPIFIED_API = {
     'gear': 'gearbubble_core.api.GearBubbleApi',
     'woo': 'woocommerce_core.api.WooStoreApi',
     'gkart': 'groovekart_core.api.GrooveKartApi',
+    'bigcommerce': 'bigcommerce_core.api.BigCommerceStoreApi',
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
     'subusers': 'subusers.api.SubusersApi',
     'goals': 'goals.api.GoalsApi',
@@ -478,3 +480,8 @@ BAREMETRICS_TAGS_FIELD = os.environ.get('BAREMETRICS_TAGS_FIELD', 753)
 BAREMETRICS_ACCESS_TOKEN = os.environ.get('BAREMETRICS_ACCESS_TOKEN')
 BAREMETRICS_JWT_TOKEN_KEY = os.environ.get('BAREMETRICS_JWT_TOKEN_KEY')
 PHONE_AUTOMATION_WARNING_LIMIT = 0.75  # percent. when reached - send warning email
+
+# BigCommerce
+BIGCOMMERCE_APP_ID = os.environ.get('BIGCOMMERCE_APP_ID')
+BIGCOMMERCE_CLIENT_ID = os.environ.get('BIGCOMMERCE_CLIENT_ID')
+BIGCOMMERCE_CLIENT_SECRET = os.environ.get('BIGCOMMERCE_CLIENT_SECRET')

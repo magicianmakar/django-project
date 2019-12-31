@@ -32,6 +32,8 @@ urlpatterns = [
         subusers.views.subuser_woo_store_permissions, name='subuser_woo_store_permissions'),
     url(r'^subusers/gkart-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
         subusers.views.subuser_gkart_store_permissions, name='subuser_gkart_store_permissions'),
+    url(r'^subusers/bigcommerce-permissions/(?P<user_id>[0-9]+)/store/(?P<store_id>[0-9]+)$',
+        subusers.views.subuser_bigcommerce_store_permissions, name='subuser_bigcommerce_store_permissions'),
 
     url(r'^user/profile$', leadgalaxy.views.user_profile, name='user_profile'),
     url(r'^user/unlock/(?P<token>[a-z0-9]+)$', leadgalaxy.views.user_unlock, name='user_unlock'),

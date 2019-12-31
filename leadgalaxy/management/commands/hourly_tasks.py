@@ -9,12 +9,14 @@ from product_feed.models import (
     CommerceHQFeedStatus,
     WooFeedStatus,
     GrooveKartFeedStatus,
+    BigCommerceFeedStatus,
 )
 from product_feed.feed import (
     generate_product_feed,
     generate_chq_product_feed,
     generate_woo_product_feed,
     generate_gkart_product_feed,
+    generate_bigcommerce_product_feed,
 )
 from leadgalaxy.models import UserProfile, GroupPlan
 
@@ -29,7 +31,7 @@ class Command(DropifiedBaseCommand):
 
         self.generate_product_feeds(store_type='shopify', verbosity=verbosity + 1)
 
-        for store_type in ['chq', 'woo', 'gkart']:
+        for store_type in ['chq', 'woo', 'gkart', 'bigcommerce']:
             self.generate_product_feeds(store_type=store_type, verbosity=verbosity)
 
     def get_feed_status_model(self, store_type=''):
@@ -41,6 +43,8 @@ class Command(DropifiedBaseCommand):
             return WooFeedStatus
         elif store_type == 'gkart':
             return GrooveKartFeedStatus
+        elif store_type == 'bigcommerce':
+            return BigCommerceFeedStatus
 
     def get_generate_product_feed(self, store_type=''):
         if store_type == 'shopify':
@@ -51,6 +55,8 @@ class Command(DropifiedBaseCommand):
             return generate_woo_product_feed
         elif store_type == 'gkart':
             return generate_gkart_product_feed
+        elif store_type == 'bigcommerce':
+            return generate_bigcommerce_product_feed
 
     def generate_product_feeds(self, store_type='', verbosity=1):
         FeedStatusModel = self.get_feed_status_model(store_type)

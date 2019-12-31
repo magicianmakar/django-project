@@ -757,7 +757,8 @@ def sms_flow(request):
         phone_cleaned = re.sub(r"\D", "", command_parameter)
         orders = get_orders_by_phone(user, phone_cleaned, command_parameter)
 
-        if len(orders['shopify']) > 0 or len(orders['woo']) > 0 or len(orders['chq']) > 0 or len(orders['gear']) > 0:
+        if len(orders['shopify']) > 0 or len(orders['woo']) > 0 or len(orders['chq']) > 0 \
+           or len(orders['gear']) > 0 or len(orders['bigcommerce']) > 0:
             message += f"We've found the following open orders by your phone number {command_parameter}: \n "
             message += get_sms_text(orders)
 
@@ -769,7 +770,8 @@ def sms_flow(request):
 
         orders = get_orders_by_phone(user, phone, phone_from)
 
-        if len(orders['shopify']) > 0 or len(orders['woo']) > 0 or len(orders['chq']) > 0 or len(orders['gear']) > 0:
+        if len(orders['shopify']) > 0 or len(orders['woo']) > 0 or len(orders['chq']) > 0 \
+           or len(orders['gear']) > 0 or len(orders['bigcommerce']) > 0:
             message += f"We've found the following open orders by your phone number {phone_from}: \n "
             message += get_sms_text(orders)
 
@@ -784,7 +786,8 @@ def sms_flow(request):
         order_id = command_parameter
 
         orders = get_orders_by_id(user, order_id)
-        if len(orders['shopify']) > 0 or len(orders['woo']) > 0 or len(orders['chq']) > 0 or len(orders['gear']) > 0:
+        if len(orders['shopify']) > 0 or len(orders['woo']) > 0 or len(orders['chq']) > 0 \
+           or len(orders['gear']) > 0 or len(orders['bigcommerce']) > 0:
             message += f"We've found the following open orders by ID you provided ({order_id}): \n "
             message += get_sms_text(orders)
 

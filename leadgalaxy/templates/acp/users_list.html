@@ -88,11 +88,13 @@
                                             <li><a href="/admin/leadgalaxy/shopifystore/?q={{item.email|urlencode}}" target="_blank">Shopify Stores</a></li>
                                             <li><a href="/admin/commercehq_core/commercehqstore/?q={{item.email|urlencode}}" target="_blank">CommerceHQ Stores</a></li>
                                             <li><a href="/admin/woocommerce_core/woostore/?q={{item.email|urlencode}}" target="_blank">WooCommerce Stores</a></li>
+                                            <li><a href="/admin/bigcommerce_core/bigcommercestore/?q={{item.email|urlencode}}" target="_blank">BigCommerce Stores</a></li>
                                             <li class="divider"></li>
                                             <li><a href="/admin/stripe_subscription/extrastore/?q={{item.email|urlencode}}" target="_blank">Extra Stores</a></li>
                                             <li><a href="/admin/stripe_subscription/extrachqstore/?q={{item.email|urlencode}}" target="_blank">Extra CommerceHQ Stores</a></li>
                                             <li><a href="/admin/stripe_subscription/extrawoostore/?q={{item.email|urlencode}}" target="_blank">Extra Woocommerce Stores</a></li>
                                             <li><a href="/admin/stripe_subscription/extragearstore/?q={{item.email|urlencode}}" target="_blank">Extra GearBubble Stores</a></li>
+                                            <li><a href="/admin/stripe_subscription/extrabigcommercestore/?q={{item.email|urlencode}}" target="_blank">Extra BigCommerce Stores</a></li>
                                             <li class="divider"></li>
                                             <li><a href="https://dashboard.stripe.com/search?query={{item.email|urlencode}}" target="_blank">Stripe</a></li>
                                             <li><a href="/admin/stripe_subscription/stripecustomer/?q={{item.email|urlencode}}" target="_blank">Stripe Customer</a></li>
@@ -187,6 +189,18 @@
 
                                         {% if product_count %}
                                             <li style="list-style:none">{{item.groovekartproduct_set.count}} Products</li>
+                                        {% endif %}
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>BigCommerce</td>
+                                <td style=" white-space:nowrap">
+                                    <ul style="padding:0;margin:0">
+                                        <li style="list-style:none">{{item.profile.get_bigcommerce_stores.count}} Stores</li>
+
+                                        {% if product_count %}
+                                            <li style="list-style:none">{{item.bigcommerceproduct_set.count}} Products</li>
                                         {% endif %}
                                     </ul>
                                 </td>

@@ -30,6 +30,13 @@
                 {{ form.subuser_gkart_stores.errors | safe }}
             </div>
             {% endif %}
+            {% if form.subuser_bigcommerce_stores %}
+            <h4>BigCommerce Stores</h4>
+            <div class="form-group">
+                {% render_field form.subuser_bigcommerce_stores  %}
+                {{ form.subuser_bigcommerce_stores.errors | safe }}
+            </div>
+            {% endif %}
             <p class="text-right">
                 <a href="{% url template_config.url.namespace|add:'subuser_perms_edit' subuser.id %}" class="btn btn-warning m-b">Edit Permissions</a>
                 <button type="submit" class="btn btn-primary m-b">Save</button>

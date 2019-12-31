@@ -23,6 +23,13 @@
             <li><a href="{% url 'woo:orders_list' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
 
+    {% elif item|model_name == 'bigcommercestore' %}
+        {% if store == item %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% else %}
+            <li><a href="{% url 'bigcommerce:orders_list' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% endif %}
+
     {% elif item|model_name == 'gearbubblestore' %}
         {% if store == item %}
             <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>

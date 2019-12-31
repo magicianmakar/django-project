@@ -42,10 +42,12 @@
         "subuser_chq_stores": [],
         "subuser_woo_stores": [],
         "subuser_gear_stores": [],
+        "subuser_bigcommerce_stores": [],
         "subuser_permissions": [],
         "subuser_chq_permissions": [],
         "subuser_woo_permissions": [],
-        "subuser_gear_permissions": []
+        "subuser_gear_permissions": [],
+        "subuser_bigcommerce_permissions": []
     }
 }, {
     "model": "leadgalaxy.subuserpermission",
@@ -5463,6 +5465,13 @@
     "fields": {
         "name": "ebay_auto_fulfill.use",
         "description": "eBay Auto Fulfill"
+    }
+}, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 135,
+    "fields": {
+        "name": "bigcommerce.use",
+        "description": "BigCommerce Integration"
     }
 }, {
     "model": "stripe_subscription.stripeplan",

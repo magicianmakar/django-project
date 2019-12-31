@@ -22,11 +22,13 @@ from leadgalaxy.models import (
     SubuserWooPermission,
     SubuserGearPermission,
     SubuserGKartPermission,
+    SubuserBigCommercePermission,
     SUBUSER_STORE_PERMISSIONS,
     SUBUSER_CHQ_STORE_PERMISSIONS,
     SUBUSER_WOO_STORE_PERMISSIONS,
     SUBUSER_GEAR_STORE_PERMISSIONS,
     SUBUSER_GKART_STORE_PERMISSIONS,
+    SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
 )
 
 from profit_dashboard.models import AliexpressFulfillmentCost
@@ -199,6 +201,22 @@ def add_gkart_store_permissions_to_subuser(sender, instance, pk_set, action, **k
         for store in stores:
             permissions = store.subuser_gkart_permissions.all()
             instance.subuser_gkart_permissions.add(*permissions)
+
+
+@receiver(post_save, sender='bigcommerce_core.BigCommerceStore')
+def add_bigcommerce_store_permissions(sender, instance, created, **kwargs):
+    if created:
+        for codename, name in SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS:
+            SubuserBigCommercePermission.objects.create(store=instance, codename=codename, name=name)
+
+
+@receiver(m2m_changed, sender=UserProfile.subuser_bigcommerce_stores.through)
+def add_bigcommerce_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+    if action == "post_add":
+        stores = instance.user.models_user.bigcommercestore_set.filter(pk__in=pk_set)
+        for store in stores:
+            permissions = store.subuser_bigcommerce_permissions.all()
+            instance.subuser_bigcommerce_permissions.add(*permissions)
 
 
 @receiver(post_save, sender=ShopifyOrderTrack, dispatch_uid='sync_aliexpress_fulfillment_cost')

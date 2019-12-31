@@ -35,3 +35,10 @@ class GrooveKartFeedStatusFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'product_feed.GrooveKartFeedStatus'
+
+
+class BigCommerceFeedStatusFactory(factory.DjangoModelFactory):
+    store = factory.SubFactory('bigcommerce_core.tests.factories.BigCommerceStoreFactory')
+
+    class Meta:
+        model = 'product_feed.BigCommerceFeedStatus'

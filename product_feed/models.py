@@ -131,3 +131,14 @@ class GrooveKartFeedStatus(FeedStatusAbstract):
 
     def get_filename(self, revision=None, store_type='gkart'):
         return super().get_filename(revision=revision, store_type=store_type)
+
+
+class BigCommerceFeedStatus(FeedStatusAbstract):
+    store = models.OneToOneField('bigcommerce_core.BigCommerceStore', related_name='feedstatus', on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'BigCommerce Feed Status'
+        verbose_name_plural = 'BigCommerce Feed Statuses'
+
+    def get_filename(self, revision=None, store_type='bigcommerce'):
+        return super().get_filename(revision=revision, store_type=store_type)

@@ -593,6 +593,105 @@
 },
 {
   "fields": {
+    "list_index": 0,
+    "title": "Dropified-test",
+    "api_url": "dropified-test.mybigcommerce.com",
+    "api_key": "l3lmjvi5i1",
+    "api_token": "eoqw24yqk323c8ao3ac64cc2csizl6p",
+    "is_active": true,
+    "created_at": "2019-05-13T22:11:41.685Z",
+    "updated_at": "2019-05-13T22:11:41.685Z",
+    "store_hash": "d186aa3225e0103e6c81d733041c15cc",
+    "auto_fulfill": "disable",
+    "user": [
+      "admin"
+    ]
+  },
+  "model": "bigcommerce_core.bigcommercestore",
+  "pk": 1
+},
+{
+  "fields": {
+    "data": "{\"title\": \"dvr dash camera dash cam car dvr mirror dual lens rear view camera rearview dashcam auto recorder video full hd front and rear\", \"description\": \"\", \"price\": 36.42, \"compare_at_price\": 113.8, \"images\": [\"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/products/125/images/480/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto__25649.1575426909.386.513.jpg?c=1\", \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/products/125/images/481/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto__79569.1575426912.386.513.jpg?c=1\", \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/products/125/images/482/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto__28402.1575426914.386.513.jpg?c=1\", \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/products/125/images/483/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto__83335.1575426917.386.513.jpg?c=1\", \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/products/125/images/484/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto__71278.1575426920.386.513.jpg?c=1\", \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/products/125/images/485/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto.jpg_640x640__98837.1575426922.386.513.jpg?c=1\", \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/products/125/images/486/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto.jpg_640x640__07175.1575426925.386.513.jpg?c=1\", \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/products/125/images/487/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto.jpg_640x640__21629.1575426927.386.513.jpg?c=1\", \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/products/125/images/479/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto__28051.1575426906.386.513.jpg?c=1\"], \"original_url\": \"https://www.aliexpress.com/item/32881810553.html\", \"store\": {\"id\": 4311001, \"name\": \"Max-VIP Store\", \"url\": \"//www.aliexpress.com/store/4311001\", \"contact\": \"http://message.aliexpress.com/message/new.htm?productId=32881810553&messageType=product&memberType=seller\"}, \"type\": \"DVR/Dash Camera\", \"tags\": \"\", \"vendor\": \"Max-VIP Store\", \"published\": false, \"weight\": 0, \"weight_unit\": \"g\", \"variants_images\": {\"-248664780.jpg\": \"Double Lens DVR-10M\", \"1246895716.jpg\": \"Double Lens DVR-6M\", \"1094062098.jpg\": \"Single Len DVR\"}, \"variants_sku\": {\"Double Lens DVR-10M\": \"200000182:29\", \"Double Lens DVR-6M\": \"200000182:10\", \"Single Len DVR\": \"200000182:496\", \"16G\": \"200009160:100018900\", \"32G\": \"200009160:100019035\", \"None\": \"200009160:350525\"}, \"variants\": [{\"id\": 215, \"product_id\": 125, \"sku\": \"42 | Color Name: Double Lens DVR-10M | Sd Card Memory: 16G\", \"sku_id\": 252, \"price\": 113.8, \"calculated_price\": 36.42, \"sale_price\": 36.42, \"retail_price\": null, \"map_price\": null, \"weight\": null, \"calculated_weight\": 0, \"width\": null, \"height\": null, \"depth\": null, \"is_free_shipping\": false, \"fixed_cost_shipping_price\": null, \"purchasing_disabled\": false, \"purchasing_disabled_message\": \"\", \"image_url\": \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/product_images/attribute_rule_images/126_source_1575426927.jpg\", \"cost_price\": 0, \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"bin_picking_number\": \"\", \"option_values\": [{\"id\": 176, \"label\": \"Double Lens DVR-10M\", \"option_id\": 135, \"option_display_name\": \"Color Name\"}, {\"id\": 177, \"label\": \"16G\", \"option_id\": 136, \"option_display_name\": \"Sd Card Memory\"}]}, {\"id\": 216, \"product_id\": 125, \"sku\": \"42 | Color Name: Double Lens DVR-10M | Sd Card Memory: 32G\", \"sku_id\": 253, \"price\": 113.8, \"calculated_price\": 36.42, \"sale_price\": 36.42, \"retail_price\": null, \"map_price\": null, \"weight\": null, \"calculated_weight\": 0, \"width\": null, \"height\": null, \"depth\": null, \"is_free_shipping\": false, \"fixed_cost_shipping_price\": null, \"purchasing_disabled\": false, \"purchasing_disabled_message\": \"\", \"image_url\": \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/product_images/attribute_rule_images/127_source_1575426928.jpg\", \"cost_price\": 0, \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"bin_picking_number\": \"\", \"option_values\": [{\"id\": 176, \"label\": \"Double Lens DVR-10M\", \"option_id\": 135, \"option_display_name\": \"Color Name\"}, {\"id\": 178, \"label\": \"32G\", \"option_id\": 136, \"option_display_name\": \"Sd Card Memory\"}]}, {\"id\": 217, \"product_id\": 125, \"sku\": \"42 | Color Name: Double Lens DVR-10M | Sd Card Memory: None\", \"sku_id\": 254, \"price\": 113.8, \"calculated_price\": 36.42, \"sale_price\": 36.42, \"retail_price\": null, \"map_price\": null, \"weight\": null, \"calculated_weight\": 0, \"width\": null, \"height\": null, \"depth\": null, \"is_free_shipping\": false, \"fixed_cost_shipping_price\": null, \"purchasing_disabled\": false, \"purchasing_disabled_message\": \"\", \"image_url\": \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/product_images/attribute_rule_images/128_source_1575426930.jpg\", \"cost_price\": 0, \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"bin_picking_number\": \"\", \"option_values\": [{\"id\": 176, \"label\": \"Double Lens DVR-10M\", \"option_id\": 135, \"option_display_name\": \"Color Name\"}, {\"id\": 179, \"label\": \"None\", \"option_id\": 136, \"option_display_name\": \"Sd Card Memory\"}]}, {\"id\": 218, \"product_id\": 125, \"sku\": \"42 | Color Name: Double Lens DVR-6M | Sd Card Memory: 16G\", \"sku_id\": 255, \"price\": 113.8, \"calculated_price\": 36.42, \"sale_price\": 36.42, \"retail_price\": null, \"map_price\": null, \"weight\": null, \"calculated_weight\": 0, \"width\": null, \"height\": null, \"depth\": null, \"is_free_shipping\": false, \"fixed_cost_shipping_price\": null, \"purchasing_disabled\": false, \"purchasing_disabled_message\": \"\", \"image_url\": \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/product_images/attribute_rule_images/129_source_1575426932.jpg\", \"cost_price\": 0, \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"bin_picking_number\": \"\", \"option_values\": [{\"id\": 180, \"label\": \"Double Lens DVR-6M\", \"option_id\": 135, \"option_display_name\": \"Color Name\"}, {\"id\": 177, \"label\": \"16G\", \"option_id\": 136, \"option_display_name\": \"Sd Card Memory\"}]}, {\"id\": 219, \"product_id\": 125, \"sku\": \"42 | Color Name: Double Lens DVR-6M | Sd Card Memory: 32G\", \"sku_id\": 256, \"price\": 113.8, \"calculated_price\": 36.42, \"sale_price\": 36.42, \"retail_price\": null, \"map_price\": null, \"weight\": null, \"calculated_weight\": 0, \"width\": null, \"height\": null, \"depth\": null, \"is_free_shipping\": false, \"fixed_cost_shipping_price\": null, \"purchasing_disabled\": false, \"purchasing_disabled_message\": \"\", \"image_url\": \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/product_images/attribute_rule_images/130_source_1575426933.jpg\", \"cost_price\": 0, \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"bin_picking_number\": \"\", \"option_values\": [{\"id\": 180, \"label\": \"Double Lens DVR-6M\", \"option_id\": 135, \"option_display_name\": \"Color Name\"}, {\"id\": 178, \"label\": \"32G\", \"option_id\": 136, \"option_display_name\": \"Sd Card Memory\"}]}, {\"id\": 220, \"product_id\": 125, \"sku\": \"42 | Color Name: Double Lens DVR-6M | Sd Card Memory: None\", \"sku_id\": 257, \"price\": 113.8, \"calculated_price\": 36.42, \"sale_price\": 36.42, \"retail_price\": null, \"map_price\": null, \"weight\": null, \"calculated_weight\": 0, \"width\": null, \"height\": null, \"depth\": null, \"is_free_shipping\": false, \"fixed_cost_shipping_price\": null, \"purchasing_disabled\": false, \"purchasing_disabled_message\": \"\", \"image_url\": \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/product_images/attribute_rule_images/131_source_1575426935.jpg\", \"cost_price\": 0, \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"bin_picking_number\": \"\", \"option_values\": [{\"id\": 180, \"label\": \"Double Lens DVR-6M\", \"option_id\": 135, \"option_display_name\": \"Color Name\"}, {\"id\": 179, \"label\": \"None\", \"option_id\": 136, \"option_display_name\": \"Sd Card Memory\"}]}, {\"id\": 221, \"product_id\": 125, \"sku\": \"42 | Color Name: Single Len DVR | Sd Card Memory: 16G\", \"sku_id\": 258, \"price\": 113.8, \"calculated_price\": 36.42, \"sale_price\": 36.42, \"retail_price\": null, \"map_price\": null, \"weight\": null, \"calculated_weight\": 0, \"width\": null, \"height\": null, \"depth\": null, \"is_free_shipping\": false, \"fixed_cost_shipping_price\": null, \"purchasing_disabled\": false, \"purchasing_disabled_message\": \"\", \"image_url\": \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/product_images/attribute_rule_images/132_source_1575426936.jpg\", \"cost_price\": 0, \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"bin_picking_number\": \"\", \"option_values\": [{\"id\": 181, \"label\": \"Single Len DVR\", \"option_id\": 135, \"option_display_name\": \"Color Name\"}, {\"id\": 177, \"label\": \"16G\", \"option_id\": 136, \"option_display_name\": \"Sd Card Memory\"}]}, {\"id\": 222, \"product_id\": 125, \"sku\": \"42 | Color Name: Single Len DVR | Sd Card Memory: 32G\", \"sku_id\": 259, \"price\": 113.8, \"calculated_price\": 36.42, \"sale_price\": 36.42, \"retail_price\": null, \"map_price\": null, \"weight\": null, \"calculated_weight\": 0, \"width\": null, \"height\": null, \"depth\": null, \"is_free_shipping\": false, \"fixed_cost_shipping_price\": null, \"purchasing_disabled\": false, \"purchasing_disabled_message\": \"\", \"image_url\": \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/product_images/attribute_rule_images/133_source_1575426938.jpg\", \"cost_price\": 0, \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"bin_picking_number\": \"\", \"option_values\": [{\"id\": 181, \"label\": \"Single Len DVR\", \"option_id\": 135, \"option_display_name\": \"Color Name\"}, {\"id\": 178, \"label\": \"32G\", \"option_id\": 136, \"option_display_name\": \"Sd Card Memory\"}]}, {\"id\": 223, \"product_id\": 125, \"sku\": \"42 | Color Name: Single Len DVR | Sd Card Memory: None\", \"sku_id\": 260, \"price\": 113.8, \"calculated_price\": 36.42, \"sale_price\": 36.42, \"retail_price\": null, \"map_price\": null, \"weight\": null, \"calculated_weight\": 0, \"width\": null, \"height\": null, \"depth\": null, \"is_free_shipping\": false, \"fixed_cost_shipping_price\": null, \"purchasing_disabled\": false, \"purchasing_disabled_message\": \"\", \"image_url\": \"https://cdn11.bigcommerce.com/s-l3lmjvi5i1/product_images/attribute_rule_images/134_source_1575426939.jpg\", \"cost_price\": 0, \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"bin_picking_number\": \"\", \"option_values\": [{\"id\": 181, \"label\": \"Single Len DVR\", \"option_id\": 135, \"option_display_name\": \"Color Name\"}, {\"id\": 179, \"label\": \"None\", \"option_id\": 136, \"option_display_name\": \"Sd Card Memory\"}]}], \"id\": 125, \"sku\": \"\", \"width\": 0, \"depth\": 0, \"height\": 0, \"cost_price\": 0, \"retail_price\": 0, \"sale_price\": 36.42, \"map_price\": 0, \"tax_class_id\": 0, \"product_tax_code\": \"\", \"calculated_price\": 36.42, \"categories\": [23], \"brand_id\": 0, \"option_set_id\": 29, \"option_set_display\": \"right\", \"inventory_level\": 0, \"inventory_warning_level\": 0, \"inventory_tracking\": \"none\", \"reviews_rating_sum\": 0, \"reviews_count\": 0, \"total_sold\": 0, \"fixed_cost_shipping_price\": 0, \"is_free_shipping\": false, \"is_visible\": false, \"is_featured\": false, \"related_products\": [-1], \"warranty\": \"\", \"bin_picking_number\": \"\", \"layout_file\": \"\", \"upc\": \"\", \"mpn\": \"\", \"gtin\": \"\", \"search_keywords\": \"\", \"availability\": \"available\", \"availability_description\": \"\", \"gift_wrapping_options_type\": \"any\", \"gift_wrapping_options_list\": [], \"sort_order\": 0, \"condition\": \"New\", \"is_condition_shown\": false, \"order_quantity_minimum\": 0, \"order_quantity_maximum\": 0, \"page_title\": \"\", \"meta_keywords\": [], \"meta_description\": \"\", \"date_created\": \"2019-12-04T02:35:03+00:00\", \"date_modified\": \"2019-12-04T02:35:03+00:00\", \"view_count\": 0, \"preorder_release_date\": null, \"preorder_message\": \"\", \"is_preorder_only\": false, \"is_price_hidden\": false, \"price_hidden_label\": \"\", \"custom_url\": {\"url\": \"/dvr-dash-camera-dash-cam-car-dvr-mirror-dual-lens-rear-view-camera-rearview-dashcam-auto-recorder-video-full-hd-front-and-rear/\", \"is_customized\": false}, \"base_variant_id\": null, \"open_graph_type\": \"product\", \"open_graph_title\": \"\", \"open_graph_description\": \"\", \"open_graph_use_meta_description\": true, \"open_graph_use_product_name\": true, \"open_graph_use_image\": true, \"options\": [{\"id\": 135, \"product_id\": 125, \"name\": \"Color-Name1575426936-125\", \"display_name\": \"Color Name\", \"type\": \"rectangles\", \"sort_order\": 0, \"option_values\": [{\"id\": 176, \"label\": \"Double Lens DVR-10M\", \"sort_order\": 0, \"value_data\": null, \"is_default\": false}, {\"id\": 180, \"label\": \"Double Lens DVR-6M\", \"sort_order\": 0, \"value_data\": null, \"is_default\": false}, {\"id\": 181, \"label\": \"Single Len DVR\", \"sort_order\": 0, \"value_data\": null, \"is_default\": false}], \"config\": []}, {\"id\": 136, \"product_id\": 125, \"name\": \"Sd-Card-Memory1575426930-125\", \"display_name\": \"Sd Card Memory\", \"type\": \"rectangles\", \"sort_order\": 0, \"option_values\": [{\"id\": 177, \"label\": \"16G\", \"sort_order\": 0, \"value_data\": null, \"is_default\": false}, {\"id\": 178, \"label\": \"32G\", \"sort_order\": 0, \"value_data\": null, \"is_default\": false}, {\"id\": 179, \"label\": \"None\", \"sort_order\": 0, \"value_data\": null, \"is_default\": false}], \"config\": []}]}",
+    "title": "dvr dash camera dash cam car dvr mirror dual lens rear view camera rearview dashcam auto recorder video full hd front and rear",
+    "notes": "",
+    "price": 36.42,
+    "tags": "",
+    "product_type": "DVR/Dash Camera",
+    "source_id": 125,
+    "variants_map": "",
+    "supplier_map": "",
+    "shipping_map": "",
+    "default_supplier": 1,
+    "parent_product": null,
+    "store": 1,
+    "user": [
+      "admin"
+    ],
+    "created_at": "2019-05-05T18:01:26.806Z",
+    "updated_at": "2019-05-05T22:44:07.939Z"
+  },
+  "model": "bigcommerce_core.bigcommerceproduct",
+  "pk": 1
+},
+{
+  "fields": {
+    "data": "{\"title\": \"Kitchen Gadgets Silicone Ice Cube Tray Mold Mould Fits For Water Bottle Cream Markers Tools\", \"description\": \"\", \"price\": 1.59, \"compare_at_price\": 1.99, \"images\": [\"https://ae01.alicdn.com/kf/HTB175_KXQL0gK0jSZFAq6AA9pXaI/Kitchen-Gadgets-Silicone-Ice-Cube-Tray-Mold-Mould-Fits-For-Water-Bottle-Cream-Markers-Tools.jpg\", \"https://ae01.alicdn.com/kf/HTB1WLjJXKL2gK0jSZFmq6A7iXXah/Kitchen-Gadgets-Silicone-Ice-Cube-Tray-Mold-Mould-Fits-For-Water-Bottle-Cream-Markers-Tools.jpg\", \"https://ae01.alicdn.com/kf/HTB1Vy_KXQL0gK0jSZFAq6AA9pXa0/Kitchen-Gadgets-Silicone-Ice-Cube-Tray-Mold-Mould-Fits-For-Water-Bottle-Cream-Markers-Tools.jpg\", \"https://ae01.alicdn.com/kf/HTB1bBDKXQH0gK0jSZFNq6xMqXXay/Kitchen-Gadgets-Silicone-Ice-Cube-Tray-Mold-Mould-Fits-For-Water-Bottle-Cream-Markers-Tools.jpg\", \"https://ae01.alicdn.com/kf/HTB1B1TJXKT2gK0jSZFvq6xnFXXam/Kitchen-Gadgets-Silicone-Ice-Cube-Tray-Mold-Mould-Fits-For-Water-Bottle-Cream-Markers-Tools.jpg\", \"https://ae01.alicdn.com/kf/HTB1H9PGXF67gK0jSZPfq6yhhFXaH/Kitchen-Gadgets-Silicone-Ice-Cube-Tray-Mold-Mould-Fits-For-Water-Bottle-Cream-Markers-Tools.jpg\"], \"original_url\": \"https://www.aliexpress.com/item/32866531954.html\", \"store\": {\"id\": 3676003, \"name\": \"Believer Store\", \"url\": \"//www.aliexpress.com/store/3676003\", \"contact\": \"http://message.aliexpress.com/message/new.htm?productId=32866531954&messageType=product&memberType=seller\"}, \"type\": \"Ice Cream Makers\", \"tags\": \"\", \"vendor\": \"Believer Store\", \"published\": false, \"weight\": null, \"weight_unit\": \"g\", \"variants_images\": {}, \"variants_sku\": {}, \"variants\": []}",
+    "title": "Kitchen Gadgets Silicone Ice Cube Tray Mold Mould Fits For Water Bottle Cream Markers Tools",
+    "notes": "",
+    "price": 1.59,
+    "tags": "",
+    "product_type": "Ice Cream Makers",
+    "source_id": 126,
+    "variants_map": "",
+    "supplier_map": "",
+    "shipping_map": "",
+    "default_supplier": 2,
+    "parent_product": null,
+    "store": 1,
+    "user": [
+      "admin"
+    ],
+    "created_at": "2019-05-05T18:01:26.806Z",
+    "updated_at": "2019-05-05T22:44:07.939Z"
+  },
+  "model": "bigcommerce_core.bigcommerceproduct",
+  "pk": 2
+},
+{
+  "fields": {
+    "product_url": "https://www.aliexpress.com/item/32881810553.html",
+    "supplier_name": "Max-VIP Store",
+    "supplier_url": "//www.aliexpress.com/store/4311001",
+    "shipping_method": null,
+    "variants_map": "{\"215\": \"[{\\\"title\\\": \\\"Double Lens DVR-10M\\\"}, {\\\"title\\\": \\\"16G\\\"}]\", \"216\": \"[{\\\"title\\\": \\\"Double Lens DVR-10M\\\"}, {\\\"title\\\": \\\"32G\\\"}]\", \"217\": \"[{\\\"title\\\": \\\"Double Lens DVR-10M\\\"}, {\\\"title\\\": \\\"None\\\"}]\", \"218\": \"[{\\\"title\\\": \\\"Double Lens DVR-6M\\\"}, {\\\"title\\\": \\\"16G\\\"}]\", \"219\": \"[{\\\"title\\\": \\\"Double Lens DVR-6M\\\"}, {\\\"title\\\": \\\"32G\\\"}]\", \"220\": \"[{\\\"title\\\": \\\"Double Lens DVR-6M\\\"}, {\\\"title\\\": \\\"None\\\"}]\", \"221\": \"[{\\\"title\\\": \\\"Single Len DVR\\\"}, {\\\"title\\\": \\\"16G\\\"}]\", \"222\": \"[{\\\"title\\\": \\\"Single Len DVR\\\"}, {\\\"title\\\": \\\"32G\\\"}]\", \"223\": \"[{\\\"title\\\": \\\"Single Len DVR\\\"}, {\\\"title\\\": \\\"None\\\"}]\"}",
+    "is_default": true,
+    "created_at": "2019-05-07T22:31:05.967Z",
+    "updated_at": "2019-05-07T22:44:07.920Z",
+    "product": 1,
+    "store": 1
+  },
+  "model": "bigcommerce_core.bigcommercesupplier",
+  "pk": 1
+},
+{
+  "fields": {
+    "product_url": "https://www.aliexpress.com/item/32866531954.html",
+    "supplier_name": "Believer Store",
+    "supplier_url": "//www.aliexpress.com/store/3676003",
+    "shipping_method": null,
+    "variants_map": "{\"224\": \"[]\"}",
+    "is_default": true,
+    "created_at": "2019-05-07T22:31:05.967Z",
+    "updated_at": "2019-05-07T22:44:07.920Z",
+    "product": 2,
+    "store": 1
+  },
+  "model": "bigcommerce_core.bigcommercesupplier",
+  "pk": 2
+},
+{
+  "fields": {
     "store_type": "woo",
     "data": "[{\"name\": \"offline\", \"level\": \"product\", \"new_value\": true, \"old_value\": false}, {\"name\": \"price\", \"sku\": \"200000182:193#Single Len DVR;200009160:100018900#DVR with 16G TF card\", \"ships_from_id\": null, \"old_value\": 0, \"level\": \"variant\", \"new_value\": 26.57, \"ships_from_title\": null}]",
     "hidden": false,
@@ -607,5 +706,22 @@
   },
   "model": "product_alerts.productchange",
   "pk": 7
+},
+{
+  "fields": {
+    "store_type": "bigcommerce",
+    "data": "[{\"name\": \"offline\", \"level\": \"product\", \"new_value\": true, \"old_value\": false}, {\"name\": \"price\", \"sku\": \"200000182:496#Single Len DVR;200009160:100018900#16G\", \"ships_from_id\": null, \"old_value\": 0, \"level\": \"variant\", \"new_value\": 26.57, \"ships_from_title\": null}]",
+    "hidden": false,
+    "seen": true,
+    "bigcommerce_product": 1,
+    "created_at": "2019-08-07T01:43:18.902Z",
+    "updated_at": "2019-08-07T23:11:17.800Z",
+    "user": [
+      "admin"
+    ],
+    "categories": "product:offline,variant:price,variant:quantity"
+  },
+  "model": "product_alerts.productchange",
+  "pk": 8
 }
 ]

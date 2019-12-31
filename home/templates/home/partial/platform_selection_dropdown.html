@@ -35,6 +35,11 @@
                     <a href="{% url 'gkart:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">GrooveKart</a>
                 </li>
                 {% endif %}
+                {% if section != 'BigCommerce' %}
+                <li>
+                    <a href="{% url 'bigcommerce:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">BigCommerce</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
 

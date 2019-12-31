@@ -22,6 +22,7 @@ STORE_TYPES = (
     ('shopify', 'Shopify'),
     ('chq', 'CommerceHQ'),
     ('woo', 'WooCommerce'),
+    ('bigcommerce', 'BigCommerce'),
 )
 
 

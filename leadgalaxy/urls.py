@@ -45,7 +45,7 @@ urlpatterns = [
 
     url(r'^accounts/register/?(?P<registration>[a-z0-9-]+)?$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/sudo/$', leadgalaxy.views.sudo_login, name='sudo_login'),
-    url(r'^accounts/login/$', django.contrib.auth.views.login,
+    url(r'^accounts/login/$', leadgalaxy.views.login_xframe_options_exempt,
         {'authentication_form': EmailAuthenticationForm}, name='login'),
     url(r'^accounts/password/reset/$', django.contrib.auth.views.password_reset,
         {'template_name': 'registration/password_reset.html', 'html_email_template_name': 'registration/password_reset_email2.html'}),

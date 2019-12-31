@@ -20,6 +20,9 @@
 
             {% elif item|model_name == 'groovekartstore' %}
                 <li><a href="{% url 'gkart:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+
+            {% elif item|model_name == 'bigcommercestore' %}
+                <li><a href="{% url 'bigcommerce:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
             {% endif %}
         {% endfor %}
 
@@ -72,6 +75,14 @@
                 {% else %}
                     <li><a href="{% url 'gkart:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
                 {% endif %}
+
+            {% elif item|model_name == 'bigcommercestore' %}
+                {% if item == store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+                {% else %}
+                    <li><a href="{% url 'bigcommerce:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+                {% endif %}
+
             {% endif %}
 
         {% endfor %}

@@ -37,6 +37,14 @@ def template_config(request):
                 'prefix': '/gkart'
             }
         }
+    elif namespace == 'bigcommerce':
+        template_config = {
+            'base': 'base_bigcommerce_core.html',
+            'url': {
+                'namespace': 'bigcommerce:',
+                'prefix': '/bigcommerce'
+            }
+        }
     else:
         template_config = {
             'base': 'base.html',

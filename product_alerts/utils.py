@@ -30,6 +30,8 @@ def reset_product_monitor(store):
         store.products.filter(monitor_id__gt=0).update(monitor_id=0)
     elif store.__class__.__name__ == 'WooStore' and store.products.count() < 2000:
         store.products.filter(monitor_id__gt=0).update(monitor_id=0)
+    elif store.__class__.__name__ == 'BigCommerceStore' and store.products.count() < 2000:
+        store.products.filter(monitor_id__gt=0).update(monitor_id=0)
 
 
 def unmonitor_store(store):
@@ -41,6 +43,8 @@ def unmonitor_store(store):
         dropified_type = 'gkart'
     elif store.__class__.__name__ == 'WooStore':
         dropified_type = 'woo'
+    elif store.__class__.__name__ == 'BigCommerceStore':
+        dropified_type = 'bigcommerce'
 
     rep = requests.delete(
         url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/products'),
@@ -135,6 +139,8 @@ def monitor_product(product, stdout=None):
         dropified_type = 'gkart'
     elif product.__class__.__name__ == 'WooProduct':
         dropified_type = 'woo'
+    elif product.__class__.__name__ == 'BigCommerceProduct':
+        dropified_type = 'bigcommerce'
 
     webhook_url = app_link('webhook/price-monitor/product', product=product.id, dropified_type=dropified_type)
     rep = None

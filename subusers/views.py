@@ -11,7 +11,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from leadgalaxy.models import ShopifyStore, PlanRegistration
 from last_seen.models import LastSeen, clear_interval
 from .utils import get_namespace
-from .forms import SubUserStoresForm, SubuserPermissionsForm, SubuserCHQPermissionsForm, SubuserWooPermissionsForm, SubuserGKartPermissionsForm
+from .forms import (
+    SubUserStoresForm,
+    SubuserPermissionsForm,
+    SubuserCHQPermissionsForm,
+    SubuserWooPermissionsForm,
+    SubuserGKartPermissionsForm,
+    SubuserBigCommercePermissionsForm,
+)
 
 
 @login_required
@@ -294,3 +301,47 @@ def subuser_gkart_store_permissions(request, user_id, store_id):
     }
 
     return render(request, 'subusers/gkart_store_permissions.html', context)
+
+
+@transaction.atomic
+@login_required
+def subuser_bigcommerce_store_permissions(request, user_id, store_id):
+    store = request.user.bigcommercestore_set.filter(pk=store_id).first()
+    if not store:
+        raise Http404
+
+    subuser = get_object_or_404(User,
+                                pk=user_id,
+                                profile__subuser_parent=request.user,
+                                profile__subuser_gkart_stores__pk=store_id)
+
+    subuser_bigcommerce_permissions = subuser.profile.subuser_bigcommerce_permissions.filter(store=store)
+    initial = {'permissions': subuser_bigcommerce_permissions, 'store': store}
+
+    if request.method == 'POST':
+        form = SubuserBigCommercePermissionsForm(request.POST, initial=initial)
+        if form.is_valid():
+            new_permissions = form.cleaned_data['permissions']
+            subuser.profile.subuser_bigcommerce_permissions.remove(*subuser_bigcommerce_permissions)
+            subuser.profile.subuser_bigcommerce_permissions.add(*new_permissions)
+            messages.success(request, 'Subuser permissions successfully updated')
+            return redirect('{}subuser_bigcommerce_store_permissions'.format(get_namespace(request)), user_id, store_id)
+    else:
+        form = SubuserBigCommercePermissionsForm(initial=initial)
+
+    breadcrumbs = [
+        'Account',
+        {'title': 'Sub Users', 'url': reverse('{}subusers'.format(get_namespace(request)))},
+        subuser.username,
+        {'title': 'Permissions', 'url': reverse('{}subuser_perms_edit'.format(get_namespace(request)), args=(user_id,))},
+        store.title,
+    ]
+
+    context = {
+        'subuser': subuser,
+        'form': form,
+        'breadcrumbs': breadcrumbs,
+        'page': 'subusers',
+    }
+
+    return render(request, 'subusers/bigcommerce_store_permissions.html', context)

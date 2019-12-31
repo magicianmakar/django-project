@@ -1143,6 +1143,14 @@ class ShopifyStoreApi(ApiBase):
                     'url': i.get_admin_url()
                 })
 
+            for i in user.profile.get_bigcommerce_stores():
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'bigcommerce',
+                    'url': i.get_admin_url()
+                })
+
             config['stores'] = stores
 
         config['sync'] = {
@@ -1310,6 +1318,14 @@ class ShopifyStoreApi(ApiBase):
                 'id': i.id,
                 'title': i.title,
                 'type': 'gkart',
+                'favorite': i.favorite
+            })
+
+        for i in user.get_bigcommerce_boards():
+            boards.append({
+                'id': i.id,
+                'title': i.title,
+                'type': 'bigcommerce',
                 'favorite': i.favorite
             })
 

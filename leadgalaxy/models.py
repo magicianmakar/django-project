@@ -94,6 +94,11 @@ SUBUSER_GKART_STORE_PERMISSIONS = (
     ('view_profit_dashboard', 'View profit dashboard'),
 )
 
+SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS = (
+    *SUBUSER_STORE_PERMISSIONS_BASE,
+    ('send_to_bigcommerce', 'Send products to BigCommerce'),
+)
+
 PRICE_MARKUP_TYPES = (
     ('margin_percent', 'Increase by percentage'),
     ('margin_amount', 'Increase by amount'),
@@ -112,6 +117,7 @@ class UserProfile(models.Model):
     subuser_woo_stores = models.ManyToManyField('woocommerce_core.WooStore', blank=True, related_name='subuser_woo_stores')
     subuser_gear_stores = models.ManyToManyField('gearbubble_core.GearBubbleStore', blank=True, related_name='subuser_gear_stores')
     subuser_gkart_stores = models.ManyToManyField('groovekart_core.GrooveKartStore', blank=True, related_name='subuser_gkart_stores')
+    subuser_bigcommerce_stores = models.ManyToManyField('bigcommerce_core.BigCommerceStore', blank=True, related_name='subuser_bigcommerce_stores')
 
     stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
@@ -141,6 +147,7 @@ class UserProfile(models.Model):
     subuser_woo_permissions = models.ManyToManyField('SubuserWooPermission', blank=True)
     subuser_gear_permissions = models.ManyToManyField('SubuserGearPermission', blank=True)
     subuser_gkart_permissions = models.ManyToManyField('SubuserGKartPermission', blank=True)
+    subuser_bigcommerce_permissions = models.ManyToManyField('SubuserBigCommercePermission', blank=True)
 
     updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
@@ -155,6 +162,7 @@ class UserProfile(models.Model):
             self.user.wooproduct_set.exists(),
             self.user.gearbubbleproduct_set.exists(),
             self.user.groovekartproduct_set.exists(),
+            self.user.bigcommerceproduct_set.exists(),
         ])
 
     @property
@@ -165,6 +173,7 @@ class UserProfile(models.Model):
             self.user.wooboard_set.filter(products__isnull=False).exists(),
             self.user.gearbubbleboard_set.filter(products__isnull=False).exists(),
             self.user.groovekartboard_set.filter(products__isnull=False).exists(),
+            self.user.bigcommerceboard_set.filter(products__isnull=False).exists(),
         ])
 
     @property
@@ -373,6 +382,17 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_bigcommerce_stores(self, flat=False):
+        if self.is_subuser:
+            stores = self.subuser_bigcommerce_stores.filter(is_active=True)
+        else:
+            stores = self.user.bigcommercestore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
+
     def get_stores_count(self):
         return sum([
             self.get_shopify_stores().count(),
@@ -380,6 +400,7 @@ class UserProfile(models.Model):
             self.get_woo_stores().count(),
             self.get_gear_stores().count(),
             self.get_gkart_stores().count(),
+            self.get_bigcommerce_stores().count(),
         ])
 
     def get_new_alerts(self):
@@ -500,6 +521,8 @@ class UserProfile(models.Model):
                 return self.has_subuser_woo_permission(codename, store)
             elif store_model_name == 'GearBubbleStore':
                 return self.has_subuser_gear_permission(codename, store)
+            elif store_model_name == 'BigCommerceStore':
+                return self.has_subuser_bigcommerce_permission(codename, store)
             else:
                 raise ValueError('Invalid store')
 
@@ -535,6 +558,12 @@ class UserProfile(models.Model):
             return False
 
         return self.subuser_gkart_permissions.filter(codename=codename, store=store).exists()
+
+    def has_subuser_bigcommerce_permission(self, codename, store):
+        if not self.subuser_bigcommerce_stores.filter(pk=store.id).exists():
+            return False
+
+        return self.subuser_bigcommerce_permissions.filter(codename=codename, store=store).exists()
 
     def add_ip(self, ip):
         if not ip:
@@ -748,6 +777,19 @@ class SubuserGKartPermission(models.Model):
 
     def __str__(self):
         return f'<SubuserGKartPermission: {self.id}>'
+
+
+class SubuserBigCommercePermission(models.Model):
+    codename = models.CharField(max_length=100)
+    name = models.CharField(max_length=255)
+    store = models.ForeignKey('bigcommerce_core.BigCommerceStore', related_name='subuser_bigcommerce_permissions')
+
+    class Meta:
+        ordering = 'pk',
+        unique_together = 'codename', 'store'
+
+    def __str__(self):
+        return f'<SubuserBigCommercePermission: {self.id}>'
 
 
 class ShopifyStore(StoreBase):

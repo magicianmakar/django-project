@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^woo/', include('woocommerce_core.urls', 'woo')),
     url(r'^gear/', include('gearbubble_core.urls', 'gear')),
     url(r'^gkart/', include('groovekart_core.urls', 'gkart')),
+    url(r'^bigcommerce/', include('bigcommerce_core.urls', 'bigcommerce')),
     url(r'^subscription/', include('stripe_subscription.urls')),
     url(r'^subscription/shopify/', include('shopify_subscription.urls')),
     url(r'^marketing/', include('product_feed.urls')),

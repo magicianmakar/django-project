@@ -473,6 +473,16 @@ function sendProductToWooCommerce(productId, storeId, publish) {
     return $.post(api_url('product-export', 'woo'), data);
 }
 
+function sendProductToBigCommerce(productId, storeId, publish) {
+    var data = {
+        product: productId,
+        store: storeId,
+        publish: publish
+    };
+
+    return $.post(api_url('product-export', 'bigcommerce'), data);
+}
+
 function sendProductToGearBubble(productId, storeId) {
     var data = {
         product: productId,

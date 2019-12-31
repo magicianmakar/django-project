@@ -8,6 +8,7 @@ from .models import (
     ExtraCHQStore,
     ExtraWooStore,
     ExtraGearStore,
+    ExtraBigCommerceStore,
     CustomStripePlan,
     CustomStripeSubscription
 )
@@ -95,6 +96,20 @@ class ExtraGearStoreAdmin(admin.ModelAdmin):
 
     def stores_count(self, obj):
         return obj.user.profile.get_gear_stores().count()
+
+    def is_active(self, obj):
+        return obj.store.is_active
+
+
+@admin.register(ExtraBigCommerceStore)
+class ExtraBigCommerceStoreAdmin(admin.ModelAdmin):
+    list_display = ('store', 'user', 'status', 'stores_count', 'is_active', 'last_invoice', 'period_start', 'period_end')
+    list_filter = ('status', 'store__is_active')
+    search_fields = ('store__title', 'store__id', 'last_invoice') + USER_SEARCH_FIELDS
+    raw_id_fields = ('store', 'user')
+
+    def stores_count(self, obj):
+        return obj.user.profile.get_bigcommerce_stores().count()
 
     def is_active(self, obj):
         return obj.store.is_active

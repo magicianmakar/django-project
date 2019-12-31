@@ -8,12 +8,14 @@ from leadgalaxy.models import ShopifyStore
 from commercehq_core.models import CommerceHQStore
 from woocommerce_core.models import WooStore
 from gearbubble_core.models import GearBubbleStore
+from bigcommerce_core.models import BigCommerceStore
 
 from stripe_subscription.models import (
     ExtraStore,
     ExtraCHQStore,
     ExtraWooStore,
-    ExtraGearStore
+    ExtraGearStore,
+    ExtraBigCommerceStore,
 )
 
 
@@ -26,6 +28,8 @@ def get_extra_model_from_store(store_model):
         return ExtraWooStore
     if isinstance(store_model, GearBubbleStore):
         return ExtraGearStore
+    if isinstance(store_model, BigCommerceStore):
+        return ExtraBigCommerceStore
 
 
 def create_extra_store(sender, instance, created):
@@ -65,4 +69,9 @@ def add_woostore_signal(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=GearBubbleStore)
 def add_gearstore_signal(sender, instance, created, **kwargs):
+    create_extra_store(sender, instance, created)
+
+
+@receiver(post_save, sender=BigCommerceStore)
+def add_bigcommercestore_signal(sender, instance, created, **kwargs):
     create_extra_store(sender, instance, created)

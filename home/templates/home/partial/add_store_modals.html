@@ -1,3 +1,5 @@
+{% load perms_helper %}
+
 <div id="modal-add-all-store-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -13,6 +15,10 @@
                     <li><a href="#chq-section" data-toggle="tab"></a></li>
                     <li><a href="#woo-section" data-toggle="tab"></a></li>
                     <li><a href="#gk-section" data-toggle="tab"></a></li>
+
+                    {% if request.user|can:'bigcommerce.use' %}
+                    <li><a href="#bigcommerce-section" data-toggle="tab"></a></li>
+                    {% endif %}
                 </ul>
                 <div class="tab-content">
                     <div id="select-section" class="tab-pane fade in active">
@@ -39,6 +45,13 @@
                                     <input name="amt" value="#gk-section" type="radio">
                                     <span class="label-text"><strong>GrooveKart</strong></span>
                                 </label>
+
+                                {% if request.user|can:'bigcommerce.use' %}
+                                <label style="display: block;">
+                                    <input name="amt" value="#bigcommerce-section" type="radio">
+                                    <span class="label-text"><strong>BigCommerce</strong></span>
+                                </label>
+                                {% endif %}
                             </fieldset>
 
                             <hr style="margin:20px -15px">
@@ -54,10 +67,10 @@
                             <h3 class="m-t-none m-b">Add Shopify Store</h3>
 
                             <div class="col-sm-12">
-                                <form id="install-store-form" role="form">
+                                <form class="install-store-form" role="form">
                                     <div class="form-group">
-                                        <label for="shop-url">Enter your store's URL:</label>
-                                        <input type="text" id="shop-url" placeholder="your-shop-url.myshopify.com"
+                                        <label for="shopify-shop-url">Enter your store's URL:</label>
+                                        <input type="text" id="shopify-shop-url" placeholder="your-shop-url.myshopify.com"
                                                 class="form-control" autocorrect="off" spellcheck="false">
                                     </div>
                                 </form>
@@ -66,7 +79,7 @@
                             </div>
 
                             <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
-                            <button id="install-store" class="btn btn-primary pull-right" type="button"><strong>Add store</strong></button>
+                            <button class="btn btn-primary pull-right install-store" type="button" data-store-type="shopify"><strong>Add store</strong></button>
                         </div>
                     </div>
 
@@ -161,6 +174,28 @@
                                     </div>
                                 </form>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- BigCommerce -->
+                    <div id="bigcommerce-section" class="tab-pane fade">
+                        <div class="row">
+                            <h3 class="m-t-none m-b">Add BigCommerce Store</h3>
+
+                            <div class="col-sm-12">
+                                <form class="install-store-form" role="form">
+                                    <div class="form-group">
+                                        <label for="bigcommerce-shop-url">Enter your store's URL:</label>
+                                        <input type="text" id="bigcommerce-shop-url" placeholder="your-shop-url.mybigcommerce.com"
+                                                class="form-control" autocorrect="off" spellcheck="false">
+                                    </div>
+                                </form>
+
+                                <hr style="margin:20px -30px">
+                            </div>
+
+                            <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                            <button class="btn btn-primary pull-right install-store" type="button" data-store-type="bigcommerce"><strong>Add store</strong></button>
                         </div>
                     </div>
                 </div>

@@ -178,6 +178,7 @@ class UtilsTestCase(BaseTestCase):
         from commercehq_core.models import CommerceHQProduct
         from groovekart_core.models import GrooveKartProduct
         from woocommerce_core.models import WooProduct
+        from bigcommerce_core.models import BigCommerceProduct
 
         self.assertEqual(prefix_from_model(ShopifyStore()), 'shopify')
         self.assertEqual(prefix_from_model(GroupPlan()), 'shopify')
@@ -188,6 +189,7 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(prefix_from_model(GrooveKartProduct()), 'gkart')
 
         self.assertEqual(prefix_from_model(WooProduct()), 'woo')
+        self.assertEqual(prefix_from_model(BigCommerceProduct()), 'bigcommerce')
 
     def test_order_data(self):
         orders = {
@@ -210,7 +212,11 @@ class UtilsTestCase(BaseTestCase):
             'gear_order_10_30_136622333': {
                 'id': '10_30_136622333',
                 'product': 5
-            }
+            },
+            'bigcommerce_order_1_3_111222333': {
+                'id': '1_3_111222333',
+                'product': 5
+            },
         }
 
         caches['orders'].set_many(orders)
@@ -226,6 +232,9 @@ class UtilsTestCase(BaseTestCase):
 
         self.assertEqual(order_data_cache('gear_order', 10, 30, 136622333), orders['gear_order_10_30_136622333'])
         self.assertEqual(order_data_cache('gear_order_10_30_136622333'), orders['gear_order_10_30_136622333'])
+
+        self.assertEqual(order_data_cache('bigcommerce_order', 1, 3, 111222333), orders['bigcommerce_order_1_3_111222333'])
+        self.assertEqual(order_data_cache('bigcommerce_order_1_3_111222333'), orders['bigcommerce_order_1_3_111222333'])
 
         self.assertEqual(order_data_cache(1, '222', 444444), orders['order_1_222_444444'])
         self.assertEqual(order_data_cache(3, '222', 444444), None)

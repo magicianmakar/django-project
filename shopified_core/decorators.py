@@ -77,7 +77,7 @@ def use_upsell_for(permission, selected_menu):
 
 
 class PlatformPermissionRequired:
-    platforms = ['shopify', 'commercehq', 'woocommerce', 'gearbubble', 'groovekart']
+    platforms = ['shopify', 'commercehq', 'woocommerce', 'gearbubble', 'groovekart', 'bigcommerce']
 
     def __init__(self, platform):
         self._platform = platform

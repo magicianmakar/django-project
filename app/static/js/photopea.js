@@ -17,7 +17,7 @@
             url: imageId + '.jpg'
         });
 
-        var storeType = window.location.href.match('(chq|woo|gear|gkart)');
+        var storeType = window.location.href.match('(chq|woo|gear|gkart|bigcommerce)');
         if (storeType) {
             serverUrl += '&' + storeType[0] + '=1';
         }

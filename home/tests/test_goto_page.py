@@ -13,6 +13,7 @@ from commercehq_core.tests.factories import CommerceHQStoreFactory
 from gearbubble_core.tests.factories import GearBubbleStoreFactory
 from groovekart_core.tests.factories import GrooveKartStoreFactory
 from woocommerce_core.tests.factories import WooStoreFactory
+from bigcommerce_core.tests.factories import BigCommerceStoreFactory
 
 
 class GotoPageTestCase(BaseTestCase):
@@ -69,6 +70,12 @@ class GotoPageTestCase(BaseTestCase):
         response = self.client.get(self.url)
         self.assertRedirects(response, self.make_url('woo:orders_list'))
 
+    def test_bigcommerce(self):
+        self.store = BigCommerceStoreFactory(user=self.user)
+        self.add_user_permission('bigcommerce.use')
+        response = self.client.get(self.url)
+        self.assertRedirects(response, self.make_url('bigcommerce:orders_list'))
+
     @patch('commercehq_core.views.OrdersList.paginator_class'
            '._orders_count_request')
     def test_multiple_stores(self, mock_count_request):
@@ -81,12 +88,14 @@ class GotoPageTestCase(BaseTestCase):
             GearBubbleStoreFactory(user=self.user),
             GrooveKartStoreFactory(user=self.user),
             WooStoreFactory(user=self.user),
+            BigCommerceStoreFactory(user=self.user),
         ]
         self.store = self.stores[0]
         self.add_user_permission('commercehq.use')
         self.add_user_permission('gearbubble.use')
         self.add_user_permission('groovekart.use')
         self.add_user_permission('woocommerce.use')
+        self.add_user_permission('bigcommerce.use')
         response = self.client.get(self.url)
         self.assertRedirects(response, self.make_url('chq:orders_list'))
 

@@ -12,6 +12,7 @@ def all_stores(request):
         'woo': list(user.profile.get_woo_stores()),
         'gear': list(user.profile.get_gear_stores()),
         'gkart': list(user.profile.get_gkart_stores()),
+        'bigcommerce': list(user.profile.get_bigcommerce_stores()),
         'all': [],
         'type_count': 0,
     }

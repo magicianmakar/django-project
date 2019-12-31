@@ -173,6 +173,17 @@
                         complete: LimitReached.ajaxCallbacks.complete
                     });
                 },
+                bigcommerce: function(storeId) {
+                    $.ajax({
+                        url: api_url('store', 'bigcommerce') +'?' + $.param({id: storeId}),
+                        method: 'DELETE',
+                        context: {storeId: storeId, type: 'bigcommerce'},
+                        beforeSend: LimitReached.ajaxCallbacks.beforeSend,
+                        success: LimitReached.ajaxCallbacks.success,
+                        error: LimitReached.ajaxCallbacks.error,
+                        complete: LimitReached.ajaxCallbacks.complete
+                    });
+                },
             },
             start: function() {
                 LimitReached.loading.add();
@@ -186,6 +197,9 @@
                 }
                 if (storeType == 'woo') {
                     LimitReached.call.woo(storeId);
+                }
+                if (storeType == 'bigcommerce') {
+                    LimitReached.call.bigcommerce(storeId);
                 }
             },
             checkComplete: function() {
@@ -206,6 +220,8 @@
                 return 'CommerceHQ';
             } else if (type === 'woo') {
                 return 'WooCommerce';
+            } else if (type === 'bigcommerce') {
+                return 'BigCommerce';
             } else {
                 return type;
             }

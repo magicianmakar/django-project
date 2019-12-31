@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.validators import validate_email, ValidationError
 from django.conf import settings
 
-from .models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission
+from .models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission, SubuserBigCommercePermission
 from shopified_core.utils import login_attempts_exceeded, unlock_account_email, unique_username, send_email_from_template
 
 from raven.contrib.django.raven_compat.models import client as raven_client
@@ -290,7 +290,7 @@ class EmailForm(forms.Form):
 class SubUserStoresForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = ["subuser_stores", "subuser_chq_stores", "subuser_woo_stores"]
+        fields = ["subuser_stores", "subuser_chq_stores", "subuser_woo_stores", "subuser_bigcommerce_stores"]
 
     def __init__(self, *args, **kwargs):
         parent_user = kwargs.pop("parent_user")
@@ -302,6 +302,7 @@ class SubUserStoresForm(forms.ModelForm):
             initial['subuser_stores'] = [t.pk for t in kwargs['instance'].subuser_stores.all()]
             initial['subuser_chq_stores'] = [t.pk for t in kwargs['instance'].subuser_chq_stores.all()]
             initial['subuser_woo_stores'] = [t.pk for t in kwargs['instance'].subuser_woo_stores.all()]
+            initial['subuser_bigcommerce_stores'] = [t.pk for t in kwargs['instance'].subuser_bigcommerce_stores.all()]
 
         self.fields["subuser_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_stores"].help_text = ""
@@ -314,6 +315,10 @@ class SubUserStoresForm(forms.ModelForm):
         self.fields["subuser_woo_stores"].widget = forms.widgets.CheckboxSelectMultiple()
         self.fields["subuser_woo_stores"].help_text = ""
         self.fields["subuser_woo_stores"].queryset = parent_user.profile.get_woo_stores()
+
+        self.fields["subuser_bigcommerce_stores"].widget = forms.widgets.CheckboxSelectMultiple()
+        self.fields["subuser_bigcommerce_stores"].help_text = ""
+        self.fields["subuser_bigcommerce_stores"].queryset = parent_user.profile.get_bigcommerce_stores()
 
     def save(self, commit=True):
         instance = forms.ModelForm.save(self, False)
@@ -333,6 +338,10 @@ class SubUserStoresForm(forms.ModelForm):
             instance.subuser_woo_stores.clear()
             for store in self.cleaned_data['subuser_woo_stores']:
                 instance.subuser_woo_stores.add(store)
+
+            instance.subuser_bigcommerce_stores.clear()
+            for store in self.cleaned_data['subuser_bigcommerce_stores']:
+                instance.subuser_bigcommerce_stores.add(store)
 
         self.save_m2m = save_m2m
 
@@ -387,6 +396,19 @@ class SubuserWooPermissionsForm(forms.Form):
         super(SubuserWooPermissionsForm, self).__init__(*args, **kwargs)
         permissions_initial = kwargs['initial']['permissions']
         permissions_queryset = SubuserWooPermission.objects.filter(store=kwargs['initial']['store'])
+        permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
+        permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
+                                                          queryset=permissions_queryset,
+                                                          widget=permissions_widget,
+                                                          required=False)
+        self.fields['permissions'] = permissions_field
+
+
+class SubuserBigCommercePermissionsForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(SubuserBigCommercePermissionsForm, self).__init__(*args, **kwargs)
+        permissions_initial = kwargs['initial']['permissions']
+        permissions_queryset = SubuserBigCommercePermission.objects.filter(store=kwargs['initial']['store'])
         permissions_widget = SubuserPermissionsSelectMultiple(attrs={'class': 'js-switch'})
         permissions_field = SubuserPermissionsChoiceField(initial=permissions_initial,
                                                           queryset=permissions_queryset,

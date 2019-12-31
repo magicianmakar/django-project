@@ -148,7 +148,7 @@ def get_twilio_client():
 def get_orders_by_phone(user, phone, phone_raw):
 
     shopify_filter_status = 'open'  # - to get only open orders
-    orders = {'shopify': [], 'woo': [], 'chq': [], 'gear': []}
+    orders = {'shopify': [], 'woo': [], 'chq': [], 'gear': [], 'bigcommerce': []}
     shopify_stores = user.profile.get_shopify_stores()
     woo_stores = user.profile.get_woo_stores()
     chq_stores = user.profile.get_chq_stores()
@@ -246,11 +246,12 @@ def phone_format(phone_number):
 def get_orders_by_id(user, order_id):
 
     shopify_filter_status = 'any'  # - to get only open orders
-    orders = {'shopify': [], 'woo': [], 'chq': [], 'gear': []}
+    orders = {'shopify': [], 'woo': [], 'chq': [], 'gear': [], 'bigcommerce': []}
     shopify_stores = user.profile.get_shopify_stores()
     woo_stores = user.profile.get_woo_stores()
     chq_stores = user.profile.get_chq_stores()
     gear_stores = user.profile.get_gear_stores()
+    bigcommerce_stores = user.profile.get_bigcommerce_stores()
 
     for shopify_store in shopify_stores:
         try:
@@ -304,6 +305,21 @@ def get_orders_by_id(user, order_id):
         except:
             raven_client.captureException()
 
+    for bigcommerce_store in bigcommerce_stores:
+        try:
+            resp_customer_orders = bigcommerce_store.request.get(
+                url=bigcommerce_store.get_api_url('v2/orders'),
+                params={
+                    'id:like': order_id
+                }
+            )
+
+            resp_customer_orders.raise_for_status()
+            for bigcommerce_order in resp_customer_orders.json():
+                orders['bigcommerce'].append(bigcommerce_order)
+        except:
+            raven_client.captureException()
+
     return orders
 
 
@@ -336,6 +352,13 @@ def get_sms_text(orders):
                    ' ) : ' + \
             str(order['status']) + ', ' + ('unfulfilled' if order['shipped'] is False else 'fulfilled') + ' ' +\
             str(updated_at) + '; Total: $' + str(order['amount']) + ''
+
+    for order in orders['bigcommerce']:
+        updated_at = dateutil.parser.parse(order['date_modified']).strftime("%Y-%m-%d %H:%M:%S")
+        message += '\nOrder #' + str(order['id']) + ' ( BigCommerce #:' + str(
+            order['id']) + ' ) : ' + str(order['status']) + ', ' + \
+            ('unfulfilled' if order['date_shipped'] is None else 'fulfilled') + ' ' \
+            + str(updated_at) + '; Total: $' + str(order['total_inc_tax']) + ''
 
     return message
 

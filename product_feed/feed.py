@@ -29,6 +29,11 @@ from woocommerce_core.utils import (
     get_woo_products
 )
 
+from bigcommerce_core.utils import (
+    get_bigcommerce_products_count,
+    get_bigcommerce_products
+)
+
 from groovekart_core.utils import get_store_categories
 
 from .models import (
@@ -36,7 +41,8 @@ from .models import (
     CommerceHQFeedStatus,
     WooFeedStatus,
     GearBubbleFeedStatus,
-    GrooveKartFeedStatus
+    GrooveKartFeedStatus,
+    BigCommerceFeedStatus,
 )
 
 
@@ -468,6 +474,144 @@ class WooProductFeed():
         os.unlink(self.out.name)
 
 
+class BigCommerceProductFeed():
+    def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category='', feed=None):
+        self.store = store
+
+        domain = urlparse(store.api_url).netloc
+        self.info = {'currency': self._get_store_currency(), 'domain': domain, 'name': store.title}
+
+        self.currency = self.info['currency']
+        self.domain = self.info['domain']
+
+        self.revision = safe_int(revision, 1)
+        self.all_variants = all_variants
+        self.include_variants = include_variants
+        self.default_product_category = default_product_category
+        self.weight_unit = self._get_store_weight_unit()
+
+        self.feed = feed
+        if feed:
+            self.google_settings = self.feed.get_google_settings()
+        else:
+            self.google_settings = {}
+
+    def _add_element(self, tag, text):
+        self.writer.startTag(tag)
+        self.writer.text(text)
+        self.writer.endTag()
+
+    def init(self):
+        self.out = NamedTemporaryFile(suffix='.xml', prefix='bigcommerce_feed_', delete=False)
+        self.writer = XmlWriter(self.out, pretty=True, indent='')
+
+        self.writer.addNamespace("g", "http://base.google.com/ns/1.0")
+
+        self.writer.startTag("rss", {"version": "2.0"})
+        self.writer.startTag("channel")
+
+        self._add_element('title', self.store.title)
+        self._add_element('link', self.store.get_store_url())
+        self._add_element('description', '{} Products Feed'.format(self.store.title))
+
+    def save(self):
+        self.writer.endTag()
+        self.writer.endTag()
+        self.writer.close()
+
+        self.out.close()
+
+        return self.out
+
+    def generate_feed(self):
+        limit = 100
+        count = get_bigcommerce_products_count(self.store)
+
+        if not count:
+            return
+
+        pages = int(ceil(count / float(limit)))
+        for page in range(1, pages + 1):
+            products = get_bigcommerce_products(store=self.store, page=page, limit=limit, all_products=False)
+            for p in products:
+                self.add_product(p)
+
+    def add_product(self, product):
+        if not product['is_visible']:
+            return
+
+        if self.include_variants and len(product['variants']) > 0:
+            variants = self._get_variants(product['id'])
+
+            for variant in variants:
+                self._add_variant(product, variant)
+
+                if not self.all_variants:
+                    break
+
+        else:
+            self._add_variant(product, None)
+
+    def _get_store_weight_unit(self):
+        r = self.store.request.get(url=self.store.get_api_url('v2/store'))
+        r.raise_for_status()
+
+        return r.json()['weight_units']
+
+    def _get_store_currency(self):
+        r = self.store.request.get(url=self.store.get_api_url('v2/store'))
+        r.raise_for_status()
+
+        return r.json()['currency']
+
+    def _add_variant(self, product, variant):
+        if variant:
+            image = variant['image_url']
+        else:
+            image = next(iter(product['images']), {}).get('url_standard', '')
+
+        element = product if variant is None else variant
+
+        if variant is None:
+            variant = {'id': 0}
+
+        self.writer.startTag('item')
+
+        if self.revision == 1:
+            self._add_element('g:id', 'store_{p[id]}_{v[id]}'.format(p=product, v=variant))
+        else:
+            self._add_element('g:id', 'bigcommerce_{}'.format(variant['id']))
+            self._add_element('g:item_group_id', '{}'.format(variant['id']))
+
+        self._add_element('g:link', product.get('custom_url', {}).get('url', ''))
+        self._add_element('g:title', product.get('name', ''))
+        self._add_element('g:description', product.get('name', ''))
+        self._add_element('g:image_link', image)
+
+        self._add_element('g:price', '{amount} {currency}'.format(amount=element['price'], currency=self.currency))
+        self._add_element('g:shipping_weight', '{} {}'.format(element['weight'], self.weight_unit))
+        self._add_element('g:google_product_category', self.default_product_category)
+        self._add_element('g:availability', 'in stock')
+        self._add_element('g:condition', 'new')
+
+        if self.revision == 3:
+            self._add_element('g:age_group', self.google_settings.get('age_group') or 'Adult')
+            self._add_element('g:gender', self.google_settings.get('gender') or 'Unisex')
+            self._add_element('g:brand', self.google_settings.get('brand_name', self.store.title))
+            self._add_element('g:mpn', 'store_{}_{}'.format(element['id'], variant['id']))
+
+        self.writer.endTag()
+
+    def out_file(self):
+        return self.out
+
+    def out_filename(self):
+        return self.out.name
+
+    def delete_out(self):
+        os.unlink(self.out.name)
+
+
 class GearBubbleProductFeed(object):
     def __init__(self, store, revision=1, all_variants=True, include_variants=True, default_product_category=''):
         domain = urlparse(store.get_api_url('')).netloc
@@ -745,6 +889,18 @@ def get_gkart_store_feed(store):
         )
 
 
+def get_bigcommerce_store_feed(store):
+    try:
+        return BigCommerceFeedStatus.objects.get(store=store)
+
+    except BigCommerceFeedStatus.DoesNotExist:
+        return BigCommerceFeedStatus.objects.create(
+            store=store,
+            revision=2,
+            updated_at=None
+        )
+
+
 def generate_product_feed(feed_status, nocache=False, revision=None):
     store = feed_status.store
 
@@ -956,6 +1112,56 @@ def generate_gkart_product_feed(feed_status, nocache=False, revision=None):
                                      feed_status.include_variants_id,
                                      feed_status.default_product_category,
                                      feed=feed_status)
+
+        feed.init()
+
+        feed_status.status = 2
+        feed_status.save()
+
+        feed.generate_feed()
+        feed.save()
+
+        feed_status.generation_time = time.time() - feed_start
+        feed_status.updated_at = timezone.now()
+
+        feed_s3_url, upload_time = aws_s3_upload(
+            filename=feed_status.get_filename(revision=revision),
+            input_filename=feed.out_filename(),
+            mimetype='application/xml',
+            upload_time=True,
+            compress=True,
+            bucket_name=settings.S3_PRODUCT_FEED_BUCKET
+        )
+
+        feed.delete_out()
+
+    else:
+        feed_s3_url = feed_status.get_url(revision=revision)
+
+    feed_status.status = 1
+    feed_status.save()
+
+    return feed_s3_url
+
+
+def generate_bigcommerce_product_feed(feed_status, nocache=False, revision=None):
+    store = feed_status.store
+
+    if not store.user.can('product_feeds.use'):
+        return False
+
+    feed_start = time.time()
+
+    if not feed_status.feed_exists(revision=revision) or nocache:
+        if revision is None:
+            revision = feed_status.revision
+
+        feed = BigCommerceProductFeed(store,
+                                      revision,
+                                      feed_status.all_variants,
+                                      feed_status.include_variants_id,
+                                      feed_status.default_product_category,
+                                      feed=feed_status)
 
         feed.init()
 

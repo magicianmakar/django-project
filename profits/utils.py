@@ -13,6 +13,7 @@ from commercehq_core import utils as chq_utils
 from woocommerce_core import utils as woo_utils
 from gearbubble_core import utils as gear_utils
 from groovekart_core import utils as gkart_utils
+from bigcommerce_core import utils as bigcommerce_utils
 from groovekart_core.models import GrooveKartOrderTrack
 
 from shopified_core.paginators import SimplePaginator
@@ -53,6 +54,8 @@ def get_store_from_request(request, store_type=''):
         return gear_utils.get_store_from_request(request)
     elif store_type == 'gkart':
         return gkart_utils.get_store_from_request(request)
+    elif store_type == 'bigcommerce':
+        return bigcommerce_utils.get_store_from_request(request)
     else:
         raise NotImplementedError('Store Type')
 
