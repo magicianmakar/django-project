@@ -86,7 +86,7 @@ from shopified_core.utils import (
     format_queueable_orders,
     products_filter,
 )
-from shopified_core.tasks import keen_order_event
+from shopified_core.tasks import keen_order_event, export_user_activity
 
 from shopify_orders.models import (
     ShopifyOrder,
@@ -1089,6 +1089,22 @@ def webhook(request, provider, option):
                 return HttpResponse('Charge canceled for *{}*'.format(', '.join(list(set(found)))))
             else:
                 return HttpResponse('No Recurring Charges found on *{}*'.format(shop))
+
+        elif request.POST['command'] == '/user-activity':
+            user_id = request.POST['text']
+            if not user_id:
+                return HttpResponse(':x: You must specify a user email or ID')
+
+            try:
+                user = User.objects.get(id=int(user_id))
+            except ValueError:
+                user = User.objects.get(email__iexact=user_id)
+            except:
+                return HttpResponse(f':x: User not found: {user_id}')
+
+            export_user_activity.delay(user.id, request_from)
+
+            return HttpResponse(f'Exporting activty for *{user.email}*')
 
         elif request.POST['command'] == '/captcha-credit':
             is_review_bonus = False

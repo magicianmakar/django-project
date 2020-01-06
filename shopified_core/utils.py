@@ -317,7 +317,13 @@ def get_mimetype(url, default=None):
 
 def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_email=None, is_async=False):
     template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', tpl)
-    template = Template(open(template_file).read())
+
+    try:
+        template = open(template_file).read()
+    except FileNotFoundError:
+        template = tpl
+
+    template = Template(template)
 
     ctx = Context(data)
 
