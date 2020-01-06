@@ -112,7 +112,7 @@ def keen_send_event(self, event_name, event_data):
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def export_user_activity(self, user_id, requester):
+def export_user_activity(self, user_id, requester_id):
     from leadgalaxy.management.commands.user_activity_log import generate_user_activity
     from shopified_core.utils import send_email_from_template
 
@@ -123,6 +123,7 @@ def export_user_activity(self, user_id, requester):
 
     url = generate_user_activity(user)
 
+    requester = User.objects.get(id=requester_id)
     send_email_from_template(
         tpl=f'Activity for {user.email} has been exported:\n{url}',
         subject='[Dropified] User Activity Export',

@@ -1085,14 +1085,19 @@ def webhook(request, provider, option):
             if not user_id:
                 return HttpResponse(':x: You must specify a user email or ID')
 
+            user = None
             try:
                 user = User.objects.get(id=int(user_id))
             except ValueError:
-                user = User.objects.get(email__iexact=user_id)
-            except:
-                return HttpResponse(f':x: User not found: {user_id}')
+                pass
 
-            export_user_activity.delay(user.id, request_from)
+            if not user:
+                try:
+                    user = User.objects.get(email__iexact=user_id)
+                except:
+                    return HttpResponse(f':x: User not found: {user_id}')
+
+            export_user_activity.delay(user.id, request_from.id)
 
             return HttpResponse(f'Exporting activty for *{user.email}*')
 
