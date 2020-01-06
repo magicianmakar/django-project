@@ -60,7 +60,15 @@
                         <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
                         <a class="store-link" href="{% url 'product' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
-                    <td>
+                    <td class="no-wrap text-right">
+                        {% if item.version == 1 %}
+                        <a href="{% url 'product' %}?store={{ item.id }}" class="label label-danger re-install-store"
+                            store-id="{{item.id}}" store-shop="{{item.get_shop}}">
+                            Upgrade required
+                            {% include 'partial/help_tooltip.html' with help="You've installed Dropified on this store as a Private App, please click here to re-install using Shopify's recommended method. You won't lose any data." qtipstyle="color:#FFF" %}
+                        </a>
+                        {% endif %}
+
                         <a href="{% url 'product' %}?store={{ item.id }}" class="label">Products</a>
                     </td>
                     <td>
@@ -137,7 +145,7 @@
                         <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
                         <a class="store-link" href="{% url 'chq:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
-                    <td>
+                    <td class="no-wrap text-right">
                         <a href="{% url 'chq:products_list' %}?store={{ item.id }}" class="label">Products</a>
                     </td>
                     <td>
@@ -208,7 +216,7 @@
                         <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
                         <a class="store-link" href="{% url 'woo:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
-                    <td>
+                    <td class="no-wrap text-right">
                         <a href="{% url 'woo:products_list' %}?store={{ item.id }}" class="label">Products</a>
                     </td>
                     <td>
@@ -278,7 +286,7 @@
                         <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
                         <a class="store-link" href="{% url 'gear:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
-                    <td>
+                    <td class="no-wrap text-right">
                         <a href="{% url 'gear:products_list' %}?store={{ item.id }}" class="label">Products</a>
                     </td>
                     <td>
@@ -342,7 +350,7 @@
                         <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
                         <a class="store-link" href="{% url 'gkart:products_list' %}?store={{ item.id }}">{{item.title}}</a>
                     </td>
-                    <td>
+                    <td class="no-wrap text-right">
                         <a href="{% url 'gkart:products_list' %}?store={{ item.id }}" class="label">Products</a>
                     </td>
                     <td>
@@ -414,7 +422,7 @@
                         <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
                         <a class="store-link" href="{% url 'bigcommerce:products_list' %}?store={{item.id}}">{{item.title}}</a>
                     </td>
-                    <td>
+                    <td class="no-wrap text-right">
                         <a href="{% url 'bigcommerce:products_list' %}?store={{ item.id }}" class="label">Products</a>
                     </td>
                     <td>

@@ -132,7 +132,7 @@ class ShopifyStoreAdmin(admin.ModelAdmin):
     search_fields = ('title', 'api_url', 'store_hash') + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
     readonly_fields = ('store_hash', 'created_at', 'updated_at', 'uninstalled_at')
-    list_filter = ('is_active', 'auto_fulfill', 'created_at', 'uninstalled_at')
+    list_filter = ('is_active', 'auto_fulfill', 'version', 'created_at', 'uninstalled_at')
 
 
 @admin.register(ShopifyWebhook)

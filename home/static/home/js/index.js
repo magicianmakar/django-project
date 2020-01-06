@@ -431,7 +431,19 @@
 
         $(this).bootstrapBtn('loading');
 
-        window.location.href = '/shopify/install/' + $(this).attr('store-shop') + '?reinstall=' + $(this).attr('store-id');
+        var newUrl = '/shopify/install/' + $(this).attr('store-shop') + '?reinstall=' + $(this).attr('store-id');
+
+        ga('send', 'event', {
+            eventCategory: $(this).hasClass('label-danger') ?  'Store Upgrade' : 'Store Reinstall',
+            eventAction: 'Shopify',
+            eventLabel: $(this).attr('store-shop'),
+            hitCallback: function() {
+                window.location.href = newUrl;
+            },
+            hitCallbackFail : function () {
+                window.location.href = newUrl;
+            }
+        });
     });
 
     $('.change-tracking-url').click(function(e) {
