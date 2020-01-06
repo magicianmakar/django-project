@@ -127,5 +127,7 @@ def export_user_activity(self, user_id, requester_id):
     send_email_from_template(
         tpl=f'Activity for {user.email} has been exported:\n{url}',
         subject='[Dropified] User Activity Export',
-        recipient=requester.email
+        recipient=requester.email,
+        data={},
+        nl2br=True
     )
