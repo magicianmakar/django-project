@@ -59,8 +59,6 @@ from woocommerce_core.models import WooProduct
 from bigcommerce_core.models import BigCommerceProduct
 from product_alerts.models import ProductChange
 from stripe_subscription.stripe_api import stripe
-from shopify_subscription.tasks import cancel_baremetrics_subscriptions
-from shopify_subscription.models import BaremetricsCustomer
 from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
 from phone_automation import billing_utils as billing
 
@@ -766,14 +764,6 @@ def webhook(request, provider, option):
                     store.user.profile.change_plan(GroupPlan.objects.get(
                         payment_gateway='shopify',
                         slug='shopify-free-plan'))
-
-                    try:
-                        cancel_baremetrics_subscriptions.apply_async(
-                            args=[store.baremetrics_customer.pk],
-                            expires=900
-                        )
-                    except BaremetricsCustomer.DoesNotExist:
-                        pass
 
                 return JsonResponse({'status': 'ok'})
             else:
