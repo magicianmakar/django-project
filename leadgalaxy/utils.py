@@ -2299,6 +2299,109 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
+def fetchall_athena(query_string, output=None):
+    import boto3
+
+    client = boto3.client('athena', 'us-east-1')
+
+    query_id = client.start_query_execution(
+        QueryString=query_string,
+        QueryExecutionContext={
+            'Database': 'shopifiedapplogs'
+        },
+        ResultConfiguration={
+            'OutputLocation': 's3://aws-athena-query-results-533310886335-us-east-1'
+        }
+    )['QueryExecutionId']
+    query_status = None
+    while query_status == 'QUEUED' or query_status == 'RUNNING' or query_status is None:
+        query_status = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']['Status']['State']
+        if query_status == 'FAILED' or query_status == 'CANCELLED':
+            raise Exception('Athena query with the string "{}" failed or was cancelled'.format(query_string))
+
+        if output:
+            output.write(f'query_status: {query_status}')
+
+        time.sleep(5)
+
+    results_paginator = client.get_paginator('get_query_results')
+    results_iter = results_paginator.paginate(
+        QueryExecutionId=query_id,
+        PaginationConfig={
+            'PageSize': 1000
+        }
+    )
+    results = []
+    data_list = []
+    columns = []
+
+    for results_page in results_iter:
+        columns = [
+            col['Label']
+            for col in results_page['ResultSet']['ResultSetMetadata']['ColumnInfo']
+        ]
+
+        for row in results_page['ResultSet']['Rows']:
+            data_list.append(row['Data'])
+
+    # names = [x['VarCharValue'] for x in data_list[0]]
+    for datum in data_list[1:]:
+        results.append([x['VarCharValue'] for x in datum])
+
+    return [dict(zip(columns, x)) for x in results]
+
+
+def build_query(user, output=None):
+    query = 'SELECT * FROM "shopifiedapplogs"."app_logs" WHERE ('
+    query += '\n  OR '.join([f"strpos(message,'{ip}') > 0 " for ip in json.loads(user.profile.ips)])
+    query += f''') AND '{user.date_joined:%Y-%m-%d}' <= dt
+            AND strpos(message, '/api/all/orders-sync?since=') = 0
+            AND strpos(message, '/api/can?') = 0
+            AND strpos(message, '/api/captcha-credits') = 0
+            AND strpos(message, '/api/search-shopify-products-cached') = 0
+        ORDER BY generated_at'''
+
+    if output:
+        output.write(f'Query:\n{query}\n')
+
+    return query
+
+
+def generate_user_activity(user, output=None):
+    import logfmt
+
+    query = build_query(user, output=output)
+    results = fetchall_athena(query, output=output)
+
+    lines = ['\t'.join(["IP", "Time", "HTTP Method", "Path", "Status Code", "Response Bytes"])]
+    for i in results:
+        try:
+            message = re.sub(r'hmac=[A-Za-z0-9]+', 'hmac=secret', i['message'])
+            message = list(logfmt.parse(io.StringIO(message)))[0]
+            date = arrow.get(i['generated_at']).datetime
+            lines.append('\t'.join([
+                message['fwd'].split(',')[0],
+                f"{date:%d/%b/%Y:%H:%M:%S %z}",
+                message['method'],
+                f'"https://app.dropified.com{message["path"]}"',
+                message['status'],
+                message['bytes']
+            ]))
+        except:
+            if output:
+                output.write('Ignore line...')
+
+    email_filename = re.sub(r"[@\.]", "_", user.email)
+
+    url = aws_s3_upload(
+        filename=f'activity/logs-{email_filename}.csv',
+        content='\n'.join(lines),
+        bucket_name='aws-athena-query-results-533310886335-us-east-1',
+    )
+
+    return url
+
+
 # Helper Classes
 class TimezoneMiddleware(object):
 
