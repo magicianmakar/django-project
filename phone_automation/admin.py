@@ -62,7 +62,7 @@ class TwilioAutomationAdmin(admin.ModelAdmin):
 class TwilioPhoneNumberAdmin(admin.ModelAdmin):
     list_display = ('incoming_number', 'status', 'twilio_sid', 'created_at', 'user', 'plan', 'last_two_month_usage')
     search_fields = ('user__email', 'incoming_number', 'user__profile__plan__title')
-    raw_id_fields = ('automation',)
+    raw_id_fields = ('automation', 'user')
     readonly_fields = ('last_two_month_usage', )
     list_filter = ('status', 'user__profile__plan')
     actions = (ExportCsvMixin.export_as_csv,)
@@ -187,4 +187,5 @@ class CallflexShopifyUsageChargeAdmin(admin.ModelAdmin):
         'updated_at',
     )
     list_filter = ('created_at', 'updated_at')
+    raw_id_fields = ('user',)
     date_hierarchy = 'created_at'
