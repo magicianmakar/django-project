@@ -17,6 +17,7 @@ import re
 import math
 import arrow
 import markdown
+import random
 
 register = template.Library()
 
@@ -81,11 +82,25 @@ def base64_decode_params(context, data):
 
 
 @register.simple_tag(takes_context=True)
-def json_dumps(context, data):
+def json_dumps(context, data, obfuscate=None):
     data = json.dumps(data)
-    data = escapejs(data)
+    if obfuscate:
+        rand = random.randint(1, 10)
+        ch = random.choice(['{', '}'])
+        sep = '/**/' * rand
+        data = sep.join([
+            f'/* {obfuscate} {ch} */' * rand,
+            '\n' * random.randint(0, 4),
+            f'/* ; {ch} */' * rand,
+            f' /* var {obfuscate} = {{ */ ' * rand,
+            data,
+            '/* ; */' * rand,
+            f' /* var {obfuscate} = {ch} */ ' * rand
+        ])
+    else:
+        data = f"JSON.parse('{escapejs(data)}')"
 
-    return mark_safe("JSON.parse('{}')".format(data))
+    return mark_safe(data)
 
 
 @register.simple_tag(takes_context=True)

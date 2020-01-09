@@ -1161,7 +1161,7 @@
 
 <script type="text/javascript">
 
-var product = {% json_dumps product.product %};
+var product = {% json_dumps product.product 'product' %};
 
 var config = {
     token: '{{ token }}',
