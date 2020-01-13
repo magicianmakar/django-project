@@ -48,7 +48,6 @@ from shopified_core.utils import (
     safe_str,
     list_chunks,
     app_link,
-    url_join,
     hash_text,
     random_hash,
     get_domain,
@@ -443,17 +442,6 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
         'city': '',
         'userType': 'cnfm',
     }
-
-    if product_price is None:
-        prices_response = requests.get(
-            url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api/aliexpress/products/price/', aliexpress_id),
-            auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD),
-            timeout=10)
-
-        if prices_response.ok:
-            product_price = prices_response.json()['price']
-
-            cache.set(cache_key, product_price, timeout=3600)
 
     if product_price:
         params['minPrice'] = product_price
