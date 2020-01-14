@@ -593,7 +593,7 @@ def get_tracking_products(store, tracker_orders, per_page=50):
         return tracker_orders
 
     params = {'include': ','.join(ids), 'per_page': per_page}
-    r = store.wcapi.get('products?{}'.format(urlencode(params)))
+    r = store.get_wcapi(timeout=15).get('products?{}'.format(urlencode(params)))
     r.raise_for_status()
 
     products = {}

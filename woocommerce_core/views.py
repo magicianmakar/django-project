@@ -1044,7 +1044,12 @@ class OrdersTrackList(ListView):
         try:
             context['store'] = self.get_store()
             context['orders'] = get_tracking_orders(self.get_store(), context['orders'], self.paginate_by)
-            context['orders'] = get_tracking_products(self.get_store(), context['orders'], self.paginate_by)
+
+            try:
+                context['orders'] = get_tracking_products(self.get_store(), context['orders'], self.paginate_by)
+            except Exception as e:
+                raven_client.captureException(extra=utils.http_exception_response(e))
+
             context['shipping_carriers'] = store_shipping_carriers(self.get_store())
 
         except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError) as e:
