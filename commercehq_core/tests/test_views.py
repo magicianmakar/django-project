@@ -139,7 +139,7 @@ class StoreCreateTestCase(BaseTestCase):
         r = self.client.post(self.path, self.data, **self.headers)
         rep = json.loads(r.content)
 
-        self.assertIn('API credetnails is not correct', rep.get('error'))
+        self.assertIn('API Credentials are incorrect', rep.get('error'))
         self.assertNotEqual(r.reason_phrase, 'OK')
 
     @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
