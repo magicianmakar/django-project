@@ -46,9 +46,11 @@ class Command(DropifiedBaseCommand):
             orders = orders.filter(store=fulfill_store)
 
         fulfill_max = min(fulfill_max, len(orders)) if fulfill_max else len(orders)
-        utils.cache_fulfillment_data(orders, fulfill_max)
+        self.write(f'Auto Fulfill {fulfill_max}/{len(orders)} WOO Orders')
 
-        self.write('Auto Fulfill {}/{} WOO Orders'.format(fulfill_max, len(orders)), self.style.HTTP_INFO)
+        utils.cache_fulfillment_data(orders, fulfill_max, output=self)
+        self.write('WOO Cache data loaded')
+
         self.store_countdown = {}
         self.start_at = timezone.now()
 
@@ -70,7 +72,7 @@ class Command(DropifiedBaseCommand):
                     order.save()
 
                     counter['fulfilled'] += 1
-                    if counter['fulfilled'] % 50 == 0:
+                    if counter['fulfilled'] % 50 == 0 or counter['fulfilled'] == 1:
                         self.write('Fulfill Progress: %d' % counter['fulfilled'])
                 else:
                     cache_key = 'woo_track_error_{}'.format(order.id)

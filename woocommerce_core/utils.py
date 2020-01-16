@@ -12,6 +12,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from unidecode import unidecode
 from collections import Counter
 from base64 import b64encode
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from django.db.models import Q
 from django.db import transaction
@@ -29,6 +30,7 @@ from shopified_core.utils import (
     hash_url_filename,
     products_filter,
     http_exception_response,
+    http_excption_status_code,
     get_top_most_commons,
     get_first_valid_option,
     order_data_cache
@@ -475,7 +477,7 @@ def has_order_line_been_fulfilled(order_line):
     return get_order_line_fulfillment_status(order_line) == 'Fulfilled'
 
 
-def cache_fulfillment_data(order_tracks, orders_max=None):
+def cache_fulfillment_data(order_tracks, orders_max=None, output=None):
     """
     Caches order data of given `WooOrderTrack` instances
     """
@@ -488,31 +490,44 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
         store_orders.setdefault(order_track.store.id, set()).add(order_track.order_id)
 
     cache_data = {}
+    counter = 0
     for store in stores:
-        order_ids = list(store_orders[store.id])
-        include = ','.join(str(order_id) for order_id in order_ids)
+        try:
+            counter += 1
 
-        for chunk_include in [include[x:x + 20] for x in range(0, len(include), 20)]:
-            page = 1
-            while page:
-                params = {'page': page, 'per_page': 100, 'include': chunk_include}
-                query_string = urlencode(params)
-                r = store.wcapi.get('orders?{}'.format(query_string))
-                r.raise_for_status()
+            order_ids = list(store_orders[store.id])
+            include = ','.join(str(order_id) for order_id in order_ids)
 
-                orders = r.json()
+            if output:
+                output.write(f'[{counter}/{len(stores)}] WooCommerce Cache: {len(order_ids)} Orders for store: {store.title}:{store.id}')
 
-                for order in orders:
-                    country = order['shipping']['country'] or order['billing']['country']
-                    cache_data['woo_auto_country_{}_{}'.format(store.id, order['id'])] = country
+            for chunk_include in [include[x:x + 20] for x in range(0, len(include), 20)]:
+                page = 1
+                while page:
+                    params = {'page': page, 'per_page': 100, 'include': chunk_include}
+                    query_string = urlencode(params)
+                    r = store.wcapi.get('orders?{}'.format(query_string))
+                    r.raise_for_status()
 
-                    for item in order.get('line_items', []):
-                        args = store.id, order['id'], item['id']
-                        cache_key = 'woo_auto_fulfilled_order_{}_{}_{}'.format(*args)
-                        cache_data[cache_key] = has_order_line_been_fulfilled(item)
+                    orders = r.json()
 
-                has_next = 'rel="next"' in r.headers.get('link', '')
-                page = page + 1 if has_next else 0
+                    for order in orders:
+                        country = order['shipping']['country'] or order['billing']['country']
+                        cache_data['woo_auto_country_{}_{}'.format(store.id, order['id'])] = country
+
+                        for item in order.get('line_items', []):
+                            args = store.id, order['id'], item['id']
+                            cache_key = 'woo_auto_fulfilled_order_{}_{}_{}'.format(*args)
+                            cache_data[cache_key] = has_order_line_been_fulfilled(item)
+
+                    has_next = 'rel="next"' in r.headers.get('link', '')
+                    page = page + 1 if has_next else 0
+        except Exception as e:
+            if output:
+                output.write(f'    WooCommerce Cache Error for {store.title}:{store.id} page {page}')
+                output.write(f'    HTTP Code: {http_excption_status_code(e)} Error: {http_exception_response(e)}')
+
+            raven_client.captureException(extra=http_exception_response(e))
 
     cache.set_many(cache_data, timeout=3600)
 
