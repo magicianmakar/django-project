@@ -506,7 +506,7 @@ class CHQStoreApi(ApiBase):
 
             rep.raise_for_status()
         except:
-            return self.api_error('API credetnails is not correct', status=500)
+            return self.api_error('API Credentials are incorrect', status=500)
 
         store.save()
 
@@ -555,7 +555,7 @@ class CHQStoreApi(ApiBase):
         except IndexError:
             return self.api_error('Your Store link is not correct:\n{}'.format(store.api_url))
         except:
-            return self.api_error('API credetnails is not correct\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
+            return self.api_error('API Credentials are incorrect\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
 
     def delete_board(self, request, user, data):
         if not user.can('edit_product_boards.sub'):
@@ -680,7 +680,7 @@ class CHQStoreApi(ApiBase):
                 else:
                     msg = ''
                     if 'Warehouse ID' in rep.text:
-                        msg = 'Inventroy Tracking is enabled for this product'
+                        msg = 'Inventory Tracking is enabled for this product'
 
                     return self.api_error('CommerceHQ API Error\n{}'.format(msg))
 

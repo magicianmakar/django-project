@@ -172,7 +172,7 @@ class GrooveKartApi(ApiBase):
         except IndexError:
             return self.api_error('Your Store link is not correct:\n{}'.format(store.api_url))
         except:
-            return self.api_error('API credetnails is not correct\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
+            return self.api_error('API Credentials are incorrect\nError: {}'.format(rep.reason if rep is not None else 'Unknown Issue'))
 
     def get_store(self, request, user, data):
         pk = safe_int(data.get('id'))
