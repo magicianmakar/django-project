@@ -51,6 +51,11 @@
                                 {% endfor %}
                             </select>
                         </div>
+                        <div class="col-md-6">
+                            <a href="#" class="btn btn-success select-options-mapping pull-right"
+                                       product-url="{{product.default_supplier.product_url}}"
+                                       >Bulk Change</a>
+                        </div>
                     </div>
 
                     <hr />
@@ -137,6 +142,34 @@
     </div>
 </div>
 
+<div id="modal-options-select" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Options</h4>
+            </div>
+
+            <div class="modal-body">
+                <div id='mapping-error' class="alert alert-danger" style='display:none;'>
+                    Please complete the mapping.
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 options-container">
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                <button id="save-options-mapping" class="btn btn-primary" type="button">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% verbatim %}
 
 <script id="variant-template" type="text/x-handlebars-template">
@@ -170,6 +203,59 @@
     </div>
 </script>
 
+<script id="bulk-option-template" type="text/x-handlebars-template">
+    <div class="row well bulk-option" style="padding: 5px 10px;">
+        <div class="form-group row">
+            <div class="col-md-6">
+                <h3>Supplier Option</h3>
+                <label>{{title}}</label>
+            </div>
+            <div class="col-md-6">
+                <h3>CommerceHQ Option</h3>
+                <select id="mapped_for_{{index}}" class="form-control store-option-select">
+                    <option value="">All</option>
+                    {{#each store_options}}
+                        <option value="{{@index}}">{{title}}</option>
+                    {{/each}}
+                </select>
+            </div>
+        </div>
+        <div class="options-mapping">
+        </div>
+    </div>
+</script>
+<script id="option-mapping-template" type="text/x-handlebars-template">
+    <div clas="row">
+        {{#each store_values}}
+            <div class="col-xs-1" style="width: auto;">
+                <label>{{this}}</label>
+                <select class="option-select form-control" name="mapped_value_{{../index}}{{@index}}" style="padding: 0px;">
+                    {{#each ../supplier_values}}
+                        <option value="{{title}}" var-data="{{var_json}}">{{title}}</option>
+                    {{/each}}
+                </select>
+            </div>
+        {{/each}}
+    </div>
+</script>
+<script id="supplier-option-template" type="text/x-handlebars-template">
+    <div class="options col-xs-12">
+        {{#each values}}
+            <div class="option-item" style="display:inline-block;margin-top: 5px;">
+                <div class="option-item-select" style="padding: 2px 5px;border: 1px solid rgb(204, 204, 204);border-radius: 3px;margin-right: 10px;display: flex;align-items: center;min-height: 30px;cursor: pointer;background-color: #fff;min-width: 55px;">
+                    <input class="supplier-option-value-select" name="value_for_supplier_option_{{../index}}" type="radio"
+                           style="margin: 0 5px 0" var-data="{{var_json}}"
+                           value="{{title}}">
+                    {{#if image}}
+                        <img src="{{image}}" style="max-width:35px;max-height:35px;display:inline-block;margin-right: 5px;">
+                    {{/if}}
+
+                    <span class="variant-title" style="font-weight:bold;">{{title}}</span>
+                </div>
+            </div>
+        {{/each}}
+    </div>
+</script>
 {% endverbatim %}
 
 {% endblock %}
@@ -189,6 +275,13 @@
     var product_id = {{product.id}};
     var variants_mapping = {% json_dumps variants_map %};
     var product_suppliers = {% json_dumps product_suppliers %};
+    var store_options = {% json_dumps commercehq_product.options %};
+
+    var raw_variants = {% json_dumps commercehq_product.variants %};
+    var store_variants = {};
+    for (var i = 0, iLength = raw_variants.length; i < iLength; i++) {
+        store_variants[raw_variants[i].id] = raw_variants[i];
+    }
 </script>
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>

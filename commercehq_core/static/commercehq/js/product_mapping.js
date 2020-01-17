@@ -1,7 +1,8 @@
-(function(product_id, variants_mapping) {
+(function(product_id, variants_mapping, store_options, store_variants) {
     'use strict';
 
     var mapping_changed = false;
+    var current_mappings;
 
     function parse_variant_map(variants) {
         if (!variants || (typeof(variants) === 'string' && !variants.trim().length)) {
@@ -106,6 +107,16 @@
     function getSupplierUrl() {
         var supplier = parseInt($('.supplier-select').val(), 10);
         return product_suppliers[supplier].url;
+    }
+
+    function fetchSupplierOptions(callback) {
+        var supplier_url = getSupplierUrl();
+        window.extensionSendMessage({
+            subject: 'getVariants',
+            from: 'webapp',
+            url: supplier_url,
+            cache: true,
+        }, callback);
     }
 
     $('.select-var-mapping').click(function(e) {
@@ -246,5 +257,179 @@
         }
     });
 
+    $('.select-options-mapping').click(function(e) {
+        e.preventDefault();
+
+        $(this).bootstrapBtn('loading');
+
+        var render_options = function(response) {
+            var bulk_option_tpl = Handlebars.compile($("#bulk-option-template").html());
+            var option_mapping_tpl = Handlebars.compile($("#option-mapping-template").html());
+            var supplier_option_tpl = Handlebars.compile($("#supplier-option-template").html());
+            var supplier_options = [];
+            for (var i = 0; i < response.length; i++) {
+                var supplier_option = {};
+                supplier_option['index'] = i;
+                supplier_option['title'] = response[i]['title'];
+                supplier_option['values'] = [];
+                for (var j = 0; j < response[i]['values'].length; j++) {
+                    var option = response[i]['values'][j];
+                    option['var_json'] = JSON.stringify(option);
+                    supplier_option['values'].push(option);
+                }
+                supplier_option['store_options'] = store_options;
+                supplier_options.push(supplier_option);
+            }
+            $('.options-container').empty();
+            $.each(supplier_options, function(index, supplier_option) {
+                var optionEl = $(bulk_option_tpl(supplier_option));
+                optionEl.find('.store-option-select').change(function() {
+                    var mapped = $(this).val();
+                    if (mapped) {
+                        mapped = parseInt(mapped);
+                    } else {
+                        mapped = -1;
+                    }
+                    var current_mapping;
+                    if (current_mappings) {
+                        if (current_mappings[index]['mapped'] == mapped) {
+                            current_mapping = current_mappings[index];
+                        }
+                    }
+                    if (mapped >= 0) { // The supplier option was mapped to one chq option
+                        var store_values = store_options[mapped]['values'];
+                        var option_map = {
+                            index: mapped,
+                            supplier_values: supplier_option['values'],
+                            store_values: store_values,
+                        };
+                        var optionMappingEl = $(option_mapping_tpl(option_map));
+                        if (current_mapping) {
+                            for (var i = 0; i < store_values.length; i++) {
+                                var supplier_value = current_mapping['values'][store_values[i]]['title'];
+                                var name = 'mapped_value_' + mapped + i;
+                                optionMappingEl.find('select[name=' + name + ']').val(supplier_value);
+                            }
+                        }
+                        optionEl.find('.options-mapping').empty().append(optionMappingEl);
+                    } else { // The supplier option was mapped to "None", should select default value
+                        var supplierOptionEl = $(supplier_option_tpl(supplier_option));
+                        supplierOptionEl.find('.option-item, .option-item-select, .option-item-select img, .option-item-select .variant-title').click(function(e) {
+                            $(this).parents('.option-item').find('input').prop('checked', true);
+                            selectColor();
+                        });
+                        supplierOptionEl.find('input').on('change', function(e) {
+                            selectColor();
+                        });
+                        if (current_mapping) {
+                            supplierOptionEl.find('input[value="' + current_mapping['value']['title'] + '"]').prop('checked', true);
+                        }
+                        optionEl.find('.options-mapping').empty().append(supplierOptionEl);
+                    }
+
+                    // Disable mapped chq options in other dropdowns
+                    var values = [];
+                    $('.options-container .store-option-select').each(function() {
+                        if ($(this).val()) {
+                            values.push($(this).val());
+                        }
+                        $(this).find('option').attr('disabled', null);
+                    });
+                    for (var i = 0; i < values.length; i++) { // jshint ignore:line
+                        $('.options-container .store-option-select').each(function() { // jshint ignore:line
+                            if (values[i] != $(this).val()) {
+                                $(this).find("option[value=" + values[i] + "]").attr('disabled', 'disabled');
+                            }
+                        });
+                    }
+                });
+                if (current_mappings) {
+                    if (current_mappings[index] && current_mappings[index]['mapped'] >= 0) {
+                        optionEl.find('.store-option-select').val(current_mappings[index]['mapped']);
+                    }
+                }
+                $('.options-container').append(optionEl);
+            });
+            $('#mapping-error').hide();
+            $('#modal-options-select').modal('show');
+            $('#modal-options-select .store-option-select').change();
+            $('.select-options-mapping').bootstrapBtn('reset');
+        };
+
+        fetchSupplierOptions(render_options);
+    });
+
+    $('#save-options-mapping').click(function(e) {
+        e.preventDefault();
+
+        var validateMapping = function(response) {
+            var mappings = [];
+            for (var i = 0; i < response.length; i++) {
+                var mapped = $('.options-container #mapped_for_' + i).val();
+                if (mapped) { // all chq option values should be mapped to one supplier option value
+                    mapped = parseInt(mapped);
+                    var store_values = store_options[mapped]['values'];
+                    var mapping = {
+                        mapped: mapped,
+                        values: {},
+                    };
+                    for (var j = 0; j < store_values.length; j++) {
+                        var mapped_value = $("[name=mapped_value_" + mapped + j + "]");
+                        if (mapped_value.val()) {
+                            mapping['values'][store_values[j]] = JSON.parse(mapped_value.find('option:selected').attr('var-data'));
+                        } else {
+                            return false;
+                        }
+                    }
+                    mappings.push(mapping);
+                } else { // should have default value
+                    var default_option = $('input[name=value_for_supplier_option_' + i + ']:checked');
+                    if (default_option.length == 1) {
+                        mappings.push({
+                            mapped: -1,
+                            value: JSON.parse(default_option.attr('var-data')),
+                        });
+                    } else {
+                        return false;
+                    }
+                }
+            }
+            return mappings;
+        };
+
+        var saveMapping = function(response) {
+            var result = validateMapping(response);
+            if (result) {
+                $('#mapping-error').hide();
+
+                current_mappings = result;
+
+                for (var variant_id in variants_mapping) {
+                    if (variants_mapping.hasOwnProperty(variant_id)) {
+                        variants_mapping[variant_id] = [];
+                        for (var i = 0; i < current_mappings.length; i++) {
+                            var mapping = current_mappings[i];
+                            if (mapping['mapped'] == -1) {
+                                variants_mapping[variant_id].push(mapping['value']);
+                            } else {
+                                var store_variant = store_variants[variant_id];
+                                var store_value = store_variant.variant[mapping['mapped']];
+                                variants_mapping[variant_id].push(mapping['values'][store_value]);
+                            }
+                        }
+                    }
+                }
+
+                $('#modal-options-select').modal('hide');
+                mapping_changed = true;
+                display_variant();
+            } else {
+                $('#mapping-error').show();
+            }
+        };
+
+        fetchSupplierOptions(saveMapping);
+    });
+
     display_variant();
-})(product_id, variants_mapping);
+})(product_id, variants_mapping, store_options, store_variants);
