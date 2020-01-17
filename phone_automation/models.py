@@ -24,6 +24,7 @@ from stripe_subscription.models import CustomStripeSubscription
 PHONE_NUMBER_STATUSES = (
     ('active', 'Incoming calls allowed'),
     ('inactive', 'Forwardning all incoming calls'),
+    ('released', 'Released'),
 )
 
 PHONE_NUMBER_TYPES = (
@@ -216,6 +217,15 @@ class TwilioPhoneNumber(models.Model):
         except:
             pass
         super(TwilioPhoneNumber, self).delete(*args, **kwargs)
+
+    def safe_delete(self, *args, **kwargs):
+        try:
+            client = get_twilio_client()
+            client.incoming_phone_numbers(self.twilio_sid).delete()
+        except:
+            pass
+        self.status = "released"
+        self.save()
 
 
 class TwilioUpload(models.Model):

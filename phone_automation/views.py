@@ -49,6 +49,7 @@ from .utils import (
 )
 from . import notifications_utils as notifications
 from . import billing_utils as billing
+from django.db.models import Q
 
 
 def JsonDatetimeConverter(o):
@@ -62,7 +63,7 @@ def index(request):
         return render(request, 'upgrade.html', status=403)
 
     user = request.user.models_user
-    twilio_phone_numbers = user.twilio_phone_numbers
+    twilio_phone_numbers = user.twilio_phone_numbers.exclude(status='released')
     twilio_automations = user.twilio_automations
 
     try:
@@ -433,7 +434,8 @@ def provision_release(request, twilio_phone_number_id):
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
     try:
-        twilio_phone_number.delete()
+        twilio_phone_number.safe_delete()
+
         messages.success(request, 'Phone number has been successfully removed')
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
@@ -445,7 +447,7 @@ def provision_release(request, twilio_phone_number_id):
 
 def status_callback(request):
     # searching related phone number
-    twilio_phone_number = get_object_or_404(TwilioPhoneNumber, incoming_number=request.POST.get('To'))
+    twilio_phone_number = get_object_or_404(TwilioPhoneNumber, ~Q(status='released'), incoming_number=request.POST.get('To'))
 
     if twilio_phone_number and request.POST.get('CallStatus') in ('completed', 'busy', 'failed', 'no-answer'):
         # --- check for reaching limit warning
@@ -602,7 +604,7 @@ def upload(request, twilio_automation_id):
 
 
 def call_flow(request):
-    phone = get_object_or_404(TwilioPhoneNumber, incoming_number=request.POST.get('To'))
+    phone = get_object_or_404(TwilioPhoneNumber, ~Q(status='released'), incoming_number=request.POST.get('To'))
     response = VoiceResponse()
 
     total_duration = get_month_totals(phone.user)
@@ -630,7 +632,7 @@ def call_flow(request):
 
 
 def call_flow_speak(request):
-    phone = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    phone = TwilioPhoneNumber.objects.exclude(status='released').get(incoming_number=request.POST.get('To'))
     current_step = phone.automation.steps.get(step=request.GET.get('step'))
     config = current_step.get_config()
 
@@ -645,7 +647,7 @@ def call_flow_speak(request):
 
 
 def call_flow_menu(request):
-    phone = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    phone = TwilioPhoneNumber.objects.exclude(status='released').get(incoming_number=request.POST.get('To'))
     current_step = phone.automation.steps.get(step=request.GET.get('step'))
     config = current_step.get_config()
 
@@ -666,7 +668,7 @@ def call_flow_menu(request):
 
 
 def call_flow_menu_options(request):
-    phone = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    phone = TwilioPhoneNumber.objects.exclude(status='released').get(incoming_number=request.POST.get('To'))
     current_step = phone.automation.steps.get(step=request.GET.get('step'))
     config = current_step.get_config()
 
@@ -691,7 +693,7 @@ def call_flow_menu_options(request):
 
 
 def call_flow_record(request):
-    phone = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    phone = TwilioPhoneNumber.objects.exclude(status='released').get(incoming_number=request.POST.get('To'))
     current_step = phone.automation.steps.get(step=request.GET.get('step'))
     config = current_step.get_config()
 
@@ -706,7 +708,7 @@ def call_flow_record(request):
 
 
 def call_flow_dial(request):
-    phone = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    phone = TwilioPhoneNumber.objects.exclude(status='released').get(incoming_number=request.POST.get('To'))
     current_step = phone.automation.steps.get(step=request.GET.get('step'))
     config = current_step.get_config()
 
@@ -728,7 +730,7 @@ def call_flow_hangup(request):
 
 
 def call_flow_empty(request):
-    phone = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    phone = TwilioPhoneNumber.objects.exclude(status='released').get(incoming_number=request.POST.get('To'))
     current_step = phone.automation.steps.get(step=request.GET.get('step'))
 
     response = VoiceResponse()
@@ -738,7 +740,7 @@ def call_flow_empty(request):
 
 
 def sms_flow(request):
-    phone = TwilioPhoneNumber.objects.get(incoming_number=request.POST.get('To'))
+    phone = TwilioPhoneNumber.objects.exclude(status='released').get(incoming_number=request.POST.get('To'))
     user = phone.user
     phone_from = request.POST.get('From')
     sms_message = request.POST.get('Body')
@@ -897,7 +899,7 @@ def reports_numbers(request):
     companies = user.twilio_companies.all()
     twilio_logs = []
     try:
-        twilio_phone_numbers = user.twilio_phone_numbers.all()
+        twilio_phone_numbers = user.twilio_phone_numbers.exclude(status='released')
 
         if company_id and company_id != '':
             twilio_phone_numbers = twilio_phone_numbers.filter(company_id=company_id)

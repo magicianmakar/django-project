@@ -49,8 +49,8 @@ def process_sub_upd_stripe(sender, instance, created, **kwargs):
     try:
         if perm is False:
             # deleting phones
-            for phone in user.twilio_phone_numbers.all():
-                phone.delete()
+            for phone in user.twilio_phone_numbers.exclude(status='released'):
+                phone.safe_delete()
             # deleting callflex subscriptions
             custom_callflex_subscriptions = user.customstripesubscription_set.filter(
                 custom_plan__type='callflex_subscription')
@@ -67,7 +67,7 @@ def process_sub_upd_shopify(sender, instance, created, **kwargs):
     try:
         if perm is False:
             # deleting phones
-            for phone in user.twilio_phone_numbers.all():
+            for phone in user.twilio_phone_numbers.exclude(status='released'):
                 phone.delete()
     except:
         raven_client.captureException(level='warning')

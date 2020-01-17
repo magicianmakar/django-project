@@ -33,7 +33,7 @@ class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
 
         # Get users without CallFlex Stripe Subscriptions
-        users_phones = TwilioPhoneNumber.objects
+        users_phones = TwilioPhoneNumber.objects.exclude(status='released')
         if options['user_id']:
             users_phones = users_phones.filter(user_id=options['user_id'])
         users_phones = users_phones.values_list('user_id', flat=True)
@@ -85,8 +85,8 @@ class Command(DropifiedBaseCommand):
 
                 print(f"Pending Usage amoiunt exceed limit of {settings.CALLFLEX_SHOPIFY_USAGE_MAX_PENDING}. Deleting user's phones")
                 user = User.objects.get(pk=unpaid_user_total['user'])
-                phones = user.twilio_phone_numbers.all()
-                phones.delete()
+                phones = user.twilio_phone_numbers.exclude(status='released')
+                phones.safe_delete()
 
         # removing very old usage charge logs
         exp_date = timezone.now() + timedelta(days=-90)

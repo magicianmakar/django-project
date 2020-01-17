@@ -409,7 +409,7 @@ def get_phonenumber_usage(user, phone_type="tollfree"):
             credits = 0
         credits_total += safe_int(credits)
 
-    added_numbers = user.twilio_phone_numbers.filter(type=phone_type).count()
+    added_numbers = user.twilio_phone_numbers.filter(type=phone_type).exclude(status='released').count()
 
     if user.can('phone_automation_unlimited_phone_numbers.use'):
         credits_total = False
@@ -420,13 +420,14 @@ def get_phonenumber_usage(user, phone_type="tollfree"):
 
 
 def get_unused_subscription(user):
-    count_null = user.twilio_phone_numbers.filter(custom_subscription__isnull=True).count()
+    count_null = user.twilio_phone_numbers.filter(custom_subscription__isnull=True).exclude(status='released').count()
     if user.can('phone_automation_free_number.use') and count_null <= 0:
         return None
     if user.can('phone_automation_unlimited_phone_numbers.use'):
         return None
 
-    used_subscription_ids = user.twilio_phone_numbers.filter(custom_subscription__isnull=False).values_list('custom_subscription_id', flat=True)
+    used_subscription_ids = user.twilio_phone_numbers.filter(custom_subscription__isnull=False).\
+        exclude(status='released').values_list('custom_subscription_id', flat=True)
     unused_phone_subscription = user.customstripesubscription_set.filter(
         status__in=('active', 'trialing'), custom_plan__type='callflex_extranumber').exclude(id__in=used_subscription_ids).first()
     return unused_phone_subscription
