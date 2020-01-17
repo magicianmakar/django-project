@@ -791,10 +791,10 @@ class OrdersList(ListView):
             order['supplier_types'] = set()
 
             order_status = {
-                0: 'Not sent to fulfilment',
-                1: 'Partially sent to fulfilment',
-                2: 'Partially sent to fulfilment & shipped',
-                3: 'Sent to fulfilment',
+                0: 'Not sent to fulfillment',
+                1: 'Partially sent to fulfillment',
+                2: 'Partially sent to fulfillment & shipped',
+                3: 'Sent to fulfillment',
                 4: 'Partially shipped',
                 5: 'Shipped',
             }
