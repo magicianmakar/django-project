@@ -99,6 +99,8 @@
             items: []
         };
 
+        var orderBundles = 0;
+
         $('.line', current_order).each(function(i, el) {
             if (exclude_lines) {
                 // Check if we should exclude this line if "exclude" attribute is "true"
@@ -114,17 +116,18 @@
                 }
             }
 
-            if ($(el).hasClass('bundled')) {
-                var bundleBtn = $('.order-bundle', el);
-                var order_data_id = bundleBtn.attr('order-data');
-                var order_name = bundleBtn.attr('order-number');
-                var store_type = bundleBtn.attr('store-type');
+            if ($(el).attr('line-data') && !$(el).attr('line-track')) {
+                if ($(el).hasClass('bundled')) {
+                    var bundleBtn = $('.order-bundle', el);
+                    var order_data_id = bundleBtn.attr('order-data');
+                    var order_name = bundleBtn.attr('order-number');
+                    var store_type = bundleBtn.attr('store-type');
 
-                orderBundle(order_data_id, order_name, store_type, function(data) {
-                    toastr.error(data, 'Order Bundle');
-                });
-            } else {
-                if ($(el).attr('line-data') && !$(el).attr('line-track')) {
+                    orderBundle(order_data_id, order_name, store_type, function(data) {
+                        toastr.error(data, 'Order Bundle');
+                    });
+                    orderBundles++;
+                } else {
                     order.items.push({
                         url: $('.add-to-cart', el).data('href') || $('.add-to-cart', el).prop('href'),
                         order_data: $(el).attr('order-data-id'),
@@ -170,7 +173,9 @@
 
             addOrderToQueue(order);
         } else {
-            toastr.error('The items have been ordered or are not connected', 'No items to order');
+            if (orderBundles === 0) {
+                toastr.error('The items have been ordered or are not connected', 'No items to order');
+            }
         }
     }
 
