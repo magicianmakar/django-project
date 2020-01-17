@@ -313,7 +313,7 @@ def subuser_bigcommerce_store_permissions(request, user_id, store_id):
     subuser = get_object_or_404(User,
                                 pk=user_id,
                                 profile__subuser_parent=request.user,
-                                profile__subuser_gkart_stores__pk=store_id)
+                                profile__subuser_bigcommerce_stores__pk=store_id)
 
     subuser_bigcommerce_permissions = subuser.profile.subuser_bigcommerce_permissions.filter(store=store)
     initial = {'permissions': subuser_bigcommerce_permissions, 'store': store}
