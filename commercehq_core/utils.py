@@ -595,6 +595,7 @@ class CommerceHQOrdersPaginator(Paginator):
     financial = None
     sort = None
     query_field = 'id'
+    order_date = None
 
     _products = None
     _count = None
@@ -615,10 +616,12 @@ class CommerceHQOrdersPaginator(Paginator):
     def set_request(self, r):
         self.request = r
 
-    def set_filter(self, fulfillment, financial, sort, query=''):
+    def set_filter(self, fulfillment, financial, sort, query='', order_date=None):
         self.fulfillment = fulfillment
         self.financial = financial
         self.sort = sort
+        if order_date:
+            self.order_date = order_date
 
         self.query = decode_params(query or '')
 
@@ -702,6 +705,9 @@ class CommerceHQOrdersPaginator(Paginator):
             'paid': self.financial,
         }
 
+        if self.order_date:
+            filters['order_date'] = self.order_date
+
         filters[self.query_field] = self.query
 
         for k, v in list(filters.items()):
@@ -713,7 +719,7 @@ class CommerceHQOrdersPaginator(Paginator):
         for k, v in list(filters.items()):
             if type(filters[k]) is list:
                 filters[k] = list(map((lambda x: safe_int(x)), filters[k]))
-            elif k != 'email':
+            elif k not in ['email', 'order_date']:
                 filters[k] = safe_int(v, None)
 
             if not filters[k]:

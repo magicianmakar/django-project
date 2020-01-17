@@ -1,4 +1,15 @@
-function setupDateRangePicker(elment_id, input_id) {
+function setupDateRangePicker(elment_id, input_id, useAllTime) {
+    var dateRanges = {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(30, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+    };
+
+    if (useAllTime) {
+        dateRanges['All Time'] = 'all-time';
+    }
     $(elment_id).daterangepicker({
         format: 'MM/DD/YYYY',
         minDate: moment().subtract(30 * 24, 'days'),
@@ -6,13 +17,7 @@ function setupDateRangePicker(elment_id, input_id) {
         showWeekNumbers: true,
         timePicker: false,
         autoUpdateInput: false,
-        ranges: {
-            'Today': [moment(), moment()],
-            'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-            'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-            'Last 30 Days': [moment().subtract(30, 'days'), moment()],
-            'This Month': [moment().startOf('month'), moment().endOf('month')],
-        },
+        ranges: dateRanges,
         opens: 'right',
         drops: 'down',
         buttonClasses: ['btn', 'btn-sm'],

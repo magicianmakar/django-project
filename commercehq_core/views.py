@@ -16,6 +16,7 @@ from django.http import HttpResponse, Http404
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.views.generic import ListView
@@ -675,6 +676,25 @@ class OrdersList(ListView):
             'sort': get_orders_filter(self.request, 'sort', '!order_date'),
         }
 
+        created_at_daterange = self.request.GET.get('created_at_daterange', 'all-time')
+        if not self.filter_data['query'] and created_at_daterange:
+            try:
+                daterange_list = created_at_daterange.split('-')
+
+                tz = timezone.localtime(timezone.now()).strftime(' %z')
+
+                self.filter_data['order_date'] = {}
+                self.filter_data['order_date']['start'] = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').timestamp
+                self.filter_data['order_date']['start'] = str(self.filter_data['order_date']['start'])
+
+                if len(daterange_list) > 1 and daterange_list[1]:
+                    created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                    self.filter_data['order_date']['end'] = created_at_end.span('day')[1].timestamp
+                    self.filter_data['order_date']['end'] = str(self.filter_data['order_date']['end'])
+
+            except:
+                pass
+
         if self.filter_data['query']:
             self.filter_data['fulfillment'] = 'any'
             self.filter_data['financial'] = 'any'
@@ -730,6 +750,7 @@ class OrdersList(ListView):
         if api_error:
             messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
 
+        context['created_at_daterange'] = self.request.GET.get('created_at_daterange', 'all-time')
         context['api_error'] = api_error
 
         return context
