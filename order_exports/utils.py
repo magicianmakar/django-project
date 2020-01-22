@@ -503,7 +503,7 @@ class ShopifyTrackOrderExport():
         steps = 1000
 
         with open(self.file_path, 'w') as csv_file:
-            fieldnames = ['Shopify Order', 'Shopify Item', 'Supplier Order ID', 'Tracking Number']
+            fieldnames = ['Shopify Order', 'Shopify Item', 'Shopify Product Title', 'Supplier Order ID', 'Tracking Number']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
 
@@ -512,15 +512,22 @@ class ShopifyTrackOrderExport():
                 orders_ids = list(set([o.order_id for o in orders_chunk]))
 
                 shopify_orders = {}
-                for o in get_shopify_orders(store=self.store, order_ids=orders_ids, fields='id,name', retry=True):
+                for o in get_shopify_orders(store=self.store, order_ids=orders_ids, fields='id,name,line_items', retry=True):
                     shopify_orders[o['id']] = o
 
                 for order in orders_chunk:
                     shopify_order = shopify_orders.get(order.order_id)
+                    # Match the Order line id by looping through all line items to get variant title
+                    order_title = ''
+                    for items in shopify_order['line_items']:
+                        if items['id'] == order.line_id:
+                            order_title = items['name']
+                            break
 
                     writer.writerow({
                         'Shopify Order': shopify_order['name'] if shopify_order else order.order_id,
                         'Shopify Item': order.line_id,
+                        'Shopify Product Title': order_title,
                         'Supplier Order ID': order.source_id,
                         'Tracking Number': order.source_tracking,
                     })
