@@ -612,7 +612,7 @@ def call_flow(request):
 
     # if CALLFLEX_OVERAGES_MAX_MINUTES limit reached, reject the call
     if total_duration_month_limit and total_duration \
-            and total_duration > total_duration_month_limit + settings.CALLFLEX_OVERAGES_MAX_MINUTES:
+            and total_duration > total_duration_month_limit + (settings.CALLFLEX_OVERAGES_MAX_MINUTES * 60):
         response.reject()
     elif phone.automation is None:
         if phone.forwarding_number != '':
