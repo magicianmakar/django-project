@@ -1,8 +1,7 @@
 import json
 
 from random import choice
-from unittest.mock import patch, Mock, call
-from urllib.parse import urlencode
+from unittest.mock import patch, Mock
 
 from lib.test import BaseTestCase
 
@@ -159,7 +158,7 @@ class APIConsumptionTestCase(BaseTestCase):
         self.store = WooStoreFactory(user=self.user)
 
     @patch('woocommerce.api.API.get')
-    def test_calling_once_product_multiple_variations(self, r):
+    def test_decreased_call_count_tracking_products(self, r):
         r.side_effect = [Mock(
             raise_for_status=Mock(return_value=None),
             json=Mock(return_value=[{'id': 1, 'images': []}, {'id': 2, 'images': []}])
@@ -181,34 +180,10 @@ class APIConsumptionTestCase(BaseTestCase):
 
         tracker_orders = []
 
-        t = WooOrderTrackFactory(product_id=1)
-        t.line = {'variation_id': 2}
-        tracker_orders.append(t)
-        t = WooOrderTrackFactory(product_id=1)
-        t.line = {'variation_id': 3}
-        tracker_orders.append(t)
-        t = WooOrderTrackFactory(product_id=1)
-        t.line = {'variation_id': 4}
-        tracker_orders.append(t)
-
-        t = WooOrderTrackFactory(product_id=2)
-        t.line = {'variation_id': 2}
-        tracker_orders.append(t)
-        t = WooOrderTrackFactory(product_id=2)
-        t.line = {'variation_id': 3}
-        tracker_orders.append(t)
-        t = WooOrderTrackFactory(product_id=2)
-        t.line = {'variation_id': 4}
-        tracker_orders.append(t)
-
-        for _ in range(20 - 6):
+        for _ in range(20):
             tracker = WooOrderTrackFactory(product_id=choice([1, 2]))
             tracker.line = {'variation_id': choice([2, 3, 4])}
             tracker_orders.append(tracker)
 
         get_tracking_products(self.store, tracker_orders, 50)
-        r.assert_has_calls([
-            call(f"products?{urlencode({'include': '1,2', 'per_page': '50'})}"),
-            call(f"products/1/variations?{urlencode({'include': '2,3,4'})}"),
-            call(f"products/2/variations?{urlencode({'include': '2,3,4'})}"),
-        ])
+        self.assertEqual(r.call_count, 3)
