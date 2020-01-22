@@ -1,6 +1,8 @@
 import json
 
-from unittest.mock import patch, Mock
+from random import choice
+from unittest.mock import patch, Mock, call
+from urllib.parse import urlencode
 
 from lib.test import BaseTestCase
 
@@ -8,9 +10,11 @@ from ..utils import (
     WooListQuery,
     woo_customer_address,
     add_product_images_to_api_data,
+    get_tracking_products,
 )
-from .factories import WooStoreFactory, WooProductFactory
+from .factories import WooStoreFactory, WooProductFactory, WooOrderTrackFactory
 
+from leadgalaxy.tests.factories import UserFactory
 from shopified_core.utils import hash_url_filename, update_product_data_images
 
 
@@ -147,3 +151,64 @@ class TestAddProductImagesToAPIData(BaseTestCase):
 
         expected = {'src': s3_src, 'name': s3_src, 'position': 0}
         self.assertDictEqual(api_data['images'][0], expected)
+
+
+class APIConsumptionTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.store = WooStoreFactory(user=self.user)
+
+    @patch('woocommerce.api.API.get')
+    def test_calling_once_product_multiple_variations(self, r):
+        r.side_effect = [Mock(
+            raise_for_status=Mock(return_value=None),
+            json=Mock(return_value=[{'id': 1, 'images': []}, {'id': 2, 'images': []}])
+        ), Mock(
+            raise_for_status=Mock(return_value=None),
+            json=Mock(return_value=[
+                {'id': 2, 'image': {'src': 'http://example.com/2.jpg'}},
+                {'id': 3, 'image': {'src': 'http://example.com/3.jpg'}},
+                {'id': 4, 'image': {'src': 'http://example.com/4.jpg'}},
+            ])
+        ), Mock(
+            raise_for_status=Mock(return_value=None),
+            json=Mock(return_value=[
+                {'id': 2, 'image': {'src': 'http://example.com/2.jpg'}},
+                {'id': 3, 'image': {'src': 'http://example.com/3.jpg'}},
+                {'id': 4, 'image': {'src': 'http://example.com/4.jpg'}},
+            ])
+        )]
+
+        tracker_orders = []
+
+        t = WooOrderTrackFactory(product_id=1)
+        t.line = {'variation_id': 2}
+        tracker_orders.append(t)
+        t = WooOrderTrackFactory(product_id=1)
+        t.line = {'variation_id': 3}
+        tracker_orders.append(t)
+        t = WooOrderTrackFactory(product_id=1)
+        t.line = {'variation_id': 4}
+        tracker_orders.append(t)
+
+        t = WooOrderTrackFactory(product_id=2)
+        t.line = {'variation_id': 2}
+        tracker_orders.append(t)
+        t = WooOrderTrackFactory(product_id=2)
+        t.line = {'variation_id': 3}
+        tracker_orders.append(t)
+        t = WooOrderTrackFactory(product_id=2)
+        t.line = {'variation_id': 4}
+        tracker_orders.append(t)
+
+        for _ in range(20 - 6):
+            tracker = WooOrderTrackFactory(product_id=choice([1, 2]))
+            tracker.line = {'variation_id': choice([2, 3, 4])}
+            tracker_orders.append(tracker)
+
+        get_tracking_products(self.store, tracker_orders, 50)
+        r.assert_has_calls([
+            call(f"products?{urlencode({'include': '1,2', 'per_page': '50'})}"),
+            call(f"products/1/variations?{urlencode({'include': '2,3,4'})}"),
+            call(f"products/2/variations?{urlencode({'include': '2,3,4'})}"),
+        ])

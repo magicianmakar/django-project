@@ -602,7 +602,9 @@ def order_id_from_name(store, order_name, default=None):
 def get_tracking_products(store, tracker_orders, per_page=50):
     ids = []
     for i in tracker_orders:
-        ids.append(str(i.product_id))
+        _id = str(i.product_id)
+        if _id not in ids:
+            ids.append(_id)
 
     if not len(ids):
         return tracker_orders
@@ -615,6 +617,7 @@ def get_tracking_products(store, tracker_orders, per_page=50):
     for product in r.json():
         products[product['id']] = product
 
+    product_variations = {}
     new_tracker_orders = []
     for tracked in tracker_orders:
         tracked.product = product = products.get(tracked.product_id)
@@ -627,15 +630,38 @@ def get_tracking_products(store, tracker_orders, per_page=50):
 
             variation_id = tracked.line.get('variation_id')
             if variation_id:
-                path = 'products/{}/variations/{}'.format(product['id'], variation_id)
-                r = store.wcapi.get(path)
-                r.raise_for_status()
-                tracked.variation = r.json()
-                variation_image = tracked.variation.get('image', {}).get('src')
-                if 'placeholder.png' not in variation_image:
-                    tracked.line['image'] = variation_image
+                if not product_variations.get(product['id']):
+                    product_variations[product['id']] = {
+                        'path': f"products/{product['id']}/variations",
+                        'params': {
+                            'include': []
+                        },
+                        'data': {},
+                    }
+
+                product_variations[product['id']]['params']['include'].append(str(variation_id))
 
         new_tracker_orders.append(tracked)
+
+    # Retrieve variation images
+    for tracked in new_tracker_orders:
+        if not tracked.product:
+            continue
+        variations = product_variations[tracked.product['id']]
+
+        variation_id = tracked.line.get('variation_id')
+        if not variations['data'].get(variation_id):
+            variations['params']['include'] = ','.join(set(variations['params']['include']))
+            r = store.wcapi.get(f"{variations['path']}?{urlencode(variations['params'])}")
+            r.raise_for_status()
+            api_variations = r.json()
+            for v in api_variations:
+                variations['data'][v['id']] = v
+
+        tracked.variation = variations['data'].get(variation_id)
+        variation_image = tracked.variation.get('image', {}).get('src')
+        if 'placeholder.png' not in variation_image:
+            tracked.line['image'] = variation_image
 
     return new_tracker_orders
 
