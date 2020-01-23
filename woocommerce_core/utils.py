@@ -136,8 +136,8 @@ def add_product_images_to_api_data(api_data, data, from_helper=False, user_id=No
             if from_helper:
                 src = f"https://shopified-helper-app.herokuapp.com/api/ali/get-image/image.jpg?url={b64encode(src.encode('utf-8')).decode('utf-8')}"
 
-        # From intercom conversation: 24384422520
-        if user_id == 76793:
+        # From intercom conversation: 24384422520 and 25501793126
+        if user_id in [76793, 88915]:
             name = ' '
 
         api_data['images'].append({'src': src, 'name': name, 'position': position})
