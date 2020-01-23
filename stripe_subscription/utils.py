@@ -28,7 +28,7 @@ from shopified_core.utils import safe_str
 from leadgalaxy.models import GroupPlan, UserProfile
 from leadgalaxy.utils import register_new_user
 from analytic_events.models import SuccessfulPaymentEvent
-from tapfiliate.tasks import commission_from_stripe
+from tapfiliate.tasks import commission_from_stripe, successful_payment
 from leadgalaxy import signals
 
 
@@ -649,6 +649,7 @@ def process_webhook_event(request, event_id, raven_client):
 
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)
+            response_message = "User Found"
         except User.DoesNotExist:
             description = safe_str(charge.description)
 
@@ -701,18 +702,17 @@ def process_webhook_event(request, event_id, raven_client):
 
                 return HttpResponse('New Registration to {}'.format(plan.title))
 
-            return HttpResponse('User Not Found')
+            response_message = 'User Not Found'
 
         commission_from_stripe.apply_async(
             args=[charge.id],
             countdown=600)  # Give time for the user to register/login to Dropified before handling this event (wait for conversion)
 
-        SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
-            'charge': charge.to_dict(),
-            'count': len(stripe.Charge.list(customer=charge.customer).data)
-        }))
+        successful_payment.apply_async(
+            args=[charge.id],
+            countdown=600)  # Give time for the user to register/login to Dropified before handling this event (wait for conversion)
 
-        return HttpResponse('ok')
+        return HttpResponse(response_message)
 
     else:
         return HttpResponse('Ignore Event')

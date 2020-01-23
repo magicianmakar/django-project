@@ -5,6 +5,9 @@ from django.conf import settings
 
 from stripe_subscription.stripe_api import stripe
 from tapfiliate.models import TapfiliateCommissions
+from django.contrib.auth.models import User
+from analytic_events.models import SuccessfulPaymentEvent
+import simplejson as json
 
 
 def requests_session():
@@ -81,3 +84,16 @@ def add_commission_from_stripe(charge_id):
             affiliate_id=conversion['affiliate']['id'],
             charge_id=charge.id,
             customer_id=customer_id)
+
+
+def add_successful_payment(charge_id):
+    charge = stripe.Charge.retrieve(charge_id)
+    try:
+        user = User.objects.get(stripe_customer__customer_id=charge.customer)
+    except User.DoesNotExist:
+        raise Exception('Stripe customer not found')
+
+    SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
+        'charge': charge.to_dict(),
+        'count': len(stripe.Charge.list(customer=charge.customer).data)
+    }))
