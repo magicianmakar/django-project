@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "bower": "1.8.4",
-    "yuglify": "0.1.4"
   },
   "devDependencies": {
+    "bower": "1.8.4",
+    "yuglify": "0.1.4",
     "jshint": "^2.10.2",
     "jshint-stylish": "^2.2.1"
   },
@@ -19,6 +19,6 @@
     "app/static/libs/bower_components"
   ],
   "engines": {
-    "node": "8.11.2"
+    "node": "12.x"
   }
 }
