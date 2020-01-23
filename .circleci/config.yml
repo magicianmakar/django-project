@@ -3,7 +3,7 @@ jobs:
   build:
     working_directory: ~/ShopifiedApp/webapp
     docker:
-      - image: circleci/python:3.6.8
+      - image: circleci/python:3.6.9
         environment:
           DEBUG_APP: "TRUE"
 
@@ -77,11 +77,11 @@ jobs:
       - restore_cache:
           keys:
           # This branch if available
-          - v3.6-dep-{{ .Branch }}-
+          - v3.6.9-dep-{{ .Branch }}-
           # Default branch if not
-          - v3.6-dep-master-
+          - v3.6.9-dep-master-
           # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
-          - v3.6-dep-
+          - v3.6.9-dep-
 
       - run:
           name: Install Python Dependencies
