@@ -156,7 +156,7 @@ def get_menu_item_data():
             'match': re.compile(r'(/\w+)?/pages/content/tools-business-tools'),
         },
         'academy': {
-            'title': '<span id="academy-span">Dropshipping 101</span><br>Step by Step Course',
+            'title': '<span id="academy-span">Dropshipping 101</span>',
             'url': 'https://academy.dropified.com/',
         },
         'video_training': {

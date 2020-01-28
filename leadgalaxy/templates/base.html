@@ -131,22 +131,6 @@
                     {% endblock search-form %}
                 </div>
                 <ul class="nav navbar-top-links navbar-right">
-                    <li>
-                        <span>
-                            <!--  TODO: Remove this in next task.
-                            {% if new_menu_active %}
-                            <a href="#" id="switch-menu-layout">
-                                Switch to old layout
-                            </a>
-                            {% else %}
-                            <a href="#" id="switch-menu-layout" data-active="true">
-                                Switch to new layout
-                            </a>
-                            {% endif %}
-                            -->
-                        </span>
-                    </li>
-
                     {% if selected_menu and selected_menu in upsell_pages and request.user.is_staff %}
                     <li>
                         <span>
