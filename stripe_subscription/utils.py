@@ -413,6 +413,48 @@ def process_webhook_event(request, event_id, raven_client):
         else:
             return HttpResponse('ok')
 
+    elif event.type == 'invoice.payment_succeeded':
+        invoice = event.data.object
+
+        try:
+            customer = StripeCustomer.objects.get(customer_id=invoice.customer)
+            for item in invoice['lines']['data']:
+                try:
+                    # Stripe Plan metadata format:
+                    # {"after_days":"89","switch_to_plan":"SA_07de7485", "trial_days_add":"275"}
+                    if item['type'] == 'subscription' and item['plan']['metadata'].get('plan_autoswitch'):
+                        plan_autoswitch_json = json.loads(item['plan']['metadata']['plan_autoswitch'])
+                        stripe_sub = StripeSubscription.objects.get(subscription_id=item['id'])
+                        days_passed = (arrow.now().timestamp - int(stripe_sub.created_at.timestamp())) // 86400
+
+                        if days_passed > int(plan_autoswitch_json['after_days']):
+                            # switching to plan
+                            plan = GroupPlan.objects.get(stripe_plan__stripe_id=plan_autoswitch_json['switch_to_plan'])
+                            if plan.is_stripe():
+                                # adding trial (from metadata)
+                                trial_end = arrow.now().timestamp + 86400 * item['plan']['metadata'].get('trial_days_add')
+                                stripe.Subscription.modify(
+                                    stripe_sub.subscription_id,
+                                    trial_end=trial_end,
+                                )
+                                # updating subscription item (switching plan)
+                                stripe.SubscriptionItem.modify(
+                                    item['subscription_item'],
+                                    plan=plan.stripe_plan.stripe_id,
+                                    metadata={'plan_id': plan.id, 'user_id': customer.user.id}
+                                )
+
+                                customer.user.profile.change_plan(plan)
+                                sub = stripe_sub.refresh()
+
+                                update_subscription(customer.user, plan, sub)
+                except:
+                    raven_client.captureException(level='warning')
+
+        except StripeCustomer.DoesNotExist:
+            return HttpResponse('Customer not found (1st invoice, skipping)')
+
+        return HttpResponse('ok')
     elif event.type == 'customer.subscription.created':
         sub = event.data.object
         sub_plan = get_main_subscription_item_plan(sub)
