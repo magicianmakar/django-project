@@ -54,7 +54,7 @@ from shopified_core.mixins import ApiResponseMixin
 from shopified_core.exceptions import ApiLoginException
 from shopify_orders import utils as shopify_orders_utils
 from commercehq_core.models import CommerceHQProduct
-from groovekart_core.models import GrooveKartProduct
+from groovekart_core.models import GrooveKartStore, GrooveKartProduct
 from woocommerce_core.models import WooProduct
 from bigcommerce_core.models import BigCommerceProduct
 from product_alerts.models import ProductChange
@@ -83,6 +83,7 @@ from shopified_core.utils import (
     using_replica,
     format_queueable_orders,
     products_filter,
+    decode_api_token,
 )
 from shopified_core.tasks import keen_order_event, export_user_activity
 
@@ -1403,6 +1404,47 @@ def webhook(request, provider, option):
 
         else:
             return HttpResponse(':x: Unknown Command: {}'.format(request.POST['command']))
+
+    elif provider == 'one-and-done':
+        def allow_groovesell(response):
+            response["Access-Control-Allow-Origin"] = "https://groovekart.groovesell.com"
+            return response
+
+        if option == 'check':
+            try:
+                decode_api_token(request.GET['t'])
+            except:
+                return allow_groovesell(HttpResponse(status=403))
+
+            return allow_groovesell(JsonResponse({'status': 'ok'}))
+
+        if option == 'connect':
+            if request.method != 'POST':
+                return HttpResponse('Only POST allowed', status=405)
+
+            data = json.loads(request.body.decode())
+            try:
+                token = data['t']
+                user_data = decode_api_token(token)
+            except KeyError:
+                return HttpResponse('Missing token', status=422)
+            except:
+                return HttpResponse(status=403)
+
+            store = get_object_or_404(GrooveKartStore, id=user_data['store_id'], user_id=user_data['user_id'])
+            if store.is_active:
+                return HttpResponse(status=304)
+
+            try:
+                store.api_url = data['api_url'].strip()
+                store.api_key = data['api_key'].strip()
+                store.api_token = data['api_token'].strip()
+                store.is_active = True
+                store.save()
+            except KeyError:
+                return HttpResponse('Missing credentials', status=400)
+
+            return JsonResponse({'status': 'ok'})
 
     else:
         raven_client.captureMessage('Unknown Webhook Provider')

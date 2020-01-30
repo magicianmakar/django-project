@@ -1303,17 +1303,44 @@
     });
 
     $('#gk-store-create-form').on('submit', function(e) {
-        $('#gk-store-create-form [type=submit]').bootstrapBtn('loading');
+        var form = $(this);
+        form.find('[type=submit]').bootstrapBtn('loading');
 
         $.ajax({
             url: api_url('store-add', 'gkart'),
             type: 'POST',
-            data: $('#gk-store-create-form').serialize(),
+            data: $(this).serialize(),
+            context: {form: form},
             success: function(data) {
                 window.location.reload(true);
             },
             error: function(data) {
-                $('#gk-store-create-form [type=submit]').bootstrapBtn('reset');
+                form.find('[type=submit]').bootstrapBtn('reset');
+                displayAjaxError('Add Store', data);
+            }
+        });
+
+        return false;
+    });
+
+    $('#one-store-create-form').on('submit', function(e) {
+        var form = $(this);
+        form.find('[type=submit]').bootstrapBtn('loading');
+
+        var checkoutPage = window.open('about:blank');
+        $.ajax({
+            url: api_url('store-add', 'gkart'),
+            type: 'POST',
+            data: $(this).serialize(),
+            context: {form: form},
+            success: function(data) {
+                checkoutPage.location.href = 'https://groovekart.groovesell.com/dropified/' + data.t;
+                form.find('[type=submit]').bootstrapBtn('reset');
+                $('#modal-add-all-store-form').modal('hide');
+            },
+            error: function(data) {
+                checkoutPage.close();
+                form.find('[type=submit]').bootstrapBtn('reset');
                 displayAjaxError('Add Store', data);
             }
         });

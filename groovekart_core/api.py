@@ -22,6 +22,7 @@ from shopified_core.utils import (
     safe_int,
     remove_link_query,
     get_domain,
+    encode_api_token,
 )
 
 from .api_helper import GrooveKartApiHelper
@@ -105,9 +106,26 @@ class GrooveKartApi(ApiBase):
                         'more stores.'
                     )
 
-        error_messages = self.validate_store_data(data)
-        if len(error_messages) > 0:
-            return self.api_error(' '.join(error_messages), status=400)
+        is_one_and_done = data.get('is_one_and_done') == '1'
+        if not is_one_and_done:
+            error_messages = self.validate_store_data(data)
+            if len(error_messages) > 0:
+                return self.api_error(' '.join(error_messages), status=400)
+        else:
+            if not user.can('one_and_done.use'):
+                return self.api_error('Not allowed to add One and Done stores', status=403)
+
+            if data.get('title', '').strip() == '':
+                return self.api_error('Store title is required.', status=400)
+
+            # Allow only one OneAndDone Store for now
+            stores_count = GrooveKartStore.objects.filter(
+                user=user.models_user,
+                is_one_and_done=True,
+                is_active=True
+            ).count()
+            if stores_count > 0:
+                return self.api_error('Only one store allowed per customer', status=400)
 
         store = GrooveKartStore()
         store.user = user.models_user
@@ -116,8 +134,16 @@ class GrooveKartApi(ApiBase):
         store.api_token = data.get('api_token', '').strip()
         store.api_key = data.get('api_key', '').strip()
 
+        # Activates after we receive credentials at /one-and-done/connect webhook
+        store.is_active = not is_one_and_done
+        store.is_one_and_done = is_one_and_done
+
         permissions.user_can_add(user, store)
         store.save()
+
+        if is_one_and_done:
+            token = encode_api_token({'store_id': store.id, 'user_id': store.user_id})
+            return self.api_success({'t': token})
 
         return self.api_success()
 

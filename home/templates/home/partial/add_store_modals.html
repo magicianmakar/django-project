@@ -19,6 +19,10 @@
                     {% if request.user|can:'bigcommerce.use' %}
                     <li><a href="#bigcommerce-section" data-toggle="tab"></a></li>
                     {% endif %}
+
+                    {% if request.user|can:'one_and_done.use' %}
+                    <li><a href="#gk-one-section" data-toggle="tab"></a></li>
+                    {% endif %}
                 </ul>
                 <div class="tab-content">
                     <div id="select-section" class="tab-pane fade in active">
@@ -50,6 +54,13 @@
                                 <label style="display: block;">
                                     <input name="amt" value="#bigcommerce-section" type="radio">
                                     <span class="label-text"><strong>BigCommerce</strong></span>
+                                </label>
+                                {% endif %}
+
+                                {% if request.user|can:'one_and_done.use' %}
+                                <label style="display: block;">
+                                    <input name="amt" value="#gk-one-section" type="radio">
+                                    <span class="label-text"><strong>Dropified One & Done</strong></span>
                                 </label>
                                 {% endif %}
                             </fieldset>
@@ -196,6 +207,29 @@
 
                             <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
                             <button class="btn btn-primary pull-right install-store" type="button" data-store-type="bigcommerce"><strong>Add store</strong></button>
+                        </div>
+                    </div>
+
+                    <!-- Dropified One and Done -->
+                    <div id="gk-one-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <form id="one-store-create-form" method="post" role="form">
+                                    <input type="hidden" name="is_one_and_done" value="1" />
+                                    <div class="form-group">
+                                        <label>Title</label>
+                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
+                                    </div>
+
+                                    <hr style="margin:20px -30px">
+
+                                    <div>
+                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                            <strong>Create One and Done Account</strong>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

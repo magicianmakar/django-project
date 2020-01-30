@@ -61,13 +61,14 @@ class GrooveKartStore(StoreBase):
 
     user = models.ForeignKey(User)
     title = models.CharField(max_length=300, blank=True, default='')
-    api_url = models.CharField(max_length=512)
-    api_key = models.CharField(max_length=300)
-    api_token = models.CharField(max_length=300)
+    api_url = models.CharField(max_length=512, blank=True, default='')
+    api_key = models.CharField(max_length=300, blank=True, default='')
+    api_token = models.CharField(max_length=300, blank=True, default='')
     is_active = models.BooleanField(default=True)
     store_hash = models.CharField(default='', max_length=50, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_one_and_done = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
