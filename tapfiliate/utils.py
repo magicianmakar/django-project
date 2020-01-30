@@ -47,7 +47,11 @@ def add_commission_from_stripe(charge_id):
         return
 
     customer = stripe.Customer.retrieve(customer_id)
-    if arrow.get(customer.created).replace(years=1) < arrow.utcnow():
+
+    affiliate = get_affiliate(conversion['affiliate']['id'])
+    lifetime_comissions_flag = affiliate['meta_data'].get('lifetime_comissions_flag')
+
+    if lifetime_comissions_flag != '1' and arrow.get(customer.created).replace(years=1) < arrow.utcnow():
         # User registered more than 12 months ago, ignore any further commissions
         return
 
@@ -97,3 +101,16 @@ def add_successful_payment(charge_id):
         'charge': charge.to_dict(),
         'count': len(stripe.Charge.list(customer=charge.customer).data)
     }))
+
+
+def get_affiliate(affiliate_id):
+    rep = requests_session().get(
+        url='https://api.tapfiliate.com/1.6/affiliates/{}/'.format(affiliate_id)
+    )
+
+    rep.raise_for_status()
+
+    if not rep.json():
+        return None
+
+    return rep.json()
