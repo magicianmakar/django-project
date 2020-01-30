@@ -189,7 +189,16 @@ class GrooveKartApi(ApiBase):
             )
 
             rep.raise_for_status()
-
+            msg = rep.json()
+            # GroveKart API returns status 200 in case of authentication failure & wrong API credentials
+            if rep.ok:
+                if 'Error' in msg:
+                    if 'Authentication failed' in msg['Error']:
+                        errormsg = 'Authentication failed'
+                        return self.api_error('API Credentials are incorrect\nError: {}'.format(errormsg if rep is not None else 'Unknown Issue'))
+                    elif 'Auth Token is missing' in msg['Error'] or 'API Key is missing' in msg['Error']:
+                        return self.api_error('API Credentials are incorrect\nError: {}'.format(msg['Error'] if rep is not None else 'Unknown Issue'))
+            # end of check
             return self.api_success({'store': store.get_store_url()})
 
         except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout):
