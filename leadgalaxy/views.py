@@ -1,14 +1,13 @@
 import re
 import traceback
-
+import csv
 import io
 import hmac
 import random
 import time
-
 import zlib
+
 from hashlib import sha1
-from io import BytesIO
 from urllib.parse import urlencode, quote_plus
 
 import arrow
@@ -129,6 +128,7 @@ from .models import (
     ShopifyProduct,
     ShopifyProductImage,
     ShopifyStore,
+    UserBlackSampleTracking,
     UserProfile,
     UserUpload,
 )
@@ -2869,6 +2869,94 @@ def acp_groups(request):
 
 
 @login_required
+def dropified_black_users(request):
+    if not request.user.is_superuser and not request.user.is_staff:
+        raise PermissionDenied()
+
+    if request.method == 'POST' and 'file' in request.FILES:
+        def decode_utf8(input_iterator):
+            for l in input_iterator:
+                yield l.decode('utf-8')
+
+        error_message = None
+        selected_sample = request.POST['selected-sample']
+        new_sample = request.POST['new-sample']
+        # send_user_notification = 'send-user-notification' in request.POST
+
+        if not selected_sample and not new_sample:
+            error_message = 'Sample name is not set'
+
+        if request.FILES["file"].content_type != 'text/csv':
+            error_message = 'Uploaded file is not a CSV file'
+        else:
+            spamreader = csv.DictReader(decode_utf8(request.FILES["file"]))
+            try:
+                email_field = [i for i in spamreader.fieldnames if 'email' in i.lower()].pop()
+            except:
+                error_message = 'Coud not find Email column in the upload CSV file'
+
+            try:
+                tracking_field = [i for i in spamreader.fieldnames if 'tracking' in i.lower()].pop()
+            except:
+                error_message = 'Coud not find Tracking Number column in the upload CSV file'
+
+        if not error_message:
+            new_count = 0
+            not_found = []
+            for row in spamreader:
+                try:
+                    if not row[email_field]:
+                        continue
+
+                    user = User.objects.get(email__iexact=row[email_field])
+
+                    UserBlackSampleTracking.objects.update_or_create(
+                        user=user,
+                        name=selected_sample or new_sample,
+                        defaults={
+                            'tracking_number': row[tracking_field],
+                            'tracking_url': f'https://t.17track.net/en#nums={row[tracking_field]}',
+                        })
+
+                    new_count += 1
+                except User.DoesNotExist:
+                    not_found.append(row[email_field])
+
+            if not_found:
+                messages.warning(request, f'Could not find {len(not_found)} users:<br>{"<br>".join(not_found)} not found')
+
+            messages.success(request, f'Tracking number add to {new_count} users')
+
+        else:
+            messages.error(request, error_message)
+
+    plans = GroupPlan.objects.filter(slug__contains='black')
+    users = User.objects.filter(profile__plan__in=plans)
+
+    if request.GET.get('have_address'):
+        if request.GET.get('have_address') == 'no':
+            users = users.filter(profile__address=None)
+        else:
+            users = users.exclude(profile__address=None)
+
+    if request.GET.get('sample'):
+        if request.GET.get('sample_sent') == 'no':
+            users = users.exclude(samples__name=request.GET.get('sample'))
+        else:
+            users = users.filter(samples__name=request.GET.get('sample'))
+
+    samples = set(UserBlackSampleTracking.objects.all().values_list('name', flat=True))
+
+    return render(request, 'acp/dropified_black_users.html', {
+        'plans': plans,
+        'users': users,
+        'samples': samples,
+        'page': 'acp_dropified_black_users',
+        'breadcrumbs': ['ACP', 'Dropified Black Users']
+    })
+
+
+@login_required
 def acp_groups_install(request):
     if not request.user.is_superuser:
         raise PermissionDenied()
@@ -5137,7 +5225,7 @@ def user_invoices_download(request, invoice_id):
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="%s.pdf"' % invoice.id
-    buffer = BytesIO()  # Output buffer
+    buffer = io.BytesIO()  # Output buffer
     draw_pdf(buffer, invoice)
     response.write(buffer.getvalue())
     buffer.close()

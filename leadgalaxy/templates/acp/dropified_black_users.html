@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load template_helper %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Plans<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                        <i class="fa fa-wrench"></i>
+                    </a>
+
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <div class="row">
+                    <form class="form-inline" method="GET">
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="control-label">Have Address:</label>
+                            <select name="have_address" class="form-control">
+                                <option value="yes" {% if request.GET.have_address == 'yes' %}selected="selected"{% endif %}>Yes</option>
+                                <option value="no" {% if request.GET.have_address == 'no' %}selected="selected"{% endif %}>No</option>
+                                <option value="" {% if not request.GET.have_address %}selected="selected"{% endif %}>All</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="control-label">Sample:</label>
+                            <select name="sample" class="form-control">
+                                {% for item in samples %}
+                                <option value="{{ item }}" {% if request.GET.sample == item %}selected="selected"{% endif %}>{{ item }}</option>
+                                {% endfor %}
+                                <option value="" {% if not request.GET.sample %}selected="selected"{% endif %}>Any</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="control-label">Sample Sent:</label>
+                            <select name="sample_sent" class="form-control">
+                                <option value="yes" {% if request.GET.sample_sent == 'yes' %}selected="selected"{% endif %}>Yes</option>
+                                <option value="no" {% if request.GET.sample_sent == 'no' %}selected="selected"{% endif %}>No</option>
+                                <option value="" {% if not request.GET.sample_sent %}selected="selected"{% endif %}>Any Status</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                            <button class="btn btn-success btn-sm" style="margin-bottom:0">Filter</button>
+                    </div>
+                    </form>
+                </div>
+                <p style="margin-bottom:20px"></p>
+                <table class="table table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Plan</th>
+                            <th>Address</th>
+                            <th>Samples</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in users %}
+                        <tr user-id="{{item.id}}">
+                            <td><b>{{item.email}}</b></td>
+                            <td>{{item.profile.plan.title}}</td>
+                            <td>
+                            {% if item.profile.address %}
+                                {{item.profile.address.name}}
+                                <br>
+                                {{item.profile.address.address1}}<br>
+
+                                {% if item.profile.address.address2 %}
+                                {{item.profile.address.address2}}<br>
+                                {% endif %}
+
+                                {{item.profile.address.city}},
+                                    {{item.profile.address.state}}
+                                    {{item.profile.address.zip_code}}
+
+                                {% if item.profile.address.phone %}
+                                <br> {{item.profile.address.phone}}
+                                {% endif %}
+
+                                <br> <b>{{item.profile.address.country}}</b>
+                            {% else %}
+                                N/A
+                            {% endif %}
+                            </td>
+                            <td>
+                                <ul style="padding: 5px 20px">
+                                {% for sample in item.samples.all %}
+                                    <li>
+                                        {{ sample.name }}:
+                                        <a href="{{ sample.tracking_url }}" target="_blank">{{ sample.tracking_number }}</a>
+                                        <i>({% date_humanize sample.created_at %})</i>
+                                    </li>
+                                {% empty %}
+                                    <li>No Samples</li>
+                                {% endfor %}
+                                </ul>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="4">No users found</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="col-6">
+                    <button class="btn btn-success btn-lg" data-toggle="modal" data-target="#modal-upload-csv">Upload Samples CSV</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modal-upload-csv" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content modal-lg">
+            <form action="" method="post" enctype="multipart/form-data">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Upload Sample Tracking Numbers</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <label for="selected-sample">Existing Sample:</label>
+                        <select class="form-control" name="selected-sample" id="selected-sample" style="display: inline-block; width: 191px; ">
+                            <option value=""></option>
+                            {% for item in samples %}
+                            <option value="{{ item }}">{{ item }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <label for="new-sample" class="m-l">Or New Sample:</label>
+                        <input class="form-control new inline " style="width:300px" type="text" name="new-sample">
+
+                        <!--
+                        <div class="form-group col-xs-12" style="margin-top: 10px;margin-left: 83px;">
+                            <label for="send-user-notification">
+                                <input type="checkbox" name="send-user-notification" id="send-user-notification">
+                                Send users samples tracking number by email
+                            </label>
+                        </div>
+                        -->
+
+                    </div>
+
+
+                    <div class="col-xs-12" style="margin-top: 10px;margin-left: 0;">
+                         <label for="new-sample" class="m-r">CSV File:</label>
+                        <input name="file" type="file" style="display:inline">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="progress progress-striped active" style="margin-top: 20px;display:none;">
+                        <div style="width: 0%" class="progress-bar progress-bar-danger">
+                                <span class="sr-only">0% Complete (danger)</span>
+                            </div>
+                        <div style="width: 0%;" class="progress-bar progress-bar-success">
+                            <span class="sr-only">0% Complete (success)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top:none;padding-top:0;">
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </div>
+        </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
+
+    <script type="text/javascript">
+
+        {% if users %}
+        $('.dataTables').dataTable({
+            responsive: true,
+            autoWidth: false,
+            dom: 'T<"clear">lfrtip',
+            bLengthChange: false,
+            iDisplayLength: 50,
+            order: [],
+            tableTools: {
+                sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
+            }
+        });
+        {% endif %}
+
+    </script>
+{% endblock %}
+

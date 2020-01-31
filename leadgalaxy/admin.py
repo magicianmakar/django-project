@@ -37,6 +37,7 @@ from .models import (
     SubuserGKartPermission,
     SubuserBigCommercePermission,
     UserAddress,
+    UserBlackSampleTracking,
     UserCompany,
     UserProfile,
     UserUpload,
@@ -319,6 +320,14 @@ class AdminEventAdmin(admin.ModelAdmin):
 class UserCompanyAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'address_line1', 'address_line2', 'city', 'state', 'country', 'zip_code', 'vat', )
     search_fields = ('name',)
+
+
+@admin.register(UserBlackSampleTracking)
+class UserBlackSampleTrackingAdmin(admin.ModelAdmin):
+    list_display = ('user', 'name', 'tracking_number', 'tracking_url', 'created_at', 'updated_at')
+    search_fields = USER_SEARCH_FIELDS + ('tracking_number', 'tracking_url')
+    list_filter = ('name', 'created_at', 'updated_at')
+    raw_id_fields = ('user',)
 
 
 @admin.register(UserAddress)

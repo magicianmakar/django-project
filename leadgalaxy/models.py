@@ -714,6 +714,20 @@ class UserCompany(AddressBase):
         return f'<UserCompany: {self.id}>'
 
 
+class UserBlackSampleTracking(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='samples')
+
+    name = models.CharField(max_length=100, blank=True, default='')
+    tracking_number = models.CharField(max_length=100, blank=True, default='')
+    tracking_url = models.CharField(max_length=150, blank=True, default='')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'<UserBlackSampleTracking: {self.id}>'
+
+
 class SubuserPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)

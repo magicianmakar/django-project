@@ -107,6 +107,23 @@
                                     {% if user.profile.plan.is_black %}
                                         {% include 'partial/profile_address.html' with title='Samples Shipping Address' slug='user_address' company=user.profile.address countries=countries only %}
 
+                                        {% if user.samples.count %}
+                                            <div class="hr-line-dashed"></div>
+                                            <div style="margin-left:230px">
+                                                <h4>Sent Samples</h4>
+                                                <ul style="padding: 5px 20px">
+
+                                                {% for sample in user.samples.all %}
+                                                    <li>
+                                                        {{ sample.name }}:
+                                                        <a href="{{ sample.tracking_url }}" target="_blank">{{ sample.tracking_number }}</a>
+                                                        <i>({% date_humanize sample.created_at %})</i>
+                                                    </li>
+                                                {% endfor %}
+                                                </ul>
+                                            </div>
+
+                                        {% endif %}
                                     {% endif %}
 
                                     <div class="hr-line-dashed"></div>
