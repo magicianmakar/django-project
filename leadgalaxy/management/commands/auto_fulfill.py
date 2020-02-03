@@ -22,6 +22,7 @@ class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--store', action='store', type=int, help='Fulfill orders for the given store')
+        parser.add_argument('--days', action='store', type=int, default=30, help='Fulfill orders created this number of days ago.')
         parser.add_argument('--max', action='store', type=int, default=500, help='Fulfill orders count limit')
         parser.add_argument('--uptime', action='store', type=float, default=8, help='Maximuim task uptime (minutes)')
 
@@ -33,12 +34,13 @@ class Command(DropifiedBaseCommand):
         fulfill_store = options.get('store')
         fulfill_max = options.get('max')
         uptime = options.get('uptime')
+        days = options.get('days')
 
         orders = using_replica(ShopifyOrderTrack, options['replica']) \
             .filter(shopify_status='') \
             .exclude(source_tracking='') \
             .filter(hidden=False) \
-            .filter(created_at__gte=arrow.now().replace(days=-30).datetime) \
+            .filter(created_at__gte=arrow.now().replace(days=-days).datetime) \
             .filter(store__is_active=True) \
             .filter(store__auto_fulfill='enable') \
             .defer('data') \
