@@ -1,0 +1,75 @@
+<div id="modal-place-orders-dropified-print" class="modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Print On Demand</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div id="print-progress" orders-count="0" orders-success="0" orders-error="0" style="display:none">
+                            <p><i class="fa fa-refresh fa-spin"></i> <span id="print-process"></span></p>
+                            <div class="progress progress-striped active">
+                                <div style="width: 0%" class="progress-bar progress-bar-danger"></div>
+                                <div style="width: 0%;" class="progress-bar progress-bar-success"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-12 progress-table-row" style="height:300px;max-height:300px;overflow:auto;">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Order</th>
+                                    <th>Items</th>
+                                    <th>Price (USD)</th>
+                                    <th>From</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" class="text-right">Total Cost</td>
+                                    <td id="prints-total-cost" class="text-center">-</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary print-place-order-btn">Place Order(s)</button>
+                <button type="button" class="btn btn-success close-modal hidden" data-dismiss="modal" aria-label="Close">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% verbatim %}
+<script id="dropified-print-order-template" type="text/x-handlebars-template">
+    <td class="text-center">
+        {{#if order.error}}
+            <i class="fa fa-times-circle text-danger"></i>
+        {{else if order.success}}
+            <i class="fa fa-check-circle text-success"></i>
+        {{/if}}
+    </td>
+    <td>{{order.order_name}}</td>
+    <td class="item">{{order.line_quantity}} x {{{order.line_title}}}</td>
+    <td class="text-center">{{order.item_price}}</td>
+    <td class="text-center">{{order.from}}</td>
+    <td class="status">
+        {{#if order.error}}
+            {{order.error}}
+        {{else}}
+            {{order.order_status}}
+        {{/if}}
+    </td>
+</script>
+{% endverbatim %}

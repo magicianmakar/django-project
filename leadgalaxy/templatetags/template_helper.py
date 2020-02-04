@@ -313,7 +313,12 @@ def user_orders_count(user):
 
 @register.simple_tag(takes_context=True)
 def order_track_status(context, track, html=True):
-    is_ebay = track.source_type == 'ebay'
+    if track.source_type == 'ebay':
+        supplier_name = 'eBay'
+    elif track.source_type == 'dropified-print':
+        supplier_name = 'Dropified Print'
+    else:
+        supplier_name = 'Aliexpress'
 
     if track.source_status_details:
         if ',' in track.source_status_details:
@@ -330,7 +335,7 @@ def order_track_status(context, track, html=True):
         if track.source_type == 'other':
             return mark_safe('<i>Manual Order</i>')
         else:
-            return mark_safe('<i>Awaiting Sync with {}</i>'.format('eBay' if is_ebay else 'Aliexpress'))
+            return mark_safe('<i>Awaiting Sync with {}</i>'.format(supplier_name))
 
 
 @register.simple_tag(takes_context=True)

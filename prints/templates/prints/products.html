@@ -1,0 +1,82 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+
+{% block main-container %}
+<div id="print-on-demand">
+    <ul class="nav nav-pills">
+        <li><a href="{% url 'prints:index' %}">Products</a></li>
+        <li class="active"><a href="{% url 'prints:products' %}">Saved Products</a></li>
+        <li><a href="{% url 'prints:orders' %}">Placed Orders</a></li>
+    </ul>
+
+    <div class="tabs-container">
+        <div class="tab-content">
+            <div class="tab-pane active">
+                <div class="row">
+                {% for product in custom_products %}
+                    <div class="col-md-3">
+                        <div class="ibox">
+                            <div class="ibox-content product-box">
+                                <a href="{% url 'prints:edit' product_id=product.product.id custom_product_id=product.id %}">
+                                    <img class="no-img unveil" src="{{ product.get_images_dict.0 }}" style="max-width: 100%">
+                                    <button class="btn btn-xs btn-danger delete-custom-product-btn" data-id="{{ product.id }}" style="position: absolute; top: 5px; right: 20px; background-color:#cc6666;border: none;"><i class="fa fa-times"></i></button>
+                                </a>
+                                <div class="product-desc">
+                                    <span class="product-price">
+                                        ${{ product.price }}
+                                    </span>
+                                    <small class="text-muted">{{ product.product_type }}</small>
+                                    <a href="{% url 'prints:edit' product_id=product.product.id custom_product_id=product.id %}" class="product-name">{{ product.title }}</a>
+
+                                    <div class="m-t text-righ">
+                                        <a href="{% url 'prints:edit' product_id=product.product.id custom_product_id=product.id %}" class="btn btn-xs btn-outline btn-primary">Edit and Add <i class="fa fa-long-arrow-right"></i> </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% if forloop.counter|divisibleby:4 %}
+                </div>
+                <div class="row">
+                {% endif %}
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+    #print-on-demand .nav-pills {
+        margin-bottom: 10px;
+    }
+    #print-on-demand .nav-pills > li.active {
+        border-left-width: 0;
+        background-color: transparent;
+    }
+    #print-on-demand .nav-pills > li > a {
+        padding: 10px 15px;
+    }
+
+    #print-on-demand .product-box > a {
+        height: 370px;
+        width: 100%;
+        display: inline-block;
+        text-align: center;
+    }
+    #print-on-demand .product-box img {
+        max-height: 368px;
+    }
+
+    #print-on-demand .product-name {
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block extrajs %}
+<script src="{% static 'prints/js/index.js' %}" type="text/javascript"></script>
+{% endblock %}

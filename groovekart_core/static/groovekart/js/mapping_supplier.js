@@ -82,12 +82,7 @@
         $('#modal-variant-select').data('variant', $(this).data('variant'));
         $('#modal-variant-select').data('supplier', getSelectedSupplier(this));
 
-        window.extensionSendMessage({
-            subject: 'getVariants',
-            from: 'webapp',
-            url: getSelectedSupplierUrl($(this)),
-            cache: true,
-        }, function(response) {
+        var render_options = function(response) {
             var variant_tpl = Handlebars.compile($("#variant-template").html());
             var option_tpl = Handlebars.compile($("#variant-option-template").html());
             var extra_input_tpl = Handlebars.compile($("#extra-input-template").html());
@@ -159,7 +154,27 @@
             $('.select-var-mapping').bootstrapBtn('reset');
 
             selectColor();
-        });
+        };
+
+        var supplierUrl = getSelectedSupplierUrl($(this));
+        if (supplierUrl.indexOf('dropified.com') !== -1) {
+            $.ajax({
+                url: supplierUrl,
+                type: 'GET',
+                data: {'variants': '1'},
+                success: render_options,
+                error: function(data) {
+                    displayAjaxError('Variants Mapping', data);
+                }
+            });
+        } else {
+            window.extensionSendMessage({
+                subject: 'getVariants',
+                from: 'webapp',
+                url: supplierUrl,
+                cache: true,
+            }, render_options);
+        }
     });
 
     $('.var-data-display, .shipping-rules-display').click(function (e) {

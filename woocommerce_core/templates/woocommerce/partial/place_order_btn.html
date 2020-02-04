@@ -1,6 +1,7 @@
 {% load template_helper %}
 
 {% if item.supplier %}
+    {% if not item.supplier.is_dropified_print %}
     <div class="btn-group dropup order-line-group"
         order-id="{{order.id}}"
         line-id="{{item.id}}"
@@ -62,7 +63,7 @@
             {% endif %}
         </ul>
     </div>
-
+    {% endif %}
 {% elif item.product_id %}
     <button class="btn btn-xs btn-info add-supplier-btn"
             store-id="{{store.id}}" woo-product="{{item.product_id}}">

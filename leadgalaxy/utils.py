@@ -1312,13 +1312,13 @@ def shopify_link_images(store, product):
 
             img_idx = mapping_idx.get(option)
 
-            if not img_idx:
+            if img_idx is None:
                 img_idx = mapping_idx.get(str(extension_hash_text(option)))
 
-            if not img_idx:
+            if img_idx is None:
                 img_idx = mapping_idx.get(str(extension_hash_text(option_title)))
 
-            if not img_idx:
+            if img_idx is None:
                 continue
 
             if val['id'] not in product['images'][img_idx]['variant_ids']:

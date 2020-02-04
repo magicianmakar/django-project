@@ -848,6 +848,7 @@ class OrdersList(ListView):
         product_data = self.get_product_data(product_ids)
         order_ids = self.get_order_ids(orders)
         order_track_by_item = self.get_order_track_by_item(order_ids)
+        context['has_print_on_demand'] = False
 
         for order in orders:
             country_code = order['shipping']['country'] or order['billing']['country']
@@ -864,6 +865,7 @@ class OrdersList(ListView):
             order['items'] = order.pop('line_items')
             order['lines_count'] = len(order['items'])
             order['has_shipping_address'] = any(order['shipping'].values())
+            order['supplier_types'] = set()
 
             for item in order.get('items'):
                 self.update_placed_orders(order, item)
@@ -938,8 +940,12 @@ class OrdersList(ListView):
                         item['order_data'] = order_data
                         item['supplier'] = supplier
                         item['supplier_type'] = supplier.supplier_type()
+                        order['supplier_types'].add(supplier.supplier_type())
                         item['shipping_method'] = self.get_item_shipping_method(
                             product, item, variant_id, country_code)
+
+                        if supplier.is_dropified_print:
+                            context['has_print_on_demand'] = True
 
                     key = '{}_{}_{}'.format(order['id'], item['id'], item['product_id'])
                     item['order_track'] = order_track_by_item.get(key)

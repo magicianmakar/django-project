@@ -76,12 +76,18 @@ $('.bulk-order-btn').click(function (e) {
 
     ga('clientTracker.send', 'event', 'Bulk Order', 'Shopify', sub_conf.shop);
 
+    $('#bulk-order-modal').data('dropified-print', $(this).data('dropified-print') || false);
     window.bulkOrderQueue = {
         pages: {},
         data: [],
         stop: false,
-        next: null
+        next: null,
+        is_dropified_print: $('#bulk-order-modal').data('dropified-print')
     };
+
+    var is_dropified_print = window.bulkOrderQueue.is_dropified_print;
+    $('#bulk-order-modal .modal-title .original-title').toggleClass('hidden', is_dropified_print);
+    $('#bulk-order-modal .modal-title .dropified-print-title').toggleClass('hidden', !is_dropified_print);
 
     $('#bulk-order-modal').modal({
         backdrop: 'static',
@@ -147,7 +153,8 @@ $("#bulk-order-steps").steps({
                     },
                     data: [],
                     stop: false,
-                    next: null
+                    next: null,
+                    is_dropified_print: $('#bulk-order-modal').data('dropified-print')
                 };
             }
         } else if (currentIndex == 1) {
@@ -183,6 +190,9 @@ $("#bulk-order-steps").steps({
             formData.push({name: 'bulk_queue', value: '1'});
             formData.push({name: 'page_start', value: window.bulkOrderQueue.pages.from});
             formData.push({name: 'page_end', value: window.bulkOrderQueue.pages.to});
+            if (window.bulkOrderQueue.is_dropified_print) {
+                formData.push({name: 'is_dropified_print', value: '1'});
+            }
 
             fetchOrdersToQueue(formData);
         } else if (currentIndex == 2) {
@@ -198,9 +208,13 @@ $("#bulk-order-steps").steps({
         }
     },
     onFinished: function (event, currentIndex) {
-        $.each(window.bulkOrderQueue.data, function (i, order) {
-            bulkAddOrderToQueue(order);
-        });
+        if (window.bulkOrderQueue.is_dropified_print) {
+            addOrdersToPrint(window.bulkOrderQueue.data);
+        } else {
+            $.each(window.bulkOrderQueue.data, function (i, order) {
+                bulkAddOrderToQueue(order);
+            });
+        }
 
         $('#bulk-order-modal').modal('hide');
     }

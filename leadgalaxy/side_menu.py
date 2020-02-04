@@ -8,6 +8,7 @@ def get_menu_structure(namespace):
     body = [
         ('products', [
             'all-products',
+            'prints',
             'boards',
             'alerts',
             'us-product-database',
@@ -182,6 +183,13 @@ def get_menu_item_data():
             'title': 'Get Started',
             'url_name': 'index',
             'match': re.compile(r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$'),
+        },
+        'prints': {
+            'title': 'Print On Demand',
+            'url_name': 'prints:index',
+            'match': re.compile(r'^/print-on-demand'),
+            'is_ns_aware': False,
+            'permissions': ['print_on_demand.use'],
         },
     }
 

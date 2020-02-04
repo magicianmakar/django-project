@@ -29,6 +29,7 @@ urlpatterns = [
     url(r'^aliextractor/', include('aliextractor.urls')),
     url(r'^sso/', include('sso_core.urls')),
     url(r'^profits/', include('profits.urls', 'profits')),
+    url(r'^print-on-demand/', include('prints.urls', 'prints')),
     url(r'^admin/', admin.site.urls),
 ]
 

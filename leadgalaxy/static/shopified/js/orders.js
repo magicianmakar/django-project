@@ -295,6 +295,8 @@ $('#modal-add-order-id .supplier-type').on('change', function (e) {
         placeholder = 'https://www.ebay.com/vod/FetchOrderDetails?itemid=XXXX&transId=XXXX';
     } else if (supplierType === 'aliexpress') {
         placeholder = 'http://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
+    } else if (supplierType === 'dropified-print') {
+        placeholder = 'P12345';
     } else {
         placeholder = '';
     }
@@ -368,6 +370,23 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
             } else {
                 swal('Could not get eBay Order ID');
             }
+        });
+    } else if (supplierType === 'dropified-print') {
+        btn.button('loading');
+
+        addOrderSourceRequest({
+            'store': orderData.store,
+            'order_id': orderData.order_id,
+            'line_id': orderData.line_id,
+            'source_type': supplierType,
+            'aliexpress_order_id': orderId,
+        }, function(success) {
+            if (success) {
+                $('#modal-add-order-id').modal('hide');
+                connectDropifiedPrintOrder(orderId);
+            }
+
+            btn.button('reset');
         });
     }
 });

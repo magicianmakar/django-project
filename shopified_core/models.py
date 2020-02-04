@@ -33,6 +33,11 @@ class SupplierBase(models.Model):
     class Meta:
         abstract = True
 
+    @property
+    def is_dropified(self):
+        return 'dropified.com' in self.product_url or \
+               'shopifytools-pr-' in self.product_url
+
 
 class ProductBase(models.Model):
     class Meta:
@@ -180,8 +185,10 @@ class OrderTrackBase(models.Model):
         if self.source_id:
             if self.source_type == 'ebay':
                 return 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={}'.format(self.source_id)
-            if self.source_type == 'other':
+            elif self.source_type == 'other':
                 return ''
+            elif self.source_type == 'dropified-print':
+                return f"{reverse('prints:orders')}?order={self.source_id}"
             else:
                 return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
         else:
@@ -223,7 +230,12 @@ class OrderTrackBase(models.Model):
             "PICKUP_CANCELLED_BUYER_REJECTED": "Pickup cancelled buyer rejected",
             "PICKUP_CANCELLED_OUT_OF_STOCK": "Out of stock",
             "READY_FOR_PICKUP": "Ready for pickup",
-            "SHIPPING_INFO_RECEIVED": "Shipping info received"
+            "SHIPPING_INFO_RECEIVED": "Shipping info received",
+
+            # Dropified
+            "D_PENDING_PAYMENT": "Pending Payment",
+            "D_PENDING_SHIPMENT": "Pending Shipment",
+            "D_SHIPPED": "Shipped",
         }
 
         if self.source_status and ',' in self.source_status:

@@ -743,6 +743,8 @@ def serializers_orders_track(tracks, store_type, humanize=False):
             fields['source_type'] = 'aliexpress'
         elif fields['source_type'] == 'other':
             continue
+        elif not humanize and fields['source_type'] == 'dropified-print':
+            continue
 
         if fields['source_id'] and ',' in fields['source_id']:
             for j in fields['source_id'].split(','):
@@ -905,6 +907,8 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
     orders_result = []
     next_page_url = None
     enable_supplier_grouping = False
+    is_dropified_print = request.GET.get('is_dropified_print') == '1'
+
     if store_type in ['shopify', '']:
         orders_place_url = reverse('orders_place')
     else:
@@ -957,12 +961,24 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                     continue
 
                 # Ignore items without a supplier
-                if not line_item.get('supplier') or not line_item['supplier'].support_auto_fulfill():
+                if not line_item.get('supplier'):
                     continue
 
-                # Do only aliexpress orders for now
-                if not line_item['supplier'].is_aliexpress:
-                    continue
+                # Return Print On Demand orders separately
+                if is_dropified_print:
+                    if not line_item['supplier'].is_dropified_print:
+                        continue
+
+                    # No bundle support yet
+                    if line_item.get('is_bundle', False):
+                        continue
+                else:
+                    if not line_item['supplier'].support_auto_fulfill():
+                        continue
+
+                    # Do only aliexpress orders for now
+                    if not line_item['supplier'].is_aliexpress:
+                        continue
 
                 supplier = line_item['supplier']
                 shipping_method = line_item.get('shipping_method') or {}

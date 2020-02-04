@@ -76,6 +76,22 @@ function renderSupplierInfo(product_url, parent) {
                 $('.product-supplier-link', parent).val(rep.url);
             }
         });
+    } else if ((/print-on-demand/i).test(product_url)) {
+        $.ajax({
+            url: product_url + '?supplier=1',
+            type: 'GET',
+            beforeSend: function() {
+                $('.product-original-link-loading', parent).show();
+            },
+            success: function(data) {
+                $('.product-original-link-loading', parent).hide();
+
+                if (data.success) {
+                    $('.product-supplier-name', parent).val(data.name);
+                    $('.product-supplier-link', parent).val(data.url);
+                }
+            }
+        });
     }
 }
 
@@ -453,24 +469,26 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
     });
 }
 
-function sendProductToCommerceHQ(productId, storeId, publish) {
+function sendProductToCommerceHQ(productId, storeId, publish, callback) {
+    callback = typeof(callback) === 'undefined' ? function() {} : callback;
     var data = {
         product: productId,
         store: storeId,
         publish: publish
     };
 
-    return $.post(api_url('product-export', 'chq'), data);
+    return $.post(api_url('product-export', 'chq'), data, callback);
 }
 
-function sendProductToWooCommerce(productId, storeId, publish) {
+function sendProductToWooCommerce(productId, storeId, publish, callback) {
+    callback = typeof(callback) === 'undefined' ? function() {} : callback;
     var data = {
         product: productId,
         store: storeId,
         publish: publish
     };
 
-    return $.post(api_url('product-export', 'woo'), data);
+    return $.post(api_url('product-export', 'woo'), data, callback);
 }
 
 function sendProductToBigCommerce(productId, storeId, publish) {
@@ -492,14 +510,15 @@ function sendProductToGearBubble(productId, storeId) {
     return $.post(api_url('product-export', 'gear'), data);
 }
 
-function sendProductToGrooveKart(productId, storeId, publish) {
+function sendProductToGrooveKart(productId, storeId, publish, callback) {
+    callback = typeof(callback) === 'undefined' ? function() {} : callback;
     var data = {
         product: productId,
         store: storeId,
         publish: publish
     };
 
-    return $.post(api_url('product-export', 'gkart'), data);
+    return $.post(api_url('product-export', 'gkart'), data, callback);
 }
 
 function productsEditModal(products) {

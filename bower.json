@@ -30,7 +30,8 @@
     "datatables.net-bs": "^2.1.1",
     "datatables.net-responsive": "^2.2.3",
     "datatables.net-responsive-bs": "^2.2.3",
-    "jquery.steps": "1.1.0"
+    "jquery.steps": "1.1.0",
+    "Croppie": "croppie#^2.6.4"
   },
   "devDependencies": {}
 }

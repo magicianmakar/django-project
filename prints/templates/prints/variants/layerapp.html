@@ -1,0 +1,292 @@
+{% load template_helper %}
+
+<div class="table-responsive">
+    <div class="col-md-6">
+        <p>Add and customize textures to create variants</p>
+        <!-- <div style="overflow: auto; max-height: 300px;"> -->
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Variant</th>
+                        <th>Raw Image</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for style in product.variants.styles %}
+                    <tr>
+                        <td>{{ style.variant_name }}</td>
+                        <td>
+                            <img class="img-responsive center-block" src="{{ style.variant_image }}"  style="max-width: 200px; max-height: 200px;">
+                        </td>
+                        <td class="text-center">
+                            <a class="btn btn-xs btn-primary add-variant" title="Add" data-variant-id="{{ style.id }}" data-is-paired="{{ style.is_paired|yesno:"true,false" }}">
+                                <i class="fa fa-plus"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        <!-- </div> -->
+
+        <table id="style-variants" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>
+                        <input type="text" name="style_type" class="form-control" value="{{ custom_product.get_extra_data_dict.styles.title|default:'Style' }}" placeholder="Type a custom variant type">
+                    </th>
+                    <th>Custom Image</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="col-md-6">
+        <p>Remove any sizes you don't want in your variants</p>
+        <table id="size-variants" class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>
+                        <input type="text" name="size_type" class="form-control" value="{{ custom_product.get_extra_data_dict.sizes.title|default:'Size' }}" placeholder="Type a custom variant type">
+                    </th>
+                    <th>Cost</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="col-md-12">
+        <table id="variants" class="table table-stripped table-bordered">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Variant</th>
+                    <th>Price</th>
+                    <th>Compare At</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="variant-mockup" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Customize This Variant</h4>
+            </div>
+            <div class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <div class="actions">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary mockup-save" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Starting...">
+                        Generate This Variant
+                    </button>
+                </div>
+                <div class="actions done">
+                    <button type="button" class="btn btn-success" data-dismiss="modal">Done</button>
+                    <button type="button" class="btn btn-primary mockup-save" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Starting...">
+                        Generate Again
+                    </button>
+                </div>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+{% verbatim %}
+<script id="variant-mockup-paired" type="text/x-handlebars-template">
+    <input type="hidden" name="mockup_variant_id" value="{{ style.id }}">
+    <input type="hidden" name="mockup_artwork_width" value="{{ style.artwork_width }}">
+    <input type="hidden" name="mockup_artwork_height" value="{{ style.artwork_height }}">
+    <table class="table">
+        <thead>
+            <tr>
+                <th></th>
+                <th class="text-center">Left Side</th>
+                <th class="text-center">Right Side</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="vertical-align: middle;">
+                    <img class="img-responsive center-block" src="{{ style.variant_image }}">
+                </td>
+                <td class="artwork">
+                    <div class="custom-file">
+                        <input type="file" name="left_img" class="custom-file-input" accept="image/*">
+                        <label class="custom-file-label">Choose file...</label>
+                    </div>
+                    <div class="croppie" style="display: none;" data-name="Left Side" data-key="left_img"></div>
+                    <div class="awaiting-image">Upload a texture and crop</div>
+                </td>
+                <td class="artwork">
+                    <div class="custom-file">
+                        <input type="file" name="right_img" class="custom-file-input" accept="image/*">
+                        <label class="custom-file-label">Choose file...</label>
+                    </div>
+                    <div class="croppie" style="display: none;" data-name="Right Side" data-key="right_img"></div>
+                    <div class="awaiting-image">Upload a texture and crop</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</script>
+
+<script id="variant-mockup-single" type="text/x-handlebars-template">
+    <input type="hidden" name="mockup_variant_id" value="{{ style.id }}">
+    <input type="hidden" name="mockup_artwork_width" value="{{ style.artwork_width }}">
+    <input type="hidden" name="mockup_artwork_height" value="{{ style.artwork_height }}">
+    <table class="table">
+        <thead>
+            <tr>
+                <th></th>
+                <th class="text-center">Single</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td style="vertical-align: middle;">
+                    <img class="img-responsive center-block" src="{{ style.variant_image }}">
+                </td>
+                <td class="artwork">
+                    <div class="custom-file">
+                        <input type="file" name="img" class="custom-file-input" accept="image/*">
+                        <label class="custom-file-label">Choose file...</label>
+                    </div>
+                    <div class="croppie" style="display: none;" data-name="Single" data-key="img"></div>
+                    <div class="awaiting-image">Upload a texture and crop</div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</script>
+
+<script id="style-variant" type="text/x-handlebars-template">
+    <td>
+        <div class="form-group">
+            <input type="text" class="form-control input-style" value="{{ variant.title }}">
+            <a href="#" class="btn btn-primary btn-xs confirm-input"><i class="fa fa-check"></i></a>
+            <span class="help-block">The variant name must be unique and not empty.</span>
+        </div>
+    </td>
+    <td>
+        <img class="img-responsive center-block" src="{{ variant.image }}"  style="max-width: 200px; max-height: 200px;">
+    </td>
+    <td class="text-center actions">
+        <a class="btn btn-xs btn-warning delete" title="Delete">
+            <i class="fa fa-minus"></i>
+        </a>
+        <a class="btn btn-xs btn-primary add" title="Add">
+            <i class="fa fa-plus"></i>
+        </a>
+
+        <a class="btn btn-xs btn-danger erase" title="Delete">
+            <i class="fa fa-times"></i>
+        </a>
+    </td>
+</script>
+
+<script id="size-variant" type="text/x-handlebars-template">
+    <td>
+        <div class="form-group">
+            <div class="input-group">
+                <div class="input-group-addon">{{size.size}}</div>
+                <input type="text" class="form-control input-size" value="{{size.title}}" placeholder="Type a custom name (optional)">
+                <a href="#" class="btn btn-primary btn-xs confirm-input"><i class="fa fa-check"></i></a>
+            </div>
+            <span class="help-block">The variant name must be unique.</span>
+        </div>
+    </td>
+    <td>{{size.cost}}</td>
+    <td class="text-center actions" style="vertical-align: middle;">
+        <a class="btn btn-xs btn-warning delete" title="Delete">
+            <i class="fa fa-minus"></i>
+        </a>
+
+        <a class="btn btn-xs btn-primary add" title="Add">
+            <i class="fa fa-plus"></i>
+        </a>
+    </td>
+</script>
+
+<script id="variant" type="text/x-handlebars-template">
+    <td style="width: 80px;">
+        <img class="center-block" src="{{variant.image}}" style="max-width: 60px; max-height: 50px;">
+    </td>
+    <td>{{variant.title}}</td>
+    <td><input type="number" class="form-control price" value="{{variant.price}}" step="0.1"></td>
+    <td><input type="number" class="form-control compare_at" value="{{variant.compare_at}}" step="0.1"></td>
+</script>
+{% endverbatim %}
+
+<script type="text/javascript">
+    var layerAppVariants = {% json_dumps product.variants %};
+    var layerAppCustomSizes = {% json_dumps custom_product.get_extra_data_dict.sizes %}.data || {};
+    var layerAppCustomStyles = {% json_dumps custom_product.get_extra_data_dict.styles %}.data || {};
+</script>
+
+<style type="text/css">
+    .style-variant.deleted td,
+    .size-variant.deleted td {
+        opacity: 0.5;
+    }
+    .style-variant.deleted td.actions,
+    .size-variant.deleted td.actions {
+        opacity: 1;
+    }
+    .style-variant:not(.deleted) .add,
+    .size-variant:not(.deleted) .add {
+        display: none;
+    }
+    .style-variant.deleted .delete,
+    .size-variant.deleted .delete {
+        display: none;
+    }
+
+    .style-variant .form-group .help-block,
+    .size-variant .form-group .help-block {
+        display: none;
+    }
+
+    .style-variant .form-group,
+    .size-variant .form-group {
+        margin: 0;
+    }
+
+    .style-variant .form-group .help-block,
+    .size-variant .form-group .help-block {
+        display: none;
+        margin: 5px 0 0;
+    }
+
+    .style-variant .form-group.has-error .help-block,
+    .size-variant .form-group.has-error .help-block {
+        display: inline-block;
+    }
+
+    table .form-group {
+        position: relative;
+    }
+    table .form-group .confirm-input {
+        display: none;
+        position: absolute;
+        top: 6px;
+        right: 5px;
+        z-index: 2;
+    }
+    table .form-group input.changed + .confirm-input {
+        display: inline-block;
+    }
+</style>

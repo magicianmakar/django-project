@@ -158,12 +158,25 @@
         };
 
         var supplier_url = getSelectedSupplierUrl($(this));
-        window.extensionSendMessage({
-            subject: 'getVariants',
-            from: 'webapp',
-            url: supplier_url,
-            cache: true,
-        }, render_options);
+        if (supplier_url.indexOf('dropified.com') !== -1 ||
+            supplier_url.indexOf('shopifytools-pr') !== -1) {
+            $.ajax({
+                url: supplier_url,
+                type: 'GET',
+                data: {'variants': '1'},
+                success: render_options,
+                error: function(data) {
+                    displayAjaxError('Variants Mapping', data);
+                }
+            });
+        } else {
+            window.extensionSendMessage({
+                subject: 'getVariants',
+                from: 'webapp',
+                url: supplier_url,
+                cache: true,
+            }, render_options);
+        }
     });
 
     $('.var-data-display, .shipping-rules-display').click(function (e) {

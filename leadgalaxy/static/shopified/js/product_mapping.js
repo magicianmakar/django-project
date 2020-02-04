@@ -41,12 +41,26 @@
 
     function fetchSupplierOptions(callback) {
         var supplier_url = getSupplierUrl();
-        window.extensionSendMessage({
-            subject: 'getVariants',
-            from: 'webapp',
-            url: supplier_url,
-            cache: true,
-        }, callback);
+        if (supplier_url.indexOf('dropified.com') !== -1) {
+            // Remove Dropified domain (matches with or without https)
+            supplier_url = supplier_url.replace(/\S{0,}\/\/.+?\//, '/');
+            $.ajax({
+                url: supplier_url,
+                type: 'GET',
+                data: {'variants': '1'},
+                success: callback,
+                error: function(data) {
+                    displayAjaxError('Variants Mapping', data);
+                }
+            });
+        } else {
+            window.extensionSendMessage({
+                subject: 'getVariants',
+                from: 'webapp',
+                url: supplier_url,
+                cache: true,
+            }, callback);
+        }
     }
 
     $('#save-mapping').click(function(e) {

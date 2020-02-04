@@ -662,6 +662,8 @@ class GrooveKartSupplier(SupplierBase):
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
             elif self.is_ebay:
                 return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
+            elif self.is_dropified_print:
+                return int(re.findall(r'print-on-demand.+?([0-9]+)', self.product_url)[0])
         except:
             return None
 
@@ -707,6 +709,9 @@ class GrooveKartSupplier(SupplierBase):
 
     def supplier_type(self):
         try:
+            if self.is_dropified and 'print-on-demand' in self.product_url:
+                return 'dropified-print'
+
             return get_domain(self.product_url)
         except:
             return ''
@@ -725,6 +730,10 @@ class GrooveKartSupplier(SupplierBase):
             return 'ebay.com' in get_domain(self.product_url, full=True)
         except:
             return False
+
+    @property
+    def is_dropified_print(self):
+        return self.supplier_type() == 'dropified-print'
 
     def save(self, *args, **kwargs):
         if self.is_default:

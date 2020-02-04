@@ -19,6 +19,10 @@
         "WAIT_SELLER_EXAMINE_MONEY": "Payment not yet confirmed",
         "RISK_CONTROL": "Payment being verified",
         "IN_PRESELL_PROMOTION": "Promotion is on",
+
+        "D_PENDING_PAYMENT": "Pending Payment",
+        "D_PENDING_SHIPMENT": "Pending Shipment",
+        "D_SHIPPED": "Shipped"
     };
 
     P.config({
@@ -227,6 +231,29 @@
 
     function checkOrder(order) {
         var delay = parseFloat($('#update-delay').val(), 10).bound(0.1, 100) * 1000;
+
+        if (order.source_type === 'dropified-print') {
+            return checkDropifiedPrintOrder(order).then(function(data) {
+                // Got Supplier order info
+                if (order.source_status == data.details.orderStatus &&
+                    order.source_tracking == data.details.tracking_number &&
+                    $('#update-unfulfilled-only').is(':checked') &&
+                    !order.bundle) {
+                    // Order info hasn't changed
+                    orders.success += 1;
+                    addOrderUpdateItem(order, data.details);
+                } else {
+                    return updateOrderStatus(order, data.details);
+                }
+            }).fail(function(data) {
+                // Couldn't get Supplier order info
+                orders.error += 1;
+                addOrderUpdateItem(order, {'error': getAjaxError(data)});
+
+            }).always(function() {
+                updateProgress();
+            });
+        }
 
         return new P(function(resolve, reject) {
             window.extensionSendMessage({

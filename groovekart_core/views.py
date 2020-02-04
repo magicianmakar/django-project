@@ -569,6 +569,7 @@ class OrdersList(ListView):
         products_by_source_id = self.get_products_by_source_id(product_ids)
         order_ids = [order['id'] for order in orders]
         order_tracks_by_item = self.get_order_tracks_by_item(order_ids)
+        context['has_print_on_demand'] = False
 
         for order in orders:
             order_id = order.get('id')
@@ -671,6 +672,9 @@ class OrdersList(ListView):
                         item['shipping_method'] = self.get_item_shipping_method(
                             product, item, variant_id, country_code)
                         order['connected_lines'] += 1
+
+                        if supplier.is_dropified_print:
+                            context['has_print_on_demand'] = True
 
                 key = '{}_{}'.format(order['id'], item['id'])
                 item['order_track'] = order_tracks_by_item.get(key)

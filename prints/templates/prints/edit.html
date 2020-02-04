@@ -1,0 +1,355 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+{% load compress %}
+{% load template_helper %}
+
+{% block main-container %}
+<div class="tabs-container">
+    <div id="form-data" data-action="{% url 'prints:save' %}">
+        <input type="hidden" name="product_id" value="{{ product.pk }}">
+        <input type="hidden" name="custom_product_id" value="{{ custom_product.pk }}">
+        <input type="hidden" name="images" value="">
+        <input type="hidden" name="variants" value="">
+        <input type="hidden" name="extra_data" value="">
+
+        <ul class="nav nav-tabs">
+            <li class="active"><a class="nav-link" data-toggle="tab" href="#tab-1"> Product info</a></li>
+            <li><a class="nav-link" data-toggle="tab" href="#custom-variants"> Variants</a></li>
+            <li><a class="nav-link" data-toggle="tab" href="#tab-images"> Images</a></li>
+        </ul>
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                    <fieldset>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Title:</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="title" class="form-control" placeholder="Product name" value="{% firstof custom_product.title product.title '' %}">
+                            </div>
+                        </div>
+                        <div class="form-group row"><label class="col-sm-2 col-form-label">Description:</label>
+                            <div class="col-sm-10">
+                                <textarea class="form-control" name="description">{% firstof custom_product.description product.description '' %}</textarea>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Type:</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="type" class="form-control" placeholder="Product type/category" value="{% firstof custom_product.product_type product.product_type.title '' %}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Tags:</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="tags" class="form-control tag-it" placeholder="Product tags (separated by comma)" value="{% firstof custom_product.tags '' %}">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Vendor:</label>
+                            <div class="col-sm-10">
+                                <input type="text" name="vendor" class="form-control" value="{% firstof custom_product.vendor 'Dropified Print' %}" placeholder="Product vendor">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Ship From:</label>
+                            <div class="col-sm-10">
+                                <select name="ships_from" class="form-control">
+                                    {% if product.data.china_sku in product.user_costs.keys %}
+                                    <option value="{{ product.data.china_sku }}" {% if product.data.china_sku == custom_product.ships_from %}selected{% endif %} data-sku-key="china_sku">China</option>
+                                    {% endif %}
+                                    {% if product.data.usa_sku in product.user_costs.keys %}
+                                    <option value="{{ product.data.usa_sku }}" {% if product.data.usa_sku == custom_product.ships_from %}selected{% endif %} data-sku-key="usa_sku">United States</option>
+                                    {% endif %}
+                                </select>
+                                <p class="help-text">Changing Country updates product cost</p>
+                            </div>
+                        </div>
+                        <div id="price" class="form-group row">
+                            <label class="col-sm-2 col-form-label">Cost:</label>
+                            <div class="col-sm-10">
+                                <span class="form-control">{{ product.get_price_range }}</span>
+                            </div>
+                        </div>
+                        <div id="suggested_price" class="form-group row">
+                            <label class="col-sm-2 col-form-label">Suggested Retail Price:</label>
+                            <div class="col-sm-10">
+                                <span class="form-control"></span>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Price:</label>
+                            <div class="col-sm-10">
+                                <div class="input-group">
+                                    <div class="input-group-addon">$</div>
+                                    <input type="number" name="price" step="0.1" class="form-control" value="{% firstof custom_product.price product.prices.user.price '0.0' %}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Compare At:</label>
+                            <div class="col-sm-10">
+                                <div class="input-group">
+                                    <div class="input-group-addon">$</div>
+                                    <input type="number" name="compare_at_price" step="0.1" class="form-control" value="{% firstof custom_product.compare_at product.prices.user.price '0.0' %}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Notes:</label>
+                            <div class="col-sm-10">
+                                <textarea class="form-control" name="notes">{% firstof custom_product.notes '' %}</textarea>
+                            </div>
+                        </div>
+                        {% if custom_product.source_url %}
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">Supplier Link:</label>
+                            <div class="col-sm-10">
+                                <span class="form-control">{{ custom_product.source_url }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="text-center">
+                            {% for image in product.images %}
+                            <img class="img-rounded" src="{{ image.src }}">
+                            {% endfor %}
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+            <div id="custom-variants" class="tab-pane">
+                <div class="panel-body">
+                    {% include 'prints/variants/layerapp.html' %}
+                </div>
+            </div>
+            <div id="tab-images" class="tab-pane">
+                <div class="panel-body">
+                    <div id="add-images-wrapper">
+                        <button type="button" class="btn btn-primary" id="add-images">Add Image(s)</button>
+                    </div>
+
+                    <div class="row text-center" id="images"></div>
+                </div>
+            </div>
+
+            <div class="tab-pane" style="display: block;">
+                <div class="panel-body">
+                    <div class="form-group col-xs-12 flex-center">
+                        <label for="store-select" style="margin-right: 10px;">Send to</label>
+                          <select id="store-select"  class="form-control" style="width: 185px;border-radius:4px; display: inline-block; margin-left: 10px;">
+
+                        {% for i in user_stores.shopify %}
+                            <option value="{{i.id}}" data-type="shopify">{{i.title}}</option>
+                        {% endfor %}
+
+                        {% for i in user_stores.chq %}
+                            <option value="{{i.id}}" data-type="chq">{{i.title}}</option>
+                        {% endfor %}
+
+                        {% for i in user_stores.woo %}
+                            <option value="{{i.id}}" data-type="woo">{{i.title}}</option>
+                        {% endfor %}
+
+                        {% for i in user_stores.gkart %}
+                            <option value="{{i.id}}" data-type="gkart">{{i.title}}</option>
+                        {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group col-xs-12 flex-center actions">
+                        <label for="store-select" style="margin-right: 10px;">{% if custom_product %}Edit{% else %}Create{% endif %} and</label>
+                        <div id="store-actions">
+                            <button type="button"
+                                    id="send-to-store"
+                                    class="btn btn-success"
+                                    data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">
+                                Send To My Store
+                            </button>
+
+                            <label for="store-select" style="margin: 0 10px;">or</label>
+                            <button type="button"
+                                    id="save-for-later"
+                                    class="btn btn-success"
+                                    data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Saving">
+                                Save for Later
+                            </button>
+
+                            <label for="store-select" style="margin: 0 10px;">or</label>
+                            <button type="button"
+                                    id="only-save"
+                                    class="btn btn-primary"
+                                    data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Saving">
+                                Just {% if custom_product %}Save{% else %}Create{% endif %}
+                            </button>
+                        </div>
+
+                        <a href="" target="_blank" class="btn btn-primary product-url hidden" data-type="dropified">View in Dropified</a>
+                        <a href="" target="_blank" class="btn btn-primary product-url hidden" data-type="shopify">View in Shopify</a>
+                        <a href="" target="_blank" class="btn btn-primary product-url hidden" data-type="chq">View in CommerceHQ</a>
+                        <a href="" target="_blank" class="btn btn-primary product-url hidden" data-type="woo">View in WooCommerce</a>
+                        <a href="" target="_blank" class="btn btn-primary product-url hidden" data-type="gkart">View in GrooveKart</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="plcontainer" style="display: none;">
+    <a id="pickfiles" href="javascript:;"></a>
+</div>
+{% verbatim %}
+<script id="image" type="text/x-handlebars-template">
+    <div class="col-md-3 image" data-position="{{position}}">
+        <div class="actions">
+            <a class="btn btn-xs btn-danger delete-image" title="Delete" data-index="{{index}}">
+                <i class="fa fa-times"></i>
+            </a>
+        </div>
+        <img src="{{src}}" class="img-responsive center-block">
+    </div>
+</script>
+{% endverbatim %}
+{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+.actions a {
+    margin-left: 10px;
+}
+.image {
+    position: relative;
+    height: 200px;
+    margin-top: 30px;
+}
+.image .actions {
+    opacity: 0;
+    position: absolute;
+    top: 0;
+    right: 0;
+    transition: opacity 0.2s;
+}
+.image:hover .actions,
+.image .actions:hover {
+    opacity: 1;
+}
+img {
+    max-height: 200px;
+    max-width: 200px;
+}
+
+.custom-file {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    height: calc(3rem + 2px);
+    margin-bottom: 15px;
+}
+input.custom-file-input[type=file] {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    height: calc(3rem + 2px);
+    margin: 0;
+    opacity: 0;
+}
+.custom-file-label {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1;
+    height: calc(3rem + 2px);
+    padding: .375rem .75rem;
+    line-height: 1.7;
+    color: #495057;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: .25rem;
+}
+.custom-file-label::after {
+    padding: .5rem .75rem;
+}
+.custom-file-label::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    display: block;
+    height: calc(calc(3rem + 2px) - 1px * 2);
+    padding: .375rem .75rem;
+    line-height: 1.7;
+    color: #495057;
+    content: "Browse";
+    background-color: #e9ecef;
+    border-left: 1px solid #ced4da;
+    border-radius: 0 .25rem .25rem 0;
+}
+.custom-file-label {
+  padding: .5rem .75rem;
+}
+.custom-file-label::after {
+  padding: .5rem .75rem;
+}
+.awaiting-image {
+    text-align: center;
+    padding: 50px 40px;
+    font-size: 22px;
+    color: #aaa;
+    width: 260px;
+    margin: 25px auto 15px;
+    border: 1px solid #aaa;
+}
+.artwork {
+    width: 270px !important;
+}
+
+#variant-mockup .img-responsive {
+    max-height: 300px;
+}
+</style>
+
+<link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+
+{% compress css %}
+<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
+<link href="{% static 'libs/bower_components/Croppie/croppie.css' %}" rel="stylesheet">
+{% endcompress %}
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    $.fn.bootstrapBtn = $.fn.button.noConflict();
+    window.plupload_Config = {
+        url: "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com:443/",
+        AWSAccessKeyId: "{% app_setting 'AWS_ACCESS_KEY_ID' %}",
+        policy: "{{aws_policy|escapejs}}",
+        signature: "{{aws_signature|escapejs}}",
+        key: "uploads/layerapp/u{{user.id}}/${filename}",
+        paramsKey: "uploads/layerapp/u{{user.id}}/",
+        uploadedUrl: "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/"
+    };
+</script>
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js" type="text/javascript"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js" type="text/javascript"></script>
+
+{% compress js %}
+<script src="{% static 'js/tag-it.min.js' %}" type="text/javascript"></script>
+<script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
+<script src="{% static 'libs/bower_components/Croppie/croppie.min.js' %}" type="text/javascript"></script>
+{% endcompress %}
+
+<script type="text/javascript">
+    var customVariantsInfo = {% json_dumps custom_product.get_variants_dict %} || {};
+    var customImages = {% json_dumps custom_product.get_images_list %} || [];
+    var costBySku = {% json_dumps user_costs %} || {};
+
+    customImages = $.map(customImages, function(image, position) {
+        return {'src': image, 'position': position};
+    });
+</script>
+<script src="{% static 'prints/js/edit.js' %}" type="text/javascript"></script>
+<script src="{% static 'prints/js/layerapp.js' %}" type="text/javascript"></script>
+{% endblock %}

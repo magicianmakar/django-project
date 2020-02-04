@@ -4143,6 +4143,7 @@ def orders_view(request):
         if p.shopify_id not in products_list:
             products_list[p.shopify_id] = p
 
+    open_print_on_demand = False
     for index, order in enumerate(page):
         created_at = arrow.get(order['created_at'])
         try:
@@ -4362,6 +4363,9 @@ def orders_view(request):
                         order['line_items'][i]['order_data_id'] = order_data['id']
 
                         order['line_items'][i]['order_data'] = order_data
+
+                        if supplier.is_dropified_print:
+                            open_print_on_demand = True
                 except:
                     if settings.DEBUG:
                         traceback.print_exc()
@@ -4429,6 +4433,7 @@ def orders_view(request):
         'aliexpress_mobile_order': aliexpress_mobile_order,
         'order_debug': order_debug,
         'use_fulfillbox': bool(settings.FULFILLBOX_API_URL and models_user.can('fulfillbox.use')),
+        'open_print_on_demand': open_print_on_demand,
         'page': 'orders',
         'selected_menu': 'orders:all',
         'breadcrumbs': breadcrumbs

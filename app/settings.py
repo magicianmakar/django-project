@@ -85,7 +85,8 @@ INSTALLED_APPS = (
     'bigcommerce_core',
     'phone_automation',
     'funnels',
-    'aliextractor'
+    'aliextractor',
+    'prints',
 )
 
 MIDDLEWARE = (
@@ -152,6 +153,7 @@ DROPIFIED_API = {
     'goals': 'goals.api.GoalsApi',
     'profits': 'profits.api.ProfitsApi',
     'metrics': 'metrics.api.MetricsApi',
+    'prints': 'prints.api.PrintsApi',
 }
 
 # Database
@@ -485,3 +487,6 @@ PHONE_AUTOMATION_WARNING_LIMIT = 0.75  # percent. when reached - send warning em
 BIGCOMMERCE_APP_ID = os.environ.get('BIGCOMMERCE_APP_ID')
 BIGCOMMERCE_CLIENT_ID = os.environ.get('BIGCOMMERCE_CLIENT_ID')
 BIGCOMMERCE_CLIENT_SECRET = os.environ.get('BIGCOMMERCE_CLIENT_SECRET')
+
+# LayerApp
+LAYERAPP_TEST = bool(os.getenv('LAYERAPP_TEST', False))

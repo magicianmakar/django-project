@@ -1,0 +1,64 @@
+{% load i18n %}
+
+<h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
+<ul>
+    <li>
+        {% with choices.0 as all_choice %}
+        <form id="form_{{ spec.parameter_name }}" method="GET" action="">
+
+            {% for k, v in all_choice.query_parts %}
+            <input type="hidden" name="{{ k }}" value="{{ v }}" />
+            {% endfor %}
+
+            <input type="text"
+                   value=""
+                   name="{{ spec.parameter_name }}__gt"
+                   placeholder="MM/DD/YY"
+                   style="width: 42%;" />
+
+            <input type="text"
+                   value=""
+                   name="{{ spec.parameter_name }}__lt"
+                   placeholder="MM/DD/YY"
+                   style="width: 42%;" />
+
+            <input type="hidden"
+                   value="{{ spec.value|default_if_none:'' }}"
+                   name="{{ spec.parameter_name }}" />
+
+            <button type="submit" style="display: none;"></button>
+        </form>
+        {% endwith %}
+    </li>
+
+    {% for choice in choices %}
+        <li{% if choice.selected %} class="selected"{% endif %}>
+        <a href="{{ choice.query_string|iriencode }}" title="{{ choice.display }}">{{ choice.display }}</a></li>
+    {% endfor %}
+</ul>
+
+<script type="text/javascript">
+    function {{ spec.parameter_name }}MultiValue(fieldName) {
+        var form = document.getElementById('form_' + fieldName);
+        var gt = form.elements[fieldName + '__gt'];
+        var lt = form.elements[fieldName + '__lt'];
+        var input = form.elements[fieldName];
+        if (input.value) {
+            var value = input.value.split('-');
+            gt.value = value[0];
+            lt.value = value[1];
+        }
+        form.addEventListener("submit", function(e) {
+            if (gt.value && lt.value) {
+                input.value = gt.value + '-' + lt.value;
+            } else {
+                input.value = '';
+            }
+            gt.disabled = true;
+            lt.disabled = true;
+        });
+    }
+
+    // Make it unique
+    {{ spec.parameter_name }}MultiValue('{{ spec.parameter_name }}');
+</script>

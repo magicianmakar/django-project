@@ -1,6 +1,7 @@
 {% load template_helper %}
 
 {% if original %}
+    {% if not item.supplier.is_dropified_print %}
 
     {% if use_fulfillbox %}
     <a class="place-order btn btn-info btn-xs pull-right m-r-xs" href="#"
@@ -84,7 +85,7 @@
             {% endif %}
         </ul>
     </div>
-
+    {% endif %}
 {% elif item.product_id %}
     <button class="btn btn-xs btn-info add-supplier-btn"
             store-id="{{store.id}}" shopify-product="{{item.product_id}}">

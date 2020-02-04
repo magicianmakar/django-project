@@ -789,6 +789,7 @@ class OrdersList(ListView):
         for i in res:
             orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
 
+        ctx['has_print_on_demand'] = False
         for odx, order in enumerate(orders):
             created_at = arrow.get(order['order_date'])
             try:
@@ -1025,6 +1026,9 @@ class OrdersList(ListView):
                     line['order_data_id'] = order_data['id']
 
                     line['order_data'] = order_data
+
+                    if supplier.is_dropified_print:
+                        ctx['has_print_on_demand'] = True
 
                 order['items'][ldx] = line
 
