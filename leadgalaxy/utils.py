@@ -2347,6 +2347,7 @@ def build_query(user, output=None):
             AND strpos(message, '/api/can?') = 0
             AND strpos(message, '/api/captcha-credits') = 0
             AND strpos(message, '/api/search-shopify-products-cached') = 0
+            AND strpos(message, '/api/extension-settings') = 0
         ORDER BY generated_at'''
 
     if output:
