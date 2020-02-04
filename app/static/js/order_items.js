@@ -173,6 +173,13 @@
 
             addOrderToQueue(order);
         } else {
+            var addressTxt = $('.line', current_order).parent().parent().contents('.shipping-info').contents('div').first().text();
+            addressTxt = addressTxt.replace(/[,]/gm,'').trim();
+            if (addressTxt === 'N/A' || !addressTxt.length) {
+                toastr.error('Invalid Shipping address', 'No items to order');
+                return;
+            }
+
             if (orderBundles === 0) {
                 toastr.error('The items have been ordered or are not connected', 'No items to order');
             }
