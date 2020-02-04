@@ -332,17 +332,8 @@ def calculate_price(user, old_value, new_value, current_price, current_compare_a
     new_price = None
     new_compare_at = None
 
-    if price_update_method == 'global_markup':
-        auto_margin = safe_float(user.get_config('auto_margin', '').rstrip('%'))
-        auto_compare_at = safe_float(user.get_config('auto_compare_at', '').rstrip('%'))
-        if auto_margin > 0:
-            new_price = new_value + ((new_value * auto_margin) / 100.0)
-            new_price = round(new_price, 2)
-        if auto_compare_at > 0:
-            new_compare_at = new_value + ((new_value * auto_compare_at) / 100.0)
-            new_compare_at = round(new_compare_at, 2)
-
-    if price_update_method == 'custom_markup':
+    apply_custom_markup = price_update_method == 'custom_markup'
+    if apply_custom_markup:
         for markup_rule in markup_rules:
             if new_value >= markup_rule.min_price and (new_value < markup_rule.max_price or markup_rule.max_price < 0):
                 markup_value = markup_rule.markup_value
@@ -358,18 +349,32 @@ def calculate_price(user, old_value, new_value, current_price, current_compare_a
                     new_price = round(new_price, 2)
 
                 if markup_compare_value > 0:
+                    base_compare_at = new_price or new_value
                     if markup_rule.markup_type == 'margin_percent':
-                        new_compare_at = new_value + new_value * (markup_compare_value / 100.0)
+                        new_compare_at = base_compare_at + base_compare_at * (markup_compare_value / 100.0)
                     elif markup_rule.markup_type == 'margin_amount':
-                        new_compare_at = new_value + markup_compare_value
+                        new_compare_at = base_compare_at + markup_compare_value
                     elif markup_rule.markup_type == 'fixed_amount':
                         new_compare_at = markup_compare_value
                     new_compare_at = round(new_compare_at, 2)
 
+    # Custom markup fallback to global markup
+    apply_global_markup = price_update_method == 'global_markup'
+    if apply_global_markup or apply_custom_markup and new_price is None:
+        auto_margin = safe_float(user.get_config('auto_margin', '').rstrip('%'))
+        auto_compare_at = safe_float(user.get_config('auto_compare_at', '').rstrip('%'))
+        if auto_margin > 0:
+            new_price = new_value + ((new_value * auto_margin) / 100.0)
+            new_price = round(new_price, 2)
+        if auto_compare_at > 0:
+            base_compare_at = new_price or new_value
+            new_compare_at = base_compare_at + ((base_compare_at * auto_compare_at) / 100.0)
+            new_compare_at = round(new_compare_at, 2)
+
     if price_update_method == 'same_margin':
         new_price = round((current_price * new_value) / old_value, 2)
         if current_compare_at:
-            new_compare_at = round((current_compare_at * new_value) / old_value, 2)
+            new_compare_at = round((current_compare_at * new_price) / old_value, 2)
 
     auto_margin_cents = safe_int(user.get_config('auto_margin_cents'), None)
     if new_price is not None and auto_margin_cents is not None and auto_margin_cents >= 0:
