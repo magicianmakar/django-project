@@ -2153,7 +2153,7 @@ class ShopifyStoreApi(ApiBase):
             profile.company.vat = form.cleaned_data['vat']
             profile.company.save()
 
-            if user.profile.plan.is_black:
+            if user.profile.is_black:
                 if not profile.address and form.cleaned_data['user_address_name']:
                     profile.address = UserAddress.objects.create()
 

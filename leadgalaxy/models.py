@@ -680,6 +680,13 @@ class UserProfile(models.Model):
         if removed_tags:
             self.sync_tags()
 
+    @property
+    def is_black(self):
+        if self.is_subuser:
+            return self.subuser_parent.profile.is_black
+        else:
+            return self.plan.is_black
+
 
 class AddressBase(models.Model):
     class Meta:

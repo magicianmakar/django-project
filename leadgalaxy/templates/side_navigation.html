@@ -7,7 +7,7 @@
     <div class="sidebar-collapse">
         <div class="logo">
             <a href="{% url 'index' %}">
-                {% if user.profile.plan.is_black %}
+                {% if user.profile.is_black %}
                 <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white.png"/>
                 {% else %}
                 <img src="{% static 'dropified-logo-white-s.png' %}"/>
@@ -95,7 +95,7 @@
     </ul>
 
     {# Dropified Black #}
-    {% if user.profile.plan.is_black %}
+    {% if user.profile.is_black %}
     <ul style="padding:0;margin: 0 0 0 24px">
         <li>
             <a href="https://app.dropified.com/pages/black">
