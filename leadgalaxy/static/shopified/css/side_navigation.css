@@ -117,7 +117,7 @@
   }
 }
 
-@media only screen and (min-height: 920px) {
+@media only screen and (min-height: 930px) {
   .sidebar .navfooter.staff {
     position: fixed;
     bottom: 20px;
