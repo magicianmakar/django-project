@@ -20,8 +20,8 @@
                     <li><a href="#bigcommerce-section" data-toggle="tab"></a></li>
                     {% endif %}
 
-                    {% if request.user|can:'one_and_done.use' %}
-                    <li><a href="#gk-one-section" data-toggle="tab"></a></li>
+                    {% if request.user|can:'groovekart_lite.use' %}
+                    <li><a href="#gk-lite-section" data-toggle="tab"></a></li>
                     {% endif %}
                 </ul>
                 <div class="tab-content">
@@ -57,10 +57,10 @@
                                 </label>
                                 {% endif %}
 
-                                {% if request.user|can:'one_and_done.use' %}
+                                {% if request.user|can:'groovekart_lite.use' %}
                                 <label style="display: block;">
-                                    <input name="amt" value="#gk-one-section" type="radio">
-                                    <span class="label-text"><strong>Dropified One & Done</strong></span>
+                                    <input name="amt" value="#gk-lite-section" type="radio">
+                                    <span class="label-text"><strong>GrooveKart Lite</strong></span>
                                 </label>
                                 {% endif %}
                             </fieldset>
@@ -210,12 +210,12 @@
                         </div>
                     </div>
 
-                    <!-- Dropified One and Done -->
-                    <div id="gk-one-section" class="tab-pane fade">
+                    <!-- GrooveKart Lite -->
+                    <div id="gk-lite-section" class="tab-pane fade">
                         <div class="row">
                             <div class="col-sm-12">
-                                <form id="one-store-create-form" method="post" role="form">
-                                    <input type="hidden" name="is_one_and_done" value="1" />
+                                <form id="gk-lite-store-create-form" method="post" role="form">
+                                    <input type="hidden" name="is_lite" value="1" />
                                     <div class="form-group">
                                         <label>Title</label>
                                         <input type="text" name="title" placeholder="Store name" class="form-control" />
@@ -225,7 +225,7 @@
 
                                     <div>
                                         <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                            <strong>Create One and Done Account</strong>
+                                            <strong>Create GrooveKart Lite Account</strong>
                                         </button>
                                     </div>
                                 </form>

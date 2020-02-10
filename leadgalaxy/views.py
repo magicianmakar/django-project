@@ -1405,7 +1405,7 @@ def webhook(request, provider, option):
         else:
             return HttpResponse(':x: Unknown Command: {}'.format(request.POST['command']))
 
-    elif provider == 'one-and-done':
+    elif provider == 'groovekart':
         def allow_groovesell(response):
             response["Access-Control-Allow-Origin"] = "https://groovekart.groovesell.com"
             return response

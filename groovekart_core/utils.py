@@ -101,8 +101,8 @@ def get_store_categories(store):
 
 
 def get_or_create_category_by_title(store, category_title):
-    # One and Done stores use Home Category
-    if store.is_one_and_done:
+    # GrooveKart Lite stores use Home Category
+    if store.is_lite:
         return 1
 
     category_title_lower = category_title.lower()

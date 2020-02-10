@@ -68,7 +68,7 @@ class GrooveKartStore(StoreBase):
     store_hash = models.CharField(default='', max_length=50, editable=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_one_and_done = models.BooleanField(default=False)
+    is_lite = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title

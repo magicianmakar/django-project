@@ -106,14 +106,14 @@ class GrooveKartApi(ApiBase):
                         'more stores.'
                     )
 
-        is_one_and_done = data.get('is_one_and_done') == '1'
-        if not is_one_and_done:
+        is_lite = data.get('is_lite') == '1'
+        if not is_lite:
             error_messages = self.validate_store_data(data)
             if len(error_messages) > 0:
                 return self.api_error(' '.join(error_messages), status=400)
         else:
-            if not user.can('one_and_done.use'):
-                return self.api_error('Not allowed to add One and Done stores', status=403)
+            if not user.can('groovekart_lite.use'):
+                return self.api_error('Not allowed to add GrooveKart Lite stores', status=403)
 
             if data.get('title', '').strip() == '':
                 return self.api_error('Store title is required.', status=400)
@@ -121,7 +121,7 @@ class GrooveKartApi(ApiBase):
             # Allow only one OneAndDone Store for now
             stores_count = GrooveKartStore.objects.filter(
                 user=user.models_user,
-                is_one_and_done=True,
+                is_lite=True,
                 is_active=True
             ).count()
             if stores_count > 0:
@@ -135,13 +135,13 @@ class GrooveKartApi(ApiBase):
         store.api_key = data.get('api_key', '').strip()
 
         # Activates after we receive credentials at /one-and-done/connect webhook
-        store.is_active = not is_one_and_done
-        store.is_one_and_done = is_one_and_done
+        store.is_active = not is_lite
+        store.is_lite = is_lite
 
         permissions.user_can_add(user, store)
         store.save()
 
-        if is_one_and_done:
+        if is_lite:
             token = encode_api_token({'store_id': store.id, 'user_id': store.user_id})
             return self.api_success({'t': token})
 

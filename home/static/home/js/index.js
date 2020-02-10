@@ -1323,7 +1323,7 @@
         return false;
     });
 
-    $('#one-store-create-form').on('submit', function(e) {
+    $('#gk-lite-store-create-form').on('submit', function(e) {
         var form = $(this);
         form.find('[type=submit]').bootstrapBtn('loading');
 
