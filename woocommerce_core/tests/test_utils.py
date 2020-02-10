@@ -123,32 +123,32 @@ class TestAddProductImagesToAPIData(BaseTestCase):
     def test_add_using_helper(self):
         test_src = 'https://avatars3.githubusercontent.com/u/36484923?s=60&v=4'
         data = {'images': [test_src]}
-        api_data = {}
+        api_data = {'name': 'Test Product'}
 
         add_product_images_to_api_data(api_data, data, user_id=1, from_helper=True)
-        self.assertEqual(api_data['images'][0]['name'], test_src)
+        self.assertEqual(api_data['images'][0]['name'], 'Test Product 1')
         self.assertNotEqual(api_data['images'][0]['src'], test_src)
 
     def test_non_childrens_place(self):
         test_src = 'https://avatars3.githubusercontent.com/u/36484923?s=60&v=4'
         data = {'images': [test_src]}
-        api_data = {}
+        api_data = {'name': 'Test Product'}
 
         add_product_images_to_api_data(api_data, data, user_id=1)
-        expected = {'src': test_src, 'name': test_src, 'position': 0}
+        expected = {'src': test_src, 'name': 'Test Product 1', 'position': 0}
         self.assertDictEqual(api_data['images'][0], expected)
 
     def test_childrens_place(self):
         test_src = 'http://childrensplace.com/images/product/1111.jpg'
         data = {'images': [test_src]}
-        api_data = {}
+        api_data = {'name': 'Test Product'}
 
         s3_src = 'http://s3.jpg'
 
         with patch('leadgalaxy.utils.upload_file_to_s3', return_value=s3_src):
             add_product_images_to_api_data(api_data, data, user_id=1)
 
-        expected = {'src': s3_src, 'name': s3_src, 'position': 0}
+        expected = {'src': s3_src, 'name': 'Test Product 1', 'position': 0}
         self.assertDictEqual(api_data['images'][0], expected)
 
 

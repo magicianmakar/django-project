@@ -120,11 +120,14 @@ def update_product_api_data(api_data, data, store):
 
 def add_product_images_to_api_data(api_data, data, from_helper=False, user_id=None):
     api_data['images'] = []
+    variants_images = data.get('variants_images', {})
     for position, src in enumerate(data.get('images', [])):
-        name = src
+        variant_name = variants_images.get(hash_url_filename(src), '')
+        if variant_name:
+            variant_name = f' - {variant_name}'
+        name = f"{api_data.get('name', '')}{variant_name} {position + 1}"
         if user_id and 'childrensplace.com' in src.lower():
             src = leadgalaxy_utils.upload_file_to_s3(src, user_id)
-            name = src
         else:
             try:
                 r = requests.head(src)
