@@ -72,10 +72,11 @@
 <script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/supplement.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/send_to_store.js' %}"></script>
+{% endcompress %}
+
 <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>
-{% endcompress %}
 
 <script type="text/javascript">
 var apiData = {{ api_data|safe }};
