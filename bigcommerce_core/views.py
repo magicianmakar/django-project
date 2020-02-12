@@ -140,7 +140,7 @@ def auth(request):
     store.save()
 
     return render(request, 'home/index.html', {
-        'message': 'The Store Successfully Added.',
+        'message': 'Your store was successfully installed.',
     })
 
 
@@ -160,7 +160,7 @@ def load(request):
                 })
 
             return render(request, 'home/index.html', {
-                'message': 'The Store Successfully Added.',
+                'message': 'Your store was successfully installed.',
             })
 
         except BigCommerceStore.DoesNotExist:
