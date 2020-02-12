@@ -1,3 +1,4 @@
+import logging
 import re
 
 from django.conf import settings
@@ -90,6 +91,9 @@ def create_payment_profile(payment_data, customer_profile_id):
     controller.execute()
 
     response = controller.getresponse()
+    if response.messages.resultCode == 'Error':
+        logging.error(response.messages.message[0]['text'])
+
     return response.customerPaymentProfileId
 
 
