@@ -1,0 +1,50 @@
+<div id="modal-make-payment" class="modal" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Order Detail</h4>
+      </div>
+      <div class="modal-body">
+        <table class='table dataTables'>
+          <thead>
+            <th>Order Number</th>
+            <th>Title</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Amount</th>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button id="id-make-payment-confirm" class="btn btn-primary"
+          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Send</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script type="application/javascript">
+  var storePriceFormat="{{ store.currency_format_with_default }}";
+</script>
+
+{% verbatim %}
+<script id="id-make-payment-template" type="text/x-handlebars-template">
+  {{#each items}}
+  <tr>
+    <td>{{ this.orderNumber }}</td>
+    <td>{{ this.title }}</td>
+    <td>{{ this.unitPrice }}</td>
+    <td>{{ this.quantity }}</td>
+    <td>{{ this.amount }}</td>
+  </tr>
+  {{/each}}
+  <tr>
+    <td colspan='4'><strong>Total</strong></td>
+    <td>{{ total }}</td>
+  </tr>
+</script>
+{% endverbatim %}

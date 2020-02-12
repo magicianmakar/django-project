@@ -1,0 +1,39 @@
+{% load widget_tweaks %}
+
+<form role="form" autocomplete="off">
+  <div class="row">
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.order_number.errors }}
+        <label class="control-label">Order ID:</label>
+        {{ form.order_number|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.stripe_id.errors }}
+        <label class="control-label">Stripe Transaction ID:</label>
+        {{ form.stripe_id|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.date.errors }}
+        <label class="control-label">Date:</label>
+        <div class='input-group'>
+          <div class="input-group-addon">
+            <i class='fa fa-calendar'></i>
+          </div>
+          {{ form.date|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <input type="submit" class="btn btn-primary" value="Filter" />
+  <input type="button" class="btn btn-default pls-reset-btn" value="Clear" />
+</form>

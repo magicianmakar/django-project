@@ -343,6 +343,10 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
             "price": product.price,
         };
 
+        if (product.sku) {
+            vdata.sku = product.sku;
+        }
+
         if (product.compare_at_price) {
             vdata.compare_at_price = product.compare_at_price;
         }

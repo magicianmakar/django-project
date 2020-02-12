@@ -1,0 +1,78 @@
+{% extends "supplements/tab_view_base.html" %}
+{% load static %}
+
+{% block extra_pls_css %}
+<link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block tab_content %}
+
+<div>
+  {% include "supplements/partials/line_filter_form.html" %}
+</div>
+
+<hr />
+
+  <h1>Order Line Items</h1>
+  <div>
+    <span>
+      <button class='btn btn-primary' id='print-all-labels'>Print Labels</button>
+    </span>
+    <span id='print-message'></span>
+  </div>
+
+<table class='table table-striped' >
+  <thead>
+    <th><input id="select-all-lines" type="checkbox" title="Select all" /></th>
+    <th>Order Number</th>
+    <th>Line Item SKU</th>
+    <th>Label SKU</th>
+    <th>Amount</th>
+    <th>Quantity</th>
+    <th>Date</th>
+    <th>Status</th>
+    <th>Label</th>
+  </thead>
+  <tbody>
+    {% for line_item in object_list %}
+    <tr>
+      <td>
+        <input class="line-checkbox"
+               data-id="{{ line_item.id }}"
+               type="checkbox" />
+      </td>
+      <td>
+        {{ line_item.pls_order.order_number }}
+      </td>
+      <td>{{ line_item.label.user_supplement.pl_supplement.shipstation_sku }}</td>
+      <td>{{ line_item.label.sku }}</td>
+      <td>{{ line_item.amount_string }}</td>
+      <td>{{ line_item.quantity }}</td>
+      <td>{{ line_item.created_at_string }}</td>
+      <td>{{ line_item.label_status_string }}</td>
+      <td>
+        <a href="{% url 'pls:generate_label' line_item.id %}"
+          class='download-label'
+          target="_blank"
+          data-item-id="{{ line_item.id }}">
+          Download
+        </a>
+      </td>
+    {% empty %}
+      <td colspan="9">No orders yet.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include "supplements/partials/paging.html" %}
+
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script type='application/javascript'>
+  $("#id_date").datepicker();
+</script>
+{% endblock %}

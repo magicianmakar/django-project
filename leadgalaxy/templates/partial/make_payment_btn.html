@@ -1,0 +1,25 @@
+{% load template_helper %}
+
+<div order-id="{{order.id}}"
+     line-id="{{item.id}}"
+     order-data-id="{{ item.order_data_id }}"
+     order-number="{{order.name}}"
+     line-title="{{item.title}}"
+     supplier-type="{{item.supplier_type}}"
+     line-quantity="{{item.quantity}}"
+     line-price="{{item.product.user_supplement.cost_price}}"
+     store-slug="{{store.store_type}}"
+     store-id="{{store.id}}"
+     {% if not item.product.is_label_approved %}
+     title="Approved label not found."
+     {% endif %}
+     class='payment-btn-wrapper'
+     >
+     <button class="btn btn-success btn-xs dropdown-toggle pay-for-supplement"
+      {% if not item.product.is_label_approved %}
+      disabled
+      {% endif %}
+      >
+       Make Payment
+     </button>
+</div>

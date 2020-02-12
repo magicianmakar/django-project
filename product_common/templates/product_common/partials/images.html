@@ -1,0 +1,23 @@
+  <div class='image-wrapper'>
+    {% if image_urls %}
+    <div class="product-images">
+      {% for url in image_urls %}
+      <div>
+        <div class="image-imitation">
+          <img src="{{ url }}"/>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {{ form.upload.errors }}
+
+    <div class="custom-file">
+      <input id="product_image" type="file" name="product_image" class="custom-file-input">
+      <label for="product_image" class="custom-file-label" data-placeholder="Choose file...">
+        Choose image...
+      </label>
+    </div>
+
+  </div>

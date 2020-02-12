@@ -1,0 +1,42 @@
+<div id="modal-send-to-store" class="modal export-product-modal" data-type='send' aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Sending To Store</h4>
+      </div>
+      <div class="modal-body">
+
+        <div class="row">
+          <label class='col-sm-3'>Store Type:</label>
+          <div class='col-sm-6'>
+            <select class="form-control m-b store-type">
+              {% for key, value in store_types %}
+              <option value="{{ key }}">{{ value }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class='col-sm-3'>Store:</label>
+          <div class='col-sm-6'>
+            <select class="form-control m-b store-list"></select>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class='col-sm-offset-3 col-sm-6'>
+            <input class="send-product-visible" type="checkbox">
+            Publish
+          </label>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary submit"
+          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Send</button>
+      </div>
+    </div>
+  </div>
+</div>

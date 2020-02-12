@@ -155,6 +155,23 @@ class GrooveKartStore(StoreBase):
 
             r.raise_for_status()
 
+    def get_order(self, order_id):
+        api_url = self.get_api_url('orders.json')
+        r = self.request.post(api_url, json={
+            'order_id': safe_int(order_id),
+        })
+        r.raise_for_status()
+
+        order = r.json()
+        order['order_number'] = order['id']
+        for line in order['line_items']:
+            line['title'] = line['name']
+
+        return order
+
+    def get_product(self, product_id):
+        return GrooveKartProduct.objects.get(source_id=product_id)
+
 
 class GrooveKartProduct(ProductBase):
     class Meta(ProductBase.Meta):

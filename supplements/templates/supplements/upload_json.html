@@ -1,0 +1,49 @@
+{% extends "supplements/tab_view_base.html" %}
+
+{% load widget_tweaks %}
+{% load static %}
+
+{% block tab_content %}
+<form method="POST" role="form" enctype='multipart/form-data'>
+  {% csrf_token %}
+  <h2>Import Supplements</h2>
+  <div class="row">
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.upload.errors }}
+        <div class="custom-file">
+          {{ form.upload|add_class:"form-control custom-file-input" }}
+          <label for="{{ form.upload.id_for_label }}" class="custom-file-label" data-placeholder="Choose json file...">
+            Choose json file...
+          </label>
+          </div>
+      </div>
+    </div>
+    <div class="col-sm-2">
+      <div class="form-group">
+        <input type="submit"
+            value="Upload"
+            data-action="upload"
+            class="add-loader form-control extra-margin"
+            data-loading-text="Please wait..."
+            >
+      </div>
+    </div>
+  </div>
+</form>
+
+<hr />
+
+<h2>Export Supplements</h2>
+<div class="row">
+  <div class="col-sm-3">
+    <button type="button" class="add-loader form-control extra-margin">
+      <a href="{% url 'pls:download_json' %}">Click to download file</a>
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static '/pls/js/common.js' %}"></script>
+{% endblock %}

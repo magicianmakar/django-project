@@ -87,6 +87,9 @@ INSTALLED_APPS = (
     'funnels',
     'aliextractor',
     'prints',
+    'supplements',
+    'product_common',
+    'dropified_product',
 )
 
 MIDDLEWARE = (
@@ -151,9 +154,11 @@ DROPIFIED_API = {
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
     'subusers': 'subusers.api.SubusersApi',
     'goals': 'goals.api.GoalsApi',
+    'supplements': 'supplements.api.SupplementsApi',
     'profits': 'profits.api.ProfitsApi',
     'metrics': 'metrics.api.MetricsApi',
     'prints': 'prints.api.PrintsApi',
+    'product_common': 'product_common.api.ProductCommonApi',
 }
 
 # Database
@@ -490,3 +495,12 @@ BIGCOMMERCE_CLIENT_SECRET = os.environ.get('BIGCOMMERCE_CLIENT_SECRET')
 
 # LayerApp
 LAYERAPP_TEST = bool(os.getenv('LAYERAPP_TEST', False))
+
+# ShipStation
+SHIPSTATION_API_KEY = os.environ.get('SHIPSTATION_API_KEY')
+SHIPSTATION_API_SECRET = os.environ.get('SHIPSTATION_API_SECRET')
+SHIPSTATION_API_URL = 'https://ssapi.shipstation.com'
+
+# Authorize.Net
+AUTH_NET_LOGIN_ID = os.environ.get('AUTHORIZENET_LOGIN_ID')
+AUTH_NET_TRANSACTION_KEY = os.environ.get('AUTHORIZENET_TRANSACTION_KEY')

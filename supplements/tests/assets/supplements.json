@@ -1,0 +1,16 @@
+[
+  {
+    "title": "Corporate Tricolor",
+    "cost_price": 15.00,
+    "description": "adasfasfqwfsa",
+    "tags": "qwert123",
+    "category": "Football",
+    "label_template_url": "https://shopifiedapp-uploads-dev-789552.s3.amazonaws.com/uploads/u1/pls_label/zdHOB135vP.pdf",
+    "image_urls": [
+      "https://shopifiedapp-uploads-dev-789552.s3.amazonaws.com/uploads/u1/pls_image/co2ZRpTAyC.jpg"
+    ],
+    "shipstation_sku": "pls-erwerwe12",
+    "shipping_countries": [],
+    "wholesale_price": 13.00
+  }
+]

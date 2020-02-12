@@ -23,6 +23,7 @@ from django.core.cache.utils import make_template_fragment_key
 
 from profits.mixins import ProfitDashboardMixin
 
+from supplements.models import PLSOrderLine
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired, HasSubuserPermission
 from shopified_core.paginators import SimplePaginator
@@ -600,6 +601,8 @@ class OrdersList(ListView):
                 variant_id = safe_int(item.get('variants', {}).get('variant_id', '0'))
                 item['title'] = item['name']
                 item['product'] = product
+                item['is_pls'] = product.is_pls
+                item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
                 item['quantity'] = safe_int(item['quantity'])
                 item['total'] = safe_float(item['price'] * item['quantity'])
                 item['image'] = item.get('variants', {}).get('image') or item.get('cover_image')

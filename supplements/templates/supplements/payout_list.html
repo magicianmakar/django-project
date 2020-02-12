@@ -1,0 +1,89 @@
+{% extends "supplements/tab_view_base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block extra_pls_css %}
+<link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block tab_content %}
+
+<div>
+  {% include "supplements/partials/filter_form.html" %}
+</div>
+
+<hr />
+
+<h2>Add New Payout</h2>
+<form method="POST" role='form'>
+  {% csrf_token %}
+  <div class="row">
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ add_form.reference_number.errors }}
+        <label class="control-label">Reference Number:</label>
+        {{ add_form.reference_number|add_class:"form-control" }}
+      </div>
+    </div>
+    <div class="col-sm-2">
+      <div class="form-group">
+        <label class="control-label">&nbsp;</label>
+        <button class='btn btn-primary form-control'>Add Payout</button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<hr />
+
+<h2>Payouts</h2>
+
+<table class='table table-striped' >
+  <thead>
+    <th>Payout Reference ID</th>
+    <th>Dropified Payout</th>
+    <th>PLS Payout</th>
+    <th>TLG Payout</th>
+    <th>Cost Price</th>
+    <th>Wholesale Price</th>
+    <th>Date</th>
+    <th>Status</th>
+    <th>Action</th>
+  </thead>
+  <tbody>
+    {% for payout in object_list %}
+    <tr>
+      <td>
+        <a title="Edit" href="{% url 'admin:supplements_payout_change' payout.id %}">
+          {{ payout.reference_number }}
+        </a>
+      </td>
+      <td>{{ payout.profit_split_string }}</td>
+      <td>{{ payout.pls_payout_string }}</td>
+      <td>{{ payout.profit_split_string }}</td>
+      <td>{{ payout.cost_price_string }}</td>
+      <td>{{ payout.wholesale_price_string }}</td>
+      <td>{{ payout.created_at_string }}</td>
+      <td>{{ payout.status_string }}</td>
+      <td>
+        <a href="{% url 'pls:order_list' %}?refnum={{ payout.reference_number}}">
+          View Orders
+        </a>
+      </td>
+    {% empty %}
+      <td colspan="9">No payouts yet.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include "supplements/partials/paging.html" %}
+
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script type='application/javascript'>
+  $("#id_date").datepicker();
+</script>
+{% endblock %}

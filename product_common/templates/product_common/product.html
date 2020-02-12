@@ -1,0 +1,56 @@
+{% extends "product_common/tab_view_base.html" %}
+
+{% load static %}
+{% load compress %}
+{% load perms_helper %}
+
+{% block extra_pls_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'libs/bower_components/slick-carousel/slick/slick.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'libs/bower_components/slick-carousel/slick/slick-theme.css' %}"/>
+{% endblock %}
+
+{% block tab_content %}
+
+<form id="user_supplement_form" name="user_supplement_form" method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <div class="row">
+    <div class="col-md-8">
+      {% include "product_common/partials/edit_form.html" %}
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10 col-xs-12">
+          <input id="save_for_later" type="button" value="Save for Later" class="btn btn-primary">
+          <input id="send_to_store" type="button" value="Send to Store" class="btn btn-primary">
+          {% if request.user|can:'dropified_product_edit.use' %}
+          <input type="submit" value="Edit" class="btn btn-primary">
+          <input type="reset" value="Reset" class="btn btn-default">
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+    <div class="col-md-4">
+      {% include "product_common/partials/images.html" %}
+    </div>
+  </div>
+</form>
+
+{% include "product_common/partials/send_to_store_modal.html" %}
+{% include "product_common/partials/save_for_later_modal.html" %}
+
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static 'libs/bower_components/slick-carousel/slick/slick.min.js' %}"></script>
+<script type="text/javascript" src="{% static '/product_common/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static '/product_common/js/supplement.js' %}"></script>
+<script type="text/javascript" src="{% static '/product_common/js/send_to_store.js' %}"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+
+<script type="text/javascript">
+var apiData = {{ api_data|safe }};
+var storeData = {{ store_data|safe }}
+setup_full_editor('id_description');
+</script>
+{% endblock %}

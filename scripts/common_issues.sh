@@ -69,6 +69,18 @@ for i in */models.py; do
             continue
         fi
 
+        if [ "$c" == "AbstractImage" ]; then
+            continue
+        fi
+
+        if [ "$c" == "AbstractOrderInfo" ]; then
+            continue
+        fi
+
+        if [ "$c" == "AbstractPayout" ]; then
+            continue
+        fi
+
         grep "$c" "$admins_file" > /dev/null
 
         if [ "$?" != "0" ]; then

@@ -420,6 +420,9 @@ def export_product(req_data, target, user_id):
                 product.update_data(data)
                 product.set_original_data(original_data, commit=False)
 
+                user_supplement_id = json.loads(data).get('user_supplement_id')
+                product.user_supplement_id = user_supplement_id
+
                 permissions.user_can_add(user, product)
 
                 product.save()

@@ -876,6 +876,14 @@ class ShopifyStore(StoreBase):
 
         return url
 
+    def get_order(self, order_id):
+        url = self.get_link(f'/admin/orders/{order_id}.json', api=True)
+        response = requests.get(url)
+        return response.json()['order']
+
+    def get_product(self, product_id):
+        return ShopifyProduct.objects.all().get(shopify_id=product_id)
+
     def get_api_url(self, hide_keys=False):
         url = self.api_url
 
@@ -1787,6 +1795,14 @@ class ProductSupplier(SupplierBase):
     @property
     def is_dropified_print(self):
         return self.supplier_type() == 'dropified-print'
+
+    @property
+    def is_pls(self):
+        return self.supplier_name == 'PLSupplement'
+
+    @property
+    def is_dropified(self):
+        return self.supplier_name == 'Dropified'
 
     def save(self, *args, **kwargs):
         if self.source_id != self.get_source_id():

@@ -1,0 +1,38 @@
+{% extends "supplements/tab_view_base.html" %}
+
+{% load static %}
+{% load compress %}
+
+{% block tab_content %}
+
+{% if not label.current_label_of %}
+<div class="alert alert-info alert-dismissable">
+  <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+  There is a newer version of this label.
+</div>
+{% endif %}
+
+<div class="row animated fadeInRight label-detail">
+  <div class="col-md-4">
+    {% include "supplements/partials/label_detail_image.html" %}
+  </div>
+  <div class="col-md-8">
+    {% include "supplements/partials/label_detail_comments.html" %}
+  </div>
+</div>
+
+{% include "supplements/partials/send_to_store_modal.html" %}
+
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static '/pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static '/pls/js/send_to_store.js' %}"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+<script type="text/javascript">
+var apiData = {{ api_data|safe }};
+var storeData = {{ store_data|safe }}
+setup_full_editor('id_comment');
+</script>
+{% endblock %}

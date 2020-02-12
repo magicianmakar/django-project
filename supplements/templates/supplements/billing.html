@@ -1,0 +1,42 @@
+{% extends "supplements/tab_view_base.html" %}
+
+{% load widget_tweaks %}
+{% load static %}
+
+{% block tab_content %}
+{% if request.user.authorize_net_customer.has_billing %}
+  <div class="panel-body">
+    {% with source=request.user.authorize_net_customer.payment_profile %}
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2">
+        <div class="panel panel-default">
+          <div class="panel-heading">Credit Card</div>
+          <div class="panel-body">
+            <p>This account is billed to:
+            <i class="fa fa-lg fa-cc-{{source.credit_card.cardType|lower}}"></i>
+            <b>{{source.credit_card.cardType}}</b> ending in <b>{{source.credit_card.cardNumber}}</b>.</p>
+            <p>Name on the card is {{ source.bill_to.firstName }} {{ source.bill_to.lastName }}.</p>
+          </div>
+        </div>
+      </div>
+
+      <form role="form" action="{% url 'pls:remove-cc' %}" method="POST">
+        <div class="col-md-3 col-md-offset-2">
+          <button class="btn btn-danger" type='submit'><i class="fa fa-times"></i> Delete Credit Card</button>
+        </div>
+      </form>
+
+    </div>
+    {% endwith %}
+  </div>
+
+{% else %}
+<form role="form" method="POST">
+  {% include "supplements/partials/billing_info.html" %}
+</form>
+{% endif %}
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static '/pls/js/common.js' %}"></script>
+{% endblock %}

@@ -6,6 +6,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.contrib.auth.models import User
 
+from supplements.models import UserSupplement
 from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, prefix_from_model, base64_encode
 
 
@@ -16,8 +17,16 @@ class StoreBase(models.Model):
     list_index = models.IntegerField(default=0)
     currency_format = models.CharField(max_length=512, blank=True, null=True)
 
+    @property
+    def currency_format_with_default(self):
+        return self.currency_format or '${{amount}}'
+
+    @property
+    def store_type(self):
+        return prefix_from_model(self)
+
     def get_url(self, name):
-        prefix = prefix_from_model(self)
+        prefix = self.store_type
         if prefix and prefix != 'shopify':
             url = reverse(f'{prefix}:{name}')
         else:
@@ -42,6 +51,21 @@ class SupplierBase(models.Model):
 class ProductBase(models.Model):
     class Meta:
         abstract = True
+
+    user_supplement = models.ForeignKey(UserSupplement,
+                                        null=True,
+                                        on_delete=models.SET_NULL)
+
+    @property
+    def is_pls(self):
+        return bool(self.user_supplement)
+
+    @property
+    def is_label_approved(self):
+        if not self.user_supplement:
+            return False
+
+        return self.user_supplement.is_approved
 
     def get_bundle_mapping(self, variant=None, default=[]):
         try:

@@ -1,0 +1,83 @@
+{% extends "supplements/tab_view_base.html" %}
+
+{% load static %}
+{% load compress %}
+
+{% block extra_pls_css %}
+<link rel="stylesheet" type="text/css" href="{% static '/libs/slick/slick.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static '/libs/slick/slick-theme.css' %}"/>
+{% endblock %}
+
+{% block tab_content %}
+<form id="user_supplement_form" name="user_supplement_form" method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {{ form.action }}
+  {{ form.image_data_url }}
+  <canvas id='canvas'></canvas>
+  <div class="row">
+    <div class="col-md-8">
+      {% include "supplements/partials/edit_form.html" %}
+      {% block form_action %}
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10 col-xs-12">
+          <input type="submit"
+                 value="Submit for Approval"
+                 data-action="approve"
+                 class="btn btn-primary add-loader"
+                 data-loading-text="Please wait..."
+                 >
+
+          <input type="submit"
+                 value="Save for Later"
+                 data-action="save"
+                 class="btn btn-primary add-loader"
+                 data-loading-text="Please wait..."
+                 >
+
+          <input type="reset" value="Reset" class="btn btn-default">
+        </div>
+      </div>
+      {% endblock %}
+    </div>
+    <div class="col-md-4">
+      {% include "supplements/partials/images.html" %}
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block product_footer %}
+<div class='row'>
+  <div class='col-md-6'>
+    <div class="jumbotron label-banner">
+      <h1>Label Requirements</h1>
+      <p>
+      For your labels to be approved please ensure that they do not
+      make misleading or unsubstantiated claims. You can learn more
+      about what you can include in our support portal.
+      </p>
+      <p><a href="" role="button" class="btn btn-primary btn-lg">Learn more</a></p>
+    </div>
+  </div>
+</div>
+
+{% include "supplements/partials/send_to_store_modal.html" %}
+
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static '/libs/slick/slick.min.js' %}"></script>
+<script type="text/javascript" src="{% static '/pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static '/pls/js/supplement.js' %}"></script>
+<script type="text/javascript" src="{% static '/pls/js/send_to_store.js' %}"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>
+
+<script type="text/javascript">
+var apiData = {{ api_data|safe }};
+var storeData = {{ store_data|safe }}
+setup_full_editor('id_description');
+</script>
+{% endblock %}

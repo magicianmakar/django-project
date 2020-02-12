@@ -1,0 +1,33 @@
+{% extends "supplements/supplement.html" %}
+
+{% block tab_notification %}
+{% if is_awaiting_review %}
+<div class="alert alert-info alert-dismissable">
+  <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+  Your label is currently under review.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block form_action %}
+<div class="form-group">
+  <div class="col-sm-offset-2 col-sm-10 col-xs-12">
+    <input type="submit"
+           value="Submit for Approval"
+           data-action="approve"
+           class="btn btn-primary add-loader"
+           data-loading-text="Please wait..."
+           >
+
+    <input type="submit"
+           value="Save for Later"
+           data-action="save"
+           class="btn btn-primary add-loader"
+           data-loading-text="Please wait..."
+           >
+
+    <input id="send_to_store" type="button" value="Send to Store" class="btn btn-primary {% if not is_approved %}disabled{% endif %}">
+    <input type="reset" value="Reset" class="btn btn-default">
+  </div>
+</div>
+{% endblock %}

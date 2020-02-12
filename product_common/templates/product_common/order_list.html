@@ -1,0 +1,54 @@
+{% extends "product_common/tab_view_base.html" %}
+{% load static %}
+
+{% block extra_pls_css %}
+<link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block tab_content %}
+
+<div>
+  {% include "product_common/partials/filter_form.html" %}
+</div>
+
+<hr />
+
+<h1>Orders</h1>
+<table class='table table-striped' >
+  <thead>
+    <th>Order ID</th>
+    <th>Customer</th>
+    <th>Amount</th>
+    <th>Date</th>
+    <th>Status</th>
+  </thead>
+  <tbody>
+    {% for order in object_list %}
+    <tr>
+      <td>
+        <a title='Edit'
+           href="{{ order.edit_url }}">
+          {{ order.order_number }}
+        </a>
+      </td>
+      <td>{{ order.user.email }}</td>
+      <td>{{ order.amount_string }}</td>
+      <td>{{ order.created_at_string }}</td>
+      <td>{{ order.status_string }}</td>
+    {% empty %}
+      <td colspan="6">No orders yet.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include "product_common/partials/paging.html" %}
+
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script type='application/javascript'>
+  $("#id_date").datepicker();
+</script>
+{% endblock %}

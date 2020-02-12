@@ -795,6 +795,10 @@ $('.cached-img').error(function() {
 
 $('.product-preview img').click(function (e) {
     var checkbox = $(this).parent().find('.line-checkbox');
+    if ($(checkbox).prop('disabled')) {
+        return;
+    }
+
     checkbox.prop('checked', !checkbox.prop('checked'));
 });
 

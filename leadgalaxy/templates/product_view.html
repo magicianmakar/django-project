@@ -213,7 +213,11 @@
                                     </td>
 
                                     <td style="white-space:nowrap">
+                                    {% if product.qelem.default_supplier.is_pls %}
+                                       <input name="sku" value="{{product.product.sku|default:''}}" class="form-control" readonly />
+                                    {% else %}
                                        <input name="sku" value="{{item.sku|default:''}}" class="form-control" />
+                                    {% endif %}
                                     </td>
 
                                     <td style="white-space:nowrap">
