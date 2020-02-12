@@ -4,8 +4,8 @@
 {% load compress %}
 
 {% block extra_pls_css %}
-<link rel="stylesheet" type="text/css" href="{% static '/libs/slick/slick.css' %}"/>
-<link rel="stylesheet" type="text/css" href="{% static '/libs/slick/slick-theme.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'libs/slick/slick.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'libs/slick/slick-theme.css' %}"/>
 {% endblock %}
 
 {% block tab_content %}
@@ -67,13 +67,15 @@
 {% endblock %}
 
 {% block extrajs %}
-<script type="text/javascript" src="{% static '/libs/slick/slick.min.js' %}"></script>
-<script type="text/javascript" src="{% static '/pls/js/common.js' %}"></script>
-<script type="text/javascript" src="{% static '/pls/js/supplement.js' %}"></script>
-<script type="text/javascript" src="{% static '/pls/js/send_to_store.js' %}"></script>
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/slick/slick.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/supplement.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/send_to_store.js' %}"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>
+{% endcompress %}
 
 <script type="text/javascript">
 var apiData = {{ api_data|safe }};
