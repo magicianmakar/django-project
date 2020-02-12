@@ -7,6 +7,23 @@
 
 {% block main-container %}
 
+    {% if error %}
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <h3 class="font-bold">{{error}}</h3>
+        </div>
+    {% endif %}
+    {% if message %}
+        <div class="alert alert-success alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <h3 class="font-bold">{{message}}</h3>
+        </div>
+    {% endif %}
+
     <div class="tabs-container">
         <ul class="nav nav-tabs" role="tablist">
             <li {% if not settings_tab %}class="active"{% endif %}>
