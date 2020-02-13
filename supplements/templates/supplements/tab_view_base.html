@@ -19,6 +19,7 @@
 
 <div class="tabs-container">
   <ul class="nav nav-tabs scrolling-tabs">
+  {% if request.user|can:'pls.use' %}
     {% if request.path ==  pls_index %}
     <li class="active"><a data-toggle="tab" href="#tab-1">Supplements</a></li>
     {% else %}
@@ -43,7 +44,14 @@
     <li><a href="{% url 'pls:my_orders' %}">My Payments</a></li>
     {% endif %}
 
-    {% if request.user|can:'pls_all_labels.use' %}
+    {% if request.path == pls_billing %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">Billing</a></li>
+    {% else %}
+    <li><a href="{% url 'pls:billing' %}">Billing</a></li>
+    {% endif %}
+  {% endif %}
+
+    {% if request.user|can:'pls_admin.use' %}
       {% if request.path ==  pls_all_labels %}
       <li class="active"><a data-toggle="tab" href="#tab-1">All Labels</a></li>
       {% else %}
@@ -51,7 +59,7 @@
       {% endif %}
     {% endif %}
 
-    {% if request.user|can:'pls_product.use' %}
+    {% if request.user|can:'pls_admin.use' %}
       {% if request.path == pls_product %}
       <li class="active"><a data-toggle="tab" href="#tab-1">Add New Supplement</a></li>
       {% else %}
@@ -59,7 +67,7 @@
       {% endif %}
     {% endif %}
 
-    {% if request.user|can:'pls_orders.use' %}
+    {% if request.user|can:'pls_admin.use' %}
       {% if request.path == pls_orders %}
       <li class="active"><a data-toggle="tab" href="#tab-1">Orders</a></li>
       {% else %}
@@ -67,7 +75,7 @@
       {% endif %}
     {% endif %}
 
-    {% if request.user|can:'pls_payouts.use' %}
+    {% if request.user|can:'pls_admin.use' %}
       {% if request.path == pls_payouts %}
       <li class="active"><a data-toggle="tab" href="#tab-1">Payouts</a></li>
       {% else %}
@@ -75,7 +83,7 @@
       {% endif %}
     {% endif %}
 
-    {% if request.user|can:'pls_orderitem.use' %}
+    {% if request.user|can:'pls_admin.use' %}
       {% if request.path == pls_orderitems %}
       <li class="active"><a data-toggle="tab" href="#tab-1">Order Items</a></li>
       {% else %}
@@ -83,15 +91,7 @@
       {% endif %}
     {% endif %}
 
-    {% if request.user|can:'pls_billing.use' %}
-      {% if request.path == pls_billing %}
-      <li class="active"><a data-toggle="tab" href="#tab-1">Billing</a></li>
-      {% else %}
-      <li><a href="{% url 'pls:billing' %}">Billing</a></li>
-      {% endif %}
-    {% endif %}
-
-    {% if request.user|can:'pls_upload_json.use' %}
+    {% if request.user|can:'pls_admin.use' %}
       {% if request.path == pls_upload_json %}
       <li class="active"><a data-toggle="tab" href="#tab-1">Import / Export</a></li>
       {% else %}
