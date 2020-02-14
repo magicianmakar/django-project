@@ -133,9 +133,6 @@ class GrooveKartApi(ApiBase):
         store.api_url = data.get('api_url', '').strip()
         store.api_token = data.get('api_token', '').strip()
         store.api_key = data.get('api_key', '').strip()
-
-        # Activates after we receive credentials at /one-and-done/connect webhook
-        store.is_active = not is_lite
         store.is_lite = is_lite
 
         permissions.user_can_add(user, store)

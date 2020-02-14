@@ -1432,8 +1432,6 @@ def webhook(request, provider, option):
                 return HttpResponse(status=403)
 
             store = get_object_or_404(GrooveKartStore, id=user_data['store_id'], user_id=user_data['user_id'])
-            if store.is_active:
-                return HttpResponse(status=304)
 
             try:
                 store.api_url = data['api_url'].strip()
