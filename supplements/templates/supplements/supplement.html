@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load compress %}
+{% load widget_tweaks %}
 
 {% block extra_pls_css %}
 <link rel="stylesheet" type="text/css" href="{% static 'libs/slick/slick.css' %}"/>
@@ -9,42 +10,83 @@
 {% endblock %}
 
 {% block tab_content %}
-<form id="user_supplement_form" name="user_supplement_form" method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
-  {% csrf_token %}
-  {{ form.non_field_errors }}
-  {{ form.action }}
-  {{ form.image_data_url }}
-  <canvas id='canvas'></canvas>
-  <div class="row">
-    <div class="col-md-8">
-      {% include "supplements/partials/edit_form.html" %}
-      {% block form_action %}
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10 col-xs-12">
-          <input type="submit"
-                 value="Submit for Approval"
-                 data-action="approve"
-                 class="btn btn-primary add-loader"
-                 data-loading-text="Please wait..."
-                 >
+<div class="tabs-container">
+  <ul class="nav nav-tabs scrolling-tabs">
+    <li class="nav-item active">
+      <a class="nav-link" data-toggle="tab" href="#edit">Edit</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#info">Info</a>
+    </li>
+  </ul>
 
-          <input type="submit"
-                 value="Save for Later"
-                 data-action="save"
-                 class="btn btn-primary add-loader"
-                 data-loading-text="Please wait..."
-                 >
+  <div class="tab-content">
+    <div class="tab-pane fade in active m-t" id="edit">
+      <form id="user_supplement_form" name="user_supplement_form" method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+          {{ form.action }}
+          {{ form.image_data_url }}
+          <canvas id='canvas'></canvas>
+          <div class="row">
+            <div class="col-md-8">
+              {% include "supplements/partials/edit_form.html" %}
+              {% block form_action %}
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10 col-xs-12">
+                  <input type="submit"
+                         value="Submit for Approval"
+                         data-action="approve"
+                         class="btn btn-primary add-loader"
+                         data-loading-text="Please wait..."
+                         >
 
-          <input type="reset" value="Reset" class="btn btn-default">
+                  <input type="submit"
+                         value="Save for Later"
+                         data-action="save"
+                         class="btn btn-primary add-loader"
+                         data-loading-text="Please wait..."
+                         >
+
+                  <input type="reset" value="Reset" class="btn btn-default">
+                </div>
+              </div>
+              {% endblock %}
+            </div>
+            <div class="col-md-4">
+              {% include "supplements/partials/images.html" %}
+            </div>
+          </div>
+        </form>
+    </div>
+
+    <div class="tab-pane fade m-t" id="info">
+      <div class="row">
+        <div class="col-md-10">
+          <label class="col-sm-3 col-xs-12 control-label">Product Information:</label>
+          <div class="col-sm-9 col-xs-12">
+            {{ product_information }}
+          </div>
         </div>
       </div>
-      {% endblock %}
-    </div>
-    <div class="col-md-4">
-      {% include "supplements/partials/images.html" %}
+
+      {% if authenticity_cert %}
+      <div class="row m-t">
+        <div class="col-md-10">
+          <label class="col-sm-3 col-xs-12 control-label">Authenticity Certificate:</label>
+          <div class="col-sm-9 col-xs-12">
+            <div>
+              <div class="image-imitation">
+                <embed alt="image" class="img-fluid" src="{{ authenticity_cert }}" type='application/pdf' height="500px" width="100%" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
   </div>
-</form>
+</div>
 {% endblock %}
 
 {% block product_footer %}

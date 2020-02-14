@@ -1,7 +1,11 @@
 from io import BytesIO
 from urllib.request import urlopen
 
+import requests
+from pdfrw import PageMerge, PdfReader, PdfWriter
+from pdfrw.pagemerge import RectXObj
 from PIL import Image
+from reportlab.pdfgen import canvas
 
 
 def wrap_image(bottle, label, mask, shadow, light, lighter):
@@ -50,3 +54,38 @@ def pil_to_fp(image):
     out = BytesIO()
     image.save(out, format='png')
     return out
+
+
+def get_order_number_label(item):
+    order_number = item.pls_order.shipstation_order_number
+
+    data = BytesIO()
+    c = canvas.Canvas(data)
+    c.drawString(0, 800, order_number)
+    c.save()
+    data.seek(0)
+
+    reader = PdfReader(data)
+    writer = PdfWriter()
+    writer.addpage(reader.pages[0])
+    pdf_data = BytesIO()
+    writer.write(pdf_data)
+    pdf_data.seek(0)
+
+    pdf = PdfReader(pdf_data)
+    pdf.pages[0].Rotate = 270
+    pdf_pages = PageMerge() + pdf.pages
+    pdf_page = pdf_pages[0]
+
+    label_data = BytesIO(requests.get(item.label.url).content)
+    base_label_pdf = PdfReader(label_data)
+
+    page_merge = PageMerge(base_label_pdf.pages[0]).add(pdf_page)
+    pdf_obj = page_merge[-1]
+    pdf_obj.scale(0.5, 1)
+    total_height = RectXObj(page_merge.page).h
+    pdf_obj.y = total_height * .67
+
+    page_merge.render()
+
+    return base_label_pdf

@@ -4,6 +4,7 @@ from django.contrib import admin
 from .models import (
     AuthorizeNetCustomer,
     LabelComment,
+    LabelSize,
     Payout,
     PLSOrder,
     PLSOrderLine,
@@ -151,4 +152,13 @@ class ShippingGroupAdmin(admin.ModelAdmin):
         'name',
         'locations',
         'immutable',
+    )
+
+
+@admin.register(LabelSize)
+class LabelSizeAdmin(admin.ModelAdmin):
+    list_display = (
+        'slug',
+        'height',
+        'width',
     )

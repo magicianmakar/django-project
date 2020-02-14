@@ -14,7 +14,6 @@ import requests
 import simplejson as json
 from barcode import generate
 from pdfrw import PageMerge, PdfReader, PdfWriter
-from pdfrw.pagemerge import RectXObj
 from product_common import views as common_views
 from product_common.lib import views as common_lib_views
 from product_common.lib.views import PagingMixin, upload_image_to_aws, upload_object_to_aws
@@ -26,7 +25,7 @@ from leadgalaxy.models import ShopifyStore
 from shopified_core.shipping_helper import get_counrties_list
 from shopify_orders.models import ShopifyOrderLog
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
-from supplements.lib.image import data_url_to_pil_image, get_bottle_mockup, pil_to_fp
+from supplements.lib.image import data_url_to_pil_image, get_bottle_mockup, get_order_number_label, pil_to_fp
 from supplements.models import (
     AuthorizeNetCustomer,
     Payout,
@@ -94,8 +93,12 @@ class Product(common_views.ProductAddView):
         thumbnail = request.FILES['thumbnail']
         thumbnail_url = upload_image_to_aws(thumbnail, 'pls_image', user_id)
 
+        certificate = request.FILES['authenticity_certificate']
+        certificate_url = upload_image_to_aws(certificate, 'pls_certificate', user_id)
+
         pl_supplement = form.save(commit=False)
         pl_supplement.label_template_url = template_url
+        pl_supplement.authenticity_certificate_url = certificate_url
         pl_supplement.save()
         form.save_m2m()
 
@@ -205,6 +208,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form_data = supplement.to_dict()
         form_data['action'] = 'save'
         form_data['shipping_countries'] = supplement.shipping_groups_string
+        form_data['label_size'] = supplement.label_size
 
         api_data = {}
         if supplement.is_approved:
@@ -221,6 +225,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             api_data=api_data,
             store_data=store_type_and_data['store_data'],
             store_types=store_type_and_data['store_types'],
+            product_information=supplement.product_information,
+            authenticity_cert=supplement.authenticity_certificate_url,
         )
 
         if 'label_url' in form_data:
@@ -302,6 +308,38 @@ class UserSupplementView(Supplement):
             {'title': 'User Supplement', 'url': url},
         ]
         return breadcrumbs
+
+    def get_supplement_data(self, user, supplement_id):
+        supplement = self.get_supplement(user, supplement_id)
+
+        form_data = supplement.to_dict()
+        form_data['action'] = 'save'
+        form_data['shipping_countries'] = supplement.shipping_groups_string
+        form_data['label_size'] = supplement.pl_supplement.label_size
+
+        api_data = {}
+        if supplement.is_approved:
+            api_data = self.get_api_data(supplement)
+
+        store_type_and_data = self.get_store_data(user)
+
+        data = dict(
+            form_data=form_data,
+            image_urls=form_data.pop('image_urls'),
+            label_template_url=form_data.pop('label_template_url'),
+            is_approved=supplement.is_approved,
+            is_awaiting_review=supplement.is_awaiting_review,
+            api_data=api_data,
+            store_data=store_type_and_data['store_data'],
+            store_types=store_type_and_data['store_types'],
+            product_information=supplement.pl_supplement.product_information,
+            authenticity_cert=supplement.pl_supplement.authenticity_certificate_url,
+        )
+
+        if 'label_url' in form_data:
+            data['label_url'] = form_data.pop('label_url')
+
+        return data
 
     def get_form(self):
         user_supplement = UserSupplement.objects.get(id=self.supplement_id)
@@ -449,9 +487,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
         barcode_obj = page_merge[-1]
         barcode_obj.scale(0.5, 1)
-        total_height = RectXObj(page_merge.page).h
-        # y + height should be equal to half of total height
-        barcode_obj.y = (total_height // 2) - (barcode_obj.h // 2)
+        barcode_obj.x = barcode_obj.y = 1
 
         page_merge.render()
 
@@ -656,15 +692,10 @@ class OrderItemListView(common_views.OrderItemListView):
 class GenerateLabel(LoginRequiredMixin, View):
     def get(self, request, line_id):
         line_item = get_object_or_404(PLSOrderLine, id=line_id)
-
-        label_data = BytesIO(requests.get(line_item.label.url).content)
-        label_writer = PdfWriter()
-        label_pdf = PdfReader(label_data)
-        for _ in range(line_item.quantity):
-            label_writer.addpages(label_pdf.pages)
+        base_label_pdf = get_order_number_label(line_item)
 
         output = BytesIO()
-        label_writer.write(output)
+        PdfWriter().write(output, base_label_pdf)
 
         output.seek(0)
         return HttpResponse(output.read(), content_type='application/pdf')

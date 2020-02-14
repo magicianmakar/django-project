@@ -163,7 +163,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
 
     def do_test(self, count=1):
         self.client.force_login(self.user)
-        with patch('supplements.api.requests.get',
+        with patch('leadgalaxy.models.requests.get',
                    return_value=self.mock_order_response), \
                 patch('supplements.utils.payment.charge_customer_profile',
                       return_value=self.transaction_id), \

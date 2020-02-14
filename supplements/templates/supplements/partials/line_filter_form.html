@@ -21,15 +21,22 @@
 
     <div class="col-sm-4">
       <div class="form-group">
+        {{ form.label_size.errors }}
+        <label class="control-label">Label Size:</label>
+        {{ form.label_size|add_class:"form-control" }}
+      </div>
+    </div>
+
+  </div>
+  <div class="row">
+
+    <div class="col-sm-4">
+      <div class="form-group">
         {{ form.email.errors }}
         <label class="control-label">Customer Email:</label>
         {{ form.email|add_class:"form-control" }}
       </div>
     </div>
-
-  </div>
-
-  <div class="row">
 
     <div class="col-sm-4">
       <div class="form-group">
@@ -44,6 +51,26 @@
         {{ form.label_sku.errors }}
         <label class="control-label">Label SKU:</label>
         {{ form.label_sku|add_class:"form-control" }}
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row">
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.batch_number.errors }}
+        <label class="control-label">Batch Number:</label>
+        {{ form.batch_number|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.shipstation_status.errors }}
+        <label class="control-label">Fulfillment Status:</label>
+        {{ form.shipstation_status|add_class:"form-control" }}
       </div>
     </div>
 

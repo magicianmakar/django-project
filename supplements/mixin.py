@@ -194,6 +194,10 @@ class PLSOrderMixin:
     def user_profit_string(self):
         return "${:.2f}".format((self.sale_price - self.amount) / 100.)
 
+    @property
+    def shipstation_order_number(self):
+        return f"{self.order_number}-{self.id}"
+
 
 class PLSOrderLineMixin:
 
@@ -228,6 +232,17 @@ class PLSOrderLineMixin:
     def mark_printed(self):
         self.is_label_printed = True
         self.save()
+
+    @property
+    def fulfillment_status_string(self):
+        def get_string(color, value):
+            label = f"<span class='badge badge-{color}'>{value}</span>"
+            return format_html(label)
+
+        if self.pls_order.is_fulfilled:
+            return get_string("primary", "Fulfilled")
+        else:
+            return get_string("warning", "Unfulfilled")
 
 
 class PayoutMixin:

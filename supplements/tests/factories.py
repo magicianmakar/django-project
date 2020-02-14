@@ -38,3 +38,8 @@ class PLSOrderLineFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'supplements.PLSOrderLine'
+
+
+class LabelSizeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = 'supplements.LabelSize'

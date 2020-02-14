@@ -87,8 +87,24 @@
     </div>
 
     <div class="form-group">
+      {{ form.label_size.errors }}
+      <label class="col-sm-2 control-label">Label Size:</label>
+      <div class="col-sm-5">
+        <select id="id_{{ form.label_size.name }}"
+                name="{{ form.label_size.name }}"
+                class='form-control'
+                data-placeholder="Select label sizes">
+          {% for value, text in form.label_size.field.choices %}
+          <option value="{{ value }}">{{ text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
       {{ form.template.errors }}
-      <div class='col-sm-7 col-sm-offset-2'>
+      <label class="col-sm-2 control-label">Template:</label>
+      <div class='col-sm-7'>
         <div class="custom-file">
           <input id="product-template" type="file" name="template" class="custom-file-input">
           <label for="product-template" class="custom-file-label" data-placeholder="Choose template file...">
@@ -100,11 +116,33 @@
 
     <div class="form-group">
       {{ form.thumbnail.errors }}
-      <div class='col-sm-7 col-sm-offset-2'>
+      <label class="col-sm-2 control-label">Thumbnail:</label>
+      <div class='col-sm-7'>
         <div class="custom-file">
           <input id="product-thumbnail" type="file" name="thumbnail" class="custom-file-input">
           <label for="product-thumbnail" class="custom-file-label" data-placeholder="Choose thumbnail file...">
             Choose thumbnail file...
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      {{ form.product_information.errors }}
+      <label class="col-sm-2 control-label">Product Information:</label>
+      <div class="col-sm-5">
+        {{ form.product_information|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <div class="form-group">
+      {{ form.authenticity_certificate.errors }}
+      <label class="col-sm-2 control-label">Authenticity Certificate:</label>
+      <div class='col-sm-7'>
+        <div class="custom-file">
+          <input id="product-certificate" type="file" name="authenticity_certificate" class="custom-file-input">
+          <label for="product-certificate" class="custom-file-label" data-placeholder="Choose certificate file...">
+            Choose certificate file...
           </label>
         </div>
       </div>

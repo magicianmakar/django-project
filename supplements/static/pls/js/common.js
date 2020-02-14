@@ -1,7 +1,13 @@
 $(document).ready(function(){
     $('.custom-file-input').on('change', function() {
         var fileName = $(this).val().split('\\').pop();
-        $(this).next('.custom-file-label').addClass("selected").html(fileName);
+        var nextLabel = $(this).next('.custom-file-label');
+
+        if (fileName !== '') {
+          nextLabel.addClass("selected").html(fileName);
+        } else {
+          nextLabel.html(nextLabel.data('placeholder'));
+        }
     });
 
     $("input[type='reset']").closest('form').on('reset', function() {
@@ -38,7 +44,8 @@ $(document).ready(function(){
         $(this).button('loading');
     });
 
-    $("#print-all-labels").click(function () {
+    $("#print-all-labels").click(function (e) {
+        e.preventDefault();
         var data = {'item-ids': []};
         $(".line-checkbox").each(function (i, item) {
             if ($(item).prop('checked')) {
@@ -46,7 +53,7 @@ $(document).ready(function(){
             }
         });
         if (data['item-ids'].length === 0) {
-            toastr.error("Please select line items to print labels against.");
+            toastr.info("Please select line items to print labels against.");
             return;
         }
 
@@ -58,10 +65,36 @@ $(document).ready(function(){
             data: JSON.stringify(data),
             dataType: 'json',
             contentType: 'application/json',
-            success: function (data) {
-                var url = data['download-url'];
+            success: function (response) {
+                var url = response['download-url'];
                 var link = "<a href='" + url + "' target='_blank'>Download All</a>";
                 $("#print-message").html(link);
+            }
+        });
+    });
+
+    $("#mark-all-labels").click(function (e) {
+        e.preventDefault();
+        var data = {'item-ids': []};
+        $(".line-checkbox").each(function (i, item) {
+            if ($(item).prop('checked')) {
+                data['item-ids'].push($(item).data("id"));
+            }
+        });
+        if (data['item-ids'].length === 0) {
+            toastr.info("Please select line items to mark labels against.");
+            return;
+        }
+
+        var url = api_url('bulk-mark', 'supplements');
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: JSON.stringify(data),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (response) {
+                toastr.success("Successfully marked elected lines as printed.");
             }
         });
     });

@@ -4,12 +4,12 @@ from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.views.generic import View
 
-import requests
-from pdfrw import PdfReader, PdfWriter
+from pdfrw import PdfWriter
 
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
 
+from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import Payout, PLSOrder
 from .utils.payment import Util
@@ -84,8 +84,7 @@ class SupplementsApi(ApiResponseMixin, View):
         label_writer = PdfWriter()
         for line_id in data['item-ids']:
             line_item = util.mark_label_printed(line_id)
-            label_data = BytesIO(requests.get(line_item.label.url).content)
-            label_pdf = PdfReader(label_data)
+            label_pdf = get_order_number_label(line_item)
             for _ in range(line_item.quantity):
                 label_writer.addpages(label_pdf.pages)
 
@@ -110,6 +109,13 @@ class SupplementsApi(ApiResponseMixin, View):
 
         data = {'download-url': url}
         return self.api_success(data)
+
+    def post_bulk_mark(self, request, user, data):
+        util = Util()
+        for line_id in data['item-ids']:
+            util.mark_label_printed(line_id)
+
+        return self.api_success()
 
     def post_order_payout(self, request, user, data):
         order_id = data['order-id']

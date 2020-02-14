@@ -10,7 +10,7 @@ from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrderLog
 from supplements.models import UserSupplementImage, UserSupplementLabel
 
-from .factories import PLSOrderFactory, PLSOrderLineFactory, PLSupplementFactory, UserSupplementFactory, UserSupplementLabelFactory
+from .factories import LabelSizeFactory, PLSOrderFactory, PLSOrderLineFactory, PLSupplementFactory, UserSupplementFactory, UserSupplementLabelFactory
 
 
 class PLSBaseTestCase(BaseTestCase):
@@ -19,6 +19,12 @@ class PLSBaseTestCase(BaseTestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
+
+        self.label_size = LabelSizeFactory.create(
+            slug='any-slug-123',
+            height='2.25',
+            width='5.75',
+        )
 
         self.supplement = PLSupplementFactory.create(
             title='Fish Oil',
@@ -344,7 +350,7 @@ class OrdersShippedWebHookTestCase(BaseTestCase):
 
         self.data = {
             'resource_url': 'fake',
-            'event': 'SHIP_NOTIFY',
+            'resource_type': 'SHIP_NOTIFY',
         }
 
         self.store = ShopifyStoreFactory(primary_location=12)
@@ -402,8 +408,11 @@ class ProductTestCase(PLSBaseTestCase):
             shipstation_sku='test-sku',
             cost_price='20.00',
             wholesale_price='10.00',
+            label_size=self.label_size.id,
             template=open('app/static/example-label.pdf', 'rb'),
             thumbnail=open('app/static/aliex.png', 'rb'),
+            product_information='New Information',
+            authenticity_certificate=open('app/static/example-label.pdf', 'rb'),
         )
         with patch('product_common.lib.views.aws_s3_upload',
                    return_value='http://example.com/test'):

@@ -20,7 +20,13 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
 
     wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
     label_template_url = models.URLField()
+    label_size = models.ForeignKey('LabelSize',
+                                   on_delete=models.SET_NULL,
+                                   related_name='label_size',
+                                   null=True)
     shipping_countries = models.ManyToManyField('ShippingGroup')
+    product_information = models.TextField()
+    authenticity_certificate_url = models.URLField()
 
     def __str__(self):
         return self.title
@@ -118,6 +124,7 @@ class LabelComment(models.Model, LabelCommentMixin):
 class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
     sale_price = models.IntegerField()
     wholesale_price = models.IntegerField()
+    batch_number = models.CharField(max_length=30, null=True, blank=True)
 
     payout = models.ForeignKey('Payout',
                                related_name='payout_items',
@@ -184,3 +191,12 @@ class AuthorizeNetCustomer(models.Model, AuthorizeNetCustomerMixin):
 
     def __str__(self):
         return f"Authorize.net Customer: {self.user.username}"
+
+
+class LabelSize(models.Model):
+    slug = models.SlugField(max_length=100)
+    height = models.DecimalField(max_digits=10, decimal_places=2)
+    width = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f'{self.height}×{self.width}'

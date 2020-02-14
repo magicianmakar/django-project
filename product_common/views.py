@@ -8,6 +8,7 @@ from django.views.generic.list import ListView
 import requests
 import simplejson as json
 from raven.contrib.django.raven_compat.models import client as raven_client
+import urllib.parse as urlparse
 
 from leadgalaxy.models import ShopifyStore
 from leadgalaxy.utils import order_track_fulfillment
@@ -278,6 +279,7 @@ class OrdersShippedWebHookView(View, BaseMixin):
         get_line = self.order_line_model.objects.get
 
         with transaction.atomic():
+            order.batch_number = shipment['batchId']
             order.is_fulfilled = True
             order.save()
 
@@ -298,13 +300,17 @@ class OrdersShippedWebHookView(View, BaseMixin):
 
     def get_shipments(self):
         data = json.loads(self.request.body.decode())
-        if data['event'] != 'SHIP_NOTIFY':
+        if data['resource_type'] != 'SHIP_NOTIFY':
             # Process when the whole order is shipped, return otherwise.
             return
 
         resource_url = data['resource_url']
+        parsed = urlparse.urlparse(resource_url)
+        result = urlparse.parse_qs(parsed.query)
+
         shipments = get_shipstation_shipments(resource_url)
         for shipment in shipments:
+            shipment['batchId'] = result.get('batchId', '')
             yield shipment
 
     def post(self, request, *args, **kwargs):
@@ -469,6 +475,23 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 queryset = queryset.filter(
                     label__user_supplement__pl_supplement__shipstation_sku=product_sku
                 )
+
+            label_size = form.cleaned_data['label_size']
+            if label_size:
+                queryset = queryset.filter(
+                    label__user_supplement__pl_supplement__label_size=label_size
+                )
+
+            batch_number = form.cleaned_data['batch_number']
+            if batch_number:
+                queryset = queryset.filter(pls_order__batch_number=batch_number)
+
+            shipstation_status = form.cleaned_data['shipstation_status']
+            if shipstation_status:
+                if shipstation_status == 'fulfilled':
+                    queryset = queryset.filter(pls_order__is_fulfilled=True)
+                elif shipstation_status == 'unfulfilled':
+                    queryset = queryset.filter(pls_order__is_fulfilled=False)
 
         return queryset
 

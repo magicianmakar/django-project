@@ -2,7 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 
-from .models import Payout, PLSOrder, PLSupplement, UserSupplement, UserSupplementLabel
+from .models import LabelSize, Payout, PLSOrder, PLSupplement, UserSupplement, UserSupplementLabel
 
 
 class UserSupplementForm(forms.ModelForm):
@@ -23,6 +23,7 @@ class UserSupplementForm(forms.ModelForm):
     cost_price = forms.DecimalField()
     shipstation_sku = forms.CharField()
     shipping_countries = forms.CharField(required=False)
+    label_size = forms.CharField(required=False)
     action = forms.CharField(widget=forms.HiddenInput)
     upload = forms.FileField(required=False)
     image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
@@ -72,6 +73,8 @@ class PLSupplementForm(forms.ModelForm):
                   'cost_price',
                   'shipping_countries',
                   'wholesale_price',
+                  'product_information',
+                  'label_size',
                   ]
 
         widgets = {
@@ -80,6 +83,7 @@ class PLSupplementForm(forms.ModelForm):
 
     template = forms.FileField()
     thumbnail = forms.ImageField()
+    authenticity_certificate = forms.FileField()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -95,9 +99,19 @@ class PLSupplementForm(forms.ModelForm):
         )
         extension_validator(template)
 
+    def clean_authenticity_certificate(self):
+        cert = self.cleaned_data['authenticity_certificate']
+        if not cert:
+            return
+
+        extension_validator = FileExtensionValidator(
+            allowed_extensions=['pdf']
+        )
+        extension_validator(cert)
+
 
 class OrderFilterForm(forms.Form):
-    STATUSES = [('', '-')] + PLSOrder.STATUSES
+    STATUSES = [('', '---------')] + PLSOrder.STATUSES
 
     order_number = forms.CharField(required=False)
     status = forms.ChoiceField(required=False, choices=STATUSES)
@@ -121,14 +135,23 @@ class PayoutFilterForm(OrderFilterForm):
 
 class LineFilterForm(OrderFilterForm):
     LINE_STATUSES = [
-        ('', '-'),
+        ('', '---------'),
         ('not-printed', 'Not Printed'),
         ('printed', 'Printed'),
     ]
 
+    SHIPSTATION_STATUSES = [
+        ('', '---------'),
+        ('fulfilled', 'Fulfilled'),
+        ('unfulfilled', 'Unfulfilled'),
+    ]
+
     line_status = forms.ChoiceField(required=False, choices=LINE_STATUSES)
+    label_size = forms.ModelChoiceField(required=False, queryset=LabelSize.objects.all())
     product_sku = forms.CharField(required=False)
     label_sku = forms.CharField(required=False)
+    batch_number = forms.CharField(required=False)
+    shipstation_status = forms.ChoiceField(required=False, choices=SHIPSTATION_STATUSES)
 
 
 class LabelFilterForm(forms.Form):

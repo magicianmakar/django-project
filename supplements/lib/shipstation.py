@@ -61,11 +61,8 @@ def prepare_shipstation_data(pls_order, order, line_items):
         'customField1': order['order_number'],
     }
 
-    order_id = pls_order.id
-    order_number = f"{order['order_number']}-{order_id}"
-
     return {
-        'orderNumber': order_number,
+        'orderNumber': pls_order.shipstation_order_number,
         'orderDate': order['created_at'],
         'orderStatus': 'awaiting_shipment',
         'amountPaid': pls_order.amount / 100.,

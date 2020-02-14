@@ -1,4 +1,3 @@
-import logging
 import re
 
 from django.conf import settings
@@ -10,6 +9,7 @@ from authorizenet.apicontrollers import (
     createTransactionController,
     getCustomerPaymentProfileController
 )
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 
 def to_price(price):
@@ -91,8 +91,10 @@ def create_payment_profile(payment_data, customer_profile_id):
     controller.execute()
 
     response = controller.getresponse()
+    raven_client.captureMessage('one', level='warning')
     if response.messages.resultCode == 'Error':
-        logging.error(response.messages.message[0]['text'])
+        message = response.messages.message[0]['text']
+        raven_client.captureMessage(message, level='warning')
 
     return response.customerPaymentProfileId
 

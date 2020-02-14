@@ -13,21 +13,39 @@
 
 <hr />
 
-  <h1>Order Line Items</h1>
-  <div>
-    <span>
-      <button class='btn btn-primary' id='print-all-labels'>Print Labels</button>
-    </span>
+<div class="row">
+
+  <div class="col-md-8">
+    <h1 style="margin: 0px;">Order Line Items</h1>
+  </div>
+
+  <div class="col-md-2 m-t">
     <span id='print-message'></span>
   </div>
 
-<table class='table table-striped' >
+  <div class="col-md-2">
+    <div class="dropdown">
+      <button class="btn btn-default btn-outline dropdown-toggle" type="button" id="dropdownMenu1" >
+        Actions
+        <span class="caret"></span>
+      </button>
+      <ul id="store-dropdown-menu" class="dropdown-menu" style="display: none;">
+        <li><a href="#" id='print-all-labels'>Print Labels</a></li>
+        <li><a href="#" id='mark-all-labels'>Mark as Printed</a></li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+<table class="table table-striped m-t">
   <thead>
     <th><input id="select-all-lines" type="checkbox" title="Select all" /></th>
-    <th>Order Number</th>
+    <th>Order ID</th>
     <th>Line Item SKU</th>
     <th>Label SKU</th>
-    <th>Amount</th>
+    <th>Batch</th>
+    <th>Fulfillment</th>
     <th>Quantity</th>
     <th>Date</th>
     <th>Status</th>
@@ -46,7 +64,8 @@
       </td>
       <td>{{ line_item.label.user_supplement.pl_supplement.shipstation_sku }}</td>
       <td>{{ line_item.label.sku }}</td>
-      <td>{{ line_item.amount_string }}</td>
+      <td>{{ line_item.pls_order.batch_number|default:'' }}</td>
+      <td>{{ line_item.fulfillment_status_string }}</td>
       <td>{{ line_item.quantity }}</td>
       <td>{{ line_item.created_at_string }}</td>
       <td>{{ line_item.label_status_string }}</td>
@@ -59,7 +78,7 @@
         </a>
       </td>
     {% empty %}
-      <td colspan="9">No orders yet.</td>
+      <td colspan="10">No orders yet.</td>
     </tr>
     {% endfor %}
   </tbody>
