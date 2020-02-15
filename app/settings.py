@@ -93,6 +93,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = (
+    'leadgalaxy.utils.CookiesSameSite',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -173,6 +174,11 @@ DATABASES = {
 DATABASE_STATEMENT_TIMEOUT = os.environ.get('DATABASE_STATEMENT_TIMEOUT')
 CELERY_STATEMENT_TIMEOUT = os.environ.get('CELERY_STATEMENT_TIMEOUT')
 COMMAND_STATEMENT_TIMEOUT = os.environ.get('COMMAND_STATEMENT_TIMEOUT')
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE2 = 'none'
+SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 
 # Ignore psycopg2-binary and urllib3 warnings
 warnings.filterwarnings('ignore', module='psycopg2')
