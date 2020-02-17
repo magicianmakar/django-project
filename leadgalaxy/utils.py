@@ -2520,10 +2520,12 @@ class CookiesSameSite(MiddlewareMixin):
         if samesite_force_all:
             for cookie in response.cookies:
                 response.cookies[cookie]['samesite'] = samesite_flag
+                response.cookies[cookie]['secure'] = True
         else:
             for cookie in protected_cookies:
                 if cookie in response.cookies:
                     response.cookies[cookie]['samesite'] = samesite_flag
+                    response.cookies[cookie]['secure'] = True
 
         return response
 
