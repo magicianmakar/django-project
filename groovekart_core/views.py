@@ -601,8 +601,6 @@ class OrdersList(ListView):
                 variant_id = safe_int(item.get('variants', {}).get('variant_id', '0'))
                 item['title'] = item['name']
                 item['product'] = product
-                item['is_pls'] = product.is_pls
-                item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
                 item['quantity'] = safe_int(item['quantity'])
                 item['total'] = safe_float(item['price'] * item['quantity'])
                 item['image'] = item.get('variants', {}).get('image') or item.get('cover_image')
@@ -662,6 +660,9 @@ class OrdersList(ListView):
 
                     if product.has_supplier:
                         item['supplier'] = supplier = product.default_supplier
+                        is_pls = item['is_pls'] = supplier.is_pls
+                        if is_pls:
+                            item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(item['supplier_type'])
                         order_data = self.get_order_data(order, item, product, supplier)

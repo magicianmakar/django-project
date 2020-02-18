@@ -728,6 +728,8 @@ class GrooveKartSupplier(SupplierBase):
         try:
             if self.is_dropified and 'print-on-demand' in self.product_url:
                 return 'dropified-print'
+            if self.is_pls:
+                return 'pls'
 
             return get_domain(self.product_url)
         except:

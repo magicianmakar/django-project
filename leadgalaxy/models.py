@@ -1772,6 +1772,8 @@ class ProductSupplier(SupplierBase):
         try:
             if self.is_dropified and 'print-on-demand' in self.product_url:
                 return 'dropified-print'
+            if self.is_pls:
+                return 'pls'
 
             return get_domain(self.product_url)
         except:
@@ -1795,10 +1797,6 @@ class ProductSupplier(SupplierBase):
     @property
     def is_dropified_print(self):
         return self.supplier_type() == 'dropified-print'
-
-    @property
-    def is_pls(self):
-        return self.supplier_name == 'PLSupplement'
 
     @property
     def is_dropified(self):

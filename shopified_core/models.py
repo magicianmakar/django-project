@@ -47,6 +47,10 @@ class SupplierBase(models.Model):
         return 'dropified.com' in self.product_url or \
                'shopifytools-pr-' in self.product_url
 
+    @property
+    def is_pls(self):
+        return self.supplier_name == 'PLSupplement'
+
 
 class ProductBase(models.Model):
     class Meta:
