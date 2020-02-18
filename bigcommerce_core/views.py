@@ -86,12 +86,12 @@ def auth(request):
         token = client.oauth_fetch_token(settings.BIGCOMMERCE_CLIENT_SECRET, code, context, scope, redirect)
     except Exception:
         messages.error(request, 'Failed to Get Access Token')
-        return render(request, 'home/index.html')
+        return redirect('bigcommerce:index')
 
     user = request.user
     if user.is_subuser:
         messages.error(request, 'Sub-Users can not add new stores')
-        return render(request, 'home/index.html')
+        return redirect('bigcommerce:index')
 
     can_add, total_allowed, user_count = permissions.can_add_store(user)
 
@@ -112,14 +112,13 @@ def auth(request):
             )
 
             if user.profile.plan.is_free or user.can_trial():
-                url = request.build_absolute_uri('/user/profile#plan')
                 messages.error(request, 'Please Activate your account first by visiting:\n{}')
-                return render(request, 'home/index.html')
+                return redirect('bigcommerce:index')
             else:
                 messages.error(request, ('Your plan does not support connecting another BigCommerce store. '
-                              'Please contact support@dropified.com to learn how to connect '
-                              'more stores.'))
-                return render(request, 'home/index.html')
+                                         'Please contact support@dropified.com to learn how to connect '
+                                         'more stores.'))
+                return redirect('bigcommerce:index')
 
     access_token = token['access_token']
     client = BigcommerceApi(client_id=settings.BIGCOMMERCE_CLIENT_ID, store_hash=store_hash, access_token=access_token)
@@ -136,7 +135,7 @@ def auth(request):
     store.save()
 
     messages.success(request, 'Your store was successfully installed.')
-    return render(request, 'home/index.html')
+    return redirect('bigcommerce:index')
 
 
 @login_required
@@ -150,15 +149,15 @@ def load(request):
             store = BigCommerceStore.objects.get(api_key=store_hash, is_active=True)
 
             if not permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
-                messages.error(reqeust, 'You don\'t have access to this store')
-                return render(request, 'home/index.html')
+                messages.error(request, 'You don\'t have access to this store')
+                return redirect('bigcommerce:index')
 
-            messages.success(request, 'Your store was successfully installed.');
-            return render(request, 'home/index.html')
+            messages.success(request, 'Your store was successfully installed.')
+            return redirect('bigcommerce:index')
 
         except BigCommerceStore.DoesNotExist:
             messages.error(request, 'Couldn\'t find this store')
-            return render(request, 'home/index.html')
+            return redirect('bigcommerce:index')
         # except BigCommerceStore.MultipleObjectsReturned:
         #     # TODO: Handle multi stores
         #     raven_client.captureException()
@@ -166,7 +165,7 @@ def load(request):
         #     raven_client.captureException()
 
     messages.error(request, 'Verification failed')
-    return render(request, 'home/index.html')
+    return redirect('bigcommerce:index')
 
 
 @xframe_options_exempt
