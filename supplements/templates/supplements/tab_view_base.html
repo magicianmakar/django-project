@@ -17,6 +17,7 @@
 {% url 'pls:billing' as pls_billing %}
 {% url 'pls:upload_json' as pls_upload_json %}
 
+{% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' %}
 <div class="tabs-container">
   <ul class="nav nav-tabs scrolling-tabs">
   {% if request.user|can:'pls.use' %}
@@ -51,7 +52,7 @@
     {% endif %}
   {% endif %}
 
-    {% if request.user|can:'pls_admin.use' %}
+    {% if pls_staff or pls_admin %}
       {% if request.path ==  pls_all_labels %}
       <li class="active"><a data-toggle="tab" href="#tab-1">All Labels</a></li>
       {% else %}
@@ -59,15 +60,7 @@
       {% endif %}
     {% endif %}
 
-    {% if request.user|can:'pls_admin.use' %}
-      {% if request.path == pls_product %}
-      <li class="active"><a data-toggle="tab" href="#tab-1">Add New Supplement</a></li>
-      {% else %}
-      <li><a href="{% url 'pls:product' %}">Add New Supplement</a></li>
-      {% endif %}
-    {% endif %}
-
-    {% if request.user|can:'pls_admin.use' %}
+    {% if pls_staff or pls_admin %}
       {% if request.path == pls_orders %}
       <li class="active"><a data-toggle="tab" href="#tab-1">Orders</a></li>
       {% else %}
@@ -75,7 +68,7 @@
       {% endif %}
     {% endif %}
 
-    {% if request.user|can:'pls_admin.use' %}
+    {% if pls_staff or pls_admin %}
       {% if request.path == pls_payouts %}
       <li class="active"><a data-toggle="tab" href="#tab-1">Payouts</a></li>
       {% else %}
@@ -83,7 +76,7 @@
       {% endif %}
     {% endif %}
 
-    {% if request.user|can:'pls_admin.use' %}
+    {% if pls_staff or pls_admin %}
       {% if request.path == pls_orderitems %}
       <li class="active"><a data-toggle="tab" href="#tab-1">Order Items</a></li>
       {% else %}
@@ -91,7 +84,15 @@
       {% endif %}
     {% endif %}
 
-    {% if request.user|can:'pls_admin.use' %}
+    {% if pls_admin %}
+      {% if request.path == pls_product %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Add New Supplement</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:product' %}">Add New Supplement</a></li>
+      {% endif %}
+    {% endif %}
+
+    {% if pls_admin %}
       {% if request.path == pls_upload_json %}
       <li class="active"><a data-toggle="tab" href="#tab-1">Import / Export</a></li>
       {% else %}
@@ -111,4 +112,5 @@
 
   {% block product_footer %}{% endblock %}
 </div>
+{% endwith %}
 {% endblock %}
