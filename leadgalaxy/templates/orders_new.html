@@ -657,7 +657,7 @@
                                                     <span class="ordered-status">Fulfilled in Shopify</span>
                                                 {% elif excluded_product %}
                                                     <span class="ordered-status">Excluded Product</span>
-                                                {% elif item.is_paid %}
+                                                {% elif item.is_pls and item.is_paid %}
                                                     <span class="ordered-status">{{ item.status_string }}</span>
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
@@ -681,7 +681,12 @@
                                                     <tr>
                                                         <td class="product-preview" style="width:64px">
                                                             <input class="line-checkbox hidden-xs" type="checkbox" style="position: absolute; top: 0px; left: 5px; "
-                                                              {% if item.is_paid or not item.product.is_label_approved %}disabled{% endif %}>
+                                                                {% if item.is_pls %}
+                                                                    {% if item.is_paid or not item.product.is_label_approved %}
+                                                                        disabled
+                                                                    {% endif %}
+                                                                {% endif %}
+                                                              >
 
                                                             <img class="product-img cached-img no-img no-img-sm unveil"
                                                                 store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
