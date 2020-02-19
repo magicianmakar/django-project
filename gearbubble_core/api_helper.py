@@ -1,4 +1,4 @@
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from shopified_core.api_helper import ApiHelperBase
 from shopified_core.utils import order_data_cache_key

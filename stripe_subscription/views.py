@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import require_http_methods
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 import arrow
 import simplejson as json

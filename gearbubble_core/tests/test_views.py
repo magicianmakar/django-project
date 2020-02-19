@@ -5,7 +5,7 @@ import arrow
 from munch import Munch
 
 from lib.test import BaseTestCase
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.core.cache import caches
 
 from shopified_core.utils import order_data_cache

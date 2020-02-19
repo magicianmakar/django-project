@@ -9,7 +9,7 @@ from django.utils.functional import cached_property
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from shopified_core.utils import get_domain, safe_str
 from shopified_core.decorators import add_to_class

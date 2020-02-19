@@ -1,7 +1,7 @@
 import re
 from django.conf import settings
 from django.urls import reverse_lazy
-from django.core.urlresolvers import resolve
+from django.urls import resolve
 
 
 def get_menu_structure(namespace):
