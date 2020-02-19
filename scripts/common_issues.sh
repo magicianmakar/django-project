@@ -28,6 +28,13 @@ if [ "$?" == "0" ]; then
     exit -1
 fi
 
+grep -E "{% static ['\"]/[^'\"]+['\"] %}" --exclude-dir='venv*' --include="*.html" --recursive .
+if [ "$?" == "0" ]; then
+    echo
+    echo "[-] static tag argument should not start with a slash"
+    exit -1
+fi
+
 OUTFILE="$(mktemp)"
 python manage.py makemigrations > $OUTFILE 2>&1
 grep 'No changes detected' $OUTFILE > /dev/null
@@ -66,6 +73,18 @@ for i in */models.py; do
         fi
 
         if [ "$c" == "AddressBase" ]; then
+            continue
+        fi
+
+        if [ "$c" == "AbstractImage" ]; then
+            continue
+        fi
+
+        if [ "$c" == "AbstractOrderInfo" ]; then
+            continue
+        fi
+
+        if [ "$c" == "AbstractPayout" ]; then
             continue
         fi
 

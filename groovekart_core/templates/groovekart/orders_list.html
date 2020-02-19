@@ -275,8 +275,22 @@
                                         </div>
                                         {% endif %}
 
-                                        {% if order.lines_count %}
-                                            <div class="btn-group pull">
+                                        {% if 'pls' in order.supplier_types %}
+                                        <div class="btn-group pull">
+                                          <button type="button" class="btn btn-success btn-xs dropdown-toggle"
+                                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Payments
+                                            <span class="caret"></span>
+                                          </button>
+
+                                          <ul class="dropdown-menu pull-right">
+                                            <li><a class="pay-selected-lines" href="#">Pay for Selected Items</a></li>
+                                          </ul>
+                                        </div>
+                                        {% endif %}
+
+                                          {% if order.lines_count %}
+                                          <div class="btn-group pull">
                                                 <button class="btn btn-success btn-xs order-items" order-id="{{order.id}}"
                                                         type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
                                                     Order Items
@@ -453,6 +467,10 @@
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% if item.is_bundle %}
                                                                 <span class="badge badge-primary">Bundle</span>
+                                                            {% elif item.is_pls %}
+                                                                {% if not item.is_paid %}
+                                                                    {% include 'partial/make_payment_btn.html' %}
+                                                                {% endif %}
                                                             {% else %}
                                                                 {% include 'groovekart/partial/place_order_btn.html' %}
                                                             {% endif %}
@@ -585,6 +603,7 @@
 {% include "common/partial/modal_add_order_id.html" %}
 
 {% include "groovekart/partial/groovekart_product_selector.html" %}
+{% include "supplements/partials/make_payment_modal.html" %}
 
 {% endblock %}
 
@@ -633,9 +652,9 @@
     <script type="text/javascript" src="{% static 'prints/js/place_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/order_items.js' %}"></script>
+    <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
     <script type="text/javascript" src="{% static 'groovekart/js/groovekart_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'groovekart/js/orders_list.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}
-

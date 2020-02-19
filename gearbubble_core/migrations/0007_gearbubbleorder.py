@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('order_at', models.DateTimeField()),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('store', models.ForeignKey(to='gearbubble_core.GearBubbleStore')),
+                ('store', models.ForeignKey(to='gearbubble_core.GearBubbleStore', on_delete=models.CASCADE)),
             ],
         ),
     ]

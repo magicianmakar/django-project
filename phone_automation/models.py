@@ -161,8 +161,8 @@ class TwilioCompany(models.Model):
 
 class TwilioPhoneNumber(models.Model):
     user = models.ForeignKey(User, related_name='twilio_phone_numbers', on_delete=models.CASCADE)
-    automation = models.ForeignKey(TwilioAutomation, related_name='phones', null=True)
-    company = models.ForeignKey(TwilioCompany, related_name='phones', null=True)
+    automation = models.ForeignKey(TwilioAutomation, related_name='phones', null=True, on_delete=models.CASCADE)
+    company = models.ForeignKey(TwilioCompany, related_name='phones', null=True, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default='')
 
     incoming_number = models.CharField(max_length=50, default='', blank=True)
@@ -233,7 +233,7 @@ class TwilioUpload(models.Model):
         ordering = ['-created_at']
     user = models.ForeignKey(User, related_name='twilio_uploads', on_delete=models.CASCADE)
     # phone = models.ForeignKey(TwilioPhoneNumber, on_delete=models.CASCADE)
-    automation = models.ForeignKey(TwilioAutomation, related_name='automation', null=True)
+    automation = models.ForeignKey(TwilioAutomation, related_name='automation', null=True, on_delete=models.CASCADE)
     url = models.CharField(max_length=512, blank=True, default='', verbose_name="Upload file URL")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
@@ -245,7 +245,7 @@ class TwilioUpload(models.Model):
 
 class TwilioLog(models.Model):
     user = models.ForeignKey(User, related_name='twilio_logs', on_delete=models.CASCADE)
-    twilio_phone_number = models.ForeignKey(TwilioPhoneNumber, related_name='twilio_logs', null=True)
+    twilio_phone_number = models.ForeignKey(TwilioPhoneNumber, related_name='twilio_logs', null=True, on_delete=models.CASCADE)
     direction = models.CharField(max_length=50, default='', blank=True)
     from_number = models.CharField(max_length=50, default='', blank=True)
     call_duration = models.IntegerField(default=0, null=True)
@@ -331,8 +331,8 @@ class CallflexCredit(models.Model):
 
 class TwilioAlert(models.Model):
     user = models.ForeignKey(User, related_name='twilio_alerts', on_delete=models.CASCADE)
-    twilio_phone_number = models.ForeignKey(TwilioPhoneNumber, related_name='twilio_alerts', null=True)
-    company = models.ForeignKey(TwilioCompany, related_name='twilio_alerts', null=True)
+    twilio_phone_number = models.ForeignKey(TwilioPhoneNumber, related_name='twilio_alerts', null=True, on_delete=models.CASCADE)
+    company = models.ForeignKey(TwilioCompany, related_name='twilio_alerts', null=True, on_delete=models.CASCADE)
     config = models.TextField(default='{}')
     alert_event = models.CharField(max_length=50, default='', choices=ALERT_EVENTS)
     alert_type = models.CharField(max_length=50, default='', choices=ALERT_TYPES)
@@ -361,7 +361,7 @@ class TwilioAlert(models.Model):
 
 class TwilioSummary(models.Model):
     user = models.ForeignKey(User, related_name='twilio_summaries', on_delete=models.CASCADE)
-    company = models.ForeignKey(TwilioCompany, related_name='twilio_summaries', null=True)
+    company = models.ForeignKey(TwilioCompany, related_name='twilio_summaries', null=True, on_delete=models.CASCADE)
     config = models.TextField(default='{}')
     freq_daily = models.BooleanField(default=False)
     freq_weekly = models.BooleanField(default=False)

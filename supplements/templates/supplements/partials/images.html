@@ -1,0 +1,36 @@
+  <div class='image-wrapper'>
+    <div class="product-images">
+      {% for url in image_urls %}
+      <div>
+        <div class="image-imitation">
+          <img src="{{ url }}"/>
+        </div>
+      </div>
+      {% endfor %}
+
+      {% if label_url %}
+      <div>
+        <div class="image-imitation">
+          <embed alt="image" class="img-fluid" src="{{ label_url }}" type='application/pdf' height="500px" width="100%" />
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <a href="{{ label_template_url }}" class="btn btn-primary">Download Template</a>
+
+    {{ form.upload.errors }}
+
+    <div class="custom-file">
+      <input id="upload" type="file" name="upload" class="custom-file-input">
+      <label for="upload" class="custom-file-label" data-placeholder="Choose file...">
+        Choose file...
+      </label>
+    </div>
+
+    <div class='alert label-info-box'>
+      Submitting a new label will restart the review process.
+    </div>
+
+  </div>

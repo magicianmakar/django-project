@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Submission date')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Last update')),
                 ('products', models.ManyToManyField(to='gearbubble_core.GearBubbleProduct', blank=True)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
                 'verbose_name': 'GearBubble Board',

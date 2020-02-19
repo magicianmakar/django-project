@@ -1,0 +1,13 @@
+{% extends "supplements/tab_view_base.html" %}
+
+{% block tab_content %}
+
+<div class="row">
+  {% for supplement in supplements %}
+    {% include "supplements/partials/product.html" with item=supplement %}
+  {% empty %}
+</div>
+<div>No supplements yet.</div>
+{% endfor %}
+
+{% endblock %}

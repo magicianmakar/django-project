@@ -527,7 +527,7 @@ class CustomStripeSubscription(models.Model):
         get_latest_by = 'created_at'
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    custom_plan = models.ForeignKey(CustomStripePlan, null=True)
+    custom_plan = models.ForeignKey(CustomStripePlan, null=True, on_delete=models.CASCADE)
 
     subscription_id = models.CharField(max_length=255, editable=False, verbose_name='Stripe Subscription ID')
     subscription_item_id = models.CharField(max_length=255, verbose_name='Stripe Subscription Item ID', null=True)

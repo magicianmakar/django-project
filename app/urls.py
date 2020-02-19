@@ -30,6 +30,8 @@ urlpatterns = [
     url(r'^sso/', include('sso_core.urls')),
     url(r'^profits/', include('profits.urls', 'profits')),
     url(r'^print-on-demand/', include('prints.urls', 'prints')),
+    url(r'^pls/', include('supplements.urls', 'pls')),
+    url(r'^dropified-product/', include('dropified_product.urls', 'dropified_product')),
     url(r'^admin/', admin.site.urls),
 ]
 

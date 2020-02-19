@@ -777,7 +777,7 @@ class SubuserWooPermission(models.Model):
 class SubuserGearPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    store = models.ForeignKey('gearbubble_core.GearBubbleStore', related_name='subuser_gear_permissions')
+    store = models.ForeignKey('gearbubble_core.GearBubbleStore', related_name='subuser_gear_permissions', on_delete=models.CASCADE)
 
     class Meta:
         ordering = 'pk',
@@ -790,7 +790,7 @@ class SubuserGearPermission(models.Model):
 class SubuserGKartPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    store = models.ForeignKey('groovekart_core.GrooveKartStore', related_name='subuser_gkart_permissions')
+    store = models.ForeignKey('groovekart_core.GrooveKartStore', related_name='subuser_gkart_permissions', on_delete=models.CASCADE)
 
     class Meta:
         ordering = 'pk',
@@ -803,7 +803,7 @@ class SubuserGKartPermission(models.Model):
 class SubuserBigCommercePermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    store = models.ForeignKey('bigcommerce_core.BigCommerceStore', related_name='subuser_bigcommerce_permissions')
+    store = models.ForeignKey('bigcommerce_core.BigCommerceStore', related_name='subuser_bigcommerce_permissions', on_delete=models.CASCADE)
 
     class Meta:
         ordering = 'pk',
@@ -875,6 +875,14 @@ class ShopifyStore(StoreBase):
             url = 'https://{}'.format(url)
 
         return url
+
+    def get_order(self, order_id):
+        url = self.get_link(f'/admin/orders/{order_id}.json', api=True)
+        response = requests.get(url)
+        return response.json()['order']
+
+    def get_product(self, product_id):
+        return ShopifyProduct.objects.all().get(shopify_id=product_id)
 
     def get_api_url(self, hide_keys=False):
         url = self.api_url
@@ -1764,6 +1772,8 @@ class ProductSupplier(SupplierBase):
         try:
             if self.is_dropified and 'print-on-demand' in self.product_url:
                 return 'dropified-print'
+            if self.is_pls:
+                return 'pls'
 
             return get_domain(self.product_url)
         except:
@@ -1787,6 +1797,10 @@ class ProductSupplier(SupplierBase):
     @property
     def is_dropified_print(self):
         return self.supplier_type() == 'dropified-print'
+
+    @property
+    def is_dropified(self):
+        return self.supplier_name == 'Dropified'
 
     def save(self, *args, **kwargs):
         if self.source_id != self.get_source_id():

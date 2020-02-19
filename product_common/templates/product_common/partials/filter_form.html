@@ -1,0 +1,59 @@
+{% load widget_tweaks %}
+
+<form role="form" autocomplete="off">
+  <div class="row">
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.order_number.errors }}
+        <label class="control-label">Order ID:</label>
+        {{ form.order_number|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.status.errors }}
+        <label class="control-label">Order Status:</label>
+        {{ form.status|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.email.errors }}
+        <label class="control-label">Customer Email:</label>
+        {{ form.email|add_class:"form-control" }}
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row">
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.amount.errors }}
+        <label class="control-label">Amount:</label>
+        {{ form.amount|add_class:"form-control" }}
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <div class="form-group">
+        {{ form.date.errors }}
+        <label class="control-label">Date:</label>
+        <div class='input-group'>
+          <div class="input-group-addon">
+            <i class='fa fa-calendar'></i>
+          </div>
+          {{ form.date|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <input type="submit" class="btn btn-primary" value="Filter" />
+  <input type="button" class="btn btn-default pls-reset-btn" value="Clear" />
+</form>

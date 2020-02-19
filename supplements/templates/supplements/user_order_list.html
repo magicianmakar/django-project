@@ -1,0 +1,42 @@
+{% extends "supplements/plsorder_list.html" %}
+
+
+{% block tab_content %}
+
+<div>
+  {% include "supplements/partials/my_order_filter_form.html" %}
+</div>
+
+<hr />
+
+<h1>Payments</h1>
+<table class='table table-striped' >
+  <thead>
+    <th>Order ID</th>
+    <th>Payment ID</th>
+    <th>Amount Paid</th>
+    <th>Sale Price</th>
+    <th>Profit</th>
+    <th>Date</th>
+    <th>Status</th>
+  </thead>
+  <tbody>
+    {% for pls_order in object_list %}
+    <tr>
+      <td>{{ pls_order.order_number }}</td>
+      <td>{{ pls_order.stripe_transaction_id }}</td>
+      <td>{{ pls_order.amount_string }}</td>
+      <td>{{ pls_order.sale_price_string }}</td>
+      <td>{{ pls_order.user_profit_string }}</td>
+      <td>{{ pls_order.created_at_string }}</td>
+      <td>{{ pls_order.status_string }}</td>
+    {% empty %}
+      <td colspan="7">No orders yet.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% include "supplements/partials/paging.html" %}
+
+{% endblock %}

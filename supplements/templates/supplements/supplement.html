@@ -1,0 +1,128 @@
+{% extends "supplements/tab_view_base.html" %}
+
+{% load static %}
+{% load compress %}
+{% load widget_tweaks %}
+
+{% block extra_pls_css %}
+<link rel="stylesheet" type="text/css" href="{% static 'libs/slick/slick.css' %}"/>
+<link rel="stylesheet" type="text/css" href="{% static 'libs/slick/slick-theme.css' %}"/>
+{% endblock %}
+
+{% block tab_content %}
+<div class="tabs-container">
+  <ul class="nav nav-tabs scrolling-tabs">
+    <li class="nav-item active">
+      <a class="nav-link" data-toggle="tab" href="#edit">Edit</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" data-toggle="tab" href="#info">Info</a>
+    </li>
+  </ul>
+
+  <div class="tab-content">
+    <div class="tab-pane fade in active m-t" id="edit">
+      <form id="user_supplement_form" name="user_supplement_form" method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+          {{ form.action }}
+          {{ form.image_data_url }}
+          <canvas id='canvas'></canvas>
+          <div class="row">
+            <div class="col-md-8">
+              {% include "supplements/partials/edit_form.html" %}
+              {% block form_action %}
+              <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10 col-xs-12">
+                  <input type="submit"
+                         value="Submit for Approval"
+                         data-action="approve"
+                         class="btn btn-primary add-loader"
+                         data-loading-text="Please wait..."
+                         >
+
+                  <input type="submit"
+                         value="Save for Later"
+                         data-action="save"
+                         class="btn btn-primary add-loader"
+                         data-loading-text="Please wait..."
+                         >
+
+                  <input type="reset" value="Reset" class="btn btn-default">
+                </div>
+              </div>
+              {% endblock %}
+            </div>
+            <div class="col-md-4">
+              {% include "supplements/partials/images.html" %}
+            </div>
+          </div>
+        </form>
+    </div>
+
+    <div class="tab-pane fade m-t" id="info">
+      <div class="row">
+        <div class="col-md-10">
+          <label class="col-sm-3 col-xs-12 control-label">Product Information:</label>
+          <div class="col-sm-9 col-xs-12">
+            {{ product_information }}
+          </div>
+        </div>
+      </div>
+
+      {% if authenticity_cert %}
+      <div class="row m-t">
+        <div class="col-md-10">
+          <label class="col-sm-3 col-xs-12 control-label">Authenticity Certificate:</label>
+          <div class="col-sm-9 col-xs-12">
+            <div>
+              <div class="image-imitation">
+                <embed alt="image" class="img-fluid" src="{{ authenticity_cert }}" type='application/pdf' height="500px" width="100%" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block product_footer %}
+<div class='row'>
+  <div class='col-md-6'>
+    <div class="jumbotron label-banner">
+      <h1>Label Requirements</h1>
+      <p>
+      For your labels to be approved please ensure that they do not
+      make misleading or unsubstantiated claims. You can learn more
+      about what you can include in our support portal.
+      </p>
+      <p><a href="" role="button" class="btn btn-primary btn-lg">Learn more</a></p>
+    </div>
+  </div>
+</div>
+
+{% include "supplements/partials/send_to_store_modal.html" %}
+
+{% endblock %}
+
+{% block extrajs %}
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/slick/slick.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/supplement.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/send_to_store.js' %}"></script>
+{% endcompress %}
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>
+
+<script type="text/javascript">
+var apiData = {{ api_data|safe }};
+var storeData = {{ store_data|safe }}
+setup_full_editor('id_description');
+</script>
+{% endblock %}

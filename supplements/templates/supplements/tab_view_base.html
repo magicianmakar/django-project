@@ -1,0 +1,116 @@
+{% extends "supplements/base.html" %}
+
+{% load static %}
+{% load compress %}
+{% load perms_helper %}
+
+{% block main-container %}
+{% url 'pls:index' as pls_index %}
+{% url 'pls:my_supplements' as pls_my_supplements %}
+{% url 'pls:my_labels' as pls_my_labels %}
+{% url 'pls:all_labels' as pls_all_labels %}
+{% url 'pls:my_orders' as pls_my_orders %}
+{% url 'pls:product' as pls_product %}
+{% url 'pls:order_list' as pls_orders %}
+{% url 'pls:payout_list' as pls_payouts %}
+{% url 'pls:orderitem_list' as pls_orderitems %}
+{% url 'pls:billing' as pls_billing %}
+{% url 'pls:upload_json' as pls_upload_json %}
+
+{% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' %}
+<div class="tabs-container">
+  <ul class="nav nav-tabs scrolling-tabs">
+  {% if request.user|can:'pls.use' %}
+    {% if request.path ==  pls_index %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">Supplements</a></li>
+    {% else %}
+    <li><a href="{{ pls_index }}">Supplements</a></li>
+    {% endif %}
+
+    {% if request.path ==  pls_my_supplements %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">My Supplements</a></li>
+    {% else %}
+    <li><a href="{% url 'pls:my_supplements' %}">My Supplements</a></li>
+    {% endif %}
+
+    {% if request.path ==  pls_my_labels %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">My Labels</a></li>
+    {% else %}
+    <li><a href="{% url 'pls:my_labels' %}">My Labels</a></li>
+    {% endif %}
+
+    {% if request.path ==  pls_my_orders %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">My Payments</a></li>
+    {% else %}
+    <li><a href="{% url 'pls:my_orders' %}">My Payments</a></li>
+    {% endif %}
+
+    {% if request.path == pls_billing %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">Billing</a></li>
+    {% else %}
+    <li><a href="{% url 'pls:billing' %}">Billing</a></li>
+    {% endif %}
+  {% endif %}
+
+    {% if pls_staff or pls_admin %}
+      {% if request.path ==  pls_all_labels %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">All Labels</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:all_labels' %}">All Labels</a></li>
+      {% endif %}
+    {% endif %}
+
+    {% if pls_staff or pls_admin %}
+      {% if request.path == pls_orders %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Orders</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:order_list' %}">Orders</a></li>
+      {% endif %}
+    {% endif %}
+
+    {% if pls_staff or pls_admin %}
+      {% if request.path == pls_payouts %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Payouts</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:payout_list' %}">Payouts</a></li>
+      {% endif %}
+    {% endif %}
+
+    {% if pls_staff or pls_admin %}
+      {% if request.path == pls_orderitems %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Order Items</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:orderitem_list' %}">Order Items</a></li>
+      {% endif %}
+    {% endif %}
+
+    {% if pls_admin %}
+      {% if request.path == pls_product %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Add New Supplement</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:product' %}">Add New Supplement</a></li>
+      {% endif %}
+    {% endif %}
+
+    {% if pls_admin %}
+      {% if request.path == pls_upload_json %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Import / Export</a></li>
+      {% else %}
+      <li><a href="{% url 'pls:upload_json' %}">Import / Export</a></li>
+      {% endif %}
+    {% endif %}
+  </ul>
+
+  <div class="tab-content">
+    <div id="tab-1" class="tab-pane active">
+      <div class="panel-body">
+        {% block tab_notification %}{% endblock %}
+        {% block tab_content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+
+  {% block product_footer %}{% endblock %}
+</div>
+{% endwith %}
+{% endblock %}

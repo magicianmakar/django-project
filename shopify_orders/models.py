@@ -211,7 +211,7 @@ class ShopifyOrderLog(models.Model):
         ordering = ['-created_at']
         index_together = ['store', 'order_id', 'created_at']
 
-    store = models.ForeignKey(ShopifyStore)
+    store = models.ForeignKey(ShopifyStore, on_delete=models.deletion.CASCADE)
     order_id = models.BigIntegerField()
     logs = models.TextField(blank=True, null=True)
     seen = models.IntegerField(default=0, null=True, blank=True)

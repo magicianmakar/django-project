@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block extracss %}
+<link href="{% static 'pls/css/pls.css' %}" rel="stylesheet">
+{% block extra_pls_css %}{% endblock %}
+{% endblock %}

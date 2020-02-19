@@ -16,8 +16,8 @@ class Goal(models.Model):
 
 
 class UserGoalRelationship(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
-    goal = models.ForeignKey('goals.Goal')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    goal = models.ForeignKey('goals.Goal', on_delete=models.CASCADE)
     viewed = models.BooleanField(default=False)
 
     class Meta:
@@ -33,8 +33,8 @@ class UserGoalRelationship(models.Model):
 
 
 class GoalStepRelationship(models.Model):
-    goal = models.ForeignKey('goals.Goal')
-    step = models.ForeignKey('goals.Step')
+    goal = models.ForeignKey('goals.Goal', on_delete=models.CASCADE)
+    step = models.ForeignKey('goals.Step', on_delete=models.CASCADE)
     step_number = models.PositiveIntegerField()
 
     class Meta:

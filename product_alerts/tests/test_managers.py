@@ -515,51 +515,6 @@ class ProductChangeManagerTestCase(BaseTestCase):
 
     @tag('slow')
     @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
-    def test_webhook_woo_price_change_no_variant(self, manage):
-        self.user.profile.config = json.dumps({"alert_price_change": "update"})
-        self.user.profile.save()
-
-        product_changes = []
-        product = WooProduct.objects.get(pk=2)
-        woo_product = product.retrieve()
-
-        price = round(float(woo_product['regular_price']), 2)
-
-        # Reset price to a reasonable amount
-        price = 100.0 if price < 10 else price
-
-        # update price
-        old_price = round(price - (price / 2.0), 2)
-        api_endpoint = 'products/{}'.format(product.source_id)
-        r = product.store.wcapi.put(api_endpoint, {
-            'regular_price': str(old_price)
-        })
-        self.assertTrue(r.ok)
-
-        new_value = round(price / 3.0, 2)
-        old_value = round(old_price / 3.0, 2)
-        product_changes.append({
-            'level': 'variant',
-            'name': 'price',
-            'new_value': new_value,
-            'old_value': old_value,
-        })
-        request = self.factory.post(
-            '/webhook/price-monitor/product?product={}&dropified_type=woo'.format(product.id),
-            data=json.dumps(product_changes),
-            content_type='application/json'
-        )
-        response = webhook(request, 'price-monitor', None)
-        self.assertEqual(response.status_code, 200)
-        woo_product = product.retrieve()
-
-        updated_price = round(float(woo_product['regular_price']), 2)
-
-        # check if price was updated back and preserved the margin
-        self.assertEqual(updated_price, round(old_price * new_value / old_value, 2))
-
-    @tag('slow')
-    @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_woo_price_change(self, manage):
         self.user.profile.config = json.dumps({"alert_price_change": "update"})
         self.user.profile.save()

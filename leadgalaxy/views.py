@@ -85,7 +85,7 @@ from shopified_core.utils import (
     decode_api_token,
 )
 from shopified_core.tasks import keen_order_event, export_user_activity
-
+from supplements.models import PLSOrderLine
 from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
@@ -1432,8 +1432,6 @@ def webhook(request, provider, option):
                 return HttpResponse(status=403)
 
             store = get_object_or_404(GrooveKartStore, id=user_data['store_id'], user_id=user_data['user_id'])
-            if store.is_active:
-                return HttpResponse(status=304)
 
             try:
                 store.api_url = data['api_url'].strip()
@@ -4237,6 +4235,11 @@ def orders_view(request):
                     shipping_method = None
 
                 order['line_items'][i]['product'] = product
+                order['line_items'][i]['is_pls'] = supplier.is_pls
+                is_paid = False
+                if order['line_items'][i]['is_pls']:
+                    is_paid = PLSOrderLine.is_paid(store, order['id'], el['id'])
+                order['line_items'][i]['is_paid'] = is_paid
                 order['line_items'][i]['supplier'] = supplier
                 order['line_items'][i]['shipping_method'] = shipping_method
                 order['line_items'][i]['supplier_type'] = supplier.supplier_type()

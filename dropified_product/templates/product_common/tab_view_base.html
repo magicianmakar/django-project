@@ -1,0 +1,43 @@
+{% extends "product_common/base.html" %}
+
+{% load static %}
+{% load compress %}
+{% load perms_helper %}
+
+{% block main-container %}
+{% url 'dropified_product:index' as index_url %}
+{% url 'dropified_product:order_list' as orders_url %}
+{% url 'dropified_product:product_add' as new_product_url %}
+
+<div class="tabs-container">
+  <ul class="nav nav-tabs scrolling-tabs">
+    {% if request.path ==  index_url %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">Products</a></li>
+    {% else %}
+    <li><a href="{{ index_url }}">Products</a></li>
+    {% endif %}
+
+    {% if request.user|can:'dropified_product_edit.use' %}
+      {% if request.path == new_product_url %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Add New Product</a></li>
+      {% else %}
+      <li><a href="{{ new_product_url }}">Add New Product</a></li>
+      {% endif %}
+
+      {% if request.path == orders_url %}
+      <li class="active"><a data-toggle="tab" href="#tab-1">Orders</a></li>
+      {% else %}
+      <li><a href="{{ orders_url }}">Orders</a></li>
+      {% endif %}
+    {% endif %}
+  </ul>
+
+  <div class="tab-content">
+    <div id="tab-1" class="tab-pane active">
+      <div class="panel-body">
+        {% block tab_content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

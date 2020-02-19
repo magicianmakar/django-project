@@ -87,9 +87,13 @@ INSTALLED_APPS = (
     'funnels',
     'aliextractor',
     'prints',
+    'supplements',
+    'product_common',
+    'dropified_product',
 )
 
 MIDDLEWARE = (
+    'leadgalaxy.utils.CookiesSameSite',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -151,9 +155,11 @@ DROPIFIED_API = {
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
     'subusers': 'subusers.api.SubusersApi',
     'goals': 'goals.api.GoalsApi',
+    'supplements': 'supplements.api.SupplementsApi',
     'profits': 'profits.api.ProfitsApi',
     'metrics': 'metrics.api.MetricsApi',
     'prints': 'prints.api.PrintsApi',
+    'product_common': 'product_common.api.ProductCommonApi',
 }
 
 # Database
@@ -168,6 +174,11 @@ DATABASES = {
 DATABASE_STATEMENT_TIMEOUT = os.environ.get('DATABASE_STATEMENT_TIMEOUT')
 CELERY_STATEMENT_TIMEOUT = os.environ.get('CELERY_STATEMENT_TIMEOUT')
 COMMAND_STATEMENT_TIMEOUT = os.environ.get('COMMAND_STATEMENT_TIMEOUT')
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE2 = 'none'
+SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 
 # Ignore psycopg2-binary and urllib3 warnings
 warnings.filterwarnings('ignore', module='psycopg2')
@@ -490,3 +501,12 @@ BIGCOMMERCE_CLIENT_SECRET = os.environ.get('BIGCOMMERCE_CLIENT_SECRET')
 
 # LayerApp
 LAYERAPP_TEST = bool(os.getenv('LAYERAPP_TEST', False))
+
+# ShipStation
+SHIPSTATION_API_KEY = os.environ.get('SHIPSTATION_API_KEY')
+SHIPSTATION_API_SECRET = os.environ.get('SHIPSTATION_API_SECRET')
+SHIPSTATION_API_URL = 'https://ssapi.shipstation.com'
+
+# Authorize.Net
+AUTH_NET_LOGIN_ID = os.environ.get('AUTHORIZENET_LOGIN_ID')
+AUTH_NET_TRANSACTION_KEY = os.environ.get('AUTHORIZENET_TRANSACTION_KEY')

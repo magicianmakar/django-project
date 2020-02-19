@@ -1,0 +1,78 @@
+<div class="ibox ">
+  <div class="ibox-title">
+    <h5>Label: #{{ label.label_id_string }}</h5>
+  </div>
+  <div>
+    <div class="ibox-content no-padding border-left-right">
+      <embed alt="image" class="img-fluid" src="{{ label.url }}" type='application/pdf' height="400px" width="100%" />
+    </div>
+    <div class="ibox-content profile-content">
+      <h4><strong>{{ label.user_supplement.title }}</strong></h4>
+      <p><i class="fa fa-calendar"></i> Submitted on {{ label.created_at_string }}</p>
+      <div class="user-button">
+
+        <div class="row m-b">
+          <div class="col-md-6">
+            Status:
+            <span class='label
+            {% if label.status == label.APPROVED %}
+            label-primary
+            {% elif label.status == label.AWAITING_REVIEW %}
+            label-warning
+            {% elif label.status == label.REJECTED %}
+            label-danger
+            {% endif %}'>
+              {{ label.status_string }}
+            </span>
+          </div>
+          <div class="col-md-6">
+            <div class='float-right'>
+              {% if label.status == label.APPROVED and label.sku %}
+              <strong>SKU: {{ label.sku }}</strong>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-5">
+            <a class="btn btn-default btn-outline btn-sm btn-block" href="{% url 'pls:user_supplement' supplement_id=label.user_supplement.id %}">View Product</a>
+          </div>
+
+          {% if label.current_label_of %}
+          <div class="col-md-6">
+            <button {% if label.status != label.APPROVED %}disabled{% endif %}
+                    id="send_to_store"
+                    type="button"
+                    class="btn btn-primary btn-sm btn-block"><i class="fa fa-arrow-right"></i> Send to Store</button>
+          </div>
+        </div>
+
+        <div class="row m-t">
+          <div class="col-md-5">
+            <form method="POST" role="form">
+              <input type="hidden" name="action" value="{{ label.REJECTED }}" />
+              <button type="submit"
+              class="btn btn-default btn-outline btn-sm btn-block"
+              title="Reject"
+              data-loading-text="Please wait..."><i class="fa fa-thumbs-down"></i> Reject</button>
+            </form>
+          </div>
+
+          <div class="col-md-6">
+            <form method="POST" role="form">
+              <input type="hidden" name="action" value="{{ label.APPROVED }}" />
+              <button type="submit"
+                      class="btn btn-primary btn-sm btn-block add-loader"
+                      title="Approve"
+                      data-loading-text="Please wait..."><i class="fa fa-thumbs-up"></i> Approve</button>
+            </form>
+          </div>
+
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

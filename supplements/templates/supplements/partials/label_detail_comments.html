@@ -1,0 +1,77 @@
+{% load widget_tweaks %}
+
+<div class="ibox ">
+  <div class="ibox-title">
+    <h5>Comments</h5>
+  </div>
+  <div class="ibox-content">
+    <div>
+      <div class="feed-activity-list">
+
+        {% for comment in comments %}
+        <div class="feed-element">
+          <div class="media-body ">
+            <small class="text-muted float-right">{{ comment.created_at_string }}</small>
+            {% if comment.sets_new_status %}
+
+            <p>{{ comment.text|safe }}</p>
+
+            {% else %}
+
+            <strong>{{ comment.user.get_full_name }}</strong> wrote. <br>
+            <div class="well">
+              {{ comment.text|safe }}
+            </div>
+
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ibox ">
+  <div class="ibox-title">
+    <h5>Reply</h5>
+  </div>
+  <div class="ibox-content">
+    <form method="POST" role="form" enctype="multipart/form-data">
+      <input type='hidden' name='action' value='comment' />
+      <div class='form-group row'>
+        {{ form.comment.errors }}
+        {{ form.comment|add_class:"form-control" }}
+      </div>
+      <div class="hr-line-dashed"></div>
+      <div class='form-group row label-comment-action'>
+        <div class="col-sm-4">
+          {{ form.upload.errors }}
+
+          <div class="custom-file label-detail">
+            {{ form.upload.errors }}
+            <input id="upload" type="file" name="upload" class="custom-file-input">
+            <label for="upload" class="custom-file-label" data-placeholder="Choose file...">
+              Choose new label...
+            </label>
+          </div>
+
+        </div>
+
+        <div class='col-sm-2'>
+          <button class='btn btn-primary btn-sm add-loader'
+                  type="submit"
+                  data-loading-text="Please wait...">
+            <i class='fa fa-reply'></i> Submit
+          </button>
+        </div>
+        <div class='col-sm-2 col-sm-offset-4'>
+          <input class='btn btn-default btn-outline btn-sm'
+                  type='reset' value="Discard" />
+        </div>
+      </div>
+
+    </form>
+  </div>
+</div>

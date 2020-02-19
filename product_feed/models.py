@@ -112,7 +112,7 @@ class WooFeedStatus(FeedStatusAbstract):
 
 
 class GearBubbleFeedStatus(FeedStatusAbstract):
-    store = models.OneToOneField('gearbubble_core.GearBubbleStore', related_name='feedstatus')
+    store = models.OneToOneField('gearbubble_core.GearBubbleStore', related_name='feedstatus', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'GearBubble Feed Status'
@@ -123,7 +123,7 @@ class GearBubbleFeedStatus(FeedStatusAbstract):
 
 
 class GrooveKartFeedStatus(FeedStatusAbstract):
-    store = models.OneToOneField('groovekart_core.GrooveKartStore', related_name='feedstatus')
+    store = models.OneToOneField('groovekart_core.GrooveKartStore', related_name='feedstatus', on_delete=models.CASCADE)
 
     class Meta:
         verbose_name = 'GrooveKart Feed Status'

@@ -1,4 +1,5 @@
 FROM python:3.6.8
+ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
@@ -10,7 +11,7 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     postgresql-client
 # We should give exact version to make caching work in a predictable manner.
-RUN pip install pip==19.2.1
+RUN pip install pip==19.3.1
 WORKDIR /opt/dropified
 COPY requirements.txt requirements.txt
 COPY docker/dev_requirements.txt docker/dev_requirements.txt

@@ -222,3 +222,7 @@ ul.shipping-method {
         margin-top: 5px;
     }
 }
+
+#modal-make-payment table th {
+  text-align: left !important;
+}

@@ -293,7 +293,7 @@ class ProfitOrder(models.Model):
     class Meta:
         ordering = ['-date']
 
-    sync = models.ForeignKey(ProfitSync, related_name='orders')
+    sync = models.ForeignKey(ProfitSync, related_name='orders', on_delete=models.CASCADE)
     date = models.DateTimeField()
     order_id = models.BigIntegerField()
     order_name = models.CharField(max_length=255, null=True, blank=True)
@@ -311,7 +311,7 @@ class ProfitRefund(models.Model):
     class Meta:
         ordering = ['-date']
 
-    sync = models.ForeignKey(ProfitSync, related_name='refunds')
+    sync = models.ForeignKey(ProfitSync, related_name='refunds', on_delete=models.CASCADE)
     date = models.DateTimeField()
     order_id = models.BigIntegerField()
     amount = models.DecimalField(decimal_places=2, max_digits=9, default=0)

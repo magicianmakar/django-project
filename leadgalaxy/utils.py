@@ -25,6 +25,7 @@ import simplejson as json
 from boto.s3.key import Key
 from unidecode import unidecode
 from collections import Counter
+import http.cookies as Cookie
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -82,6 +83,11 @@ from shopified_core.shipping_helper import (
     fix_br_address
 )
 from shopify_orders.models import ShopifyOrderLine
+
+
+from django.utils.deprecation import MiddlewareMixin
+
+Cookie.Morsel._reserved['samesite'] = 'SameSite'
 
 
 def upload_from_url(url, stores=[]):
@@ -2463,6 +2469,65 @@ class UserEmailEncodeMiddleware(object):
         params[name] = encode_params(value)
 
         return HttpResponseRedirect('{}?{}'.format(request.path, params.urlencode()))
+
+
+class CookiesSameSite(MiddlewareMixin):
+    CHROME_VALIDATE_REGEX = "Chrome/((5[1-9])|6[0-6])"
+
+    """
+    Support for SameSite attribute in Cookies is implemented in Django 2.1 and won't
+    be backported to Django 1.11.x.
+    This middleware will be obsolete when your app will start using Django 2.1.
+    """
+    def process_response(self, request, response):
+        # same-site = None introduced for Chrome 80 breaks for Chrome 51-66
+        # Refer (https://www.chromium.org/updates/same-site/incompatible-clients)
+        http_user_agent = request.META.get('HTTP_USER_AGENT') or " "
+        if re.search(self.CHROME_VALIDATE_REGEX, http_user_agent):
+            return response
+
+        protected_cookies = getattr(
+            settings,
+            'SESSION_COOKIE_SAMESITE_KEYS',
+            set()
+        ) or set()
+
+        if not isinstance(protected_cookies, (list, set, tuple)):
+            raise ValueError('SESSION_COOKIE_SAMESITE_KEYS should be a list, set or tuple.')
+
+        protected_cookies = set(protected_cookies)
+        protected_cookies |= {settings.SESSION_COOKIE_NAME, settings.CSRF_COOKIE_NAME}
+
+        samesite_flag = getattr(
+            settings,
+            'SESSION_COOKIE_SAMESITE2',
+            None
+        )
+
+        if not samesite_flag:
+            return response
+
+        samesite_flag = samesite_flag.lower()
+
+        if samesite_flag not in {'lax', 'none', 'strict'}:
+            raise ValueError('samesite must be "lax", "none", or "strict".')
+
+        samesite_force_all = getattr(
+            settings,
+            'SESSION_COOKIE_SAMESITE_FORCE_ALL',
+            False
+        )
+        if samesite_force_all:
+            for cookie in response.cookies:
+                response.cookies[cookie]['samesite'] = samesite_flag
+                response.cookies[cookie]['secure'] = True
+        else:
+            for cookie in protected_cookies:
+                if cookie in response.cookies:
+                    response.cookies[cookie]['samesite'] = samesite_flag
+                    response.cookies[cookie]['secure'] = True
+
+        return response
 
 
 class ShopifyOrderPaginator(Paginator):

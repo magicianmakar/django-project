@@ -24,6 +24,7 @@ from leadgalaxy.models import ShopifyStore, AppPermission
 from leadgalaxy.tasks import delete_shopify_store
 
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
+from shopify_orders.utils import get_elastic
 
 from shopified_core.utils import base64_encode
 
@@ -652,6 +653,11 @@ class ShopifyMandatoryWebhooksTestCase(BaseTestCase):
         self.assertNotEqual(orders.count(), 0)
 
     def test_delete_customer(self):
+        # Elasticsearch Index can be deleted and fail test
+        es = get_elastic()
+        if not es.indices.exists(index="shopify-order"):
+            es.indices.create(index='shopify-order')
+
         response = self.client.post('/webhook/gdpr-shopify/delete-customer',
                                     self.customer_payload,
                                     content_type="application/json",

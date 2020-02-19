@@ -23,6 +23,7 @@ from django.core.cache.utils import make_template_fragment_key
 
 from profits.mixins import ProfitDashboardMixin
 
+from supplements.models import PLSOrderLine
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired, HasSubuserPermission
 from shopified_core.paginators import SimplePaginator
@@ -659,6 +660,9 @@ class OrdersList(ListView):
 
                     if product.has_supplier:
                         item['supplier'] = supplier = product.default_supplier
+                        is_pls = item['is_pls'] = supplier.is_pls
+                        if is_pls:
+                            item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(item['supplier_type'])
                         order_data = self.get_order_data(order, item, product, supplier)

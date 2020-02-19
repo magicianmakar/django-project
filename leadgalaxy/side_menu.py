@@ -22,6 +22,7 @@ def get_menu_structure(namespace):
             'callflex',
             'tubehunt',
             'tools',
+            'pls',
         ]),
     ]
 
@@ -89,7 +90,7 @@ def get_menu_item_data():
         'all-products': {
             'title': 'Saved Products',
             'url_name': 'products_list',
-            'match': re.compile(r'(/\w+)?/products?$'),
+            'match': re.compile(r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/products$'),
         },
         'import-products': {
             'title': 'Import Products',
@@ -190,6 +191,20 @@ def get_menu_item_data():
             'match': re.compile(r'^/print-on-demand'),
             'is_ns_aware': False,
             'permissions': ['print_on_demand.use'],
+        },
+        'pls': {
+            'title': 'PLSupplements',
+            'url_name': 'pls:index',
+            'match': re.compile(r'^/pls'),
+            'is_ns_aware': False,
+            'permissions': ['pls.use'],
+        },
+        'dropified-product': {
+            'title': 'Fulfilled by Dropified',
+            'url_name': 'dropified_product:index',
+            'match': re.compile(r'^/dropified_product'),
+            'is_ns_aware': False,
+            'permissions': ['dropified_product.use'],
         },
     }
 

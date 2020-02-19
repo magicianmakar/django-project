@@ -1,0 +1,89 @@
+{% load template_helper %}
+{% load widget_tweaks %}
+
+<div class="form-group">
+  {{ form.title.errors }}
+  <label class="col-sm-2 col-xs-12 control-label">Name:</label>
+  <div class="col-sm-10 col-xs-12">
+    {{ form.title|add_class:"form-control" }}
+  </div>
+</div>
+
+<div class="form-group">
+  {{ form.price.errors }}
+  <label class="col-sm-2 col-xs-12 control-label">Price:</label>
+  <div class="col-sm-10 col-xs-12">
+    <div class='input-group'>
+      <span class="input-group-addon">$</span>
+      {{ form.price|add_class:"form-control" }}
+    </div>
+  </div>
+</div>
+
+<div class="form-group">
+  {{ form.compare_at_price.errors }}
+  <label class="col-sm-2 col-xs-12 control-label">Compare at Price:</label>
+  <div class="col-sm-10 col-xs-12">
+    <div class='input-group'>
+      <span class="input-group-addon">$</span>
+      {{ form.compare_at_price|add_class:"form-control" }}
+    </div>
+  </div>
+</div>
+
+<div class="form-group">
+  {{ form.cost_price.errors }}
+  <label class="col-sm-2 col-xs-12 control-label">Cost Price:</label>
+  <div class="col-sm-10 col-xs-12">
+    <div class='input-group'>
+      <span class="input-group-addon">$</span>
+      {{ form.cost_price|add_class:"form-control"|attr:"readonly" }}
+    </div>
+  </div>
+</div>
+
+<div class="form-group">
+  {{ form.shipstation_sku.errors }}
+  <label class="col-sm-2 col-xs-12 control-label">Shipstation SKU:</label>
+  <div class="col-sm-10 col-xs-12">
+    {{ form.shipstation_sku|add_class:"form-control"|attr:"readonly" }}
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="col-sm-2 col-xs-12 control-label">Label Size:</label>
+  <div class="col-sm-10 col-xs-12">
+    {{ form.label_size|add_class:"form-control"|attr:"readonly" }}
+  </div>
+</div>
+
+<div class="form-group">
+  <label class="col-sm-2 control-label">Shipping Countries:</label>
+  <div class="col-sm-10 col-xs-12">
+    {{ form.shipping_countries|add_class:"form-control"|attr:"readonly"|attr:"id=shipping-countries" }}
+  </div>
+</div>
+
+<div class="form-group">
+  {{ form.description.errors }}
+  <label class="col-sm-2 col-xs-12 control-label">Description:</label>
+  <div class="col-sm-10 col-xs-12">
+    {{ form.description|add_class:"form-control" }}
+  </div>
+</div>
+
+<div class="form-group">
+  {{ form.tags.errors }}
+  <label class="col-sm-2 col-xs-12 control-label">Tags:</label>
+  <div class="col-sm-10 col-xs-12">
+    {{ form.tags|add_class:"form-control" }}
+  </div>
+</div>
+
+<div class="form-group">
+  {{ form.category.errors }}
+  <label class="col-sm-2 col-xs-12 control-label">Product Type:</label>
+  <div class="col-sm-10 col-xs-12">
+    {{ form.category|add_class:"form-control" }}
+  </div>
+</div>
