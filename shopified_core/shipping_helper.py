@@ -117,14 +117,15 @@ def load_uk_provincess():
 
     uk_provinces = {}
     data_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'uk_provinces.csv')
-    lines = open(data_file).readlines()
-    for l in lines:
-        parts = [j.strip() for j in l.split(',')]
-        if len(parts) == 2:
-            city = parts[0].lower()
-            province = parts[1]
-            if city not in uk_provinces and province.lower() in ALIEXPRESS_UK_PROVINCES:
-                uk_provinces[city] = province
+    with open(data_file) as f:
+        lines = f.readlines()
+        for l in lines:
+            parts = [j.strip() for j in l.split(',')]
+            if len(parts) == 2:
+                city = parts[0].lower()
+                province = parts[1]
+                if city not in uk_provinces and province.lower() in ALIEXPRESS_UK_PROVINCES:
+                    uk_provinces[city] = province
 
     return uk_provinces
 
@@ -136,9 +137,10 @@ def load_aliexpress_countries():
         return aliexpress_countries
 
     data_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'shipping', 'aliexpress_countries.json')
-    aliexpress_countries = json.loads(open(data_file).read())
+    with open(data_file) as f:
+        aliexpress_countries = json.loads(f.read())
 
-    return aliexpress_countries
+        return aliexpress_countries
 
 
 def load_ebay_countries():
@@ -148,9 +150,10 @@ def load_ebay_countries():
         return ebay_countries
 
     data_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'shipping', 'ebay_countries.json')
-    ebay_countries = json.loads(open(data_file).read().lower())
+    with open(data_file) as f:
+        ebay_countries = json.loads(f.read().lower())
 
-    return ebay_countries
+        return ebay_countries
 
 
 def get_uk_province(city, default=''):
@@ -382,9 +385,8 @@ def load_countries():
     global countries_code
 
     if countries_code is None:
-        countries_code = json.load(
-            open(os.path.join(settings.BASE_DIR, 'app/data/shipping/countries.json')),
-            object_pairs_hook=OrderedDict)
+        with open(os.path.join(settings.BASE_DIR, 'app/data/shipping/countries.json')) as f:
+            countries_code = json.loads(f.read(), object_pairs_hook=OrderedDict)
 
     return countries_code
 
@@ -409,7 +411,8 @@ def province_from_code(country_code, province_code):
     if country_code not in provinces_code:
         path = os.path.join(settings.BASE_DIR, 'app/data/shipping/provinces/{}.json'.format(country_code))
         if os.path.isfile(path):
-            provinces_code[country_code] = json.load(open(path))
+            with open(path) as f:
+                provinces_code[country_code] = json.loads(f.read())
 
     province = provinces_code.get(country_code, {}).get(province_code)
 
