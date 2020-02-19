@@ -49,8 +49,8 @@ class Migration(migrations.Migration):
                 ('is_default', models.BooleanField(default=False)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('product', models.ForeignKey(to='gearbubble_core.GearBubbleProduct')),
-                ('store', models.ForeignKey(related_name='suppliers', to='gearbubble_core.GearBubbleStore', null=True)),
+                ('product', models.ForeignKey(to='gearbubble_core.GearBubbleProduct', on_delete=django.db.models.deletion.CASCADE)),
+                ('store', models.ForeignKey(related_name='suppliers', to='gearbubble_core.GearBubbleStore', null=True, on_delete=django.db.models.deletion.CASCADE)),
             ],
         ),
         migrations.AddField(
@@ -66,11 +66,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='gearbubbleproduct',
             name='store',
-            field=models.ForeignKey(related_name='products', to='gearbubble_core.GearBubbleStore', null=True),
+            field=models.ForeignKey(related_name='products', to='gearbubble_core.GearBubbleStore', null=True, on_delete=django.db.models.deletion.CASCADE),
         ),
         migrations.AddField(
             model_name='gearbubbleproduct',
             name='user',
-            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=django.db.models.deletion.CASCADE),
         ),
     ]

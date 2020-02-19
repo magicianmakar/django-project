@@ -32,8 +32,8 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Submission date')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Last update')),
                 ('status_updated_at', models.DateTimeField(auto_now_add=True, verbose_name='Last Status Update')),
-                ('store', models.ForeignKey(to='gearbubble_core.GearBubbleStore', null=True)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('store', models.ForeignKey(to='gearbubble_core.GearBubbleStore', null=True, on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
                 'ordering': ['-created_at'],

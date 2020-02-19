@@ -59,7 +59,7 @@ class GrooveKartStore(StoreBase):
     class Meta(StoreBase.Meta):
         verbose_name = 'GrooveKart Store'
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=300, blank=True, default='')
     api_url = models.CharField(max_length=512, blank=True, default='')
     api_key = models.CharField(max_length=300, blank=True, default='')
@@ -178,8 +178,8 @@ class GrooveKartProduct(ProductBase):
         verbose_name = 'GrooveKart Product'
         ordering = ['-created_at']
 
-    store = models.ForeignKey('GrooveKartStore', related_name='products', null=True)
-    user = models.ForeignKey(User)
+    store = models.ForeignKey('GrooveKartStore', related_name='products', null=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     data = models.TextField(default='{}', blank=True)
     notes = models.TextField(null=True, blank=True)
@@ -657,8 +657,8 @@ class GrooveKartProduct(ProductBase):
 
 
 class GrooveKartSupplier(SupplierBase):
-    store = models.ForeignKey('GrooveKartStore', null=True, related_name='suppliers')
-    product = models.ForeignKey('GrooveKartProduct')
+    store = models.ForeignKey('GrooveKartStore', null=True, related_name='suppliers', on_delete=models.CASCADE)
+    product = models.ForeignKey('GrooveKartProduct', on_delete=models.CASCADE)
 
     product_url = models.CharField(max_length=512, null=True, blank=True)
     supplier_name = models.CharField(max_length=512, null=True, blank=True, db_index=True)
@@ -766,7 +766,7 @@ class GrooveKartSupplier(SupplierBase):
 
 
 class GrooveKartUserUpload(UserUploadBase):
-    product = models.ForeignKey('GrooveKartProduct', null=True)
+    product = models.ForeignKey('GrooveKartProduct', null=True, on_delete=models.CASCADE)
 
 
 class GrooveKartBoard(BoardBase):
@@ -779,7 +779,7 @@ class GrooveKartBoard(BoardBase):
 class GrooveKartOrderTrack(OrderTrackBase):
     CUSTOM_TRACKING_KEY = 'gkart_custom_tracking'
 
-    store = models.ForeignKey('GrooveKartStore', null=True)
+    store = models.ForeignKey('GrooveKartStore', null=True, on_delete=models.CASCADE)
     groovekart_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="GrooveKart Fulfillment Status")
 
     def __str__(self):

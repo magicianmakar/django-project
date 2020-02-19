@@ -32,7 +32,7 @@ class GearBubbleStore(StoreBase):
     LIVE = 'live'
     MODE_CHOICES = [(STAGING, 'Staging'), (LIVE, 'Live')]
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=300, blank=True, default='')
     api_token = models.CharField(max_length=300)
     is_active = models.BooleanField(default=True)
@@ -112,8 +112,8 @@ class GearBubbleProduct(ProductBase):
         verbose_name = 'GearBubble Product'
         ordering = ['-created_at']
 
-    store = models.ForeignKey('GearBubbleStore', related_name='products', null=True)
-    user = models.ForeignKey(User)
+    store = models.ForeignKey('GearBubbleStore', related_name='products', null=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     data = models.TextField(default='{}', blank=True)
     notes = models.TextField(null=True, blank=True)
@@ -519,8 +519,8 @@ class GearBubbleProduct(ProductBase):
 
 
 class GearBubbleSupplier(SupplierBase):
-    store = models.ForeignKey('GearBubbleStore', null=True, related_name='suppliers')
-    product = models.ForeignKey('GearBubbleProduct')
+    store = models.ForeignKey('GearBubbleStore', null=True, related_name='suppliers', on_delete=models.CASCADE)
+    product = models.ForeignKey('GearBubbleProduct', on_delete=models.CASCADE)
 
     product_url = models.CharField(max_length=512, null=True, blank=True)
     supplier_name = models.CharField(max_length=512, null=True, blank=True, db_index=True)
@@ -607,7 +607,7 @@ class GearBubbleSupplier(SupplierBase):
 
 
 class GearUserUpload(UserUploadBase):
-    product = models.ForeignKey('GearBubbleProduct', null=True)
+    product = models.ForeignKey('GearBubbleProduct', null=True, on_delete=models.CASCADE)
 
 
 class GearBubbleBoard(BoardBase):
@@ -618,8 +618,8 @@ class GearBubbleBoard(BoardBase):
 
 
 class GearBubbleOrderTrack(OrderTrackBase):
-    user = models.ForeignKey(User)
-    store = models.ForeignKey('GearBubbleStore', null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey('GearBubbleStore', null=True, on_delete=models.CASCADE)
     gearbubble_status = models.CharField(max_length=128, blank=True, null=True, default='', verbose_name="GearBubble Fulfillment Status")
 
     def __str__(self):

@@ -777,7 +777,7 @@ class SubuserWooPermission(models.Model):
 class SubuserGearPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    store = models.ForeignKey('gearbubble_core.GearBubbleStore', related_name='subuser_gear_permissions')
+    store = models.ForeignKey('gearbubble_core.GearBubbleStore', related_name='subuser_gear_permissions', on_delete=models.CASCADE)
 
     class Meta:
         ordering = 'pk',
@@ -790,7 +790,7 @@ class SubuserGearPermission(models.Model):
 class SubuserGKartPermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    store = models.ForeignKey('groovekart_core.GrooveKartStore', related_name='subuser_gkart_permissions')
+    store = models.ForeignKey('groovekart_core.GrooveKartStore', related_name='subuser_gkart_permissions', on_delete=models.CASCADE)
 
     class Meta:
         ordering = 'pk',
@@ -803,7 +803,7 @@ class SubuserGKartPermission(models.Model):
 class SubuserBigCommercePermission(models.Model):
     codename = models.CharField(max_length=100)
     name = models.CharField(max_length=255)
-    store = models.ForeignKey('bigcommerce_core.BigCommerceStore', related_name='subuser_bigcommerce_permissions')
+    store = models.ForeignKey('bigcommerce_core.BigCommerceStore', related_name='subuser_bigcommerce_permissions', on_delete=models.CASCADE)
 
     class Meta:
         ordering = 'pk',

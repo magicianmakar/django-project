@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('logs', models.TextField(null=True, blank=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore')),
+                ('store', models.ForeignKey(to='leadgalaxy.ShopifyStore', on_delete=models.CASCADE)),
             ],
         ),
     ]

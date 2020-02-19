@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(null=True, blank=True)),
                 ('fb_access_at', models.DateTimeField(null=True, verbose_name='Last Facebook Access', blank=True)),
-                ('store', models.OneToOneField(related_name='feedstatus', to='gearbubble_core.GearBubbleStore')),
+                ('store', models.OneToOneField(related_name='feedstatus', to='gearbubble_core.GearBubbleStore', on_delete=models.deletion.CASCADE)),
             ],
             options={
                 'verbose_name': 'GearBubble Feed Status',

@@ -39,7 +39,7 @@ class Product(models.Model):
 
     title = models.TextField(blank=True, default='')
     description = models.TextField(blank=True, default='')
-    product_type = models.ForeignKey(Category, null=True)
+    product_type = models.ForeignKey(Category, null=True, on_delete=models.CASCADE)
     default_image = models.CharField(max_length=512, blank=True, default='')
     dropified_image = models.CharField(max_length=512, blank=True, default='', verbose_name="Default Image (Overrite)")
 
@@ -174,7 +174,7 @@ class Product(models.Model):
 
 
 class ProductPrice(models.Model):
-    product = models.ForeignKey(Product, null=True, related_name='prices')
+    product = models.ForeignKey(Product, null=True, related_name='prices', on_delete=models.CASCADE)
     sku = models.CharField(max_length=100, unique=True, null=True, blank=True)
     dropified_profit = models.DecimalField(decimal_places=2, max_digits=9, verbose_name="Dropified Profit")
     source_profit = models.DecimalField(decimal_places=2, max_digits=9, verbose_name="LayerApp Profit")
@@ -194,8 +194,8 @@ class CustomProduct(models.Model):
     class Meta:
         ordering = 'title',
 
-    product = models.ForeignKey(Product)
-    user = models.ForeignKey(User)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.TextField(blank=True, default='')
     description = models.TextField(blank=True, default='')
     product_type = models.CharField(max_length=255, blank=True, default='')
@@ -466,7 +466,7 @@ class Order(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     store_object = GenericForeignKey('content_type', 'object_id')
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     order_name = models.CharField(max_length=200, blank=True, default='', verbose_name="Order ID")  # POD order id
     order_reference = models.CharField(max_length=200)  # Order name from store platform
     order_id = models.BigIntegerField()  # ID from store platform
@@ -568,11 +568,11 @@ class OrderItem(models.Model):
     track = GenericForeignKey('track_content_type', 'track_object_id')
     line_id = models.BigIntegerField()
 
-    order = models.ForeignKey(Order, related_name='line_items')
+    order = models.ForeignKey(Order, related_name='line_items', on_delete=models.CASCADE)
     order_data_id = models.CharField(max_length=100)
     title = models.TextField(default='')
     product_id = models.BigIntegerField()
-    custom_product = models.ForeignKey(CustomProduct)
+    custom_product = models.ForeignKey(CustomProduct, on_delete=models.CASCADE)
 
     dropified_price = models.DecimalField(decimal_places=2, max_digits=9, default=0.0)
     dropified_profit = models.DecimalField(decimal_places=2, max_digits=9, default=0.0)

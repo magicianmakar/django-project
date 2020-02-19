@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 
 class VideosList(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=512)
     videos = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')

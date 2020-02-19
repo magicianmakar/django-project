@@ -39,7 +39,7 @@ class BigCommerceStore(StoreBase):
     class Meta(StoreBase.Meta):
         verbose_name = 'BigCommerce Store'
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=300, blank=True, default='')
     api_url = models.CharField(max_length=512)
     api_key = models.CharField(max_length=300)
