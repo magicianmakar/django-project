@@ -521,6 +521,8 @@ class UserProfile(models.Model):
                 return self.has_subuser_woo_permission(codename, store)
             elif store_model_name == 'GearBubbleStore':
                 return self.has_subuser_gear_permission(codename, store)
+            elif store_model_name == 'GrooveKartStore':
+                return self.has_subuser_gkart_permission(codename, store)
             elif store_model_name == 'BigCommerceStore':
                 return self.has_subuser_bigcommerce_permission(codename, store)
             else:
