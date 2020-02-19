@@ -78,12 +78,12 @@ def auth(request):
     context = request.GET['context']
     scope = request.GET['scope']
     store_hash = context.split('/')[1]
-    redirect = request.build_absolute_uri('/bigcommerce/auth')
-    redirect = redirect.replace('http://', 'https://')
+    redirect_url = request.build_absolute_uri('/bigcommerce/auth')
+    redirect_url = redirect_url.replace('http://', 'https://')
 
     try:
         client = BigcommerceApi(client_id=settings.BIGCOMMERCE_CLIENT_ID, store_hash=store_hash)
-        token = client.oauth_fetch_token(settings.BIGCOMMERCE_CLIENT_SECRET, code, context, scope, redirect)
+        token = client.oauth_fetch_token(settings.BIGCOMMERCE_CLIENT_SECRET, code, context, scope, redirect_url)
     except Exception:
         messages.error(request, 'Failed to Get Access Token')
         return redirect('bigcommerce:index')

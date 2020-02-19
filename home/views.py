@@ -3,6 +3,7 @@ from django.core.cache import cache
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.views.generic import View
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from shopified_core import permissions
 from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule, DashboardVideo
@@ -12,6 +13,7 @@ from .context_processors import all_stores
 
 
 @login_required
+@xframe_options_exempt
 def home_page_view(request):
     user = request.user
 
