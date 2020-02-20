@@ -52,6 +52,7 @@ from .models import WooProduct, WooStore, WooBoard
 def woocommerce_products(request, post_per_page=25, sort=None, board=None, store='n'):
     store = request.GET.get('store', store)
     sort = request.GET.get('sort')
+    product_board = request.GET.get('product_board')
 
     user_stores = request.user.profile.get_woo_stores(flat=True)
     res = WooProduct.objects.select_related('store') \
@@ -75,6 +76,13 @@ def woocommerce_products(request, post_per_page=25, sort=None, board=None, store
             res = res.filter(source_id__gt=0, store=store)
 
             permissions.user_can_view(request.user, store)
+
+    if product_board in ['added', 'not_added']:
+        board_list = request.user.models_user.wooboard_set.all()
+        if product_board == "added":
+            res = res.filter(wooboard__in=board_list)
+        elif product_board == "not_added":
+            res = res.exclude(wooboard__in=board_list)
 
     if board:
         res = res.filter(wooboard=board)
