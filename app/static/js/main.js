@@ -1240,6 +1240,25 @@ $(function() {
     }, function() {
         $('#store-dropdown-menu').stop(true, true).delay(200).fadeOut(200);
     });
+
+    $('#store-type-video > *').hover(function() {
+        $('#store-type-video > ul').stop(true, true).fadeIn(0);
+    }, function() {
+        $('#store-type-video > ul').stop(true, true).delay(200).fadeOut(200);
+    });
+    $('#store-type-video li').click(function(e) {
+        $('#store-type-video li.active').removeClass('active');
+        $('#selected-video-platform').text($(e.target).text());
+        $('#store-type-video > ul').stop(true, true).hide();
+    });
+
+    // Select first store platform in list of stores
+    var firstStoreType = $('.store-tables tbody tr:first').attr('store-type');
+    var selectedStoreVideos = $('#store-type-video a[href="#' + firstStoreType + '-vids"]');
+    console.log(selectedStoreVideos);
+    if (selectedStoreVideos.length === 0 && $('#' + firstStoreType + '-vids .training-video').length === 0) {
+        $('#store-type-video a[href="#' + firstStoreType + '-vids"]').trigger('click');
+    }
 });
 
 var ravenOptions = {

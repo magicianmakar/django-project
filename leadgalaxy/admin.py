@@ -398,8 +398,8 @@ class SubuserBigCommercePermissionAdmin(admin.ModelAdmin):
 
 @admin.register(DashboardVideo)
 class DashboardVideoAdmin(SortableAdminMixin, admin.ModelAdmin):
-    list_display = ('url', 'title')
-    search_fields = ('url', 'title')
+    list_display = ('url', 'title', 'store_type')
+    search_fields = ('url', 'title', 'store_type')
 
 
 @admin.register(SubuserGKartPermission)

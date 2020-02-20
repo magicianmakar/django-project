@@ -118,35 +118,63 @@
             </div>
         </div>
         <div class="ibox-content">
-            <div class="row">
-                <div class="col-md-6">
-                    <h4>
-                        Dropified saves time, makes running your business simple and gives you your life back.
-                    </h4>
-                </div>
-                <div class="col-md-6 text-right">
-                    <a href="https://academy.dropified.com/training/" target="_blank" id="view-all-training" class="btn btn-primary btn-rounded">View All Training</a>
-                </div>
-            </div>
-            <br>
-            <div class="row training-videos">
-                {% for video in videos %}
-                <div class="col-md-6 training-video">
-                    <div class="embed-responsive embed-responsive-16by9" style="background-color:#93c47d">
-                        <iframe class="embed-responsive-item" src="{{ video.url }}" allow="fullscreen" allowfullscreen></iframe>
+            <div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>Dropified saves time, makes running your business simple and gives you your life back.</h4>
                     </div>
-                    <h3 class="text-center">
-                        <strong>{{ video.title }}</strong><br>
-                    </h3>
-                    <p class="text-center">{{ video.description }}</p>
-                </div>
 
-                {% if forloop.counter|divisibleby:"2" %}
-                </div>
-                <div class="row training-videos m-t-xl">
-                {% endif %}
+                    <div class="col-md-6">
+                        <a href="https://academy.dropified.com/training/" target="_blank" id="view-all-training" class="btn btn-primary btn-rounded pull-right">View All Training</a>
+                        <div class="dropdown pull-right m-r-md" id="store-type-video">
+                            <button class="btn btn-default btn-outline dropdown-toggle"
+                                    type="button" aria-haspopup="true" aria-expanded="true">
+                                        <span id="selected-video-platform">Shopify</span>
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="tablist">
+                                <li>
+                                    <a href="#shopify-vids" role="tab" data-toggle="tab">Shopify</a>
+                                </li>
 
-                {% endfor %}
+                                <li>
+                                    <a href="#bigcommerce-vids" role="tab" data-toggle="tab">BigCommerce</a>
+                                </li>
+
+                                <li>
+                                    <a href="#chq-vids" role="tab" data-toggle="tab">CommerceHQ</a>
+                                </li>
+
+                                <li>
+                                    <a href="#woo-vids" role="tab" data-toggle="tab">WooCommerce</a>
+                                </li>
+
+                                <li>
+                                    <a href="#gkart-vids" role="tab" data-toggle="tab">GrooveKart</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-content">
+                    {% for store_type, videos in platform_videos.items %}
+                    <div role="tabpanel" class="tab-pane fade {% if forloop.first %}in active{% endif %}" id="{{ store_type }}-vids">
+                        <div class="row training-videos m-b-n-xl">
+                            {% for video in videos %}
+                            <div class="col-md-6 training-video m-b-xl">
+                                <div class="embed-responsive embed-responsive-16by9" style="background-color:#93c47d">
+                                    <iframe class="embed-responsive-item" src="{{ video.url }}" allow="fullscreen" allowfullscreen></iframe>
+                                </div>
+                                <h3 class="text-center">
+                                    <strong>{{ video.title }}</strong><br>
+                                </h3>
+                                <p class="text-center">{{ video.description }}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
     </div>

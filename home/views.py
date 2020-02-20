@@ -37,7 +37,10 @@ def home_page_view(request):
     markup_rules = PriceMarkupRule.objects.filter(user=user.models_user)
 
     user_goals = get_dashboard_user_goals(request.user)
-    videos = DashboardVideo.objects.filter(is_active=True)[:4]
+    videos = DashboardVideo.objects.filter(is_active=True)
+    platform_videos = {t[0]: [] for t in DashboardVideo.STORE_TYPES}
+    for video in videos:
+        platform_videos[video.store_type].append(video)
 
     return render(request, 'home/index.html', {
         'config': config,
@@ -53,7 +56,7 @@ def home_page_view(request):
         'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
         'breadcrumbs': ['Stores'],
         'user_goals': user_goals,
-        'videos': videos,
+        'platform_videos': platform_videos,
     })
 
 

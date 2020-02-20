@@ -2271,10 +2271,19 @@ class AdminEvent(models.Model):
 
 
 class DashboardVideo(models.Model):
+    STORE_TYPES = (
+        ('shopify', 'Shopify'),
+        ('chq', 'CommerceHQ'),
+        ('woo', 'WooCommerce'),
+        ('gkart', 'GrooveKart'),
+        ('bigcommerce', 'BigCommerce'),
+    )
+
     url = models.TextField()
     title = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    store_type = models.CharField(max_length=50, default='shopify', choices=STORE_TYPES)
     display_order = models.PositiveIntegerField(default=0)
 
     def __str__(self):
