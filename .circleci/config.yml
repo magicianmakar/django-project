@@ -64,7 +64,7 @@ jobs:
           - v4-dep-
 
       - run:
-          name: Install Python Dependencies
+          name: Install Dependencies
           command: |
               source venv/bin/activate
               pip install -r requirements.txt
@@ -76,25 +76,6 @@ jobs:
             pip install flake8
             flake8 --version
             flake8 --show-source
-
-      # Save dependency cache
-      - save_cache:
-          key: v4-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
-          paths:
-          - app/static/libs/bower_components
-          - node_modules
-          - venv
-
-  lint:
-    <<: *defaults
-    steps:
-      - checkout
-
-      - restore_cache:
-          keys:
-          - v4-dep-{{ .Branch }}-
-          - v4-dep-master-
-          - v4-dep-
 
       - run:
           name: Common Issues
@@ -113,6 +94,15 @@ jobs:
           name: JSHint
           command: |
             npm run jshint
+
+      # Save dependency cache
+      - save_cache:
+          key: v4-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
+          paths:
+          - app/static/libs/bower_components
+          - node_modules
+          - venv
+
   test:
     <<: *defaults
 
@@ -194,9 +184,6 @@ workflows:
       - lint:
           requires:
             - build
-      - test:
-          requires:
-            - lint
       - statics:
           requires:
-            - lint
+            - build
