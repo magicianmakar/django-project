@@ -169,11 +169,12 @@ def add_product_attributes_to_api_data(api_data, data):
     return api_data
 
 
-def get_image_id_by_hash(product_data):
+def get_image_id_by_hash(api_data, product_data):
     image_id_by_hash = {}
-    for image in product_data.get('images', []):
-        hash_ = hash_url_filename(image['name'])
-        image_id_by_hash[hash_] = image['id']
+    image_id_by_position = {i['position']: i['id'] for i in product_data.get('images', [])}
+    for image in api_data.get('images', []):
+        hash_ = hash_url_filename(image['src'])
+        image_id_by_hash[hash_] = image_id_by_position[image['position']]
 
     return image_id_by_hash
 

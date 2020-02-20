@@ -215,7 +215,7 @@ def product_export(store_id, product_id, user_id, publish=None):
         product.save()
 
         if product_data and saved_data.get('variants', []):
-            image_id_by_hash = get_image_id_by_hash(product_data)
+            image_id_by_hash = get_image_id_by_hash(api_data, product_data)
             variant_list = create_variants_api_data(saved_data, image_id_by_hash)
             path = 'products/{}/variations/batch'.format(product.source_id)
             r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post(path, {'create': variant_list})
