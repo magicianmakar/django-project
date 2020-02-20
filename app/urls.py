@@ -33,6 +33,7 @@ urlpatterns = [
     url(r'^pls/', include(('supplements.urls', 'supplements'), 'pls')),
     url(r'^dropified-product/', include(('dropified_product.urls', 'dropified_product'), 'dropified_product')),
     url(r'^admin/', admin.site.urls),
+    url(r'^tapfiliate/', include('tapfiliate.urls')),
 ]
 
 if settings.DEBUG:

@@ -5,6 +5,7 @@ from django.core.cache import cache
 from django.conf import settings
 
 import arrow
+import datetime
 
 from shopified_core.permissions import can_add_store
 from shopified_core.decorators import upsell_pages
@@ -15,6 +16,7 @@ from leadgalaxy.side_menu import (
     get_namespace,
     create_named_menu,
 )
+from stripe_subscription.stripe_api import stripe
 
 
 def extra_bundles(request):
@@ -105,15 +107,32 @@ def facebook_pixel(request):
 
 
 def tapafilate_conversaion(request):
-    affilaite = None
+    tapafilate_conversaion = None
 
-    if request.user.is_authenticated \
+    # if called from CF order confirmation (not logged in, called via iframe/js with special GET parameter)
+    tapfiliate_user_email = request.GET.get('tapfiliate_user_email', False)
+    if tapfiliate_user_email:
+        # getting stripe customer via API (because of posible webhook delay), most recent first
+        stripe_cus = stripe.Customer.list(email=tapfiliate_user_email, limit=1)
+        if len(stripe_cus.data):
+            # check if time difference is less than 7 days (same as cache)
+            stripe_cus_created = datetime.datetime.fromtimestamp(float(stripe_cus.data[0].created))
+            seconds_passed = (datetime.datetime.now() - stripe_cus_created).total_seconds()
+            if seconds_passed < 99999604800:
+                tapafilate_conversaion = {"affiliate": stripe_cus.data[0].id,
+                                          "email": stripe_cus.data[0].email,
+                                          "full_name": stripe_cus.data[0].metadata.name}
+
+    # fallback to "logined" method
+    elif request.user.is_authenticated \
             and request.user.is_stripe_customer() \
             and cache.get('affilaite_{}'.format(request.user.stripe_customer.customer_id)):
-        affilaite = request.user.stripe_customer.customer_id
+        tapafilate_conversaion = {"affiliate": request.user.stripe_customer.customer_id,
+                                  "email": request.user.email,
+                                  "full_name": request.user.get_full_name}
 
     return {
-        'tapafilate_conversaion': affilaite
+        'tapafilate_conversaion': tapafilate_conversaion
     }
 
 

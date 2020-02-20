@@ -48,8 +48,11 @@ def add_commission_from_stripe(charge_id):
 
     customer = stripe.Customer.retrieve(customer_id)
 
-    affiliate = get_affiliate(conversion['affiliate']['id'])
-    lifetime_comissions_flag = affiliate['meta_data'].get('lifetime_comissions_flag')
+    try:
+        affiliate = get_affiliate(conversion['affiliate']['id'])
+        lifetime_comissions_flag = affiliate['meta_data'].get('lifetime_comissions_flag')
+    except:
+        lifetime_comissions_flag = False
 
     if lifetime_comissions_flag != '1' and arrow.get(customer.created).replace(years=1) < arrow.utcnow():
         # User registered more than 12 months ago, ignore any further commissions

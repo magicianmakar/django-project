@@ -251,9 +251,9 @@
   tap('create', '6857-ecfa17');
 
   {% if tapafilate_conversaion %}
-    tap('conversion', '{{ tapafilate_conversaion }}', 0, {meta_data: {
-        email: "{{ user.email }}",
-        name: "{{ user.get_full_name | default:'' | escapejs }}",
+    tap('conversion', '{{ tapafilate_conversaion.affiliate }}', 0, {meta_data: {
+        email: "{{ tapafilate_conversaion.email }}",
+        name: "{{ tapafilate_conversaion.full_name | default:'' | escapejs }}",
       }});
   {% else %}
     tap('detect');
