@@ -283,15 +283,9 @@
                                     <div class="col-md-2">
                                         <b>{% money_format order.total store %}</b>
                                         <div>
-                                            {% if shipping_method_filter_enabled %}
-                                                {% if order.shipping_lines %}
-                                                <ul class="shipping-method">
-                                                    {% for shipping_line in order.shipping_lines %}
-                                                        <li>{{ shipping_line.title }}</li>
-                                                    {% endfor %}
-                                                </ul>
-                                                {% endif %}
-                                            {% endif %}
+                                            <ul class="shipping-method">
+                                                <li>{{ order.shipping.description|default_if_none:"" }}</li>
+                                            </ul>
                                         </div>
                                     </div>
                                     <div class="col-md-3 col-md-offset-3">
