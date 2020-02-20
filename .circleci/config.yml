@@ -1,86 +1,71 @@
 version: 2
+defaults: &defaults
+  working_directory: ~/ShopifiedApp/webapp
+  docker:
+    - image: circleci/python:3.6.10-node
+      environment:
+        DEBUG_APP: "TRUE"
+
+        DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/circle_test
+        DATA_STORE_DATABASE_URL: ""
+
+        REDISCLOUD_URL: redis://localhost:6379
+        REDISCLOUD_CACHE: redis://localhost:6379
+        REDISCLOUD_ORDERS: redis://localhost:6379
+
+        AWS_ACCESS_KEY_ID: AKIAIVNSP7PF5CR4UC7Q
+        AWS_SECRET_ACCESS_KEY: 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
+
+        S3_CUSTOM_DOMAIN: d1ohstt056kdjc.cloudfront.net
+        S3_BUCKET_NAME: dropified-assets-dev-ci
+        S3_PRODUCT_FEED_BUCKET: shopifiedapp-feeds-dev-789552
+        S3_UPLOADS_BUCKET: shopifiedapp-uploads-dev-789552
+
+        SHOPIFY_API_KEY: f136ffe9efd969c70ad04f31de4a59de
+        SHOPIFY_API_SECRET: e22d8748c0507ad996ef80691a4054a0
+
+        BIGCOMMERCE_APP_ID: 19230
+        BIGCOMMERCE_CLIENT_ID: p95pk5kxbfb9dudaafsev7mcrdcn2h2
+        BIGCOMMERCE_CLIENT_SECRET: f4c8f3801bc4653bd33222bfdb9538dc4d169bef09ca4acffe416baeac1f9439
+
+        PUSHER_APP_ID: 255355
+        PUSHER_KEY: 446d8151fc6d4157e2cc
+        PUSHER_SECRET: 4e7022fac49cdb27bcdb
+        PUSHER_SOCKET_URL: ws://ws.pusherapp.com/app/446d8151fc6d4157e2cc
+        PUSHER_URL: http://446d8151fc6d4157e2cc:4e7022fac49cdb27bcdb@api.pusherapp.com/apps/255355
+
+        FOUNDELASTICSEARCH_URL: https://search-dropified-ci-tests-thechx2xa2if5bonuiyobhyamq.us-east-1.es.amazonaws.com/
+
+        SENDGRID_PASSWORD: ""
+        SENDGRID_USERNAME: ""
+
+        STRIPE_PUBLIC_KEY: ""
+        STRIPE_SECRET_KEY: ""
+
+        JVZOO_SECRET: ""
+
+    - image: circleci/postgres:9.5
+      environment:
+        POSTGRES_USER: ubuntu
+        POSTGRES_DB: circle_test
+        POSTGRES_PASSWORD: "ubuntu1"
+
+    - image: redis:3.2.7
+
 jobs:
   build:
-    working_directory: ~/ShopifiedApp/webapp
-    docker:
-      - image: circleci/python:3.6.10
-        environment:
-          DEBUG_APP: "TRUE"
-
-          DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/circle_test
-          DATA_STORE_DATABASE_URL: ""
-
-          REDISCLOUD_URL: redis://localhost:6379
-          REDISCLOUD_CACHE: redis://localhost:6379
-          REDISCLOUD_ORDERS: redis://localhost:6379
-
-          AWS_ACCESS_KEY_ID: AKIAIVNSP7PF5CR4UC7Q
-          AWS_SECRET_ACCESS_KEY: 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
-
-          S3_CUSTOM_DOMAIN: d1ohstt056kdjc.cloudfront.net
-          S3_BUCKET_NAME: dropified-assets-dev-ci
-          S3_PRODUCT_FEED_BUCKET: shopifiedapp-feeds-dev-789552
-          S3_UPLOADS_BUCKET: shopifiedapp-uploads-dev-789552
-
-          SHOPIFY_API_KEY: f136ffe9efd969c70ad04f31de4a59de
-          SHOPIFY_API_SECRET: e22d8748c0507ad996ef80691a4054a0
-
-          BIGCOMMERCE_APP_ID: 19230
-          BIGCOMMERCE_CLIENT_ID: p95pk5kxbfb9dudaafsev7mcrdcn2h2
-          BIGCOMMERCE_CLIENT_SECRET: f4c8f3801bc4653bd33222bfdb9538dc4d169bef09ca4acffe416baeac1f9439
-
-          PUSHER_APP_ID: 255355
-          PUSHER_KEY: 446d8151fc6d4157e2cc
-          PUSHER_SECRET: 4e7022fac49cdb27bcdb
-          PUSHER_SOCKET_URL: ws://ws.pusherapp.com/app/446d8151fc6d4157e2cc
-          PUSHER_URL: http://446d8151fc6d4157e2cc:4e7022fac49cdb27bcdb@api.pusherapp.com/apps/255355
-
-          FOUNDELASTICSEARCH_URL: https://search-dropified-ci-tests-thechx2xa2if5bonuiyobhyamq.us-east-1.es.amazonaws.com/
-
-          SENDGRID_PASSWORD: ""
-          SENDGRID_USERNAME: ""
-
-          STRIPE_PUBLIC_KEY: ""
-          STRIPE_SECRET_KEY: ""
-
-          JVZOO_SECRET: ""
-
-      - image: circleci/postgres:9.5
-        environment:
-          POSTGRES_USER: ubuntu
-          POSTGRES_DB: circle_test
-          POSTGRES_PASSWORD: "ubuntu1"
-
-      - image: redis:3.2.7
-
+    <<: *defaults
     steps:
       - checkout
       - run:
-          name: Install System Dependencies
+          name: "Init Image"
           command: |
-              source ./scripts/prepare_build.sh
-              sudo pip install codecov
+            source ./scripts/prepare_build.sh
 
-      - run:
-          name: Intall NodeJS
-          command: |
-              curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-
-      - run:
-          name: Static Code Checks
-          command: |
-              flake8 --version
-              flake8 --show-source
-
-      # Restore the dependency cache
       - restore_cache:
           keys:
-          # This branch if available
           - v4-dep-{{ .Branch }}-
-          # Default branch if not
           - v4-dep-master-
-          # Any branch if there are none on the default branch - this should be unnecessary if you have your default branch configured correctly
           - v4-dep-
 
       - run:
@@ -90,11 +75,6 @@ jobs:
               pip install -r requirements.txt
               npm install --dev
 
-      - run:
-          name: Set up test
-          command: |
-              sudo ln -s ~/ShopifiedApp/webapp/node_modules/.bin/yuglify /usr/bin/yuglify
-
       # Save dependency cache
       - save_cache:
           key: v4-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
@@ -102,7 +82,28 @@ jobs:
           - app/static/libs/bower_components
           - node_modules
           - venv
+  lint:
+    <<: *defaults
 
+    steps:
+      - checkout
+      - run:
+          name: "Init Image"
+          command: |
+            source ./scripts/prepare_build.sh
+
+
+      - restore_cache:
+          keys:
+          - v4-dep-{{ .Branch }}-
+          - v4-dep-master-
+          - v4-dep-
+
+      - run:
+          name: Static Code Checks
+          command: |
+              flake8 --version
+              flake8 --show-source
       - run:
           name: Common Issues
           command: |
@@ -120,6 +121,26 @@ jobs:
           name: JSHint
           command: |
             npm run jshint
+  test:
+    <<: *defaults
+
+    steps:
+      - checkout
+      - run:
+          name: "Init Image"
+          command: |
+            source ./scripts/prepare_build.sh
+
+      - restore_cache:
+          keys:
+          - v4-dep-{{ .Branch }}-
+          - v4-dep-master-
+          - v4-dep-
+
+      - run:
+          name: Install Codecov
+          command: |
+            sudo pip install codecov
 
       - run:
           name: Django Tests
@@ -133,6 +154,26 @@ jobs:
             source venv/bin/activate
             coverage report --skip-covered
             coverage html --skip-covered
+      - run:
+          name: Codecov upload
+          command: |
+            codecov --token=1e92f142-d3e3-4ef4-9feb-e4146b378ca4
+
+  statics:
+    <<: *defaults
+
+    steps:
+      - checkout
+      - run:
+          name: "Init Image"
+          command: |
+            source ./scripts/prepare_build.sh
+
+      - restore_cache:
+          keys:
+          - v4-dep-{{ .Branch }}-
+          - v4-dep-master-
+          - v4-dep-
 
       - run:
           name: Static Files
@@ -141,12 +182,37 @@ jobs:
             python manage.py collectstatic --noinput --traceback 2>&1 | sed '/^Post-processed/d;/^Copying/d;/^$/d'
 
       - run:
+          name: Set up yuglify
+          command: |
+              sudo npm install -g yuglify
+
+      - run:
           name: Django Compressor
           command: |
             source venv/bin/activate
             DEBUG_APP="FALSE" python manage.py compress
 
+  deploy:
+    working_directory: ~/ShopifiedApp/webapp
+    docker:
+      - image: circleci/python:3.6.10
+    steps:
       - run:
-          name: Codecov upload
+          name: Deploy Master to Heroku
           command: |
-            codecov --token=1e92f142-d3e3-4ef4-9feb-e4146b378ca4
+            echo "Manual Deploy Only"
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - lint:
+          requires:
+            - build
+      - test:
+          requires:
+            - lint
+      - statics:
+          requires:
+            - lint
