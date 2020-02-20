@@ -176,7 +176,7 @@ class BillingForm(forms.Form):
 
     def __init__(self, data=None, *args, **kwargs):
         if data is not None:
-            data = data.copy() # make it mutable
+            data = data.copy()  # make it mutable
             data['cc_number'] = ''.join(data['cc_number'].strip().split())
 
         super(BillingForm, self).__init__(data, *args, **kwargs)
