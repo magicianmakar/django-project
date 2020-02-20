@@ -4235,9 +4235,9 @@ def orders_view(request):
                     shipping_method = None
 
                 order['line_items'][i]['product'] = product
-                order['line_items'][i]['is_pls'] = supplier.is_pls
                 is_paid = False
-                if order['line_items'][i]['is_pls']:
+                is_pls = order['line_items'][i]['is_pls'] = supplier.is_pls
+                if is_pls:
                     is_paid = PLSOrderLine.is_paid(store, order['id'], el['id'])
                 order['line_items'][i]['is_paid'] = is_paid
                 order['line_items'][i]['supplier'] = supplier

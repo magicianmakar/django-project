@@ -660,9 +660,11 @@ class OrdersList(ListView):
 
                     if product.has_supplier:
                         item['supplier'] = supplier = product.default_supplier
+                        is_paid = False
                         is_pls = item['is_pls'] = supplier.is_pls
                         if is_pls:
-                            item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
+                            is_paid = PLSOrderLine.is_paid(store, order['id'], item['id'])
+                        item['is_paid'] = is_paid
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(item['supplier_type'])
                         order_data = self.get_order_data(order, item, product, supplier)

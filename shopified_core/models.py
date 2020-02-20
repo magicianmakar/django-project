@@ -61,10 +61,6 @@ class ProductBase(models.Model):
                                         on_delete=models.SET_NULL)
 
     @property
-    def is_pls(self):
-        return bool(self.user_supplement)
-
-    @property
     def is_label_approved(self):
         if not self.user_supplement:
             return False
