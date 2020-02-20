@@ -57,11 +57,6 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - run:
-          name: "Init Image"
-          command: |
-            source ./scripts/prepare_build.sh
-
       - restore_cache:
           keys:
           - v4-dep-{{ .Branch }}-
@@ -75,6 +70,13 @@ jobs:
               pip install -r requirements.txt
               npm install --dev
 
+      - run:
+          name: "flake8"
+          command: |
+            pip install flake8
+            flake8 --version
+            flake8 --show-source
+
       # Save dependency cache
       - save_cache:
           key: v4-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
@@ -82,16 +84,11 @@ jobs:
           - app/static/libs/bower_components
           - node_modules
           - venv
+
   lint:
     <<: *defaults
-
     steps:
       - checkout
-      - run:
-          name: "Init Image"
-          command: |
-            source ./scripts/prepare_build.sh
-
 
       - restore_cache:
           keys:
@@ -99,11 +96,6 @@ jobs:
           - v4-dep-master-
           - v4-dep-
 
-      - run:
-          name: Static Code Checks
-          command: |
-              flake8 --version
-              flake8 --show-source
       - run:
           name: Common Issues
           command: |
@@ -126,10 +118,6 @@ jobs:
 
     steps:
       - checkout
-      - run:
-          name: "Init Image"
-          command: |
-            source ./scripts/prepare_build.sh
 
       - restore_cache:
           keys:
@@ -164,10 +152,6 @@ jobs:
 
     steps:
       - checkout
-      - run:
-          name: "Init Image"
-          command: |
-            source ./scripts/prepare_build.sh
 
       - restore_cache:
           keys:
