@@ -104,4 +104,13 @@ $(document).ready(function(){
     });
 
     $("#id_shipping_countries").chosen();
+
+    new Cleave('#cc-number', {
+        creditCard: true,
+    });
+
+    new Cleave('#cc-exp', {
+        date: true,
+        datePattern: ['m', 'Y']
+    });
 });
