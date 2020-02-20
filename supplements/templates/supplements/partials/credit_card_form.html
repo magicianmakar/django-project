@@ -2,6 +2,7 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="form-group">
+                {{ form.name.errors }}
                 <label>Name: <span class="small" style="color:#999;font-weight:normal;white-space:nowrap;">(as it appears on the credit card)</span></label>
                 <input id="cc-name" name="cc-name" type="text" class="form-control cc-name" value="{{source.name|default:''}}">
             </div>
@@ -11,6 +12,7 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="form-group">
+                {{ form.cc_number.errors }}
                 <label>Card Number:</label>
                 <div class="input-group">
                     <input id="cc-number" name="cc-number" type="tel" class="form-control cc-number" autocomplete="cc-number" placeholder="•••• •••• •••• ••••" required="">
@@ -23,6 +25,7 @@
     <div class="row">
         <div class="col-xs-7 col-md-7">
             <div class="form-group">
+                {{ form.cc_expiry.errors }}
                 <label>Expiration Date:</label>
                 <input id="cc-exp" name="cc-exp" type="tel" class="form-control cc-exp"
                        autocomplete="cc-exp" placeholder="•• / ••••" required="">
@@ -30,6 +33,7 @@
         </div>
         <div class="col-xs-5 col-md-5">
             <div class="form-group">
+                {{ form.cc_cvv.errors }}
                 <label>CVV:</label>
                 <input id="cc-cvc" name="cc-cvc" type="tel" class="form-control cc-cvc" maxlength="3" value="" autocomplete="off" placeholder="•••" required="">
             </div>

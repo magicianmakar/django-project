@@ -2,6 +2,7 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="form-group">
+                {{ form.address_line1.errors }}
                 <!-- <label>Street Address 1:</label> -->
                 <input id="address_line1" name="address_line1" type="text" class="form-control"
                        value="{{source.address_line1|default:''}}" placeholder="Street Address 1">
@@ -12,6 +13,7 @@
     <div class="row">
         <div class="col-xs-12">
             <div class="form-group">
+                {{ form.address_line2.errors }}
                 <!-- <label>Street Address 2:</label> -->
                 <input id="address_line2" name="address_line2" type="text" class="form-control"
                        value="{{source.address_line2|default:''}}" placeholder="Street Address 2">
@@ -22,6 +24,7 @@
     <div class="row">
         <div class="col-xs-5 col-md-5">
             <div class="form-group">
+                {{ form.address_city.errors }}
                 <!-- <label>City:</label> -->
                 <input id="address_city" name="address_city" type="text" class="form-control "
                        value="{{source.address_city|default:''}}" placeholder="City" required="">
@@ -29,6 +32,7 @@
         </div>
         <div class="col-xs-7 col-md-7">
             <div class="form-group">
+                {{ form.address_state.errors }}
                 <!-- <label>State/Province:</label> -->
                 <input id="address_state" name="address_state" type="text" class="form-control "
                        value="{{source.address_state|default:''}}" placeholder="State/Province" required="">
@@ -39,6 +43,7 @@
     <div class="row">
         <div class="col-xs-5 col-md-5">
             <div class="form-group">
+                {{ form.address_zip.errors }}
                 <!-- <label>ZIP/Postal Code:</label> -->
                 <input id="address_zip" name="address_zip" type="text" class="form-control "
                        value="{{source.address_zip|default:''}}" placeholder="ZIP/Postal Code" required="">
@@ -47,6 +52,7 @@
         <div class="col-xs-7 col-md-7">
             <div class="form-group">
                 <!-- <label>Country:</label> -->
+                {{ form.address_country.errors }}
 
                 <select id="address_country" name="address_country" class="form-control" style="width:70%" data-placeholder="Country">
                     <option value=""></option>

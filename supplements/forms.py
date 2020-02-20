@@ -171,7 +171,7 @@ class BillingForm(forms.Form):
     address_line2 = forms.CharField(required=False)
     address_city = forms.CharField()
     address_state = forms.CharField()
-    address_zip = forms.CharField(max_length=5)
+    address_zip = forms.CharField(max_length=10)
     address_country = forms.CharField(max_length=5)
 
     def __init__(self, data=None, *args, **kwargs):
