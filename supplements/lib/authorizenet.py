@@ -91,7 +91,6 @@ def create_payment_profile(payment_data, customer_profile_id):
     controller.execute()
 
     response = controller.getresponse()
-    raven_client.captureMessage('one', level='warning')
     if response.messages.resultCode == 'Error':
         message = response.messages.message[0]['text']
         raven_client.captureMessage(message, level='warning')
