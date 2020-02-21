@@ -4,6 +4,13 @@
 {% load static %}
 
 {% block tab_content %}
+{% if error %}
+<div class="alert alert-danger alert-dismissable">
+  <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+  {{ error }}
+</div>
+{% endif %}
+
 {% if request.user.authorize_net_customer.has_billing %}
   <div class="panel-body">
     {% with source=request.user.authorize_net_customer.payment_profile %}

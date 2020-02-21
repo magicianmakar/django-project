@@ -40,13 +40,13 @@ def create_customer_profile(user):
     response = controller.getresponse()
 
     duplicate_regex = r'A duplicate record with ID (\d+) already exists.'
-    if response.messages.resultCode == 'OK':
+    if response.messages.resultCode == 'Ok':
         return response.customerProfileId
-    else:
-        message = response.messages.message[0]['text'].text
-        result = re.match(duplicate_regex, message)
-        if result:
-            return result.group(1)
+
+    message = response.messages.message[0]['text'].text
+    result = re.match(duplicate_regex, message)
+    if result:
+        return result.group(1)
 
 
 def create_payment_profile(payment_data, customer_profile_id):
@@ -91,11 +91,13 @@ def create_payment_profile(payment_data, customer_profile_id):
     controller.execute()
 
     response = controller.getresponse()
-    if response.messages.resultCode == 'Error':
-        message = response.messages.message[0]['text']
-        raven_client.captureMessage(message, level='warning')
+    error = ''
+    if response.messages.resultCode == 'Ok':
+        return (response.customerPaymentProfileId, error)
 
-    return response.customerPaymentProfileId
+    error = message = response.messages.message[0]['text']
+    raven_client.captureMessage(message, level='warning')
+    return ('', error)
 
 
 def charge_customer_profile(amount, customer_id, payment_id, lines):
@@ -145,7 +147,4 @@ def get_customer_payment_profile(profile_id, payment_id):
 
     response = controller.getresponse()
 
-    try:
-        return response.paymentProfile
-    except AttributeError:
-        pass
+    return response.paymentProfile

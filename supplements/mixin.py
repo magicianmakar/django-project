@@ -303,10 +303,16 @@ class AuthorizeNetCustomerMixin:
         if not self.has_billing():
             return
 
-        data = get_customer_payment_profile(
-            self.customer_id,
-            self.payment_id,
-        )
+        try:
+            data = get_customer_payment_profile(
+                self.customer_id,
+                self.payment_id,
+            )
+        except AttributeError:
+            self.payment_id = None
+            self.customer_id = None
+            self.save()
+            return
 
         self.payment_profile = {
             'credit_card': data.payment.creditCard,

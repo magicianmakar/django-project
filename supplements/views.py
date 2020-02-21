@@ -717,6 +717,7 @@ class Billing(LoginRequiredMixin, TemplateView):
         )
 
     def post(self, request):
+        error = ''
         form = self.form = self.get_form()
         if form.is_valid():
             user = self.request.user
@@ -730,13 +731,13 @@ class Billing(LoginRequiredMixin, TemplateView):
                 customer_id = create_customer_profile(request.user)
 
             data = self.get_payment_data()
-            payment_id = create_payment_profile(data, customer_id)
-            self.add_ids_to_user(customer_id, payment_id)
+            payment_id, error = create_payment_profile(data, customer_id)
+            if payment_id:
+                self.add_ids_to_user(customer_id, payment_id)
+                url = reverse('pls:billing')
+                return redirect(url)
 
-            url = reverse('pls:billing')
-            return redirect(url)
-
-        context = self.get_context_data(form=form)
+        context = self.get_context_data(form=form, error=error)
         return render(request, self.template_name, context=context)
 
     def add_ids_to_user(self, profile_id, payment_id):
