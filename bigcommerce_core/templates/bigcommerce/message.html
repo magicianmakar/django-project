@@ -12,15 +12,3 @@
 {% endif %}
 </div>
 {% endblock %}
-
-{% block extrajs %}
-<script type="text/javascript">
-    $(function () {
-        if(self !== top) {
-            $('#side-menu').find('a').each(function() {
-                    $(this).attr('target', '_blank');
-            });
-        }
-    });
-</script>
-{% endblock %}
