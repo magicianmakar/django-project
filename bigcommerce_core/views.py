@@ -86,12 +86,12 @@ def auth(request):
         token = client.oauth_fetch_token(settings.BIGCOMMERCE_CLIENT_SECRET, code, context, scope, redirect_url)
     except Exception:
         messages.error(request, 'Failed to Get Access Token')
-        return redirect('bigcommerce:index')
+        return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
     user = request.user
     if user.is_subuser:
         messages.error(request, 'Sub-Users can not add new stores')
-        return redirect('bigcommerce:index')
+        return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
     can_add, total_allowed, user_count = permissions.can_add_store(user)
 
@@ -113,12 +113,12 @@ def auth(request):
 
             if user.profile.plan.is_free or user.can_trial():
                 messages.error(request, 'Please Activate your account first by visiting:\n{}')
-                return redirect('bigcommerce:index')
+                return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
             else:
                 messages.error(request, ('Your plan does not support connecting another BigCommerce store. '
                                          'Please contact support@dropified.com to learn how to connect '
                                          'more stores.'))
-                return redirect('bigcommerce:index')
+                return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
     access_token = token['access_token']
     client = BigcommerceApi(client_id=settings.BIGCOMMERCE_CLIENT_ID, store_hash=store_hash, access_token=access_token)
@@ -135,7 +135,7 @@ def auth(request):
     store.save()
 
     messages.success(request, 'Your store was successfully installed.')
-    return redirect('bigcommerce:index')
+    return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
 
 @login_required
@@ -150,14 +150,14 @@ def load(request):
 
             if not permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
                 messages.error(request, 'You don\'t have access to this store')
-                return redirect('bigcommerce:index')
+                return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
             messages.success(request, 'Your store was successfully installed.')
-            return redirect('bigcommerce:index')
+            return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
         except BigCommerceStore.DoesNotExist:
             messages.error(request, 'Couldn\'t find this store')
-            return redirect('bigcommerce:index')
+            return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
         # except BigCommerceStore.MultipleObjectsReturned:
         #     # TODO: Handle multi stores
         #     raven_client.captureException()
@@ -165,7 +165,7 @@ def load(request):
         #     raven_client.captureException()
 
     messages.error(request, 'Verification failed')
-    return redirect('bigcommerce:index')
+    return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
 
 @xframe_options_exempt
@@ -718,11 +718,11 @@ class OrdersList(ListView):
 
         if not self.get_store():
             messages.warning(request, 'Please add at least one store before using the Orders page.')
-            return redirect('bigcommerce:index')
+            return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
         if not request.user.can('place_orders.sub', self.get_store()):
             messages.warning(request, "You don't have access to this store orders")
-            return redirect('bigcommerce:index')
+            return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
@@ -1062,7 +1062,7 @@ class OrdersTrackList(ListView):
 
         if not self.get_store():
             messages.warning(request, 'Please add at least one store before using the Tracking page.')
-            return redirect('bigcommerce:index')
+            return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
         return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
 

@@ -1679,6 +1679,14 @@
                 });
             }, window.extensionSendMessage ? 100 : 1000);
         }
+
+        var urlParams = new URLSearchParams(window.location.search);
+        var newTab = urlParams.get('new_tab');
+        if (newTab === '1') {
+            $('a', '.store-tables, #side-menu').each(function() {
+                $(this).attr('target', '_blank');
+            });
+        }
     });
 
 })(sub_conf, user_statistics);
