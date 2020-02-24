@@ -1255,7 +1255,6 @@ $(function() {
     // Select first store platform in list of stores
     var firstStoreType = $('.store-tables tbody tr:first').attr('store-type');
     var selectedStoreVideos = $('#store-type-video a[href="#' + firstStoreType + '-vids"]');
-    console.log(selectedStoreVideos);
     if (selectedStoreVideos.length === 0 && $('#' + firstStoreType + '-vids .training-video').length === 0) {
         $('#store-type-video a[href="#' + firstStoreType + '-vids"]').trigger('click');
     }

@@ -159,18 +159,6 @@
         {% if request.user|can:'bigcommerce.use' %}
         var bigcommerce_app_id = "{% app_setting 'BIGCOMMERCE_APP_ID' %}";
         {% endif %}
-
-        $(function () {
-            var urlParams = new URLSearchParams(window.location.search);
-            var newTab = urlParams.get('new_tab');
-            if(newTab === '1') {
-                $('#side-menu').find('a').each(function() {
-                    $(this).attr('target', '_blank');
-                });     
-            }
-
-        });
-
     </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
