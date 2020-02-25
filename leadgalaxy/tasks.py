@@ -209,7 +209,32 @@ def export_product(req_data, target, user_id):
                 if user.id == 43981 and api_data['product'].get('body_html'):
                     api_data['product']['body_html'] = re.sub(r'<(/?)i( [^>]+)?>', r'<\1em\2>', api_data['product']['body_html'])
 
+                # Separate images and merge them later
+                remaining_images = []
+                max_images_chunk = 50
+                if len(api_data['product']['images']) > max_images_chunk:
+                    remaining_images = api_data['product']['images'][max_images_chunk:]
+                    api_data['product']['images'] = api_data['product']['images'][:max_images_chunk]
+
                 r = requests.post(endpoint, json=api_data)
+
+                # Shopify can take too long to process each image
+                if len(remaining_images) > 0 and 'product' in r.json():
+                    created_product = r.json()['product']
+                    update_endpoint = store.get_link(f"/admin/products/{created_product['id']}.json", api=True)
+                    i = 0
+                    for chunk in range(0, len(remaining_images), max_images_chunk):
+                        i += 1
+                        if 'product' in r.json():
+                            created_product = r.json()['product']
+
+                        saved_images = [{'id': i['id']} for i in created_product.get('images', [])]
+                        r = requests.put(update_endpoint, json={'product': {
+                            'id': created_product['id'],
+                            'images': saved_images + remaining_images[chunk:chunk + max_images_chunk]
+                        }})
+
+                    api_data['product']['images'] += remaining_images
 
                 if 'product' in r.json():
                     product_to_map = r.json()['product']
