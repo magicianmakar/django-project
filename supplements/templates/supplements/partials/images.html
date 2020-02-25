@@ -22,11 +22,16 @@
 
     {{ form.upload.errors }}
 
-    <div class="custom-file">
-      <input id="upload" type="file" name="upload" class="custom-file-input">
-      <label for="upload" class="custom-file-label" data-placeholder="Choose file...">
-        Choose file...
-      </label>
+    <div class="row" style="margin: 0;">
+      <div class="col-md-2 m-t custom-file">
+        <input id="upload-ajax-label" type="file" name="upload" class="custom-file-input">
+        <label for="upload-ajax-label" class="custom-file-label" data-placeholder="Choose file...">
+          Choose file...
+        </label>
+      </div>
+      <div class="col-md-3" style="margin-top: 20px;">
+        <span id="mockup-link"></span>
+      </div>
     </div>
 
     <div class='alert label-info-box'>

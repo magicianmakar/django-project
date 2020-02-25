@@ -2,18 +2,32 @@
   <div class="ibox">
     <div class="ibox-content product-box" product-id="{{item.id}}" product-title="{{item.title}}">
       <div class="product-imitation pls">
-        <a href="#">
+        <a href="{{ item.get_url }}">
           <img src="{{ item.thumbnail }}">
         </a>
       </div>
       <div class="product-desc">
         <span class="product-price">${{ item.price }}</span>
         <small class="text-muted">{{ item.category }}</small>
-        <a href="#" class="product-name">{{ item.title }}</a>
+        <a href="{{ item.get_url }}" class="product-name">{{ item.title }}</a>
         <div class="small m-t-xs">{{ item.description_short }}</div>
+        <span class='label tile-label
+            {% if item.current_label.status == "approved" %}
+            label-primary
+            {% elif item.current_label.status == "awaiting" %}
+            label-warning
+            {% elif item.current_label.status == "rejected" %}
+            label-danger
+            {% endif %}'>
+              {% if item.current_label.status %}
+              {{ item.current_label.status_string }}
+              {% else %}
+              Draft
+              {% endif %}
+        </span>
         <div class="m-t row">
           <div class="col-md-4">
-            <a href="{{ supplement.get_url }}" class="btn btn-xs btn-outline btn-primary"> Customize <i class="fa fa-long-arrow-right"></i> </a>
+            <a href="{{ item.get_url }}" class="btn btn-xs btn-outline btn-primary"> Customize <i class="fa fa-long-arrow-right"></i> </a>
           </div>
         </div>
       </div>

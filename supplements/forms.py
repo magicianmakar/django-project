@@ -1,5 +1,4 @@
 from django import forms
-from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 
 from .models import LabelSize, Payout, PLSOrder, PLSupplement, UserSupplement, UserSupplementLabel
@@ -30,17 +29,9 @@ class UserSupplementForm(forms.ModelForm):
 
     def clean_upload(self):
         upload = self.cleaned_data['upload']
-        if self.cleaned_data['action'] == 'approve':
-            if not upload:
-                raise ValidationError("Label is required.")
-
+        if upload:
             extension_validator = FileExtensionValidator(
                 allowed_extensions=['pdf']
-            )
-            extension_validator(upload)
-        elif upload:
-            extension_validator = FileExtensionValidator(
-                allowed_extensions=['png', 'jpg', 'jpeg']
             )
             extension_validator(upload)
 
@@ -155,7 +146,8 @@ class LineFilterForm(OrderFilterForm):
 
 
 class LabelFilterForm(forms.Form):
-    STATUSES = [('', '-')] + UserSupplementLabel.LABEL_STATUSES
+    STATUSES = [('', '---------')] + [i for i in UserSupplementLabel.LABEL_STATUSES
+                                      if i[0] != 'draft']
 
     status = forms.ChoiceField(required=False, choices=STATUSES)
     sku = forms.CharField(required=False)

@@ -1,3 +1,4 @@
+import base64
 from io import BytesIO
 
 from django.conf import settings
@@ -9,7 +10,7 @@ from pdfrw import PdfWriter
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
 
-from .lib.image import get_order_number_label
+from .lib.image import data_url_to_pil_image, get_bottle_mockup, get_order_number_label, pil_to_fp
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import Payout, PLSOrder
 from .utils.payment import Util
@@ -134,3 +135,18 @@ class SupplementsApi(ApiResponseMixin, View):
         order.save()
 
         return self.api_success()
+
+    def post_ajaxify_label(self, request, user, data):
+        image_data = data['image_data_url']
+        label_image = data_url_to_pil_image(image_data)
+        bottle_mockup = get_bottle_mockup(label_image)
+        image_fp = pil_to_fp(bottle_mockup)
+        image_fp.seek(0)
+        image_fp.name = 'mockup.png'
+
+        img_data = image_fp.getvalue()
+        data = base64.b64encode(img_data)
+        image_data = data.decode()
+        data_url = f'data:image/jpeg;base64,{image_data}'
+
+        return self.api_success({'data_url': data_url})

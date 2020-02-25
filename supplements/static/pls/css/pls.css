@@ -180,3 +180,10 @@
 .extra-margin {
   margin-top: 8px;
 }
+
+.tile-label {
+  position: absolute;
+  right: 0;
+  top: 30px;
+  margin: 0 10px 0 0;
+}

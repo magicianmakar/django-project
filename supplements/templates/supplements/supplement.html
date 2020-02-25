@@ -35,16 +35,16 @@
               <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10 col-xs-12">
                   <input type="submit"
-                         value="Submit for Approval"
+                         value="Create Supplement"
                          data-action="approve"
-                         class="btn btn-primary add-loader"
+                         class="btn btn-primary add-loader confirm-create"
                          data-loading-text="Please wait..."
                          >
 
                   <input type="submit"
                          value="Save for Later"
                          data-action="save"
-                         class="btn btn-primary add-loader"
+                         class="btn btn-primary add-loader confirm-create"
                          data-loading-text="Please wait..."
                          >
 
@@ -100,6 +100,22 @@
       about what you can include in our support portal.
       </p>
       <p><a href="" role="button" class="btn btn-primary btn-lg">Learn more</a></p>
+    </div>
+  </div>
+</div>
+
+<div id="modal-preview-image" class="modal" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Bottle Mockup</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row m-t" style="margin: 0 0 0 50px;">
+          <img id="mockup" src="" alt="" style="height: 400px;width: 400px;">
+        </div>
+      </div>
     </div>
   </div>
 </div>

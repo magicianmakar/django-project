@@ -82,13 +82,15 @@ class UserSupplementImage(model_base.AbstractImage):
 
 
 class UserSupplementLabel(models.Model, UserSupplementLabelMixin):
+    DRAFT = 'draft'
     APPROVED = 'approved'
     AWAITING_REVIEW = 'awaiting'
     REJECTED = 'rejected'
 
     LABEL_STATUSES = [
+        (DRAFT, 'Draft'),
         (APPROVED, 'Approved'),
-        (AWAITING_REVIEW, 'Awaiting Review'),
+        (AWAITING_REVIEW, 'In Review'),
         (REJECTED, 'Rejected'),
     ]
 
@@ -98,7 +100,7 @@ class UserSupplementLabel(models.Model, UserSupplementLabelMixin):
     status = models.CharField(
         max_length=8,
         choices=LABEL_STATUSES,
-        default=AWAITING_REVIEW,
+        default=DRAFT,
     )
 
     url = models.URLField()

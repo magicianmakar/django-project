@@ -5,6 +5,7 @@
 <div class="alert alert-info alert-dismissable">
   <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
   Your label is currently under review.
+  <u><a href="{{ status_url }}">View it's status</a></u>
 </div>
 {% endif %}
 {% endblock %}
@@ -12,20 +13,29 @@
 {% block form_action %}
 <div class="form-group">
   <div class="col-sm-offset-2 col-sm-10 col-xs-12">
+    {% if is_submitted %}
     <input type="submit"
-           value="Submit for Approval"
-           data-action="approve"
+           value="Save Changes"
            class="btn btn-primary add-loader"
+           id="save-changes"
            data-loading-text="Please wait..."
            >
+    {% else %}
+    <input type="submit"
+          value="Create Supplement"
+          data-action="approve"
+          data-label-url="{{label_url}}"
+          class="btn btn-primary add-loader confirm-create"
+          data-loading-text="Please wait..."
+          >
 
     <input type="submit"
-           value="Save for Later"
-           data-action="save"
-           class="btn btn-primary add-loader"
-           data-loading-text="Please wait..."
-           >
-
+        value="Save for Later"
+        data-action="save"
+        class="btn btn-primary add-loader confirm-create"
+        data-loading-text="Please wait..."
+        >
+    {% endif %}
     <input id="send_to_store" type="button" value="Send to Store" class="btn btn-primary {% if not is_approved %}disabled{% endif %}">
     <input type="reset" value="Reset" class="btn btn-default">
   </div>

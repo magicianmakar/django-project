@@ -139,7 +139,12 @@ class SupplementTestCase(PLSBaseTestCase):
 
     def test_post_save(self):
         self.client.force_login(self.user)
-        image = open('app/static/aliex.png', 'rb')
+        image = open('app/static/example-label.pdf', 'rb')
+        img = 'app/static/pls-mockup/SevenLimb_29033-2_VytaMind_60_200cc.png'
+        with open(img, 'rb') as reader:
+            data = base64.b64encode(reader.read()).decode()
+            image_data_url = f'data:image/png;base64,{data}'
+
         data = dict(
             action="save",
             title="New title",
@@ -151,6 +156,7 @@ class SupplementTestCase(PLSBaseTestCase):
             cost_price=self.user_supplement.pl_supplement.cost_price,
             shipstation_sku='test-sku',
             upload=image,
+            image_data_url=image_data_url,
         )
 
         with patch('product_common.lib.views.aws_s3_upload',
@@ -181,7 +187,6 @@ class SupplementTestCase(PLSBaseTestCase):
         self.client.force_login(self.user)
         data = dict(
             action="approve",
-            title="New title",
             description="New description",
             category=self.user_supplement.category,
             tags=self.user_supplement.tags,
@@ -195,7 +200,7 @@ class SupplementTestCase(PLSBaseTestCase):
                    return_value='http://example.com/test'):
             response = self.client.post(self.get_url(), data=data)
             self.assertEqual(response.status_code, 200)
-            self.assertIn("Label is required", response.content.decode())
+            self.assertIn("This field is required", response.content.decode())
 
     def test_post_approve(self):
         self.client.force_login(self.user)

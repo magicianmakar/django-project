@@ -1,3 +1,4 @@
+import base64
 import json
 from unittest.mock import MagicMock, patch
 
@@ -180,3 +181,26 @@ class MakePaymentTestCase(PLSBaseTestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(Order.objects.all().count(), count)
             self.assertEqual(OrderLine.objects.all().count(), count)
+
+
+class AjaxLabelMockupTestCase(PLSBaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        img = 'app/static/pls-mockup/SevenLimb_29033-2_VytaMind_60_200cc.png'
+        with open(img, 'rb') as reader:
+            data = base64.b64encode(reader.read()).decode()
+            self.image_data_url = f'data:image/png;base64,{data}'
+
+        self.url = '/api/supplements/ajaxify-label'
+        self.data = {
+            'image_data_url': self.image_data_url,
+        }
+
+    def test_post(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(self.url,
+                                    data=json.dumps(self.data),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 200)

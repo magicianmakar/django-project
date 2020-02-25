@@ -9,7 +9,6 @@ from django.views.generic import TemplateView
 from django.views.generic.list import ListView
 
 import bleach
-import bleach.sanitizer
 import requests
 import simplejson as json
 from barcode import generate
@@ -159,8 +158,29 @@ class LabelMixin:
         )
 
         new_label = user_supplement.labels.create(url=url)
+        if user_supplement.current_label:
+            kwargs = {'label_id': user_supplement.current_label.id}
+            reverse_url = reverse('pls:label_detail', kwargs=kwargs)
+            comments = new_label.comments
+            comment = (f"There is an <a href='{reverse_url}'>"
+                       f"older version</a> of this label.")
+            self.create_comment(comments, comment)
         user_supplement.current_label = new_label
         user_supplement.save()
+
+    def create_comment(self, comments, text, new_status=''):
+        tags = bleach.sanitizer.ALLOWED_TAGS + [
+            'span',
+            'p',
+        ]
+        attributes = bleach.sanitizer.ALLOWED_ATTRIBUTES
+        attributes.update({'span': ['class']})
+        text = bleach.clean(text, tags=tags, attributes=attributes)
+        comment = comments.create(user=self.request.user,
+                                  text=text,
+                                  new_status=new_status)
+        send_email_against_comment(comment)
+        return comment
 
 
 class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
@@ -182,7 +202,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             image.name,
         )
 
-        user_supplement.images.create(image_url=upload_url, position=1)
+        user_supplement.images.all().delete()
+        user_supplement.images.create(image_url=upload_url, position=0)
 
     def copy_images(self, user_supplement):
         current_urls = set(
@@ -251,24 +272,24 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         if form.is_valid():
             new_user_supplement = self.save_supplement(form)
 
-            self.copy_images(new_user_supplement)
-
             upload = request.FILES.get('upload')
             if upload:
-                if form.cleaned_data['action'] == 'approve':
-                    image_data = form.cleaned_data['image_data_url']
-                    label_image = data_url_to_pil_image(image_data)
-                    bottle_mockup = get_bottle_mockup(label_image)
-                    image_fp = pil_to_fp(bottle_mockup)
-                    image_fp.seek(0)
-                    image_fp.name = 'mockup.png'
+                image_data = form.cleaned_data['image_data_url']
+                label_image = data_url_to_pil_image(image_data)
+                bottle_mockup = get_bottle_mockup(label_image)
+                image_fp = pil_to_fp(bottle_mockup)
+                image_fp.seek(0)
+                image_fp.name = 'mockup.png'
+                self.save_label(user, upload, new_user_supplement)
+                self.save_image(user, image_fp, new_user_supplement)
+            elif not new_user_supplement.images.count():
+                self.copy_images(new_user_supplement)
 
-                    self.save_label(user, upload, new_user_supplement)
-                    self.save_image(user, image_fp, new_user_supplement)
-                    url = reverse("pls:my_labels") + "?s=1"
-                    return redirect(url)
-                else:
-                    self.save_image(user, upload, new_user_supplement)
+            if form.cleaned_data['action'] == 'approve':
+                new_user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
+                new_user_supplement.current_label.save()
+                url = reverse("pls:my_labels") + "?s=1"
+                return redirect(url)
 
             kwargs = {'supplement_id': new_user_supplement.id}
             return self.get_redirect_url(**kwargs)
@@ -322,6 +343,12 @@ class UserSupplementView(Supplement):
             api_data = self.get_api_data(supplement)
 
         store_type_and_data = self.get_store_data(user)
+        status_url = None
+        is_submitted = False
+        if supplement.current_label:
+            status_url = reverse('pls:label_detail',
+                                 kwargs={'label_id': supplement.current_label.id})
+            is_submitted = supplement.current_label.status != UserSupplementLabel.DRAFT
 
         data = dict(
             form_data=form_data,
@@ -334,6 +361,8 @@ class UserSupplementView(Supplement):
             store_types=store_type_and_data['store_types'],
             product_information=supplement.pl_supplement.product_information,
             authenticity_cert=supplement.pl_supplement.authenticity_certificate_url,
+            status_url=status_url,
+            is_submitted=is_submitted,
         )
 
         if 'label_url' in form_data:
@@ -388,7 +417,7 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
         return queryset
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().exclude(status=UserSupplementLabel.DRAFT)
         queryset = self.add_filters(queryset)
 
         form = self.form = LabelFilterForm(self.request.GET)
@@ -508,6 +537,11 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
         api_data = self.get_api_data(label.user_supplement)
         store_type_and_data = self.get_store_data(request.user)
+        new_version_url = None
+        current_label = label.user_supplement.current_label
+        if current_label:
+            new_version_url = reverse('pls:label_detail',
+                                      kwargs={'label_id': current_label.id})
         context = dict(
             label=label,
             comments=comments.all().order_by('-created_at'),
@@ -516,6 +550,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             api_data=api_data,
             store_data=store_type_and_data['store_data'],
             store_types=store_type_and_data['store_types'],
+            new_version_url=new_version_url,
         )
 
         return render(request, "supplements/label_detail.html", context)
@@ -534,25 +569,11 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         action = request.POST['action']
         form = CommentForm()
 
-        def create_comment(text, new_status=''):
-            tags = bleach.sanitizer.ALLOWED_TAGS + [
-                'span',
-                'p',
-            ]
-            attributes = bleach.sanitizer.ALLOWED_ATTRIBUTES
-            attributes.update({'span': ['class']})
-            text = bleach.clean(text, tags=tags, attributes=attributes)
-            comment = comments.create(user=user,
-                                      text=text,
-                                      new_status=new_status)
-            send_email_against_comment(comment)
-            return comment
-
         if action == 'comment':
             form = CommentForm(request.POST, request.FILES)
             if form.is_valid():
                 comment = form.cleaned_data['comment']
-                create_comment(comment)
+                self.create_comment(comments, comment)
                 upload = request.FILES.get('upload')
                 if upload:
                     user_supplement = label.user_supplement
@@ -575,8 +596,8 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
             comment = (f"<strong>{user_name}</strong> set the status to "
                        f"<span class='label {label_class}'>"
-                       f"{label.status_string}</span>.")
-            create_comment(comment, new_status=action)
+                       f"{label.status_string}</span>")
+            self.create_comment(comments, comment, new_status=action)
             return redirect(reverse_url)
 
         context = dict(
