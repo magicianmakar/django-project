@@ -593,6 +593,10 @@ class GrooveKartProduct(ProductBase):
     def get_image(self):
         return self.parsed.get('cover_image', '')
 
+    def get_cover_image_id(self):
+        image_id = re.findall(r'\/(\d+)\-large', self.parsed.get('cover_image', ''))
+        return image_id[0] if image_id else None
+
     def get_original_info(self):
         if self.has_supplier:
             url = self.default_supplier.product_url

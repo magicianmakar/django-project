@@ -597,6 +597,29 @@ def update_product_images(product, images):
             if 'groovekart.com' in image:
                 continue
 
+            # GKart replaces images when providing their id
+            replace_image = image.split('#')
+            if len(replace_image) == 2:
+                image_id = re.findall(r'image_id=(\d+)', replace_image[1])
+                if image_id:
+                    image_id = image_id[0]
+                    api_data = {
+                        'product': {
+                            'action': 'replace_image',
+                            'product_id': product.source_id,
+                            'image_id': image_id,
+                            'image': {
+                                'src': replace_image[0],
+                                'position': 0,
+                                'cover': 1 if product.get_cover_image_id() == image_id else 0
+                            },
+                        }
+                    }
+                    r = store.request.post(endpoint, json=api_data)
+                    r.raise_for_status()
+                    continue
+
+            # Include new images
             api_data = {
                 'product': {
                     'id': product.source_id,

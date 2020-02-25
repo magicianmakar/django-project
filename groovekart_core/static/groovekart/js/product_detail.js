@@ -910,6 +910,25 @@ function renderImages() {
             'image-id': i
         });
 
+        img.on('load', function() {
+            if ($(this).attr('src') === $(this).attr('image-url')) {
+                return;
+            }
+
+            // Update new image src with GKart image id
+            var currentId = $(this).attr('src').match(/\#image_id=(\d+)$/);
+            if (!currentId) {
+                // Works only if GKart still adds image id into their urls
+                var imageId = $(this).attr('image-url').match(/\/(\d+)\-large/);
+                if (imageId) {
+                    imageId = imageId[1];
+                    var newUrl = $(this).attr('src') + '#image_id=' + imageId;
+                    $(this).attr('src', newUrl);
+                    product.images[parseInt($(this).attr('image-id'), 10)] = newUrl;
+                }
+            }
+        });
+
         d.append(img);
 
         d.append($('<div>', {
