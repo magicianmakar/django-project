@@ -580,7 +580,7 @@
     </div>
 
     {% cache 600 gkart_shipping_carriers2 store.id %}
-    {% include 'groovekart/partial/fulfillment_modal.html' with notify=False shipping_carriers=shipping_carriers only %}
+    {% include 'groovekart/partial/fulfillment_modal.html' with notify=True shipping_carriers=shipping_carriers only %}
     {% endcache %}
     {% include 'prints/partial/place_orders_modal.html' %}
 

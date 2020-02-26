@@ -564,12 +564,20 @@ def order_track_fulfillment(order_track, user_config=None):
     carrier_names = ','.join(carrier_names)
     carrier_urls = ','.join(carrier_urls)
 
-    return changed, {
+    fulfillment_data = {
         'order_id': order_track.order_id,
         'tracking_number': tracking_numbers,
         'carrier_name': carrier_names,
         'carrier_url': carrier_urls,
     }
+
+    send_email = user_config.get('send_shipping_confirmation')
+    if send_email == 'yes':
+        fulfillment_data['send_email'] = True
+    elif send_email == 'no':
+        fulfillment_data['send_email'] = False
+
+    return changed, fulfillment_data
 
 
 def get_variant_value(label, value, color_textures={}):
