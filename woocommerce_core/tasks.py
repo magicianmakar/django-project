@@ -177,7 +177,7 @@ def product_export(store_id, product_id, user_id, publish=None):
         saved_data['published'] = saved_data['published'] if publish is None else publish
         api_data = update_product_api_data({}, saved_data, store)
         api_data = add_product_images_to_api_data(api_data, saved_data, user_id=user_id)
-        api_data = add_product_attributes_to_api_data(api_data, saved_data)
+        api_data = add_product_attributes_to_api_data(api_data, store, saved_data)
         api_data = add_store_tags_to_api_data(api_data, store, saved_data.get('tags', []))
 
         r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post('products', api_data)

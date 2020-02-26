@@ -156,14 +156,25 @@ def add_product_images_to_api_data(api_data, data, from_helper=False, user_id=No
     return api_data
 
 
-def add_product_attributes_to_api_data(api_data, data):
+def get_product_attributes_dict(store):
+    attributes = store.wcapi.get('products/attributes').json()
+    return {a['name']: a['id'] for a in attributes if a.get('name')}
+
+
+def add_product_attributes_to_api_data(api_data, store, data):
     variants = data.get('variants', [])
+    attributes = get_product_attributes_dict(store)
+
     if variants:
         api_data['type'] = 'variable'
         api_data['attributes'] = []
         for num, variant in enumerate(variants):
             name, options = variant.get('title'), variant.get('values', [])
-            attribute = {'position': num + 1, 'name': name, 'options': options, 'variation': True}
+            attribute = {'position': num + 1, 'options': options, 'variation': True}
+            if attributes.get(name):
+                attribute['id'] = attributes.get(name)
+            else:
+                attribute['name'] = name
             api_data['attributes'].append(attribute)
 
     return api_data
