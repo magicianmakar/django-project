@@ -555,6 +555,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
         return render(request, "supplements/label_detail.html", context)
 
+    @transaction.atomic
     def post(self, request, label_id):
         self.label = label = get_object_or_404(UserSupplementLabel, id=label_id)
 

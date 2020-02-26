@@ -79,7 +79,9 @@ $(document).ready(function(){
                               form.image_data_url.value = labelUrl;
                               form.submit();
                           } else {
-                              getImageUrl(file);
+                              if (isConfirm) {
+                                  getImageUrl(file);
+                              }
                           }
                       });
                 }

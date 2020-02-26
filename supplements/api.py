@@ -6,6 +6,7 @@ from django.utils.crypto import get_random_string
 from django.views.generic import View
 
 from pdfrw import PdfWriter
+from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
@@ -54,6 +55,7 @@ class SupplementsApi(ApiResponseMixin, View):
                 )
             except Exception:
                 error += len(order_line_items)
+                raven_client.captureException(level='warning')
             else:
                 shipstation_data = prepare_shipstation_data(pls_order,
                                                             order,
