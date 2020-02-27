@@ -364,8 +364,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
                 )
 
     def update_product(self, api_product_data, product_data):
-        update_endpoint = self.product.store.get_link('/admin/products/{}.json'.format(
-            self.product.get_shopify_id()), api=True)
+        update_endpoint = self.product.store.api('products', self.product.get_shopify_id())
 
         if api_product_data and api_product_data.get('variants') == []:
             del api_product_data['variants']

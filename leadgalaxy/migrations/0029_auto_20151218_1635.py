@@ -15,7 +15,7 @@ def get_myshopify_link(user, default_store, link):
     for store in stores:
         handle = link.split('/')[-1]
 
-        r = requests.get(store.get_link('/admin/products.json', api=True), params={'handle': handle}).json()
+        r = requests.get(store.api('products'), params={'handle': handle}).json()
         if len(r['products']) == 1:
             return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
 

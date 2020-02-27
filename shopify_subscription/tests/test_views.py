@@ -55,7 +55,7 @@ class ShopifyApssSubscriprtionTestCase(BaseTestCase):
     def test_shopify_plan_sub_monthly(self, req_mock, refresh, shopify, recu_charge_create):
         self.store = f.ShopifyStoreFactory(user=self.user)
 
-        req_mock.get(self.store.get_link('/admin/shop.json', api=True), json={"shop": {"plan_name": "pro"}})
+        req_mock.get(self.store.api('shop'), json={"shop": {"plan_name": "pro"}})
         confirm_hash = random_hash()
         recu_charge_create.return_value = Munch({
             'id': 123456789,
@@ -91,7 +91,7 @@ class ShopifyApssSubscriprtionTestCase(BaseTestCase):
     def test_shopify_plan_sub_yearly(self, req_mock, refresh, shopify, charge_create):
         self.store = f.ShopifyStoreFactory(user=self.user)
 
-        req_mock.get(self.store.get_link('/admin/shop.json', api=True), json={"shop": {"plan_name": "pro"}})
+        req_mock.get(self.store.api('shop'), json={"shop": {"plan_name": "pro"}})
         confirm_hash = random_hash()
         charge_create.return_value = Munch({
             'id': 123456789,
@@ -127,7 +127,7 @@ class ShopifyApssSubscriprtionTestCase(BaseTestCase):
     def test_shopify_plan_sub_monthly_shopify_staff(self, req_mock, refresh, shopify, recu_charge_create):
         self.store = f.ShopifyStoreFactory(user=self.user)
 
-        req_mock.get(self.store.get_link('/admin/shop.json', api=True), json={"shop": {"plan_name": "staff"}})
+        req_mock.get(self.store.api('shop'), json={"shop": {"plan_name": "staff"}})
 
         confirm_hash = random_hash()
         recu_charge_create.return_value = Munch({
@@ -167,7 +167,7 @@ class ShopifyApssSubscriprtionTestCase(BaseTestCase):
     def test_shopify_plan_sub_yearly_shopify_staff(self, req_mock, refresh, shopify, charge_create):
         self.store = f.ShopifyStoreFactory(user=self.user)
 
-        req_mock.get(self.store.get_link('/admin/shop.json', api=True), json={"shop": {"plan_name": "staff"}})
+        req_mock.get(self.store.api('shop'), json={"shop": {"plan_name": "staff"}})
         confirm_hash = random_hash()
         charge_create.return_value = Munch({
             'id': 123456789,
@@ -202,7 +202,7 @@ class ShopifyApssSubscriprtionTestCase(BaseTestCase):
     @patch('phone_automation.billing_utils.get_shopify_recurring')
     def test_shopify_subscription_callflex(self, req_mock, get_shopify_recurring, shopify, recu_charge_create):
         self.store = f.ShopifyStoreFactory(user=self.user)
-        req_mock.get(self.store.get_link('/admin/shop.json', api=True), json={"shop": {"plan_name": "pro"}})
+        req_mock.get(self.store.api('shop'), json={"shop": {"plan_name": "pro"}})
         confirm_hash = random_hash()
         get_shopify_recurring.return_value = False
         recu_charge_create.return_value = Munch({
@@ -229,7 +229,7 @@ class ShopifyApssSubscriprtionTestCase(BaseTestCase):
     def test_shopify_subscription_callflex_exists(self, req_mock, get_shopify_recurring, shopify, recu_charge_create):
         self.store = f.ShopifyStoreFactory(user=self.user)
 
-        req_mock.get(self.store.get_link('/admin/shop.json', api=True), json={"shop": {"plan_name": "pro"}})
+        req_mock.get(self.store.api('shop'), json={"shop": {"plan_name": "pro"}})
         confirm_hash = random_hash()
         get_shopify_recurring.return_value = Munch({
             'id': 123456789,

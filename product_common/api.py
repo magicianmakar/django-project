@@ -89,7 +89,7 @@ class ProductCommonApi(ApiResponseMixin, View):
             return order_cache[order_id]
 
         store = self.store
-        url = store.get_link(f'/admin/orders/{order_id}.json', api=True)
+        url = store.api('orders', order_id)
         response = requests.get(url)
         order_cache[order_id] = order = response.json()['order']
         return order

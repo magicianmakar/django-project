@@ -3169,7 +3169,7 @@ def autocomplete(request, target):
             store = ShopifyStore.objects.get(id=request.GET.get('store'))
             permissions.user_can_view(request.user, store)
 
-            rep = requests.get(url=store.get_link('/admin/customers/search.json', api=True), params={'query': q})
+            rep = requests.get(url=store.api('customers/search'), params={'query': q})
             rep.raise_for_status()
 
             results = []
@@ -3891,7 +3891,7 @@ def orders_view(request):
 
         if open_orders:
             rep = requests.get(
-                url=store.get_link('/admin/orders.json', api=True),
+                url=store.api('orders'),
                 params={
                     'ids': ','.join([str(i['_source']['order_id']) for i in hits]),
                     'status': 'any',
@@ -4025,7 +4025,7 @@ def orders_view(request):
             shopify_orders = cache.get(cache_key)
             if shopify_orders is None or cache.get('saved_orders_clear_{}'.format(store.id)):
                 rep = requests.get(
-                    url=store.get_link('/admin/orders.json', api=True),
+                    url=store.api('orders'),
                     params={
                         'ids': ','.join([str(i.order_id) for i in page]),
                         'status': 'any',
@@ -4153,7 +4153,7 @@ def orders_view(request):
         order['date_str'] = created_at.format('MM/DD/YYYY')
         order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
         order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])
-        order['order_api_url'] = store.get_link('/admin/orders/%d.json' % order['id'], api=True)
+        order['order_api_url'] = store.api('orders', order['id'])
         order['store'] = store
         order['placed_orders'] = 0
         order['connected_lines'] = 0

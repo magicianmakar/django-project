@@ -344,7 +344,7 @@ def order_id_from_name(store, order_name, default=None):
     }
 
     rep = requests.get(
-        url=store.get_link('/admin/orders.json', api=True),
+        url=store.api('orders'),
         params=params
     )
 
@@ -359,7 +359,7 @@ def order_id_from_name(store, order_name, default=None):
     del params['name']
 
     rep = requests.get(
-        url=store.get_link('/admin/orders.json', api=True),
+        url=store.api('orders'),
         params=params
     )
 
@@ -384,7 +384,7 @@ def order_ids_from_customer_id(store, customer_id):
     }
 
     rep = requests.get(
-        url=store.get_link('/admin/orders.json', api=True),
+        url=store.api('orders'),
         params=params
     )
 

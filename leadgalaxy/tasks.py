@@ -175,7 +175,7 @@ def export_product(req_data, target, user_id):
                 api_data = parsed_data
                 api_data['product']['id'] = product.get_shopify_id()
 
-                update_endpoint = store.get_link('/admin/products/{}.json'.format(product.get_shopify_id()), api=True)
+                update_endpoint = store.api('products', product.get_shopify_id())
                 r = requests.put(update_endpoint, json=api_data)
 
                 if r.ok:
@@ -191,7 +191,7 @@ def export_product(req_data, target, user_id):
 
                 del api_data
             else:
-                endpoint = store.get_link('/admin/products.json', api=True)
+                endpoint = store.api('products')
                 api_data = parsed_data
 
                 if api_data['product'].get('variants') and len(api_data['product']['variants']) > 100:
@@ -221,7 +221,7 @@ def export_product(req_data, target, user_id):
                 # Shopify can take too long to process each image
                 if len(remaining_images) > 0 and 'product' in r.json():
                     created_product = r.json()['product']
-                    update_endpoint = store.get_link(f"/admin/products/{created_product['id']}.json", api=True)
+                    update_endpoint = store.api('products', created_product['id'])
                     i = 0
                     for chunk in range(0, len(remaining_images), max_images_chunk):
                         i += 1
@@ -251,7 +251,7 @@ def export_product(req_data, target, user_id):
 
                             try:
                                 rep = requests.put(
-                                    url=store.get_link('/admin/products/{}.json'.format(product_to_map['id']), api=True),
+                                    url=store.api('products', product_to_map['id']),
                                     json=images_fix_data
                                 )
                                 rep.raise_for_status()
@@ -283,7 +283,7 @@ def export_product(req_data, target, user_id):
 
                 if 'Invalid API key or access token' in shopify_error:
                     print('SHOPIFY EXPORT: {} - Store: {} - Link: {}'.format(
-                        shopify_error, store, store.get_link('/admin/products.json', api=True)
+                        shopify_error, store, store.api('products')
                     ))
                 else:
                     print('SHOPIFY EXPORT: {} - Store: {} - Product: {}'.format(
@@ -898,7 +898,7 @@ def bulk_edit_products(self, store, products):
     errors = []
     for product in products:
         try:
-            api_url = store.get_link('/admin/products/{}.json'.format(product['id']), api=True)
+            api_url = store.api('products', product['id'])
             title = product['title']
             del product['title']
 
@@ -1253,7 +1253,7 @@ def shopify_orders_risk(self, store, order_ids):
             risks = json.loads(order_risks[int(order_id)])
         else:
             try:
-                api_url = store.get_link('/admin/orders/{}/risks.json'.format(order_id), api=True)
+                api_url = store.api('orders', order_id, 'risks')
                 rep = requests.get(api_url)
                 rep.raise_for_status()
 
@@ -1402,7 +1402,7 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
                         unmapped_variants.append(variant['title'])
 
             if updated:
-                update_endpoint = product.store.get_link('/admin/products/{}.json'.format(product.shopify_id), api=True)
+                update_endpoint = product.store.api('products', product.shopify_id)
                 rep = requests.put(update_endpoint, json={
                     "product": {
                         "id": product_data['id'],
@@ -1441,10 +1441,9 @@ def product_randomize_image_names(self, product_id):
     images = []
     try:
         # Get shopify product images
-        rep = requests.get(
-            url=store.get_link('/admin/products/{}/images.json'.format(shopify_id), api=True)
-        )
+        rep = requests.get(url=store.api(f'products', shopify_id, 'images'))
         rep.raise_for_status()
+
         images = rep.json()['images']
         data['total'] = len(images)
     except:
@@ -1464,7 +1463,7 @@ def product_randomize_image_names(self, product_id):
             path, ext = os.path.splitext(image['src'])
             image['filename'] = '{}{}'.format(random_hash(), ext)
             rep = requests.post(
-                store.get_link('/admin/products/{}/images.json'.format(shopify_id), api=True),
+                store.api('products', shopify_id, 'images'),
                 json={'image': image}
             )
             rep.raise_for_status()
@@ -1478,7 +1477,7 @@ def product_randomize_image_names(self, product_id):
 
             # Delete a original shopify product image
             rep = requests.delete(
-                store.get_link('/admin/products/{}/images/{}.json'.format(shopify_id, image_id), api=True),
+                store.api('products', shopify_id, 'images', image_id),
             )
             rep.raise_for_status()
             data['success'] += 1
@@ -1543,7 +1542,7 @@ def delete_shopify_store(self, store_id):
             'tracks': tracks,
         })
 
-        requests.delete(store.get_link('/admin/api_permissions/current.json', api=True))
+        requests.delete(store.api('api_permissions/current'))
 
         if store.user.profile.from_shopify_app_store():
             delete_user.delay(store.user.id)

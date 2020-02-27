@@ -390,23 +390,23 @@ def format_shopify_error(data):
 def verify_shopify_permissions(store):
     permissions = []
 
-    r = requests.post(store.get_link('/admin/products.json', api=True))
+    r = requests.post(store.api('products'))
     if r.status_code == 403:
         permissions.append('Products')
 
-    r = requests.post(store.get_link('/admin/orders.json', api=True))
+    r = requests.post(store.api('orders'))
     if r.status_code == 403:
         permissions.append('Orders')
 
-    r = requests.post(store.get_link('/admin/customers.json', api=True))
+    r = requests.post(store.api('customers'))
     if r.status_code == 403:
         permissions.append('Customers')
 
-    r = requests.post(store.get_link('/admin/fulfillment_services.json', api=True))
+    r = requests.post(store.api('fulfillment_services'))
     if r.status_code == 403:
         permissions.append('Fulfillment Service')
 
-    r = requests.post(store.get_link('/admin/carrier_services.json', api=True))
+    r = requests.post(store.api('carrier_services'))
     if r.status_code == 403:
         permissions.append('Shipping Rates')
 
@@ -547,7 +547,7 @@ def get_myshopify_link(user, default_store, link):
     for store in stores:
         handle = link.split('/')[-1]
 
-        r = requests.get(store.get_link('/admin/products.json', api=True), params={'handle': handle}).json()
+        r = requests.get(store.api('products'), params={'handle': handle}).json()
         if len(r['products']) == 1:
             return store.get_link('/admin/products/{}'.format(r['products'][0]['id']))
 
@@ -762,7 +762,7 @@ def split_product(product, split_factor, store=None):
 
 
 def get_shopify_products_count(store):
-    return requests.get(url=store.get_link('/admin/products/count.json', api=True)).json().get('count', 0)
+    return requests.get(url=store.api('products/count')).json().get('count', 0)
 
 
 def get_shopify_products(store, page=1, limit=50, all_products=False,
@@ -794,7 +794,7 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
                 params['fields'] = fields
 
         rep = session.get(
-            url=store.get_link('/admin/products.json', api=True),
+            url=store.api('products'),
             params=params
         )
 
@@ -859,7 +859,7 @@ def get_shopify_inventories(store, inventory_item_ids, sleep=None):
         }
 
         rep = requests.get(
-            url=store.get_link('/admin/inventory_levels.json', api=True),
+            url=store.api('inventory_levels'),
             params=params
         )
 
@@ -886,7 +886,7 @@ def get_shopify_inventories(store, inventory_item_ids, sleep=None):
 
 def get_shopify_product(store, product_id, raise_for_status=False):
     if store:
-        rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(product_id), api=True))
+        rep = requests.get(url=store.api('products', product_id))
 
         if raise_for_status:
             rep.raise_for_status()
@@ -956,7 +956,7 @@ def get_shopify_variant_image(store, product_id, variant_id):
 
 
 def get_shopify_order(store, order_id):
-    rep = requests.get(store.get_link('/admin/orders/{}.json'.format(order_id), api=True))
+    rep = requests.get(store.api('orders', order_id))
     rep.raise_for_status()
 
     return rep.json()['order']
@@ -1002,7 +1002,7 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
 
         while retries > 0:
             rep = session.get(
-                url=store.get_link('/admin/orders.json', api=True),
+                url=store.api('orders'),
                 params=params
             )
 
@@ -1067,7 +1067,7 @@ def get_shopify_order_note(store, order_id):
 
 def set_shopify_order_note(store, order_id, note):
     rep = requests.put(
-        url=store.get_link('/admin/orders/{}.json'.format(order_id), api=True),
+        url=store.api('orders', order_id),
         json={
             'order': {
                 'id': order_id,
@@ -1342,7 +1342,7 @@ def shopify_link_images(store, product):
         })
 
     return requests.put(
-        url=store.get_link('/admin/products/{}.json'.format(product['id']), api=True),
+        url=store.api('products', product['id']),
         json={'product': api_product}
     )
 
@@ -1353,7 +1353,7 @@ def update_shopify_product_vendor(store, product_shopify_id, vendor):
         'vendor': vendor
     }
     return requests.put(
-        url=store.get_link('/admin/products/{}.json'.format(product_shopify_id), api=True),
+        url=store.api('products', product_shopify_id),
         json={'product': api_product}
     )
 
@@ -1364,7 +1364,7 @@ def webhook_token(store_id):
 
 def create_shopify_webhook(store, topic):
     token = webhook_token(store.id)
-    endpoint = store.get_link('/admin/webhooks.json', api=True)
+    endpoint = store.api('webhooks')
     data = {
         'webhook': {
             'topic': topic,
@@ -1424,7 +1424,7 @@ def attach_webhooks(store):
 
 
 def check_webhooks(store):
-    endpoint = store.get_link('/admin/webhooks.json', api=True)
+    endpoint = store.api('webhooks')
 
     try:
         webhooks = requests.get(endpoint).json()['webhooks']
@@ -1466,7 +1466,7 @@ def get_tracking_orders(store, tracker_orders):
     }
 
     rep = requests.get(
-        url=store.get_link('/admin/orders.json', api=True),
+        url=store.api('orders'),
         params=params
     )
 
@@ -2237,7 +2237,7 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
             shopify_product = cache.get('webhook_product_{}_{}'.format(store_id, shopify_id))
 
         if shopify_product is None:
-            rep = requests.get(url=store.get_link('/admin/products/{}.json'.format(shopify_id), api=True))
+            rep = requests.get(url=store.api('products', shopify_id))
 
             if rep.ok:
                 shopify_product = rep.json()['product']
@@ -2617,7 +2617,7 @@ class ShopifyOrderPaginator(Paginator):
             params['ids'] = self.query
 
         rep = requests.get(
-            url=self.store.get_link('/admin/orders.json', api=True),
+            url=self.store.api('orders'),
             params=params
         )
 
@@ -2804,7 +2804,7 @@ class ShopifyOrderUpdater:
             }
 
             rep = requests.put(
-                url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
+                url=self.store.api('orders', self.order_id),
                 json=order_data
             )
 
@@ -2825,7 +2825,7 @@ class ShopifyOrderUpdater:
             }
 
             rep = requests.put(
-                url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
+                url=self.store.api('orders', self.order_id),
                 json=order_data
             )
 
@@ -2846,7 +2846,7 @@ class ShopifyOrderUpdater:
             }
 
             rep = requests.put(
-                url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
+                url=self.store.api('orders', self.order_id),
                 json=order_data
             )
 
@@ -2881,7 +2881,7 @@ class ShopifyOrderUpdater:
 
         if len(list(order_data.keys())) > 1:
             rep = requests.put(
-                url=self.store.get_link('/admin/orders/{}.json'.format(self.order_id), api=True),
+                url=self.store.api('orders', self.order_id),
                 json={'order': order_data}
             )
 
@@ -2909,21 +2909,13 @@ class ShopifyOrderUpdater:
 
 
 class ProductCollections(object):
-    shopify_api_urls = {
-        'custom_collections': '/admin/custom_collections.json',
-        'collection_products': '/admin/collects.json?collection_id={}',
-        'product_collections': '/admin/collects.json?product_id={}',
-        'link_collection': '/admin/collects.json',
-        'unlink_collection': '/admin/collects/{}.json',
-    }
-
     def get_collections(self, store, title=''):
         params = {'limit': 100}
         if title:
             params['title'] = title
 
         try:
-            response = requests.get(url=store.get_link(self.shopify_api_urls.get('custom_collections'), api=True), params=params).json()
+            response = requests.get(url=store.api('custom_collections'), params=params).json()
             collections = [{'title': collection.get('title'), 'id': collection.get('id')} for collection in
                            response.get('custom_collections', [])]
         except:
@@ -2935,7 +2927,8 @@ class ProductCollections(object):
     def link_product_collection(self, product, collections):
         collections = list(map(int, collections))
         response = requests.get(
-            url=product.store.get_link(self.shopify_api_urls.get('product_collections').format(product.shopify_id), api=True)
+            url=product.store.api('collects'),
+            params={'product_id': product.shopify_id}
         ).json()
 
         self.unlink_product_collection(product=product, collections=[
@@ -2945,7 +2938,7 @@ class ProductCollections(object):
         for collection in collections:
             if collection not in [collect.get('collection_id') for collect in response.get('collects', [])]:
                 requests.post(
-                    product.store.get_link(self.shopify_api_urls.get('link_collection'), api=True),
+                    url=product.store.api('collects'),
                     json={
                         'collect': {
                             'product_id': product.shopify_id,
@@ -2960,15 +2953,16 @@ class ProductCollections(object):
         selected = list(map(int, selected))
         for collection in collections:
             if collection['collection_id'] not in selected:
-                requests.delete(product.store.get_link(
-                    self.shopify_api_urls.get('unlink_collection').format(collection['id']),
-                    api=True))
+                requests.delete(product.store.api('collects', collection['id']))
 
     def update_product_collects_shopify_id(self, product):
         # check if we have any unlinked product collection
         try:
-            url = product.store.get_link(self.shopify_api_urls.get('product_collections').format(product.shopify_id), api=True)
-            response = requests.get(url=url).json()
+            response = requests.get(
+                url=product.store.api('collects'),
+                params={'product_id': product.shopify_id}
+            ).json()
+
             data = json.loads(product.data)
             data['collections'] = [collection.get('collection_id') for collection in response.get('collects', [])]
             product.data = json.dumps(data)

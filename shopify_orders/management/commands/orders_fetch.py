@@ -158,7 +158,7 @@ class Command(DropifiedBaseCommand):
             tries = 3
             while tries:
                 rep = requests.get(
-                    url=store.get_link('/admin/orders.json', api=True),
+                    url=store.api('orders'),
                     params={
                         'page': page,
                         'limit': limit,

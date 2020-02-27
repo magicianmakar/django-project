@@ -112,7 +112,7 @@ class ShopifyStoreApi(ApiBase):
                 pass
 
             try:
-                requests.delete(store.get_link('/admin/api_permissions/current.json', api=True)) \
+                requests.delete(store.api('api_permissions/current')) \
                         .raise_for_status()
 
             except requests.exceptions.HTTPError as e:
@@ -368,8 +368,7 @@ class ShopifyStoreApi(ApiBase):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        api_url = '/admin/products/{}/images/{}.json'.format(data.get('product'), data.get('image_id'))
-        api_url = store.get_link(api_url, api=True)
+        api_url = store.api('products', data.get('product'), 'images', data.get('image_id'))
 
         api_data = {
             'image': {
@@ -390,8 +389,7 @@ class ShopifyStoreApi(ApiBase):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        api_url = '/admin/variants/{}.json'.format(data.get('variant'))
-        api_url = store.get_link(api_url, api=True)
+        api_url = store.api('variants', data.get('variant'))
 
         api_data = {
             "variant": {
@@ -821,7 +819,7 @@ class ShopifyStoreApi(ApiBase):
                 params['title'] = data.get('query')
 
             rep = requests.get(
-                url=store.get_link('/admin/products.json', api=True),
+                url=store.api('products'),
                 params=params
             )
 
@@ -1418,7 +1416,7 @@ class ShopifyStoreApi(ApiBase):
         api_data = utils.order_track_fulfillment(**fulfillment_data)
 
         rep = requests.post(
-            url=store.get_link('/admin/orders/{}/fulfillments.json'.format(data.get('fulfill-order-id')), api=True),
+            url=store.api('orders', data.get('fulfill-order-id'), 'fulfillments'),
             json=api_data
         )
 
@@ -2643,7 +2641,7 @@ class ShopifyStoreApi(ApiBase):
         except ShopifyStore.DoesNotExist:
             return self.api_error('Store not found', status=404)
 
-        locations_url = store.get_link('/admin/locations.json', api=True)
+        locations_url = store.api('locations')
         response = requests.get(locations_url)
         locations = response.json()
 

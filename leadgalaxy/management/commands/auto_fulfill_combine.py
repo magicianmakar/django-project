@@ -132,7 +132,7 @@ class Command(DropifiedBaseCommand):
         while tries > 0:
             try:
                 rep = requests.post(
-                    url=store.get_link('/admin/orders/{}/fulfillments.json'.format(first_order.order_id), api=True),
+                    url=store.api(f'orders/{first_order.order_id}/fulfillments'),
                     json=data['api']
                 )
 
@@ -218,8 +218,8 @@ class Command(DropifiedBaseCommand):
         return fulfilled
 
     def fix_api_line_items(self, order_track, api_data, errors):
-        url = order_track.store.get_link('/admin/orders.json?ids={}'.format(order_track.order_id), api=True)
-        response = requests.get(url=url)
+        url = order_track.store.api(f'orders')
+        response = requests.get(url=url, params={'ids': order_track.order_id})
 
         # Errors only show the title of the line item
         titles = []

@@ -235,8 +235,7 @@ class OrdersShippedWebHookView(View, BaseMixin):
             }
         })
 
-        path = f'/admin/orders/{order_id}/fulfillments.json'
-        url = store.get_link(path, api=True)
+        url = store.api('orders', order_id, 'fulfillments')
         rep = requests.post(url=url, json=api_data)
 
         try:

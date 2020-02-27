@@ -137,7 +137,7 @@ class Command(DropifiedBaseCommand):
 
             try:
                 rep = requests.post(
-                    url=store.get_link('/admin/orders/{}/fulfillments.json'.format(order.order_id), api=True),
+                    url=store.api('orders', order.order_id, 'fulfillments'),
                     json=api_data
                 )
 
@@ -148,7 +148,7 @@ class Command(DropifiedBaseCommand):
                     fulfillment = rep.json()['fulfillment']
                     if fulfillment['status'] == 'pending':
                         r = requests.post(
-                            url=store.get_link('/admin/orders/{}/fulfillments/{}/complete.json'.format(order.order_id, fulfillment['id']), api=True),
+                            url=store.api('orders', order.order_id, 'fulfillments', fulfillment['id'], 'complete'),
                             json=api_data
                         )
 
@@ -168,7 +168,7 @@ class Command(DropifiedBaseCommand):
                 elif e.response.status_code in [422, 404]:
                     if e.response.status_code == 404:
                         if check_order_exist:
-                            r = requests.get(store.get_link(f'/admin/orders/{order.order_id}.json', api=True))
+                            r = requests.get(store.api(f'orders/{order.order_id}'))
                             if r.status_code == 404:
                                 self.log_fulfill_error(order, 'Order Not Found')
 
@@ -201,7 +201,7 @@ class Command(DropifiedBaseCommand):
 
                     elif 'Invalid fulfillment order line item quantity requested' in rep.text:
                         # This could mean it was fulfilled
-                        r = requests.get(url=store.get_link(f'/admin/orders/{order.order_id}/fulfillments.json', api=True))
+                        r = requests.get(url=store.api(f'orders/{order.order_id}/fulfillments'))
                         if r.ok:
 
                             for fulfillment in r.json()['fulfillments']:
@@ -245,7 +245,7 @@ class Command(DropifiedBaseCommand):
 
                     elif 'your shop does not have the \'oberlo\' fulfillment service enabled' in rep.text.lower():
                         r = requests.post(
-                            url=store.get_link('/admin/fulfillment_services.json', api=True),
+                            url=store.api('fulfillment_services'),
                             json={
                                 "fulfillment_service": {
                                     "name": "Oberlo",
@@ -267,7 +267,7 @@ class Command(DropifiedBaseCommand):
                             }, level='warning')
 
                             r = requests.post(
-                                url=store.get_link('/admin/fulfillment_services.json', api=True),
+                                url=store.api('fulfillment_services'),
                                 json={
                                     "fulfillment_service": {
                                         "name": "oberlo",

@@ -19,6 +19,7 @@ from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
 from shopified_core.utils import (
     safe_int,
+    url_join,
     get_domain,
     using_store_db,
 )
@@ -26,6 +27,7 @@ from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class, upsell_page_permissions
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 
+SHOPIFY_API_VERSION = "2019-04"
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -865,22 +867,43 @@ class ShopifyStore(StoreBase):
     def __str__(self):
         return self.title
 
-    def get_link(self, page=None, api=False):
+    def get_link(self, page=None, api=False, version=SHOPIFY_API_VERSION):
         if api:
             url = re.findall(r'[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
         else:
             url = re.findall(r'[^@\.]+\.myshopify\.com', self.api_url)[0]
 
         if page:
-            url = 'https://{}/{}'.format(url, page.lstrip('/'))
+            if api:
+                page = re.sub(r'^/?admin/', '', page)
+
+                if '.json' not in page:
+                    page = f'{page}.json'
+
+                url = url_join(f'https://{url}', 'admin', 'api', version, page)
+            else:
+                url = url_join(f'https://{url}', page)
         else:
-            url = 'https://{}'.format(url)
+            url = url_join(f'https://{url}')
+
+        return url
+
+    def api(self, *pages, version=SHOPIFY_API_VERSION):
+        url = re.findall(r'[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
+
+        page = url_join(*pages)
+
+        page = re.sub(r'^/?admin/', '', page)
+
+        if not page.endswith('.json'):
+            page = f'{page}.json'
+
+        url = url_join(f'https://{url}', 'admin', 'api', version, page)
 
         return url
 
     def get_order(self, order_id):
-        url = self.get_link(f'/admin/orders/{order_id}.json', api=True)
-        response = requests.get(url)
+        response = requests.get(url=self.api('orders', order_id))
         return response.json()['order']
 
     def get_product(self, product_id):
@@ -952,7 +975,7 @@ class ShopifyStore(StoreBase):
             params['created_at_min'] = arrow.utcnow().replace(days=-abs(days)).isoformat()
 
         return requests.get(
-            url=self.get_link('/admin/orders/count.json', api=True),
+            url=self.api('order/count'),
             params=params
         ).json().get('count', 0)
 
@@ -966,7 +989,7 @@ class ShopifyStore(StoreBase):
 
     @cached_property
     def get_info(self):
-        rep = requests.get(url=self.get_link('/admin/shop.json', api=True))
+        rep = requests.get(url=self.api('shop'))
         rep = rep.json()
 
         if 'shop' in rep:
@@ -1058,7 +1081,7 @@ class ShopifyStore(StoreBase):
             self.save()
             return self.primary_location
 
-        response = requests.get(self.get_link('/admin/locations.json', api=True))
+        response = requests.get(self.api('locations'))
         locations = response.json()['locations']
         primary_location = locations[0].get('id')
 
@@ -1069,7 +1092,7 @@ class ShopifyStore(StoreBase):
         locations = cache.get(locations_key)
         if locations is None:
 
-            rep = requests.get(self.get_link('/admin/locations.json', api=True))
+            rep = requests.get(self.api('locations'))
             rep.raise_for_status()
 
             locations = rep.json()['locations']
@@ -1644,13 +1667,12 @@ class ShopifyProduct(ProductBase):
 
     def get_inventory_item_by_variant(self, variant_id, variant=None, ensure_tracking=True):
         if variant is None:
-            url = self.store.get_link('/admin/variants/{}.json'.format(variant_id), api=True)
-            response = requests.get(url)
+            response = requests.get(url=self.store.api('variants', variant_id))
             variant = response.json()['variant']
 
         if ensure_tracking and variant['inventory_management'] != 'shopify':
             requests.put(
-                url=self.store.get_link('/admin/inventory_items/{}.json'.format(variant['inventory_item_id']), api=True),
+                url=self.store.api('inventory_items', variant['inventory_item_id']),
                 json={
                     "inventory_item": {
                         "id": variant['inventory_item_id'],
@@ -1668,7 +1690,7 @@ class ShopifyProduct(ProductBase):
             inventory_item_id = self.get_inventory_item_by_variant(variant_id, variant=variant)
 
         return requests.post(
-            url=self.store.get_link('/admin/inventory_levels/set.json', api=True),
+            url=self.store.api('inventory_levels/set'),
             json={
                 'location_id': self.store.get_primary_location(),
                 'inventory_item_id': inventory_item_id,
@@ -1685,7 +1707,7 @@ class ShopifyProduct(ProductBase):
 
         primary_location = self.store.get_primary_location()
         response = requests.get(
-            url=self.store.get_link('/admin/inventory_levels.json', api=True),
+            url=self.store.api('inventory_levels'),
             params={
                 'inventory_item_ids': inventory_item_id,
                 'location_ids': primary_location
@@ -1896,7 +1918,7 @@ class ShopifyWebhook(models.Model):
         if not self.shopify_id:
             return
 
-        endpoint = self.store.get_link('/admin/webhooks/{}.json'.format(self.shopify_id), api=True)
+        endpoint = self.store.api('webhooks', self.shopify_id)
         try:
             requests.delete(endpoint)
         except Exception as e:

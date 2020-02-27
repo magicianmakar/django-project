@@ -161,14 +161,14 @@ def get_orders_by_phone(user, phone, phone_raw):
 
     for shopify_store in shopify_stores:
         try:
-            resp_customers = requests.get(url=shopify_store.get_link('/admin/customers/search.json', api=True),
+            resp_customers = requests.get(url=shopify_store.api('customers/search'),
                                           params={'query': 'phone:' + phone,
                                                   'fields': 'id'})
             resp_customers.raise_for_status()
             for shopify_customer in resp_customers.json()['customers']:
                 resp_customer_orders = requests.get(
-                    url=shopify_store.get_link('/admin/customers/' + str(shopify_customer['id']) + '/orders.json',
-                                               api=True), params={'status': shopify_filter_status})
+                    url=shopify_store.api('customers', shopify_customer['id'], 'orders'),
+                    params={'status': shopify_filter_status})
                 resp_customer_orders.raise_for_status()
                 for shopify_order in resp_customer_orders.json()['orders']:
                     orders['shopify'].append(shopify_order)
@@ -256,8 +256,8 @@ def get_orders_by_id(user, order_id):
     for shopify_store in shopify_stores:
         try:
             resp_customer_orders = requests.get(
-                url=shopify_store.get_link('/admin/orders.json',
-                                           api=True), params={'ids': order_id, 'status': shopify_filter_status})
+                url=shopify_store.api('orders'),
+                params={'ids': order_id, 'status': shopify_filter_status})
             resp_customer_orders.raise_for_status()
             for shopify_order in resp_customer_orders.json()['orders']:
                 orders['shopify'].append(shopify_order)

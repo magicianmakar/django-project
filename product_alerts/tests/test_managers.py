@@ -165,7 +165,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         old_price = round(price - (price / 2.0), 2)
         old_compare_price = round(price - (price / 2.0), 2) * 2.0
 
-        update_endpoint = product.store.get_link('/admin/products/{}.json'.format(product.shopify_id), api=True)
+        update_endpoint = product.store.api('products', product.shopify_id)
         shopify_product['variants'][0]['price'] = old_price
         shopify_product['variants'][0]['compare_at_price'] = old_compare_price
         r = requests.put(update_endpoint, json={'product': shopify_product})
