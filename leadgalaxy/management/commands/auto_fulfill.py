@@ -29,6 +29,7 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--new', action='store_true', help='Fulfill newest orders first')
         parser.add_argument('--progress', action='store_true', help='Show Reset Progress')
         parser.add_argument('--replica', dest='replica', action='store_true', help='Use Replica database if available')
+        parser.add_argument('--count-only', dest='count_only', action='store_true', help='Use Replica database if available')
 
     def start_command(self, *args, **options):
         fulfill_store = options.get('store')
@@ -48,6 +49,10 @@ class Command(DropifiedBaseCommand):
 
         if fulfill_store is not None:
             orders = orders.filter(store=fulfill_store)
+
+        if options['count_only']:
+            self.write(f'Orders to auto fulfill {orders.count()}')
+            return
 
         self.write('Start Auto Fulfill')
 
