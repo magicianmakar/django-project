@@ -27,9 +27,6 @@ class ShopifyOrderImport():
         if self.store is None:
             raise Exception("Store not set.")
 
-        # Sets the base url for accessing Shopify api endpoint.
-        self.base_url = self.store.get_link(api=True)
-
         raven_client.user_context({
             'id': self.store.user.id,
             'username': self.store.user.username,
@@ -39,7 +36,7 @@ class ShopifyOrderImport():
     def _get_response_from_url(self, url, params=None):
         """Access any given url and return the corresponding response"""
         # concatenate the URL to be requested with the base url and do the request
-        request_url = self.base_url + url
+        request_url = self.store.api(url)
         if params is not None:
             response = requests.get(request_url, params=params)
         else:
@@ -51,7 +48,7 @@ class ShopifyOrderImport():
     def _post_response_from_url(self, url, data):
         """Access any given url and return the corresponding response"""
         # concatenate the URL to be requested with the base url and do the request
-        request_url = self.base_url + url
+        request_url = self.store.api(url)
         response = requests.post(request_url, json=data)
 
         time.sleep(0.5)

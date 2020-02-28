@@ -43,7 +43,6 @@ class ShopifyOrderExport():
         self.store = order_export.store
 
         # create the base url for accessing Shopify with basic http auth
-        self.base_url = self.store.get_link('/', api=True)
         self.file_path = tempfile.mktemp(suffix='.csv', prefix='export_%d_' % self.order_export.id)
 
         file_name = self.file_path.split('/')[-1]
@@ -58,15 +57,15 @@ class ShopifyOrderExport():
         })
 
     def _get_response_from_url(self, url, params=None):
-        request_url = self.base_url + url
+        request_url = self.store.api(url)
         return requests.get(request_url, params=params)
 
     def _post_response_from_url(self, url, data):
-        request_url = self.base_url + url
+        request_url = self.store.api(url)
         return requests.post(request_url, json=data)
 
     def _put_response_from_url(self, url, data):
-        request_url = self.base_url + url
+        request_url = self.store.api(url)
         return requests.put(request_url, json=data)
 
     def _create_fulfillment_params(self, order_id, tracking_number, line_item_id):
@@ -427,7 +426,6 @@ class ShopifyTrackOrderExport():
     def __init__(self, store):
         self.store = ShopifyStore.objects.get(id=store)
         # create the base url for accessing Shopify with basic http auth
-        self.base_url = self.store.get_link('/', api=True)
         self.file_path = tempfile.mktemp(suffix='.csv', prefix='order_export_')
 
         file_name = self.file_path.split('/')[-1]

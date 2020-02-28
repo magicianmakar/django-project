@@ -34,12 +34,19 @@ class StoreTestCase(BaseTestCase):
             self.assertEqual(store.get_link('product/123'), "https://%s/product/123" % MYSHOPIFY_DOMAIN)
 
             if store.version == 2:
-                self.assertEqual(store.get_link(api=True), "https://%s" % SHOPIFY_APP_URL)
-                self.assertEqual(store.get_link('/admin/products.json', api=True), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
-                self.assertEqual(store.get_link('admin/products.json', api=True), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
+                with self.assertRaises(NotImplementedError):
+                    self.assertEqual(store.get_link(api=True), "https://%s" % SHOPIFY_APP_URL)
+
+                with self.assertRaises(NotImplementedError):
+                    self.assertEqual(store.get_link('/admin/products.json', api=True), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
+
+                with self.assertRaises(NotImplementedError):
+                    self.assertEqual(store.get_link('admin/products.json', api=True), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
 
                 self.assertEqual(store.api('products'), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
                 self.assertEqual(store.api('products.json'), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
+                self.assertEqual(store.api('/admin/products.json'), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
+                self.assertEqual(store.api('admin/products.json'), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
                 self.assertEqual(store.api('products', 1236), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products/1236.json")  # noqa
                 self.assertEqual(store.api('products', 1236, 'variants.json'), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products/1236/variants.json")  # noqa
                 self.assertEqual(store.api('products', 1236, 'variants'), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products/1236/variants.json")  # noqa
@@ -47,12 +54,19 @@ class StoreTestCase(BaseTestCase):
                 self.assertEqual(store.api('products/1236/variants.json'), f"https://{SHOPIFY_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products/1236/variants.json")  # noqa
                 self.assertEqual(store.api('products', 1236, 'variants', version='9999-99'), f"https://{SHOPIFY_APP_URL}/admin/api/9999-99/products/1236/variants.json")  # noqa
             else:
-                self.assertEqual(store.get_link(api=True), "https://%s" % PRIVATE_APP_URL)
-                self.assertEqual(store.get_link('/admin/products.json', api=True), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
-                self.assertEqual(store.get_link('admin/products.json', api=True), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
+                with self.assertRaises(NotImplementedError):
+                    self.assertEqual(store.get_link(api=True), "https://%s" % PRIVATE_APP_URL)
+
+                with self.assertRaises(NotImplementedError):
+                    self.assertEqual(store.get_link('/admin/products.json', api=True), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
+
+                with self.assertRaises(NotImplementedError):
+                    self.assertEqual(store.get_link('admin/products.json', api=True), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
 
                 self.assertEqual(store.api('products'), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
                 self.assertEqual(store.api('products.json'), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
+                self.assertEqual(store.api('/admin/products.json'), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
+                self.assertEqual(store.api('admin/products.json'), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products.json")  # noqa
                 self.assertEqual(store.api('products', 1236), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products/1236.json")  # noqa
                 self.assertEqual(store.api('products', 1236, 'variants.json'), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products/1236/variants.json")  # noqa
                 self.assertEqual(store.api('products', 1236, 'variants'), f"https://{PRIVATE_APP_URL}/admin/api/{SHOPIFY_API_VERSION}/products/1236/variants.json")  # noqa

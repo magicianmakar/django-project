@@ -123,7 +123,7 @@ class OrderImportFetchOrdersTestCase(BaseTestCase):
     @tag('slow')
     def test_found_shopify_filled_for_items(self):
         with requests_mock.mock(real_http=True) as mock:
-            mock.register_uri('GET', 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com/admin/orders.json?name=1089', json={
+            mock.register_uri('GET', f'{self.store.api("orders")}?name=1089', json={
                 "orders": [
                     {"id": 4154418757, "line_items": [
                         {"id": 7374191301, "sku": "1100195-bulbasaur"},
@@ -132,7 +132,7 @@ class OrderImportFetchOrdersTestCase(BaseTestCase):
                 ]
             })
 
-            mock.register_uri('GET', 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com/admin/orders.json?name=1039', json={
+            mock.register_uri('GET', f'{self.store.api("orders")}?name=1039', json={
                 "orders": [
                     {"id": 4154418758, "line_items": [
                         {"id": 4175570565, "sku": "1100195-bulbasaur"},
@@ -170,15 +170,13 @@ class OrderImportSyncShopifyTestCase(BaseTestCase):
         ]
 
         with requests_mock.mock(real_http=True) as mock:
-            base = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
-            mock.register_uri('POST', base + '/admin/orders/4154418757/fulfillments.json', json={})
-            mock.register_uri('POST', base + '/admin/orders/4095014149/fulfillments.json', json={})
+            mock.register_uri('POST', self.store.api("orders", 4154418757, 'fulfillments'), json={})
+            mock.register_uri('POST', self.store.api("orders", 4095014149, 'fulfillments'), json={})
 
             self.tracking_response = self.api.send_tracking_number(tracking_items)
 
         with requests_mock.mock(real_http=True) as mock:
-            base = 'https://:88937df17024aa5126203507e2147f47@shopified-app-ci.myshopify.com'
-            mock.register_uri('POST', base + '/admin/orders/4154418757/fulfillments.json', json={})
+            mock.register_uri('POST', self.store.api("orders", 4154418757, 'fulfillments'), json={})
 
             self.incomplete_tracking_response = self.api.send_tracking_number(tracking_items)
 

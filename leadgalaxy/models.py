@@ -869,22 +869,14 @@ class ShopifyStore(StoreBase):
 
     def get_link(self, page=None, api=False, version=SHOPIFY_API_VERSION):
         if api:
-            url = re.findall(r'[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
-        else:
-            url = re.findall(r'[^@\.]+\.myshopify\.com', self.api_url)[0]
+            raise NotImplementedError("Use ShoifyStore.api to get API links")
+
+        url = re.findall(r'[^@\.]+\.myshopify\.com', self.api_url)[0]
 
         if page:
-            if api:
-                page = re.sub(r'^/?admin/', '', page)
-
-                if '.json' not in page:
-                    page = f'{page}.json'
-
-                url = url_join(f'https://{url}', 'admin', 'api', version, page)
-            else:
-                url = url_join(f'https://{url}', page)
+            url = url_join(f'https://{url}', page)
         else:
-            url = url_join(f'https://{url}')
+            url = f'https://{url}'
 
         return url
 
