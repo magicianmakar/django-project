@@ -3,6 +3,7 @@ from collections import defaultdict
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.utils.text import Truncator
 
 from commercehq_core.models import CommerceHQStore
 from groovekart_core.models import GrooveKartStore
@@ -96,7 +97,7 @@ class Util:
 
                 auth_net_lines.append(dict(
                     line_id=line_id,
-                    name=user_supplement.title,
+                    name=Truncator(user_supplement.title).chars(27),
                     quantity=quantity,
                     unit_price=line_amount,
                 ))

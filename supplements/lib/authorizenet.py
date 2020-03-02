@@ -114,6 +114,7 @@ def charge_customer_profile(amount, customer_id, payment_id, lines):
     line_items = apicontractsv1.ArrayOfLineItem()
 
     for line in lines:
+        assert len(line['name']) < 31
         line_item = apicontractsv1.lineItemType()
         line_item.itemId = str(line['line_id'])
         line_item.name = line['name']
