@@ -113,12 +113,12 @@ class BigCommerceStoreApi(ApiBase):
             store = BigCommerceStore.objects.get(id=store)
             permissions.user_can_view(user, store)
             page = safe_int(data.get('page'), 1)
-            limit = 25
+            limit = 100
             params = {'limit': limit, 'page': page}
 
             if data.get('query'):
                 params['name'] = data['query']
-            params['include'] = 'variants,images,options'
+            params['include'] = 'variants,images'
 
             try:
                 r = store.request.get(url=store.get_api_url('v3/catalog/products'), params=params)

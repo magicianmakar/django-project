@@ -169,13 +169,15 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
 }
 
 #modal-shopify-product .shopify-products,
-#modal-commercehq-product .shopify-products
+#modal-commercehq-product .shopify-products,
+#modal-bigcommerce-product .shopify-products
 {
     padding:10px 20px;
 }
 
 #modal-shopify-product .product-item,
-#modal-commercehq-product .product-item {
+#modal-commercehq-product .product-item,
+#modal-bigcommerce-product .product-item {
     padding-bottom: 10px;
     border-bottom: 1px solid #eee;
     padding-top: 10px;
@@ -184,24 +186,28 @@ body.modal-open #page-wrapper, body.stop-scrolling #page-wrapper{
 }
 
 #modal-shopify-product .product-item:hover,
-#modal-commercehq-product .product-item:hover {
+#modal-commercehq-product .product-item:hover,
+#modal-bigcommerce-product .product-item:hover {
     background-color: #eff9fd;
 }
 
 #modal-shopify-product .product-item .shopify-product:hover,
-#modal-commercehq-product .product-item .shopify-product:hover {
+#modal-commercehq-product .product-item .shopify-product:hover,
+#modal-bigcommerce-product .product-item .shopify-product:hover {
     cursor: pointer;
 }
 
 #modal-shopify-product .product-item .product-thumb,
-#modal-commercehq-product .product-item .product-thumb {
+#modal-commercehq-product .product-item .product-thumb,
+#modal-bigcommerce-product .product-item .product-thumb {
     width: 30px;
     padding-bottom: 30px;
     border: 1px solid #eee;
 }
 
 #modal-shopify-product .product-item .product-thumb img,
-#modal-commercehq-product .product-item .product-thumb img {
+#modal-commercehq-product .product-item .product-thumb img,
+#modal-bigcommerce-product .product-item .product-thumb img {
     bottom: 0;
     display: block;
     left: 0;
