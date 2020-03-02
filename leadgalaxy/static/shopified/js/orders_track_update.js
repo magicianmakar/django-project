@@ -237,7 +237,7 @@
         }
 
         $.ajax({
-            url: '/api/user-config',
+            url: api_url('user-config'),
             method: 'POST',
             data: {
                 'single': true,
@@ -249,7 +249,7 @@
 
     function loadConfig() {
         $.ajax({
-            url: '/api/user-config',
+            url: api_url('user-config'),
             data: {
                 'name': '_track_advanced_options,_track_update_delay,_track_update_concurrency',
             }
@@ -413,7 +413,6 @@
 
     setupDateRangePicker('#created_at_daterange', 'input[name="created_at_daterange"]');
     setupDateRangePicker('#date', 'input[name="date"]');
-
 
     $('#created_at_daterange').data('daterangepicker').setStartDate(moment().subtract(30, 'days').format('MM/DD/YYYY'));
     $('#created_at_daterange').data('daterangepicker').setEndDate(moment().format('MM/DD/YYYY'));

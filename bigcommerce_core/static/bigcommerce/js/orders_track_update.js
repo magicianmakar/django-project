@@ -19,6 +19,29 @@
         "WAIT_SELLER_EXAMINE_MONEY": "Payment not yet confirmed",
         "RISK_CONTROL": "Payment being verified",
         "IN_PRESELL_PROMOTION": "Promotion is on",
+        "FUND_PROCESSING": "Fund Processing",
+
+        "BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+        "BUYER_REJECTED": "Pickup cancelled buyer rejected",
+        "DELIVERED": "Delivered",
+        "DIRECT_DEBIT": "Direct Debit",
+        "EXTERNAL_WALLET": "Processed by PayPal",
+        "IN_TRANSIT": "In transit",
+        "MANIFEST": "Shipping Info Received",
+        "NO_PICKUP_INSTRUCTIONS_AVAILABLE": "No pickup instruction available",
+        "NOT_PAID": "Not Paid",
+        "OUT_OF_STOCK": "Out of stock",
+        "PENDING_MERCHANT_CONFIRMATION": "Order is being prepared",
+        "PICKED_UP": "Picked up",
+        "PICKUP_CANCELLED_BUYER_NO_SHOW": "Pickup cancelled buyer no show",
+        "PICKUP_CANCELLED_BUYER_REJECTED": "Pickup cancelled buyer rejected",
+        "PICKUP_CANCELLED_OUT_OF_STOCK": "Out of stock",
+        "READY_FOR_PICKUP": "Ready for pickup",
+        "SHIPPING_INFO_RECEIVED": "Shipping info received",
+
+        "D_PENDING_PAYMENT": "Pending Payment",
+        "D_PENDING_SHIPMENT": "Pending Shipment",
+        "D_SHIPPED": "Shipped"
     };
 
     P.config({
@@ -49,7 +72,7 @@
         }, 1000);
     });
 
-    $('#update-unfulfilled-only').on('change', function (e) {
+    $('#update-unfulfilled-only').on('ifChanged', function (e) {
         if($('.aliexpress-sync-btn').prop('updated-version') &&
             $('#modal-tracking-update').is(':visible')) {
             syncTrackedOrders();
@@ -68,12 +91,18 @@
 
         btn.button('loading');
 
+        var createdAt = $('input[name="created_at_daterange"]').val();
+        if (createdAt.indexOf('all-time') > -1) {
+            createdAt = '';
+        }
+
         $.ajax({
             url: api_url('order-fulfill', 'bigcommerce'),
             data: {
                 store: btn.data('store'),
                 all: true,
                 unfulfilled_only: $('#update-unfulfilled-only').is(':checked'),
+                created_at: createdAt,
                 count_only: true
             }
         }).done(function(data) {
@@ -114,6 +143,15 @@
         var btn = $(this);
         var modal = $('#modal-tracking-update');
 
+        // If orders object isn't filled inside count
+        if (!orders.pending) {
+            orders = {
+                pending: window.syncOrderIds.split(',').length,
+                success: 0,
+                error: 0
+            };
+        }
+
         $('.pending-msg', modal).hide();
         $('.update-progress, .update-progress p', modal).show();
         $('.progress-bar-success', modal).css('width', '0');
@@ -124,11 +162,18 @@
         btn.hide();
         $('.stop-update-btn').show();
 
+        var createdAt = $('input[name="created_at_daterange"]').val();
+        if (createdAt.indexOf('all-time') > -1) {
+            createdAt = '';
+        }
+
         $.ajax({
             url: api_url('order-fulfill', 'bigcommerce'),
             data: {
                 store: btn.data('store'),
                 all: true,
+                ids: window.syncOrderIds,
+                created_at: createdAt,
                 unfulfilled_only: $('#update-unfulfilled-only').is(':checked')
             }
         }).done(function(data) {
@@ -145,6 +190,8 @@
         }).fail(function(data) {
             displayAjaxError('Update Orders', data);
         });
+
+        window.syncOrderIds = null;
     });
 
     $('.stop-update-btn').click(function (e) {
@@ -210,7 +257,7 @@
             disable_config_sync = true;
 
             if(data._track_advanced_options == 'true') {
-                $('#advanced-options-check').prop('checked', true).trigger('change');
+                $('#advanced-options-check').iCheck('check');
             }
 
             $('.advanced-options').toggle($('#advanced-options-check')[0].checked);
@@ -229,6 +276,29 @@
 
     function checkOrder(order) {
         var delay = parseFloat($('#update-delay').val(), 10).bound(0.1, 100) * 1000;
+
+        if (order.source_type === 'dropified-print') {
+            return checkDropifiedPrintOrder(order).then(function(data) {
+                // Got Supplier order info
+                if (order.source_status == data.details.orderStatus &&
+                    order.source_tracking == data.details.tracking_number &&
+                    $('#update-unfulfilled-only').is(':checked') &&
+                    !order.bundle) {
+                    // Order info hasn't changed
+                    orders.success += 1;
+                    addOrderUpdateItem(order, data.details);
+                } else {
+                    return updateOrderStatus(order, data.details);
+                }
+            }).fail(function(data) {
+                // Couldn't get Supplier order info
+                orders.error += 1;
+                addOrderUpdateItem(order, {'error': getAjaxError(data)});
+
+            }).always(function() {
+                updateProgress();
+            });
+        }
 
         return new P(function(resolve, reject) {
             window.extensionSendMessage({
@@ -255,7 +325,8 @@
                 // Got Supplier order info
                 if (data.order.source_status == data.source.orderStatus &&
                     data.order.source_tracking == data.source.tracking_number &&
-                    $('#update-unfulfilled-only').is(':checked')) {
+                    $('#update-unfulfilled-only').is(':checked') &&
+                    !data.order.bundle) {
                     // Order info hasn't changed
                     orders.success += 1;
                     addOrderUpdateItem(data.order, data.source);
@@ -283,6 +354,8 @@
                 'end_reason': source.endReason,
                 'tracking_number': source.tracking_number,
                 'order_details': JSON.stringify(source.order_details || {}),
+                'bundle': order.bundle,
+                'source_id': order.source_id,
             }
         }).done(function(data) {
             orders.success += 1;
@@ -309,7 +382,6 @@
         } else {
             order.source_url = 'https://trade.aliexpress.com/order_detail.htm?orderId=' + order.source_id;
         }
-
         var trItem = $(order_update_tpl({
             order: order,
             source: source,
@@ -347,8 +419,9 @@
     $('#created_at_daterange').trigger('apply.daterangepicker', $('#created_at_daterange').data('daterangepicker'));
     $('input[name="created_at_daterange"]').on('change', syncTrackedOrders);
 
+    $('#advanced-options-check').iCheck('uncheck');
+
     $(function () {
         setTimeout(loadConfig, 500);
     });
-
 })();

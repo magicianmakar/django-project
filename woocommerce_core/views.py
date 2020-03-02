@@ -13,6 +13,7 @@ from django.db.models import Q
 from django.views.generic import View, ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.base import RedirectView
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse, reverse_lazy
@@ -1068,6 +1069,13 @@ class OrdersTrackList(ListView):
             messages.error(self.request, f'Error while trying to show your Store Orders: {error}')
 
         context['api_error'] = error
+
+        sync_delay_notify_days = safe_int(self.request.user.get_config('sync_delay_notify_days'))
+        sync_delay_notify_highlight = self.request.user.get_config('sync_delay_notify_highlight')
+        order_threshold = None
+        if sync_delay_notify_days > 0 and sync_delay_notify_highlight:
+            order_threshold = timezone.now() - timezone.timedelta(days=sync_delay_notify_days)
+        context['order_threshold'] = order_threshold
 
         context['breadcrumbs'] = [{
             'title': 'Orders',

@@ -21,10 +21,22 @@
                         </div>
 
                         <div class="col-md-6 col-md-offset-2 text-right">
+                            {% if request.user|can:'order_imports.use' %}
+                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r-xs"
+                                title="Import Tracking IDs"
+                                href="{% url 'order_imports_index' %}"><i class="fa fa-download"></i> Import</a>
+                            {% endif %}
+
                             <div class="btn-group ">
-                                <button data-toggle="dropdown" class="btn btn-default btn-outline btn-rounded btn-sm dropdown-toggle" aria-expanded="false">
+                                <button data-toggle="dropdown" class="btn btn-default btn-outline btn-rounded btn-sm dropdown-toggle m-r-xs" aria-expanded="false">
                                     <i class="fa fa-cog"></i> Bulk Actions <span class="caret"></span></button>
                                 <ul class="dropdown-menu">
+
+                                    <li>
+                                        <a class="btn-success btn-outline sync-selected-btn" store-id="{{store.id}}">
+                                            <i class="fa fa-refresh"></i> Sync Selected Orders
+                                        </a>
+                                    </li>
 
                                     <li>
                                         <a class="btn-danger btn-outline delete-order-id-btn" store-id="{{store.id}}">
@@ -39,12 +51,6 @@
                                     </li>
                                     </ul>
                             </div>
-
-                            {% if request.user|can:'order_imports.use' %}
-                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r"
-                                title="Import Tracking IDs"
-                                href="{% url 'order_imports_index' %}"><i class="fa fa-download"></i> Import</a>
-                            {% endif %}
 
                             <button class="btn btn-success btn-rounded btn-outline btn-sm itooltip aliexpress-sync-btn" data-store="{{store.id}}"
                             title="Click Sync with Supplier to fetch order updates from AliExpress & eBay.">
@@ -92,11 +98,28 @@
                         <div class="col-md-2">
                             <select name="reason" class="form-control" style="padding: 6px 0px">
                                 <option {% if not request.GET.reason %}selected="selected"{% endif %} value="">Any</option>
+                                <optgroup label="Order Status">
+                                    <option {% if request.GET.reason == '_PLACE_ORDER_SUCCESS' %}selected="selected"{% endif %} value="_PLACE_ORDER_SUCCESS">Awaiting Payment</option>
+                                    <option {% if request.GET.reason == '_IN_CANCEL' %}selected="selected"{% endif %} value="_IN_CANCEL">Awaiting Cancellation</option>
+                                    <option {% if request.GET.reason == '_WAIT_SELLER_SEND_GOODS' %}selected="selected"{% endif %} value="_WAIT_SELLER_SEND_GOODS">Awaiting Shipment</option>
+                                    <option {% if request.GET.reason == '_SELLER_PART_SEND_GOODS' %}selected="selected"{% endif %} value="_SELLER_PART_SEND_GOODS">Partial Shipment</option>
+                                    <option {% if request.GET.reason == '_WAIT_BUYER_ACCEPT_GOODS' %}selected="selected"{% endif %} value="_WAIT_BUYER_ACCEPT_GOODS">Awaiting delivery</option>
+                                    <option {% if request.GET.reason == '_WAIT_GROUP_SUCCESS' %}selected="selected"{% endif %} value="_WAIT_GROUP_SUCCESS">Pending operation success</option>
+                                    <option {% if request.GET.reason == '_FINISH' %}selected="selected"{% endif %} value="_FINISH">Order Completed</option>
+                                    <option {% if request.GET.reason == '_IN_ISSUE' %}selected="selected"{% endif %} value="_IN_ISSUE">Dispute Orders</option>
+                                    <option {% if request.GET.reason == '_IN_FROZEN' %}selected="selected"{% endif %} value="_IN_FROZEN">Frozen Orders</option>
+                                    <option {% if request.GET.reason == '_WAIT_SELLER_EXAMINE_MONEY' %}selected="selected"{% endif %} value="_WAIT_SELLER_EXAMINE_MONEY">Payment not yet confirmed</option>
+                                    <option {% if request.GET.reason == '_RISK_CONTROL' %}selected="selected"{% endif %} value="_RISK_CONTROL">Payment being verified</option>
+                                    <option {% if request.GET.reason == '_IN_PRESELL_PROMOTION' %}selected="selected"{% endif %} value="_IN_PRESELL_PROMOTION">Promotion is on</option>
+                                    <option {% if request.GET.reason == '_FUND_PROCESSING' %}selected="selected"{% endif %} value="_FUND_PROCESSING">Fund Processing</option>
+                                </optgroup>
 
-                                {% for key, value in rejected_status.items %}
-                                <option {% if request.GET.reason == key %}selected="selected"{% endif %}
-                                        value="{{ key }}">{{ value }}</option>
-                                {% endfor %}
+                                <optgroup label="Order Cancellation Reason">
+                                    {% for key, value in rejected_status.items %}
+                                    <option {% if request.GET.reason == key %}selected="selected"{% endif %}
+                                            value="{{ key }}">{{ value }}</option>
+                                    {% endfor %}
+                                </optgroup>
                             </select>
                         </div>
                     </div>
@@ -147,7 +170,10 @@
                       </thead>
                       <tbody>
                         {% for item in orders %}
-                        <tr id="{{item.id}}">
+                        <tr id="{{item.id}}"
+                            {% if item.errors > 0 %}style="background-color:#ffcfd4"{% endif %}
+                            {% if order_threshold and item.created_at < order_threshold and not item.source_tracking %}class="highlight"{% endif %}
+                        >
                             <td style="min-width:30px">
                                 <div class="row">
                                     <div class="col-md-12">
@@ -155,8 +181,8 @@
                                             src="{% static 'img/blank.gif' %}"
                                             data-src="{{item.line.image}}"
                                             style="width:64px" />
-                                            <input type="checkbox" class="icheck order-track" name="track"
-                                                   value="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
+                                            <input type="checkbox" class="icheck order-track" name="track" value="{{item.id}}"
+                                                   track-id="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
                                     </div>
                                 </div>
                             </td>
@@ -245,11 +271,18 @@
         position: initial !important;
         margin: 0 !important;
     }
-
     table tbody .icheckbox_square-blue {
         position: absolute !important;
         top: 0px;
         left: 15px;
+    }
+    .highlight {
+        background-color: rgb(230, 213, 213);
+    }
+    .filter-form .row {
+        padding-bottom: 5px;
+        display: flex;
+        align-items: center;
     }
 </style>
 {% endcompress %}

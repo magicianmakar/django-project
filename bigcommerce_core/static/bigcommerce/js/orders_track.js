@@ -179,6 +179,27 @@
         });
     });
 
+    $('.sync-selected-btn').click(function(e) {
+        var tracks = $.map($('.order-track').filter(function(i, el) {
+            return el.checked;
+        }), function(el) {
+            return $(el).attr('track-id');
+        });
+
+        if (!tracks.length) {
+            return swal('Bulk Actions', 'Please select an order first', 'warning');
+        }
+
+        window.syncOrderIds = tracks.join(',');
+
+        $('#modal-tracking-update').modal({
+            backdrop: 'static',
+            keyboard: false
+        });
+
+        $('.start-update-btn').trigger('click');
+    });
+
     $('.archive-selected-orders-btn').click(function(e) {
         var tracks = $.map($('.order-track').filter(function(i, el) {
             return el.checked;
@@ -235,6 +256,16 @@
 
     $('.check-all').on('ifChanged', function (e) {
         $('.order-track').iCheck(e.target.checked ? 'check' : 'uncheck');
+    });
+
+    $('[name="errors"]').chosen({
+        search_contains: true,
+        width: '100%'
+    });
+
+    $('[name="reason"]').chosen({
+        search_contains: true,
+        width: '100%'
     });
 
     $(".filter-form").submit(function() {

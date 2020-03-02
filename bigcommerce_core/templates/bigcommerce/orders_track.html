@@ -21,10 +21,22 @@
                         </div>
 
                         <div class="col-md-6 col-md-offset-2 text-right">
+                            {% if request.user|can:'order_imports.use' %}
+                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r-xs"
+                                title="Import Tracking IDs"
+                                href="{% url 'order_imports_index' %}"><i class="fa fa-download"></i> Import</a>
+                            {% endif %}
+
                             <div class="btn-group ">
-                                <button data-toggle="dropdown" class="btn btn-default btn-outline btn-rounded btn-sm dropdown-toggle" aria-expanded="false">
+                                <button data-toggle="dropdown" class="btn btn-default btn-outline btn-rounded btn-sm dropdown-toggle m-r-xs" aria-expanded="false">
                                     <i class="fa fa-cog"></i> Bulk Actions <span class="caret"></span></button>
                                 <ul class="dropdown-menu">
+
+                                    <li>
+                                        <a class="btn-success btn-outline sync-selected-btn" store-id="{{store.id}}">
+                                            <i class="fa fa-refresh"></i> Sync Selected Orders
+                                        </a>
+                                    </li>
 
                                     <li>
                                         <a class="btn-danger btn-outline delete-order-id-btn" store-id="{{store.id}}">
@@ -39,12 +51,6 @@
                                     </li>
                                     </ul>
                             </div>
-
-                            {% if request.user|can:'order_imports.use' %}
-                            <a class="btn btn-outline btn-default btn-rounded btn-sm itooltip m-r"
-                                title="Import Tracking IDs"
-                                href="{% url 'order_imports_index' %}"><i class="fa fa-download"></i> Import</a>
-                            {% endif %}
 
                             <button class="btn btn-success btn-rounded btn-outline btn-sm itooltip aliexpress-sync-btn" data-store="{{store.id}}"
                             title="Click Sync with Supplier to fetch order updates from AliExpress & eBay.">
@@ -147,7 +153,10 @@
                       </thead>
                       <tbody>
                         {% for item in orders %}
-                        <tr id="{{item.id}}">
+                        <tr id="{{item.id}}"
+                            {% if item.errors > 0 %}style="background-color:#ffcfd4"{% endif %}
+                            {% if order_threshold and item.created_at < order_threshold and not item.source_tracking %}class="highlight"{% endif %}
+                        >
                             <td style="min-width:30px">
                                 <div class="row">
                                     <div class="col-md-12">
@@ -155,8 +164,8 @@
                                             src="{% static 'img/blank.gif' %}"
                                             data-src="{{item.line.image}}"
                                             style="width:64px" />
-                                            <input type="checkbox" class="icheck order-track" name="track"
-                                                   value="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
+                                            <input type="checkbox" class="icheck order-track" name="track" value="{{item.id}}"
+                                                   track-id="{{item.id}}" order-id="{{item.order_id}}" line-id="{{item.line_id}}">
                                     </div>
                                 </div>
                             </td>
@@ -245,11 +254,18 @@
         position: initial !important;
         margin: 0 !important;
     }
-
     table tbody .icheckbox_square-blue {
         position: absolute !important;
         top: 0px;
         left: 15px;
+    }
+    .highlight {
+        background-color: rgb(230, 213, 213);
+    }
+    .filter-form .row {
+        padding-bottom: 5px;
+        display: flex;
+        align-items: center;
     }
 </style>
 {% endcompress %}

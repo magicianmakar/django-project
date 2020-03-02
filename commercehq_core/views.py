@@ -1389,6 +1389,13 @@ class OrdersTrackList(ListView):
         except:
             pass
 
+        sync_delay_notify_days = safe_int(self.request.user.get_config('sync_delay_notify_days'))
+        sync_delay_notify_highlight = self.request.user.get_config('sync_delay_notify_highlight')
+        order_threshold = None
+        if sync_delay_notify_days > 0 and sync_delay_notify_highlight:
+            order_threshold = timezone.now() - timezone.timedelta(days=sync_delay_notify_days)
+        context['order_threshold'] = order_threshold
+
         context['breadcrumbs'] = [{
             'title': 'Orders',
             'url': reverse('chq:orders_list')
