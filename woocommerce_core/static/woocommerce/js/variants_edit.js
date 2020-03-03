@@ -108,8 +108,12 @@ function setupVariantsLinking() {
         $('.current-var').prop('total', product.variants.length);
 
         $.each(product.variants, function(i, el) {
+            var variantText = product.variants[i].description.replace(/<.*?>/g, '');
+            if (!variantText) {
+                variantText = product.variants[i].variant.join(' - ');
+            }
             $('.current-var').append($('<option>', {
-                text: product.variants[i].description.replace(/<.*?>/g, ''),
+                text: variantText,
                 value: i
             }));
         });
