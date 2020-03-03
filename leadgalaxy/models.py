@@ -987,7 +987,7 @@ class ShopifyStore(StoreBase):
             params['created_at_min'] = arrow.utcnow().replace(days=-abs(days)).isoformat()
 
         return requests.get(
-            url=self.api('order/count'),
+            url=self.api('orders/count'),
             params=params
         ).json().get('count', 0)
 
