@@ -147,7 +147,8 @@ $(document).ready(function () {
         makePayment([orderDataId]);
     });
 
-    $(".pay-selected-lines").click(function () {
+    $(".pay-selected-lines").click(function (e) {
+        e.preventDefault();
         var orderDataIds = [];
         $('.line-checkbox:checkbox:checked').each(function (i, item) {
             var line = $(item).parents('.line');
