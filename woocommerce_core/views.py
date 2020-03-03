@@ -237,7 +237,7 @@ def autocomplete(request, target):
             if not len(results):
                 results.append({
                     'value': "Default",
-                    'data': api_product['id'],
+                    'data': -1,
                     'image': first_image
                 })
 

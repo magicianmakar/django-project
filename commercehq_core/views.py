@@ -1116,7 +1116,7 @@ def autocomplete(request, target):
                     image = chq_product['images'][0]['path']
                 results.append({
                     'value': "Default",
-                    'data': chq_product['id'],
+                    'data': -1,
                     'image': image
                 })
 

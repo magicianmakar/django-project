@@ -798,7 +798,7 @@ class GrooveKartApi(ApiBase):
             if not len(results):
                 results.append({
                     'value': "Default",
-                    'data': api_product['id'],
+                    'data': -1,
                     'image': api_product.get('cover_image')
                 })
 
