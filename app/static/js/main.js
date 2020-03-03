@@ -1253,10 +1253,14 @@ $(function() {
     });
 
     // Select first store platform in list of stores
-    var firstStoreType = $('.store-tables tbody tr:first').attr('store-type');
-    var selectedStoreVideos = $('#store-type-video a[href="#' + firstStoreType + '-vids"]');
-    if (selectedStoreVideos.length === 0 && $('#' + firstStoreType + '-vids .training-video').length === 0) {
-        $('#store-type-video a[href="#' + firstStoreType + '-vids"]').trigger('click');
+    var videosStoreType = window.location.pathname.replace(/\//g, '');
+    var videosStoreTypeMenu = $('#store-type-video a[href="#' + videosStoreType + '-vids"]');
+    if (videosStoreTypeMenu.length === 0) {
+        videosStoreType = $('.store-tables tbody tr:first').attr('store-type');
+        videosStoreTypeMenu = $('#store-type-video a[href="#' + videosStoreType + '-vids"]');
+    }
+    if (videosStoreTypeMenu.length === 1 && $('#' + videosStoreType + '-vids .training-video').length >= 0) {
+        $('#store-type-video a[href="#' + videosStoreType + '-vids"]').trigger('click');
     }
 });
 
