@@ -55,7 +55,7 @@
     <div class="form-group">
         <div class="col-md-offset-2 col-sm-6">
             <div class="checkbox">
-                <label><input type="checkbox" name="invoice_to_company" {% if get_config.invoice_to_company %}checked{% endif %}>Send invoice to company</label>
+                <label><input type="checkbox" name="invoice_to_company" {% if profile.get_config.invoice_to_company %}checked{% endif %}>Send invoice to company</label>
             </div>
         </div>
     </div>

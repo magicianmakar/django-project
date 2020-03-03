@@ -102,10 +102,10 @@
                                         </div>
                                     </div>
 
-                                    {% include 'partial/profile_address.html' with title='Company' slug='company' company=user.profile.company countries=countries only %}
+                                    {% include 'partial/profile_address.html' with title='Company' slug='company' company=user.profile.company countries=countries profile=user.profile only %}
 
                                     {% if user.profile.is_black %}
-                                        {% include 'partial/profile_address.html' with title='Samples Shipping Address' slug='user_address' company=user.profile.address countries=countries only %}
+                                        {% include 'partial/profile_address.html' with title='Samples Shipping Address' slug='user_address' company=user.profile.address countries=countries  profile=user.profile only %}
 
                                         {% if user.samples.count %}
                                             <div class="hr-line-dashed"></div>
