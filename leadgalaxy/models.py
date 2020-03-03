@@ -881,6 +881,26 @@ class ShopifyStore(StoreBase):
         return url
 
     def api(self, *pages, version=SHOPIFY_API_VERSION):
+        ''' Get Shopify API link
+
+        Return a Shopify API link with basic auth and the resources path
+        Example usage:
+            store.api('orders') => '/admin/api/{SHOPIFY_API_VERSION}/orders.json'
+            store.api('orders', 1234567, 'fulfillments') => '/admin/api/{SHOPIFY_API_VERSION}/orders/1234567/fulfillments.json'
+
+        Note that this examples return the same result:
+            store.api('orders')
+            store.api('orders.json')
+            store.api('/admin/orders.json')
+            store.api('admin/orders.json')
+            store.api('admin', 'orders')
+            store.api('admin', 'orders.json')
+
+        Args:
+            *pages: list or string to Shopify API resource
+            version: Shoify API version to use (default: {SHOPIFY_API_VERSION})
+        '''
+
         url = re.findall(r'[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
 
         page = url_join(*pages)
