@@ -129,6 +129,33 @@ class WooStore(StoreBase):
 
         pusher.trigger(self.pusher_channel(), event, data)
 
+    def prepare_data(self, key, order):
+        order[key]['name'] = order[key].pop('first_name')
+        order[key]['address1'] = order[key].pop('address_1')
+        order[key]['country_code'] = order[key]['country']
+        order[key]['province'] = order[key].pop('state')
+        order[key]['zip'] = order[key].pop('postcode')
+
+    def get_order(self, order_id):
+        wcapi = self.get_wcapi()
+        order = wcapi.get(f'orders/{order_id}').json()
+        order['order_number'] = order.pop('number')
+        self.prepare_data('shipping', order)
+        self.prepare_data('billing', order)
+
+        order['shipping']['phone'] = order['billing']['phone']
+        order['shipping_address'] = order.pop('shipping')
+        order['billing_address'] = order.pop('billing')
+        order['created_at'] = order.pop('date_created')
+
+        for item in order['line_items']:
+            item['title'] = item.pop('name')
+
+        return order
+
+    def get_product(self, product_id):
+        return WooProduct.objects.get(source_id=product_id)
+
 
 class WooProduct(ProductBase):
     class Meta(ProductBase.Meta):
@@ -681,6 +708,8 @@ class WooSupplier(SupplierBase):
         try:
             if self.is_dropified and 'print-on-demand' in self.product_url:
                 return 'dropified-print'
+            if self.is_pls:
+                return 'pls'
 
             return get_domain(self.product_url)
         except:

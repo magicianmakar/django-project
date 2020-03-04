@@ -23,6 +23,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import get_user_model
 from django.core.cache.utils import make_template_fragment_key
 
+from supplements.models import PLSOrderLine
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
@@ -852,8 +853,10 @@ class OrdersList(ListView):
         context['has_print_on_demand'] = False
 
         for order in orders:
+            order_id = order.get('id')
             country_code = order['shipping']['country'] or order['billing']['country']
             date_created = self.get_order_date_created(order)
+            order['name'] = order_id
             order['date_paid'] = self.get_order_date_paid(order)
             order['date'] = date_created.datetime
             order['date_str'] = date_created.format('MM/DD/YYYY')
@@ -873,6 +876,7 @@ class OrdersList(ListView):
                 product_id = item['product_id']
                 product = product_by_source_id.get(product_id)
                 data = product_data.get(product_id)
+                item['title'] = item['name']
                 item['product'] = product
                 item['image'] = next(iter(data['images']), {}).get('src') if data else None
                 variant_id = item.get('variation_id')
@@ -940,6 +944,9 @@ class OrdersList(ListView):
                         item['order_data_id'] = order_data_id
                         item['order_data'] = order_data
                         item['supplier'] = supplier
+                        is_pls = item['is_pls'] = supplier.is_pls
+                        if is_pls:
+                            item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(supplier.supplier_type())
                         item['shipping_method'] = self.get_item_shipping_method(
