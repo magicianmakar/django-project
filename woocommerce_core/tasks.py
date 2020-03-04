@@ -22,6 +22,7 @@ from .models import WooStore, WooProduct, WooSupplier
 from .utils import (
     format_woo_errors,
     get_image_id_by_hash,
+    get_product_attributes_dict,
     add_product_images_to_api_data,
     add_product_attributes_to_api_data,
     add_store_tags_to_api_data,
@@ -177,7 +178,8 @@ def product_export(store_id, product_id, user_id, publish=None):
         saved_data['published'] = saved_data['published'] if publish is None else publish
         api_data = update_product_api_data({}, saved_data, store)
         api_data = add_product_images_to_api_data(api_data, saved_data, user_id=user_id)
-        api_data = add_product_attributes_to_api_data(api_data, store, saved_data)
+        attributes = get_product_attributes_dict(store)
+        api_data = add_product_attributes_to_api_data(api_data, saved_data, attributes)
         api_data = add_store_tags_to_api_data(api_data, store, saved_data.get('tags', []))
 
         r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post('products', api_data)
@@ -216,7 +218,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
         if product_data and saved_data.get('variants', []):
             image_id_by_hash = get_image_id_by_hash(api_data, product_data)
-            variant_list = create_variants_api_data(saved_data, image_id_by_hash)
+            variant_list = create_variants_api_data(saved_data, image_id_by_hash, attributes)
             path = 'products/{}/variations/batch'.format(product.source_id)
             r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post(path, {'create': variant_list})
             r.raise_for_status()

@@ -157,13 +157,16 @@ def add_product_images_to_api_data(api_data, data, from_helper=False, user_id=No
 
 
 def get_product_attributes_dict(store):
-    attributes = store.wcapi.get('products/attributes').json()
-    return {a['name']: a['id'] for a in attributes if a.get('name')}
+    try:
+        attributes = store.wcapi.get('products/attributes').json()
+        return {a['name']: a['id'] for a in attributes if a.get('name')}
+    except:
+        raven_client.captureException()
+        return {}
 
 
-def add_product_attributes_to_api_data(api_data, store, data):
+def add_product_attributes_to_api_data(api_data, data, attributes=[]):
     variants = data.get('variants', [])
-    attributes = get_product_attributes_dict(store)
 
     if variants:
         api_data['type'] = 'variable'
@@ -190,7 +193,7 @@ def get_image_id_by_hash(api_data, product_data):
     return image_id_by_hash
 
 
-def create_variants_api_data(data, image_id_by_hash):
+def create_variants_api_data(data, image_id_by_hash, attributes=[]):
     variants = data.get('variants', [])
     variants_info = data.get('variants_info', {})
     variants_images = list(data.get('variants_images', {}).items())
@@ -209,7 +212,12 @@ def create_variants_api_data(data, image_id_by_hash):
         for name, option in zip(titles, product):
             options.append(option)
             descriptions.append('{}: {}'.format(name, option))
-            api_data['attributes'].append({'name': name, 'option': option})
+            attribute_id = attributes.get(name)
+            if attribute_id:
+                api_data['attributes'].append({'id': attribute_id, 'option': option})
+            else:
+                api_data['attributes'].append({'name': name, 'option': option})
+
             if 'image' not in api_data:
                 for image_hash, variant_option in variants_images:
                     if image_hash in image_id_by_hash and variant_option == option:
