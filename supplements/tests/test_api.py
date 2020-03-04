@@ -162,6 +162,11 @@ class MakePaymentTestCase(PLSBaseTestCase):
 
         self.do_test()
 
+    def test_post_invalid_country(self):
+        self.order_data['shipping_address']['country'] = 'US'
+
+        self.do_test()
+
     def test_post_long_title(self):
         name = "Fish Oil name longer than 31 chars - 1250mg Lemon Flavor"
         self.user_supplement.title = name
