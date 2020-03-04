@@ -8,6 +8,7 @@ from django.utils.text import Truncator
 from commercehq_core.models import CommerceHQStore
 from groovekart_core.models import GrooveKartStore
 from leadgalaxy.models import ShopifyStore
+from shopified_core.shipping_helper import country_from_code
 from supplements.lib.authorizenet import charge_customer_profile
 from supplements.models import PLSOrder, PLSOrderLine
 from woocommerce_core.models import WooStore
@@ -147,6 +148,9 @@ class Util:
 
             order = self.get_order(order_id)
             orders[order_id] = order
+
+            address = order['shipping_address']
+            address['country'] = country_from_code(address['country_code'], address['country'])
 
             for line_item in order['line_items']:
                 if str(line_item['id']) != str(line_id):
