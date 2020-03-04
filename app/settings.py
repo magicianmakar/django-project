@@ -454,6 +454,8 @@ PRICE_MONITOR_HOSTNAME = os.environ.get('PRICE_MONITOR_HOSTNAME')
 PRICE_MONITOR_USERNAME = os.environ.get('PRICE_MONITOR_USERNAME')
 PRICE_MONITOR_PASSWORD = os.environ.get('PRICE_MONITOR_PASSWORD')
 
+ALIEXPRESS_API_URL = os.environ.get('ALIEXPRESS_API_URL', 'https://square-dust-d318.aliaffgen.workers.dev/')
+
 # Profits Dashboard FB Ads
 FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID')
 FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET')

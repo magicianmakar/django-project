@@ -23,11 +23,15 @@ class UtilTestCase(BaseTestCase):
         self.product_id = 32825336375
         self.monitor_id = 1
 
-    @patch('product_alerts.utils.requests.get')
-    def test_get_supplier_variants(self, mock_get):
-        mock_get.return_value.json.return_value = ['test variant']
+    def test_get_supplier_variants(self):
         variants = get_supplier_variants('aliexpress', self.product_id)
-        self.assertEqual(len(variants), 1)
+        self.assertEqual(len(variants), 8)
+
+        for v in variants:
+            self.assertIn('sku', v)
+            self.assertIn(';', v['sku'])
+            self.assertIn('availabe_qty', v)
+            self.assertGreaterEqual(v['availabe_qty'], 0)
 
     @patch('product_alerts.utils.requests.post')
     def test_monitor_not_registered_product(self, mock_post):

@@ -10,40 +10,61 @@ from shopified_core.utils import app_link, url_join, safe_float, safe_int
 
 
 def get_supplier_variants(supplier_type, product_id):
-    if supplier_type != 'aliexpress' and supplier_type != 'ebay':
-        return []
-    rep = requests.get(
-        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api', supplier_type, '/products', product_id, '/variants'),
-        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
-    )
+    if supplier_type == 'aliexpress':
+        rep = requests.get(
+            url=url_join(settings.ALIEXPRESS_API_URL, product_id),
+        )
 
-    rep.raise_for_status()
-    return rep.json()
+        rep.raise_for_status()
+
+        variants = []
+
+        for v in rep.json()['data']['product_detail']['aeop_ae_product_s_k_us']['aeop_ae_product_sku']:
+            v['sku'] = v['id']
+            v['availabe_qty'] = v['s_k_u_available_stock']
+            variants.append(v)
+
+        return variants
+
+    elif supplier_type == 'ebay':
+        rep = requests.get(
+            url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api', supplier_type, '/products', product_id, '/variants'),
+            auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+        )
+
+        rep.raise_for_status()
+        return rep.json()
+    else:
+        return []
 
 
 def reset_product_monitor(store):
-    if store.__class__.__name__ == 'ShopifyStore' and store.shopifyproduct_set.count() < 2000:
+    cls_name = store.__class__.__name__
+
+    if cls_name == 'ShopifyStore' and store.shopifyproduct_set.count() < 2000:
         store.shopifyproduct_set.filter(monitor_id__gt=0).update(monitor_id=0)
-    elif store.__class__.__name__ == 'CommerceHQStore' and store.products.count() < 2000:
+    elif cls_name == 'CommerceHQStore' and store.products.count() < 2000:
         store.products.filter(monitor_id__gt=0).update(monitor_id=0)
-    elif store.__class__.__name__ == 'GrooveKartStore' and store.products.count() < 2000:
+    elif cls_name == 'GrooveKartStore' and store.products.count() < 2000:
         store.products.filter(monitor_id__gt=0).update(monitor_id=0)
-    elif store.__class__.__name__ == 'WooStore' and store.products.count() < 2000:
+    elif cls_name == 'WooStore' and store.products.count() < 2000:
         store.products.filter(monitor_id__gt=0).update(monitor_id=0)
-    elif store.__class__.__name__ == 'BigCommerceStore' and store.products.count() < 2000:
+    elif cls_name == 'BigCommerceStore' and store.products.count() < 2000:
         store.products.filter(monitor_id__gt=0).update(monitor_id=0)
 
 
 def unmonitor_store(store):
-    if store.__class__.__name__ == 'ShopifyStore':
+    cls_name = store.__class__.__name__
+
+    if cls_name == 'ShopifyStore':
         dropified_type = 'shopify'
-    elif store.__class__.__name__ == 'CommerceHQStore':
+    elif cls_name == 'CommerceHQStore':
         dropified_type = 'chq'
-    elif store.__class__.__name__ == 'GrooveKartStore':
+    elif cls_name == 'GrooveKartStore':
         dropified_type = 'gkart'
-    elif store.__class__.__name__ == 'WooStore':
+    elif cls_name == 'WooStore':
         dropified_type = 'woo'
-    elif store.__class__.__name__ == 'BigCommerceStore':
+    elif cls_name == 'BigCommerceStore':
         dropified_type = 'bigcommerce'
 
     rep = requests.delete(
