@@ -374,7 +374,7 @@ class ApiBase(ApiResponseMixin, View):
 
         created_at_start = None
         created_at_end = None
-        created_at_max = arrow.now().replace(days=-30).datetime  # Always update orders that are max. 30 days old
+        created_at_max = arrow.now().replace(days=-60).datetime
         created_at = data.get('created_at')  # Format: %m/%d/%Y-%m/%d/%Y
 
         if sync_all_orders:
@@ -393,8 +393,7 @@ class ApiBase(ApiResponseMixin, View):
                 created_at_end = arrow.get(created_at_end + tz, r'MM/DD/YYYY Z')
                 created_at_end = created_at_end.span('day')[1].datetime  # Ensure end date is set to last hour in the day
 
-            if created_at_start >= created_at_max:
-                created_at_max = created_at_start
+            created_at_max = created_at_start
 
             if created_at_end:
                 order_tracks = order_tracks.filter(created_at__lte=created_at_end)
