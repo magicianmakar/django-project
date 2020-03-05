@@ -156,7 +156,11 @@ $(document).ready(function () {
                 orderDataIds.push(line.attr('order-data-id'));
             }
         });
-        makePayment(orderDataIds);
+        if (orderDataIds.length) {
+            makePayment(orderDataIds);
+        } else {
+            toastr.warning("Please select orders for processing.");
+        }
     });
 
     $(".order-payout").on("blur", function () {
