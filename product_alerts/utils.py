@@ -13,6 +13,7 @@ def get_supplier_variants(supplier_type, product_id):
     if supplier_type == 'aliexpress':
         rep = requests.get(
             url=url_join(settings.ALIEXPRESS_API_URL, product_id),
+            timeout=10,
         )
 
         rep.raise_for_status()
