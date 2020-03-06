@@ -1,6 +1,8 @@
 from lib.test import BaseTestCase
 from unittest.mock import patch
 
+from django.test import tag
+
 from ..utils import (
     get_supplier_variants,
     monitor_product,
@@ -260,6 +262,7 @@ class MappingUtilsTestCase(BaseTestCase):
 
         self.assertTrue(match_sku_title_with_shopify_variant_title(ali_sku, variant))
 
+    @tag('slow', 'excessive')
     def test_variant_from_supplier_with_product_title_mapping(self):
         product = ShopifyProduct.objects.get(pk=5)
         product_data = utils.get_shopify_product(product.store, product.shopify_id)
