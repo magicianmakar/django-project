@@ -27,7 +27,7 @@ from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class, upsell_page_permissions
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 
-SHOPIFY_API_VERSION = "2019-04"
+SHOPIFY_API_VERSION = "2019-07"
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -903,11 +903,15 @@ class ShopifyStore(StoreBase):
 
         url = re.findall(r'[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
 
+        if len(pages) == 1 and type(pages[0]) is str and pages[0].startswith('https://'):
+            pages = list(pages)
+            pages[0] = pages[0].split('.myshopify.com').pop()
+
         page = url_join(*pages)
 
-        page = re.sub(r'^/?admin/', '', page)
+        page = re.sub(r'^/?admin/(api/[0-9-]+/)?', '', page)
 
-        if not page.endswith('.json'):
+        if '.json' not in page:
             page = f'{page}.json'
 
         url = url_join(f'https://{url}', 'admin', 'api', version, page)

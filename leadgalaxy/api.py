@@ -803,27 +803,31 @@ class ShopifyStoreApi(ApiBase):
             store = ShopifyStore.objects.get(id=store)
             permissions.user_can_view(user, store)
 
-            page = safe_int(data.get('page'), 1)
-            limit = 25
-
-            params = {
-                'fields': 'id,title,image',
-                'limit': limit,
-                'page': page
-            }
-
-            ids = utils.get_shopify_id(data.get('query'))
-            if ids:
-                params['ids'] = [ids]
+            page_info = data.get('page')
+            if page_info and page_info.startswith('https://'):
+                rep = requests.get(url=store.api(page_info))
             else:
-                params['title'] = data.get('query')
+                params = {
+                    'fields': 'id,title,image',
+                    'limit': 25,
+                }
 
-            rep = requests.get(
-                url=store.api('products'),
-                params=params
-            )
+                if page_info:
+                    params['page_info'] = page_info
+
+                ids = utils.get_shopify_id(data.get('query'))
+                if ids:
+                    params['ids'] = [ids]
+                else:
+                    params['query'] = data.get('query')
+
+                rep = requests.get(
+                    url=store.api('products'),
+                    params=params
+                )
 
             if not rep.ok:
+                print(rep.json())
                 return self.api_error('Shopify API Error', status=500)
 
             products = []
@@ -856,10 +860,13 @@ class ShopifyStoreApi(ApiBase):
                 if data.get('hide_connected'):
                     products = [p for p in products if not p.get('connected')]
 
+            next_page_info = None
+            if rep.links and rep.links.get('next'):
+                next_page_info = rep.links['next']['url']
+
             return JsonResponse({
                 'products': products,
-                'page': page,
-                'next': page + 1 if (len(products) == limit or data.get('hide_connected')) else None,
+                'next': next_page_info,
             })
 
         except ShopifyStore.DoesNotExist:

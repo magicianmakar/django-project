@@ -93,7 +93,6 @@ class ProductFeed():
         return self.out
 
     def generate_feed(self):
-        limit = 200
         count = get_shopify_products_count(self.store)
 
         if not count:
@@ -103,11 +102,8 @@ class ProductFeed():
             print('Ignore Feed for ', self.store.shop, 'with', count, 'Products')
             return
 
-        pages = int(ceil(count / float(limit)))
-        for page in range(1, pages + 1):
-            products = get_shopify_products(store=self.store, page=page, limit=limit, all_products=False)
-            for p in products:
-                self.add_product(p)
+        for p in get_shopify_products(store=self.store, all_products=True):
+            self.add_product(p)
 
     def add_product(self, product):
         if len(product['variants']) and product.get('published_at'):

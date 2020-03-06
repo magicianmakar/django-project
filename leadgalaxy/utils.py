@@ -765,43 +765,42 @@ def get_shopify_products_count(store):
     return requests.get(url=store.api('products/count')).json().get('count', 0)
 
 
-def get_shopify_products(store, page=1, limit=50, all_products=False,
-                         product_ids=None, fields=None, session=requests,
-                         title=None, product_type=None, status=None, max_products=None, sleep=None):
+def get_shopify_products(store, page_url=None, limit=50, all_products=False,
+                         product_ids=None, fields=None, title=None, product_type=None,
+                         status=None, max_products=None, sleep=None, return_links=False):
 
     if not all_products:
-        params = {
-            'page': page,
-            'limit': limit,
-        }
+        if not page_url:
+            params = {
+                'limit': limit,
+            }
 
-        if product_type:
-            params['product_type'] = product_type
+            if product_type:
+                params['product_type'] = product_type
 
-        if title:
-            params['title'] = title
+            if title:
+                params['title'] = title
 
-        if product_ids:
-            if type(product_ids) is list:
-                params['ids'] = ','.join(product_ids)
-            else:
-                params['ids'] = product_ids
+            if product_ids:
+                if type(product_ids) is list:
+                    params['ids'] = ','.join(product_ids)
+                else:
+                    params['ids'] = product_ids
 
-        if fields:
-            if type(fields) is list:
-                params['fields'] = ','.join(fields)
-            else:
-                params['fields'] = fields
+            if fields:
+                if type(fields) is list:
+                    params['fields'] = ','.join(fields)
+                else:
+                    params['fields'] = fields
 
-        rep = session.get(
-            url=store.api('products'),
-            params=params
-        )
+            rep = requests.get(url=store.api('products'), params=params)
+        else:
+            rep = requests.get(url=store.api(page_url))
 
-        rep = rep.json()
-
-        for p in rep['products']:
-            yield p
+        if return_links:
+            return rep.links, rep.json()['products']
+        else:
+            return rep.json()['products']
     else:
         limit = 200
         count = get_shopify_products_count(store)
@@ -812,12 +811,17 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
         if status not in ['connected', 'not_connected', 'any']:
             status = None
 
-        pages = int(ceil(count / float(limit)))
-        total = 0
-        for page in range(1, pages + 1):
-            rep = get_shopify_products(store=store, page=page, limit=limit,
-                                       title=title, product_type=product_type, fields=fields,
-                                       all_products=False, session=requests.session())
+        products_list = []
+        next_page_url = store.api('products')
+        while next_page_url:
+            links, rep = get_shopify_products(store=store, page_url=next_page_url, limit=limit,
+                                              title=title, product_type=product_type, fields=fields,
+                                              return_links=True)
+
+            if links.get('next'):
+                next_page_url = links['next']['url']
+            else:
+                next_page_url = None
 
             products = {}
             if status:
@@ -826,8 +830,8 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
 
             for p in rep:
                 if status is None:
-                    total += 1
-                    yield p
+                    products_list.append(p)
+
                 else:
                     product = products.get(p['id'])
                     if product and product.have_supplier():
@@ -840,14 +844,16 @@ def get_shopify_products(store, page=1, limit=50, all_products=False,
                         p['status'] = 'not_connected'
 
                     if status == 'any' or status == p['status']:
-                        total += 1
-                        yield p
+                        products_list.append(p)
 
-            if max_products and total >= max_products:
+            if max_products and len(products_list) >= max_products:
+                next_page_url = None
                 break
 
             if sleep:
                 time.sleep(sleep)
+
+        return products_list
 
 
 def get_shopify_inventories(store, inventory_item_ids, sleep=None):
