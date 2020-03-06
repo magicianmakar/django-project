@@ -1,8 +1,6 @@
 from lib.test import BaseTestCase
 from unittest.mock import patch
 
-from django.test import tag
-
 from ..utils import (
     get_supplier_variants,
     monitor_product,
