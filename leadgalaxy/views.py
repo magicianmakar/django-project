@@ -817,6 +817,7 @@ def webhook(request, provider, option):
 
                 else:
                     raven_client.captureMessage('Shopify GDPR Topic', level='warning', extra={'topic': topic})
+                    return HttpResponse('ok')
 
             return HttpResponse('ok')
         except:
