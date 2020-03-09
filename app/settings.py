@@ -515,3 +515,8 @@ SHIPSTATION_API_URL = 'https://ssapi.shipstation.com'
 # Authorize.Net
 AUTH_NET_LOGIN_ID = os.environ.get('AUTHORIZENET_LOGIN_ID')
 AUTH_NET_TRANSACTION_KEY = os.environ.get('AUTHORIZENET_TRANSACTION_KEY')
+
+# Aliexpress
+ALIEXPRESS_API_KEY = os.environ.get('ALIEXPRESS_API_KEY')
+ALIEXPRESS_API_SECRET = os.environ.get('ALIEXPRESS_API_SECRET')
+ALIEXPRESS_TOKEN = os.environ.get('ALIEXPRESS_TOKEN')

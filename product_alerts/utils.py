@@ -7,11 +7,20 @@ import requests
 from munch import Munch
 
 from shopified_core.utils import app_link, url_join, safe_float, safe_int
+from lib.aliexpress_api import find_aliexpress_product
 
 
 def get_supplier_variants(supplier_type, product_id):
     if supplier_type == 'aliexpress':
-        return []
+        product_detail = find_aliexpress_product(product_id)
+        variants = []
+
+        for v in product_detail['aeop_ae_product_s_k_us']['aeop_ae_product_sku']:
+            v['sku'] = v['id']
+            v['availabe_qty'] = v['s_k_u_available_stock']
+            variants.append(v)
+
+        return variants
 
     elif supplier_type == 'ebay':
         rep = requests.get(
