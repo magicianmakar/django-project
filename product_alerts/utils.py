@@ -11,21 +11,7 @@ from shopified_core.utils import app_link, url_join, safe_float, safe_int
 
 def get_supplier_variants(supplier_type, product_id):
     if supplier_type == 'aliexpress':
-        rep = requests.get(
-            url=url_join(settings.ALIEXPRESS_API_URL, product_id),
-            timeout=10,
-        )
-
-        rep.raise_for_status()
-
-        variants = []
-
-        for v in rep.json()['data']['product_detail']['aeop_ae_product_s_k_us']['aeop_ae_product_sku']:
-            v['sku'] = v['id']
-            v['availabe_qty'] = v['s_k_u_available_stock']
-            variants.append(v)
-
-        return variants
+        return []
 
     elif supplier_type == 'ebay':
         rep = requests.get(
