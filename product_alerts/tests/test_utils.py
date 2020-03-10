@@ -1,6 +1,7 @@
 from lib.test import BaseTestCase
 from unittest.mock import patch
 
+from django.conf import settings
 from django.test import tag
 
 from ..utils import (
@@ -24,6 +25,9 @@ class UtilTestCase(BaseTestCase):
         self.monitor_id = 1
 
     def test_get_supplier_variants(self):
+        if not settings.ALIEXPRESS_TOKEN:
+            return
+
         variants = get_supplier_variants('aliexpress', self.product_id)
 
         self.assertEqual(len(variants), 8)
