@@ -7,34 +7,19 @@ import requests
 from munch import Munch
 
 from shopified_core.utils import app_link, url_join, safe_float, safe_int
-from lib.aliexpress_api import find_aliexpress_product
 
 
 def get_supplier_variants(supplier_type, product_id):
-    if supplier_type == 'aliexpress':
-        variants = []
-
-        try:
-            product_detail = find_aliexpress_product(product_id)
-            for v in product_detail['aeop_ae_product_s_k_us']['aeop_ae_product_sku']:
-                v['sku'] = v['id']
-                v['availabe_qty'] = v.get('s_k_u_available_stock', 0)
-                variants.append(v)
-        except:
-            raven_client.captureException(sample_rate=0.3)  # Send 30% of this event
-
-        return variants
-
-    elif supplier_type == 'ebay':
-        rep = requests.get(
-            url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api', supplier_type, '/products', product_id, '/variants'),
-            auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
-        )
-
-        rep.raise_for_status()
-        return rep.json()
-    else:
+    if supplier_type != 'aliexpress' and supplier_type != 'ebay':
         return []
+
+    rep = requests.get(
+        url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api', supplier_type, '/products', product_id, '/variants'),
+        auth=(settings.PRICE_MONITOR_USERNAME, settings.PRICE_MONITOR_PASSWORD)
+    )
+
+    rep.raise_for_status()
+    return rep.json()
 
 
 def reset_product_monitor(store):
