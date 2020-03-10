@@ -4670,6 +4670,13 @@ def orders_place(request):
     admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user.models_user)
 
     redirect_url = False
+
+    # Don't use our affiliate for specific user
+    # https://app.intercom.io/a/apps/k9cb5frr/inbox/inbox/1203815/conversations/26057032791
+    models_user = request.user.models_user
+    if models_user.id == 14624 and not models_user.get_config('admitad_site_id'):
+        disable_affiliate = True
+
     if not disable_affiliate:
         if supplier and supplier.is_ebay:
             if not request.user.models_user.can('ebay_auto_fulfill.use'):
