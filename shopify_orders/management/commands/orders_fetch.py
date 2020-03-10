@@ -160,7 +160,7 @@ class Command(DropifiedBaseCommand):
                 rep = requests.get(
                     url=store.api('orders'),
                     params={
-                        'page': page,
+                        'page': page,  # TODO: Shopify pagination
                         'limit': limit,
                         'status': 'any',
                         'fulfillment': 'any',

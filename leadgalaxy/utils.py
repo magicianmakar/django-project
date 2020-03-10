@@ -974,7 +974,7 @@ def get_shopify_orders(store, page=1, limit=50, all_orders=False,
 
     if not all_orders:
         params = {
-            'page': page,
+            'page': page,  # TODO: Shopify pagination
             'limit': limit,
             'status': 'any',
             'order': 'created_at desc'
@@ -2606,7 +2606,7 @@ class ShopifyOrderPaginator(Paginator):
 
         params = {
             'limit': self.order_limit,
-            'page': page,
+            'page': page,  # TODO: Shopify pagination
             'status': self.status,
             'fulfillment_status': self.fulfillment,
             'financial_status': self.financial,
