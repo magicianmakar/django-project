@@ -18,7 +18,7 @@ def get_supplier_variants(supplier_type, product_id):
             product_detail = find_aliexpress_product(product_id)
             for v in product_detail['aeop_ae_product_s_k_us']['aeop_ae_product_sku']:
                 v['sku'] = v['id']
-                v['availabe_qty'] = v['s_k_u_available_stock']
+                v['availabe_qty'] = v.get('s_k_u_available_stock', 0)
                 variants.append(v)
         except:
             raven_client.captureException(sample_rate=0.3)  # Send 30% of this event

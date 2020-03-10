@@ -38,6 +38,21 @@ class UtilTestCase(BaseTestCase):
             self.assertIn('availabe_qty', v)
             self.assertGreaterEqual(v['availabe_qty'], 0)
 
+    def test_get_supplier_variants_with_non_available_stock(self):
+        if not settings.ALIEXPRESS_TOKEN:
+            return
+
+        variants = get_supplier_variants('aliexpress', 32955059114)
+
+        self.assertEqual(len(variants), 15)
+
+        for v in variants:
+            self.assertIn('sku', v)
+            self.assertNotIn(';', v['sku'])
+            self.assertIn(':', v['sku'])
+            self.assertIn('availabe_qty', v)
+            self.assertGreaterEqual(v['availabe_qty'], 0)
+
     @patch('product_alerts.utils.requests.post')
     def test_monitor_not_registered_product(self, mock_post):
         mock_post.return_value.json.return_value = {'id': self.monitor_id}
