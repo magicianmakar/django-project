@@ -926,6 +926,9 @@ class OrderPlaceRedirectView(RedirectView):
 
         disable_affiliate = self.request.user.get_config('_disable_affiliate', False)
 
+        if self.request.user.models_user.get_config('_disable_affiliate_permanent'):
+            disable_affiliate = True
+
         redirect_url = False
         if not disable_affiliate:
             if supplier and supplier.is_ebay:

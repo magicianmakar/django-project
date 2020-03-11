@@ -1359,7 +1359,7 @@ def webhook(request, provider, option):
             args = request.POST['text'].split(' ')
             command = args[0]
 
-            if command in ['disable', 'enable']:
+            if command in ['disable', 'enable', 'disable_always', 'enable_always']:
                 if len(args) != 2:
                     return HttpResponse(':x: Wrong number of arguments')
 
@@ -1370,7 +1370,15 @@ def webhook(request, provider, option):
                 else:
                     user = User.objects.get(email__iexact=user_id)
 
-                user.set_config('_disable_affiliate', command == 'disable')
+                if command == 'enable':
+                    user.set_config('_disable_affiliate', False)
+                elif command == 'disable':
+                    user.set_config('_disable_affiliate', True)
+
+                elif command == 'enable_always':
+                    user.set_config('_disable_affiliate_permanent', False)
+                elif command == 'disable_always':
+                    user.set_config('_disable_affiliate_permanent', True)
 
                 return HttpResponse(f'Affiliate {command}d for {user_id}')
             else:
@@ -4675,6 +4683,9 @@ def orders_place(request):
     # https://app.intercom.io/a/apps/k9cb5frr/inbox/inbox/1203815/conversations/26057032791
     models_user = request.user.models_user
     if models_user.id == 14624 and not models_user.get_config('admitad_site_id'):
+        disable_affiliate = True
+
+    if models_user.get_config('_disable_affiliate_permanent'):
         disable_affiliate = True
 
     if not disable_affiliate:
