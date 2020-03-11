@@ -89,7 +89,7 @@ def json_dumps(context, data, obfuscate=None):
         ch = random.choice(['\'', 'JSON.parse('])
         sep = '/**/' * rand
         data = sep.join([
-            f'/* {obfuscate} {ch} */' * rand,
+            f'/* {obfuscate} {ch} variants_sku */' * rand,
             '\n' * random.randint(0, 4),
             f"JSON.parse(",
             f' /* var {obfuscate} = {{ */ ' * rand,
