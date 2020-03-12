@@ -146,7 +146,7 @@ def load(request):
     if authorised:
         store_hash = authorised['store_hash']
         try:
-            store = BigCommerceStore.objects.get(api_key=store_hash, is_active=True)
+            store = BigCommerceStore.objects.get(user=request.user.models_user, api_key=store_hash, is_active=True)
 
             if not permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
                 messages.error(request, 'You don\'t have access to this store')
