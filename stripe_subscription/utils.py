@@ -432,7 +432,7 @@ def process_webhook_event(request, event_id, raven_client):
                             plan = GroupPlan.objects.get(stripe_plan__stripe_id=plan_autoswitch_json['switch_to_plan'])
                             if plan.is_stripe():
                                 # adding trial (from metadata)
-                                trial_end = arrow.now().timestamp + 86400 * item['plan']['metadata'].get('trial_days_add')
+                                trial_end = arrow.now().timestamp + 86400 * int(plan_autoswitch_json['trial_days_add'])
                                 stripe.Subscription.modify(
                                     stripe_sub.subscription_id,
                                     trial_end=trial_end,
