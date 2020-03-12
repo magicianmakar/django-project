@@ -124,7 +124,10 @@ def auth(request):
     client = BigcommerceApi(client_id=settings.BIGCOMMERCE_CLIENT_ID, store_hash=store_hash, access_token=access_token)
     bigcommerce_store = client.Store.all()
 
-    store = BigCommerceStore()
+    store = BigCommerceStore.objects.filter(user=user.models_user, api_key=store_hash, is_active=True).first()
+    if not store:
+        store = BigCommerceStore()
+
     store.user = user.models_user
     store.title = bigcommerce_store.name
     store.api_url = bigcommerce_store.domain
@@ -158,11 +161,8 @@ def load(request):
         except BigCommerceStore.DoesNotExist:
             messages.error(request, 'Couldn\'t find this store')
             return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
-        # except BigCommerceStore.MultipleObjectsReturned:
-        #     # TODO: Handle multi stores
-        #     raven_client.captureException()
-        # except:
-        #     raven_client.captureException()
+        except:
+            raven_client.captureException()
 
     messages.error(request, 'Verification failed')
     return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
@@ -171,37 +171,6 @@ def load(request):
 @xframe_options_exempt
 def uninstall(request):
     pass
-    # signed_payload = request.GET['signed_payload']
-    # authorised = BigcommerceApi.oauth_verify_payload(signed_payload, settings.BIGCOMMERCE_CLIENT_SECRET)
-    # if authorised:
-    #     store_hash = authorised['store_hash']
-    #     try:
-    #         store = BigCommerceStore.objects.get(api_key=store_hash, is_active=True)
-
-    #         from product_alerts.utils import unmonitor_store
-
-    #         store.is_active = False
-    #         store.uninstalled_at = timezone.now()
-    #         store.save()
-
-    #         unmonitor_store(store)
-    #         return render(request, 'bigcommerce/message.html', {
-    #             'message': 'The Store Successfully Uninstalled.',
-    #         })
-
-    #     except BigCommerceStore.DoesNotExist:
-    #         return render(request, 'bigcommerce/message.html', {
-    #             'error': 'Couldn\'t find this store',
-    #         })
-    #     # except BigCommerceStore.MultipleObjectsReturned:
-    #     #     # TODO: Handle multi stores
-    #     #     raven_client.captureException()
-    #     # except:
-    #     #     raven_client.captureException()
-
-    # return render(request, 'bigcommerce/message.html', {
-    #     'error': 'Verification failed',
-    # })
 
 
 @login_required
