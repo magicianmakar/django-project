@@ -554,3 +554,7 @@ ul.breadcrumb-right-menu li a {
 [data-dismissible-id] {
     cursor: pointer;
 }
+
+#bt_dsers_sync, .dsers-oberlo-checkoutAll {
+    display: none !important;
+}
