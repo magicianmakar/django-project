@@ -146,7 +146,10 @@ def product_alerts(request):
         change['woo_link'] = i.product.woocommerce_url
         change['original_link'] = i.product.get_original_info().get('url')
         p = product_variants.get(str(i.product.source_id), {})
-        p['variants'] = i.product.retrieve_variants()
+
+        if not request.user.models_user.get_config('_woo_alerts_variants_fix'):
+            p['variants'] = i.product.retrieve_variants()
+
         variants = p.get('variants', [])
         for c in change['changes']['variants']['quantity']:
             variant_id = 0
