@@ -441,7 +441,8 @@ def process_webhook_event(request, event_id, raven_client):
                                 stripe.SubscriptionItem.modify(
                                     item['subscription_item'],
                                     plan=plan.stripe_plan.stripe_id,
-                                    metadata={'plan_id': plan.id, 'user_id': customer.user.id}
+                                    metadata={'plan_id': plan.id, 'user_id': customer.user.id},
+                                    proration_behavior='none'
                                 )
 
                                 customer.user.profile.change_plan(plan)
