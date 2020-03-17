@@ -113,13 +113,15 @@
     </ul>
 
     {% else %}
-    <ul style="padding:0;margin: 0 0 0 24px">
-        <li>
-            <a href="https://go.dropified.com/black" target="_blank">
-                <img class="img-responsive" src="https://cdn.dropified.com/static/img/black/dropified_black_text_white3.png"/>
-            </a>
-        </li>
-    </ul>
+      {% if not user.is_staff and not user.is_superuser %}
+      <ul style="padding:0;margin: 0 0 0 24px">
+          <li>
+              <a href="https://go.dropified.com/black" target="_blank">
+                  <img class="img-responsive" src="https://cdn.dropified.com/static/black-plan-waitlist.png"/>
+              </a>
+          </li>
+      </ul>
+      {% endif %}
     {% endif %}
 
     {# footer #}
