@@ -20,12 +20,10 @@
 
     <a href="{{ label_template_url }}" class="btn btn-primary">Download Template</a>
 
-    {{ form.upload.errors }}
-
     <div class="row" style="margin: 0;">
       <div class="col-md-2 m-t custom-file">
-        <input id="upload-ajax-label" type="file" name="upload" class="custom-file-input">
-        <label for="upload-ajax-label" class="custom-file-label" data-placeholder="Choose file...">
+        <input id="ajax-label" data-toggle="modal" data-target="#modal-upload-image" class="custom-file-input">
+        <label for="ajax-label" class="custom-file-label" data-placeholder="Choose file...">
           Choose file...
         </label>
       </div>

@@ -5,6 +5,7 @@ from .models import (
     AuthorizeNetCustomer,
     LabelComment,
     LabelSize,
+    MockupType,
     Payout,
     PLSOrder,
     PLSOrderLine,
@@ -161,4 +162,12 @@ class LabelSizeAdmin(admin.ModelAdmin):
         'slug',
         'height',
         'width',
+    )
+
+
+@admin.register(MockupType)
+class MockupTypeAdmin(admin.ModelAdmin):
+    list_display = (
+        'slug',
+        'name',
     )

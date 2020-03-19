@@ -1,4 +1,6 @@
-from shopified_core.utils import send_email_from_template
+from django.conf import settings
+
+from shopified_core.utils import do_create_aws_s3_context, send_email_from_template
 
 
 def create_rows(items, row_size):
@@ -29,3 +31,18 @@ def send_email_against_comment(comment):
     recipient = label.user_supplement.user.email
 
     return send_email_from_template(template, subject, recipient, data)
+
+
+def aws_s3_context():
+    conditions = [
+        ["starts-with", "$utf8", ""],
+        # Change this path if you need, but adjust the javascript config
+        ["starts-with", "$key", "uploads"],
+        ["starts-with", "$name", ""],
+        ["starts-with", "$Content-Type", "application/"],
+        ["starts-with", "$filename", ""],
+        {"bucket": settings.AWS_STORAGE_BUCKET_NAME},
+        {"acl": "public-read"}
+    ]
+
+    return do_create_aws_s3_context(conditions)

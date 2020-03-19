@@ -1,0 +1,28 @@
+{% if aws_available %}
+<div id="modal-upload-image" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title">Label Upload</h4>
+          </div>
+            <div class="modal-body">
+                <div class="row tabs-container">
+                    <ul class="nav nav-tabs">
+                        <li class="active">
+                            <a data-toggle="tab" href="#upload-tab1" aria-expanded="true"><i class="fa fa-desktop"></i> Desktop</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="upload-tab1">
+                            <div class="panel-body" style="padding: 5px 20px;">
+                                <div id="uploader" class="row"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

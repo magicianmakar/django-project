@@ -4,7 +4,7 @@ $(document).ready(function(){
         var nextLabel = $(this).next('.custom-file-label');
 
         if (fileName !== '') {
-          nextLabel.addClass("selected").html(fileName);
+          nextLabel.addClass("selected").html(fileName.substring(0, 27));
         } else {
           nextLabel.html(nextLabel.data('placeholder'));
         }

@@ -4,22 +4,30 @@ from urllib.request import urlopen
 import requests
 from pdfrw import PageMerge, PdfReader, PdfWriter
 from pdfrw.pagemerge import RectXObj
-from PIL import Image
+from PIL import Image, ImageChops
 from reportlab.pdfgen import canvas
 
 
-def wrap_image(bottle, label, mask, shadow, light, lighter):
-    dim = 750
+def get_bottle_mockup(label):
+    base_path = 'app/static/pls-mockup/bottle/'
+
+    bottle = Image.open(f'{base_path}bottle.png')
+    mask = Image.open(f'{base_path}bottle_mask.png')
+    shadow = Image.open(f'{base_path}bottle_shadows.png')
+    base_shadow = Image.open(f'{base_path}base_shadow.png')
+    light = Image.open(f'{base_path}bottle_highlights.png')
+
+    dim = 1000
     size = (dim, dim)
-    label_size = (int(1400 * 0.97), int(500 * 0.97))
+    label_size = (int(1547 * 0.97), int(619 * 0.97))
 
     bottle = bottle.resize(size)
     mask = mask.resize(size)
 
     label = label.resize(label_size)
 
-    left_edge = 325
-    top_edge = -190
+    left_edge = 225
+    top_edge = -300
     right_edge = left_edge + dim
     bottom_edge = top_edge + dim
 
@@ -28,21 +36,82 @@ def wrap_image(bottle, label, mask, shadow, light, lighter):
 
     mockup = Image.composite(label, bottle, mask)
     mockup.alpha_composite(light)
-    mockup.alpha_composite(lighter)
+    bottle.alpha_composite(base_shadow)
 
     return mockup
 
 
-def get_bottle_mockup(label):
-    base_path = 'app/static/pls-mockup/'
+def get_container_mockup(label):
+    base_path = 'app/static/pls-mockup/container/'
 
-    bottle = Image.open(f'{base_path}bottle_blank_mockup_750.png')
-    mask = Image.open(f'{base_path}label_area_750.png')
-    shadow = Image.open(f'{base_path}shadow_750.png')
-    light = Image.open(f'{base_path}light_750.png')
-    lighter = Image.open(f'{base_path}lighter_750.png')
+    container = Image.open(f'{base_path}container.png')
+    mask = Image.open(f'{base_path}mask.png')
+    shadow = Image.open(f'{base_path}shadow.png')
+    light = Image.open(f'{base_path}reflections.png')
 
-    return wrap_image(bottle, label, mask, shadow, light, lighter)
+    dim = 860
+    size = (dim, dim)
+    label_size = (int(1856 * 0.97), int(495 * 0.97))
+
+    container = container.resize(size)
+    mask = mask.resize(size)
+
+    label = label.resize(label_size)
+
+    left_edge = 615
+    top_edge = -250
+    right_edge = left_edge + dim
+    bottom_edge = top_edge + dim
+
+    label = label.crop((left_edge, top_edge, right_edge, bottom_edge))
+
+    container = ImageChops.screen(container, light)
+    mockup = Image.composite(label, container, mask)
+    mockup.alpha_composite(shadow)
+
+    return mockup
+
+
+def get_tincture_mockup(label):
+    base_path = 'app/static/pls-mockup/tincture/'
+
+    bottle = Image.open(f'{base_path}tincture_bottle_30.png')
+    mask = Image.open(f'{base_path}mask_30.png')
+    shadow = Image.open(f'{base_path}shadows_30.png')
+    light = Image.open(f'{base_path}reflections_30.png')
+    dark = Image.open(f'{base_path}darken_30.png')
+
+    dim = 900
+    size = (dim, dim)
+    label_size = (int(877 * 0.97), int(408 * 0.97))
+
+    bottle = bottle.resize(size)
+    mask = mask.resize(size)
+
+    label = label.resize(label_size)
+
+    left_edge = 0
+    top_edge = -410
+    right_edge = left_edge + dim
+    bottom_edge = top_edge + dim
+
+    label = label.crop((left_edge, top_edge, right_edge, bottom_edge))
+
+    bottle.alpha_composite(light)
+    mockup = Image.composite(label, bottle, mask)
+    mockup.alpha_composite(dark)
+    mockup.alpha_composite(shadow)
+
+    return mockup
+
+
+def get_mockup(label, type):
+    if type == 'bottle':
+        return get_bottle_mockup(label)
+    if type == 'container':
+        return get_container_mockup(label)
+    if type == 'tincture':
+        return get_tincture_mockup(label)
 
 
 def data_url_to_pil_image(url):

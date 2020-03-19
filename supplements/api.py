@@ -11,7 +11,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
 
-from .lib.image import data_url_to_pil_image, get_bottle_mockup, get_order_number_label, pil_to_fp
+from .lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import Payout, PLSOrder
 from .utils.payment import Util
@@ -140,8 +140,9 @@ class SupplementsApi(ApiResponseMixin, View):
 
     def post_ajaxify_label(self, request, user, data):
         image_data = data['image_data_url']
+        mockup_type = data['mockup_slug']
         label_image = data_url_to_pil_image(image_data)
-        bottle_mockup = get_bottle_mockup(label_image)
+        bottle_mockup = get_mockup(label_image, mockup_type)
         image_fp = pil_to_fp(bottle_mockup)
         image_fp.seek(0)
         image_fp.name = 'mockup.png'

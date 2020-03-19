@@ -22,35 +22,18 @@ class UserSupplementForm(forms.ModelForm):
     cost_price = forms.DecimalField()
     shipstation_sku = forms.CharField()
     shipping_countries = forms.CharField(required=False)
+    mockup_type = forms.CharField(required=False)
     label_size = forms.CharField(required=False)
     action = forms.CharField(widget=forms.HiddenInput)
-    upload = forms.FileField(required=False)
     image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
-
-    def clean_upload(self):
-        upload = self.cleaned_data['upload']
-        if upload:
-            extension_validator = FileExtensionValidator(
-                allowed_extensions=['pdf']
-            )
-            extension_validator(upload)
+    upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
+    mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
 
 
 class CommentForm(forms.Form):
     comment = forms.CharField(widget=forms.Textarea)
     action = forms.CharField(widget=forms.HiddenInput)
-    upload = forms.FileField(required=False)
-
-    def clean_upload(self):
-        if self.cleaned_data['action'] == 'comment':
-            upload = self.cleaned_data['upload']
-            if not upload:
-                return
-
-            extension_validator = FileExtensionValidator(
-                allowed_extensions=['pdf']
-            )
-            extension_validator(upload)
+    upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
 
 
 class PLSupplementForm(forms.ModelForm):
@@ -66,6 +49,7 @@ class PLSupplementForm(forms.ModelForm):
                   'wholesale_price',
                   'product_information',
                   'label_size',
+                  'mockup_type',
                   ]
 
         widgets = {

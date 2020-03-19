@@ -114,6 +114,21 @@
     </div>
 
     <div class="form-group">
+      {{ form.mockup_type.errors }}
+      <label class="col-sm-2 control-label">Mockup Style:</label>
+      <div class="col-sm-5">
+        <select id="id_{{ form.mockup_type.name }}"
+        name="{{ form.mockup_type.name }}"
+        class='form-control'
+        data-placeholder="Select label sizes">
+        {% for value, text in form.mockup_type.field.choices %}
+        <option value="{{ value }}">{{ text }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    </div>
+
+    <div class="form-group">
       {{ form.template.errors }}
       <label class="col-sm-2 control-label">Template:</label>
       <div class='col-sm-7'>

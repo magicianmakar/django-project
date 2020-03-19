@@ -10,7 +10,15 @@ from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrderLog
 from supplements.models import UserSupplementImage, UserSupplementLabel
 
-from .factories import LabelSizeFactory, PLSOrderFactory, PLSOrderLineFactory, PLSupplementFactory, UserSupplementFactory, UserSupplementLabelFactory
+from .factories import (
+    LabelSizeFactory,
+    MockupTypeFactory,
+    PLSOrderFactory,
+    PLSOrderLineFactory,
+    PLSupplementFactory,
+    UserSupplementFactory,
+    UserSupplementLabelFactory
+)
 
 
 class PLSBaseTestCase(BaseTestCase):
@@ -26,6 +34,11 @@ class PLSBaseTestCase(BaseTestCase):
             width='5.75',
         )
 
+        self.mockup_type = MockupTypeFactory.create(
+            slug='any-slug-123',
+            name='2.0 x 7.0 Bottle',
+        )
+
         self.supplement = PLSupplementFactory.create(
             title='Fish Oil',
             description='Fish oil is great',
@@ -34,6 +47,7 @@ class PLSBaseTestCase(BaseTestCase):
             cost_price='15.99',
             label_template_url='http://example.com',
             wholesale_price='5.99',
+            mockup_type=self.mockup_type,
         )
 
         self.user_supplement = UserSupplementFactory.create(
@@ -127,6 +141,7 @@ class SupplementTestCase(PLSBaseTestCase):
             cost_price='15.99',
             wholesale_price='5.99',
             label_template_url='http://example.com',
+            mockup_type=self.mockup_type,
         )
 
         kwargs = {'supplement_id': new_supplement.id}
@@ -139,7 +154,6 @@ class SupplementTestCase(PLSBaseTestCase):
 
     def test_post_save(self):
         self.client.force_login(self.user)
-        image = open('app/static/example-label.pdf', 'rb')
         img = 'app/static/pls-mockup/SevenLimb_29033-2_VytaMind_60_200cc.png'
         with open(img, 'rb') as reader:
             data = base64.b64encode(reader.read()).decode()
@@ -155,33 +169,31 @@ class SupplementTestCase(PLSBaseTestCase):
             compare_at_price=self.user_supplement.compare_at_price,
             cost_price=self.user_supplement.pl_supplement.cost_price,
             shipstation_sku='test-sku',
-            upload=image,
+            upload_url='http://example.com/test',
             image_data_url=image_data_url,
+            mockup_slug='bottle',
         )
 
-        with patch('product_common.lib.views.aws_s3_upload',
-                   return_value='http://example.com/test'):
-            self.assertEqual(self.user.pl_supplements.count(), 1)
-            self.assertEqual(UserSupplementImage.objects.count(), 0)
-            response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(self.user.pl_supplements.count(), 1)
+        self.assertEqual(UserSupplementImage.objects.count(), 0)
+        response = self.client.post(self.get_url(), data=data)
 
-            self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
 
-            detail = self.client.get(response.url)
-            content = detail.content.decode()
-            key = ('<input type="text" name="tags" '
-                   'value="supplement" class="form-control" '
-                   'required id="id_tags" />')
-            self.assertIn(key, content)
-            image.close()
-            self.assertEqual(self.user.pl_supplements.count(), 2)
-            self.assertEqual(UserSupplementImage.objects.count(), 1)
+        detail = self.client.get(response.url)
+        content = detail.content.decode()
+        key = ('<input type="text" name="tags" '
+               'value="supplement" class="form-control" '
+               'required id="id_tags" />')
+        self.assertIn(key, content)
+        self.assertEqual(self.user.pl_supplements.count(), 2)
+        self.assertEqual(UserSupplementImage.objects.count(), 1)
 
-            # Test without image.
-            del data['upload']
-            response = self.client.post(self.get_url(), data=data)
-            self.assertEqual(self.user.pl_supplements.count(), 3)
-            self.assertEqual(UserSupplementImage.objects.count(), 1)
+        # Test without image.
+        del data['upload_url']
+        response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(self.user.pl_supplements.count(), 3)
+        self.assertEqual(UserSupplementImage.objects.count(), 1)
 
     def test_post_approve_error(self):
         self.client.force_login(self.user)
@@ -196,15 +208,12 @@ class SupplementTestCase(PLSBaseTestCase):
             shipstation_sku='test-sku',
         )
 
-        with patch('product_common.lib.views.aws_s3_upload',
-                   return_value='http://example.com/test'):
-            response = self.client.post(self.get_url(), data=data)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn("This field is required", response.content.decode())
+        response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("This field is required", response.content.decode())
 
     def test_post_approve(self):
         self.client.force_login(self.user)
-        image = open('app/static/example-label.pdf', 'rb')
         img = 'app/static/pls-mockup/SevenLimb_29033-2_VytaMind_60_200cc.png'
         with open(img, 'rb') as reader:
             data = base64.b64encode(reader.read()).decode()
@@ -220,22 +229,20 @@ class SupplementTestCase(PLSBaseTestCase):
             compare_at_price=self.user_supplement.compare_at_price,
             cost_price=self.user_supplement.pl_supplement.cost_price,
             shipstation_sku='test-sku',
-            upload=image,
+            upload_url='http://example.com/test',
             image_data_url=image_data_url,
+            mockup_slug='bottle',
         )
 
-        with patch('product_common.lib.views.aws_s3_upload',
-                   return_value='http://example.com/test'):
-            self.assertEqual(UserSupplementImage.objects.count(), 0)
-            self.assertEqual(UserSupplementLabel.objects.all().count(), 1)
-            response = self.client.post(self.get_url(), data=data)
-            url = reverse('pls:my_labels') + "?s=1"
-            self.assertRedirects(response, url)
-            self.assertEqual(self.user.pl_supplements.count(), 2)
-            self.assertEqual(UserSupplementImage.objects.count(), 1)
-            self.assertEqual(UserSupplementLabel.objects.all().count(), 2)
+        self.assertEqual(UserSupplementImage.objects.count(), 0)
+        self.assertEqual(UserSupplementLabel.objects.all().count(), 1)
+        response = self.client.post(self.get_url(), data=data)
 
-            image.close()
+        url = reverse('pls:my_labels') + "?s=1"
+        self.assertRedirects(response, url)
+        self.assertEqual(self.user.pl_supplements.count(), 2)
+        self.assertEqual(UserSupplementImage.objects.count(), 1)
+        self.assertEqual(UserSupplementLabel.objects.all().count(), 2)
 
 
 class MySupplementsTestCase(PLSBaseTestCase):
@@ -285,6 +292,24 @@ class LabelDetailTestCase(PLSBaseTestCase):
     def test_get(self):
         content = self.do_test_get()
         self.assertIn(self.label.label_id_string, content)
+
+    def test_post_comment_upload(self):
+        self.client.force_login(self.user)
+        data = dict(
+            action="comment",
+            comment="New comment",
+            upload_url="http://example.com/test",
+        )
+
+        self.assertEqual(self.label.comments.count(), 0)
+
+        response = self.client.post(self.get_url(), data=data)
+        label = UserSupplementLabel.objects.get(id=self.label.id + 1)
+        kwargs = {'label_id': label.id}
+        url = reverse('pls:label_detail', kwargs=kwargs)
+        self.assertRedirects(response, url)
+        self.assertEqual(label.comments.count(), 1)
+        self.assertEqual(label.status, UserSupplementLabel.AWAITING_REVIEW)
 
     def test_post_comment(self):
         self.client.force_login(self.user)
@@ -414,6 +439,7 @@ class ProductTestCase(PLSBaseTestCase):
             cost_price='20.00',
             wholesale_price='10.00',
             label_size=self.label_size.id,
+            mockup_type=self.mockup_type.id,
             template=open('app/static/example-label.pdf', 'rb'),
             thumbnail=open('app/static/aliex.png', 'rb'),
             product_information='New Information',

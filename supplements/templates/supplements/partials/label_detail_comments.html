@@ -38,8 +38,9 @@
     <h5>Reply</h5>
   </div>
   <div class="ibox-content">
-    <form method="POST" role="form" enctype="multipart/form-data">
+    <form id="comment_form" method="POST" role="form" enctype="multipart/form-data">
       <input type='hidden' name='action' value='comment' />
+      {{ form.upload_url }}
       <div class='form-group row'>
         {{ form.comment.errors }}
         {{ form.comment|add_class:"form-control" }}
@@ -47,11 +48,9 @@
       <div class="hr-line-dashed"></div>
       <div class='form-group row label-comment-action'>
         <div class="col-sm-4">
-          {{ form.upload.errors }}
 
           <div class="custom-file label-detail">
-            {{ form.upload.errors }}
-            <input id="upload" type="file" name="upload" class="custom-file-input">
+            <input id="upload" data-toggle="modal" data-target="#modal-upload-image" class="custom-file-input">
             <label for="upload" class="custom-file-label" data-placeholder="Choose file...">
               Choose new label...
             </label>
@@ -60,7 +59,7 @@
         </div>
 
         <div class='col-sm-2'>
-          <button class='btn btn-primary btn-sm add-loader'
+          <button class='btn btn-primary btn-sm'
                   type="submit"
                   data-loading-text="Please wait...">
             <i class='fa fa-reply'></i> Submit

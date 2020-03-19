@@ -43,3 +43,8 @@ class PLSOrderLineFactory(factory.DjangoModelFactory):
 class LabelSizeFactory(factory.DjangoModelFactory):
     class Meta:
         model = 'supplements.LabelSize'
+
+
+class MockupTypeFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = 'supplements.MockupType'

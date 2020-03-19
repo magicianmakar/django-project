@@ -1,51 +1,82 @@
-$(document).ready(function(){
+function getImageUrl(file, submit) {
     var reader = new FileReader();
     var form = document.getElementById('user_supplement_form');
+    submit = submit === undefined ? true : false;
+    var p = new Promise(function(resolve, reject) {
+        reader.onload = function() {
+            if (!(reader.result.includes('application/pdf'))) {
+                return reject('Invalid file type');
+            }
+            pdfjsLib.getDocument(reader.result).promise.then(function(pdf) {
+                pdf.getPage(1).then(function(page) {
+                    var viewport = page.getViewport({scale: 3});
 
-    function getImageUrl(file, submit) {
-        submit = submit === undefined ? true : false;
-        var p = new Promise(function(resolve, reject) {
-            reader.onload = function() {
-                if (!(reader.result.includes('application/pdf'))) {
-                    return reject('Invalid file type');
-                }
-                pdfjsLib.getDocument(reader.result).promise.then(function(pdf) {
-                    pdf.getPage(1).then(function(page) {
-                        var viewport = page.getViewport({scale: 3});
+                    var canvas = document.getElementById('canvas');
+                    canvas.width = viewport.width;
+                    canvas.height = viewport.height;
+                    var context = canvas.getContext('2d');
 
-                        var canvas = document.getElementById('canvas');
-                        canvas.width = viewport.width;
-                        canvas.height = viewport.height;
-                        var context = canvas.getContext('2d');
+                    var renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
 
-                        var renderContext = {
-                            canvasContext: context,
-                            viewport: viewport
-                        };
-
-                        var renderTask = page.render(renderContext);
-                        renderTask.promise.then(function() {
-                            var url = canvas.toDataURL();
-                            resolve(url);
-                        });
+                    var renderTask = page.render(renderContext);
+                    renderTask.promise.then(function() {
+                        var url = canvas.toDataURL();
+                        resolve(url);
                     });
                 });
-            };
-        });
-        reader.readAsDataURL(file);
+            });
+        };
+    });
+    reader.readAsDataURL(file);
 
-        p.then(function(url) {
-            form.image_data_url.value = url;
-            if (submit) {
-                form.submit();
-            }
-        }).catch(function (reason) {
-              $("form input[type=submit]").button('reset');
-              toastr.error('Only "pdf" file is allowed');
-        });
+    p.then(function(url) {
+        form.image_data_url.value = url;
+        if (submit) {
+            form.submit();
+        }
+    }).catch(function (reason) {
+          $("form input[type=submit]").button('reset');
+          toastr.error('Only "pdf" file is allowed');
+    });
 
-        return p;
+    return p;
+}
+
+function ajaxify_label(file) {
+    $('#mockup-link').html('');
+    var url = api_url('ajaxify-label', 'supplements');
+    var form = document.getElementById('user_supplement_form');
+    if (file !== undefined) {
+        var p = new Promise(function(resolve, reject) {
+            getImageUrl(file, submit=false).then(function() {
+                data = {
+                    'image_data_url': form.image_data_url.value,
+                    'mockup_slug': form.mockup_slug.value,
+                };
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    data: JSON.stringify(data),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function (response) {
+                        $('#mockup').attr('src', response['data_url']);
+                        var link = "<a href='#' data-toggle='modal' data-target='#modal-preview-image'>Preview</a>";
+                        $('#mockup-link').html(link);
+                    }
+                });
+            }).catch(function (reason) {
+                  console.log(reason);
+            });
+      });
     }
+}
+
+$(document).ready(function(){
+    var form = document.getElementById('user_supplement_form');
 
     $('.product-images').slick({
         dots: true
@@ -59,10 +90,9 @@ $(document).ready(function(){
 
         if (form.checkValidity()) {
             e.preventDefault();
-            button.button('loading');
-            var file = form.upload.files[0];
+            var fileUrl = form.image_data_url.value;
             if (action === 'approve') {
-                if (file === undefined && labelUrl === undefined) {
+                if (fileUrl === "" && labelUrl === undefined) {
                     toastr.error('A "pdf" label file is required in case of submitting for approval.');
                 } else {
                     swal({
@@ -75,65 +105,33 @@ $(document).ready(function(){
                         confirmButtonText: "Submit for Approval",
                       },
                       function(isConfirm){
-                          if (isConfirm && labelUrl) {
-                              form.image_data_url.value = labelUrl;
-                              form.submit();
-                          } else {
-                              if (isConfirm) {
-                                  getImageUrl(file);
+                          if (isConfirm) {
+                              if(fileUrl !== "") {
+                                  form.submit();
+                              } else {
+                                  if (labelUrl) {
+                                      form.image_data_url.value = labelUrl;
+                                      form.submit();
+                                  }
                               }
                           }
                       });
                 }
             } else {
-                if (file === undefined) {
-                    form.submit();
-                } else {
-                    getImageUrl(file);
-                }
+                form.submit();
             }
-            button.button('reset');
         }
     });
 
     $('#save-changes').click(function (e) {
         e.preventDefault();
-        $(this).button('loading');
-        var file = form.upload.files[0];
-        if (file !== undefined) {
+        var fileUrl = form.image_data_url.value;
+        if (fileUrl !== "") {
             form.action.value = 'approve';
-            getImageUrl(file);
         } else {
             form.action.value = 'save';
-            form.submit();
         }
+        form.submit();
     });
 
-    $('#upload-ajax-label').on('change', function (e) {
-        e.preventDefault();
-        $('#mockup-link').html('');
-        var url = api_url('ajaxify-label', 'supplements');
-        var file = form.upload.files[0];
-        if (file !== undefined) {
-            var p = new Promise(function(resolve, reject) {
-                getImageUrl(file, submit=false).then(function() {
-                    data = {'image_data_url': form.image_data_url.value};
-                    $.ajax({
-                        url: url,
-                        type: "POST",
-                        data: JSON.stringify(data),
-                        dataType: 'json',
-                        contentType: 'application/json',
-                        success: function (response) {
-                            $('#mockup').attr('src', response['data_url']);
-                            var link = "<a href='#' data-toggle='modal' data-target='#modal-preview-image'>Preview</a>";
-                            $('#mockup-link').html(link);
-                        }
-                    });
-                }).catch(function (reason) {
-                      console.log(reason);
-                });
-          });
-        }
-    });
 });

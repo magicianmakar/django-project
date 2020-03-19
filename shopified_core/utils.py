@@ -418,19 +418,8 @@ def unlock_account_email(username):
     return True
 
 
-def aws_s3_context():
+def do_create_aws_s3_context(conditions):
     aws_available = (settings.AWS_ACCESS_KEY_ID and settings.AWS_SECRET_ACCESS_KEY and settings.AWS_STORAGE_BUCKET_NAME)
-
-    conditions = [
-        ["starts-with", "$utf8", ""],
-        # Change this path if you need, but adjust the javascript config
-        ["starts-with", "$key", "uploads"],
-        ["starts-with", "$name", ""],
-        ["starts-with", "$Content-Type", "image/"],
-        ["starts-with", "$filename", ""],
-        {"bucket": settings.AWS_STORAGE_BUCKET_NAME},
-        {"acl": "public-read"}
-    ]
 
     policy = {
         # Valid for 3 hours. Change according to your needs
@@ -448,6 +437,21 @@ def aws_s3_context():
         'aws_policy': string_to_sign,
         'aws_signature': signature,
     }
+
+
+def aws_s3_context():
+    conditions = [
+        ["starts-with", "$utf8", ""],
+        # Change this path if you need, but adjust the javascript config
+        ["starts-with", "$key", "uploads"],
+        ["starts-with", "$name", ""],
+        ["starts-with", "$Content-Type", "image/"],
+        ["starts-with", "$filename", ""],
+        {"bucket": settings.AWS_STORAGE_BUCKET_NAME},
+        {"acl": "public-read"}
+    ]
+
+    return do_create_aws_s3_context(conditions)
 
 
 def clean_query_id(qid):

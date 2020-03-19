@@ -24,7 +24,7 @@ from leadgalaxy.models import ShopifyStore
 from shopified_core.shipping_helper import get_counrties_list
 from shopify_orders.models import ShopifyOrderLog
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
-from supplements.lib.image import data_url_to_pil_image, get_bottle_mockup, get_order_number_label, pil_to_fp
+from supplements.lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
 from supplements.models import (
     AuthorizeNetCustomer,
     Payout,
@@ -50,7 +50,7 @@ from .forms import (
     UploadJSONForm,
     UserSupplementForm
 )
-from .utils import create_rows, send_email_against_comment
+from .utils import aws_s3_context, create_rows, send_email_against_comment
 
 
 class Index(common_views.IndexView):
@@ -148,16 +148,9 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
 
 
 class LabelMixin:
-    def save_label(self, user, label, user_supplement):
-        assert label.tell() == 0
-
-        url = upload_supplement_object_to_aws(
-            user_supplement,
-            label,
-            label.name,
-        )
-
+    def save_label(self, user, url, user_supplement):
         new_label = user_supplement.labels.create(url=url)
+
         if user_supplement.current_label:
             kwargs = {'label_id': user_supplement.current_label.id}
             reverse_url = reverse('pls:label_detail', kwargs=kwargs)
@@ -230,6 +223,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form_data['action'] = 'save'
         form_data['shipping_countries'] = supplement.shipping_groups_string
         form_data['label_size'] = supplement.label_size
+        form_data['mockup_type'] = supplement.mockup_type
+        form_data['mockup_slug'] = supplement.mockup_type.slug
 
         api_data = {}
         if supplement.is_approved:
@@ -272,17 +267,19 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         if form.is_valid():
             new_user_supplement = self.save_supplement(form)
 
-            upload = request.FILES.get('upload')
-            if upload:
+            upload_url = form.cleaned_data['upload_url']
+            if upload_url:
                 image_data = form.cleaned_data['image_data_url']
+                mockup_type = form.cleaned_data['mockup_slug']
                 label_image = data_url_to_pil_image(image_data)
-                bottle_mockup = get_bottle_mockup(label_image)
+                bottle_mockup = get_mockup(label_image, mockup_type)
                 image_fp = pil_to_fp(bottle_mockup)
                 image_fp.seek(0)
                 image_fp.name = 'mockup.png'
-                self.save_label(user, upload, new_user_supplement)
+                self.save_label(user, upload_url, new_user_supplement)
                 self.save_image(user, image_fp, new_user_supplement)
-            elif not new_user_supplement.images.count():
+
+            if not new_user_supplement.images.count():
                 self.copy_images(new_user_supplement)
 
             if form.cleaned_data['action'] == 'approve':
@@ -305,11 +302,15 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         return redirect(reverse("pls:user_supplement", kwargs=kwargs))
 
     def get(self, request, supplement_id):
+        aws = aws_s3_context()
         context = self.get_supplement_data(request.user, supplement_id)
 
         context.update({
             'breadcrumbs': self.get_breadcrumbs(supplement_id),
             'form': UserSupplementForm(initial=context['form_data']),
+            'aws_available': aws['aws_available'],
+            'aws_policy': aws['aws_policy'],
+            'aws_signature': aws['aws_signature'],
         })
         return render(request, self.template_name, context)
 
@@ -337,6 +338,8 @@ class UserSupplementView(Supplement):
         form_data['action'] = 'save'
         form_data['shipping_countries'] = supplement.shipping_groups_string
         form_data['label_size'] = supplement.pl_supplement.label_size
+        form_data['mockup_type'] = supplement.pl_supplement.mockup_type
+        form_data['mockup_slug'] = supplement.pl_supplement.mockup_type.slug
 
         api_data = {}
         if supplement.is_approved:
@@ -515,8 +518,8 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
         page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
         barcode_obj = page_merge[-1]
-        barcode_obj.scale(0.5, 1)
-        barcode_obj.x = barcode_obj.y = 1
+        barcode_obj.scale(0.3, 0.7)
+        barcode_obj.x = barcode_obj.y = 8
 
         page_merge.render()
 
@@ -531,27 +534,37 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             'label.pdf',
         )
 
-    def get(self, request, label_id):
-        self.label = label = get_object_or_404(UserSupplementLabel, id=label_id)
-        comments = label.comments
-
-        api_data = self.get_api_data(label.user_supplement)
-        store_type_and_data = self.get_store_data(request.user)
+    def get_context_data(self, *args, **kwargs):
+        aws = aws_s3_context()
+        api_data = self.get_api_data(kwargs['label'].user_supplement)
+        store_type_and_data = self.get_store_data(self.request.user)
         new_version_url = None
-        current_label = label.user_supplement.current_label
+        current_label = kwargs['label'].user_supplement.current_label
         if current_label:
             new_version_url = reverse('pls:label_detail',
                                       kwargs={'label_id': current_label.id})
-        context = dict(
-            label=label,
-            comments=comments.all().order_by('-created_at'),
+
+        return dict(
+            label=kwargs['label'],
             breadcrumbs=self.get_breadcrumbs(),
-            form=CommentForm(),
             api_data=api_data,
             store_data=store_type_and_data['store_data'],
             store_types=store_type_and_data['store_types'],
             new_version_url=new_version_url,
+            aws_available=aws['aws_available'],
+            aws_policy=aws['aws_policy'],
+            aws_signature=aws['aws_signature'],
         )
+
+    def get(self, request, label_id):
+        self.label = label = get_object_or_404(UserSupplementLabel, id=label_id)
+        comments = label.comments
+
+        context = self.get_context_data(label=label)
+        context.update({
+            'form': CommentForm(),
+            'comments': comments.all().order_by('-created_at'),
+        })
 
         return render(request, "supplements/label_detail.html", context)
 
@@ -571,14 +584,16 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form = CommentForm()
 
         if action == 'comment':
-            form = CommentForm(request.POST, request.FILES)
+            form = CommentForm(request.POST)
             if form.is_valid():
                 comment = form.cleaned_data['comment']
                 self.create_comment(comments, comment)
-                upload = request.FILES.get('upload')
-                if upload:
+                upload_url = form.cleaned_data['upload_url']
+                if upload_url:
                     user_supplement = label.user_supplement
-                    self.save_label(user, upload, user_supplement)
+                    self.save_label(user, upload_url, user_supplement)
+                    user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
+                    user_supplement.current_label.save()
                     kwargs = {'label_id': user_supplement.current_label.id}
                     reverse_url = reverse('pls:label_detail', kwargs=kwargs)
 
@@ -601,12 +616,11 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             self.create_comment(comments, comment, new_status=action)
             return redirect(reverse_url)
 
-        context = dict(
-            label=label,
-            comments=comments.all(),
-            breadcrumbs=self.get_breadcrumbs(),
-            form=form,
-        )
+        context = self.get_context_data(label=label)
+        context.update({
+            'form': form,
+            'comments': comments.all().order_by('-created_at'),
+        })
 
         return render(request, "supplements/label_detail.html", context)
 

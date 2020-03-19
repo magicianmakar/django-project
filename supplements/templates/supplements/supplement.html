@@ -1,6 +1,8 @@
 {% extends "supplements/tab_view_base.html" %}
 
 {% load static %}
+{% load perms_helper %}
+{% load template_helper %}
 {% load compress %}
 {% load widget_tweaks %}
 
@@ -27,6 +29,8 @@
           {{ form.non_field_errors }}
           {{ form.action }}
           {{ form.image_data_url }}
+          {{ form.upload_url }}
+          {{ form.mockup_slug }}
           <canvas id='canvas'></canvas>
           <div class="row">
             <div class="col-md-8">
@@ -37,14 +41,14 @@
                   <input type="submit"
                          value="Create Supplement"
                          data-action="approve"
-                         class="btn btn-primary add-loader confirm-create"
+                         class="btn btn-primary confirm-create"
                          data-loading-text="Please wait..."
                          >
 
                   <input type="submit"
                          value="Save for Later"
                          data-action="save"
-                         class="btn btn-primary add-loader confirm-create"
+                         class="btn btn-primary confirm-create"
                          data-loading-text="Please wait..."
                          >
 
@@ -109,7 +113,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">Bottle Mockup</h4>
+        <h4 class="modal-title">{{ form.mockup_slug.value|title }} Mockup</h4>
       </div>
       <div class="modal-body">
         <div class="row m-t" style="margin: 0 0 0 50px;">
@@ -121,7 +125,14 @@
 </div>
 
 {% include "supplements/partials/send_to_store_modal.html" %}
+{% include "supplements/partials/label_upload_modal.html" %}
 
+{% endblock %}
+
+{% block extracss %}
+{{ block.super }}
+<link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
@@ -132,6 +143,9 @@
 <script type="text/javascript" src="{% static 'pls/js/send_to_store.js' %}"></script>
 {% endcompress %}
 
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>
@@ -140,5 +154,58 @@
 var apiData = {{ api_data|safe }};
 var storeData = {{ store_data|safe }}
 setup_full_editor('id_description');
+
+{% if aws_available %}
+$("#uploader").plupload({
+    runtimes : 'html5,flash',
+    flash_swf_url : '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/Moxie.swf',
+    url : "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com:443/",
+    file_name_name: false,
+    multipart: true,
+    multipart_params : {
+      filename: 'filename',
+      utf8: true,
+      AWSAccessKeyId: "{% app_setting 'AWS_ACCESS_KEY_ID' %}",
+      acl: "public-read",
+      policy: "{{aws_policy|escapejs}}",
+      signature: "{{aws_signature|escapejs}}",
+      key: "uploads/u{{user.id}}/${filename}",
+      'Content-Type': 'application/pdf',
+    },
+    filters : {
+        max_file_size : '20mb',
+        mime_types: [
+            {title : "Label files", extensions : "pdf"}
+        ]
+    },
+    views: {
+        list: true,
+        thumbs: true,
+        active: 'thumbs'
+    },
+    sortable: true,
+    dragdrop: true,
+    init: {
+        BeforeUpload: function(up, file) {
+            var params = up.settings.multipart_params;
+            params['Content-Type'] = file.type;
+
+            var name = Math.round(Math.random() * 100) + file.name;
+            params.key = "uploads/u{{user.id}}/" + name;
+        },
+        FileUploaded: function(up, file, info) {
+            var key = up.settings.multipart_params.key;
+            var url = "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/" + key;
+            document.getElementById('user_supplement_form').upload_url.value = url;
+            $('.custom-file-label').html(file.name);
+            ajaxify_label(file.getNative());
+        },
+        UploadComplete: function(up, files){
+            $('#modal-upload-image').modal('hide');
+        }
+    }
+});
+{% endif %}
+
 </script>
 {% endblock %}

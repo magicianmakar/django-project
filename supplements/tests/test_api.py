@@ -218,14 +218,33 @@ class AjaxLabelMockupTestCase(PLSBaseTestCase):
             self.image_data_url = f'data:image/png;base64,{data}'
 
         self.url = '/api/supplements/ajaxify-label'
-        self.data = {
+        self.bottle_data = {
             'image_data_url': self.image_data_url,
+            'mockup_slug': 'bottle',
+        }
+        self.container_data = {
+            'image_data_url': self.image_data_url,
+            'mockup_slug': 'container',
+        }
+        self.tincture_data = {
+            'image_data_url': self.image_data_url,
+            'mockup_slug': 'tincture',
         }
 
     def test_post(self):
         self.client.force_login(self.user)
 
         response = self.client.post(self.url,
-                                    data=json.dumps(self.data),
+                                    data=json.dumps(self.bottle_data),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(self.url,
+                                    data=json.dumps(self.container_data),
+                                    content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.post(self.url,
+                                    data=json.dumps(self.tincture_data),
                                     content_type='application/json')
         self.assertEqual(response.status_code, 200)
