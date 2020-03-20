@@ -10,7 +10,7 @@
         <span class="product-price">${{ item.cost_price }}</span>
         <small class="text-muted">{{ item.category }}</small>
         <a href="{{ item.get_url }}" class="product-name">{{ item.title }}</a>
-        <div class="small m-t-xs">{{ item.description_short }}</div>
+        <div class="small m-t-xs truncate">{{ item.description }}</div>
         <div class="m-t row">
           <div class="col-md-6">
             <a href="{{ item.get_url }}" class="btn btn-xs btn-outline btn-primary"> Customize <i class="fa fa-long-arrow-right"></i> </a>
@@ -25,3 +25,11 @@
     </div>
   </div>
 </div>
+
+<style type="text/css">
+  .truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
