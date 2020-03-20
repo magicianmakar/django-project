@@ -216,6 +216,8 @@ def export_product(req_data, target, user_id):
                     remaining_images = api_data['product']['images'][max_images_chunk:]
                     api_data['product']['images'] = api_data['product']['images'][:max_images_chunk]
 
+                api_data['product']['title'] = re.sub(r'[| -]*aliexpress$', '', api_data['product']['title'], flags=re.I)
+
                 r = requests.post(endpoint, json=api_data)
 
                 # Shopify can take too long to process each image
