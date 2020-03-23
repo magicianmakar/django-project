@@ -304,6 +304,7 @@ class OrdersShippedWebHookView(View, BaseMixin):
             return
 
         resource_url = data['resource_url']
+        resource_url = resource_url.replace("False", "True")
         parsed = urlparse.urlparse(resource_url)
         result = urlparse.parse_qs(parsed.query)
 

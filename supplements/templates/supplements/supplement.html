@@ -135,6 +135,12 @@
 <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
 {% endblock %}
 
+{% block extrajs-before %}
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
+{% endblock %}
+
 {% block extrajs %}
 {% compress js %}
 <script type="text/javascript" src="{% static 'libs/slick/slick.min.js' %}"></script>
@@ -143,9 +149,6 @@
 <script type="text/javascript" src="{% static 'pls/js/send_to_store.js' %}"></script>
 {% endcompress %}
 
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>

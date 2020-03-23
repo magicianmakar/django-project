@@ -5,6 +5,7 @@ from django.conf import settings
 import requests
 
 from shopified_core.utils import base64_encode
+from supplements.models import PLSOrderLine
 
 
 def get_auth_header():
@@ -37,6 +38,8 @@ def prepare_shipstation_data(pls_order, order, line_items):
     except KeyError:
         bill_to = ship_to
 
+    get_shipstation_line_key = PLSOrderLine.get_shipstation_key
+
     items = []
     for item in line_items:
         quantity = item['quantity']
@@ -49,12 +52,19 @@ def prepare_shipstation_data(pls_order, order, line_items):
         })
 
         label = item['label']
+
+        key = get_shipstation_line_key(pls_order.store_type,
+                                       pls_order.store_id,
+                                       pls_order.store_order_id,
+                                       item['id'])
+
         items.append({
             'name': f'Label for {label.user_supplement.title}',
             'quantity': quantity,
             'sku': label.sku,
             'unitPrice': 0,
             'imageUrl': label.url,
+            'lineItemKey': key,
         })
 
     advancedOptions = {
