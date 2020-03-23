@@ -126,7 +126,7 @@
             $(loadingContainer).LoadingOverlay("hide", true);
 
             if (!rep.success) {
-                swal('Products Database', 'Could not get products list, please try agian', 'error');
+                swal('Products Database', 'Could not get products list, please try again', 'error');
                 return;
             }
 
