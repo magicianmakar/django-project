@@ -1,3 +1,7 @@
+{% load perms_helper %}
+
+{% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' %}
+
 <div class="ibox ">
   <div class="ibox-title">
     <h5>Label: #{{ label.label_id_string }}</h5>
@@ -49,6 +53,7 @@
         </div>
 
         <div class="row m-t">
+          {% if pls_admin or pls_staff %}
           <div class="col-md-5">
             <form method="POST" role="form">
               <input type="hidden" name="action" value="{{ label.REJECTED }}" />
@@ -68,6 +73,7 @@
                       data-loading-text="Please wait..."><i class="fa fa-thumbs-up"></i> Approve</button>
             </form>
           </div>
+          {% endif %}
 
           {% endif %}
         </div>
@@ -76,3 +82,4 @@
     </div>
   </div>
 </div>
+{% endwith %}
