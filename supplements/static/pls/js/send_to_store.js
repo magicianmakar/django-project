@@ -1,3 +1,12 @@
+function getCorrectRef(btn, text) {
+    if($.fn.hasOwnProperty('bootstrapBtn')) {
+        btn.bootstrapBtn(text);
+    } else {
+        btn.button(text);
+    }
+
+}
+
 function saveForLater(storeType, storeId, callback) {
     var data = {
         store: storeId,
@@ -46,7 +55,7 @@ function getPostExportPusherHandler(productId) {
                 pusher.unsubscribe(channel_hash);
 
                 if (data.success) {
-                    btn.button('reset');
+                    getCorrectRef(btn,'reset');
                     toastr.success("Product successfully exported", "Product Export");
                     $('#modal-send-to-store').find('.close').trigger('click');
                 } else {
@@ -64,7 +73,7 @@ function sendToStore(storeType, storeId, publish) {
             var jsXHR;
             if (storeType === 'shopify') {
                 sendProductToShopify(apiData, storeId, productId, function (data) {
-                    $('#id_send_to_store_confirm').button('reset');
+                    getCorrectRef($('#id_send_to_store_confirm'), 'reset');
                     toastr.success("Product successfully exported", "Export");
                     $('#modal-send-to-store').find('.close').trigger('click');
                 });
@@ -109,7 +118,7 @@ $(document).ready(function(){
         var storeType = $("#id_store_type").val();
         var storeId = $('#id_store_list').val();
         var publish = $('#send-product-visible').prop('checked') || false;
-        $(this).button('loading');
+        getCorrectRef($(this), 'loading');
         sendToStore(storeType, storeId, publish);
     });
 });

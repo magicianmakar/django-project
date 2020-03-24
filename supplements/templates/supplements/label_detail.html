@@ -36,6 +36,10 @@
 {% endblock %}
 
 {% block extrajs %}
+<script type="text/javascript">
+    $.fn.bootstrapBtn = $.fn.button.noConflict();
+</script>
+
 <script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/send_to_store.js' %}"></script>
 
