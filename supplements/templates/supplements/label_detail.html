@@ -93,7 +93,7 @@ $("#uploader").plupload({
         },
         FileUploaded: function(up, file, info) {
             var key = up.settings.multipart_params.key;
-            var url = "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/" + key;
+            var url = "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/" + key;
             document.getElementById('comment_form').upload_url.value = url;
             $('.custom-file-label').html(file.name);
         },
