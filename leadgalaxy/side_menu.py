@@ -22,7 +22,6 @@ def get_menu_structure(namespace):
             'callflex',
             'tubehunt',
             'tools',
-            'pls',
         ]),
     ]
 
@@ -191,13 +190,6 @@ def get_menu_item_data():
             'match': re.compile(r'^/print-on-demand'),
             'is_ns_aware': False,
             'permissions': ['print_on_demand.use'],
-        },
-        'pls': {
-            'title': 'PLSupplements',
-            'url_name': 'pls:index',
-            'match': re.compile(r'^/pls'),
-            'is_ns_aware': False,
-            'permissions': ['pls.use'],
         },
         'dropified-product': {
             'title': 'Fulfilled by Dropified',
