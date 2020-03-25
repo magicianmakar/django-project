@@ -103,27 +103,6 @@
   width: 21px;
 }
 
-@media only screen and (min-height: 850px) {
-  .sidebar .navfooter {
-    position: fixed;
-    bottom: 20px;
-  }
-}
-
-@media only screen and (min-height: 850px) {
-  .sidebar .navfooter.staff {
-    position: initial;
-    bottom: initial;
-  }
-}
-
-@media only screen and (min-height: 930px) {
-  .sidebar .navfooter.staff {
-    position: fixed;
-    bottom: 20px;
-  }
-}
-
 #academy-span {
   font-weight: 600;
 }
