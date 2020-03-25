@@ -624,7 +624,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         )
 
     def get(self, request, label_id):
-        self.label = label = get_object_or_404(UserSupplementLabel, id=label_id)
+        self.label = label = get_object_or_404(UserSupplementLabel, id=label_id, user_supplement__user=request.user.models_user)
         comments = label.comments
 
         context = self.get_context_data(label=label)
@@ -637,7 +637,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
     @transaction.atomic
     def post(self, request, label_id):
-        self.label = label = get_object_or_404(UserSupplementLabel, id=label_id)
+        self.label = label = get_object_or_404(UserSupplementLabel, id=label_id, user_supplement__user=request.user.models_user)
 
         comments = label.comments
 
