@@ -26,7 +26,7 @@ def get_bottle_mockup(label):
 
     label = label.resize(label_size)
 
-    left_edge = 225
+    left_edge = 300
     top_edge = -300
     right_edge = left_edge + dim
     bottom_edge = top_edge + dim
@@ -58,7 +58,7 @@ def get_container_mockup(label):
 
     label = label.resize(label_size)
 
-    left_edge = 615
+    left_edge = 500
     top_edge = -250
     right_edge = left_edge + dim
     bottom_edge = top_edge + dim
