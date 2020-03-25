@@ -21,6 +21,7 @@ from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 
 from leadgalaxy.models import ShopifyStore
+from shopified_core import permissions
 from shopified_core.shipping_helper import get_counrties_list
 from shopify_orders.models import ShopifyOrderLog
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
@@ -56,6 +57,12 @@ from .utils import aws_s3_context, create_rows, send_email_against_comment
 class Index(common_views.IndexView):
     model = PLSupplement
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def get_template(self):
         return 'supplements/index.html'
 
@@ -75,6 +82,12 @@ class Product(common_views.ProductAddView):
     form = PLSupplementForm
     namespace = 'pls'
     template_name = "supplements/product.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
 
     def get_breadcrumbs(self):
         return [
@@ -109,6 +122,12 @@ class Product(common_views.ProductAddView):
 
 
 class SendToStoreMixin(common_lib_views.SendToStoreMixin):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def get_api_data(self, user_supplement):
         data = user_supplement.to_dict()
 
@@ -178,6 +197,12 @@ class LabelMixin:
 
 class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
     template_name = 'supplements/supplement.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
 
     def get_breadcrumbs(self, supplement_id):
         url = reverse('pls:supplement',
@@ -322,6 +347,12 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 class UserSupplementView(Supplement):
     template_name = 'supplements/user_supplement.html'
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def get_breadcrumbs(self, supplement_id):
         url = reverse('pls:user_supplement',
                       kwargs={'supplement_id': supplement_id})
@@ -387,6 +418,12 @@ class UserSupplementView(Supplement):
 
 
 class MySupplements(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def get(self, request):
         breadcrumbs = [
             {'title': 'PLS', 'url': reverse('pls:index')},
@@ -407,6 +444,12 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
     ordering = '-updated_at'
     template_name = 'supplements/labels.html'
     model = UserSupplementLabel
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
 
     def get_breadcrumbs(self):
         return [
@@ -467,6 +510,12 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
 
 
 class AllLabels(MyLabels):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def add_filters(self, queryset):
         return queryset
 
@@ -484,6 +533,13 @@ def upload_supplement_object_to_aws(user_supplement, obj, name):
 
 
 class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def get_breadcrumbs(self):
         user_supplement = self.label.user_supplement
         user_supplement_url = reverse(
@@ -639,6 +695,12 @@ class Order(common_views.OrderView):
     filter_form = OrderFilterForm
     namespace = 'pls'
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def get_queryset(self):
         queryset = super().get_queryset()
 
@@ -655,6 +717,12 @@ class Order(common_views.OrderView):
 
 class MyOrders(Order):
     template_name = 'supplements/user_order_list.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
 
     def get_breadcrumbs(self):
         return [
@@ -692,6 +760,12 @@ class PayoutView(common_views.PayoutView):
     add_form = PayoutForm
     order_class = PLSOrder
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         add_form = getattr(self, 'add_form', False)
@@ -724,6 +798,12 @@ class OrderItemListView(common_views.OrderItemListView):
     filter_form = LineFilterForm
     namespace = 'pls'
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
 
 class GenerateLabel(LoginRequiredMixin, View):
     def get(self, request, line_id):
@@ -739,6 +819,12 @@ class GenerateLabel(LoginRequiredMixin, View):
 
 class Billing(LoginRequiredMixin, TemplateView):
     template_name = 'supplements/billing.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
 
     def get_context_data(self, *args, **kwargs):
         try:
@@ -810,6 +896,12 @@ class Billing(LoginRequiredMixin, TemplateView):
 
 
 class RemoveCreditCard(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def post(self, request):
         try:
             self.request.user.authorize_net_customer.payment_id = None
@@ -823,6 +915,12 @@ class RemoveCreditCard(LoginRequiredMixin, View):
 class UploadJSON(LoginRequiredMixin, TemplateView):
     template_name = 'supplements/upload_json.html'
     form = UploadJSONForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
 
     def get_breadcrumbs(self):
         return [
@@ -877,6 +975,12 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 
 
 class DownloadJSON(LoginRequiredMixin, View):
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
     def get(self, request):
         data_list = []
         for supplement in PLSupplement.objects.all():
