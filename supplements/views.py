@@ -1,9 +1,11 @@
 from io import BytesIO
 
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.list import ListView
@@ -57,6 +59,7 @@ from .utils import aws_s3_context, create_rows, send_email_against_comment
 class Index(common_views.IndexView):
     model = PLSupplement
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -83,6 +86,7 @@ class Product(common_views.ProductAddView):
     namespace = 'pls'
     template_name = "supplements/product.html"
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.can('pls_admin.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -122,6 +126,7 @@ class Product(common_views.ProductAddView):
 
 
 class SendToStoreMixin(common_lib_views.SendToStoreMixin):
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -198,6 +203,7 @@ class LabelMixin:
 class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
     template_name = 'supplements/supplement.html'
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -347,6 +353,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 class UserSupplementView(Supplement):
     template_name = 'supplements/user_supplement.html'
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -418,6 +425,7 @@ class UserSupplementView(Supplement):
 
 
 class MySupplements(LoginRequiredMixin, View):
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -445,6 +453,7 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
     template_name = 'supplements/labels.html'
     model = UserSupplementLabel
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -510,6 +519,7 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
 
 
 class AllLabels(MyLabels):
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -534,6 +544,7 @@ def upload_supplement_object_to_aws(user_supplement, obj, name):
 
 class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -695,6 +706,7 @@ class Order(common_views.OrderView):
     filter_form = OrderFilterForm
     namespace = 'pls'
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -718,6 +730,7 @@ class Order(common_views.OrderView):
 class MyOrders(Order):
     template_name = 'supplements/user_order_list.html'
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -760,6 +773,7 @@ class PayoutView(common_views.PayoutView):
     add_form = PayoutForm
     order_class = PLSOrder
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -798,6 +812,7 @@ class OrderItemListView(common_views.OrderItemListView):
     filter_form = LineFilterForm
     namespace = 'pls'
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -820,6 +835,7 @@ class GenerateLabel(LoginRequiredMixin, View):
 class Billing(LoginRequiredMixin, TemplateView):
     template_name = 'supplements/billing.html'
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -896,6 +912,7 @@ class Billing(LoginRequiredMixin, TemplateView):
 
 
 class RemoveCreditCard(LoginRequiredMixin, View):
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -916,6 +933,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
     template_name = 'supplements/upload_json.html'
     form = UploadJSONForm
 
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.can('pls_admin.use'):
             return super().dispatch(request, *args, **kwargs)
@@ -975,6 +993,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 
 
 class DownloadJSON(LoginRequiredMixin, View):
+    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.can('pls_admin.use'):
             return super().dispatch(request, *args, **kwargs)
