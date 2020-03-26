@@ -120,7 +120,7 @@
         </li>
     </ul>
 
-    {% if user|can:'pls_admin.use' %}
+    {% if user|can:'pls_admin.use' or user|can:'pls_staff.use' %}
     <ul style="margin:0">
         <li class="item">
             <a href="{% url 'pls:all_labels' %}">
