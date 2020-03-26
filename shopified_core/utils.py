@@ -9,7 +9,7 @@ import ctypes
 import simplejson as json
 from functools import wraps
 from copy import deepcopy
-from urllib.parse import urlencode, urlparse
+from urllib.parse import urlencode, urlparse, parse_qs, ParseResult
 
 from django.conf import settings
 from django.core import serializers
@@ -907,6 +907,16 @@ def bulk_order_format(queue_order, first_line_id):
     return None
 
 
+def get_next_page_from_request(request, page):
+    url = urlparse(request.get_raw_uri())
+    params = parse_qs(url.query)
+    params['page'] = page
+    return ParseResult(
+        url.scheme, url.netloc, url.path,
+        url.params, urlencode(params, doseq=True), url.fragment
+    ).geturl()
+
+
 def format_queueable_orders(request, orders, current_page, store_type='shopify'):
     orders_result = []
     next_page_url = None
@@ -1039,9 +1049,8 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
     page_end = safe_int(request.GET.get('page_end'), 0)
     page_start = safe_int(request.GET.get('page_start'), 1) - 1
     if current_page.has_next() and (not page_end or current_page.next_page_number() <= page_end):
-        params = request.GET.copy()
-        params['page'] = current_page.next_page_number() - page_start
-        next_page_url = app_link(request.path, **params.dict())
+        page = current_page.next_page_number() - page_start
+        next_page_url = get_next_page_from_request(request, page)
 
     return JsonResponse({
         'orders': orders_result,
