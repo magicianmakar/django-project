@@ -742,8 +742,11 @@ class Order(common_views.OrderView):
         return queryset
 
 
-class MyOrders(Order):
+class MyOrders(common_views.OrderView):
     template_name = 'supplements/user_order_list.html'
+    model = PLSOrder
+    filter_form = OrderFilterForm
+    namespace = 'pls'
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
