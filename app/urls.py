@@ -30,7 +30,7 @@ urlpatterns = [
     url(r'^sso/', include('sso_core.urls')),
     url(r'^profits/', include(('profits.urls', 'profits'), 'profits')),
     url(r'^print-on-demand/', include(('prints.urls', 'prints'), 'prints')),
-    url(r'^pls/', include(('supplements.urls', 'supplements'), 'pls')),
+    url(r'^supplements/', include(('supplements.urls', 'supplements'), 'pls')),
     url(r'^dropified-product/', include(('dropified_product.urls', 'dropified_product'), 'dropified_product')),
     url(r'^admin/', admin.site.urls),
     url(r'^tapfiliate/', include('tapfiliate.urls')),

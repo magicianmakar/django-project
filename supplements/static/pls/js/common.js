@@ -94,7 +94,7 @@ $(document).ready(function(){
             dataType: 'json',
             contentType: 'application/json',
             success: function (response) {
-                toastr.success("Successfully marked elected lines as printed.");
+                toastr.success("Successfully marked selected lines as printed.");
             }
         });
     });

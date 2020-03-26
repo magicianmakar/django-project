@@ -39,7 +39,7 @@ function getImageUrl(file, submit) {
         }
     }).catch(function (reason) {
           $("form input[type=submit]").button('reset');
-          toastr.error('Only "pdf" file is allowed');
+          toastr.error('Only PDF file is allowed');
     });
 
     return p;
@@ -93,7 +93,7 @@ $(document).ready(function(){
             var fileUrl = form.image_data_url.value;
             if (action === 'approve') {
                 if (fileUrl === "" && labelUrl === undefined) {
-                    toastr.error('A "pdf" label file is required in case of submitting for approval.');
+                    toastr.error('A PDF label is required to submit a product for approval');
                 } else {
                     swal({
                         title: "Are you sure?",

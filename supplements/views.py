@@ -73,7 +73,7 @@ class Index(common_views.IndexView):
         return reverse('pls:product')
 
     def get_breadcrumbs(self):
-        return [{'title': 'PLS', 'url': reverse('pls:index')}]
+        return [{'title': 'Supplements', 'url': reverse('pls:index')}]
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -95,8 +95,8 @@ class Product(common_views.ProductAddView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'PLS', 'url': reverse('pls:index')},
-            {'title': 'Add New Supplement', 'url': reverse('product')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Add New Supplement', 'url': reverse('pls:product')},
         ]
 
     def process_valid_form(self, form):
@@ -104,10 +104,10 @@ class Product(common_views.ProductAddView):
         user_id = request.user.id
 
         template = request.FILES['template']
-        template_url = upload_image_to_aws(template, 'pls_label', user_id)
+        template_url = upload_image_to_aws(template, 'supplement_label', user_id)
 
         thumbnail = request.FILES['thumbnail']
-        thumbnail_url = upload_image_to_aws(thumbnail, 'pls_image', user_id)
+        thumbnail_url = upload_image_to_aws(thumbnail, 'supplement_image', user_id)
 
         certificate = request.FILES['authenticity_certificate']
         certificate_url = upload_image_to_aws(certificate, 'pls_certificate', user_id)
@@ -152,7 +152,7 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
             title=data['title'],
             description=data['description'],
             type=data['category'],
-            vendor="PLSupplement",  # TODO: Confirm
+            vendor="Supplements on Demand",  # TODO: Confirm
             weight=0,  # TODO: Confirm
             weight_unit="lbs",  # TODO: Confirm
             tags=data['tags'],
@@ -165,7 +165,7 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
             user_supplement_id=data['user_supplement_id'],
             sku=data['shipstation_sku'],
             store=dict(
-                name="PLSupplement",
+                name="Supplements on Demand",
                 url='',
             ),
         ), use_decimal=True)
@@ -214,7 +214,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         url = reverse('pls:supplement',
                       kwargs={'supplement_id': supplement_id})
         breadcrumbs = [
-            {'title': 'PLS', 'url': reverse('pls:index')},
+            {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': 'Supplement', 'url': url},
         ]
         return breadcrumbs
@@ -364,7 +364,7 @@ class UserSupplementView(Supplement):
         url = reverse('pls:user_supplement',
                       kwargs={'supplement_id': supplement_id})
         breadcrumbs = [
-            {'title': 'PLS', 'url': reverse('pls:index')},
+            {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': 'User Supplement', 'url': url},
         ]
         return breadcrumbs
@@ -434,7 +434,7 @@ class MySupplements(LoginRequiredMixin, View):
 
     def get(self, request):
         breadcrumbs = [
-            {'title': 'PLS', 'url': reverse('pls:index')},
+            {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': 'My Supplements', 'url': reverse('pls:my_supplements')},
         ]
 
@@ -450,7 +450,7 @@ class MySupplements(LoginRequiredMixin, View):
 class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
     paginate_by = 20
     ordering = '-updated_at'
-    template_name = 'supplements/labels.html'
+    template_name = 'supplements/my_labels.html'
     model = UserSupplementLabel
 
     @method_decorator(login_required)
@@ -462,7 +462,7 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'PLS', 'url': reverse('pls:index')},
+            {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': 'My Labels', 'url': reverse('pls:my_labels')},
         ]
 
@@ -519,6 +519,8 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
 
 
 class AllLabels(MyLabels):
+    template_name = 'supplements/all_labels.html'
+
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
@@ -531,7 +533,7 @@ class AllLabels(MyLabels):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'PLS', 'url': reverse('pls:index')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
             {'title': 'All Labels', 'url': reverse('pls:all_labels')},
         ]
 
@@ -559,7 +561,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         )
 
         return [
-            {'title': 'PLS', 'url': reverse('pls:index')},
+            {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': user_supplement.title, 'url': user_supplement_url},
             {'title': 'Label', 'url': self.request.path},
         ]
@@ -720,6 +722,12 @@ class Order(common_views.OrderView):
         else:
             raise permissions.PermissionDenied()
 
+    def get_breadcrumbs(self):
+        return [
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Payments', 'url': reverse('pls:order_list')},
+        ]
+
     def get_queryset(self):
         queryset = super().get_queryset()
 
@@ -746,7 +754,7 @@ class MyOrders(Order):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'PLS', 'url': reverse('pls:index')},
+            {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': 'My Payments', 'url': reverse('pls:my_orders')},
         ]
 
@@ -787,6 +795,12 @@ class PayoutView(common_views.PayoutView):
         else:
             raise permissions.PermissionDenied()
 
+    def get_breadcrumbs(self):
+        return [
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Payouts', 'url': reverse('pls:payout_list')},
+        ]
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         add_form = getattr(self, 'add_form', False)
@@ -825,6 +839,12 @@ class OrderItemListView(common_views.OrderItemListView):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
+
+    def get_breadcrumbs(self):
+        return [
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Order Items', 'url': reverse('pls:orderitem_list')},
+        ]
 
 
 class GenerateLabel(LoginRequiredMixin, View):
@@ -949,7 +969,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'PLS', 'url': reverse('pls:index')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
             {'title': 'Import / Export', 'url': reverse('pls:upload_json')},
         ]
 

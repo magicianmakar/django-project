@@ -658,7 +658,9 @@
                                                 {% elif excluded_product %}
                                                     <span class="ordered-status">Excluded Product</span>
                                                 {% elif item.is_pls and item.is_paid %}
-                                                    <span class="ordered-status">{{ item.status_string }}</span>
+                                                    <span class="ordered-status">
+                                                      <span class="label label-primary">Paid</span>
+                                                    </span>
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}

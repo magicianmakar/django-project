@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import reverse
 
-from leadgalaxy.tests.factories import ShopifyStoreFactory, UserFactory
+from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyStoreFactory, UserFactory
 from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrderLog
 from supplements.models import UserSupplementImage, UserSupplementLabel
@@ -27,6 +27,11 @@ class PLSBaseTestCase(BaseTestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
+
+        self.user.profile.plan = GroupPlanFactory(title='Dropified Black', slug='black')
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls_admin.use', description='PLS Admin'))
+        self.user.profile.plan.save()
+        self.user.profile.save()
 
         self.label_size = LabelSizeFactory.create(
             slug='any-slug-123',

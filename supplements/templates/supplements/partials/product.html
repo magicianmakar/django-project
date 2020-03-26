@@ -17,7 +17,7 @@
         <div class="col-md-6">
           <a href="{{ item.get_url }}" class="btn btn-xs btn-outline btn-primary"> Customize <i class="fa fa-long-arrow-right"></i> </a>
         </div>
-        {% if item.is_admin_editable and pls_admin or pls_staff %}
+        {% if pls_admin %}
         <div class="col-md-6">
           <a href="{% url 'admin:supplements_plsupplement_change' item.id %}" class="btn btn-xs btn-outline btn-default"> Admin Edit <i class="fa fa-edit"></i> </a>
         </div>

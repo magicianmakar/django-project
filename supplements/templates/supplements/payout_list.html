@@ -1,6 +1,7 @@
-{% extends "supplements/tab_view_base.html" %}
+{% extends "supplements/tab_view_admin.html" %}
 {% load static %}
 {% load widget_tweaks %}
+{% load perms_helper %}
 
 {% block extra_pls_css %}
 <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
@@ -12,6 +13,7 @@
   {% include "supplements/partials/filter_form.html" %}
 </div>
 
+{% if request.user|can:'pls_admin.use' %}
 <hr />
 
 <h2>Add New Payout</h2>
@@ -33,6 +35,7 @@
     </div>
   </div>
 </form>
+{% endif %}
 
 <hr />
 

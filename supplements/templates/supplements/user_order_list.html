@@ -1,4 +1,9 @@
-{% extends "supplements/plsorder_list.html" %}
+{% extends "supplements/tab_view_base.html" %}
+{% load static %}
+
+{% block extra_pls_css %}
+<link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
+{% endblock %}
 
 
 {% block tab_content %}
@@ -39,4 +44,12 @@
 
 {% include "supplements/partials/paging.html" %}
 
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
+<script type='application/javascript'>
+  $("#id_date").datepicker();
+</script>
 {% endblock %}

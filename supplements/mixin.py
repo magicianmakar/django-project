@@ -166,7 +166,7 @@ class UserSupplementLabelMixin:
         return self.status == self.AWAITING_REVIEW
 
     def generate_sku(self):
-        self.sku = f"PLS-{self.label_id_string}"
+        self.sku = f"sup-{self.label_id_string}"
 
 
 class LabelCommentMixin:

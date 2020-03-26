@@ -44,12 +44,14 @@
           </div>
 
           {% if label.current_label_of %}
+          {% if label.user_supplement.user.id == request.user.id %}
           <div class="col-md-6">
             <button {% if label.status != label.APPROVED %}disabled{% endif %}
                     id="send_to_store"
                     type="button"
                     class="btn btn-primary btn-sm btn-block"><i class="fa fa-arrow-right"></i> Send to Store</button>
           </div>
+          {% endif %}
         </div>
 
         <div class="row m-t">

@@ -106,19 +106,29 @@
 
     <ul style="margin:0">
         <li class="item">
-            <a href="{% url 'pls:index' %}">
-              Supplements
+            <a href="https://www.dropified.com/dropified-black-catalog/" target="_blank">
+              Product Catalog
             </a>
         </li>
     </ul>
 
     <ul style="margin:0">
         <li class="item">
-            <a href="https://www.dropified.com/dropified-black-catalog/" target="_blank">
-              Product Catalog
+            <a href="{% url 'pls:index' %}">
+              Supplements
             </a>
         </li>
     </ul>
+
+    {% if user|can:'pls_admin.use' %}
+    <ul style="margin:0">
+        <li class="item">
+            <a href="{% url 'pls:all_labels' %}">
+              Supplements Admin
+            </a>
+        </li>
+    </ul>
+    {% endif %}
 
     {% else %}
       <ul style="padding:0;margin: 10px 0 0 24px">

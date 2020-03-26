@@ -1,4 +1,5 @@
 {% extends "supplements/supplement.html" %}
+{% load perms_helper %}
 
 {% block tab_notification %}
 {% if is_awaiting_review %}
@@ -36,7 +37,11 @@
         data-loading-text="Please wait..."
         >
     {% endif %}
+
+    {% if request.user|can:'pls_admin.use' %}
     <input id="send_to_store" type="button" value="Send to Store" class="btn btn-primary {% if not is_approved %}disabled{% endif %}">
+    {% endif %}
+
     <input type="reset" value="Reset" class="btn btn-default">
   </div>
 </div>

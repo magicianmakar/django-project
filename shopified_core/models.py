@@ -49,7 +49,7 @@ class SupplierBase(models.Model):
 
     @property
     def is_pls(self):
-        return self.supplier_name == 'PLSupplement'
+        return self.supplier_name == 'Supplements on Demand'
 
 
 class ProductBase(models.Model):
