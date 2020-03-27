@@ -15,6 +15,7 @@ from pusher import Pusher
 from shopified_core.utils import (
     get_domain,
     safe_str,
+    url_join,
 )
 from shopified_core.decorators import add_to_class
 from shopified_core.models import (
@@ -87,10 +88,15 @@ class BigCommerceStore(StoreBase):
         return url
 
     def get_store_url(self, *args):
-        return self.api_url.rstrip('/')
+        url = re.sub(r'^https?://', '', self.api_url.rstrip('/'))
+
+        if len(args):
+            url = f'{url}/{url_join(*args)}'
+
+        return f'https://{url}'
 
     def get_admin_url(self):
-        return self.get_store_url() + '/manage'
+        return self.get_store_url('manage')
 
     def get_suppliers(self):
         return self.bigcommercesupplier_set.all().order_by('-is_default')
