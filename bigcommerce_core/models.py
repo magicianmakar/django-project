@@ -556,7 +556,7 @@ class BigCommerceProduct(ProductBase):
                 if mapped:
                     options = mapped
                 else:
-                    options = v['variant']
+                    options = v['option_values']
 
                     options = [{'title': a} for a in options]
 
