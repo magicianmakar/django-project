@@ -6,15 +6,16 @@
   {% for supplement in supplements %}
   <div class="col-xs-12 col-md-3">
     {% include "supplements/partials/product.html" with item=supplement %}
-
-    {% if forloop.counter|divisibleby:"4" %}
-    </div><div class="row">
-    {% endif %}
   </div>
+
+  {% if forloop.counter|divisibleby:"4" %}
+  </div><div class="row">
+  {% endif %}
+
   {% empty %}
+    <div>No supplements yet.</div>
+  {% endfor %}
 </div>
-<div>No supplements yet.</div>
-{% endfor %}
 
 {% include "product_common/partials/paging.html" %}
 {% endblock %}
