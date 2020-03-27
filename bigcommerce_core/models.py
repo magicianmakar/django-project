@@ -87,11 +87,7 @@ class BigCommerceStore(StoreBase):
         return url
 
     def get_store_url(self, *args):
-        url = re.findall(r'([^/.]+\.mybigcommerce\.com)', self.api_url).pop()
-        if len(args):
-            url = url + '/' + '/'.join([str(i) for i in args]).lstrip('/')
-
-        return 'https://{}'.format(url)
+        return self.api_url.rstrip('/')
 
     def get_admin_url(self):
         return self.get_store_url() + '/manage'

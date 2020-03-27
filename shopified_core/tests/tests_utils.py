@@ -20,7 +20,8 @@ from shopified_core.utils import (
     hash_url_filename,
     encode_params,
     decode_params,
-    extension_hash_text
+    extension_hash_text,
+    get_next_page_from_request,
 )
 
 from shopified_core.utils import base64_encode
@@ -591,3 +592,21 @@ class FranceAddressFixTestCase(BaseTestCase):
         self.assertEqual(fixed_address['city'], 'Gers')
         self.assertEqual(fixed_address['address1'], '40 rue de Fontenelle')
         self.assertEqual(fixed_address['address2'], 'st cricq')
+
+
+class GetNextPageTest(BaseTestCase):
+    def setUp(self):
+        self.url = 'https://dev.dropified.com/orders?query_address=US&query_address=GB'
+        self.request = Mock(get_raw_uri=Mock(return_value=self.url))
+
+    def test_get_next_page_from_request(self):
+        ret_url = get_next_page_from_request(self.request, 1)
+        self.assertIn('page=1', ret_url)
+
+        ret_url = get_next_page_from_request(self.request, 3)
+        self.assertIn('page=3', ret_url)
+
+    def test_should_have_all_countries_after_page_change(self):
+        ret_url = get_next_page_from_request(self.request, 1)
+        self.assertIn('query_address=US', ret_url)
+        self.assertIn('query_address=GB', ret_url)
