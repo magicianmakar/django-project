@@ -379,6 +379,7 @@ class OrdersShippedWebHookTestCase(BaseTestCase):
             'orderKey': order_key,
             'trackingNumber': 'tracking-number',
             'shipmentItems': [{'lineItemKey': line_key}],
+            'batchNumber': 111111,
         }]
 
         self.url = reverse('pls:order_shipped_webhook')

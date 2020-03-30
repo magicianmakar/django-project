@@ -8,7 +8,6 @@ from django.views.generic.list import ListView
 import requests
 import simplejson as json
 from raven.contrib.django.raven_compat.models import client as raven_client
-import urllib.parse as urlparse
 
 from leadgalaxy.models import ShopifyStore
 from leadgalaxy.utils import order_track_fulfillment
@@ -278,11 +277,11 @@ class OrdersShippedWebHookView(View, BaseMixin):
         get_line = self.order_line_model.objects.get
 
         with transaction.atomic():
-            order.batch_number = shipment['batchId']
+            order.batch_number = shipment['batchNumber']
             order.is_fulfilled = True
             order.save()
 
-            for item in shipment['shipmentItems']:
+            for item in shipment.get('shipmentItems', []):
                 try:
                     line = get_line(shipstation_key=item['lineItemKey'])
                 except self.order_line_model.DoesNotExist:
@@ -305,12 +304,9 @@ class OrdersShippedWebHookView(View, BaseMixin):
 
         resource_url = data['resource_url']
         resource_url = resource_url.replace("False", "True")
-        parsed = urlparse.urlparse(resource_url)
-        result = urlparse.parse_qs(parsed.query)
 
         shipments = get_shipstation_shipments(resource_url)
         for shipment in shipments:
-            shipment['batchId'] = result.get('batchId', '')
             yield shipment
 
     def post(self, request, *args, **kwargs):
