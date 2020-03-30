@@ -779,7 +779,7 @@ def get_shopify_products(store, page_url=None, limit=50, all_products=False,
                 params['product_type'] = product_type
 
             if title:
-                params['title'] = title
+                params['ids'] = store.gql.find_products_by_title(title)
 
             if product_ids:
                 if type(product_ids) is list:
@@ -812,8 +812,9 @@ def get_shopify_products(store, page_url=None, limit=50, all_products=False,
             status = None
 
         products_list = []
-        next_page_url = store.api('products')
-        while next_page_url:
+        next_page_url = None
+        first_page = True
+        while first_page or next_page_url:
             links, rep = get_shopify_products(store=store, page_url=next_page_url, limit=limit,
                                               title=title, product_type=product_type, fields=fields,
                                               return_links=True)
@@ -822,6 +823,8 @@ def get_shopify_products(store, page_url=None, limit=50, all_products=False,
                 next_page_url = links['next']['url']
             else:
                 next_page_url = None
+
+            first_page = False
 
             products = {}
             if status:

@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 import arrow
 from pusher import Pusher
 
+from leadgalaxy.graphql import ShopifyGraphQL
 from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
 from shopified_core.utils import (
@@ -917,6 +918,22 @@ class ShopifyStore(StoreBase):
         url = url_join(f'https://{url}', 'admin', 'api', version, page)
 
         return url
+
+    def graphql(self, query, variables=None):
+        return requests.post(
+            url=f'https://{self.shop}/admin/api/{SHOPIFY_API_VERSION}/graphql.json',
+            headers={
+                'X-Shopify-Access-Token': self.access_token,
+            },
+            json={
+                'query': query,
+                'variables': variables
+            }
+        ).json()
+
+    @property
+    def gql(self):
+        return ShopifyGraphQL(self)
 
     def get_order(self, order_id):
         response = requests.get(url=self.api('orders', order_id))

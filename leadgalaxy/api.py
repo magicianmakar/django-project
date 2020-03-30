@@ -814,12 +814,14 @@ class ShopifyStoreApi(ApiBase):
 
                 if page_info:
                     params['page_info'] = page_info
-
-                ids = utils.get_shopify_id(data.get('query'))
-                if ids:
-                    params['ids'] = [ids]
                 else:
-                    params['query'] = data.get('query')
+                    query = data.get('query')
+                    if query:
+                        ids = utils.get_shopify_id(query)
+                        if ids:
+                            params['ids'] = [ids]
+                        else:
+                            params['ids'] = store.gql.find_products_by_title(query)
 
                 rep = requests.get(
                     url=store.api('products'),
@@ -827,7 +829,6 @@ class ShopifyStoreApi(ApiBase):
                 )
 
             if not rep.ok:
-                print(rep.json())
                 return self.api_error('Shopify API Error', status=500)
 
             products = []
