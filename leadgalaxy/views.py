@@ -1381,7 +1381,11 @@ def webhook(request, provider, option):
             email = args[0]
 
             try:
-                user = User.objects.get(email__iexact=email)
+                user_id = safe_int(email)
+                if user_id is not None:
+                    user = User.objects.get(id=user_id)
+                else:
+                    user = User.objects.get(email__iexact=email)
             except:
                 return HttpResponse(f':x: User not found {email} (or duplicate accounts) {request_from.email}')
 
