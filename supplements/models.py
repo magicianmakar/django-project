@@ -201,8 +201,8 @@ class AuthorizeNetCustomer(models.Model, AuthorizeNetCustomerMixin):
 
 class LabelSize(models.Model):
     slug = models.SlugField(max_length=100)
-    height = models.DecimalField(max_digits=10, decimal_places=2)
-    width = models.DecimalField(max_digits=10, decimal_places=2)
+    height = models.DecimalField(max_digits=10, decimal_places=3)
+    width = models.DecimalField(max_digits=10, decimal_places=3)
 
     def __str__(self):
         return f'{self.height}×{self.width}'
