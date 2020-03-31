@@ -294,6 +294,34 @@ AWS_STORAGE_BUCKET_NAME = S3_STATIC_BUCKET  # Default bucket
 
 USE_WHITENOISE = os.environ.get('USE_WHITENOISE')
 
+# Django Storage
+if not DEBUG:
+    AWS_S3_SECURE_URLS = False
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_URL_PROTOCOL = ''
+    AWS_S3_CUSTOM_DOMAIN = os.environ.get('S3_CUSTOM_DOMAIN', 'd2kadg5e284yn4.cloudfront.net')
+
+    AWS_IS_GZIPPED = False
+    AWS_HEADERS = {
+        'Cache-Control': 'max-age=604800',
+    }
+    GZIP_CONTENT_TYPES = (
+        'text/css',
+        'application/javascript',
+        'application/x-javascript',
+        'text/javascript'
+    )
+
+    STATICFILES_LOCATION = 'static'
+    MEDIAFILES_LOCATION = 'media'
+
+    if not USE_WHITENOISE:
+        STATICFILES_STORAGE = 'app.storage.CachedS3BotoStorage'
+        DEFAULT_FILE_STORAGE = 'app.storage.CachedMediaS3BotoStorage'
+        STATIC_URL = "//%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, STATICFILES_LOCATION)
+
+        COMPRESS_STORAGE = 'app.storage.CachedS3BotoStorage'
+
 # Django Compressor
 COMPRESS_ENABLED = not DEBUG
 COMPRESS_OFFLINE = True
