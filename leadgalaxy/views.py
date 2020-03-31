@@ -1381,7 +1381,7 @@ def webhook(request, provider, option):
             email = args[0]
 
             try:
-                user_id = safe_int(email)
+                user_id = safe_int(email, None)
                 if user_id is not None:
                     user = User.objects.get(id=user_id)
                 else:
