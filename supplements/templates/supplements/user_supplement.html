@@ -38,7 +38,7 @@
         >
     {% endif %}
 
-    {% if request.user|can:'pls_admin.use' %}
+    {% if request.user|can:'pls.use' %}
     <input id="send_to_store" type="button" value="Send to Store" class="btn btn-primary {% if not is_approved %}disabled{% endif %}">
     {% endif %}
 

@@ -418,7 +418,11 @@ class UserSupplementView(Supplement):
                                   instance=user_supplement)
 
     def get_supplement(self, user, supplement_id):
-        return get_object_or_404(UserSupplement, id=supplement_id)
+        return get_object_or_404(
+            UserSupplement,
+            user=user.models_user,
+            id=supplement_id,
+        )
 
     def save_supplement(self, form):
         return form.save()
