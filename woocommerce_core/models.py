@@ -153,8 +153,8 @@ class WooStore(StoreBase):
 
         return order
 
-    def get_product(self, product_id):
-        return WooProduct.objects.get(source_id=product_id)
+    def get_product(self, product_id, store):
+        return WooProduct.objects.get(source_id=product_id, store=store)
 
 
 class WooProduct(ProductBase):

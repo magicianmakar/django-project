@@ -159,7 +159,7 @@ class Util:
                 product_id = line_item['product_id']
                 product = self.product_cache.get(product_id)
                 if not product:
-                    product = self.store.get_product(product_id)
+                    product = self.store.get_product(product_id, self.store)
                     self.product_cache[product_id] = product
                 else:
                     # Some data is retrieved from pl_supplement. Due to

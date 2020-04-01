@@ -939,8 +939,8 @@ class ShopifyStore(StoreBase):
         response = requests.get(url=self.api('orders', order_id))
         return response.json()['order']
 
-    def get_product(self, product_id):
-        return ShopifyProduct.objects.all().get(shopify_id=product_id)
+    def get_product(self, product_id, store):
+        return ShopifyProduct.objects.all().get(shopify_id=product_id, store=store)
 
     def get_api_url(self, hide_keys=False):
         url = self.api_url

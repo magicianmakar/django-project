@@ -169,8 +169,8 @@ class GrooveKartStore(StoreBase):
 
         return order
 
-    def get_product(self, product_id):
-        return GrooveKartProduct.objects.get(source_id=product_id)
+    def get_product(self, product_id, store):
+        return GrooveKartProduct.objects.get(source_id=product_id, store=store)
 
 
 class GrooveKartProduct(ProductBase):

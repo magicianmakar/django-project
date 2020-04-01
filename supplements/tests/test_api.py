@@ -92,6 +92,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
             user=self.user,
             shopify_id='13213123',
             user_supplement=self.user_supplement,
+            store=self.store,
         )
 
         self.url = '/api/supplements/make-payment'
