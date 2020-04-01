@@ -71,7 +71,7 @@ class FacebookAccess(models.Model):
             settings.FACEBOOK_APP_ID,
             settings.FACEBOOK_APP_SECRET,
             self.access_token,
-            api_version='v4.0'
+            api_version='v5.0'
         )
 
     @property
