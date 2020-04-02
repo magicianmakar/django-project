@@ -1,5 +1,3 @@
-from django.contrib.auth.models import User
-
 from django.utils import timezone
 
 import arrow
@@ -16,8 +14,8 @@ from shopify_subscription.models import ShopifySubscription
 class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
         # Disable affilaites
-        for u in User.objects.filter(profile__config__contains="_disable_affiliate"):
-            u.set_config('_disable_affiliate', False)
+        for u in UserProfile.objects.filter(config__contains="_disable_affiliate"):
+            u.del_config_values('_disable_affiliate')
 
         # Expired plans
         self.stdout.write('Change plan of expired profiles', self.style.HTTP_INFO)
