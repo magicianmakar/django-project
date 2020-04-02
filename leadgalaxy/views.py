@@ -1360,19 +1360,30 @@ def webhook(request, provider, option):
                 if safe_int(user_id):
                     user = User.objects.get(id=user_id)
                 else:
-                    user = User.objects.get(email__iexact=user_id)
+                    try:
+                        user = User.objects.get(email__iexact=user_id)
+                    except User.MultipleObjectsReturned:
+                        return HttpResponse(':x: Multiple users with same email found, use user ID instead of email')
 
-                if command == 'enable':
-                    user.set_config('_disable_affiliate', False)
-                elif command == 'disable':
-                    user.set_config('_disable_affiliate', True)
+                if command in ['enable', 'disable']:
+                    if command == 'enable':
+                        user.set_config('_disable_affiliate', False)
+                    elif command == 'disable':
+                        user.set_config('_disable_affiliate', True)
 
-                elif command == 'enable_always':
-                    user.set_config('_disable_affiliate_permanent', False)
-                elif command == 'disable_always':
-                    user.set_config('_disable_affiliate_permanent', True)
+                    return HttpResponse(f':ok: Affiliate {command}d for {user.email}')
 
-                return HttpResponse(f'Affiliate {command}d for {user_id}')
+                elif command in ['enable_always', 'disable_always']:
+                    if command == 'enable_always':
+                        user.models_user.set_config('_disable_affiliate_permanent', False)
+                    elif command == 'disable_always':
+                        user.models_user.set_config('_disable_affiliate_permanent', True)
+
+                    if user.models_user != user:
+                        return HttpResponse(f':ok: Affiliate {command} for parent account {user.models_user.email}')
+                    else:
+                        return HttpResponse(f':ok: Affiliate {command} for {user.email}')
+
             else:
                 return HttpResponse(':x: Unknown Command: {} {}'.format(request.POST['command'], command))
 
