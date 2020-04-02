@@ -505,7 +505,7 @@ class MySupplements(LoginRequiredMixin, View):
             {'title': 'My Supplements', 'url': reverse('pls:my_supplements')},
         ]
 
-        supplements = [i for i in request.user.pl_supplements.all()]
+        supplements = [i for i in request.user.models_user.pl_supplements.all()]
 
         context = {
             'breadcrumbs': breadcrumbs,
