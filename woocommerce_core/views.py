@@ -82,7 +82,7 @@ def product_alerts(request):
         product = get_object_or_404(WooProduct, id=product)
         permissions.user_can_view(request.user, product)
 
-    post_per_page = settings.ITEMS_PER_PAGE
+    post_per_page = safe_int(request.user.models_user.get_config('_woo_alerts_ppp')) or settings.ITEMS_PER_PAGE
     page = safe_int(request.GET.get('page'), 1)
 
     store = utils.get_store_from_request(request)
@@ -178,7 +178,7 @@ def product_alerts(request):
                     c['woo_value'] = variants[index]['price']
                 else:
                     c['woo_value_label'] = "Not Found"
-            elif len(variants) == 0 or variant_id < 0:
+            elif (len(variants) == 0 or variant_id < 0) and 'price' in p:
                 c['woo_value'] = p['price']
             else:
                 c['woo_value_label'] = "Not Found"
