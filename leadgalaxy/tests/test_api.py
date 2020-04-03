@@ -60,7 +60,7 @@ class ProductsApiTestCase(BaseTestCase):
             store=self.store, user=self.user, shopify_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         data = {'product': product.id, 'store': self.store.id, 'shopify': 12345670001}
@@ -81,7 +81,7 @@ class ProductsApiTestCase(BaseTestCase):
             store=self.store, user=self.user, shopify_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         data = {'product': product.id}
@@ -110,7 +110,7 @@ class ProductsApiTestCase(BaseTestCase):
             store=self.store, user=self.user, shopify_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         data = {'product': product.id}
@@ -222,7 +222,7 @@ class ProductsApiTestCase(BaseTestCase):
             store=self.store, user=self.user, shopify_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         supplier = f.ProductSupplierFactory(product=product)
@@ -246,7 +246,7 @@ class ProductsApiTestCase(BaseTestCase):
             store=self.store, user=self.user, shopify_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         supplier1 = f.ProductSupplierFactory(product=product)

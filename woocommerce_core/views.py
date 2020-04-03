@@ -1202,7 +1202,7 @@ class OrderPlaceRedirectView(RedirectView):
             product = self.request.GET['product']
 
             if safe_int(product):
-                product = 'https://www.aliexpress.com/item//{}.html'.format(product)
+                product = 'https://www.aliexpress.com/item/{}.html'.format(product)
 
         if not product:
             return Http404("Product or Order not set")

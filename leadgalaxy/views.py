@@ -4673,7 +4673,7 @@ def orders_place(request):
         product = request.GET['product']
 
         if safe_int(product):
-            product = 'https://www.aliexpress.com/item//{}.html'.format(product)
+            product = 'https://www.aliexpress.com/item/{}.html'.format(product)
 
     if not product:
         return Http404("Product or Order not set")

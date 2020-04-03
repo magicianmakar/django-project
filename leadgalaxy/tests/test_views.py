@@ -835,10 +835,10 @@ class BulkOrderTestCase(BaseTestCase):
             store=self.store, user=self.user, shopify_id=1565445881899,
             data="""{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }, "title": "Mala Prayer Bracelet"}""")
 
-        supplier = f.ProductSupplierFactory(product=self.product, product_url='https://www.aliexpress.com/item//12345467890.html')
+        supplier = f.ProductSupplierFactory(product=self.product, product_url='https://www.aliexpress.com/item/12345467890.html')
         self.product.default_supplier = supplier
         self.product.save()
 

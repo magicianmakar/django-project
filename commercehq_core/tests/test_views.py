@@ -816,7 +816,7 @@ class ApiTestCase(BaseTestCase):
             "is_draft": "",
             "store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         def retrieve():
@@ -840,7 +840,7 @@ class ApiTestCase(BaseTestCase):
             store=self.store, user=self.user, source_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         data = {'product': product.id}
@@ -869,7 +869,7 @@ class ApiTestCase(BaseTestCase):
             store=self.store, user=self.user, source_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         data = {'product': product.id}
@@ -985,7 +985,7 @@ class ApiTestCase(BaseTestCase):
             store=self.store, user=self.user, source_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         supplier = CommerceHQSupplierFactory(product=product)
@@ -1014,7 +1014,7 @@ class ApiTestCase(BaseTestCase):
             store=self.store, user=self.user, source_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item//12345467890.html"
+                "url": "https://www.aliexpress.com/item/12345467890.html"
             }}''')
 
         supplier1 = CommerceHQSupplierFactory(product=product)

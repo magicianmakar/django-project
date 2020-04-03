@@ -673,7 +673,7 @@ class CommerceHQSupplier(SupplierBase):
         source_id = self.get_source_id()
         if source_id:
             if self.is_aliexpress:
-                return 'https://www.aliexpress.com/item//{}.html'.format(source_id)
+                return 'https://www.aliexpress.com/item/{}.html'.format(source_id)
             if self.is_ebay:
                 return 'https://www.ebay.com/itm/{}'.format(source_id)
 
