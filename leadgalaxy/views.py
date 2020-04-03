@@ -4697,7 +4697,7 @@ def orders_place(request):
     if models_user.id == 14624 and not models_user.get_config('admitad_site_id'):
         disable_affiliate = True
 
-    if models_user.get_config('_disable_affiliate_permanent') or settings.DISABLE_ALIEXPRESS_AFFILIATE:
+    if models_user.get_config('_disable_affiliate_permanent', settings.DISABLE_ALIEXPRESS_AFFILIATE):
         disable_affiliate = True
 
     if not disable_affiliate:
