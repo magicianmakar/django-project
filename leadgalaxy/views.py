@@ -1371,16 +1371,21 @@ def webhook(request, provider, option):
                     elif command == 'disable':
                         user.set_config('_disable_affiliate', True)
 
-                    return HttpResponse(f':ok: Affiliate {command}d for {user.email}')
+                    if user.models_user != user:
+                        return HttpResponse(f':ok: Affiliate {command} for *sub user* {user.email} '
+                                            f':warning: Parent account {user.models_user.email} must be set separately')
+                    else:
+                        return HttpResponse(f':ok: Affiliate {command} for {user.email}')
 
                 elif command in ['enable_always', 'disable_always']:
                     if command == 'enable_always':
-                        user.models_user.set_config('_disable_affiliate_permanent', False)
+                        user.set_config('_disable_affiliate_permanent', False)
                     elif command == 'disable_always':
-                        user.models_user.set_config('_disable_affiliate_permanent', True)
+                        user.set_config('_disable_affiliate_permanent', True)
 
                     if user.models_user != user:
-                        return HttpResponse(f':ok: Affiliate {command} for parent account {user.models_user.email}')
+                        return HttpResponse(f':ok: Affiliate {command} for sub user {user.email} '
+                                            f':warning: Parent account {user.models_user.email} must be set separately')
                     else:
                         return HttpResponse(f':ok: Affiliate {command} for {user.email}')
 

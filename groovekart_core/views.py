@@ -926,7 +926,7 @@ class OrderPlaceRedirectView(RedirectView):
 
         disable_affiliate = self.request.user.get_config('_disable_affiliate', False)
 
-        if self.request.user.models_user.get_config('_disable_affiliate_permanent') or settings.DISABLE_ALIEXPRESS_AFFILIATE:
+        if self.request.user.get_config('_disable_affiliate_permanent', settings.DISABLE_ALIEXPRESS_AFFILIATE):
             disable_affiliate = True
 
         redirect_url = False
