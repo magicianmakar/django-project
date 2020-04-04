@@ -131,6 +131,8 @@ def product_save(req_data, user_id):
         try:
             product = WooProduct(store=store, user=user.models_user)
             product.update_data(data)
+            user_supplement_id = json.loads(data).get('user_supplement_id')
+            product.user_supplement_id = user_supplement_id
             permissions.user_can_add(user, product)
             product.save()
 
