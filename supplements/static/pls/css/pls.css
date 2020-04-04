@@ -86,17 +86,18 @@
   margin-top: 0 !important;
 }
 
-.jumbotron.label-banner, .label-info-box {
+.label-info-box {
   margin-top: 20px;
   background-color: #ccc;
 }
 
-.jumbotron.label-banner h1 {
-  font-size: 40px;
+.panel.panel-info.label-banner {
+  border-color: #93c47d;
 }
 
-.jumbotron.label-banner p {
-  font-size: 16px;
+.panel-info>.panel-heading.label-banner {
+  border-color: #93c47d;
+  background-color: #93c47d;
 }
 
 .btn-primary.disabled {
