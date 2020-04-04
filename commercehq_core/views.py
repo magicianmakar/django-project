@@ -1176,7 +1176,7 @@ class OrderPlaceRedirectView(RedirectView):
         ali_api_key, ali_tracking_id, user_ali_credentials = get_aliexpress_credentials(self.request.user.models_user)
         admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
 
-        if self.request.user.get_config('_disable_affiliate_permanent', settings.DISABLE_ALIEXPRESS_AFFILIATE):
+        if self.request.user.get_config('_disable_affiliate_permanent'):
             disable_affiliate = True
 
         redirect_url = False
