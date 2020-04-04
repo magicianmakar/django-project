@@ -457,6 +457,49 @@ class ProductTestCase(PLSBaseTestCase):
             self.assertRedirects(response, reverse('pls:index'))
 
 
+class ProductEditTestCase(PLSBaseTestCase):
+    def get_url(self):
+        kwargs = {'supplement_id': self.supplement.id}
+        return reverse('pls:product_edit', kwargs=kwargs)
+
+    def test_login(self):
+        self.do_test_login()
+
+    def test_get(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_error(self):
+        self.client.force_login(self.user)
+        response = self.client.post(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        self.client.force_login(self.user)
+        self.supplement.images.create(
+            product=self.supplement,
+            position=0,
+            image_url='https://example.com/image',
+        )
+        data = dict(
+            title="Changed title",
+            description="Changed description",
+            category=self.user_supplement.category,
+            tags=self.user_supplement.tags,
+            shipstation_sku='test-sku',
+            cost_price='20.00',
+            wholesale_price='10.00',
+            label_size=self.label_size.id,
+            mockup_type=self.mockup_type.id,
+            product_information='Changed Information',
+        )
+        with patch('product_common.lib.views.aws_s3_upload',
+                   return_value='http://example.com/test'):
+            response = self.client.post(self.get_url(), data=data)
+            self.assertRedirects(response, reverse('pls:index'))
+
+
 class OrderListTestCase(PLSBaseTestCase):
     def get_url(self):
         return reverse('pls:order_list')

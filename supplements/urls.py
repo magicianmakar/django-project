@@ -9,6 +9,10 @@ urlpatterns = [
         supplements.views.Product.as_view(),
         name='product'),
 
+    url(r'^supplement/(?P<supplement_id>[0-9]+)/edit$',
+        supplements.views.ProductEdit.as_view(),
+        name='product_edit'),
+
     url(r'^supplement/(?P<supplement_id>[0-9]+)$',
         supplements.views.Supplement.as_view(),
         name='supplement'),

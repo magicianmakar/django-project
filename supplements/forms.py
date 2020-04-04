@@ -54,11 +54,12 @@ class PLSupplementForm(forms.ModelForm):
 
         widgets = {
             'tags': forms.TextInput(),
+            'shipping_countries': forms.SelectMultiple(attrs={'data-placeholder': 'Select shipping countries'})
         }
 
     template = forms.FileField()
     thumbnail = forms.ImageField()
-    authenticity_certificate = forms.FileField()
+    authenticity_certificate = forms.FileField(required=False)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -83,6 +84,13 @@ class PLSupplementForm(forms.ModelForm):
             allowed_extensions=['pdf']
         )
         extension_validator(cert)
+
+
+class PLSupplementEditForm(PLSupplementForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['template'].required = False
+        self.fields['thumbnail'].required = False
 
 
 class OrderFilterForm(forms.Form):

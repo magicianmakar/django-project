@@ -86,15 +86,7 @@
       {{ form.shipping_countries.errors }}
       <label class="col-sm-2 control-label">Shipping Countries:</label>
       <div class="col-sm-5">
-        <select id="id_{{ form.shipping_countries.name }}"
-                name="{{ form.shipping_countries.name }}"
-                class='form-control'
-                data-placeholder="Select shipping countries"
-                multiple>
-          {% for value, text in form.shipping_countries.field.choices %}
-          <option value="{{ value }}">{{ text }}</option>
-          {% endfor %}
-        </select>
+        {{ form.shipping_countries|add_class:'form-control' }}
       </div>
     </div>
 
@@ -102,14 +94,7 @@
       {{ form.label_size.errors }}
       <label class="col-sm-2 control-label">Label Size:</label>
       <div class="col-sm-5">
-        <select id="id_{{ form.label_size.name }}"
-                name="{{ form.label_size.name }}"
-                class='form-control'
-                data-placeholder="Select label sizes">
-          {% for value, text in form.label_size.field.choices %}
-          <option value="{{ value }}">{{ text }}</option>
-          {% endfor %}
-        </select>
+        {{ form.label_size|add_class:'form-control' }}
       </div>
     </div>
 
@@ -117,14 +102,7 @@
       {{ form.mockup_type.errors }}
       <label class="col-sm-2 control-label">Mockup Style:</label>
       <div class="col-sm-5">
-        <select id="id_{{ form.mockup_type.name }}"
-        name="{{ form.mockup_type.name }}"
-        class='form-control'
-        data-placeholder="Select label sizes">
-        {% for value, text in form.mockup_type.field.choices %}
-        <option value="{{ value }}">{{ text }}</option>
-        {% endfor %}
-      </select>
+        {{ form.mockup_type|add_class:'form-control' }}
     </div>
     </div>
 
@@ -177,7 +155,7 @@
 
     <div class="form-group" id="product-buttons">
       <div class="col-sm-offset-2 col-sm-7">
-        <input type="submit" value="Save" class="btn btn-primary">
+        <input type="submit" value="Save" class="btn btn-primary add-loader" data-loading-text="Saving...">
         <input type="reset" value="Reset" class="btn btn-default">
       </div>
     </div>

@@ -19,7 +19,7 @@
         </div>
         {% if pls_admin %}
         <div class="col-md-6">
-          <a href="{% url 'admin:supplements_plsupplement_change' item.id %}" class="btn btn-xs btn-outline btn-default"> Admin Edit <i class="fa fa-edit"></i> </a>
+          <a href="{% url 'pls:product_edit' item.id %}" class="btn btn-xs btn-outline btn-default"> Admin Edit <i class="fa fa-edit"></i> </a>
         </div>
         {% endif %}
       </div>

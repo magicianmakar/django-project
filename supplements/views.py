@@ -49,6 +49,7 @@ from .forms import (
     OrderFilterForm,
     PayoutFilterForm,
     PayoutForm,
+    PLSupplementEditForm,
     PLSupplementForm,
     UploadJSONForm,
     UserSupplementForm
@@ -99,30 +100,90 @@ class Product(common_views.ProductAddView):
             {'title': 'Add New Supplement', 'url': reverse('pls:product')},
         ]
 
-    def process_valid_form(self, form):
+    def process_valid_form(self, form, pl_supplement=None):
         request = self.request
         user_id = request.user.id
 
-        template = request.FILES['template']
-        template_url = upload_image_to_aws(template, 'supplement_label', user_id)
+        template = request.FILES.get('template', None)
+        thumbnail = request.FILES.get('thumbnail', None)
 
-        thumbnail = request.FILES['thumbnail']
-        thumbnail_url = upload_image_to_aws(thumbnail, 'supplement_image', user_id)
+        if template:
+            template_url = upload_image_to_aws(template, 'supplement_label', user_id)
+        else:
+            template_url = pl_supplement.label_template_url
 
-        certificate = request.FILES['authenticity_certificate']
-        certificate_url = upload_image_to_aws(certificate, 'pls_certificate', user_id)
+        if thumbnail:
+            thumbnail_url = upload_image_to_aws(thumbnail, 'supplement_image', user_id)
+        else:
+            thumbnail_url = pl_supplement.images.get(position=0).image_url
 
         pl_supplement = form.save(commit=False)
+        certificate = request.FILES.get('authenticity_certificate', None)
+        if certificate:
+            certificate_url = upload_image_to_aws(certificate, 'pls_certificate', user_id)
+            pl_supplement.authenticity_certificate_url = certificate_url
+
         pl_supplement.label_template_url = template_url
-        pl_supplement.authenticity_certificate_url = certificate_url
         pl_supplement.save()
         form.save_m2m()
 
+        pl_supplement.images.all().delete()
         pl_supplement.images.create(
             product=pl_supplement,
             position=0,
             image_url=thumbnail_url,
         )
+
+
+class ProductEdit(Product):
+    form = PLSupplementEditForm
+    supplement = None
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get_supplement(self, supplement_id):
+        return get_object_or_404(PLSupplement, id=supplement_id)
+
+    def get_breadcrumbs(self, supplement_id):
+        kwargs = {'supplement_id': supplement_id}
+        return [
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Edit Supplement', 'url': reverse('pls:product_edit', kwargs=kwargs)},
+        ]
+
+    def get(self, request, supplement_id):
+        self.supplement = self.get_supplement(supplement_id)
+        form_data = self.supplement.to_dict()
+
+        form_data['shipping_countries'] = self.supplement.shipping_countries.all()
+        form_data['label_size'] = self.supplement.label_size
+        form_data['mockup_type'] = self.supplement.mockup_type
+        form_data['product_information'] = self.supplement.product_information
+        form_data['authenticity_certificate_url'] = self.supplement.authenticity_certificate_url
+
+        context = {
+            'breadcrumbs': self.get_breadcrumbs(supplement_id),
+            'form': self.form(initial=form_data),
+        }
+        return render(request, self.get_template(), context)
+
+    def post(self, request, supplement_id):
+        self.supplement = self.get_supplement(supplement_id)
+        form = self.form(request.POST, request.FILES, instance=self.supplement)
+        if form.is_valid():
+            self.process_valid_form(form, self.supplement)
+            return redirect(self.get_redirect_url())
+
+        context = {
+            'breadcrumbs': self.get_breadcrumbs(supplement_id),
+            'form': form,
+        }
+        return render(request, self.get_template(), context)
 
 
 class SendToStoreMixin(common_lib_views.SendToStoreMixin):
