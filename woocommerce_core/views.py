@@ -1316,7 +1316,7 @@ class OrderPlaceRedirectView(RedirectView):
                 'store_type': 'WooCommerce',
                 'plan': plan.title,
                 'plan_id': plan.id,
-                'affiliate': affiliate,
+                'affiliate': affiliate if not disable_affiliate else 'disables',
                 'sub_user': self.request.user.is_subuser,
                 'total': order_data['total'],
                 'quantity': order_data['quantity'],

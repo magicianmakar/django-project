@@ -4812,7 +4812,7 @@ def orders_place(request):
             'store_type': 'Shopify',
             'plan': plan.title,
             'plan_id': plan.id,
-            'affiliate': affiliate,
+            'affiliate': affiliate if not disable_affiliate else 'disables',
             'sub_user': request.user.is_subuser,
             'extension_version': request.user.get_config('extension_version'),
             'total': order_data['total'],
