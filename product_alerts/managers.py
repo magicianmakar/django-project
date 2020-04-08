@@ -322,8 +322,10 @@ class ShopifyProductChangeManager(ProductChangeManager):
                     self.markup_rules
                 )
 
-                if new_compare_at_price > 1000.0:
-                    print(f'Change {self.product_change.id} wrong comapre price {current_compare_at_price} => {new_compare_at_price}')
+                if safe_float(new_compare_at_price) > 1000.0:
+                    print(f'Change {self.product_change.id} wrong comapre price {current_compare_at_price} => {new_compare_at_price} | '
+                          f'{current_price} => {new_price}')
+
                     new_compare_at_price = 0.0
 
                 if new_price or new_compare_at_price is not None:
