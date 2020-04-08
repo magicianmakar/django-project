@@ -18,7 +18,11 @@
 <hr />
 
 <div>
-  {% include "supplements/partials/label_filter_form.html" %}
+  <form role="form" autocomplete="off">
+    {% include "supplements/partials/label_filter_form.html" %}
+    <input type="submit" class="btn btn-primary" value="Filter" />
+    <input type="button" class="btn btn-default pls-reset-btn" value="Clear" />
+  </form>
 </div>
 
 <div class='label-count'>

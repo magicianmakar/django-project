@@ -146,6 +146,12 @@ class LabelFilterForm(forms.Form):
     date = forms.DateField(required=False)
 
 
+class AllLabelFilterForm(forms.Form):
+    label_user_id = forms.IntegerField(required=False)
+    product_sku = forms.CharField(required=False)
+    title = forms.CharField(required=False)
+
+
 class BillingForm(forms.Form):
     name = forms.CharField()
     cc_number = forms.CharField(max_length=16)

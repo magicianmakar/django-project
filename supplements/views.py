@@ -2,8 +2,9 @@ from io import BytesIO
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import transaction
-from django.http import HttpResponse
+from django.contrib.auth.models import User
+from django.db import transaction, models
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -44,6 +45,7 @@ from .forms import (
     BillingForm,
     CommentForm,
     LabelFilterForm,
+    AllLabelFilterForm,
     LineFilterForm,
     MyOrderFilterForm,
     OrderFilterForm,
@@ -602,6 +604,30 @@ class AllLabels(MyLabels):
             {'title': 'All Labels', 'url': reverse('pls:all_labels')},
         ]
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        form = AllLabelFilterForm(self.request.GET)
+        if form.is_valid():
+            label_user_id = form.cleaned_data['label_user_id']
+            if label_user_id:
+                queryset = queryset.filter(user_supplement__user_id=label_user_id)
+
+            product_sku = form.cleaned_data['product_sku']
+            if product_sku:
+                queryset = queryset.filter(user_supplement__pl_supplement__shipstation_sku__icontains=product_sku)
+
+            title = form.cleaned_data['title']
+            if title:
+                queryset = queryset.filter(user_supplement__pl_supplement__title__icontains=title)
+
+        return queryset
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['all_label_form'] = AllLabelFilterForm(self.request.GET)
+        return context
+
 
 def upload_supplement_object_to_aws(user_supplement, obj, name):
     # Randomize filename in order to not overwrite an existing file
@@ -1104,3 +1130,36 @@ class DownloadJSON(LoginRequiredMixin, View):
         response = HttpResponse(data, content_type='application/json')
         response['Content-Disposition'] = 'attachment; filename="supplements.json"'
         return response
+
+
+class Autocomplete(View):
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get(self, request, target):
+        q = request.GET.get('query', request.GET.get('term', '')).strip()
+        if not q:
+            return JsonResponse({'query': q, 'suggestions': []}, safe=False)
+
+        if target == 'users':
+            results = []
+            queryset = User.objects.annotate(
+                count=models.Count('pl_supplements__labels'),
+                full_name=models.functions.Concat('first_name', models.Value(' '), 'last_name')
+            ).filter(count__gt=0)
+            queryset = queryset.filter(models.Q(email__icontains=q) | models.Q(full_name__icontains=q))
+
+            for result in queryset[:10]:
+                results.append({
+                    'value': result.full_name,
+                    'data': result.id
+                })
+
+            return JsonResponse({'query': q, 'suggestions': results}, safe=False)
+
+        else:
+            return JsonResponse({'error': 'Unknown target'})

@@ -738,3 +738,32 @@ class DownloadJSONTestCase(PLSBaseTestCase):
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content)
         self.assertEqual(content[0]['title'], 'Fish Oil')
+
+
+class AutocompleteTestCase(PLSBaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.user2 = UserFactory(username='test2')
+        self.password = 'test2'
+        self.user2.set_password(self.password)
+
+        self.user2.first_name = 'Test'
+        self.user2.last_name = 'User 2'
+        self.user2.save()
+        self.user.first_name = 'Test'
+        self.user.last_name = 'User'
+        self.user.save()
+
+    def get_url(self):
+        return reverse('pls:autocomplete', kwargs={'target': 'users'})
+
+    def test_return_only_users_with_supplements(self):
+        self.client.force_login(self.user)
+        response = self.client.get(f"{self.get_url()}?query=Test User 2")
+        result = response.json()
+        self.assertEqual(len(result['suggestions']), 0)
+
+        response = self.client.get(f"{self.get_url()}?query=Test User")
+        result = response.json()
+        self.assertEqual(len(result['suggestions']), 1)

@@ -76,4 +76,9 @@ urlpatterns = [
     url(r'^download-json$',
         supplements.views.DownloadJSON.as_view(),
         name='download_json'),
+
+    url(r'^autocomplete/(?P<target>[a-z-]+)$',
+        supplements.views.Autocomplete.as_view(),
+        name='autocomplete'),
+
 ]
