@@ -1,5 +1,6 @@
-import simplejson as json
+import copy
 import requests
+import simplejson as json
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -377,9 +378,13 @@ class ShopifyProductChangeManager(ProductChangeManager):
             self.product.update_data(product_data)
         except:
             if r.status_code not in [401, 402, 403, 404, 429]:
+                _api_data = copy.deepcopy(api_product_data)
+                _api_data.update(dict(body_html=None, images=None, image=None))
+
                 raven_client.captureException(extra={
                     'rep': r.text,
-                    'data': api_product_data,
+                    'data': _api_data,
+                    'changes': json.loads(self.product_change.data),
                 }, tags={
                     'product': self.product.id,
                     'store': self.product.store,
