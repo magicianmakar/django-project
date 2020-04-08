@@ -321,7 +321,12 @@ class ShopifyProductChangeManager(ProductChangeManager):
                     self.config['price_update_method'],
                     self.markup_rules
                 )
-                if new_price:
+
+                if new_compare_at_price > 1000.0:
+                    print(f'Change {self.product_change.id} wrong comapre price {current_compare_at_price} => {new_compare_at_price}')
+                    new_compare_at_price = 0.0
+
+                if new_price or new_compare_at_price is not None:
                     if self.config['price_update_for_increase']:
                         if new_price > current_price:
                             self.product_data_changed = True
