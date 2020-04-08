@@ -356,7 +356,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         return supplement
 
     def save(self, request):
-        user = request.user
+        user = request.user.models_user
         form = self.get_form()
         if form.is_valid():
             new_user_supplement = self.save_supplement(form)
