@@ -433,7 +433,12 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
         if form.is_valid():
             order_number = form.cleaned_data['order_number']
             if order_number:
-                queryset = queryset.filter(pls_order__order_number=order_number)
+                try:
+                    order_number, order_id = order_number.split('-')
+                except ValueError:
+                    queryset = queryset.filter(pls_order__order_number=order_number)
+                else:
+                    queryset = queryset.filter(pls_order_id=order_id)
 
             status = form.cleaned_data['status']
             if status:
