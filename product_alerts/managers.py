@@ -385,6 +385,8 @@ class ShopifyProductChangeManager(ProductChangeManager):
                     'rep': r.text,
                     'data': _api_data,
                     'changes': json.loads(self.product_change.data),
+                    'product_change_id': self.product_change.id,
+                    'config': self.config,
                 }, tags={
                     'product': self.product.id,
                     'store': self.product.store,
