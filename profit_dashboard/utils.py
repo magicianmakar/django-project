@@ -1,5 +1,4 @@
 import arrow
-import pytz
 import re
 import simplejson as json
 
@@ -7,7 +6,6 @@ from datetime import date
 from collections import OrderedDict
 
 from django.db.models import Sum
-from django.utils import timezone
 
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.models import ShopifyOrder
@@ -543,12 +541,12 @@ def get_date_range(request, store_timezone):
         try:
             daterange_list = date_range.split('-')
             # Get timezone from user store, if it doesn't exist, we save it the first time they access PD
-            tz = timezone.now().astimezone(pytz.timezone(store_timezone)).strftime(' %z')
-
-            start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z')
+            start_tz = arrow.get(daterange_list[0], r'MM/DD/YYYY').to(store_timezone).format(' Z')
+            start = arrow.get(daterange_list[0] + start_tz, r'MM/DD/YYYY Z')
 
             if len(daterange_list) > 1 and daterange_list[1]:
-                end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                end_tz = arrow.get(daterange_list[1], r'MM/DD/YYYY').to(store_timezone).format(' Z')
+                end = arrow.get(daterange_list[1] + end_tz, r'MM/DD/YYYY Z')
                 end = end.span('day')[1]
             else:
                 end = arrow.now()

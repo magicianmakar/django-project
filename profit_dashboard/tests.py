@@ -3,14 +3,17 @@ import uuid
 from datetime import timedelta
 from dateutil.parser import parse as date_parser
 from random import randint
+from urllib.parse import urlencode
 
 import factory
 import factory.fuzzy
 
 from django.test import tag
-from lib.test import BaseTestCase
+from django.test.client import RequestFactory
+from django.urls import reverse
 from django.utils import timezone
 from django.db.models import Sum
+from lib.test import BaseTestCase
 from unittest.mock import patch, Mock
 
 from facebook_business.adobjects.user import User as FBUser
@@ -22,7 +25,7 @@ from shopify_orders.models import ShopifyOrder
 from shopify_orders.tests.factories import ShopifyOrderFactory
 
 from .models import AliexpressFulfillmentCost
-from .utils import get_facebook_ads, get_profits
+from .utils import get_facebook_ads, get_profits, get_date_range
 
 
 NOW = timezone.now()
@@ -188,3 +191,15 @@ class FulfillmentCostTestCase(BaseTestCase):
         # total_fulfillment_cost = AliexpressFulfillmentCost.objects.all().aggregate(total=Sum('total_cost'))['total']
         # self.assertAlmostEqual(self.totals['fulfillment_cost'], total_fulfillment_cost)
         pass
+
+
+class SearchTestCase(BaseTestCase):
+    def setUp(self):
+        params = (('date_range', '03/01/2020-04/01/2020'),)
+        self.request = RequestFactory().get(f"{reverse('profit_dashboard.views.index')}?{urlencode(params)}")
+
+    def test_sould_apply_daylight_savings(self):
+        store_timezone = 'Europe/Paris'
+        start, end = get_date_range(self.request, store_timezone)
+        self.assertEqual(start.strftime('%z'), '+0100')
+        self.assertEqual(end.strftime('%z'), '+0200')
