@@ -615,7 +615,7 @@ class AllLabels(MyLabels):
 
             product_sku = form.cleaned_data['product_sku']
             if product_sku:
-                queryset = queryset.filter(user_supplement__pl_supplement__shipstation_sku__icontains=product_sku)
+                queryset = queryset.filter(user_supplement__pl_supplement__shipstation_sku__iexact=product_sku)
 
             title = form.cleaned_data['title']
             if title:
