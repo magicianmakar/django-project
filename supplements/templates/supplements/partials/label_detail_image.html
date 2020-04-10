@@ -44,7 +44,7 @@
           </div>
 
           {% if label.current_label_of %}
-          {% if label.user_supplement.user.id == request.user.id %}
+          {% if label.user_supplement.user.models_user == request.user.models_user %}
           <div class="col-md-6">
             <button {% if label.status != label.APPROVED %}disabled{% endif %}
                     id="send_to_store"
