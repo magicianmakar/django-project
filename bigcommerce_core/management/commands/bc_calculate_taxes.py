@@ -92,10 +92,8 @@ class Command(DropifiedBaseCommand):
     def get_monthly_revenue(user):
         group_plan = user.profile.plan
         monthly_price = 0
-        if group_plan.payment_interval == 'monthly':
+        if group_plan.monthly_price:
             monthly_price = group_plan.monthly_price
-        if group_plan.payment_interval == 'yearly':
-            monthly_price = group_plan.monthly_price / 12
 
         total_stores = user.profile.get_stores_count()
         if total_stores > 0:
