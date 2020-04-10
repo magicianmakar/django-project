@@ -126,9 +126,8 @@
             shop = shop_url.match(/(?:https?:\/\/)?(?:[^:]*:[^@]*@)?([^\/\.]+)(?:\.myshopify\.com)?/);
         }
         if (store_type === 'bigcommerce') {
-            shop = shop_url.match(/(?:https?:\/\/)?(?:[^:]*:[^@]*@)?([^\/\.]+)(?:\.mybigcommerce\.com)?/);
-        }
-        if (!shop || shop.length != 2) {
+            install_url = 'https://' + shop_url + '/manage/marketplace/apps/' + bigcommerce_app_id;
+        } else if (!shop || shop.length != 2) {
             swal('Add Store', 'Store URL is not correct!', 'error');
             return;
         } else {
@@ -138,9 +137,7 @@
         if (store_type === 'shopify') {
             install_url = '/shopify/install/' + shop;
         }
-        if (store_type === 'bigcommerce') {
-            install_url = 'https://' + shop + '.mybigcommerce.com/manage/marketplace/apps/' + bigcommerce_app_id;
-        }
+
         if($('.add-store-btn').data('extra')) {
             swal({
                 title: "Additional Store",
