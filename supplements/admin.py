@@ -45,6 +45,7 @@ class UserSupplementAdmin(admin.ModelAdmin):
         'pl_supplement',
         'price',
         'compare_at_price',
+        'created_at',
     )
     raw_id_fields = ('user', 'pl_supplement')
 

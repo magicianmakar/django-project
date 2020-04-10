@@ -55,6 +55,8 @@ class ShippingGroup(models.Model):
 
 
 class UserSupplement(UserSupplementMixin, models.Model):
+    class Meta:
+        ordering = ['-pk']
     title = models.CharField(max_length=200)
     description = models.TextField()
     category = models.CharField(max_length=200)
@@ -74,6 +76,7 @@ class UserSupplement(UserSupplementMixin, models.Model):
                                          on_delete=models.SET_NULL,
                                          related_name='current_label_of',
                                          null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title
