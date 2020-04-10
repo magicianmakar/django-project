@@ -28,6 +28,7 @@ class UserSupplementForm(forms.ModelForm):
     image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
+    mockup_data = forms.CharField(widget=forms.HiddenInput, required=False)
 
 
 class CommentForm(forms.Form):

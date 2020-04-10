@@ -142,14 +142,18 @@ class SupplementsApi(ApiResponseMixin, View):
         image_data = data['image_data_url']
         mockup_type = data['mockup_slug']
         label_image = data_url_to_pil_image(image_data)
-        bottle_mockup = get_mockup(label_image, mockup_type)
-        image_fp = pil_to_fp(bottle_mockup)
-        image_fp.seek(0)
-        image_fp.name = 'mockup.png'
+        mockups = get_mockup(label_image, mockup_type)
 
-        img_data = image_fp.getvalue()
-        data = base64.b64encode(img_data)
-        image_data = data.decode()
-        data_url = f'data:image/jpeg;base64,{image_data}'
+        mockup_data = {}
+        for key, mockup in mockups.items():
+            image_fp = pil_to_fp(mockup)
+            image_fp.seek(0)
+            image_fp.name = f'{key}.png'
 
-        return self.api_success({'data_url': data_url})
+            img_data = image_fp.getvalue()
+            data = base64.b64encode(img_data)
+            image_data = data.decode()
+            data_url = f'data:image/jpeg;base64,{image_data}'
+            mockup_data.update({key: data_url})
+
+        return self.api_success({'data': mockup_data})

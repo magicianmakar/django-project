@@ -31,6 +31,7 @@
           {{ form.image_data_url }}
           {{ form.upload_url }}
           {{ form.mockup_slug }}
+          {{ form.mockup_data }}
           <canvas id='canvas'></canvas>
           <div class="row">
             <div class="col-md-8">
@@ -41,6 +42,7 @@
                   <input type="submit"
                          value="Create Supplement"
                          data-action="approve"
+                         data-label-url="{{label_url}}"
                          class="btn btn-primary confirm-create"
                          data-loading-text="Please wait..."
                          >
@@ -112,16 +114,70 @@
   </div>
 </div>
 
-<div id="modal-preview-image" class="modal" aria-hidden="true">
-  <div class="modal-dialog">
+<div id="modal-mockup-images" class="modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title">{{ form.mockup_slug.value|title }} Mockup</h4>
+        <h4 class="modal-title">{{ form.mockup_slug.value|title }} Mockups</h4>
       </div>
       <div class="modal-body">
         <div class="row m-t" style="margin: 0 0 0 50px;">
-          <img id="mockup" src="" alt="" style="height: 400px;width: 400px;">
+          <div class="col-md-6">
+            <div class="modal-preview hidden">
+              <span class="preview-text"></span>
+              <img id="mockup-preview" src="" alt="" style="height: 280px;width: 340px;">
+            </div>
+            <div class="custom-file m-t">
+              <input id="ajax-label" data-toggle="modal" data-target="#modal-upload-image" class="custom-file-input">
+              <label for="ajax-label" class="custom-file-label" data-placeholder="Choose file...">
+                Choose file...
+              </label>
+            </div>
+          </div>
+          <div class="col-md-6 hidden">
+            <h5>Select images to send to store</h5>
+            <div class="row img-select">
+              <span class="img-select-opt">SELECT ALL</span>
+              <span>|</span>
+              <span class="img-select-opt">SELECT NONE</span>
+              <div class="previews m-t">
+                <div class="mockup-item">
+                  <input type="checkbox" class="mockup-select" name="" value="">
+                  <img class="mockup-img" id="front_shadow_mockup" src="" alt="">
+                  <div class="loader"></div>
+                </div>
+                <div class="mockup-item">
+                  <input type="checkbox" class="mockup-select" name="" value="">
+                  <img class="mockup-img" id="front_mockup" src="" alt="">
+                  <div class="loader"></div>
+                </div>
+                <div class="mockup-item">
+                  <input type="checkbox" class="mockup-select" name="" value="">
+                  <img class="mockup-img" id="back_shadow_mockup" src="" alt="">
+                  <div class="loader"></div>
+                </div>
+                <div class="mockup-item">
+                  <input type="checkbox" class="mockup-select" name="" value="">
+                  <img class="mockup-img" id="back_mockup" src="" alt="">
+                  <div class="loader"></div>
+                </div>
+                <div class="mockup-item">
+                  <input type="checkbox" class="mockup-select" name="" value="">
+                  <img class="mockup-img" id="group_of_3" src="" alt="">
+                  <div class="loader"></div>
+                </div>
+                <div class="mockup-item">
+                  <input type="checkbox" class="mockup-select" name="" value="">
+                  <img class="mockup-img" id="group_of_5" src="" alt="">
+                  <div class="loader"></div>
+                </div>
+              </div>
+            </div>
+            <div class="mockup-save m-t">
+              <button id="save-mockups" class="btn btn-primary" disabled>Save</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -202,6 +258,11 @@ $("#uploader").plupload({
             params.key = "uploads/u{{user.id}}/" + name;
         },
         FileUploaded: function(up, file, info) {
+            $('.loader').show();
+            $('.hidden').removeClass('hidden');
+            $('#mockup-preview').attr('src', '');
+            $('.mockup-img').attr('src', '');
+            $('.preview-text').html('Generating Mockup Images, Please wait...');
             var key = up.settings.multipart_params.key;
             var url = "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/" + key;
             document.getElementById('user_supplement_form').upload_url.value = url;
