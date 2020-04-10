@@ -534,7 +534,8 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
         ]
 
     def add_filters(self, queryset):
-        queryset = queryset.filter(user_supplement__user=self.request.user)
+        user = self.request.user.models_user
+        queryset = queryset.filter(user_supplement__user=user)
         queryset = queryset.filter(current_label_of__isnull=False)
         return queryset
 
