@@ -787,7 +787,7 @@ class OrdersList(ListView):
             return []
 
         options = []
-        for attribute in data['attributes']:
+        for attribute in data.get('attributes', []):
             options += attribute['options']
 
         metas = line.get('meta_data', [])
