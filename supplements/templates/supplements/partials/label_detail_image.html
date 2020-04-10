@@ -11,7 +11,8 @@
       <embed alt="image" class="img-fluid" src="{{ label.url }}" type='application/pdf' height="400px" width="100%" />
     </div>
     <div class="ibox-content profile-content">
-      <h4><strong>{{ label.user_supplement.title }}</strong></h4>
+      <h4><strong>Product Name: {{ label.user_supplement.title }}</strong></h4>
+      <h4><strong>Supplement: {{ label.user_supplement.pl_supplement.title }}</strong></h4>
       <p><i class="fa fa-calendar"></i> Submitted on {{ label.created_at_string }}</p>
       <div class="user-button">
 
