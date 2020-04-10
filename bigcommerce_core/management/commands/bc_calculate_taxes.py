@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
 from shopified_core.management import DropifiedBaseCommand
+from bigcommerce_core.models import BigCommerceStore
+
 from raven.contrib.django.raven_compat.models import client as raven_client
 from django.conf import settings
 from django.core.mail import EmailMessage
@@ -8,9 +10,7 @@ import csv
 from io import StringIO
 import os
 from django.template import Context, Template
-from shopified_core.utils import (
-    safe_float
-)
+from shopified_core.utils import safe_float
 
 
 class Command(DropifiedBaseCommand):
@@ -31,10 +31,10 @@ class Command(DropifiedBaseCommand):
         )
 
     def start_command(self, *args, **options):
-        users = User.objects.all()
-
         if options['user_id']:
             users = User.objects.filter(pk=options['user_id'])
+        else:
+            users = User.objects.filter(pk__in=BigCommerceStore.objects.values_list('user', flat=True))
 
         attachment_csv_file = StringIO()
         writer = csv.writer(attachment_csv_file)
@@ -62,7 +62,7 @@ class Command(DropifiedBaseCommand):
                         data_item.append(user.email)
                         data_item.append(user.first_name + " " + user.last_name)
                         data_item.append(user.date_joined.strftime("%Y-%m-%d %H:%M:%S"))
-                        monthly_revenue = self.get_monthly_revenue(user)
+                        monthly_revenue = safe_float(self.get_monthly_revenue(user))
                         if user.profile.on_trial:
                             monthly_revenue_share = 0
                             data_item.append('Yes')
