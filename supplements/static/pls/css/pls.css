@@ -1,11 +1,3 @@
-.loader {
-  background: url(/static/loader.gif) no-repeat center center;
-  z-index: 1;
-  width: 32px;
-  height: 32px;
-  margin: 8px 0 0 32px;
-}
-
 #canvas {
   display: none;
 }
@@ -195,64 +187,4 @@
   right: 0;
   top: 20px;
   margin: 0 10px 0 0;
-}
-
-.truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.hidden {
-  visibility: hidden;
-}
-
-.modal-preview {
-  border: 1px solid #bfc0c1;
-  height: 300px;
-  width: 350px;
-  border-radius: inherit;
-}
-
-.img-select {
-  font-size: 0.8em;
-  text-align: right;
-}
-
-.img-select-opt {
-  cursor: pointer;
-}
-
-.previews {
-  text-align: center;
-}
-
-.preview-text {
-  position: absolute;
-  top: 95px;
-  left: 75px;
-}
-
-.mockup-img {
-  height: 90px;
-  position: relative;
-  top: -20px;
-}
-
-.mockup-item {
-  height: 100px;
-  width: 100px;
-  border: 1px solid #bfc0c1;
-  float: left;
-  margin: 10px 30px 0 0;
-}
-
-.mockup-select {
-  position: relative;
-  left: 39px;
-  z-index: 1;
-}
-
-.mockup-save {
-  text-align: right;
 }

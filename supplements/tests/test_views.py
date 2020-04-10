@@ -177,7 +177,6 @@ class SupplementTestCase(PLSBaseTestCase):
             upload_url='http://example.com/test',
             image_data_url=image_data_url,
             mockup_slug='bottle',
-            mockup_data=json.dumps({'front_shadow_mockup': image_data_url}),
         )
 
         self.assertEqual(self.user.pl_supplements.count(), 1)
@@ -238,7 +237,6 @@ class SupplementTestCase(PLSBaseTestCase):
             upload_url='http://example.com/test',
             image_data_url=image_data_url,
             mockup_slug='bottle',
-            mockup_data=json.dumps({'front_shadow_mockup': image_data_url}),
         )
 
         self.assertEqual(UserSupplementImage.objects.count(), 0)

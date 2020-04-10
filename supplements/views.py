@@ -28,7 +28,7 @@ from shopified_core import permissions
 from shopified_core.shipping_helper import get_counrties_list
 from shopify_orders.models import ShopifyOrderLog
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
-from supplements.lib.image import data_url_to_pil_image, get_order_number_label, pil_to_fp
+from supplements.lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
 from supplements.models import (
     AuthorizeNetCustomer,
     Payout,
@@ -282,14 +282,15 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         ]
         return breadcrumbs
 
-    def save_image(self, user, image, user_supplement, position):
+    def save_image(self, user, image, user_supplement):
         upload_url = upload_supplement_object_to_aws(
             user_supplement,
             image,
             image.name,
         )
 
-        user_supplement.images.create(image_url=upload_url, position=position)
+        user_supplement.images.all().delete()
+        user_supplement.images.create(image_url=upload_url, position=0)
 
     def copy_images(self, user_supplement):
         current_urls = set(
@@ -362,19 +363,15 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
             upload_url = form.cleaned_data['upload_url']
             if upload_url:
-                mockup_ids = json.loads(form.cleaned_data['mockup_data'])
-                new_user_supplement.images.all().delete()
-
-                position = 0
-                for key, data_url in mockup_ids.items():
-                    label_image = data_url_to_pil_image(data_url)
-                    image_fp = pil_to_fp(label_image)
-                    image_fp.seek(0)
-                    image_fp.name = f'{key}.png'
-                    self.save_image(user, image_fp, new_user_supplement, position)
-                    position += 1
-
+                image_data = form.cleaned_data['image_data_url']
+                mockup_type = form.cleaned_data['mockup_slug']
+                label_image = data_url_to_pil_image(image_data)
+                bottle_mockup = get_mockup(label_image, mockup_type)
+                image_fp = pil_to_fp(bottle_mockup)
+                image_fp.seek(0)
+                image_fp.name = 'mockup.png'
                 self.save_label(user, upload_url, new_user_supplement)
+                self.save_image(user, image_fp, new_user_supplement)
 
             if not new_user_supplement.images.count():
                 self.copy_images(new_user_supplement)

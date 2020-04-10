@@ -1,5 +1,3 @@
-var mockupData = {};
-
 function getImageUrl(file, submit) {
     var reader = new FileReader();
     var form = document.getElementById('user_supplement_form');
@@ -48,6 +46,7 @@ function getImageUrl(file, submit) {
 }
 
 function ajaxify_label(file) {
+    $('#mockup-link').html('');
     var url = api_url('ajaxify-label', 'supplements');
     var form = document.getElementById('user_supplement_form');
     if (file !== undefined) {
@@ -64,12 +63,9 @@ function ajaxify_label(file) {
                     dataType: 'json',
                     contentType: 'application/json',
                     success: function (response) {
-                        $('.loader').hide();
-                        for (var key in response.data) {
-                            $('#'+key).attr('src', response.data[key]);
-                        }
-                        $('#save-mockups').prop('disabled', false);
-                        $('.preview-text').html('Click on any image to preview it here');
+                        $('#mockup').attr('src', response['data_url']);
+                        var link = "<a href='#' data-toggle='modal' data-target='#modal-preview-image'>Preview</a>";
+                        $('#mockup-link').html(link);
                     }
                 });
             }).catch(function (reason) {
@@ -96,9 +92,7 @@ $(document).ready(function(){
             e.preventDefault();
             var fileUrl = form.image_data_url.value;
             if (action === 'approve') {
-                if (fileUrl !== "" && Object.keys(mockupData).length === 0) {
-                    toastr.info("Please select at least 1 or more mockup images to send to store.");
-                } else if (fileUrl === "" && labelUrl === "") {
+                if (fileUrl === "" && labelUrl === undefined) {
                     toastr.error('A PDF label is required to submit a product for approval');
                 } else {
                     swal({
@@ -124,11 +118,7 @@ $(document).ready(function(){
                       });
                 }
             } else {
-                if (fileUrl !== "" && Object.keys(mockupData).length === 0) {
-                    toastr.info("Please select at least 1 or more mockup images to send to store.");
-                } else {
-                    form.submit();
-                }
+                form.submit();
             }
         }
     });
@@ -142,37 +132,6 @@ $(document).ready(function(){
             form.action.value = 'save';
         }
         form.submit();
-    });
-
-    $('.img-select-opt').click(function () {
-      if ($(this).html() === 'SELECT ALL') {
-          $('.mockup-select').prop('checked', true);
-      } else {
-          $('.mockup-select').prop('checked', false);
-      }
-    });
-
-    $('.mockup-img').click(function () {
-        $('.preview-text').addClass('hidden');
-        $('#mockup-preview').attr('src', $(this).attr('src'));
-    });
-
-    $('#save-mockups').click(function (e) {
-        e.preventDefault();
-        mockupData = {};
-        $(".mockup-select").each(function (i, item) {
-            if ($(item).prop('checked')) {
-                var img = $(item).next('img');
-                mockupData[img.attr('id')] = img.attr('src');
-            }
-        });
-        if (Object.keys(mockupData).length === 0) {
-            toastr.info("Please select at least 1 or more mockup images to send to store.");
-            return;
-        } else {
-            form.mockup_data.value = JSON.stringify(mockupData);
-            $('#modal-mockup-images').modal('hide');
-        }
     });
 
 });
