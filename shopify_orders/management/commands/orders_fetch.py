@@ -1,35 +1,16 @@
 import time
-import math
-from random import choice
+import traceback
 
-import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
 
+from django.conf import settings
+
 from shopified_core.management import DropifiedBaseCommand
-from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine, ShopifyOrderShippingLine
+from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safe_int, str_max, delete_store_orders
 from leadgalaxy.models import ShopifyStore
 from leadgalaxy.utils import get_shopify_order
-
-
-DESKTOP_AGENTS = []
-DESKTOP_AGENTS_TEMPLATE = [
-    'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/{VER}.0',
-    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.71 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.99 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.71 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.99 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.99 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.99 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/602.2.14 (KHTML, like Gecko) Version/10.0.1 Safari/602.2.14',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.98 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{VER}.0.2840.98 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/{VER}.0.2840.98 Chrome/{VER}.0.2840.98 Safari/537.36'
-]
-
-for i in range(54, 74):
-    for u in DESKTOP_AGENTS_TEMPLATE:
-        DESKTOP_AGENTS.append(u.format(VER=i))
+from leadgalaxy.shopify import ShopifyAPI
 
 
 class Command(DropifiedBaseCommand):
@@ -46,23 +27,24 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--max_orders', dest='max_orders', type=int, help='Sync Stores with Maximum Orders count')
         parser.add_argument('--max_import', dest='max_import', type=int, help='Maximum number of orders to import')
 
-    def reset_stores(self, store_ids, progress=False):
+    def reset_stores(self, store_ids, verbose=True):
+        if type(store_ids) is not list:
+            store_ids = [store_ids]
+
         for store in store_ids:
             store = ShopifyStore.objects.get(id=store)
-
-            self.write_success('Reset Store: {}'.format(store.title))
+            self.write_success(f'Reset Store: {store.title}', show=verbose)
 
             deleted = delete_store_orders(store)
 
-            self.write_success('Deleted Orders: {}'.format(deleted))
+            self.write_success(f'Deleted Orders: {deleted}', show=verbose)
 
             ShopifySyncStatus.objects.filter(store_id=store.id).update(sync_status=0, pending_orders=None, elastic=False)
-            self.write_success('Done')
 
     def start_command(self, *args, **options):
         if options['reset']:
             if options['store_id']:
-                self.reset_stores(options['store_id'], options['progress'])
+                self.reset_stores(options['store_id'])
             return
 
         if not options['sync_status']:
@@ -86,25 +68,33 @@ class Command(DropifiedBaseCommand):
                 break
 
             if order_sync.sync_status == 6:
-                self.reset_stores([order_sync.store.pk])
+                self.reset_stores(order_sync.store.pk)
 
             order_sync.sync_status = 1
             order_sync.save()
 
             try:
-                self.fetch_orders(order_sync.store)
+                count = order_sync.store.get_orders_count(status='any', fulfillment='any', financial='any')
+                self.progress_total(count, enable=options['progress'])
+
+                self.fetch_orders(order_sync.store, count)
 
                 order_sync.sync_status = 2
                 order_sync.elastic = False  # Orders are not indexed by default
                 order_sync.revision = 2  # New imported (or re-imported) orders support Product filters by default
                 order_sync.save()
 
+                self.progress_close()
+
                 self.update_pending_orders(order_sync)
 
             except:
+                if settings.DEBUG:
+                    traceback.print_exc()
+
                 raven_client.captureException(extra={'store': order_sync.store, 'user': order_sync.store.user})
 
-                ShopifyOrder.objects.filter(store=order_sync.store).delete()
+                self.reset_stores(order_sync.store.pk)
 
                 order_sync.sync_status = 4
                 order_sync.save()
@@ -112,13 +102,8 @@ class Command(DropifiedBaseCommand):
             if options.get('max_import') and self.total_order_fetch > options.get('max_import'):
                 break
 
-    def fetch_orders(self, store):
-        limit = 240
-        count = store.get_orders_count(status='any', fulfillment='any', financial='any')
-
-        shipping_method_filter = False
-
-        self.write_success('Import {} Order for: {}'.format(count, store.title))
+    def fetch_orders(self, store, count):
+        self.write_success(f'Import {count} Order for: {store.title}')
         if not count:
             return
 
@@ -140,95 +125,54 @@ class Command(DropifiedBaseCommand):
 
         import_start = time.time()
 
-        pages = int(math.ceil(count / float(limit)))
-        for page in range(1, pages + 1):
-            if count > 1000:
-                imported_count = len(self.imported_orders)
-                self.stdout.write('Page {} ({:0.2f}%) (Rate: {} - {:0.2f}s) (Imported: {})'.format(
-                    page,
-                    imported_count / float(count) * 100.0,
-                    self.rate_limit,
-                    self.req_time,
-                    imported_count
-                ))
+        api = ShopifyAPI(store)
 
-            req_start = time.time()
+        for orders in api.paginate_orders():
+            self.proccess_orders(store, orders)
 
-            rep = None
-            tries = 3
-            while tries:
-                rep = requests.get(
-                    url=store.api('orders'),
-                    params={
-                        'page': page,  # TODO: Shopify pagination
-                        'limit': limit,
-                        'status': 'any',
-                        'fulfillment': 'any',
-                        'financial': 'any'
-                    },
-                    headers={
-                        'User-Agent': choice(DESKTOP_AGENTS)
-                    }
-                )
+            self.progress_update(len(orders))
+            self.total_order_fetch += len(orders)
 
-                if rep.ok:
-                    break
-                else:
-                    print('Order Fetch Retry', tries, 'Page', page)
-                    tries -= 1
-                    continue
+        m, s = divmod(time.time() - import_start, 60)
+        self.write_success(f'Orders imported in {int(m)}:{int(s)}')
 
-            self.rate_limit = rep.headers.get('X-Shopify-Shop-Api-Call-Limit')
-            self.req_time = time.time() - req_start
+    def proccess_orders(self, store, orders_list):
+        # Bulk import orders
+        orders = []
+        already_imported = []
+        for order in orders_list:
+            if order['id'] not in self.imported_orders:
+                orders.append(self.prepare_order(order, store))
 
-            rep = rep.json()
-            self.total_order_fetch += len(rep['orders'])
-
-            # Bulk import orders
-            orders = []
-            already_imported = []
-            for order in rep['orders']:
-                if order['id'] not in self.imported_orders:
-                    orders.append(self.prepare_order(order, store))
-
-                    self.imported_orders.append(order['id'])
-                else:
-                    already_imported.append(order['id'])
-                    self.stdout.write('Order #{} Already Imported'.format(order['id']), self.style.WARNING)
-
-            if len(orders):
-                ShopifyOrder.objects.bulk_create(orders)
+                self.imported_orders.append(order['id'])
             else:
-                self.stdout.write('Empty Orders', self.style.WARNING)
+                already_imported.append(order['id'])
+                self.write(f"Order #{order['id']} Already Imported", self.style.WARNING)
 
-            self.load_saved_orders(store)
+        if len(orders):
+            ShopifyOrder.objects.bulk_create(orders)
+        else:
+            self.write('Empty Orders', self.style.WARNING)
 
-            # Bulk import order lines
-            lines = []
-            shipping_lines = []
+        self.load_saved_orders(store)
 
-            for order in rep['orders']:
-                if order['id'] not in already_imported:
-                    saved_order = self.get_saved_order(store, order['id'])
+        # Bulk import order lines
+        lines = []
 
-                    for line in self.prepare_lines(order, saved_order):
-                        lines.append(line)
+        for order in orders_list:
+            if order['id'] not in already_imported:
+                saved_order = self.get_saved_order(store, order['id'])
 
-                    if shipping_method_filter:
-                        for shipping_line in self.prepare_shipping_lines(order, saved_order):
-                            shipping_lines.append(shipping_line)
-                else:
-                    self.stdout.write('Line Already Imported of order #{}'.format(order['id']), self.style.WARNING)
+                for line in self.prepare_lines(order, saved_order):
+                    lines.append(line)
 
-            if len(lines):
-                ShopifyOrderLine.objects.bulk_create(lines)
             else:
-                self.stdout.write('Empty Order Lines', self.style.WARNING)
+                self.write(f"Line Already Imported of order #{order['id']}", self.style.WARNING)
 
-            if len(shipping_lines):
-                ShopifyOrderShippingLine.objects.bulk_create(shipping_lines)
-
-        self.write_success('Orders imported in %d:%d' % divmod(time.time() - import_start, 60))
+        if len(lines):
+            ShopifyOrderLine.objects.bulk_create(lines)
+        else:
+            self.write('Empty Order Lines', self.style.WARNING)
 
     def update_pending_orders(self, order_sync):
         store = order_sync.store
@@ -240,7 +184,7 @@ class Command(DropifiedBaseCommand):
             if not order_id:
                 break
 
-            self.stdout.write('Update pending order #{}'.format(order_id))
+            self.write(f'Update pending order #{order_id}')
             time.sleep(1)
 
             try:
@@ -259,7 +203,7 @@ class Command(DropifiedBaseCommand):
     def get_saved_order(self, store, order_id):
         saved_order = self.saved_orders.get(order_id)
         if saved_order is None:
-            self.stdout.write('Get Order from database #{}'.format(order_id))
+            self.write(f'Get Order from database #{order_id}')
             saved_order = ShopifyOrder.objects.get(store=store, order_id=order_id)
 
         return saved_order
@@ -322,24 +266,6 @@ class Command(DropifiedBaseCommand):
                 fulfillment_status=line['fulfillment_status'],
                 product_id=self.products_map.get(safe_int(line['product_id'])),
                 track_id=self.tracking_map.get(safe_int(line['id']))
-            ))
-
-        return lines
-
-    def prepare_shipping_lines(self, data, order):
-        lines = []
-        for shipping_line in data.get('shipping_lines'):
-            lines.append(ShopifyOrderShippingLine(
-                store=order.store,
-                order=order,
-                shipping_line_id=shipping_line['id'],
-                price=shipping_line['price'],
-                title=shipping_line['title'],
-                code=shipping_line['code'],
-                source=shipping_line['source'],
-                phone=shipping_line['phone'],
-                carrier_identifier=shipping_line['carrier_identifier'],
-                requested_fulfillment_service_id=shipping_line['requested_fulfillment_service_id']
             ))
 
         return lines

@@ -46,6 +46,7 @@ from leadgalaxy.models import (
     UserProfile,
 )
 from leadgalaxy import utils
+from leadgalaxy.shopify import ShopifyAPI
 
 from shopified_core.utils import update_product_data_images
 
@@ -636,13 +637,16 @@ def sync_shopify_orders(self, store_id, elastic=False):
             })
 
             imported = 0
-            page = 1
-            extra_params = {
+            params = {
+                'fields': 'id',
                 'created_at_min': arrow.utcnow().replace(days=-abs(max_days_sync)).isoformat()
             }
 
-            while imported < need_import:
-                shopify_orders = utils.get_shopify_orders(store, page=page, limit=250, fields='id', extra_params=extra_params)
+            api = ShopifyAPI(store)
+            for shopify_orders in api.paginate_orders(**params):
+                if imported >= need_import:
+                    break
+
                 shopify_order_ids = [o['id'] for o in shopify_orders]
 
                 if not shopify_order_ids:
@@ -662,8 +666,6 @@ def sync_shopify_orders(self, store_id, elastic=False):
                         'curreny': imported,
                         'total': need_import
                     })
-
-                page += 1
 
             took = (arrow.now() - start_time).seconds
             print('Sync Need: {}, Total: {}, Imported: {}, Store: {}, Took: {}s'.format(

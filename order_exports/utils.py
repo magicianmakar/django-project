@@ -15,9 +15,9 @@ from django.utils import timezone
 from django.utils.text import slugify
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment, get_shopify_orders
 from shopified_core.utils import app_link, send_email_from_template, clean_query_id
-
+from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment
+from leadgalaxy.shopify import ShopifyAPI
 from leadgalaxy.models import ShopifyOrderTrack, User, ShopifyStore
 from shopify_orders import utils as shopify_orders_utils
 
@@ -500,6 +500,7 @@ class ShopifyTrackOrderExport():
         start = 0
         steps = 1000
 
+        api = ShopifyAPI(self.store)
         with open(self.file_path, 'w') as csv_file:
             fieldnames = ['Shopify Order', 'Shopify Item', 'Shopify Product Title', 'Supplier Order ID', 'Tracking Number']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
@@ -510,8 +511,9 @@ class ShopifyTrackOrderExport():
                 orders_ids = list(set([o.order_id for o in orders_chunk]))
 
                 shopify_orders = {}
-                for o in get_shopify_orders(store=self.store, order_ids=orders_ids, fields='id,name,line_items', retry=True):
-                    shopify_orders[o['id']] = o
+                for orders_page in api.paginate_orders(ids=orders_ids, fields='id,name,line_items'):
+                    for order in orders_page:
+                        shopify_orders[order['id']] = order
 
                 for order in orders_chunk:
                     shopify_order = shopify_orders.get(order.order_id)

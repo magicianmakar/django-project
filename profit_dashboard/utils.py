@@ -9,8 +9,9 @@ from django.db.models import Sum
 
 from shopified_core.paginators import SimplePaginator
 from shopify_orders.models import ShopifyOrder
-from leadgalaxy.utils import safe_float, get_shopify_orders
+from leadgalaxy.utils import safe_float
 from leadgalaxy.models import ShopifyOrderTrack
+from leadgalaxy.shopify import ShopifyAPI
 
 from .models import (
     FacebookAccess,
@@ -354,17 +355,13 @@ def order_refunds(store, start, end, store_timezone=''):
     params = {
         'updated_at_min': arrow.get(start).isoformat(),
         'updated_at_max': arrow.get(end).isoformat(),
+        'fields': 'refunds',
     }
 
     def retrieve_refunds(params):
-        orders_count = 250
-        limit = 250
-        page = 1
-        while orders_count >= limit:
-            shopify_orders = get_shopify_orders(store, page=page, limit=limit, fields='refunds', extra_params=params, raise_for_status=True)
-            orders_count = 0
+        api = ShopifyAPI(store)
+        for shopify_orders in api.paginate_orders(**params):
             for order in shopify_orders:
-                orders_count += 1
                 for refund in order.get('refunds'):
                     # Correct our database date to show these at the correct day
                     processed_at = arrow.get(refund.get('processed_at')).to(store_timezone)
@@ -372,9 +369,6 @@ def order_refunds(store, start, end, store_timezone=''):
                     if start < processed_at < end:
                         refund['processed_at_datetime'] = processed_at
                         yield refund
-
-            # There is still another page while orders count is at its max limit
-            page += 1
 
     # Partially refunded
     params['financial_status'] = 'partially_refunded'
@@ -500,14 +494,14 @@ def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refun
     def sum_costs(x, y):
         return x + float(y['costs']['total_cost'])
 
-    shopify_orders = get_shopify_orders(store, page=1, limit=limit, fields='name,id,line_items', order_ids=order_ids, raise_for_status=True)
-    shopify_orders = {
-        i['id']: {
-            'name': i['name'],
-            'line_items': i.get('line_items', [])
-        }
-        for i in shopify_orders
-    }
+    shopify_orders = {}
+    api = ShopifyAPI(store)
+    for shopify_orders_page in api.paginate_orders(ids=order_ids, fields='name,id,line_items'):
+        for order in shopify_orders_page:
+            shopify_orders[order['id']] = {
+                'name': order['name'],
+                'line_items': order.get('line_items', [])
+            }
 
     # Merge tracks with orders
     for detail in profit_details:

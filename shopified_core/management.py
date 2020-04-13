@@ -47,13 +47,19 @@ class DropifiedBaseCommand(BaseCommand):
         if self.progress_bar:
             self.progress_bar.close()
 
-    def write(self, msg, style_func=None, ending=None):
+    def write(self, msg, style_func=None, ending=None, show=True):
+        if not show:
+            return
+
         if self.progress_bar:
             self.progress_bar.write(msg)
         else:
             self.stdout.write(msg, style_func, ending)
 
-    def write_success(self, msg):
+    def write_success(self, msg, show=True):
+        if not show:
+            return
+
         if self.progress_bar:
             self.progress_bar.write(msg)
         else:
@@ -77,8 +83,9 @@ class DropifiedBaseCommand(BaseCommand):
             with connection.cursor() as cursor:
                 cursor.execute('SET statement_timeout TO {};'.format(settings.COMMAND_STATEMENT_TIMEOUT))
 
-    def progress_total(self, total):
-        self.progress_bar = tqdm(total=total, smoothing=0)
+    def progress_total(self, total, enable=True):
+        if enable:
+            self.progress_bar = tqdm(total=total, smoothing=0)
 
     def progress_update(self, p=1, desc=None):
         if self.progress_bar:
@@ -90,3 +97,8 @@ class DropifiedBaseCommand(BaseCommand):
     def progress_write(self, msg):
         if self.progress_bar:
             self.progress_bar.write(msg)
+
+    def progress_close(self):
+        if self.progress_bar:
+            self.progress_bar.close()
+            self.progress_bar = None

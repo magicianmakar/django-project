@@ -25,8 +25,7 @@ class Command(DropifiedBaseCommand):
             profiles = profiles.filter(updated_at__gte=arrow.utcnow().replace(days=-options['days']).datetime) \
                                .exclude(updated_at=None)
 
-        if options['progress']:
-            self.progress_total(profiles.count())
+        self.progress_total(profiles.count(), enable=options['progress'])
 
         for profile in profiles:
             try:
