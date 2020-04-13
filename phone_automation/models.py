@@ -171,7 +171,7 @@ class TwilioPhoneNumber(models.Model):
     type = models.CharField(max_length=50, default='tollfree', choices=PHONE_NUMBER_TYPES)
     country_code = models.CharField(max_length=10, default='', blank=True)
     twilio_sid = models.CharField(max_length=50, default='', blank=True)
-    twilio_metadata = JSONField(default={})
+    twilio_metadata = JSONField(default=dict)
     sms_enabled = models.BooleanField(default=False)
     custom_subscription = models.ForeignKey(CustomStripeSubscription, related_name='twilio_phone_numbers', null=True,
                                             on_delete=models.CASCADE)
@@ -254,7 +254,7 @@ class TwilioLog(models.Model):
     log_type = models.CharField(max_length=50, default='', blank=True)
     phone_type = models.CharField(max_length=50, default='tollfree', choices=PHONE_NUMBER_TYPES)
     digits = models.CharField(max_length=50, default='', blank=True)
-    twilio_metadata = JSONField(default={})
+    twilio_metadata = JSONField(default=dict)
     notes = models.TextField(default='')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
@@ -275,7 +275,7 @@ class TwilioRecording(models.Model):
     twilio_log = models.ForeignKey(TwilioLog, related_name='twilio_recordings', on_delete=models.CASCADE)
     recording_sid = models.CharField(max_length=50, default='', blank=True)
     recording_url = models.CharField(max_length=300, default='', blank=True)
-    twilio_metadata = JSONField(default={})
+    twilio_metadata = JSONField(default=dict)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')

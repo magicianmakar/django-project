@@ -19,6 +19,10 @@ from product_alerts.models import ProductChange
 from product_alerts.managers import ProductChangeManager
 
 
+def clamp(minvalue, value, maxvalue):
+    return max(minvalue, min(value, maxvalue))
+
+
 def manage_product_change_callback(*args, **kwargs):
     manage_product_change(*kwargs['args'])
 
@@ -369,7 +373,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         price = round(float(variant['price']), 2)
 
         # Reset price to a reasonable amount
-        price = 100.0 if price < 0.02 else price
+        price = clamp(10.0, price, 100.0)
 
         # update price
         old_price = round(price - (price / 2.0), 2)
@@ -418,7 +422,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         price = round(float(gkart_product['price']), 2)
 
         # Reset price to a reasonable amount
-        price = 100.0 if price < 0.02 else price
+        price = clamp(10.0, price, 100.0)
 
         # update price
         old_price = round(price - (price / 2.0), 2)
@@ -471,7 +475,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         price = round(float(variant['price']), 2)
 
         # Reset price to a reasonable amount
-        price = 100.0 if price < 0.02 else price
+        price = clamp(10.0, price, 100.0)
 
         # update price
         old_price = round(price - (price / 2.0), 2)
@@ -529,7 +533,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         price = round(float(variant['regular_price']), 2)
 
         # Reset price to a reasonable amount
-        price = 100.0 if price < 0.02 else price
+        price = clamp(10.0, price, 100.0)
 
         # update price
         old_price = round(price - (price / 2.0), 2)
@@ -584,7 +588,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         price = round(float(bigcommerce_product['price']), 2)
 
         # Reset price to a reasonable amount
-        price = 100.0 if price < 10 else price
+        price = clamp(10.0, price, 100.0)
 
         # update price
         old_price = round(price - (price / 2.0), 2)
@@ -637,7 +641,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         price = round(float(variant['price']), 2)
 
         # Reset price to a reasonable amount
-        price = 100.0 if price < 0.02 else price
+        price = clamp(10.0, price, 100.0)
 
         # update price
         old_price = round(price - (price / 2.0), 2)

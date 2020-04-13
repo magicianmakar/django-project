@@ -193,7 +193,7 @@ class SupplementTestCase(PLSBaseTestCase):
         content = detail.content.decode()
         key = ('<input type="text" name="tags" '
                'value="supplement" class="form-control" '
-               'required id="id_tags" />')
+               'required id="id_tags"')
         self.assertIn(key, content)
         self.assertEqual(self.user.pl_supplements.count(), 2)
         self.assertEqual(UserSupplementImage.objects.count(), 1)

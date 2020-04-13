@@ -4,10 +4,11 @@ import hmac
 import urllib3
 from hashlib import sha256
 
-from django.urls import reverse
+from django.db import NotSupportedError
 from django.core.cache import cache
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.urls import reverse
 
 from unittest.mock import patch, Mock
 
@@ -320,7 +321,7 @@ class AutocompleteTestCase(BaseTestCase):
             content = json.loads(r.content)
             suggestion = content['suggestions'].pop()
             self.assertEqual(suggestion['value'], supplier.supplier_name)
-        except NotImplementedError:
+        except NotSupportedError:
             pass
 
     def test_must_not_suggest_names_from_other_users_stores(self):
@@ -506,7 +507,7 @@ class AutoFulfillLimitsTestCase(BaseTestCase):
 
             messages.assert_called()
             self.assertNotIn('aliexpress', r['location'])
-        except NotImplementedError:
+        except NotSupportedError:
             pass
 
     @patch('django.contrib.messages.error')
@@ -522,7 +523,7 @@ class AutoFulfillLimitsTestCase(BaseTestCase):
 
             messages.assert_not_called()
             self.assertIn('aliexpress', r['location'])
-        except NotImplementedError:
+        except NotSupportedError:
             pass
 
     @patch('django.contrib.messages.error')
@@ -538,7 +539,7 @@ class AutoFulfillLimitsTestCase(BaseTestCase):
 
             messages.assert_called()
             self.assertNotIn('aliexpress', r['location'])
-        except NotImplementedError:
+        except NotSupportedError:
             pass
 
 

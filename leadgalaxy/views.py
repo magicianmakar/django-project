@@ -24,7 +24,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as user_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.auth.views import login as login_view
+from django.contrib.auth.views import LoginView
 from django.conf import settings
 from django.core.cache import cache, caches
 from django.core.cache.utils import make_template_fragment_key
@@ -962,6 +962,8 @@ def webhook(request, provider, option):
             return JsonResponse({'error': 'Not Registered Monitor ID'}, status=404)
 
         if product.user.can('price_changes.use') and product.is_connected and product.store.is_active:
+            data = json.loads(request.body.decode())
+
             product_change = ProductChange.objects.create(
                 store_type=dropified_type,
                 shopify_product=product if dropified_type == 'shopify' else None,
@@ -970,7 +972,7 @@ def webhook(request, provider, option):
                 woo_product=product if dropified_type == 'woo' else None,
                 bigcommerce_product=product if dropified_type == 'bigcommerce' else None,
                 user=product.user,
-                data=request.body,
+                data=json.dumps(data),
             )
 
             countdown = random.randint(1, 120)
@@ -5212,18 +5214,17 @@ def sudo_login(request):
     elif request.GET.get('email'):
         target_user = User.objects.get(email__iexact=request.GET['email'])
 
-    return login_view(
-        request,
+    return LoginView.as_view(
         authentication_form=EmailAuthenticationForm,
         extra_context={
             'target_user': target_user
         }
-    )
+    )(request)
 
 
 @xframe_options_exempt
-def login_xframe_options_exempt(*args, **kwargs):
-    return login_view(*args, **kwargs)
+def login_xframe_options_exempt(request):
+    return LoginView.as_view(authentication_form=EmailAuthenticationForm)(request)
 
 
 @require_http_methods(['GET'])

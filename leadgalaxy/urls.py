@@ -1,5 +1,4 @@
 from django.conf.urls import url
-from leadgalaxy.forms import EmailAuthenticationForm
 import django.contrib.auth.views
 
 import leadgalaxy.views
@@ -46,21 +45,18 @@ urlpatterns = [
 
     url(r'^accounts/register/?(?P<registration>[a-z0-9-]+)?$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/sudo/$', leadgalaxy.views.sudo_login, name='sudo_login'),
-    url(r'^accounts/login/$', leadgalaxy.views.login_xframe_options_exempt,
-        {'authentication_form': EmailAuthenticationForm}, name='login'),
-    url(r'^accounts/password/reset/$', django.contrib.auth.views.password_reset,
-        {'template_name': 'registration/password_reset.html', 'html_email_template_name': 'registration/password_reset_email2.html'}),
-    url(r'^accounts/password_reset/done/$', django.contrib.auth.views.password_reset_done,
-        {'template_name': 'registration/password_reset_done2.html', 'extra_context': {'site_header': 'Dropified'}}),
-    url(r'^accounts/password_change/done/$', django.contrib.auth.views.password_change_done,
-        {'template_name': 'registration/password_change_done2.html', 'extra_context': {'site_header': 'Dropified'}}),
+    url(r'^accounts/login/$', leadgalaxy.views.login_xframe_options_exempt, name='login'),
+    url(r'^accounts/password/reset/$', django.contrib.auth.views.PasswordResetView.as_view(
+        template_name='registration/password_reset.html', html_email_template_name='registration/password_reset_email2.html')),
+    url(r'^accounts/password_reset/done/$', django.contrib.auth.views.PasswordResetDoneView.as_view(
+        template_name='registration/password_reset_done2.html', extra_context={'site_header': 'Dropified'})),
+    url(r'^accounts/password_change/done/$', django.contrib.auth.views.PasswordChangeDoneView.as_view(
+        template_name='registration/password_change_done2.html', extra_context={'site_header': 'Dropified'})),
     url(r'^accounts/reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
-        django.contrib.auth.views.password_reset_confirm,
-        {'template_name': 'registration/password_reset_confirm2.html', 'extra_context': {'site_header': 'Dropified'}},
-        name='password_reset_confirm'),
-    url(r'^accounts/reset/done/$', django.contrib.auth.views.password_reset_complete,
-        {'template_name': 'registration/password_reset_complete2.html', 'extra_context': {'site_header': 'Dropified'}},
-        name='password_reset_complete'),
+        django.contrib.auth.views.PasswordResetConfirmView.as_view(template_name='registration/password_reset_confirm2.html',
+                                                                   extra_context={'site_header': 'Dropified'}), name='password_reset_confirm'),
+    url(r'^accounts/reset/done/$', django.contrib.auth.views.PasswordResetCompleteView.as_view(
+        template_name='registration/password_reset_complete2.html', extra_context={'site_header': 'Dropified'}), name='password_reset_complete'),
 
     url(r'^robots\.txt$', leadgalaxy.views.robots_txt, name='robots_txt'),
     url(r'^crossdomain\.xml$', leadgalaxy.views.crossdomain, name='crossdomain'),

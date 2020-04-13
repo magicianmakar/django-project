@@ -2445,5 +2445,5 @@ def user_models_user(self):
         return self.profile.subuser_parent
 
 
-User.add_to_class("is_subuser", cached_property(user_is_subsuser))
-User.add_to_class("models_user", cached_property(user_models_user))
+User.add_to_class("is_subuser", property(user_is_subsuser))
+User.add_to_class("models_user", property(user_models_user))

@@ -8,9 +8,9 @@ from munch import Munch
 from unittest.mock import patch, Mock, PropertyMock
 
 from django.test import override_settings
-from django.urls import reverse
 from django.utils import timezone
 from django.core.cache import caches
+from last_seen.models import LastSeen
 
 from . import factories as f
 from lib.test import BaseTestCase
@@ -702,8 +702,7 @@ class SyncAliexpressTestCase(BaseTestCase):
         get_tracking_orders.return_value = []
         logged_in = self.client.login(username=user.username, password=self.password)
 
-        # Access page before API
-        self.client.get(reverse('orders_track'))
+        LastSeen.objects.seen(user=user.models_user, module='website')
 
         return logged_in
 
