@@ -14,7 +14,7 @@ from shopified_core.mixins import ApiResponseMixin
 from .lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import Payout, PLSOrder
-from .utils.payment import Util
+from .utils.payment import Util, get_shipping_cost
 
 
 class SupplementsApi(ApiResponseMixin, View):
@@ -32,7 +32,12 @@ class SupplementsApi(ApiResponseMixin, View):
         orders, line_items, order_data_ids, error = info
 
         for order_id, order in orders.items():
-            order_info = (order['order_number'], order_id)
+            try:
+                province = order['shipping_address']['province_code']
+            except:
+                province = order['shipping_address']['province']
+            order_info = (order['order_number'], order_id, order['shipping_address']['country_code'],
+                          province)
             order_line_items = line_items[order_id]
 
             shipping_country = order['shipping_address']['country']
@@ -153,3 +158,11 @@ class SupplementsApi(ApiResponseMixin, View):
         data_url = f'data:image/jpeg;base64,{image_data}'
 
         return self.api_success({'data_url': data_url})
+
+    def post_calculate_shipping_cost(self, request, user, data):
+        shipping_price = get_shipping_cost(data['country-code'], data.get('province-code'), data['total-weight'])
+        data = {'shipping_cost': shipping_price}
+        if shipping_price is False:
+            return self.api_error('Shipping cost not available', status=404)
+        else:
+            return self.api_success(data)

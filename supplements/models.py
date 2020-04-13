@@ -13,6 +13,7 @@ from .mixin import (
     UserSupplementLabelMixin,
     UserSupplementMixin
 )
+import simplejson as json
 
 
 class PLSupplement(PLSupplementMixin, model_base.Product):
@@ -31,6 +32,7 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
     shipping_countries = models.ManyToManyField('ShippingGroup')
     product_information = models.TextField()
     authenticity_certificate_url = models.URLField()
+    weight = models.DecimalField(max_digits=10, decimal_places=4, default=0)
 
     def __str__(self):
         return self.title
@@ -41,9 +43,34 @@ class ShippingGroup(models.Model):
     name = models.CharField(max_length=100)
     locations = models.TextField()
     immutable = models.BooleanField(default=False)
+    data = models.TextField(null=True, blank=True, help_text='''Shipping rates (by weight) in the following Json format <pre>
+        {
+        "shipping_cost_default":{DEFAULT_COST},
+        "shipping_rates":
+                        [
+                            {
+                               "weight_from":{FROM_LB},
+                               "weight_to":{TO_LB},
+                               "shipping_cost":{COST}
+                            },
+                            {
+                               "weight_from":{FROM_LB},
+                               "weight_to":{TO_LB},
+                               "shipping_cost":{COST}
+                            }
+                        ]
+        }
+        </pre>''')
 
     def __str__(self):
         return self.name
+
+    def get_data(self):
+        return json.loads(self.data)
+
+    def set_data(self, cus):
+        self.data = json.dumps(cus)
+        self.save()
 
     def to_dict(self):
         return dict(
@@ -80,6 +107,9 @@ class UserSupplement(UserSupplementMixin, models.Model):
 
     def __str__(self):
         return self.title
+
+    def get_weight(self, quantity):
+        return self.pl_supplement.weight * quantity
 
 
 class UserSupplementImage(model_base.AbstractImage):
@@ -133,6 +163,7 @@ class LabelComment(models.Model, LabelCommentMixin):
 class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
     sale_price = models.IntegerField()
     wholesale_price = models.IntegerField()
+    shipping_price = models.IntegerField(default=0)
     batch_number = models.CharField(max_length=30, null=True, blank=True)
 
     payout = models.ForeignKey('Payout',

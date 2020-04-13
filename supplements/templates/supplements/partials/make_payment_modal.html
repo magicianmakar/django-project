@@ -12,7 +12,7 @@
             <th>Title</th>
             <th>Unit Price</th>
             <th>Quantity</th>
-            <th>Amount</th>
+            <th>Total Amount</th>
           </thead>
           <tbody>
           </tbody>
@@ -42,6 +42,10 @@
     <td>{{ this.amount }}</td>
   </tr>
   {{/each}}
+  <tr>
+    <td colspan='4'><strong>Shipping</strong></td>
+    <td>{{ total_shipping_cost }}</td>
+  </tr>
   <tr>
     <td colspan='4'><strong>Total</strong></td>
     <td>{{ total }}</td>

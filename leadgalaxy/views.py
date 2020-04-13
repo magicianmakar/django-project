@@ -4260,6 +4260,8 @@ def orders_view(request):
                 is_pls = order['line_items'][i]['is_pls'] = supplier.is_pls
                 if is_pls:
                     is_paid = PLSOrderLine.is_paid(store, order['id'], el['id'])
+                    order['line_items'][i]['weight'] = product.user_supplement.get_weight(order['line_items'][i]['quantity'])
+
                 order['line_items'][i]['is_paid'] = is_paid
                 order['line_items'][i]['supplier'] = supplier
                 order['line_items'][i]['shipping_method'] = shipping_method

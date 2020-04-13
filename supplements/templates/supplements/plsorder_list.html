@@ -19,7 +19,8 @@
     <th>Order ID</th>
     <th>Authorize.net Payment ID</th>
     <th>Customer</th>
-    <th>Amount</th>
+    <th>Total Amount</th>
+    <th>Shipping Cost</th>
     <th>Date</th>
     <th>Status</th>
     <th id="payout-column">Payout</th>
@@ -37,6 +38,7 @@
       <td>{{ pls_order.stripe_transaction_id }}</td>
       <td>{{ pls_order.user.email }}</td>
       <td>{{ pls_order.amount_string }}</td>
+      <td>{{ pls_order.shipping_price_string }}</td>
       <td>{{ pls_order.created_at_string }}</td>
       <td>{{ pls_order.status_string }}</td>
       <td>

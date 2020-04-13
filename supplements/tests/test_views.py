@@ -52,6 +52,7 @@ class PLSBaseTestCase(BaseTestCase):
             cost_price='15.99',
             label_template_url='http://example.com',
             wholesale_price='5.99',
+            weight="1.00",
             mockup_type=self.mockup_type,
         )
 
@@ -108,6 +109,7 @@ class IndexTestCase(PLSBaseTestCase):
             tags='supplement',
             cost_price='15.99',
             wholesale_price='5.99',
+            weight='1',
             label_template_url='http://example.com',
         )
 
@@ -145,6 +147,7 @@ class SupplementTestCase(PLSBaseTestCase):
             tags='supplement',
             cost_price='15.99',
             wholesale_price='5.99',
+            weight='1',
             label_template_url='http://example.com',
             mockup_type=self.mockup_type,
         )
@@ -171,6 +174,7 @@ class SupplementTestCase(PLSBaseTestCase):
             category=self.user_supplement.category,
             tags=self.user_supplement.tags,
             price=self.user_supplement.price,
+            weight=self.user_supplement.pl_supplement.weight,
             compare_at_price=self.user_supplement.compare_at_price,
             cost_price=self.user_supplement.pl_supplement.cost_price,
             shipstation_sku='test-sku',
@@ -231,6 +235,7 @@ class SupplementTestCase(PLSBaseTestCase):
             category=self.user_supplement.category,
             tags=self.user_supplement.tags,
             price=self.user_supplement.price,
+            weight=self.user_supplement.pl_supplement.weight,
             compare_at_price=self.user_supplement.compare_at_price,
             cost_price=self.user_supplement.pl_supplement.cost_price,
             shipstation_sku='test-sku',
@@ -444,6 +449,7 @@ class ProductTestCase(PLSBaseTestCase):
             shipstation_sku='test-sku',
             cost_price='20.00',
             wholesale_price='10.00',
+            weight=self.user_supplement.pl_supplement.weight,
             label_size=self.label_size.id,
             mockup_type=self.mockup_type.id,
             template=open('app/static/example-label.pdf', 'rb'),
@@ -490,6 +496,7 @@ class ProductEditTestCase(PLSBaseTestCase):
             shipstation_sku='test-sku',
             cost_price='20.00',
             wholesale_price='10.00',
+            weight=self.user_supplement.pl_supplement.weight,
             label_size=self.label_size.id,
             mockup_type=self.mockup_type.id,
             product_information='Changed Information',
@@ -570,6 +577,7 @@ class UserSupplementViewTestCase(PLSBaseTestCase):
             price=user_supplement.price,
             compare_at_price=user_supplement.compare_at_price,
             cost_price=user_supplement.cost_price,
+            weight=user_supplement.pl_supplement.weight,
             action='save',
         )
 

@@ -950,6 +950,8 @@ class OrdersList(ListView):
                         is_pls = item['is_pls'] = supplier.is_pls
                         if is_pls:
                             item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
+                            item['weight'] = product.user_supplement.get_weight(item['quantity'])
+
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(supplier.supplier_type())
                         item['shipping_method'] = self.get_item_shipping_method(

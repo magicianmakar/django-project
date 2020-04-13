@@ -10,8 +10,10 @@ from groovekart_core.models import GrooveKartStore
 from leadgalaxy.models import ShopifyStore
 from shopified_core.shipping_helper import country_from_code
 from supplements.lib.authorizenet import charge_customer_profile
-from supplements.models import PLSOrder, PLSOrderLine
+from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
 from woocommerce_core.models import WooStore
+from raven.contrib.django.raven_compat.models import client as raven_client
+from shopified_core.utils import safe_float
 
 
 def complete_payment(transaction_id, pls_order_id):
@@ -26,19 +28,41 @@ def complete_payment(transaction_id, pls_order_id):
     return pls_order
 
 
+def get_shipping_cost(shipping_country_code, shipping_province_code, total_weight):
+    try:
+        # getting pls country group
+        search_country_provice = str(shipping_country_code) + "-" + str(shipping_province_code)
+        try:
+            shipping_group = ShippingGroup.objects.get(slug__iexact=search_country_provice, data__isnull=False)
+        except ShippingGroup.DoesNotExist:
+            shipping_group = ShippingGroup.objects.get(slug__iexact=shipping_country_code, data__isnull=False)
+
+        shipping_data = shipping_group.get_data()
+
+        cost = shipping_data.get('shipping_cost_default')
+        shipping_rates = shipping_data.get('shipping_rates')
+        for shipping_rate in shipping_rates:
+            if total_weight > shipping_rate['weight_from'] and total_weight <= shipping_rate['weight_to']:
+                cost = shipping_rate['shipping_cost']
+    except:
+        cost = False
+        raven_client.captureException()
+    return cost
+
+
 class Util:
     def __init__(self):
         self.order_cache = {}
         self.product_cache = {}
 
     def make_payment(self, order_info, lines, user):
-        order_number, order_id = order_info
+        order_number, order_id, shipping_country_code, shipping_province_code = order_info
         store_id = self.store.id
         store_type = self.store.store_type
 
         get_shipstation_line_key = PLSOrderLine.get_shipstation_key
-
-        wholesale_price = amount = 0
+        total_weight = 0
+        wholesale_price = amount = shipping_price = 0
         for line in lines:
             user_supplement = line['user_supplement']
             quantity = int(line['quantity'])
@@ -46,8 +70,10 @@ class Util:
             line_wholesale = user_supplement.wholesale_price * quantity
             amount += line_amount
             wholesale_price += line_wholesale
+            total_weight += user_supplement.pl_supplement.weight * quantity
 
-        amount = int(amount * 100)
+        shipping_price = get_shipping_cost(shipping_country_code, shipping_province_code, total_weight)
+        amount = int((safe_float(amount) + shipping_price) * 100)
         wholesale_price = int(wholesale_price * 100)
 
         sale_price = sum([float(i['price']) * int(i['quantity']) for i in lines])
@@ -62,6 +88,7 @@ class Util:
                 amount=amount,
                 sale_price=sale_price,
                 wholesale_price=wholesale_price,
+                shipping_price=int(shipping_price * 100),
                 user=user,
             )
 

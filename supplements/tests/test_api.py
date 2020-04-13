@@ -29,6 +29,7 @@ class PLSBaseTestCase(BaseTestCase):
             cost_price='15.99',
             label_template_url='http://example.com',
             wholesale_price='10.00',
+            weight='1',
         )
 
         self.user_supplement = UserSupplementFactory.create(
@@ -139,7 +140,6 @@ class MakePaymentTestCase(PLSBaseTestCase):
 
         self.mock_order_response = MagicMock()
         self.mock_order_response.json.return_value = {'order': self.order_data}
-
         self.mock_response = MagicMock()
         self.mock_response.json.return_value = {'orderKey': 'Test Key'}
 

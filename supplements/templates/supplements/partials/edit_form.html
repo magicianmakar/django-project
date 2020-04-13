@@ -51,6 +51,17 @@
 </div>
 
 <div class="form-group">
+  {{ form.weight.errors }}
+  <label class="col-sm-2 col-xs-12 control-label">Weight:</label>
+  <div class="col-sm-10 col-xs-12">
+    <div class='input-group'>
+      {{ form.weight|add_class:"form-control"|attr:"readonly" }}
+        <span class="input-group-addon">lb</span>
+    </div>
+  </div>
+</div>
+
+<div class="form-group">
   <label class="col-sm-2 col-xs-12 control-label">Label Size:</label>
   <div class="col-sm-10 col-xs-12">
     {{ form.label_size|add_class:"form-control"|attr:"readonly" }}

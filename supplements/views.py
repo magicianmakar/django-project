@@ -319,6 +319,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form_data['label_size'] = supplement.label_size
         form_data['mockup_type'] = supplement.mockup_type
         form_data['mockup_slug'] = supplement.mockup_type.slug
+        form_data['weight'] = supplement.weight
 
         api_data = {}
         if supplement.is_approved:
@@ -441,6 +442,7 @@ class UserSupplementView(Supplement):
         form_data['label_size'] = supplement.pl_supplement.label_size
         form_data['mockup_type'] = supplement.pl_supplement.mockup_type
         form_data['mockup_slug'] = supplement.pl_supplement.mockup_type.slug
+        form_data['weight'] = supplement.pl_supplement.weight
 
         api_data = {}
         if supplement.is_approved:

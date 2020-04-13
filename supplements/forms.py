@@ -28,6 +28,7 @@ class UserSupplementForm(forms.ModelForm):
     image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
+    weight = forms.DecimalField()
 
 
 class CommentForm(forms.Form):
@@ -49,6 +50,7 @@ class PLSupplementForm(forms.ModelForm):
                   'wholesale_price',
                   'product_information',
                   'label_size',
+                  'weight',
                   'mockup_type',
                   ]
 

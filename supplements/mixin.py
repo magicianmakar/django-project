@@ -198,6 +198,10 @@ class PLSOrderMixin:
     def shipstation_order_number(self):
         return f"{self.order_number}-{self.id}"
 
+    @property
+    def shipping_price_string(self):
+        return "${:.2f}".format(self.shipping_price / 100.)
+
 
 class PLSOrderLineMixin:
 

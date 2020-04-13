@@ -68,25 +68,32 @@ function doMakePayment(orderDataIds, storeId, storeType) {
     });
 }
 
+function formatCurrency(amount) {
+        var currencyTemplate = Handlebars.compile(storePriceFormat);
+        return currencyTemplate({amount: amount});
+    }
+
 function makeData(orderDataIds) {
     var data = {};
     var items = [];
     var quantity, unitPrice, amount, total = 0.0, storeType, storeId;
+    var total_weight=0;
 
-    var currencyTemplate = Handlebars.compile(storePriceFormat);
 
-    function formatCurrency(amount) {
-        return currencyTemplate({amount: amount});
-    }
 
     $.each(orderDataIds, function (i, item) {
         line = $("div.payment-btn-wrapper[order-data-id=" + item + "]");
         orderNumber = $(line).attr('order-number');
         unitPrice = $(line).attr('line-price');
         quantity = $(line).attr('line-quantity');
-        amount = unitPrice * quantity;
         storeType = $(line).attr('store-slug');
         storeId = $(line).attr('store-id');
+
+        if ($(line).attr('weight')!="False"){
+            total_weight += parseFloat($(line).attr('weight'));
+        }
+
+        amount = parseFloat(unitPrice) * quantity ;
 
         items.push({
             title: $(line).attr('line-title'),
@@ -98,23 +105,51 @@ function makeData(orderDataIds) {
 
         total += amount;
     });
-    data.total = formatCurrency(total.toFixed(2));
+    data.total = total;
     data.items = items;
     data.storeType = storeType;
     data.storeId = storeId;
+    data.total_weight = total_weight;
     return data;
 }
 
-function makePayment(orderDataIds) {
+function makePayment(orderDataIds,country_code,province_code) {
     var makePaymentTemplate = Handlebars.compile($("#id-make-payment-template").html());
     var data = makeData(orderDataIds);
-    var html = makePaymentTemplate(data);
-    $('#modal-make-payment tbody').empty().append(html);
-    $('#modal-make-payment').modal('show');
-    $('#id-make-payment-confirm').off('click').click(function () {
-        $('#modal-make-payment').modal('hide');
-        doMakePayment(orderDataIds, data.storeId, data.storeType);
+
+
+    var url = api_url('calculate_shipping_cost', 'supplements');
+    var post_data = {
+        'country-code': country_code,
+        'province-code': province_code,
+        'total-weight': data.total_weight
+    };
+    $.ajax({
+        url: url,
+        type: "POST",
+        data: JSON.stringify(post_data),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function (api_data) {
+            data.total_shipping_cost=formatCurrency(api_data.shipping_cost.toFixed(2));
+            data.total = formatCurrency((data.total+api_data.shipping_cost).toFixed(2));
+
+            var html = makePaymentTemplate(data);
+            $('#modal-make-payment tbody').empty().append(html);
+            $('#modal-make-payment').modal('show');
+            $('#id-make-payment-confirm').off('click').click(function () {
+                $('#modal-make-payment').modal('hide');
+                doMakePayment(orderDataIds, data.storeId, data.storeType);
+            });
+
+        },
+        error: function (api_data) {
+            toastr.warning("Error calculating shipping");
+        }
     });
+
+
+
 }
 
 function addOrderToPayout(orderId, referenceNumber) {
@@ -144,20 +179,25 @@ $(document).ready(function () {
 
     $(".pay-for-supplement").click(function () {
         var orderDataId = $(this).parent().attr('order-data-id');
-        makePayment([orderDataId]);
+        var country_code = $(this).parents('.order').find('.shipping-country-code').attr('shipping-country-code');
+        var province_code = $(this).parents('.order').find('.shipping-province-code').attr('shipping-province-code');
+        makePayment([orderDataId],country_code, province_code);
     });
 
     $(".pay-selected-lines").click(function (e) {
         e.preventDefault();
+        var order_id=$(this).attr('order-id');
+        var country_code = $(this).parents('.order').find('.shipping-country-code').attr('shipping-country-code');
+        var province_code = $(this).parents('.order').find('.shipping-province-code').attr('shipping-province-code');
         var orderDataIds = [];
-        $('.line-checkbox:checkbox:checked').each(function (i, item) {
+        $(this).parents('.order').find('.line-checkbox:checkbox:checked').each(function (i, item) {
             var line = $(item).parents('.line');
             if (line.attr("is-pls") === "true") {
                 orderDataIds.push(line.attr('order-data-id'));
             }
         });
         if (orderDataIds.length) {
-            makePayment(orderDataIds);
+            makePayment(orderDataIds,country_code,province_code);
         } else {
             toastr.warning("Please select orders for processing.");
         }

@@ -8,6 +8,7 @@
      line-price="{{item.product.user_supplement.cost_price}}"
      store-slug="{{store.store_type}}"
      store-id="{{store.id}}"
+     weight="{{item.weight}}"
      {% if not item.product.is_label_approved %}
      title="Approved label not found."
      {% endif %}

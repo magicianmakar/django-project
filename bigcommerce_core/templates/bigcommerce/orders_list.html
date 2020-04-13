@@ -308,7 +308,10 @@
 
                                             {{order.shipping_address.city}}
                                             {% if order.shipping_address.state %}
-                                            , {{order.shipping_address.state}}
+                                            ,
+                                            <span class="itooltip" title="Province" data-placement="auto right" shipping-province-code="{{order.shipping_address.state}}">
+                                                    {{order.shipping_address.state}}
+                                            </span>
                                             {% endif %}
                                             {% if order.shipping_address.zip %}
                                             , {{order.shipping_address.zip}}
@@ -338,8 +341,8 @@
                                     </div>
                                     <div class="col-md-1 col-xs-1">
                                         {% if order.has_shipping_address %}
-                                            <img class="itooltip" style="width: 16px"
-                                                 title="{{order.shipping_address.country}}"
+                                            <img class="itooltip shipping-country-code" shipping-country-code="{{order.shipping_address.country_iso2|lower}}"
+                                                 style="width: 16px" title="{{order.shipping_address.country}}"
                                                  src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.shipping_address.country_iso2|lower}}.svg">
                                             <br />
                                         {% else %}
