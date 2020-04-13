@@ -528,7 +528,7 @@
                                     <div class="col-md-1 hidden-xs">
                                         {% if order.shipping_address.country_code %}
                                         <img class="itooltip m-r-xs shipping-country-code" shipping-country-code="{{order.shipping_address.country_code|lower}}"
-                                                style="width: 16px" title="{{order.shipping_address.country}}" src="//d2kadg5e284yn4.cloudfront.net/static/flags/{{order.shipping_address.country_code|lower}}.svg">
+                                                style="width: 16px" title="{{order.shipping_address.country}}" src="//cdn.dropified.com/static/flags/{{order.shipping_address.country_code|lower}}.svg">
                                         {% endif %}
 
                                         {% if order.customer.email %}
