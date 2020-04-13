@@ -119,3 +119,14 @@ fi
 if [ -n "$CIRCLE_BRANCH" ]; then
     echo "INSTALLED_APPS += ('django_template_check',)" >> app/settings.py
 fi
+
+cat << EOF | md5sum -c > /dev/null
+    ce7a3cd8f9075c25faa6e079694152d9  .env
+EOF
+
+if [ ! "$?" == "0" ]; then
+    echo
+    echo "[-] .env file changed, make sure changes are required, then update .env MD5 hash in scripts/common_issues.sh"
+    cat $OUTFILE
+    exit -2
+fi
