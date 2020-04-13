@@ -126,7 +126,6 @@ class ShopifyOrderExport():
     def _get_orders(self, params={}, limit=250, page=1):
         url = '/admin/orders.json'
 
-        params['page'] = page  # TODO: Shopify pagination
         params['limit'] = limit
 
         response = self._get_response_from_url(url, params)

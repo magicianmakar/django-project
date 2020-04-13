@@ -1413,7 +1413,7 @@ def webhook(request, provider, option):
             token = token = jwt.encode({
                 'id': user.id,
                 'exp': arrow.utcnow().replace(hours=1).timestamp
-            }, settings.API_SECRECT_KEY, algorithm='HS256')
+            }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
 
             link = app_link(reverse('sudo_login'), token=token)
 
@@ -1831,7 +1831,7 @@ def product_view(request, pid):
     token = jwt.encode({
         'id': request.user.id,
         'exp': arrow.utcnow().replace(hours=6).timestamp
-    }, settings.API_SECRECT_KEY, algorithm='HS256')
+    }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
 
     if product.parent_product is None:
         if original:
@@ -3318,7 +3318,7 @@ def user_profile(request):
             baremetrics_jwt_token = jwt.encode({
                 "access_token_id": settings.BAREMETRICS_ACCESS_TOKEN,
                 "subscription_oids": [subscription.subscription_id],
-            }, settings.BAREMETRICS_JWT_TOKEN_KEY, "HS256")
+            }, settings.BAREMETRICS_JWT_TOKEN_KEY, "HS256").decode()
 
     baremetrics_form_enabled = bool(baremetrics_jwt_token)
 

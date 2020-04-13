@@ -411,7 +411,7 @@ class ProductDetailView(DetailView):
         context['token'] = jwt.encode({
             'id': self.request.user.id,
             'exp': arrow.utcnow().replace(hours=6).timestamp
-        }, settings.API_SECRECT_KEY, algorithm='HS256')
+        }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
 
         return context
 
