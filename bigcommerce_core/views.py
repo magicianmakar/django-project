@@ -914,6 +914,10 @@ class OrdersList(ListView):
             country_code = order['billing_address']['country_iso2']
             if len(order['shipping_addresses']) > 0:
                 country_code = order['shipping_addresses'][0]['country_iso2']
+
+                if not order.get('shipping_address'):
+                    order['shipping_address'] = order['shipping_addresses'][0]
+
             date_created = self.get_order_date_created(order)
             order['date_paid'] = self.get_order_date_paid(order)
             order['date'] = date_created.datetime
