@@ -121,6 +121,7 @@ class UserSupplementMixin(PLSupplementMixin):
         for country in shipping_countries.all():
             countries = country.locations.split(',')
             target.extend(countries)
+            target.extend([country.slug])
 
         return target
 
