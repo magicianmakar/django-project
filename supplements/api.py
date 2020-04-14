@@ -15,6 +15,7 @@ from .lib.image import data_url_to_pil_image, get_mockup, get_order_number_label
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import Payout, PLSOrder
 from .utils.payment import Util, get_shipping_cost
+from django.utils.text import slugify
 
 
 class SupplementsApi(ApiResponseMixin, View):
@@ -41,14 +42,16 @@ class SupplementsApi(ApiResponseMixin, View):
             order_line_items = line_items[order_id]
 
             shipping_country = order['shipping_address']['country']
+            shipping_country_province = slugify(order['shipping_address']['country_code'] + "-" + order['shipping_address']['province'])
             target_countries = []
             for line in order_line_items:
                 user_supplement = line['user_supplement']
                 shipping_countries = user_supplement.shipping_countries
                 target_countries.extend(shipping_countries)
-
             target_countries = set(target_countries)
-            if target_countries and shipping_country not in set(target_countries):
+
+            if target_countries and shipping_country not in set(target_countries) \
+                    and shipping_country_province not in set(target_countries):
                 invalid_country += 1
                 continue
 

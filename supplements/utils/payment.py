@@ -131,6 +131,7 @@ class Util:
                 ))
 
             auth_net_customer = user.authorize_net_customer
+
             transaction_id = charge_customer_profile(
                 amount,
                 auth_net_customer.customer_id,
