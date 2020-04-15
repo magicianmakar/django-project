@@ -9,6 +9,7 @@ from authorizenet.apicontrollers import (
     createTransactionController,
     getCustomerPaymentProfileController
 )
+from authorizenet.constants import constants
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 
@@ -35,6 +36,9 @@ def create_customer_profile(user):
     create_profile.profile = profile
 
     controller = createCustomerProfileController(create_profile)
+    if settings.AUTH_NET_PROD:
+        controller.setenvironment(constants.PRODUCTION)
+
     controller.execute()
 
     response = controller.getresponse()
@@ -90,6 +94,9 @@ def create_payment_profile(payment_data, customer_profile_id):
     create_profile.validationMode = 'liveMode'
 
     controller = createCustomerPaymentProfileController(create_profile)
+    if settings.AUTH_NET_PROD:
+        controller.setenvironment(constants.PRODUCTION)
+
     controller.execute()
 
     response = controller.getresponse()
@@ -131,6 +138,9 @@ def charge_customer_profile(amount, customer_id, payment_id, lines):
     create_transaction.transactionRequest = transaction_request
 
     controller = createTransactionController(create_transaction)
+    if settings.AUTH_NET_PROD:
+        controller.setenvironment(constants.PRODUCTION)
+
     controller.execute()
 
     response = controller.getresponse()
@@ -146,6 +156,9 @@ def get_customer_payment_profile(profile_id, payment_id):
     get_profile.customerPaymentProfileId = payment_id
 
     controller = getCustomerPaymentProfileController(get_profile)
+    if settings.AUTH_NET_PROD:
+        controller.setenvironment(constants.PRODUCTION)
+
     controller.execute()
 
     response = controller.getresponse()
