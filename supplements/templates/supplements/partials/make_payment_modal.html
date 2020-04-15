@@ -28,7 +28,7 @@
 
 
 <script type="application/javascript">
-  var storePriceFormat="{{ store.currency_format_with_default }}";
+  var storePriceFormat="{% verbatim %}${{amount}}{% endverbatim %}";
 </script>
 
 {% verbatim %}
