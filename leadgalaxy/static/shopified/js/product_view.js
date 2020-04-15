@@ -1037,7 +1037,7 @@ dragula([document.getElementById('var-images')], {
                 'image_id': config['shopify_images'][parseInt(f_img_id)]['id'],
                 'position':  $(el).index() + 1
             };
-            
+
             $.ajax({
                 url: api_url('image-position', 'shopify'),
                 type: 'POST',

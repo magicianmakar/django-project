@@ -1355,7 +1355,7 @@ class ApiTestCase(BaseTestCase):
         product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
         data = {
             'product': product.id,
-            'original-link': '123',
+            'original-link': 'https://www.aliexpress.com/item/32213964945.html',
             'supplier-link': '123',
             'supplier-name': 'test'
         }
