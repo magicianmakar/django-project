@@ -67,6 +67,7 @@
 <table class='table table-striped'>
   <thead>
     <th>Status</th>
+    <th>Supplement SKU</th>
     <th>Supplement</th>
     <th>Label SKU</th>
     <th>User</th>
@@ -90,6 +91,7 @@
           {{ label.status_string }}
         </span>
       </td>
+      <td>{{ label.user_supplement.pl_supplement.shipstation_sku }}</td>
       <td>{{ label.user_supplement.pl_supplement.title }}</td>
       <td>{{ label.sku }}</td>
       <td>{{ label.user_supplement.user.get_full_name }}</td>
