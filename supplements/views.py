@@ -164,6 +164,7 @@ class ProductEdit(Product):
 
         form_data['shipping_countries'] = self.supplement.shipping_countries.all()
         form_data['label_size'] = self.supplement.label_size
+        form_data['weight'] = self.supplement.weight
         form_data['mockup_type'] = self.supplement.mockup_type
         form_data['product_information'] = self.supplement.product_information
         form_data['authenticity_certificate_url'] = self.supplement.authenticity_certificate_url
