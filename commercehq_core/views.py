@@ -24,7 +24,7 @@ from django.views.generic.base import RedirectView
 from django.views.generic.detail import DetailView
 from django.core.cache.utils import make_template_fragment_key
 
-
+from supplements.models import PLSOrderLine
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
@@ -762,6 +762,7 @@ class OrdersList(ListView):
         return self.store
 
     def get_orders(self, ctx):
+        store = self.get_store()
         models_user = self.request.user.models_user
         auto_orders = self.request.user.can('auto_order.use')
         fix_order_variants = self.request.user.get_config('fix_order_variants')
@@ -913,6 +914,9 @@ class OrdersList(ListView):
 
                     line['product'] = product
                     line['supplier'] = supplier
+                    is_pls = line['is_pls'] = supplier.is_pls
+                    if is_pls:
+                        line['is_paid'] = PLSOrderLine.is_paid(store, order['id'], line['id'])
                     line['supplier_type'] = supplier.supplier_type()
                     line['shipping_method'] = shipping_method
                     order['connected_lines'] += 1
@@ -1036,7 +1040,6 @@ class OrdersList(ListView):
 
             if tracked_unfulfilled:
                 try:
-                    store = self.get_store()
                     fulfilments_url = store.get_api_url('orders', order['id'], 'fulfilments')
 
                     r = store.request.post(url=fulfilments_url, json={'items': tracked_unfulfilled})

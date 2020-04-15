@@ -5,6 +5,7 @@ from django.utils.crypto import get_random_string
 
 import re
 import simplejson as json
+from datetime import datetime
 from urllib.parse import urlparse
 
 import requests
@@ -92,6 +93,52 @@ class CommerceHQStore(StoreBase):
             url = url + '/' + '/'.join([str(i) for i in args]).lstrip('/')
 
         return 'https://{}'.format(url)
+
+    def get_order(self, order_id):
+        api_url = self.get_api_url('orders', order_id)
+        r = self.request.get(api_url)
+        r.raise_for_status()
+
+        order = r.json()
+        order['order_number'] = order['id']
+        for line in order['items']:
+            line['data']['quantity'] = line['status']['quantity']
+        order['line_items'] = [item['data'] for item in order.pop('items')]
+
+        address = order.pop('address')
+        phone = address.pop('phone')
+        for address_type in ('shipping', 'billing'):
+            address[address_type]['name'] = f"{address[address_type]['first_name']} {address[address_type]['last_name']}"
+
+            line = [address[address_type].pop('street')]
+            suite = address[address_type].pop('suite')
+            if suite:
+                line.append(suite)
+
+            address[address_type]['address1'] = ', '.join(line)
+            address[address_type]['province'] = address[address_type].pop('state')
+            address[address_type]['country_code'] = address[address_type]['country']
+            address[address_type]['phone'] = phone
+
+        order['shipping_address'] = address.pop('shipping')
+        order['billing_address'] = address.pop('billing')
+
+        from commercehq_core.utils import chq_customer_address
+
+        get_config = self.user.models_user.get_config
+        order, customer_address = chq_customer_address(
+            order,
+            german_umlauts=get_config('_use_german_umlauts', False)
+        )
+        order['customer_address'] = customer_address
+
+        order['currency'] = 'usd'
+        order['created_at'] = datetime.fromtimestamp(order['order_date']).strftime('%Y-%m-%dT%H:%M:%S')
+
+        return order
+
+    def get_product(self, product_id, store):
+        return CommerceHQProduct.objects.get(source_id=product_id, store=store)
 
     @property
     def request(self):
@@ -706,6 +753,8 @@ class CommerceHQSupplier(SupplierBase):
         try:
             if self.is_dropified and 'print-on-demand' in self.product_url:
                 return 'dropified-print'
+            if self.is_pls:
+                return 'pls'
 
             return get_domain(self.product_url)
         except:

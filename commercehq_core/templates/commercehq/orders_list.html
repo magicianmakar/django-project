@@ -211,6 +211,20 @@
                                         {% endif %}
 
                                         {% if order.lines_count %}
+                                        {% if 'pls' in order.supplier_types %}
+                                        <div class="btn-group pull">
+                                          <button type="button" class="btn btn-success btn-xs dropdown-toggle"
+                                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            Payments
+                                            <span class="caret"></span>
+                                          </button>
+
+                                          <ul class="dropdown-menu pull-right">
+                                            <li><a class="pay-selected-lines" href="#">Pay for Selected Items</a></li>
+                                          </ul>
+                                        </div>
+                                        {% endif %}
+
                                         <div class="btn-group">
                                             <button class="btn btn-success btn-xs order-items" order-id="{{order.id}}"
                                                     type="button" style="border-right:1px solid #66a8cc; {% if order.mixed_supplier_types %}display:none{% endif %}">
@@ -331,7 +345,7 @@
                                         line-data="{{item.order_data_id|default:''}}"
                                         line-track="{{item.order_track.id|default:''}}"
                                         fulfillment-status="{{item.fulfillment_status}}"
-                                        store-type="chq">
+                                        {% if item.is_pls %}is-pls="true"{% endif %}>
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
@@ -368,7 +382,7 @@
                                                 {% endif %}
                                             </div>
                                             <div class="col-xs-3 line-ordered">
-                                                <span class="badge badge-{% if item.order_track or item.status.fulfilled or item.status.shipped %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
+                                                <span class="badge badge-{% if item.order_track or item.is_paid or item.status.fulfilled or item.status.shipped %}primary{% else %}danger{% endif %}" style="width:15px;height:15px">&nbsp;</span>
                                                 {% if item.order_track %}
                                                     <span class="ordered-status"
                                                     {% if item.order_track.source_id %}
@@ -386,6 +400,10 @@
                                                     <span class="ordered-status">Shipped</span>
                                                 {% elif item.status.fulfilled %}
                                                     <span class="ordered-status">Sent to Fulfillment</span>
+                                                {% elif item.is_pls and item.is_paid %}
+                                                    <span class="ordered-status">
+                                                      <span class="label label-primary">Paid</span>
+                                                    </span>
                                                 {% else %}
                                                     <span class="ordered-status">Not ordered</span>
                                                 {% endif %}
@@ -447,6 +465,10 @@
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% if item.is_bundle %}
                                                                 <span class="badge badge-primary">Bundle</span>
+                                                            {% elif item.is_pls %}
+                                                                {% if not item.is_paid %}
+                                                                    {% include 'partial/make_payment_btn.html' %}
+                                                                {% endif %}
                                                             {% else %}
                                                                 {% include 'commercehq/partial/place_order_btn.html' %}
                                                             {% endif %}
@@ -588,6 +610,7 @@
 {% include "common/partial/modal_add_order_id.html" %}
 
 {% include "commercehq/partial/commercehq_product_selector.html" %}
+{% include "supplements/partials/make_payment_modal.html" %}
 
 {% endblock %}
 
@@ -628,6 +651,7 @@
     <script type="text/javascript" src="{% static 'prints/js/place_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/order_items.js' %}"></script>
+    <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/daterangepicker.js' %}"></script>

@@ -112,6 +112,9 @@ def product_save(req_data, user_id):
             product = CommerceHQProduct(store=store, user=user.models_user, notes=req_data.get('notes'))
             product.update_data(data)
 
+            user_supplement_id = json.loads(data).get('user_supplement_id')
+            product.user_supplement_id = user_supplement_id
+
             permissions.user_can_add(user, product)
 
             product.save()
