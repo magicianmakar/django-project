@@ -42,7 +42,7 @@ def get_shipping_cost(shipping_country_code, shipping_province_code, total_weigh
         cost = shipping_data.get('shipping_cost_default')
         shipping_rates = shipping_data.get('shipping_rates')
         for shipping_rate in shipping_rates:
-            if total_weight > shipping_rate['weight_from'] and total_weight <= shipping_rate['weight_to']:
+            if total_weight >= shipping_rate['weight_from'] and total_weight < shipping_rate['weight_to']:
                 cost = shipping_rate['shipping_cost']
     except:
         cost = False
