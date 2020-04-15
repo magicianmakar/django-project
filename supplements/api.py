@@ -43,16 +43,18 @@ class SupplementsApi(ApiResponseMixin, View):
 
             shipping_country = order['shipping_address']['country']
             shipping_country_province = slugify(order['shipping_address']['country_code'] + "-" + order['shipping_address']['province'])
-            target_countries = []
+
             for line in order_line_items:
+                target_countries = []
                 user_supplement = line['user_supplement']
                 shipping_countries = user_supplement.shipping_countries
                 target_countries.extend(shipping_countries)
-            target_countries = set(target_countries)
+                target_countries = set(target_countries)
+                if target_countries and shipping_country not in set(target_countries) \
+                        and shipping_country_province not in set(target_countries):
+                    invalid_country += 1
 
-            if target_countries and shipping_country not in set(target_countries) \
-                    and shipping_country_province not in set(target_countries):
-                invalid_country += 1
+            if invalid_country > 0:
                 continue
 
             try:
