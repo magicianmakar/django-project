@@ -63,29 +63,33 @@
 
                                 <td>
                                     <div class="mapping-preview">
-                                        <div>
-                                            <a class="select-var-mapping edit-btn" data-variant="{{variant.id}}"
-                                               href="#" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>">
-                                                <i class="fa fa-edit"></i>
-                                            </a>
-                                        </div>
+                                        {% if not product.user_supplement %}
+                                            <div>
+                                                <a class="select-var-mapping edit-btn" data-variant="{{variant.id}}"
+                                                href="#" data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i>">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                            </div>
+                                        {% endif %}
 
                                         <div class="var-data-display preview-display"
-                                             id="var_{{variant.id}}" data-variant="{{variant.id}}"></div>
+                                            id="var_{{variant.id}}" data-variant="{{variant.id}}"></div>
                                     </div>
                                 </td>
 
                                 <td>
-                                    <div class="mapping-preview">
-                                        <div>
-                                            <a href="#" class="change-shipping-rules edit-btn"data-variant="{{variant.id}}">
-                                                <i class="fa fa-edit"></i>
-                                            </a>
-                                       </div>
+                                    {% if not product.user_supplement %}
+                                        <div class="mapping-preview">
+                                            <div>
+                                                <a href="#" class="change-shipping-rules edit-btn"data-variant="{{variant.id}}">
+                                                    <i class="fa fa-edit"></i>
+                                                </a>
+                                        </div>
 
-                                        <div class="shipping-rules-display preview-display-block"
-                                             data-variant="{{variant.id}}"></div>
-                                    </div>
+                                            <div class="shipping-rules-display preview-display-block"
+                                                data-variant="{{variant.id}}"></div>
+                                        </div>
+                                    {% endif %}
                                </td>
                             </tr>
                             {% empty %}

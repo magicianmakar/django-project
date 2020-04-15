@@ -26,6 +26,8 @@ from shopified_core.utils import (
     CancelledOrderAlert
 )
 
+from supplements.models import UserSupplement
+
 from .api_helper import WooApiHelper
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
 from . import tasks
@@ -352,6 +354,15 @@ class WooStoreApi(ApiBase):
 
             supplier_url = remove_link_query(supplier_url)
 
+        user_supplement = None
+
+        if get_domain(supplier_url) == 'dropified':
+            try:
+                user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
+                user_supplement = UserSupplement.objects.get(id=user_supplement_id)
+            except:
+                return self.api_error('Product supplier is not correct', status=422)
+
         product = WooProduct(
             store=store,
             user=user.models_user,
@@ -363,6 +374,9 @@ class WooStoreApi(ApiBase):
                 'original_url': supplier_url
             })
         )
+
+        if user_supplement:
+            product.user_supplement = user_supplement
 
         permissions.user_can_add(user, product)
 
@@ -377,6 +391,11 @@ class WooStoreApi(ApiBase):
                 supplier_url=remove_link_query(data.get('vendor_url', 'http://www.aliexpress.com/')),
                 is_default=True
             )
+
+            if user_supplement:
+                supplier.supplier_name = 'Supplements On Demand'
+                supplier.notes = user_supplement.title
+                supplier.save()
 
             product.set_default_supplier(supplier, commit=True)
             product.sync()

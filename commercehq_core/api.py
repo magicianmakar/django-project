@@ -24,6 +24,8 @@ from shopified_core.utils import (
 )
 from product_alerts.utils import unmonitor_store
 
+from supplements.models import UserSupplement
+
 from . import tasks
 from . import utils
 
@@ -766,6 +768,15 @@ class CHQStoreApi(ApiBase):
                             'supplier_url': data.get('supplier')
                         })
 
+        user_supplement = None
+
+        if get_domain(supplier_url) == 'dropified':
+            try:
+                user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
+                user_supplement = UserSupplement.objects.get(id=user_supplement_id)
+            except:
+                return self.api_error('Product supplier is not correct', status=422)
+
         supplier_url = remove_link_query(supplier_url)
 
         product = CommerceHQProduct(
@@ -779,6 +790,9 @@ class CHQStoreApi(ApiBase):
             })
         )
 
+        if user_supplement:
+            product.user_supplement = user_supplement
+
         permissions.user_can_add(user, product)
         product.save()
 
@@ -790,6 +804,11 @@ class CHQStoreApi(ApiBase):
             supplier_url=remove_link_query(data.get('vendor_url', 'http://www.aliexpress.com/')),
             is_default=True
         )
+
+        if user_supplement:
+            supplier.supplier_name = 'Supplements On Demand'
+            supplier.notes = user_supplement.title
+            supplier.save()
 
         product.set_default_supplier(supplier, commit=True)
         product.sync()

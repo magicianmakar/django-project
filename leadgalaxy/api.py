@@ -84,6 +84,8 @@ from .models import (
     UserUpload,
 )
 
+from supplements.models import UserSupplement
+
 from .templatetags.template_helper import shopify_image_thumb, money_format
 from stripe_subscription import utils as stripe_utils
 
@@ -2282,6 +2284,7 @@ class ShopifyStoreApi(ApiBase):
         shopify_product = safe_int(data.get('product'))
         supplier_url = data.get('supplier')
         product = None
+        user_supplement = None
 
         if shopify_product:
             found_products = user.models_user.shopifyproduct_set.filter(store=store, shopify_id=shopify_product)
@@ -2318,6 +2321,13 @@ class ShopifyStoreApi(ApiBase):
                             'supplier_url': data.get('supplier')
                         })
 
+        if get_domain(supplier_url) == 'dropified':
+            try:
+                user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
+                user_supplement = UserSupplement.objects.get(id=user_supplement_id)
+            except:
+                return self.api_error('Product supplier is not correct', status=422)
+
         elif get_domain(supplier_url) == 'alitems':
             supplier_url = parse_qs(urlparse(supplier_url).query)['ulp'].pop()
 
@@ -2339,6 +2349,9 @@ class ShopifyStoreApi(ApiBase):
                 })
             )
 
+            if user_supplement:
+                product.user_supplement = user_supplement
+
             permissions.user_can_add(user, product)
             product.set_original_data('{}')
             product.save()
@@ -2351,6 +2364,10 @@ class ShopifyStoreApi(ApiBase):
             supplier_url=remove_link_query(data.get('vendor_url', 'http://www.aliexpress.com/')),
             is_default=True
         )
+        if user_supplement:
+            supplier.supplier_name = 'Supplements on Demand'
+            supplier.notes = user_supplement.title
+            supplier.save()
 
         product.set_default_supplier(supplier, commit=True)
 

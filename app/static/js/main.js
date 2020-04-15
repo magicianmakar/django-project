@@ -92,6 +92,8 @@ function renderSupplierInfo(product_url, parent) {
                 }
             }
         });
+    } else if ((/dropified.com\/supplements\/usersupplement/i).test(product_url)) {
+        $('.product-supplier-name', parent).val('Supplements on Demand');
     }
 }
 
