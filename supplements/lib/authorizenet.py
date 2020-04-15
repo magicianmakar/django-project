@@ -47,6 +47,8 @@ def create_customer_profile(user):
     result = re.match(duplicate_regex, message)
     if result:
         return result.group(1)
+    else:
+        raise Exception(message)
 
 
 def create_payment_profile(payment_data, customer_profile_id):
