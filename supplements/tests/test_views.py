@@ -305,10 +305,17 @@ class LabelDetailTestCase(PLSBaseTestCase):
 
     def test_post_comment_upload(self):
         self.client.force_login(self.user)
+        img = 'app/static/pls-mockup/SevenLimb_29033-2_VytaMind_60_200cc.png'
+        with open(img, 'rb') as reader:
+            data = base64.b64encode(reader.read()).decode()
+            image_data_url = f'data:image/png;base64,{data}'
+
         data = dict(
             action="comment",
             comment="New comment",
             upload_url="http://example.com/test",
+            image_data_url=image_data_url,
+            mockup_slug='bottle',
         )
 
         self.assertEqual(self.label.comments.count(), 0)

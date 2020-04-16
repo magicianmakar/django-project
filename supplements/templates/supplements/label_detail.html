@@ -48,6 +48,8 @@
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>
+
 <script type="text/javascript">
 var apiData = {{ api_data|safe }};
 var storeData = {{ store_data|safe }};
@@ -94,8 +96,10 @@ $("#uploader").plupload({
         FileUploaded: function(up, file, info) {
             var key = up.settings.multipart_params.key;
             var url = "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/" + key;
-            document.getElementById('comment_form').upload_url.value = url;
+            var form = document.getElementById('comment_form');
+            form.upload_url.value = url;
             $('.custom-file-label').html(file.name);
+            getImageUrl(form, file.getNative(), submit=false);
         },
         UploadComplete: function(up, files){
             $('#modal-upload-image').modal('hide');

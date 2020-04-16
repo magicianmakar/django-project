@@ -41,6 +41,9 @@
     <form id="comment_form" method="POST" role="form">
       <input type='hidden' name='action' value='comment' />
       {{ form.upload_url }}
+      {{ form.image_data_url }}
+      {{ form.mockup_slug }}
+      <canvas id='canvas'></canvas>
       <div class='form-group row'>
         {{ form.comment.errors }}
         {{ form.comment|add_class:"form-control" }}

@@ -35,6 +35,8 @@ class CommentForm(forms.Form):
     comment = forms.CharField(widget=forms.Textarea)
     action = forms.CharField(widget=forms.HiddenInput)
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
+    image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
+    mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
 
 
 class PLSupplementForm(forms.ModelForm):

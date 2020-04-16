@@ -1,57 +1,10 @@
-function getImageUrl(file, submit) {
-    var reader = new FileReader();
-    var form = document.getElementById('user_supplement_form');
-    submit = submit === undefined ? true : false;
-    var p = new Promise(function(resolve, reject) {
-        reader.onload = function() {
-            if (!(reader.result.includes('application/pdf'))) {
-                return reject('Invalid file type');
-            }
-            pdfjsLib.getDocument(reader.result).promise.then(function(pdf) {
-                pdf.getPage(1).then(function(page) {
-                    var viewport = page.getViewport({scale: 3});
-
-                    var canvas = document.getElementById('canvas');
-                    canvas.width = viewport.width;
-                    canvas.height = viewport.height;
-                    var context = canvas.getContext('2d');
-
-                    var renderContext = {
-                        canvasContext: context,
-                        viewport: viewport
-                    };
-
-                    var renderTask = page.render(renderContext);
-                    renderTask.promise.then(function() {
-                        var url = canvas.toDataURL();
-                        resolve(url);
-                    });
-                });
-            });
-        };
-    });
-    reader.readAsDataURL(file);
-
-    p.then(function(url) {
-        form.image_data_url.value = url;
-        if (submit) {
-            form.submit();
-        }
-    }).catch(function (reason) {
-          $("form input[type=submit]").button('reset');
-          toastr.error('Only PDF file is allowed');
-    });
-
-    return p;
-}
-
 function ajaxify_label(file) {
     $('#mockup-link').html('');
     var url = api_url('ajaxify-label', 'supplements');
     var form = document.getElementById('user_supplement_form');
     if (file !== undefined) {
         var p = new Promise(function(resolve, reject) {
-            getImageUrl(file, submit=false).then(function() {
+            getImageUrl(form, file, submit=false).then(function() {
                 data = {
                     'image_data_url': form.image_data_url.value,
                     'mockup_slug': form.mockup_slug.value,

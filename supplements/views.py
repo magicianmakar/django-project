@@ -249,6 +249,16 @@ class LabelMixin:
         user_supplement.current_label = new_label
         user_supplement.save()
 
+    def save_image(self, user, image, user_supplement):
+        upload_url = upload_supplement_object_to_aws(
+            user_supplement,
+            image,
+            image.name,
+        )
+
+        user_supplement.images.all().delete()
+        user_supplement.images.create(image_url=upload_url, position=0)
+
     def create_comment(self, comments, text, new_status=''):
         tags = bleach.sanitizer.ALLOWED_TAGS + [
             'span',
@@ -282,16 +292,6 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             {'title': 'Supplement', 'url': url},
         ]
         return breadcrumbs
-
-    def save_image(self, user, image, user_supplement):
-        upload_url = upload_supplement_object_to_aws(
-            user_supplement,
-            image,
-            image.name,
-        )
-
-        user_supplement.images.all().delete()
-        user_supplement.images.create(image_url=upload_url, position=0)
 
     def copy_images(self, user_supplement):
         current_urls = set(
@@ -699,11 +699,12 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         )
 
     def get_context_data(self, *args, **kwargs):
+        user_supplement = kwargs['label'].user_supplement
         aws = aws_s3_context()
-        api_data = self.get_api_data(kwargs['label'].user_supplement)
+        api_data = self.get_api_data(user_supplement)
         store_type_and_data = self.get_store_data(self.request.user)
         new_version_url = None
-        current_label = kwargs['label'].user_supplement.current_label
+        current_label = user_supplement.current_label
         if current_label:
             new_version_url = reverse('pls:label_detail',
                                       kwargs={'label_id': current_label.id})
@@ -728,9 +729,13 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
         comments = label.comments
 
+        form_data = dict(
+            mockup_slug=label.user_supplement.pl_supplement.mockup_type.slug,
+        )
+
         context = self.get_context_data(label=label)
         context.update({
-            'form': CommentForm(),
+            'form': CommentForm(initial=form_data),
             'comments': comments.all().order_by('-created_at'),
         })
 
@@ -743,6 +748,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         else:
             self.label = label = get_object_or_404(UserSupplementLabel, id=label_id, user_supplement__user=request.user.models_user)
 
+        user_supplement = label.user_supplement
         comments = label.comments
 
         user = request.user
@@ -761,8 +767,16 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                 self.create_comment(comments, comment)
                 upload_url = form.cleaned_data['upload_url']
                 if upload_url:
-                    user_supplement = label.user_supplement
+                    image_data = form.cleaned_data['image_data_url']
+                    mockup_type = form.cleaned_data['mockup_slug']
+                    label_image = data_url_to_pil_image(image_data)
+                    bottle_mockup = get_mockup(label_image, mockup_type)
+                    image_fp = pil_to_fp(bottle_mockup)
+                    image_fp.seek(0)
+                    image_fp.name = 'mockup.png'
                     self.save_label(user, upload_url, user_supplement)
+                    self.save_image(user, image_fp, user_supplement)
+
                     user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
                     user_supplement.current_label.save()
                     kwargs = {'label_id': user_supplement.current_label.id}
