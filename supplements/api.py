@@ -1,4 +1,5 @@
 import base64
+import json
 from io import BytesIO
 
 from django.conf import settings
@@ -10,6 +11,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
+from shopified_core.utils import get_store_api
 
 from .lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
@@ -72,6 +74,26 @@ class SupplementsApi(ApiResponseMixin, View):
                                                             order_line_items,
                                                             )
                 create_shipstation_order(pls_order, shipstation_data)
+
+                StoreApi = get_store_api(data['store_type'])
+                for item in pls_order.order_items.all():
+                    if item.shipstation_key:
+                        data = {
+                            'store': store.id,
+                            'order_id': item.store_order_id,
+                            'line_id': item.line_id,
+                            'aliexpress_order_id': str(pls_order.stripe_transaction_id),
+                            'source_type': 'supplements'
+                        }
+
+                        api_result = StoreApi.post_order_fulfill(request, user, data)
+                        if api_result.status_code != 200:
+                            error += 1
+                            raven_client.captureMessage('Unable to track supplement', extra={
+                                'api_result': json.loads(api_result.content.decode("utf-8")),
+                                'api_data': data
+                            }, level='warning')
+
                 success += len(order_line_items)
                 success_ids.extend([
                     {'id': i, 'status': pls_order.status_string}

@@ -317,6 +317,8 @@ def order_track_status(context, track, html=True):
         supplier_name = 'eBay'
     elif track.source_type == 'dropified-print':
         supplier_name = 'Dropified Print'
+    elif track.source_type == 'supplements':
+        supplier_name = 'Supplements'
     else:
         supplier_name = 'Aliexpress'
 

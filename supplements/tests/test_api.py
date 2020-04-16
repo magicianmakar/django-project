@@ -195,7 +195,14 @@ class MakePaymentTestCase(PLSBaseTestCase):
                 patch('supplements.utils.payment.charge_customer_profile',
                       return_value=self.transaction_id), \
                 patch('supplements.lib.shipstation.requests.post',
-                      return_value=self.mock_response):
+                      return_value=self.mock_response), \
+                patch('leadgalaxy.tasks.update_shopify_order.apply_async',
+                      return_value=True), \
+                patch('leadgalaxy.tasks.order_save_changes.apply_async',
+                      return_value=True), \
+                patch('shopify_orders.tasks.check_track_errors.delay',
+                      return_value=True), \
+                patch('leadgalaxy.utils.get_shopify_order_line'):
 
             self.assertEqual(Order.objects.all().count(), 0)
             self.assertEqual(OrderLine.objects.all().count(), 0)

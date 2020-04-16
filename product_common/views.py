@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
 from django.http import HttpResponse
@@ -5,13 +7,10 @@ from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.views import View
 from django.views.generic.list import ListView
 
-import requests
 import simplejson as json
 from raven.contrib.django.raven_compat.models import client as raven_client
 
-from leadgalaxy.models import ShopifyStore
-from leadgalaxy.utils import order_track_fulfillment
-from shopify_orders.models import ShopifyOrderLog
+from shopified_core.utils import get_store_api, get_track_model
 
 from .forms import OrderFilterForm, PayoutFilterForm, ProductEditForm, ProductForm
 from .lib.shipstation import get_shipstation_shipments
@@ -206,57 +205,8 @@ class ProductDetailView(LoginRequiredMixin, View, BaseMixin, SendToStoreMixin):
 
 
 class OrdersShippedWebHookView(View, BaseMixin):
-    store_model = ShopifyStore
-    log_model = ShopifyOrderLog
     order_model = Order
     order_line_model = OrderLine
-
-    def fulfill_shopify_order(self, data):
-        store = self.store_model.objects.get(id=data['store_id'])
-        order_id = data['order_id']
-        line_id = int(data['line_id'])
-        tracking_number = data['tracking_number']
-        location_id = store.get_primary_location()
-        notify_customer = True
-        aftership_domain = 'track'
-
-        api_data = order_track_fulfillment(**{
-            'store_id': store.id,
-            'line_id': line_id,
-            'order_id': order_id,
-            'source_tracking': tracking_number,
-            'use_usps': data.get('is_usps') == 'usps',
-            'location_id': location_id,
-            'user_config': {
-                'send_shipping_confirmation': notify_customer,
-                'validate_tracking_number': False,
-                'aftership_domain': aftership_domain,
-            }
-        })
-
-        url = store.api('orders', order_id, 'fulfillments')
-        rep = requests.post(url=url, json=api_data)
-
-        try:
-            rep.raise_for_status()
-
-            self.log_model.objects.update_order_log(
-                store=store,
-                user=self.request.user,
-                log='Manually Fulfilled in Shopify',
-                order_id=order_id,
-                line_id=line_id,
-            )
-
-        except:
-            if 'already fulfilled' not in rep.text and \
-               'please try again' not in rep.text and \
-               'Internal Server Error' not in rep.text:
-                raven_client.captureException(
-                    level='warning',
-                    extra={'response': rep.text})
-
-            raise
 
     def fulfill_order(self, shipment):
         try:
@@ -273,6 +223,9 @@ class OrdersShippedWebHookView(View, BaseMixin):
         store_id = order.store_id
         store_order_id = order.store_order_id
         tracking_number = shipment['trackingNumber']
+        source_id = order.stripe_transaction_id
+        StoreApi = get_store_api(store_type)
+        OrderTrack = get_track_model(store_type)
 
         get_line = self.order_line_model.objects.get
 
@@ -287,14 +240,38 @@ class OrdersShippedWebHookView(View, BaseMixin):
                 except self.order_line_model.DoesNotExist:
                     continue
 
+                try:
+                    track = OrderTrack.objects.get(
+                        order_id=store_order_id,
+                        line_id=line.line_id,
+                        source_id=source_id
+                    )
+                except OrderTrack.DoesNotExist:
+                    continue
+
+                product_price = Decimal(item.get('unitPrice') or 0)
+                shipping_price = Decimal(shipment.get('shipmentCost') or 0)
+                total_price = product_price + shipping_price
                 data = {
-                    'store_id': store_id,
-                    'order_id': store_order_id,
-                    'line_id': line.line_id,
+                    'store': store_id,
+                    'order': track.id,
+                    'status': 'SHIPPED',
+                    'orderStatus': 'SHIPPED',  # Mock extension
                     'tracking_number': tracking_number,
+                    'order_details': {'cost': {
+                        'products': str(product_price),
+                        'shipping': str(shipping_price),
+                        'total': str(total_price.quantize(Decimal('0.01'))),
+                    }},
+                    'source_id': item['lineItemKey'],
                 }
-                if store_type == self.order_model.SHOPIFY:
-                    self.fulfill_shopify_order(data)
+
+                api_result = StoreApi.post_order_fulfill_update(self.request, order.user, data)
+                if api_result.status_code != 200:
+                    raven_client.captureMessage('Unable to update tracking for supplement', extra={
+                        'api_result': json.loads(api_result.content.decode("utf-8")),
+                        'api_data': data
+                    }, level='warning')
 
     def get_shipments(self):
         data = json.loads(self.request.body.decode())

@@ -23,10 +23,8 @@ from product_common.models import ProductImage
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 
-from leadgalaxy.models import ShopifyStore
 from shopified_core import permissions
 from shopified_core.shipping_helper import get_counrties_list
-from shopify_orders.models import ShopifyOrderLog
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
 from supplements.lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
 from supplements.models import (
@@ -811,8 +809,6 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
 
 class OrdersShippedWebHook(common_views.OrdersShippedWebHookView):
-    store_model = ShopifyStore
-    log_model = ShopifyOrderLog
     order_model = PLSOrder
     order_line_model = PLSOrderLine
 

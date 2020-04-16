@@ -88,6 +88,7 @@ def create_shipstation_order(pls_order, data):
     headers.update(get_auth_header())
     url = f'{settings.SHIPSTATION_API_URL}/orders/createOrder'
     response = requests.post(url, data=json.dumps(data), headers=headers)
+    response.raise_for_status()
     response = response.json()
 
     pls_order.shipstation_key = response['orderKey']

@@ -211,6 +211,8 @@ class OrderTrackBase(models.Model):
                 return 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={}'.format(self.source_id)
             elif self.source_type == 'other':
                 return ''
+            elif self.source_type == 'supplements':
+                return f"{reverse('pls:my_orders')}?stripe_id={self.source_id}"
             elif self.source_type == 'dropified-print':
                 return f"{reverse('prints:orders')}?order={self.source_id}"
             else:

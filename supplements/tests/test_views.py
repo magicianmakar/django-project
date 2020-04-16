@@ -5,7 +5,13 @@ from unittest.mock import MagicMock, patch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import reverse
 
-from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyStoreFactory, UserFactory
+from leadgalaxy.tests.factories import (
+    AppPermissionFactory,
+    GroupPlanFactory,
+    ShopifyStoreFactory,
+    UserFactory,
+    ShopifyOrderTrackFactory,
+)
 from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrderLog
 from supplements.models import UserSupplementImage, UserSupplementLabel
@@ -401,13 +407,22 @@ class OrdersShippedWebHookTestCase(BaseTestCase):
             'resource_type': 'SHIP_NOTIFY',
         }
 
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
         self.store = ShopifyStoreFactory(primary_location=12)
+        self.store.user = self.user
+        self.store.save()
         store_id = self.store.id
 
+        source_id = 1234
         self.pls_order = PLSOrderFactory(shipstation_key=order_key,
                                          store_type=store_type,
                                          store_id=store_id,
-                                         store_order_id=order_id)
+                                         store_order_id=order_id,
+                                         stripe_transaction_id=source_id,
+                                         user_id=self.store.user_id)
 
         self.pls_order_line = PLSOrderLineFactory(shipstation_key=line_key,
                                                   store_id=store_id,
@@ -415,11 +430,17 @@ class OrdersShippedWebHookTestCase(BaseTestCase):
                                                   line_id=line_id,
                                                   pls_order=self.pls_order)
 
+        ShopifyOrderTrackFactory(source_id=source_id,
+                                 order_id=order_id,
+                                 line_id=line_id,
+                                 store_id=store_id,
+                                 user_id=self.store.user_id)
+
     def test_post(self):
         self.setup_data()
 
         with patch('product_common.views.get_shipstation_shipments') as mock_func, \
-                patch('requests.post'):
+                patch('requests.post'), patch('shopify_orders.tasks.check_track_errors.delay'):
             mock_func.return_value = self.shipments
             response = self.client.post(self.url,
                                         data=json.dumps(self.data),

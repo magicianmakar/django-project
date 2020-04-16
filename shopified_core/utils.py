@@ -21,6 +21,7 @@ from django.http import JsonResponse
 from django.template import Context, Template
 from django.template.defaultfilters import pluralize
 from django.utils.crypto import get_random_string
+from django.utils.module_loading import import_string
 
 import arrow
 import bleach
@@ -1087,3 +1088,29 @@ def products_filter(res, fdata, tags_field='tags'):
         res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))
 
     return res
+
+
+def get_store_api(store_type=''):
+    store_type = store_type or 'shopify'
+    if store_type not in ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']:
+        raise NotImplementedError('No such Store API')
+
+    return import_string(settings.DROPIFIED_API.get(store_type))()
+
+
+def get_track_model(store_type=''):
+    if store_type == 'chq':
+        from commercehq_core.models import CommerceHQOrderTrack
+        return CommerceHQOrderTrack
+    elif store_type == 'woo':
+        from woocommerce_core.models import WooOrderTrack
+        return WooOrderTrack
+    elif store_type == 'gkart':
+        from groovekart_core.models import GrooveKartOrderTrack
+        return GrooveKartOrderTrack
+    elif store_type == 'bigcommerce':
+        from bigcommerce_core.models import BigCommerceOrderTrack
+        return BigCommerceOrderTrack
+    else:
+        from leadgalaxy.models import ShopifyOrderTrack
+        return ShopifyOrderTrack
