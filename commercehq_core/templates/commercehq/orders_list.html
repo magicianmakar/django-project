@@ -432,7 +432,12 @@
                                                 <thead>
                                                     <tr>
                                                         <td class="product-preview">
-                                                            <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; ">
+                                                            <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; "
+                                                                  {% if item.is_pls %}
+                                                                    {% if item.is_paid or not item.product.is_label_approved %}
+                                                                        disabled
+                                                                    {% endif %}
+                                                                  {% endif %} >
 
                                                             <img class="product-img cached-img no-img no-img-sm unveil"
                                                                 store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
