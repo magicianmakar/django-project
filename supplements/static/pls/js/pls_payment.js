@@ -203,6 +203,12 @@ $(document).ready(function () {
         }
     });
 
+    $(".pay-all-lines").click(function (e) {
+        e.preventDefault();
+        $(this).parents('.order').find('.line-checkbox').prop('checked',true);
+        $(this).parents('.order').find('.pay-selected-lines').click();
+    });
+
     $(".order-payout").on("blur", function () {
         var orderId = $(this).parent('.order-payout-wrapper').data('order-id');
         var referenceNumber = $(this).val();
