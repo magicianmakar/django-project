@@ -917,6 +917,11 @@ class OrdersList(ListView):
                     is_pls = line['is_pls'] = supplier.is_pls
                     if is_pls:
                         line['is_paid'] = PLSOrderLine.is_paid(store, order['id'], line['id'])
+                        # pass orders without PLS products (when one store is used in multiple account)
+                        try:
+                            line['weight'] = product.user_supplement.get_weight(line['quantity'])
+                        except:
+                            line['weight'] = False
                     line['supplier_type'] = supplier.supplier_type()
                     line['shipping_method'] = shipping_method
                     order['connected_lines'] += 1

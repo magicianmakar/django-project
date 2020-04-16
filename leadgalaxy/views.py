@@ -4262,7 +4262,12 @@ def orders_view(request):
                 is_pls = order['line_items'][i]['is_pls'] = supplier.is_pls
                 if is_pls:
                     is_paid = PLSOrderLine.is_paid(store, order['id'], el['id'])
-                    order['line_items'][i]['weight'] = product.user_supplement.get_weight(order['line_items'][i]['quantity'])
+
+                    # pass orders without PLS products (when one store is used in multiple account)
+                    try:
+                        order['line_items'][i]['weight'] = product.user_supplement.get_weight(order['line_items'][i]['quantity'])
+                    except:
+                        order['line_items'][i]['weight'] = False
 
                 order['line_items'][i]['is_paid'] = is_paid
                 order['line_items'][i]['supplier'] = supplier
