@@ -42,7 +42,7 @@ class SupplementsApi(ApiResponseMixin, View):
             order_line_items = line_items[order_id]
 
             shipping_country = order['shipping_address']['country']
-            shipping_country_province = slugify(order['shipping_address']['country_code'] + "-" + order['shipping_address']['province'])
+            shipping_country_province = slugify(order['shipping_address']['country_code'] + "-" + str(order['shipping_address']['province']))
 
             for line in order_line_items:
                 target_countries = []

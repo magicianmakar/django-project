@@ -950,7 +950,12 @@ class OrdersList(ListView):
                         is_pls = item['is_pls'] = supplier.is_pls
                         if is_pls:
                             item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
-                            item['weight'] = product.user_supplement.get_weight(item['quantity'])
+
+                            # pass orders without PLS products (when one store is used in multiple account)
+                            try:
+                                item['weight'] = product.user_supplement.get_weight(item['quantity'])
+                            except:
+                                item['weight'] = False
 
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(supplier.supplier_type())

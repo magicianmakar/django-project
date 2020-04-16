@@ -213,9 +213,12 @@
                                         {% if order.lines_count %}
                                         {% if 'pls' in order.supplier_types %}
                                         <div class="btn-group pull">
+                                          <button class="btn btn-success btn-xs pay-all-lines" type="button" style="border-right:1px solid #66a8cc;">
+                                            Pay For Supplements
+                                          </button>
+
                                           <button type="button" class="btn btn-success btn-xs dropdown-toggle"
                                                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            Payments
                                             <span class="caret"></span>
                                           </button>
 
@@ -269,7 +272,11 @@
                                         {% endif %}
 
                                         {{order.customer_address.city}},
-                                            {{order.customer_address.province_code|default:''}}
+                                            <span class="itooltip shipping-province-code" title="Province" data-placement="auto right" shipping-province-code="{{order.customer_address.province_code|default:''}}">
+                                                        {{order.customer_address.province_code|default:''}}
+                                            </span>
+
+
                                             {{order.customer_address.zip}}
 
                                         {% if order.customer_address.phone %}
@@ -282,7 +289,7 @@
                                     </div>
                                     <div class="col-md-1 col-xs-1">
                                         {% if order.customer_address.country_code %}
-                                        <img class="itooltip" style="width: 16px"
+                                        <img class="itooltip shipping-country-code" shipping-country-code="{{order.customer_address.country_code|lower}}" style="width: 16px"
                                              title="{{order.customer_address.country}}"
                                              src="//cdn.dropified.com/static/flags/{{order.customer_address.country_code|lower}}.svg">
                                         <br />
