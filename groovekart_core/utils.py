@@ -720,6 +720,9 @@ class OrderListQuery(object):
 
         return self
 
+    def __len__(self):
+        return self.count()
+
 
 class OrderListPaginator(Paginator):
     def page(self, number):
