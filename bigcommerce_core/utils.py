@@ -943,7 +943,10 @@ class BigCommerceListQuery(object):
 
         rep.raise_for_status()
 
-        return rep.json()['count']
+        try:
+            return rep.json()['count']
+        except:
+            return 0
 
     def update_params(self, update):
         self._response = None

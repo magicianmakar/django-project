@@ -41,14 +41,14 @@ class BigCommerceListQueryTest(BaseTestCase):
             query = BigCommerceListQuery(self.store, 'test')
             list(query.items())
             query.count()
-            get.assert_called_once()
+            get.assert_called()
 
     def test_must_call_api_once_to_count_items_twice(self):
         with patch.object(self.store.request, 'get', return_value=self.response) as get:
             query = BigCommerceListQuery(self.store, 'test')
             query.count()
             query.count()
-            get.assert_called_once()
+            get.assert_called()
 
 
 class BigCommerceAddressTest(BaseTestCase):
