@@ -1526,17 +1526,6 @@ class ShopifyProduct(ProductBase):
 
         return all_mapping
 
-    def get_real_variant_id(self, variant_id):
-        """
-        Used to get current variant id from previously delete variant id
-        """
-
-        config = self.get_config()
-        if config.get('real_variant_map'):
-            return config.get('real_variant_map').get(str(variant_id), variant_id)
-
-        return variant_id
-
     def set_real_variant(self, deleted_id, real_id):
         config = self.get_config()
         mapping = config.get('real_variant_map', {})

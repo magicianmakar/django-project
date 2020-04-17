@@ -84,6 +84,17 @@ class ProductBase(models.Model):
 
         self.bundle_map = json.dumps(bundle_map)
 
+    def get_real_variant_id(self, variant_id):
+        """
+        Used to get current variant id from previously delete variant id
+        """
+
+        config = self.get_config()
+        if config.get('real_variant_map'):
+            return config.get('real_variant_map').get(str(variant_id), variant_id)
+
+        return variant_id
+
 
 class BoardBase(models.Model):
     class Meta:
