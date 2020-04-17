@@ -99,6 +99,10 @@ class ProductChangeManager():
 
             return product_data
 
+        except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout):
+            self.product_change.status = 2  # Failed
+            self.product_change.save()
+
         except Exception as e:
             self.product_change.status = 2  # Failed
             self.product_change.save()
