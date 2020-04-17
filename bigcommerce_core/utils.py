@@ -937,15 +937,22 @@ class BigCommerceListQuery(object):
         return self.response.json()
 
     def count(self):
-        if isinstance(self.response.json(), dict):
-            return self.response.json()['meta']['pagination']['total']
-        return len(self.response.json())
+        rep = self._store.request.get(
+            url=self._store.get_api_url('v2/orders/count'),
+        )
+
+        rep.raise_for_status()
+
+        return rep.json()['count']
 
     def update_params(self, update):
         self._response = None
         self._params.update(update)
 
         return self
+
+    def __len__(self):
+        return self.count()
 
 
 class BigCommerceListPaginator(SimplePaginator):
