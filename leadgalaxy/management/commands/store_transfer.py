@@ -18,11 +18,14 @@ from shopified_core.management import DropifiedBaseCommand
 class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
-        parser.add_argument('--from', dest='from', action='store', required=True, type=str, help='User that current have the store')
-        parser.add_argument('--to', dest='to', action='store', type=str, required=True, help='User to transfer ownership to')
-        parser.add_argument('--store', dest='store', action='store', type=str, required=True, help='Store shop link')
+        parser.add_argument(dest='store', type=str, help='Store shop link')
+        parser.add_argument(dest='from', type=str, help='User that current have the store')
+        parser.add_argument(dest='to', type=str, help='User to transfer ownership to')
 
         parser.add_argument('--permissions-check', dest='permissions_check', action='store_false',
+                            help='Check if recipient have the store in his account')
+
+        parser.add_argument('--dry-run', action='store_true',
                             help='Check if recipient have the store in his account')
 
     def start_command(self, *args, **options):
@@ -56,7 +59,7 @@ class Command(DropifiedBaseCommand):
                     return
             else:
                 self.write('Warning: Store is not install on {} account'.format(to_user.email))
-        else:
+        elif not options['dry_run']:
             for old_store in ShopifyStore.objects.filter(shop=shop, user=to_user, is_active=True):
                 self.write('Disable {} on {} account'.format(old_store.shop, to_user.email))
 
@@ -65,12 +68,25 @@ class Command(DropifiedBaseCommand):
                 old_store.is_active = False
                 old_store.save()
 
-        store.user = to_user
-        store.save()
+        if not options['dry_run']:
+            store.user = to_user
+            store.save()
 
-        ShopifyProduct.objects.filter(store=store, user=from_user).update(user=to_user)
-        ShopifyOrderTrack.objects.filter(store=store, user=from_user).update(user=to_user)
-        ShopifyOrder.objects.filter(store=store, user=from_user).update(user=to_user)  # TODO: Elastic update
-        ShopifyBoard.objects.filter(user=from_user).update(user=to_user)
+            self.write('ShopifyProduct...')
+            ShopifyProduct.objects.filter(store=store, user=from_user).update(user=to_user)
 
-        self.write('Store {} has been transferred to {} account'.format(store.shop, to_user.email))
+            self.write('ShopifyOrderTrack...')
+            ShopifyOrderTrack.objects.filter(store=store, user=from_user).update(user=to_user)
+
+            self.write('ShopifyOrder...')
+            ShopifyOrder.objects.filter(store=store, user=from_user).update(user=to_user)  # TODO: Elastic update
+
+            self.write('ShopifyBoard...')
+            ShopifyBoard.objects.filter(user=from_user).update(user=to_user)
+
+            self.write('Store {} has been transferred to {} account'.format(store.shop, to_user.email))
+        else:
+            self.write(f'ShopifyProduct: {ShopifyProduct.objects.filter(store=store, user=from_user)}')
+            self.write(f'ShopifyOrderTrack: {ShopifyOrderTrack.objects.filter(store=store, user=from_user)}')
+            self.write(f'ShopifyOrder: {ShopifyOrder.objects.filter(store=store, user=from_user)}')
+            self.write(f'ShopifyBoard: {ShopifyBoard.objects.filter(user=from_user)}')
