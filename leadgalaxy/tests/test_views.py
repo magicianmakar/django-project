@@ -889,39 +889,39 @@ class BulkOrderTestCase(BaseTestCase):
         r = self.client.get(self.bulk_order_url)
         self.assertIn('error', r.json())
 
-    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
-    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders')
     def test_bulk_order_should_return_orders(self, get_orders):
-        get_orders.return_value = self.shopify_order
+        get_orders.return_value = [self.shopify_order, None, None]
 
         result = self.client.get(self.bulk_order_url).json()
         self.assertEqual(len(result['orders']), 1)
         self.assertEqual(result['pages'], 1)
         self.assertEqual(result['next'], None)
 
-    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
-    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders')
     def test_bulk_order_without_supplier(self, get_orders):
-        get_orders.return_value = self.shopify_order
+        get_orders.return_value = [self.shopify_order, None, None]
         self.product.default_supplier = None
         self.product.save()
 
         result = self.client.get(self.bulk_order_url).json()
         self.assertEqual(len(result['orders']), 0)
 
-    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
-    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders')
     def test_bulk_order_without_payment(self, get_orders):
         self.shopify_order[0]['financial_status'] = 'pending'
-        get_orders.return_value = self.shopify_order
+        get_orders.return_value = [self.shopify_order, None, None]
 
         result = self.client.get(self.bulk_order_url).json()
         self.assertEqual(len(result['orders']), 0)
 
-    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
-    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders')
     def test_fulfilled_bulk_order(self, get_orders):
-        get_orders.return_value = self.shopify_order
+        get_orders.return_value = [self.shopify_order, None, None]
         order_track = f.ShopifyOrderTrackFactory(
             user=self.user,
             store=self.store,
@@ -933,16 +933,16 @@ class BulkOrderTestCase(BaseTestCase):
         self.assertEqual(len(result['orders']), 0)
 
         self.shopify_order[0]['fulfillment_status'] = 'fulfilled'
-        get_orders.return_value = self.shopify_order
+        get_orders.return_value = [self.shopify_order, None, None]
         order_track.delete()
 
         result = self.client.get(self.bulk_order_url).json()
         self.assertEqual(len(result['orders']), 0)
 
-    @patch('leadgalaxy.models.ShopifyStore.get_orders_count', Mock(return_value=1))
-    @patch('leadgalaxy.utils.ShopifyOrderPaginator.get_orders')
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders')
     def test_not_aliexpress_supplier(self, get_orders):
-        get_orders.return_value = self.shopify_order
+        get_orders.return_value = [self.shopify_order, None, None]
         self.product.default_supplier.product_url = self.product.default_supplier.product_url.replace('aliexpress', 'ebay')
         self.product.default_supplier.save()
 

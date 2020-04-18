@@ -2,12 +2,6 @@
 
 {% if paginator and current_page.has_previous or current_page.has_next or page_obj.has_previous or page_obj.has_next %}
 <div class="row">
-    {% if current_page.is_infinte or page_obj.is_infinte %}
-    <span style="position: relative;top: 50px;left: 20px;font-size: 18px;">
-        Page: {% if current_page %} {{current_page.number}} {% elif page_obj %} {{page_obj.number}} {% endif %}
-    </span>
-    {% endif %}
-
     <nav style="text-align: center;">
       <ul class="pagination pagination-lg">
         {% if current_page %}
@@ -24,20 +18,6 @@
                     <a href="{% url_replace 'page' current_page.previous_page_number %}" aria-label="Previous">
                         <span aria-hidden="true">&larr; Previous</span>
                     </a>
-                </li>
-            {% else %}
-                {% if current_page.previous_page_number != 1 %}
-                <li class="disabled">
-                    <span href="#" aria-label="Previous">
-                        <span aria-hidden="true">&laquo; First</span>
-                    </span>
-                </li>
-                {% endif %}
-
-                <li class="disabled">
-                    <span aria-label="Previous">
-                        <span aria-hidden="true">&larr; Previous</span>
-                    </span>
                 </li>
             {% endif %}
         {% endif %}
@@ -63,8 +43,10 @@
 
             {% endfor %}
         {% else %}
-            {% if current_page.has_previous or current_page.has_next %}
-                <li class="paginator-goto" data-href="{% url_replace 'page' 'paginator-goto' %}"><span>...</span></li>
+            {% if not page_obj.is_infinte and not current_page.is_infinte %}
+                {% if current_page.has_previous or current_page.has_next %}
+                    <li class="paginator-goto" data-href="{% url_replace 'page' 'paginator-goto' %}"><span>...</span></li>
+                {% endif %}
             {% endif %}
         {% endif %}
 
@@ -75,12 +57,6 @@
                         <span aria-hidden="true">Next &rarr;</span>
                     </a>
                 </li>
-            {% else %}
-            <li class="disabled">
-                <span aria-label="Next">
-                    <span aria-hidden="true">Next &rarr;</span>
-                </span>
-            </li>
             {% endif %}
         {% endif %}
 

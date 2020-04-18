@@ -133,6 +133,8 @@ from .models import (
     UserUpload,
 )
 from .templatetags.template_helper import money_format
+from .paginator import ShopifyOrderPaginator
+
 from functools import reduce
 from stripe_subscription.models import CustomStripePlan
 
@@ -3706,10 +3708,10 @@ def orders_view(request):
         open_orders = store.get_orders_count(status, fulfillment, financial,
                                              query=safe_int(order_id, query),
                                              created_range=[created_at_start, created_at_end])
-        orders = range(0, open_orders)
 
-        paginator = utils.ShopifyOrderPaginator(orders, post_per_page)
+        paginator = ShopifyOrderPaginator([], post_per_page)
         paginator.set_store(store)
+        paginator.set_page_info(request.GET.get('page'))
         paginator.set_order_limit(post_per_page)
         paginator.set_filter(
             status,
@@ -3720,6 +3722,8 @@ def orders_view(request):
         )
         paginator.set_reverse_order(sort == 'desc' and sort != 'created_at')
         paginator.set_query(safe_int(order_id, query))
+
+        open_orders = paginator.orders_count()
 
         page = min(max(1, page), paginator.num_pages)
         current_page = paginator.page(page)

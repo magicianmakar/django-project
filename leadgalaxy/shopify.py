@@ -10,6 +10,33 @@ class ShopifyAPI:
     def __init__(self, store=None):
         self.store = store
 
+    def get_orders(self, params, page_info=None):
+        links, data = self._get_resource(
+            resource='orders',
+            params=params,
+            page_info=page_info,
+            raise_for_status=True)
+
+        if links.get('next'):
+            next_page_info = links['next']['url']
+        else:
+            next_page_info = None
+
+        if links.get('previous'):
+            previous_page_info = links['previous']['url']
+        else:
+            previous_page_info = None
+
+        return data['orders'], next_page_info, previous_page_info
+
+    def get_orders_count(self, params):
+        links, data = self._get_resource(
+            resource='orders/count',
+            params=params,
+            raise_for_status=True)
+
+        return data['count']
+
     def paginate_orders(self, **kwargs):
         defaults = {
             'limit': self._pagination_limit,
@@ -40,24 +67,27 @@ class ShopifyAPI:
         yield from self.paginate_resource('products', params=kwargs)
 
     def paginate_resource(self, resource, params):
-        next_page_url = None
+        next_page_info = None
         first_page = True
-        while first_page or next_page_url:
-            links, rep = self._get_resource(resource=resource, params=params, page_url=next_page_url)
+        while first_page or next_page_info:
+            links, rep = self._get_resource(resource=resource, params=params, page_info=next_page_info)
 
             if links.get('next'):
-                next_page_url = links['next']['url']
+                next_page_info = links['next']['url']
             else:
-                next_page_url = None
+                next_page_info = None
 
             first_page = False
 
             yield rep[resource]
 
-    def _get_resource(self, resource, params, page_url):
-        if not page_url:
+    def _get_resource(self, resource, params, page_info=None, raise_for_status=False):
+        if not page_info:
             rep = requests.get(url=self.store.api(resource, version=self.version), params=params)
         else:
-            rep = requests.get(url=self.store.api(page_url, version=self.version))
+            rep = requests.get(url=self.store.api(page_info, version=self.version))
+
+        if raise_for_status:
+            rep.raise_for_status()
 
         return rep.links, rep.json()
