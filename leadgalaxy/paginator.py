@@ -91,6 +91,7 @@ class ShopifyOrderPaginator(Paginator):
 
 class ShopifyOrderPage(Page):
     is_infinte = True
+    no_page_number = True
 
     next_page_info = None
     previous_page_info = None
