@@ -516,6 +516,9 @@ class ShopifyTrackOrderExport():
 
                 for order in orders_chunk:
                     shopify_order = shopify_orders.get(order.order_id)
+                    if not shopify_order:
+                        continue
+
                     # Match the Order line id by looping through all line items to get variant title
                     order_title = ''
                     for items in shopify_order['line_items']:
