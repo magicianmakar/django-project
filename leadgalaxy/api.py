@@ -890,9 +890,10 @@ class ShopifyStoreApi(ApiBase):
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id)
                 product.user_supplement_id = user_supplement
             except:
+                raven_client.captureException(level='warning')
                 return self.api_error('Product supplier is not correct', status=500)
 
-        if 'click.aliexpress.com' in original_link.lower():
+        elif 'click.aliexpress.com' in original_link.lower():
             return self.api_error('The submitted Aliexpress link will not work properly with order fulfillment')
 
         if not original_link:
@@ -2310,7 +2311,7 @@ class ShopifyStoreApi(ApiBase):
         if get_domain(supplier_url) == 'myshopify':
             return self.api_error('Product supplier is not correct', status=422)
 
-        if get_domain(supplier_url) == 'aliexpress':
+        elif get_domain(supplier_url) == 'aliexpress':
             if '/deep_link.htm' in supplier_url.lower():
                 supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
 
@@ -2329,19 +2330,19 @@ class ShopifyStoreApi(ApiBase):
                             'supplier_url': data.get('supplier')
                         })
 
-        if get_domain(supplier_url) == 'dropified':
+        elif get_domain(supplier_url) == 'dropified':
             try:
                 user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id)
             except:
+                raven_client.captureException(level='warning')
                 return self.api_error('Product supplier is not correct', status=422)
 
         elif get_domain(supplier_url) == 'alitems':
             supplier_url = parse_qs(urlparse(supplier_url).query)['ulp'].pop()
 
-        else:
-            if 'app.oberlo.com/suppliers' not in supplier_url:
-                raven_client.captureMessage('Unsupported Import Source', level='warning', extra={'url': supplier_url})
+        elif 'app.oberlo.com/suppliers' not in supplier_url:
+            raven_client.captureMessage('Unsupported Import Source', level='warning', extra={'url': supplier_url})
 
         supplier_url = remove_link_query(supplier_url)
 
