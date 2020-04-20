@@ -333,6 +333,7 @@ class WooStoreApi(ApiBase):
         if not supplier_url:
             return self.api_error('Supplier URL is missing', status=422)
 
+        user_supplement = None
         if get_domain(supplier_url) == 'aliexpress':
             if '/deep_link.htm' in supplier_url.lower():
                 supplier_url = parse_qs(urlparse(supplier_url).query)['dl_target_url'].pop()
