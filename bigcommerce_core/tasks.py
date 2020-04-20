@@ -10,6 +10,7 @@ from django.core.cache import cache
 from django.urls import reverse
 from django.utils.text import slugify
 from django.conf import settings
+from django.template.defaultfilters import truncatewords
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -19,6 +20,7 @@ from shopified_core import permissions
 
 from .models import BigCommerceStore, BigCommerceProduct, BigCommerceSupplier
 from .utils import (
+    BigCommerceOrderUpdater,
     format_bigcommerce_errors,
     get_image_url_by_hash,
     add_product_images_to_api_data,
@@ -401,4 +403,30 @@ def sync_bigcommerce_product_quantities(self, product_id):
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_sync_bigcommerce_{}'.format(product_id), self.request.retries)
+            raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure, bind=True)
+def order_save_changes(self, data):
+    order_id = None
+    try:
+        updater = BigCommerceOrderUpdater()
+        updater.fromJSON(data)
+
+        order_id = updater.order_id
+
+        updater.save_changes()
+
+        order_note = '\n'.join(updater.notes)
+        updater.store.pusher_trigger('order-note-update', {
+            'order_id': order_id,
+            'note': order_note,
+            'note_snippet': truncatewords(order_note, 10),
+        })
+
+    except Exception as e:
+        raven_client.captureException(extra=utils.http_exception_response(e))
+
+        if not self.request.called_directly:
+            countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
