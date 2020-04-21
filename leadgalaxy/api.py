@@ -1553,8 +1553,15 @@ class ShopifyStoreApi(ApiBase):
             order_updater.add_note("Variant changed to '{}' for line #{} by {}".format(
                 data.get('title'), data.get('line'), user.first_name or user.username))
 
+        product = ShopifyProduct.objects.get(id=data.get('product'), store=store)
+        supplier = product.get_supplier_for_variant(data.get('variant'))
+
+        if supplier.is_pls:
+            user_supplement_id = int(urlparse(supplier.product_url).path.split('/')[-1])
+            product.user_supplement_id = user_supplement_id
+            product.save()
+
         if data.get('remember_variant') == 'true':
-            product = ShopifyProduct.objects.get(id=data.get('product'), store=store)
             product.set_real_variant(data.get('current_variant'), data.get('variant'))
 
         order_updater.save_changes()

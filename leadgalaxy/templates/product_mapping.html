@@ -86,11 +86,13 @@
                                     <div class="var-data-display" style="display: flex; align-items: center;"
                                          id="var_{{variant.id}}" data-var-id="{{variant.id}}"></div>
                                 </td>
-                                <td style="vertical-align:middle;text-align:center">
-                                    <a href="#" class="btn btn-xs btn-success select-var-mapping"
-                                       product-url="{{product.default_supplier.product_url}}"
-                                       data-var="{{variant.id}}">Change</a>
-                                </td>
+                                {% if not product.user_supplement %}
+                                    <td style="vertical-align:middle;text-align:center">
+                                        <a href="#" class="btn btn-xs btn-success select-var-mapping"
+                                        product-url="{{product.default_supplier.product_url}}"
+                                        data-var="{{variant.id}}">Change</a>
+                                    </td>
+                                {% endif %}
                             </tr>
                             {% empty %}
                             <tr>
