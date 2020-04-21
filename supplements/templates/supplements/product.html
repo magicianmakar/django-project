@@ -159,6 +159,13 @@
     </div>
 
     <div class="form-group">
+      <label class="col-sm-2 control-label">Active:</label>
+      <div class="col-sm-5" style="padding-top: 7px;">
+        {{ form.is_active }}
+      </div>
+    </div>
+
+    <div class="form-group">
       {{ form.authenticity_certificate.errors }}
       <label class="col-sm-2 control-label">Authenticity Certificate:</label>
       <div class='col-sm-7'>

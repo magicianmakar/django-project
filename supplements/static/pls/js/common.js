@@ -87,7 +87,9 @@ $(document).ready(function(){
     });
 
     $(".add-loader").click(function () {
-        $(this).button('loading');
+        if ($(this).parents('form')[0].checkValidity()) {
+            $(this).button('loading');
+        }
     });
 
     $("#print-all-labels").click(function (e) {

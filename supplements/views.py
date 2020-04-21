@@ -68,6 +68,13 @@ class Index(common_views.IndexView):
         else:
             raise permissions.PermissionDenied()
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.user.can('pls_admin.use') \
+                and not self.request.user.can('pls_staff.use'):
+            return queryset.filter(is_active=True)
+        return queryset
+
     def get_template(self):
         return 'supplements/index.html'
 
@@ -170,7 +177,7 @@ class ProductEdit(Product):
 
         context = {
             'breadcrumbs': self.get_breadcrumbs(supplement_id),
-            'form': self.form(initial=form_data),
+            'form': self.form(initial=form_data, instance=self.supplement),
         }
         return render(request, self.get_template(), context)
 
@@ -308,6 +315,9 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         ])
 
     def get_supplement(self, user, supplement_id):
+        if not self.request.user.can('pls_admin.use') \
+                and not self.request.user.can('pls_staff.use'):
+            return get_object_or_404(PLSupplement, id=supplement_id, is_active=True)
         return get_object_or_404(PLSupplement, id=supplement_id)
 
     def get_supplement_data(self, user, supplement_id):
@@ -507,7 +517,7 @@ class MySupplements(LoginRequiredMixin, View):
             {'title': 'My Supplements', 'url': reverse('pls:my_supplements')},
         ]
 
-        supplements = [i for i in request.user.models_user.pl_supplements.all()]
+        supplements = [i for i in request.user.models_user.pl_supplements.filter(pl_supplement__is_active=True)]
 
         context = {
             'breadcrumbs': breadcrumbs,

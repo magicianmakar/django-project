@@ -54,6 +54,7 @@ class PLSupplementForm(forms.ModelForm):
                   'label_size',
                   'weight',
                   'mockup_type',
+                  'is_active',
                   ]
 
         widgets = {
