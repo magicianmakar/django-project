@@ -136,7 +136,7 @@ def product_save(req_data, user_id):
 
 
 @celery_app.task(base=CaptureFailure)
-def product_export(store_id, product_id, user_id):
+def product_export(store_id, product_id, user_id, publish=None):
     user = get_user_model().objects.get(id=user_id)
     store = GrooveKartStore.objects.get(id=store_id)
     product = GrooveKartProduct.objects.get(id=product_id)
@@ -269,11 +269,13 @@ def product_export(store_id, product_id, user_id):
 
             product.default_supplier.save()
 
+        active = publish if publish is not None else product.parsed.get('published', False)
+
         api_data = {
             'product': {
                 'id': product.source_id,
                 'action': 'product_status',
-                'active': product.parsed.get('published', False),
+                'active': active,
             }
         }
         r = store.request.post(endpoint, json=api_data)

@@ -358,8 +358,12 @@ class GrooveKartApi(ApiBase):
 
         permissions.user_can_view(user, product)
 
+        publish = data.get('publish')
+        if publish is not None:
+            publish = data.get('publish') == 'true'
+
         try:
-            args = [store.id, product.id, user.id]
+            args = [store.id, product.id, user.id, publish]
             tasks.product_export.apply_async(args=args, countdown=0, expires=120)
         except ProductExportException as e:
             return self.api_error(str(e))
