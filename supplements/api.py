@@ -52,6 +52,7 @@ class SupplementsApi(ApiResponseMixin, View):
                 shipping_countries = user_supplement.shipping_countries
                 target_countries.extend(shipping_countries)
                 target_countries = set(target_countries)
+
                 if target_countries and shipping_country not in set(target_countries) \
                         and shipping_country_province not in set(target_countries):
                     invalid_country += 1
