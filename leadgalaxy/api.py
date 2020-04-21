@@ -84,7 +84,7 @@ from .models import (
     UserUpload,
 )
 
-from supplements.models import UserSupplement
+from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
 
 from .templatetags.template_helper import shopify_image_thumb, money_format
 from stripe_subscription import utils as stripe_utils
@@ -2374,7 +2374,7 @@ class ShopifyStoreApi(ApiBase):
             is_default=True
         )
         if user_supplement:
-            supplier.supplier_name = 'Supplements on Demand'
+            supplier.supplier_name = SUPPLEMENTS_SUPPLIER
             supplier.notes = user_supplement.title
             supplier.save()
 

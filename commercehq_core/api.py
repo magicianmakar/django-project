@@ -24,7 +24,7 @@ from shopified_core.utils import (
 )
 from product_alerts.utils import unmonitor_store
 
-from supplements.models import UserSupplement
+from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
 
 from . import tasks
 from . import utils
@@ -815,7 +815,7 @@ class CHQStoreApi(ApiBase):
         )
 
         if user_supplement:
-            supplier.supplier_name = 'Supplements On Demand'
+            supplier.supplier_name = SUPPLEMENTS_SUPPLIER
             supplier.notes = user_supplement.title
             supplier.save()
 

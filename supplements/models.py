@@ -15,6 +15,8 @@ from .mixin import (
 )
 import simplejson as json
 
+SUPPLEMENTS_SUPPLIER = 'Supplements on Demand'
+
 
 class PLSupplement(PLSupplementMixin, model_base.Product):
     PRODUCT_TYPE = 'pls'

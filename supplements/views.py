@@ -36,7 +36,8 @@ from supplements.models import (
     ShippingGroup,
     UserSupplement,
     UserSupplementImage,
-    UserSupplementLabel
+    UserSupplementLabel,
+    SUPPLEMENTS_SUPPLIER,
 )
 
 from .forms import (
@@ -214,7 +215,7 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
             title=data['title'],
             description=data['description'],
             type=data['category'],
-            vendor="Supplements on Demand",  # TODO: Confirm
+            vendor=SUPPLEMENTS_SUPPLIER,
             weight=0,  # TODO: Confirm
             weight_unit="lbs",  # TODO: Confirm
             tags=data['tags'],
@@ -227,7 +228,7 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
             user_supplement_id=data['user_supplement_id'],
             sku=data['shipstation_sku'],
             store=dict(
-                name="Supplements on Demand",
+                name=SUPPLEMENTS_SUPPLIER,
                 url='',
             ),
         ), use_decimal=True)

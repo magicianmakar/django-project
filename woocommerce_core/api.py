@@ -26,7 +26,7 @@ from shopified_core.utils import (
     CancelledOrderAlert
 )
 
-from supplements.models import UserSupplement
+from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
 
 from .api_helper import WooApiHelper
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
@@ -393,7 +393,7 @@ class WooStoreApi(ApiBase):
             )
 
             if user_supplement:
-                supplier.supplier_name = 'Supplements On Demand'
+                supplier.supplier_name = SUPPLEMENTS_SUPPLIER
                 supplier.notes = user_supplement.title
                 supplier.save()
 

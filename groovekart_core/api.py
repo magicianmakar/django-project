@@ -25,7 +25,7 @@ from shopified_core.utils import (
     encode_api_token,
 )
 
-from supplements.models import UserSupplement
+from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
 
 from .api_helper import GrooveKartApiHelper
 from .models import (
@@ -617,7 +617,7 @@ class GrooveKartApi(ApiBase):
             )
 
             if user_supplement:
-                supplier.supplier_name = 'Supplements On Demand'
+                supplier.supplier_name = SUPPLEMENTS_SUPPLIER
                 supplier.notes = user_supplement.title
                 supplier.save()
 

@@ -6,7 +6,8 @@ from django.db.models import Q
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from supplements.models import UserSupplement
+from shopified_core.utils import get_domain
+from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
 from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, prefix_from_model, base64_encode
 
 
@@ -49,7 +50,10 @@ class SupplierBase(models.Model):
 
     @property
     def is_pls(self):
-        return self.supplier_name == 'Supplements on Demand'
+        return (
+            get_domain(self.product_url) == 'dropified'
+            or safe_str(self.supplier_name).lower() == SUPPLEMENTS_SUPPLIER.lower()
+        )
 
 
 class ProductBase(models.Model):
