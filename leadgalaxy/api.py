@@ -1900,8 +1900,9 @@ class ShopifyStoreApi(ApiBase):
 
         order_details = {}
         try:
-            order_details = json.loads(data.get('order_details'))
-            order_data['aliexpress']['order_details'] = order_details
+            if data.get('order_details'):
+                order_details = json.loads(data.get('order_details'))
+                order_data['aliexpress']['order_details'] = order_details
         except:
             raven_client.captureException(level='warning')
 
