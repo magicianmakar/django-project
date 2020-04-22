@@ -4383,7 +4383,10 @@ def orders_view(request):
                             item_note = '{}{}: {}\n'.format(item_note, prop['name'], prop['value'])
 
                         if item_note:
-                            item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
+                            if models_user.get_config('_plain_attribute_note'):
+                                item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
+                            else:
+                                item_note = item_note.strip()
 
                             order_data['order']['item_note'] = item_note
                             order['line_items'][i]['item_note'] = item_note
