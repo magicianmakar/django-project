@@ -40,6 +40,7 @@
         "SHIPPING_INFO_RECEIVED": "Shipping info received",
 
         "D_PENDING_PAYMENT": "Pending Payment",
+        "D_PAID": "Confirmed Payment",
         "D_PENDING_SHIPMENT": "Pending Shipment",
         "D_SHIPPED": "Shipped"
     };
@@ -279,6 +280,35 @@
 
         if (order.source_type === 'dropified-print') {
             return checkDropifiedPrintOrder(order).then(function(data) {
+                // Got Supplier order info
+                if (order.source_status == data.details.orderStatus &&
+                    order.source_tracking == data.details.tracking_number &&
+                    $('#update-unfulfilled-only').is(':checked') &&
+                    !order.bundle) {
+                    // Order info hasn't changed
+                    orders.success += 1;
+                    addOrderUpdateItem(order, data.details);
+                } else {
+                    return updateOrderStatus(order, data.details);
+                }
+            }).fail(function(data) {
+                // Couldn't get Supplier order info
+                orders.error += 1;
+                addOrderUpdateItem(order, {'error': getAjaxError(data)});
+            }).always(function() {
+                updateProgress();
+            });
+        }
+
+        if (order.source_type === 'supplements') {
+            return $.ajax({
+                url: api_url('sync-order', 'supplements'),
+                type: 'POST',
+                data: {
+                    'store_type': window.storeType,
+                    'source_id': order.source_id
+                }
+            }).then(function(data) {
                 // Got Supplier order info
                 if (order.source_status == data.details.orderStatus &&
                     order.source_tracking == data.details.tracking_number &&

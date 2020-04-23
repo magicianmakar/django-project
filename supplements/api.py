@@ -1,6 +1,7 @@
 import base64
 import json
 from io import BytesIO
+from decimal import Decimal
 
 from django.conf import settings
 from django.utils.crypto import get_random_string
@@ -64,7 +65,7 @@ class SupplementsApi(ApiResponseMixin, View):
                 pls_order = util.make_payment(
                     order_info,
                     order_line_items,
-                    user,
+                    user.models_user,
                 )
             except Exception:
                 error += len(order_line_items)
@@ -194,3 +195,42 @@ class SupplementsApi(ApiResponseMixin, View):
             return self.api_error('Shipping cost not available', status=404)
         else:
             return self.api_success(data)
+
+    def post_sync_order(self, request, user, data):
+        try:
+            print(data.get('source_id'))
+            order = PLSOrder.objects.get(
+                stripe_transaction_id=data.get('source_id'),
+                user=request.user.models_user
+            )
+        except PLSOrder.DoesNotExist:
+            return self.api_error('Order not found', status=404)
+
+        status = {
+            PLSOrder.PENDING: 'D_PENDING_PAYMENT',
+            PLSOrder.PAID: 'D_PAID',
+            PLSOrder.SHIPPED: 'D_SHIPPED',
+        }.get(order.status, 'PLACE_ORDER_SUCCESS')
+
+        total_price = Decimal(order.amount) / Decimal(100)
+        shipping_price = Decimal(order.shipping_price) / Decimal(100)
+        products_price = total_price - shipping_price
+
+        tracking_numbers = []
+        for item in order.order_items.values('tracking_number'):
+            if item['tracking_number'] and item['tracking_number'] not in tracking_numbers:
+                tracking_numbers.append(item['tracking_number'])
+        tracking_number = ','.join(tracking_numbers)
+        return self.api_success({
+            'details': {
+                'status': status,
+                'orderStatus': status,  # Mock extension
+                'tracking_number': tracking_number,
+                'order_details': {'cost': {
+                    'total': str(total_price),
+                    'products': str(products_price),
+                    'shipping': str(shipping_price),
+                }},
+                'source_id': order.stripe_transaction_id,
+            }
+        })

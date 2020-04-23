@@ -220,8 +220,6 @@ class OrdersShippedWebHookView(View, BaseMixin):
             return
 
         store_type = order.store_type
-        store_id = order.store_id
-        store_order_id = order.store_order_id
         tracking_number = shipment['trackingNumber']
         source_id = order.stripe_transaction_id
         StoreApi = get_store_api(store_type)
@@ -231,47 +229,47 @@ class OrdersShippedWebHookView(View, BaseMixin):
 
         with transaction.atomic():
             order.batch_number = shipment['batchNumber']
-            order.is_fulfilled = True
+            if tracking_number:
+                order.is_fulfilled = True
+                order.status = Order.SHIPPED
             order.save()
 
             for item in shipment.get('shipmentItems', []):
                 try:
                     line = get_line(shipstation_key=item['lineItemKey'])
+                    line.tracking_number = tracking_number
+                    line.save()
                 except self.order_line_model.DoesNotExist:
                     continue
 
-                try:
-                    track = OrderTrack.objects.get(
-                        order_id=store_order_id,
-                        line_id=line.line_id,
-                        source_id=source_id
-                    )
-                except OrderTrack.DoesNotExist:
-                    continue
+        total_price = Decimal(order.amount) / Decimal(100)
+        shipping_price = Decimal(order.shipping_price) / Decimal(100)
+        products_price = total_price - shipping_price
 
-                product_price = Decimal(item.get('unitPrice') or 0)
-                shipping_price = Decimal(shipment.get('shipmentCost') or 0)
-                total_price = product_price + shipping_price
-                data = {
-                    'store': store_id,
-                    'order': track.id,
-                    'status': 'SHIPPED',
-                    'orderStatus': 'SHIPPED',  # Mock extension
-                    'tracking_number': tracking_number,
-                    'order_details': json.dumps({'cost': {
-                        'products': str(product_price.quantize(Decimal('0.10'))),
-                        'shipping': str(shipping_price.quantize(Decimal('0.10'))),
-                        'total': str(total_price.quantize(Decimal('0.01'))),
-                    }}),
-                    'source_id': item['lineItemKey'],
-                }
+        tracks = OrderTrack.objects.filter(
+            source_id=source_id,
+            source_type='supplements'
+        )
+        for track in tracks:
+            data = {
+                'store': track.store_id,
+                'order': track.id,
+                'status': 'D_SHIPPED' if tracking_number else 'D_PENDING_SHIPMENT',
+                'tracking_number': tracking_number,
+                'order_details': json.dumps({'cost': {
+                    'products': str(products_price.quantize(Decimal('0.01'))),
+                    'shipping': str(shipping_price.quantize(Decimal('0.01'))),
+                    'total': str(total_price.quantize(Decimal('0.01'))),
+                }}),
+                'source_id': source_id,
+            }
 
-                api_result = StoreApi.post_order_fulfill_update(self.request, order.user, data)
-                if api_result.status_code != 200:
-                    raven_client.captureMessage('Unable to update tracking for supplement', extra={
-                        'api_result': json.loads(api_result.content.decode("utf-8")),
-                        'api_data': data
-                    }, level='warning')
+            api_result = StoreApi.post_order_fulfill_update(self.request, order.user, data)
+            if api_result.status_code != 200:
+                raven_client.captureMessage('Unable to update tracking for supplement', extra={
+                    'api_result': json.loads(api_result.content.decode("utf-8")),
+                    'api_data': data
+                }, level='warning')
 
     def get_shipments(self):
         data = json.loads(self.request.body.decode())

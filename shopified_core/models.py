@@ -275,6 +275,7 @@ class OrderTrackBase(models.Model):
 
             # Dropified
             "D_PENDING_PAYMENT": "Pending Payment",
+            "D_PAID": "Confirmed Payment",
             "D_PENDING_SHIPMENT": "Pending Shipment",
             "D_SHIPPED": "Shipped",
         }

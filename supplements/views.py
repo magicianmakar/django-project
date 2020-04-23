@@ -879,7 +879,7 @@ class MyOrders(common_views.OrderView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        queryset = queryset.filter(user=self.request.user)
+        queryset = queryset.filter(user=self.request.user.models_user)
 
         form = self.form = MyOrderFilterForm(self.request.GET)
         if form.is_valid():

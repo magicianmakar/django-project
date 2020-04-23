@@ -431,6 +431,7 @@ class OrdersShippedWebHookTestCase(BaseTestCase):
                                                   pls_order=self.pls_order)
 
         ShopifyOrderTrackFactory(source_id=source_id,
+                                 source_type='supplements',
                                  order_id=order_id,
                                  line_id=line_id,
                                  store_id=store_id,
@@ -448,6 +449,10 @@ class OrdersShippedWebHookTestCase(BaseTestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ShopifyOrderLog.objects.count(), 1)
+
+        self.pls_order.refresh_from_db()
+        self.assertTrue(self.pls_order.is_fulfilled)
+        self.assertEqual(self.pls_order.status, self.pls_order.SHIPPED)
 
 
 class ProductTestCase(PLSBaseTestCase):

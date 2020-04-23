@@ -266,6 +266,8 @@ $('#modal-add-order-id .supplier-type').on('change', function (e) {
         placeholder = 'https://www.ebay.com/vod/FetchOrderDetails?itemid=XXXX&transId=XXXX';
     } else if (supplierType === 'aliexpress') {
         placeholder = 'http://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
+    } else if (supplierType === 'supplements') {
+        placeholder = 'Payment ID from your supplement payments page';
     } else {
         placeholder = '';
     }
@@ -299,7 +301,7 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
 
     ga('clientTracker.send', 'event', 'Add Order ID', supplierType, sub_conf.shop);
 
-    if (supplierType === 'aliexpress' || supplierType === 'other') {
+    if (supplierType === 'aliexpress' || supplierType === 'other' || supplierType === 'supplements') {
         var order_link = orderId.match(/orderId=([0-9]+)/);
         if (supplierType !== 'other' && order_link && order_link.length == 2) {
             orderId = order_link[1];

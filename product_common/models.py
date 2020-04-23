@@ -135,6 +135,7 @@ class AbstractOrderLine(AbstractOrderInfo, OrderLineMixin):
     shipstation_key = models.CharField(max_length=500)
     amount = models.IntegerField()
     quantity = models.IntegerField(default=1)
+    tracking_number = models.CharField(max_length=128, blank=True, default='')
 
     created_at = models.DateTimeField(auto_now_add=True)
 
