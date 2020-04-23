@@ -226,11 +226,11 @@ class SupplementsApi(ApiResponseMixin, View):
                 'status': status,
                 'orderStatus': status,  # Mock extension
                 'tracking_number': tracking_number,
-                'order_details': json.dumps({'cost': {
+                'order_details': {'cost': {
                     'total': str(total_price.quantize(Decimal('0.01'))),
                     'products': str(products_price.quantize(Decimal('0.01'))),
                     'shipping': str(shipping_price.quantize(Decimal('0.01'))),
-                }}),
+                }},
                 'source_id': order.stripe_transaction_id,
             }
         })
