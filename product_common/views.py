@@ -258,11 +258,11 @@ class OrdersShippedWebHookView(View, BaseMixin):
                     'status': 'SHIPPED',
                     'orderStatus': 'SHIPPED',  # Mock extension
                     'tracking_number': tracking_number,
-                    'order_details': {'cost': {
-                        'products': str(product_price),
-                        'shipping': str(shipping_price),
+                    'order_details': json.dumps({'cost': {
+                        'products': str(product_price.quantize(Decimal('0.10'))),
+                        'shipping': str(shipping_price.quantize(Decimal('0.10'))),
                         'total': str(total_price.quantize(Decimal('0.01'))),
-                    }},
+                    }}),
                     'source_id': item['lineItemKey'],
                 }
 
