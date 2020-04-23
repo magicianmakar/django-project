@@ -676,7 +676,7 @@ class OrdersList(ListView):
             'sort': get_orders_filter(self.request, 'sort', '!order_date'),
         }
 
-        created_at_daterange = self.request.GET.get('created_at_daterange', 'all-time')
+        created_at_daterange = self.request.GET.get('created_at_daterange', 'all')
         if not self.filter_data['query'] and created_at_daterange:
             try:
                 daterange_list = created_at_daterange.split('-')
@@ -750,7 +750,7 @@ class OrdersList(ListView):
         if api_error:
             messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
 
-        context['created_at_daterange'] = self.request.GET.get('created_at_daterange', 'all-time')
+        context['created_at_daterange'] = self.request.GET.get('created_at_daterange', 'all')
         context['api_error'] = api_error
 
         return context

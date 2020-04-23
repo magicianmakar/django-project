@@ -55,8 +55,8 @@ function setupDateRangePicker(elment_id, input_id, useAllTime) {
                  end.format(end.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
             $(input_id).val(start.format('MM/DD/YYYY') + '-' + end.format('MM/DD/YYYY'));
         } else {
-            $(elment_id).find('span').html('');
-            $(input_id).val('');
+            $('#created_at_daterange span').html('All Time');
+            $('input[name="created_at_daterange"]').val('all');
         }
 
         $(input_id).trigger('change');
