@@ -50,10 +50,13 @@ class SupplierBase(models.Model):
 
     @property
     def is_pls(self):
-        return (
-            get_domain(self.product_url) == 'dropified'
-            or safe_str(self.supplier_name).lower() == SUPPLEMENTS_SUPPLIER.lower()
-        )
+        try:
+            return (
+                get_domain(self.product_url) == 'dropified'
+                or safe_str(self.supplier_name).lower() == SUPPLEMENTS_SUPPLIER.lower()
+            )
+        except:
+            return False
 
 
 class ProductBase(models.Model):
