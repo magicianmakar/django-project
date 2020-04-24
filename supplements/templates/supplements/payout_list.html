@@ -47,7 +47,9 @@
     <th>Dropified Payout</th>
     <th>PLS Payout</th>
     <th>TLG Payout</th>
-    <th>Cost Price</th>
+    <th>Total Price</th>
+    <th>Cost Price (without shipping)</th>
+    <th>Shipping Price</th>
     <th>Wholesale Price</th>
     <th>Date</th>
     <th>Status</th>
@@ -65,6 +67,8 @@
       <td>{{ payout.pls_payout_string }}</td>
       <td>{{ payout.profit_split_string }}</td>
       <td>{{ payout.cost_price_string }}</td>
+      <td>{{ payout.cost_price_withuot_shipping_string }}</td>
+      <td>{{ payout.shipping_price_string }}</td>
       <td>{{ payout.wholesale_price_string }}</td>
       <td>{{ payout.created_at_string }}</td>
       <td>{{ payout.status_string }}</td>

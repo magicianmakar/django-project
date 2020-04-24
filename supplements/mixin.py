@@ -261,6 +261,10 @@ class PayoutMixin:
         return self.to_currency(self.cost_price)
 
     @property
+    def cost_price_withuot_shipping_string(self):
+        return self.to_currency(self.cost_price - self.shipping_price)
+
+    @property
     def wholesale_price(self):
         return sum(self.payout_items.values_list('wholesale_price', flat=True))
 
@@ -277,8 +281,16 @@ class PayoutMixin:
         return self.to_currency(self.sale_price)
 
     @property
+    def shipping_price(self):
+        return sum(self.payout_items.values_list('shipping_price', flat=True))
+
+    @property
+    def shipping_price_string(self):
+        return self.to_currency(self.shipping_price)
+
+    @property
     def profit_split(self):
-        profit = self.cost_price - self.wholesale_price
+        profit = self.cost_price - self.wholesale_price - self.shipping_price
         return profit / 3
 
     @property
@@ -287,7 +299,7 @@ class PayoutMixin:
 
     @property
     def pls_payout(self):
-        return self.profit_split + self.wholesale_price
+        return self.profit_split + self.wholesale_price + self.shipping_price
 
     @property
     def pls_payout_string(self):
