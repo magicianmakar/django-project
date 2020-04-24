@@ -18,9 +18,9 @@
                     <td class="category">Availability</td>
                     <td>
                         {% if not change.new_value %}
-                            <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">This product</a> is now <b style="color:green">Online</b>
+                            <a href="{{item.qelem.product_link}}" target="_blank">This product</a> is now <b style="color:green">Online</b>
                         {% else %}
-                            <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">This product</a> is now <b style="color:red">Offline</b>
+                            <a href="{{item.qelem.product_link}}" target="_blank">This product</a> is now <b style="color:red">Offline</b>
                         {% endif %}
                     </td>
                     <td>{{item.qelem.updated_at|date}}</td>
@@ -33,7 +33,7 @@
                 {% if forloop.first %}
                 <tr class="header">
                     <td class="category">Price</td>
-                    <td>The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a> has changed</td>
+                    <td>The <b>Price</b> of one or more Variants of <a href="{{item.qelem.product_link}}" target="_blank">this product</a> has changed</td>
                     <td>{{item.qelem.updated_at|date}}</td>
                     <td><a class="view-details" href="#">View Details</a></td>
                 </tr>
@@ -71,7 +71,7 @@
                 {% if forloop.first %}
                 <tr class="header">
                     <td class="category">Quantity</td>
-                    <td>The <b>Quantity</b> of one or more Variants of <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a> has changed</td>
+                    <td>The <b>Quantity</b> of one or more Variants of <a href="{{item.qelem.product_link}}" target="_blank">this product</a> has changed</td>
                     <td>{{item.qelem.updated_at|date}}</td>
                     <td><a class="view-details" href="#">View Details</a></td>
                 </tr>
@@ -102,7 +102,7 @@
                 {% if forloop.first %}
                 <tr class="header">
                     <td class="category">New Variant</td>
-                    <td>A <b>new variant</b> has been added to <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a></td>
+                    <td>A <b>new variant</b> has been added to <a href="{{item.qelem.product_link}}" target="_blank">this product</a></td>
                     <td>{{item.qelem.updated_at|date}}</td>
                     <td><a class="view-details" href="#">View Details</a></td>
                 </tr>
@@ -128,7 +128,7 @@
                 {% if forloop.first %}
                 <tr class="header">
                     <td class="category">Removed Variant</td>
-                    <td>A variant has been removed from <a href="{{item.qelem.product.get_original_info.url}}" target="_blank">this product</a></td>
+                    <td>A variant has been removed from <a href="{{item.qelem.product_link}}" target="_blank">this product</a></td>
                     <td>{{item.qelem.updated_at|date}}</td>
                     <td><a class="view-details" href="#">View Details</a></td>
                 </tr>
