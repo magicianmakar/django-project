@@ -82,10 +82,17 @@ class ShopifyAPI:
             yield rep[resource]
 
     def _get_resource(self, resource, params, page_info=None, raise_for_status=False):
-        if not page_info:
-            rep = requests.get(url=self.store.api(resource, version=self.version), params=params)
-        else:
-            rep = requests.get(url=self.store.api(page_info, version=self.version))
+        tries = 3
+        while tries:
+            if not page_info:
+                rep = requests.get(url=self.store.api(resource, version=self.version), params=params)
+            else:
+                rep = requests.get(url=self.store.api(page_info, version=self.version))
+
+            if rep.ok:
+                break
+            else:
+                tries -= 1
 
         if raise_for_status:
             rep.raise_for_status()
