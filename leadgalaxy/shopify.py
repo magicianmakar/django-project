@@ -37,21 +37,31 @@ class ShopifyAPI:
 
         return data['count']
 
-    def recurring_charges(self, params={}):
+    def recurring_charges(self, params={}, active=False):
         links, data = self._get_resource(
             resource='recurring_application_charges',
             params=params,
             raise_for_status=True)
 
-        return data['recurring_application_charges']
+        charges = data['recurring_application_charges']
 
-    def application_charges(self, params={}):
+        if active:
+            charges = [c for c in charges if c['status'] == 'active']
+
+        return charges
+
+    def application_charges(self, params={}, active=False):
         links, data = self._get_resource(
             resource='application_charges',
             params=params,
             raise_for_status=True)
 
-        return data['application_charges']
+        charges = data['application_charges']
+
+        if active:
+            charges = [c for c in charges if c['status'] == 'active']
+
+        return charges
 
     def paginate_orders(self, **kwargs):
         defaults = {

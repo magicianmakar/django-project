@@ -5,8 +5,12 @@ from django.shortcuts import render, redirect
 from django.views.generic import View
 from django.views.decorators.clickjacking import xframe_options_exempt
 
+from raven.contrib.django.raven_compat.models import client as raven_client
+
 from shopified_core import permissions
+from shopified_core.utils import last_executed
 from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule, DashboardVideo
+from leadgalaxy.shopify import ShopifyAPI
 from goals.utils import get_dashboard_user_goals
 
 from .context_processors import all_stores
@@ -43,6 +47,39 @@ def home_page_view(request):
     platform_videos = {t[0]: [] for t in DashboardVideo.STORE_TYPES}
     for video in videos:
         platform_videos[video.store_type].append(video)
+
+    plan = user.models_user.profile.plan
+    if plan.is_shopify and not plan.is_free and not last_executed(f'recurring_charges_check_{user.models_user.id}', 3600):
+        stores = user.profile.get_shopify_stores()
+        if len(stores) == 0:
+            raven_client.captureMessage(
+                'Shopify Subscription - Missing Stores',
+                level='warning',
+                tags={
+                    'user': user.models_user.email,
+                    'store': 'none',
+                    'count': len(stores)
+                })
+        elif len(stores) > 1:
+            raven_client.captureMessage(
+                'Shopify Subscription - Many Stores',
+                level='warning',
+                tags={
+                    'user': user.models_user.email,
+                    'store': 'none',
+                    'count': len(stores)
+                })
+        else:
+            charges = ShopifyAPI(stores[0])
+            if not charges.recurring_charges(active=True):
+                raven_client.captureMessage(
+                    'Shopify Subscription - Missing Subscription',
+                    level='warning',
+                    tags={
+                        'user': user.models_user.email,
+                        'store': 'none',
+                        'count': len(stores)
+                    })
 
     return render(request, 'home/index.html', {
         'config': config,
