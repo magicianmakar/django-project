@@ -134,6 +134,7 @@ from .models import (
 )
 from .templatetags.template_helper import money_format
 from .paginator import ShopifyOrderPaginator
+from .shopify import ShopifyAPI
 
 from functools import reduce
 from stripe_subscription.models import CustomStripePlan
@@ -2517,12 +2518,15 @@ def acp_users_list(request):
     customer_ids = []
     customer_id = request.GET.get('customer_id')
     stripe_customer = None
+    shopify_charges = []
+    shopify_application_charges = []
 
     if len(users) == 1:
+        target_user = users[0]
         rep = requests.get('https://dashboard.stripe.com/v1/search', params={
             'count': 20,
             'include[]': 'total_count',
-            'query': 'is:customer {}'.format(users[0].email),
+            'query': 'is:customer {}'.format(target_user.email),
             'facets': 'true'
         }, headers={
             'authorization': 'Bearer {}'.format(settings.STRIPE_SECRET_KEY),
@@ -2548,8 +2552,8 @@ def acp_users_list(request):
             assert found
 
         if not customer_id:
-            if users[0].have_stripe_billing():
-                customer_id = users[0].stripe_customer.customer_id
+            if target_user.have_stripe_billing():
+                customer_id = target_user.stripe_customer.customer_id
             elif len(customer_ids):
                 customer_id = customer_ids[0]['id']
 
@@ -2587,13 +2591,21 @@ def acp_users_list(request):
             stripe_customer = stripe.Customer.retrieve(customer_id)
             stripe_customer.account_balance = stripe_customer.account_balance / 100.0
 
-        registrations_email = users[0].email
+        registrations_email = target_user.email
 
         try:
             from last_seen.models import LastSeen
-            user_last_seen = arrow.get(LastSeen.objects.when(users[0], 'website')).humanize()
+            user_last_seen = arrow.get(LastSeen.objects.when(target_user, 'website')).humanize()
         except:
             user_last_seen = ''
+
+        if target_user.profile.plan.is_shopify:
+            for store in target_user.profile.get_shopify_stores():
+                for charge in ShopifyAPI(store).recurring_charges():
+                    shopify_charges.append(charge)
+
+                for charge in ShopifyAPI(store).application_charges():
+                    shopify_application_charges.append(charge)
 
     if registrations_email:
         for i in PlanRegistration.objects.filter(email__iexact=registrations_email):
@@ -2621,6 +2633,8 @@ def acp_users_list(request):
         'last_charges': charges,
         'subscribtions': subscribtions,
         'registrations': registrations,
+        'shopify_charges': shopify_charges,
+        'shopify_application_charges': shopify_application_charges,
         'random_cache': random_cache,
         'user_last_seen': user_last_seen,
         'show_products': request.GET.get('products'),

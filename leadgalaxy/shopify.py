@@ -37,6 +37,22 @@ class ShopifyAPI:
 
         return data['count']
 
+    def recurring_charges(self, params={}):
+        links, data = self._get_resource(
+            resource='recurring_application_charges',
+            params=params,
+            raise_for_status=True)
+
+        return data['recurring_application_charges']
+
+    def application_charges(self, params={}):
+        links, data = self._get_resource(
+            resource='application_charges',
+            params=params,
+            raise_for_status=True)
+
+        return data['application_charges']
+
     def paginate_orders(self, **kwargs):
         defaults = {
             'limit': self._pagination_limit,

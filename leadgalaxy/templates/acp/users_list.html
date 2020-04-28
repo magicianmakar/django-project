@@ -287,6 +287,80 @@
                     </table>
                 {% endif %}
 
+                {% if users.0.profile.plan.is_shopify %}
+                    <hr/>
+                    <h2>Shopify Recurring Charges ({{shopify_charges|length}})</h2>
+                    <table class="table  dataTables">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Price</th>
+                                <th>Billing On</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in shopify_charges %}
+                            <tr
+                                {% if i.status == 'active' %}
+                                    style="color: #28901d"
+                                {% elif i.status == 'expired' %}
+                                    style="color: #172386"
+                                {% else %}
+                                    style="color: #af3a3a"
+                                {% endif %}
+                            >
+                                <td><span class="itooltip" title="{{ i.created_at }}">{% date_humanize i.created_at %}</span></td>
+                                <td>{{ i.name }}</td>
+                                <td>{{ i.status|title }}</td>
+                                <td>${{ i.price }}</td>
+                                <td><span class="itooltip">{{ i.billing_on }}</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center"><b>No Shopify Recurring Charges</b></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <hr/>
+                    <h2>Shopify Single Charges ({{shopify_application_charges|length}})</h2>
+                    <table class="table  dataTables">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for i in shopify_application_charges %}
+                            <tr
+                                {% if i.status == 'active' %}
+                                    style="color: #28901d"
+                                {% elif i.status == 'expired' %}
+                                    style="color: #172386"
+                                {% else %}
+                                    style="color: #af3a3a"
+                                {% endif %}
+                            >
+                                <td><span class="itooltip" title="{{ i.created_at }}">{% date_humanize i.created_at %}</span></td>
+                                <td>{{ i.name }}</td>
+                                <td>{{ i.status|title }}</td>
+                                <td>${{ i.price }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center">No Shopify Single Charges</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+
                 {% if customer_ids %}
                 <hr/>
                 <h2>Customer ID ({{customer_ids|length}})</h2>
