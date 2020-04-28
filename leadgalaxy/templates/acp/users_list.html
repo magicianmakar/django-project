@@ -287,7 +287,7 @@
                     </table>
                 {% endif %}
 
-                {% if users.0.profile.plan.is_shopify %}
+                {% if users_count == 1 and users.0.profile.plan.is_shopify %}
                     <hr/>
                     <h2>Shopify Recurring Charges ({{shopify_charges|length}})</h2>
                     <table class="table  dataTables">
