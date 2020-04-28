@@ -2601,11 +2601,14 @@ def acp_users_list(request):
 
         if target_user.profile.plan.is_shopify:
             for store in target_user.profile.get_shopify_stores():
-                for charge in ShopifyAPI(store).recurring_charges():
-                    shopify_charges.append(charge)
+                try:
+                    for charge in ShopifyAPI(store).recurring_charges():
+                        shopify_charges.append(charge)
 
-                for charge in ShopifyAPI(store).application_charges():
-                    shopify_application_charges.append(charge)
+                    for charge in ShopifyAPI(store).application_charges():
+                        shopify_application_charges.append(charge)
+                except:
+                    pass
 
     if registrations_email:
         for i in PlanRegistration.objects.filter(email__iexact=registrations_email):
