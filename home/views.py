@@ -49,7 +49,7 @@ def home_page_view(request):
         platform_videos[video.store_type].append(video)
 
     plan = user.models_user.profile.plan
-    if plan.is_shopify and not plan.is_free and not last_executed(f'recurring_charges_check_{user.models_user.id}', 3600):
+    if plan.is_shopify() and not plan.is_free and not last_executed(f'recurring_charges_check_{user.models_user.id}', 3600):
         stores = user.profile.get_shopify_stores()
         if len(stores) == 0:
             raven_client.captureMessage(
