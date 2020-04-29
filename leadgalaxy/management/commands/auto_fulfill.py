@@ -56,7 +56,8 @@ class Command(DropifiedBaseCommand):
 
         self.write('Start Auto Fulfill')
 
-        self.progress_total(orders.count(), enable=options['progress'])
+        if options['progress']:
+            self.progress_total(orders.count())
 
         counter = {
             'fulfilled': 0,
