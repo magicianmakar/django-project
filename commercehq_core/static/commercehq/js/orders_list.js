@@ -118,12 +118,7 @@ $(".filter-form").submit(function() {
         }
 
         var ret = (((!el.value || el.value.trim().length === 0) &&
-                (el.type == 'text' || el.type == 'hidden' || el.type.match(/select/))) ||
-            (el.name == 'sort' && el.value == user_filter.sort) ||
-            (el.name == 'fulfillment' && el.value == user_filter.fulfillment) ||
-            (el.name == 'financial' && el.value == user_filter.financial) ||
-            (el.name == 'query_input')
-        );
+                (el.type == 'text' || el.type == 'hidden' || el.type.match(/select/))));
 
         return ret;
     }).attr("disabled", "disabled").css('background-color', '#fff');

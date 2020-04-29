@@ -738,7 +738,7 @@ class OrdersList(ListView):
             api_error = 'Store API Error'
             raven_client.captureException()
 
-        context['user_filter'] = self.filter_data
+        context['user_filter'] = get_orders_filter(self.request)
 
         context.update(self.filter_data)
 
