@@ -396,11 +396,11 @@ class GrooveKartApi(ApiBase):
         if get_domain(original_link) == 'dropified':
             try:
                 user_supplement_id = int(urlparse(original_link).path.split('/')[-1])
-                user_supplement = UserSupplement.objects.get(id=user_supplement_id)
+                user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)
                 product.user_supplement_id = user_supplement
             except:
                 raven_client.captureException(level='warning')
-                return self.api_error('Product supplier is not correct', status=500)
+                return self.api_error('Product supplier is not correct', status=422)
 
         elif 'click.aliexpress.com' in original_link.lower():
             return self.api_error('The submitted Aliexpress link will not work properly with order fulfillment')

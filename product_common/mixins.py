@@ -7,6 +7,7 @@ import commercehq_core
 import gearbubble_core
 import leadgalaxy
 import woocommerce_core
+import bigcommerce_core
 
 
 class ProductMixin:
@@ -98,6 +99,7 @@ class OrderMixin:
         CommerceHQStore = commercehq_core.models.CommerceHQStore
         WooStore = woocommerce_core.models.WooStore
         GearBubbleStore = gearbubble_core.models.GearBubbleStore
+        BigCommerceStore = bigcommerce_core.models.BigCommerceStore
 
         if isinstance(store, ShopifyStore):
             return cls.SHOPIFY
@@ -107,6 +109,8 @@ class OrderMixin:
             return cls.WOO
         elif isinstance(store, GearBubbleStore):
             return cls.GEAR
+        elif isinstance(store, BigCommerceStore):
+            return cls.BIGCOMMERCE
 
         raise Exception("Invalid Store")
 

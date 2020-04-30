@@ -12,6 +12,7 @@ from shopified_core.shipping_helper import country_from_code
 from supplements.lib.authorizenet import charge_customer_profile
 from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
 from woocommerce_core.models import WooStore
+from bigcommerce_core.models import BigCommerceStore
 from raven.contrib.django.raven_compat.models import client as raven_client
 from shopified_core.utils import safe_float
 
@@ -216,6 +217,8 @@ class Util:
             return GrooveKartStore.objects.get(id=store_id)
         elif store_type == 'woo':
             return WooStore.objects.get(id=store_id)
+        elif store_type == 'bigcommerce':
+            return BigCommerceStore.objects.get(id=store_id)
 
     def mark_label_printed(self, line_id):
         line_item = get_object_or_404(PLSOrderLine, id=line_id)

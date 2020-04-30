@@ -59,6 +59,7 @@ class AbstractOrderInfo(models.Model):
     WOO = 'woo'
     GEAR = 'gear'
     GKART = 'gkart'
+    BIGCOMMERCE = 'bigcommerce'
 
     STORE_TYPES = [
         (SHOPIFY, 'Shopify'),
@@ -66,9 +67,10 @@ class AbstractOrderInfo(models.Model):
         (WOO, 'WooCommerce'),
         (GEAR, 'GearBubble'),
         (GKART, 'GrooveKart'),
+        (BIGCOMMERCE, 'BigCommerce')
     ]
 
-    store_type = models.CharField(max_length=7,
+    store_type = models.CharField(max_length=15,
                                   choices=STORE_TYPES,
                                   default=SHOPIFY)
 

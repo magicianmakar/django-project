@@ -282,6 +282,22 @@
                                             {{order.status}}
                                     </div>
                                     <div class="col-xs-2">
+                                        {% if 'pls' in order.supplier_types %}
+                                        <div class="btn-group pull">
+                                          <button class="btn btn-success btn-xs pay-all-lines" type="button" style="border-right:1px solid #66a8cc;">
+                                            Pay For Supplements
+                                          </button>
+
+                                          <button type="button" class="btn btn-success btn-xs dropdown-toggle"
+                                                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <span class="caret"></span>
+                                          </button>
+
+                                          <ul class="dropdown-menu pull-right">
+                                            <li><a class="pay-selected-lines" href="#">Pay for Selected Items</a></li>
+                                          </ul>
+                                        </div>
+                                        {% endif %}
                                         {% if order.lines_count %}
                                         <button class="btn btn-success btn-xs pull-right order-items" order-id="{{order.id}}"
                                                 type="button" style="border-right:1px solid #66a8cc">
@@ -388,19 +404,22 @@
 
                                 <div class="row">
                                     {% for item in order.items %}
+                                    {% with original=item.product.get_original_info %}
                                     <div class="line
                                                 container-fluid
                                                 {% if item.is_bundle %}bundled{% endif %}
-                                                {% if not forloop.first %}multi-lines{% endif %}"
+                                                {% if not forloop.first %}multi-lines{% endif %} {% if excluded_product %}excluded{% endif %}"
                                         line-id="{{item.id}}"
                                         order-id="{{order.id}}"
                                         order-data-id="{{ item.order_data_id }}"
                                         order-number="{{order.id}}"
-                                        line-title="{{item.name}}"
+                                        line-title="{{item.title}}"
                                         supplier-type="{{item.supplier_type}}"
-                                        line-data="{{item.order_data_id|default:''}}"
+                                        {% if not excluded_product %}line-data="{{item.order_data_id|default:''}}"{% endif %}
                                         line-track="{{item.order_track.id|default:''}}"
-                                        status="{{item.status}}">
+                                        fulfillment-status="{{item.fulfillment_status}}"
+                                        {% if item.is_pls %}is-pls="true"{% endif %}
+                                        {% if excluded_product %}excluded-product="true"{% endif %}>
                                         <div class="row source-order">
 
                                             <div class="col-xs-3 no-wrap">
@@ -443,14 +462,21 @@
                                             <table class="table">
                                                 <thead>
                                                     <tr>
-                                                        <td>
-                                                            <img class="cached-img no-img no-img-sm unveil"
-                                                                src="{% static 'img/blank.gif' %}"
+                                                        <td class="product-preview">
+                                                            <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; "
+                                                                {% if item.is_pls %}
+                                                                    {% if item.is_paid or not item.product.is_label_approved %}
+                                                                        disabled
+                                                                    {% endif %}
+                                                                {% endif %} >
+                                                            <img class="product-img cached-img no-img no-img-sm unveil"
+                                                                store="{{store.id}}" product="{{image.product}}" variant="{{image.variant}}"
+                                                                src="{% static 'img/blank.gif' %}" no-img-width="32px"
                                                                 {% if item.image %}
                                                                 data-src="{{item.image}}"
                                                                 {% endif %}
                                                                 />
-                                                         </td>
+                                                        </td>
                                                         <td>
                                                             {% if item.product %}
                                                                 <a href="{% url 'bigcommerce:product_detail' item.product.id %}" target="_blank" title="{{item.name}}">
@@ -479,6 +505,10 @@
                                                         <td class="text-center no-wrap" style="width:10%">
                                                             {% if item.is_bundle %}
                                                                 <span class="badge badge-primary">Bundle</span>
+                                                            {% elif item.is_pls %}
+                                                                {% if not item.is_paid %}
+                                                                    {% include 'partial/make_payment_btn.html' %}
+                                                                {% endif %}
                                                             {% else %}
                                                                 {% include 'bigcommerce/partial/place_order_btn.html' %}
                                                             {% endif %}
@@ -563,6 +593,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    {% endwith %}
                                     {% endfor %}
                                 </div>
                             </div>
@@ -609,7 +640,7 @@
 {% include "common/partial/modal_add_order_id.html" %}
 
 {% include "bigcommerce/partial/bigcommerce_product_selector.html" %}
-
+{% include "supplements/partials/make_payment_modal.html" %}
 {% endblock %}
 
 
@@ -647,8 +678,9 @@
 
 {% compress js %}
     <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
-    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
+    <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/order_items.js' %}"></script>
+    <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
     <script type="text/javascript" src="{% static 'bigcommerce/js/bigcommerce_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'bigcommerce/js/orders_list.js' %}"></script>
 {% endcompress %}

@@ -2,7 +2,7 @@ import json
 import re
 import requests
 from urllib.parse import urlparse
-
+from unidecode import unidecode
 from django.db import models
 from django.utils.functional import cached_property
 from django.contrib.auth.models import User
@@ -25,6 +25,10 @@ from shopified_core.models import (
     BoardBase,
     OrderTrackBase,
     UserUploadBase
+)
+
+from shopified_core.shipping_helper import (
+    province_from_code,
 )
 
 
@@ -134,6 +138,48 @@ class BigCommerceStore(StoreBase):
             secret=settings.PUSHER_SECRET)
 
         pusher.trigger(self.pusher_channel(), event, data)
+
+    def get_order(self, order_id):
+        r = self.request.get(
+            url=self.get_api_url('v2/orders', order_id)
+        )
+        r.raise_for_status()
+        order = r.json()
+        order['order_number'] = order['id']
+
+        req_product = self.request.get(
+            url=self.get_api_url('v2/orders/{}/products'.format(order['id']))
+        )
+        req_product.raise_for_status()
+        line_items = req_product.json()
+
+        for line_item in line_items:
+            line_item['price'] = line_item['base_price']
+            line_item['title'] = line_item['name']
+
+        order['line_items'] = line_items
+        order['created_at'] = order['date_created']
+
+        req_shipment = self.request.get(
+            url=self.get_api_url('v2/orders/{}/shipping_addresses'.format(order['id']))
+        )
+        req_shipment.raise_for_status()
+        shipping_addresses = req_shipment.json()
+
+        shipping_address = shipping_addresses[0] if len(shipping_addresses) > 0 else order['billing_address']
+        shipping_address['country_code'] = shipping_address['country_iso2']
+        shipping_address['province_code'] = shipping_address.get('state')
+        shipping_address['address1'] = shipping_address.get('street_1', '')
+        shipping_address['address2'] = shipping_address.get('street_2', '')
+        province = province_from_code(shipping_address['country_iso2'], shipping_address['province_code'])
+        shipping_address['name'] = '{} {}'.format(shipping_address['first_name'], shipping_address['last_name'])
+        shipping_address['province'] = unidecode(province) if type(province) is str else province
+        order['shipping_address'] = shipping_address
+
+        return order
+
+    def get_product(self, product_id, store):
+        return BigCommerceProduct.objects.get(source_id=product_id, store=store)
 
 
 class BigCommerceProduct(ProductBase):
@@ -649,6 +695,8 @@ class BigCommerceSupplier(SupplierBase):
 
     def supplier_type(self):
         try:
+            if self.is_pls:
+                return 'pls'
             return get_domain(self.product_url)
         except:
             return ''

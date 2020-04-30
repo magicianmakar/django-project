@@ -46,12 +46,14 @@ class SendToStoreMixin:
         chq_stores = user.profile.get_chq_stores()
         gkart_stores = user.profile.get_gkart_stores()
         woo_stores = user.profile.get_woo_stores()
+        big_stores = user.profile.get_bigcommerce_stores()
 
         store_data = dict(
             shopify=[{'id': s.id, 'value': s.title} for s in shopify_stores],
             chq=[{'id': s.id, 'value': s.title} for s in chq_stores],
             gkart=[{'id': s.id, 'value': s.title} for s in gkart_stores],
             woo=[{'id': s.id, 'value': s.title} for s in woo_stores],
+            bigcommerce=[{'id': s.id, 'value': s.title} for s in big_stores],
         )
 
         store_types = []
@@ -66,6 +68,9 @@ class SendToStoreMixin:
 
         if store_data['woo']:
             store_types.append(('woo', 'WooCommerce'))
+
+        if store_data['bigcommerce']:
+            store_types.append(('bigcommerce', 'BigCommerce'))
 
         return dict(store_data=store_data, store_types=store_types)
 

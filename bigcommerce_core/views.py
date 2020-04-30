@@ -23,6 +23,7 @@ from django.http import Http404, JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.cache.utils import make_template_fragment_key
 from bigcommerce.api import BigcommerceApi
+from supplements.models import PLSOrderLine
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
@@ -705,8 +706,8 @@ class OrdersList(ListView):
         filters = {}
         params = self.request.GET
 
+        filters['sort'] = 'date_created:desc'
         if params.get('sort') in ['order_date', '!order_date']:
-            filters['sort'] = 'date_created:asc'
             if params.get('sort') == 'order_date':
                 filters['sort'] = 'date_created:asc'
             if params.get('sort') == '!order_date':
@@ -911,6 +912,7 @@ class OrdersList(ListView):
         order_track_by_item = self.get_order_track_by_item(order_ids)
 
         for order in orders:
+            order['name'] = order.get('id')
             country_code = order['billing_address']['country_iso2']
             if len(order['shipping_addresses']) > 0:
                 country_code = order['shipping_addresses'][0]['country_iso2']
@@ -931,12 +933,14 @@ class OrdersList(ListView):
             order['items'] = order.pop('line_items')
             order['lines_count'] = len(order['items'])
             order['has_shipping_address'] = len(order['shipping_addresses']) > 0
+            order['supplier_types'] = set()
 
             for item in order.get('items'):
                 self.update_placed_orders(order, item)
                 product_id = item['product_id']
                 product = product_by_source_id.get(product_id)
                 data = product_data.get(product_id)
+                item['title'] = item['name']
                 item['product'] = product
                 item['image'] = next(iter(data['images']), {}).get('url_standard') if data else None
                 variant_id = item.get('variant_id')
@@ -1004,7 +1008,18 @@ class OrdersList(ListView):
                         item['order_data_id'] = order_data_id
                         item['order_data'] = order_data
                         item['supplier'] = supplier
+
+                        is_pls = item['is_pls'] = supplier.is_pls
+                        if is_pls:
+                            item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
+
+                            try:
+                                item['weight'] = product.user_supplement.get_weight(item['quantity'])
+                            except:
+                                item['weight'] = False
+
                         item['supplier_type'] = supplier.supplier_type()
+                        order['supplier_types'].add(supplier.supplier_type())
                         item['shipping_method'] = self.get_item_shipping_method(
                             product, item, variant_id, country_code)
 

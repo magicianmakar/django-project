@@ -87,6 +87,9 @@ function sendToStore(storeType, storeId, publish) {
                 } else if (storeType === 'woo') {
                     jqXHR = sendProductToWooCommerce(productId, storeId, publish);
                     jqXHR.done(getPostExportPusherHandler(productId));
+                } else if (storeType === 'bigcommerce') {
+                    jqXHR = sendProductToBigCommerce(productId, storeId, publish);
+                    jqXHR.done(getPostExportPusherHandler(productId));
                 }
             }
         }

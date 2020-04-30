@@ -497,14 +497,15 @@ function sendProductToWooCommerce(productId, storeId, publish, callback) {
     return $.post(api_url('product-export', 'woo'), data, callback);
 }
 
-function sendProductToBigCommerce(productId, storeId, publish) {
+function sendProductToBigCommerce(productId, storeId, publish, callback) {
+    callback = typeof(callback) === 'undefined' ? function() {} : callback;
     var data = {
         product: productId,
         store: storeId,
         publish: publish
     };
 
-    return $.post(api_url('product-export', 'bigcommerce'), data);
+    return $.post(api_url('product-export', 'bigcommerce'), data, callback);
 }
 
 function sendProductToGearBubble(productId, storeId) {

@@ -117,7 +117,6 @@ function makePayment(orderDataIds,country_code,province_code) {
     var makePaymentTemplate = Handlebars.compile($("#id-make-payment-template").html());
     var data = makeData(orderDataIds);
 
-
     var url = api_url('calculate_shipping_cost', 'supplements');
     var post_data = {
         'country-code': country_code,

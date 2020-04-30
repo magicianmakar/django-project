@@ -24,6 +24,7 @@ from shopified_core.utils import (
     CancelledOrderAlert
 )
 from product_alerts.utils import unmonitor_store
+from supplements.models import UserSupplement
 
 from .api_helper import BigCommerceApiHelper
 from .models import (
@@ -209,6 +210,15 @@ class BigCommerceStoreApi(ApiBase):
 
             supplier_url = remove_link_query(supplier_url)
 
+        user_supplement = None
+
+        if get_domain(supplier_url) == 'dropified':
+            try:
+                user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
+                user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)
+            except:
+                return self.api_error('Product supplier is not correct', status=422)
+
         product = BigCommerceProduct(
             store=store,
             user=user.models_user,
@@ -220,6 +230,9 @@ class BigCommerceStoreApi(ApiBase):
                 'original_url': supplier_url
             })
         )
+
+        if user_supplement:
+            product.user_supplement = user_supplement
 
         permissions.user_can_add(user, product)
 

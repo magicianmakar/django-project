@@ -12,6 +12,8 @@ function saveForLater(storeType, storeId, callback) {
         url = '/api/gkart/product-save';
     } else if (storeType === 'woo') {
         url = '/api/woo/product-save';
+    } else if (storeType === 'bigcommerce') {
+        url = '/api/bigcommerce/product-save';
     }
 
     $.ajax({

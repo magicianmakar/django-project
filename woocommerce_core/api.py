@@ -358,7 +358,7 @@ class WooStoreApi(ApiBase):
         elif get_domain(supplier_url) == 'dropified':
             try:
                 user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
-                user_supplement = UserSupplement.objects.get(id=user_supplement_id)
+                user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)
             except:
                 raven_client.captureException(level='warning')
                 return self.api_error('Product supplier is not correct', status=422)
