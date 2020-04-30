@@ -66,7 +66,10 @@ class ShippingGroup(models.Model):
         </pre>''')
 
     def __str__(self):
-        return self.name
+        if self.locations in self.name:
+            return self.name
+        else:
+            return f'{self.name} ({self.locations})'
 
     def get_data(self):
         return json.loads(self.data)

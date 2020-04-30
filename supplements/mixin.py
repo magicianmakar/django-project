@@ -24,7 +24,7 @@ class PLSupplementMixin:
 
     @property
     def shipping_groups_string(self):
-        groups = [g.name for g in self.shipping_countries.all()]
+        groups = [str(g) for g in self.shipping_countries.all()]
         return ", ".join(sorted(groups))
 
     def to_dict(self):
