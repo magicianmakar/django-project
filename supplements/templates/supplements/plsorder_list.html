@@ -32,7 +32,7 @@
       <td>
         <a title='Edit'
            href="{% url 'admin:supplements_plsorder_change' pls_order.id %}">
-          {{ pls_order.order_number }}
+          {{ pls_order.shipstation_order_number }}
         </a>
       </td>
       <td><a href="{% url 'pls:my_order_detail' order_id=pls_order.id %}" >{{ pls_order.stripe_transaction_id }}</a></td>
