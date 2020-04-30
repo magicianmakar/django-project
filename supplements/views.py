@@ -406,7 +406,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
     def save_supplement(self, form):
         supplement = form.save(commit=False)
         supplement.pl_supplement_id = self.supplement_id
-        supplement.user_id = self.request.user.id
+        supplement.user_id = self.request.user.models_user.id
         supplement.tags = form.cleaned_data['tags']
         supplement.save()
         return supplement
