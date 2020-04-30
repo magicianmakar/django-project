@@ -157,7 +157,7 @@ class UserSupplementLabelMixin:
 
     @property
     def label_id_string(self):
-        return "{:#010}".format(self.id)
+        return "{}".format(self.id)
 
     @property
     def is_approved(self):
@@ -168,7 +168,7 @@ class UserSupplementLabelMixin:
         return self.status == self.AWAITING_REVIEW
 
     def generate_sku(self):
-        self.sku = f"sup-{self.label_id_string}"
+        self.sku = f"{self.user_supplement.pl_supplement.shipstation_sku}-{self.label_id_string}L"
 
 
 class LabelCommentMixin:
