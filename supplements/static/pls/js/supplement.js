@@ -30,6 +30,13 @@ function ajaxify_label(file) {
 
 $(document).ready(function(){
     var form = document.getElementById('user_supplement_form');
+    $('#sample_label').on('click', function(e) {
+        if (form.checkValidity()) {
+            e.preventDefault();
+            $(this).attr('data-send-to-store', 'true');
+            $('#modal-send-to-store').modal({backdrop: 'static', keyboard: false});
+        }
+    });
 
     $('.product-images').slick({
         dots: true

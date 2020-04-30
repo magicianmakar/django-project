@@ -487,6 +487,7 @@ class ProductTestCase(PLSBaseTestCase):
             mockup_type=self.mockup_type.id,
             template=open('app/static/example-label.pdf', 'rb'),
             thumbnail=open('app/static/aliex.png', 'rb'),
+            approvedlabel=open('app/static/example-label.pdf', 'rb'),
             product_information='New Information',
             authenticity_certificate=open('app/static/example-label.pdf', 'rb'),
         )
@@ -533,6 +534,7 @@ class ProductEditTestCase(PLSBaseTestCase):
             label_size=self.label_size.id,
             mockup_type=self.mockup_type.id,
             product_information='Changed Information',
+            approvedlabel=open('app/static/example-label.pdf', 'rb'),
         )
         with patch('product_common.lib.views.aws_s3_upload',
                    return_value='http://example.com/test'):

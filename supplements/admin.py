@@ -30,6 +30,7 @@ class PLSupplementAdmin(admin.ModelAdmin):
         'label_template_url',
         'wholesale_price',
         'weight',
+        'approved_label_url',
     )
 
 

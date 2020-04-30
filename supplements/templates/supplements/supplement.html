@@ -51,6 +51,19 @@
                          class="btn btn-primary confirm-create"
                          data-loading-text="Please wait..."
                          >
+                  {% if approved_label_url %}
+                  <input type="submit"
+                         value="Send Sample to Store"
+                         id="sample_label"
+                         data-action="preapproved"
+                         class="btn btn-success"
+                         data-loading-text="Please wait..."
+                         data-label-url="{{ approved_label_url }}"
+                         data-send-to-store="false"
+                         data-post-url="{{request.path}}"
+                         data-redirect-url="{% url 'pls:my_supplements' %}"
+                         >
+                  {% endif %}
 
                   <input type="reset" value="Reset" class="btn btn-default">
                 </div>
@@ -102,12 +115,12 @@
       </div>
       <div class="panel-body">
         <p>
-        Before you upload your label please read our guidelines to learn how to 
+        Before you upload your label please read our guidelines to learn how to
         present your design and ensure it is approved.
         You can learn more about what you can include in our support portal.
        </p>
        <p><a href="https://help.dropified.com/en/articles/3824485-supplement-label-guidelines" target="_blank" role="button" class="btn btn-primary btn-md">Read Guidelines</a></p>
-      </div> 
+      </div>
     </div>
   </div>
 </div>

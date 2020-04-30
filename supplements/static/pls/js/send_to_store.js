@@ -58,6 +58,7 @@ function getPostExportPusherHandler(productId) {
                     getCorrectRef(btn,'reset');
                     toastr.success("Product successfully exported", "Product Export");
                     $('#modal-send-to-store').find('.close').trigger('click');
+                    redirectToMySupplements();
                 } else {
                     displayAjaxError('Product Export', data);
                 }
@@ -70,12 +71,13 @@ function sendToStore(storeType, storeId, publish) {
     saveForLater(storeType, storeId, function(data, result) {
         if (result === true) {
             var productId = data.product.id;
-            var jsXHR;
+            var jqXHR;
             if (storeType === 'shopify') {
                 sendProductToShopify(apiData, storeId, productId, function (data) {
                     getCorrectRef($('#id_send_to_store_confirm'), 'reset');
                     toastr.success("Product successfully exported", "Export");
                     $('#modal-send-to-store').find('.close').trigger('click');
+                    redirectToMySupplements();
                 });
             } else {
                 if (storeType === 'chq') {
@@ -94,6 +96,40 @@ function sendToStore(storeType, storeId, publish) {
             }
         }
     });
+}
+
+function sendSampleLabelToStore (storeType, storeId, publish) {
+    var form = document.getElementById('user_supplement_form');
+    form.action.value = 'preapproved';
+    form.upload_url.value = $('#sample_label').attr('data-label-url');
+    var url = $('#sample_label').attr('data-post-url');
+    $.ajax({
+        url:  url,
+        data: $('form#user_supplement_form').serialize(),
+        type:  'post',
+        dataType:  'json',
+        success:  function (res) {
+            window.apiData = JSON.parse(res.data);
+            sendToStore(storeType, storeId, publish);
+        },
+        error: function(xhr, status, error) {
+            var errorMessage = xhr.status + ': ' + xhr.statusText;
+            getCorrectRef($('#id_send_to_store_confirm'), 'reset');
+            toastr.error("An error occured", "Export");
+            $('#modal-send-to-store').find('.close').trigger('click');
+            $('#sample_label').attr('data-send-to-store', 'false');
+
+        }
+    });
+}
+
+function redirectToMySupplements() {
+    if(typeof $('#sample_label').attr('data-send-to-store') !== 'undefined') {
+        if ($('#sample_label').attr('data-send-to-store') === 'true') {
+            $('#sample_label').attr('data-send-to-store', 'false');
+            window.location.href = $('#sample_label').attr('data-redirect-url');
+        }
+    }
 }
 
 $(document).ready(function(){
@@ -122,6 +158,11 @@ $(document).ready(function(){
         var storeId = $('#id_store_list').val();
         var publish = $('#send-product-visible').prop('checked') || false;
         getCorrectRef($(this), 'loading');
-        sendToStore(storeType, storeId, publish);
+        if ($('#sample_label').attr('data-send-to-store') === 'true') {
+            sendSampleLabelToStore(storeType, storeId, publish);
+        }
+        else {
+            sendToStore(storeType, storeId, publish);
+        }
     });
 });

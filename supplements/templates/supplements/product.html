@@ -8,48 +8,57 @@
   {% csrf_token %}
   {{ form.non_field_errors }}
   <div class="row">
-    <div class="form-group">
-      {{ form.title.errors }}
+    <div class="form-group {{ form.title.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Name:</label>
       <div class="col-sm-5">
         {{ form.title|add_class:"form-control" }}
+        {% for error in form.title.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.description.errors }}
+    <div class="form-group {{ form.description.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Description:</label>
       <div class="col-sm-5">
         {{ form.description|add_class:"form-control" }}
+        {% for error in form.description.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.category.errors }}
+    <div class="form-group {{ form.category.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Category:</label>
       <div class="col-sm-5">
         {{ form.category|add_class:"form-control" }}
+        {% for error in form.category.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.tags.errors }}
+    <div class="form-group {{ form.tags.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Tags:</label>
       <div class="col-sm-5">
         {{ form.tags|add_class:"form-control" }}
+        {% for error in form.tags.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.shipstation_sku.errors }}
+    <div class="form-group {{ form.shipstation_sku.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">SKU:</label>
       <div class="col-sm-5">
         {{ form.shipstation_sku|add_class:"form-control" }}
+        {% for error in form.shipstation_sku.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.cost_price.errors }}
+    <div class="form-group {{ form.cost_price.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Cost Price:</label>
       <div class="col-sm-5">
         <div class='input-group'>
@@ -62,11 +71,13 @@
             qtip-at="top center"
             style="font-size:16px;color:#BBB;margin-top:7px;position: absolute;right: -15px;top: 0px;"
         ></i>
+        {% for error in form.cost_price.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.wholesale_price.errors }}
+    <div class="form-group {{ form.wholesale_price.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Wholesale Price:</label>
       <div class="col-sm-5">
         <div class='input-group'>
@@ -79,11 +90,13 @@
         qtip-at="top center"
         style="font-size:16px;color:#BBB;margin-top:7px;position: absolute;right: -15px;top: 0px;"
         ></i>
+        {% for error in form.wholesale_price.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.weight.errors }}
+    <div class="form-group {{ form.weight.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Weight (lb):</label>
       <div class="col-sm-5">
         <div class='input-group'>
@@ -97,35 +110,44 @@
         qtip-at="top center"
         style="font-size:16px;color:#BBB;margin-top:7px;position: absolute;right: -15px;top: 0px;"
         ></i>
+        {% for error in form.weight.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.shipping_countries.errors }}
+    <div class="form-group {{ form.shipping_countries.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Shipping Countries:</label>
       <div class="col-sm-5">
         {{ form.shipping_countries|add_class:'form-control' }}
+        {% for error in form.shipping_countries.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.label_size.errors }}
+    <div class="form-group {{ form.label_size.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Label Size:</label>
       <div class="col-sm-5">
         {{ form.label_size|add_class:'form-control' }}
+        {% for error in form.label_size.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.mockup_type.errors }}
+    <div class="form-group {{ form.mockup_type.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Mockup Style:</label>
       <div class="col-sm-5">
         {{ form.mockup_type|add_class:'form-control' }}
+        {% for error in form.mockup_type.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
     </div>
     </div>
 
-    <div class="form-group">
-      {{ form.template.errors }}
+
+    <div class="form-group {{ form.template.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Template:</label>
       <div class='col-sm-7'>
         <div class="custom-file">
@@ -134,11 +156,13 @@
             Choose template file...
           </label>
         </div>
+        {% for error in form.template.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.thumbnail.errors }}
+    <div class="form-group {{ form.thumbnail.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Thumbnail:</label>
       <div class='col-sm-7'>
         <div class="custom-file">
@@ -147,14 +171,34 @@
             Choose thumbnail file...
           </label>
         </div>
+        {% for error in form.thumbnail.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.product_information.errors }}
+    <div class="form-group {{ form.approvedlabel.errors|yesno:'has-error,' }}">
+      <label class="col-sm-2 control-label">Pre-Approved Label:</label>
+      <div class='col-sm-7'>
+        <div class="custom-file">
+          <input id="product-label-url" type="file" name="approvedlabel" class="custom-file-input">
+          <label for="product-label-url" class="custom-file-label" data-placeholder="Choose file...">
+            Choose file...
+          </label>
+        </div>
+        {% for error in form.approvedlabel.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="form-group {{ form.product_information.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Product Information:</label>
       <div class="col-sm-5">
         {{ form.product_information|add_class:"form-control" }}
+        {% for error in form.product_information.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 
@@ -165,8 +209,7 @@
       </div>
     </div>
 
-    <div class="form-group">
-      {{ form.authenticity_certificate.errors }}
+    <div class="form-group {{ form.authenticity_certificate.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Authenticity Certificate:</label>
       <div class='col-sm-7'>
         <div class="custom-file">
@@ -175,6 +218,9 @@
             Choose certificate file...
           </label>
         </div>
+        {% for error in form.authenticity_certificate.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
 

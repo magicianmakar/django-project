@@ -64,6 +64,7 @@ class PLSupplementForm(forms.ModelForm):
 
     template = forms.FileField()
     thumbnail = forms.ImageField()
+    approvedlabel = forms.FileField(required=False)
     authenticity_certificate = forms.FileField(required=False)
 
     def __init__(self, *args, **kwargs):

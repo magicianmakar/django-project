@@ -117,6 +117,7 @@ class Product(common_views.ProductAddView):
 
         template = request.FILES.get('template', None)
         thumbnail = request.FILES.get('thumbnail', None)
+        approved_label = request.FILES.get('approvedlabel', None)
 
         if template:
             template_url = upload_image_to_aws(template, 'supplement_label', user_id)
@@ -133,6 +134,9 @@ class Product(common_views.ProductAddView):
         if certificate:
             certificate_url = upload_image_to_aws(certificate, 'pls_certificate', user_id)
             pl_supplement.authenticity_certificate_url = certificate_url
+
+        if approved_label:
+            pl_supplement.approved_label_url = upload_image_to_aws(approved_label, 'pre_approved_label', user_id)
 
         pl_supplement.label_template_url = template_url
         pl_supplement.save()
@@ -282,6 +286,43 @@ class LabelMixin:
         send_email_against_comment(comment)
         return comment
 
+    def add_barcode_to_label(self, label):
+        data = BytesIO()
+        generate('CODE128', label.sku, output=data)
+
+        data.seek(0)
+        drawing = svg2rlg(data)
+
+        barcode_data = BytesIO()
+        renderPDF.drawToFile(drawing, barcode_data)
+
+        barcode_data.seek(0)
+        barcode_pdf = PdfReader(barcode_data)
+        barcode_pdf.pages[0].Rotate = 270
+        barcode_pages = PageMerge() + barcode_pdf.pages
+        barcode_page = barcode_pages[0]
+
+        label_data = BytesIO(requests.get(label.url).content)
+        base_label_pdf = PdfReader(label_data)
+
+        page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
+        barcode_obj = page_merge[-1]
+        barcode_obj.scale(0.3, 0.7)
+        barcode_obj.x = barcode_obj.y = 8
+
+        page_merge.render()
+
+        label_pdf = BytesIO()
+        PdfWriter().write(label_pdf, base_label_pdf)
+
+        label_pdf.seek(0)
+
+        label.url = upload_supplement_object_to_aws(
+            label.user_supplement,
+            label_pdf,
+            'label.pdf',
+        )
+
 
 class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
     template_name = 'supplements/supplement.html'
@@ -344,6 +385,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             form_data=form_data,
             image_urls=form_data.pop('image_urls'),
             label_template_url=form_data.pop('label_template_url'),
+            approved_label_url=supplement.approved_label_url,
             is_approved=supplement.is_approved,
             is_awaiting_review=supplement.is_awaiting_review,
             api_data=api_data,
@@ -377,15 +419,16 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
             upload_url = form.cleaned_data['upload_url']
             if upload_url:
-                image_data = form.cleaned_data['image_data_url']
-                mockup_type = form.cleaned_data['mockup_slug']
-                label_image = data_url_to_pil_image(image_data)
-                bottle_mockup = get_mockup(label_image, mockup_type)
-                image_fp = pil_to_fp(bottle_mockup)
-                image_fp.seek(0)
-                image_fp.name = 'mockup.png'
+                if form.cleaned_data['action'] != 'preapproved':
+                    image_data = form.cleaned_data['image_data_url']
+                    mockup_type = form.cleaned_data['mockup_slug']
+                    label_image = data_url_to_pil_image(image_data)
+                    bottle_mockup = get_mockup(label_image, mockup_type)
+                    image_fp = pil_to_fp(bottle_mockup)
+                    image_fp.seek(0)
+                    image_fp.name = 'mockup.png'
+                    self.save_image(user, image_fp, new_user_supplement)
                 self.save_label(user, upload_url, new_user_supplement)
-                self.save_image(user, image_fp, new_user_supplement)
 
             if not new_user_supplement.images.count():
                 self.copy_images(new_user_supplement)
@@ -395,6 +438,24 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                 new_user_supplement.current_label.save()
                 url = reverse("pls:my_labels") + "?s=1"
                 return redirect(url)
+
+            if form.cleaned_data['action'] == 'preapproved':
+                new_user_supplement.current_label.status = UserSupplementLabel.APPROVED
+                new_user_supplement.current_label.generate_sku()
+                self.add_barcode_to_label(new_user_supplement.current_label)
+                new_user_supplement.current_label.save()
+
+                label_class = 'label-primary'
+                comment = (f"<strong>Dropified</strong> set the status to "
+                           f"<span class='label {label_class}'>"
+                           f"{new_user_supplement.current_label.status_string}</span>")
+                comments = new_user_supplement.current_label.comments
+                self.create_comment(comments, comment, new_status='approved')
+
+                api_data = {}
+                if new_user_supplement.is_approved:
+                    api_data = self.get_api_data(new_user_supplement)
+                return JsonResponse({'data': api_data, 'success': True})
 
             kwargs = {'supplement_id': new_user_supplement.id}
             return self.get_redirect_url(**kwargs)
@@ -672,43 +733,6 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             {'title': user_supplement.title, 'url': user_supplement_url},
             {'title': 'Label', 'url': self.request.path},
         ]
-
-    def add_barcode_to_label(self, label):
-        data = BytesIO()
-        generate('CODE128', label.sku, output=data)
-
-        data.seek(0)
-        drawing = svg2rlg(data)
-
-        barcode_data = BytesIO()
-        renderPDF.drawToFile(drawing, barcode_data)
-
-        barcode_data.seek(0)
-        barcode_pdf = PdfReader(barcode_data)
-        barcode_pdf.pages[0].Rotate = 270
-        barcode_pages = PageMerge() + barcode_pdf.pages
-        barcode_page = barcode_pages[0]
-
-        label_data = BytesIO(requests.get(label.url).content)
-        base_label_pdf = PdfReader(label_data)
-
-        page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
-        barcode_obj = page_merge[-1]
-        barcode_obj.scale(0.3, 0.7)
-        barcode_obj.x = barcode_obj.y = 8
-
-        page_merge.render()
-
-        label_pdf = BytesIO()
-        PdfWriter().write(label_pdf, base_label_pdf)
-
-        label_pdf.seek(0)
-
-        label.url = upload_supplement_object_to_aws(
-            label.user_supplement,
-            label_pdf,
-            'label.pdf',
-        )
 
     def get_context_data(self, *args, **kwargs):
         user_supplement = kwargs['label'].user_supplement

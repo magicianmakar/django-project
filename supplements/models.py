@@ -23,6 +23,7 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
 
     wholesale_price = models.DecimalField(max_digits=10, decimal_places=2)
     label_template_url = models.URLField()
+    approved_label_url = models.URLField(null=True, blank=True)
     mockup_type = models.ForeignKey('MockupType',
                                     on_delete=models.CASCADE,
                                     related_name='mockup_type',
