@@ -13,6 +13,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import get_store_api
+from shopified_core import permissions
 
 from .lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
@@ -27,6 +28,8 @@ class SupplementsApi(ApiResponseMixin, View):
     def post_make_payment(self, request, user, data):
         util = Util()
         store = util.get_store(data['store_id'], data['store_type'])
+        permissions.user_can_view(user, store)
+
         util.store = store
 
         success = error = invalid_country = 0
