@@ -246,7 +246,7 @@ class LabelSize(models.Model):
     width = models.DecimalField(max_digits=10, decimal_places=3)
 
     def __str__(self):
-        return f'{self.height}×{self.width}'
+        return f'{self.height.normalize()}×{self.width.normalize()}'
 
 
 class MockupType(models.Model):

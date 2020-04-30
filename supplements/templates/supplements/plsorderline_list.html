@@ -44,6 +44,7 @@
     <th>Order ID</th>
     <th>Line Item SKU</th>
     <th>Label SKU</th>
+    <th>Label Size</th>
     <th>Batch</th>
     <th>Fulfillment</th>
     <th>Quantity</th>
@@ -64,6 +65,7 @@
       </td>
       <td>{{ line_item.label.user_supplement.pl_supplement.shipstation_sku }}</td>
       <td>{{ line_item.label.sku }}</td>
+      <td>{{ line_item.label.user_supplement.pl_supplement.label_size }}</td>
       <td>{{ line_item.pls_order.batch_number|default:'N/A' }}</td>
       <td>{{ line_item.fulfillment_status_string }}</td>
       <td>{{ line_item.quantity }}</td>
