@@ -49,6 +49,14 @@ urlpatterns = [
         supplements.views.Order.as_view(),
         name='order_list'),
 
+    url(r'^order/(?P<order_id>[0-9]+)$$',
+        supplements.views.OrderDetail.as_view(),
+        name='order_detail'),
+
+    url(r'^my/order/(?P<order_id>[0-9]+)$$',
+        supplements.views.OrderDetail.as_view(),
+        name='my_order_detail'),
+
     url(r'^payout/list$',
         supplements.views.PayoutView.as_view(),
         name='payout_list'),

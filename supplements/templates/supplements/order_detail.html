@@ -1,0 +1,107 @@
+{% extends "supplements/tab_view_admin.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+{% load cache %}
+
+{% block tab_content %}
+
+<div class="row">
+  <div class="col-md-6 col-sm-6">
+    <h2 class="h2">Payment #{{ payment_id }}</h2>
+  </div>
+  <div class="col-md-6 col-sm-6 text-right">
+    <span class="h3">Shipping Address</span>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-6 col-sm-6">
+    <span class="h5">Your order number is #{{ order }}. A summary of your order is shown below.</span>
+  </div>
+  <div class="col-md-6 col-sm-6 text-right">
+    <span class="h5"><b>{{ shipping_address|key_value:'first_name' }} {{ shipping_address|key_value:'last_name' }}</b></span>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-6 col-sm-6 col-md-offset-6 col-sm-offset-6 text-right">
+    <span>{{ shipping_address|key_value:'address1' }}</span>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-6 col-sm-6 col-md-offset-6 col-sm-offset-6 text-right">
+    <span>{{ shipping_address|key_value:'city' }}, {{ shipping_address|key_value:'province' }}, {{ shipping_address|key_value:'zip' }}</span>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-6 col-sm-6 col-md-offset-6 col-sm-offset-6 text-right">
+    <span>{{ shipping_address|key_value:'country' }}</span>
+  </div>
+</div>
+
+<table class='table table-striped' >
+  <thead>
+    <th>Item</th>
+    <th>Title</th>
+    <th>Price</th>
+    <th>Sku</th>
+  </thead>
+  <tbody>
+    {% for item in line_items %}
+    <tr>
+      <td>
+        {% for url in item.supplement.image_urls %}
+          <img class="product-image" src="{{ url }}" alt="line_item" />
+        {% endfor %}
+      </td>
+      <td class="product-cell">{{ item.supplement.title }}</td>
+      <td class="product-cell">{{ item.quantity }}&times;{{ item.supplement.cost_price }}</td>
+      <td class="product-cell">{{ item.sku }}</td>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="row">
+  <div class="col-md-2 col-md-offset-9 text-right">
+    <span class="h5"><b>Sale Price</b>:</span>
+  </div>
+  <div class="col-md-1 text-right">
+    {{sale_price}}
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-2 col-md-offset-9 text-right">
+    <span class="h5"><b>User Profit</b>:</span>
+  </div>
+  <div class="col-md-1 text-right">
+    {{user_profit}}
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-2 col-md-offset-9 text-right">
+    <span class="h5"><b>Shipping Price</b>:</span>
+  </div>
+  <div class="col-md-1 text-right">
+    {{shipping_price}}
+  </div>
+</div>
+<br>
+<div class="row">
+  <div class="col-md-2 col-md-offset-9 text-right">
+    <span class="h4"><b>Total Price</b>:</span>
+  </div>
+  <div class="col-md-1 text-right">
+    <span class="h4">{{total_price}}</span>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block extracss %}
+{{ block.super }}
+  <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+  <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+{% endblock %}
+

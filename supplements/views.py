@@ -12,6 +12,7 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.list import ListView
+from django import template
 
 import bleach
 import requests
@@ -58,7 +59,9 @@ from .forms import (
     UploadJSONForm,
     UserSupplementForm
 )
-from .utils import aws_s3_context, create_rows, send_email_against_comment
+from .utils import aws_s3_context, create_rows, send_email_against_comment, payment
+
+register = template.Library()
 
 
 class Index(common_views.IndexView):
@@ -883,6 +886,56 @@ class Order(common_views.OrderView):
                 )
 
         return queryset
+
+
+class OrderDetail(LoginRequiredMixin, View):
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get_breadcrumbs(self, order):
+        return [
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Payments', 'url': reverse('pls:order_list')},
+            {'title': order.order_number, 'url': reverse('pls:order_detail', kwargs={'order_id': order.id})}
+        ]
+
+    def get_context_data(self, *args, **kwargs):
+        order = kwargs['order']
+
+        line_items = [dict(
+            id=i.id,
+            sku=i.label.sku,
+            quantity=i.quantity,
+            supplement=i.label.user_supplement.to_dict()
+        ) for i in order.order_items.all()]
+
+        util = payment.Util()
+        store = util.get_store(order.store_id, order.store_type)
+        util.store = store
+        shipping_address = util.get_order(order.store_order_id).get('shipping_address')
+
+        return dict(
+            order=order.order_number,
+            payment_id=order.stripe_transaction_id,
+            total_price=order.amount_string,
+            sale_price=order.sale_price_string,
+            user_profit=order.user_profit_string,
+            shipping_address=shipping_address,
+            shipping_price=order.shipping_price_string,
+            breadcrumbs=self.get_breadcrumbs(order),
+            line_items=line_items
+        )
+
+    def get(self, request, order_id):
+        self.order = order = get_object_or_404(PLSOrder, id=order_id)
+        context = self.get_context_data(order=order)
+
+        return render(request, "supplements/order_detail.html", context)
 
 
 class MyOrders(common_views.OrderView):

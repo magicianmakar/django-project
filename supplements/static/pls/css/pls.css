@@ -16,6 +16,15 @@
   text-align: center;
 }
 
+.product-image {
+  width: 55px;
+  height: 55px;
+}
+
+.product-cell {
+  line-height: 55px !important;
+}
+
 /*Slick Carousel */
 .slick-prev:before,
 .slick-next:before {

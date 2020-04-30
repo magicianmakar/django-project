@@ -24,6 +24,7 @@
     <th>Profit</th>
     <th>Date</th>
     <th>Status</th>
+    <th>Details</th>
   </thead>
   <tbody>
     {% for pls_order in object_list %}
@@ -35,6 +36,7 @@
       <td>{{ pls_order.user_profit_string }}</td>
       <td>{{ pls_order.created_at_string }}</td>
       <td>{{ pls_order.status_string }}</td>
+      <td><a class="btn btn-default btn-outline btn-xs" href="{% url 'pls:my_order_detail' order_id=pls_order.id %}" >View</a></td>
     {% empty %}
       <td colspan="7">No orders yet.</td>
     </tr>

@@ -35,7 +35,7 @@
           {{ pls_order.order_number }}
         </a>
       </td>
-      <td>{{ pls_order.stripe_transaction_id }}</td>
+      <td><a href="{% url 'pls:my_order_detail' order_id=pls_order.id %}" >{{ pls_order.stripe_transaction_id }}</a></td>
       <td>{{ pls_order.user.email }}</td>
       <td>{{ pls_order.amount_string }}</td>
       <td>{{ pls_order.shipping_price_string }}</td>
