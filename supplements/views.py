@@ -916,6 +916,7 @@ class OrderDetail(LoginRequiredMixin, View):
 
         util = payment.Util()
         store = util.get_store(order.store_id, order.store_type)
+        permissions.user_can_view(self.request.user, store)
         util.store = store
         shipping_address = util.get_order(order.store_order_id).get('shipping_address')
 
