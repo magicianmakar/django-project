@@ -35,5 +35,7 @@
   </div>
 
   <input type="submit" class="btn btn-primary" value="Filter" />
+  <input type="hidden" name="csv_page" value="{{ request.GET.page }}">
+  <input type="submit" class="btn btn-success" name="export" value="Export as CSV" />
   <input type="button" class="btn btn-default pls-reset-btn" value="Clear" />
 </form>

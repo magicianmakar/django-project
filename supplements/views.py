@@ -1,3 +1,5 @@
+import csv
+from decimal import Decimal
 from io import BytesIO
 
 from django.contrib.auth.decorators import login_required
@@ -25,6 +27,7 @@ from svglib.svglib import svg2rlg
 
 from shopified_core import permissions
 from shopified_core.shipping_helper import get_counrties_list
+from shopified_core.utils import app_link
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
 from supplements.lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
 from supplements.models import (
@@ -896,6 +899,60 @@ class MyOrders(common_views.OrderView):
                 queryset = queryset.filter(created_at__date=created_at)
 
         return queryset
+
+    def get(self, *args, **kwargs):
+        csv_export = bool(self.request.GET.get('export'))
+        # Always export current page to CSV using hidden input
+        self.page_kwarg = 'csv_page' if csv_export else self.page_kwarg
+
+        # Get list results the normal way
+        result = super().get(*args, **kwargs)
+        if not csv_export:
+            return result
+
+        response = HttpResponse(content_type='text/csv')
+        filename = f"payments-page{self.request.GET.get('csv_page') or 1}.csv"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'Order #',
+            'Shipping Cost',
+            'Supplement',
+            'Supplement URL'
+            'Quantity',
+            'Cost (USD)',
+        ])
+
+        for pls_order in result.context_data['object_list']:
+            order_row_prefix = [
+                pls_order.order_number,
+                Decimal(pls_order.shipping_price) / 100
+            ]
+
+            order_items = pls_order.order_items.all()
+            multiple_order_items = len(order_items) > 1
+            if multiple_order_items:
+                writer.writerow(order_row_prefix + ['[Multiple]'])
+                item_row_prefix = ['', '']
+            else:
+                # Write all in one row for orders with one item
+                item_row_prefix = order_row_prefix
+
+            for pls_item in order_items:
+                user_supplement = pls_item.label.user_supplement
+                supplement_link = app_link(reverse('pls:user_supplement', kwargs={
+                    'supplement_id': user_supplement.id
+                }))
+
+                writer.writerow(item_row_prefix + [
+                    f'=HYPERLINK("{supplement_link}", "{user_supplement.title}")',
+                    supplement_link,
+                    pls_item.quantity,
+                    Decimal(pls_item.amount) / 100 * pls_item.quantity,
+                ])
+
+        return response
 
 
 class PayoutView(common_views.PayoutView):

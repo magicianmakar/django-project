@@ -51,5 +51,9 @@
 <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
 <script type='application/javascript'>
   $("#id_date").datepicker();
+  // Prevent 404 by resetting page number for csv export
+  $("form input:not([type='hidden'])").on('change', function() {
+    $('[name="csv_page"]').val('');
+  });
 </script>
 {% endblock %}
