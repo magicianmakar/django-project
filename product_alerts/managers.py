@@ -532,7 +532,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
 
         except Exception as e:
             if r.status_code not in [401, 402, 403, 404, 429]:
-                raven_client.captureMessage(extra={
+                raven_client.captureException(extra={
                     'rep': r.text,
                     'data': api_product_data,
                 }, tags={
@@ -728,7 +728,7 @@ class GrooveKartProductChangeManager(ProductChangeManager):
 
         except Exception as e:
             if r.status_code not in [401, 402, 403, 404, 429]:
-                raven_client.captureMessage(extra={
+                raven_client.captureException(extra={
                     'rep': r.text,
                     'data': api_product_data,
                 }, tags={
