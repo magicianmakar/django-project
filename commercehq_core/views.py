@@ -45,6 +45,7 @@ from shopified_core.tasks import keen_order_event
 from product_alerts.models import ProductChange
 from product_alerts.utils import variant_index_from_supplier_sku
 from leadgalaxy.utils import (
+    admitad_can_redirect,
     get_aliexpress_credentials,
     get_admitad_credentials,
     get_aliexpress_affiliate_url,
@@ -1184,8 +1185,18 @@ class OrderPlaceRedirectView(RedirectView):
         ali_api_key, ali_tracking_id, user_ali_credentials = get_aliexpress_credentials(self.request.user.models_user)
         admitad_site_id, user_admitad_credentials = get_admitad_credentials(self.request.user.models_user)
 
-        if self.request.user.get_config('_disable_affiliate_permanent'):
-            disable_affiliate = True
+        if user_admitad_credentials:
+            service = 'admitad'
+        elif user_ali_credentials:
+            service = 'ali'
+        else:
+            service = settings.DEFAULT_ALIEXPRESS_AFFILIATE
+
+        if not disable_affiliate:
+            if self.request.user.get_config('_disable_affiliate_permanent'):
+                disable_affiliate = True
+            elif 'aliexpress' in product and service == 'admitad':
+                disable_affiliate = not admitad_can_redirect(product, admitad_site_id)
 
         redirect_url = False
         if not disable_affiliate:
@@ -1198,13 +1209,6 @@ class OrderPlaceRedirectView(RedirectView):
 
                 redirect_url = get_ebay_affiliate_url(product)
             else:
-                if user_admitad_credentials:
-                    service = 'admitad'
-                elif user_ali_credentials:
-                    service = 'ali'
-                else:
-                    service = settings.DEFAULT_ALIEXPRESS_AFFILIATE
-
                 if service == 'ali' and ali_api_key and ali_tracking_id:
                     redirect_url = get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
 

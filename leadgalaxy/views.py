@@ -4722,16 +4722,20 @@ def orders_place(request):
     ali_api_key, ali_tracking_id, user_ali_credentials = utils.get_aliexpress_credentials(request.user.models_user)
     admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user.models_user)
 
+    if user_admitad_credentials:
+        service = 'admitad'
+    elif user_ali_credentials:
+        service = 'ali'
+    else:
+        service = settings.DEFAULT_ALIEXPRESS_AFFILIATE
+
     redirect_url = False
 
-    # Don't use our affiliate for specific user
-    # https://app.intercom.io/a/apps/k9cb5frr/inbox/inbox/1203815/conversations/26057032791
-    models_user = request.user.models_user
-    if models_user.id == 14624 and not models_user.get_config('admitad_site_id'):
-        disable_affiliate = True
-
-    if models_user.get_config('_disable_affiliate_permanent'):
-        disable_affiliate = True
+    if not disable_affiliate:
+        if request.user.get_config('_disable_affiliate_permanent'):
+            disable_affiliate = True
+        elif 'aliexpress' in product and service == 'admitad':
+            disable_affiliate = not utils.admitad_can_redirect(product, admitad_site_id)
 
     if not disable_affiliate:
         if supplier and supplier.is_ebay:
@@ -4743,12 +4747,6 @@ def orders_place(request):
 
             redirect_url = utils.get_ebay_affiliate_url(product)
         else:
-            if user_admitad_credentials:
-                service = 'admitad'
-            elif user_ali_credentials:
-                service = 'ali'
-            else:
-                service = settings.DEFAULT_ALIEXPRESS_AFFILIATE
 
             if service == 'ali' and ali_api_key and ali_tracking_id:
                 redirect_url = utils.get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
