@@ -483,9 +483,12 @@ class OrdersList(ListView):
     def get_order_date_created(self, order):
         created_at = order.get('created_at')
         if created_at:
-            date_created = arrow.get(created_at)
-            timezone = self.request.session.get('django_timezone')
-            return date_created.to(timezone) if timezone else date_created
+            try:
+                date_created = arrow.get(f"{created_at} -0400", 'YYYY-MM-DD HH:mm:ss ZZ')
+                dj_timezone = self.request.session.get('django_timezone')
+                return date_created.to(dj_timezone) if dj_timezone else date_created
+            except arrow.parser.ParserError:
+                return arrow.get(created_at)
 
     def get_order_date_paid(self, order):
         # TODO
