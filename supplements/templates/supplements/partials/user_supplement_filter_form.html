@@ -1,0 +1,37 @@
+{% load widget_tweaks %}
+<form method="GET" role="form">
+    <div class="row">
+        <div class="col-xs-12 col-sm-4">
+            <div class="form-group {% if form.title.errors %}has-error{% endif %}">
+                <label class="control-label">Product Title:</label>
+                {{ form.title|add_class:"form-control" }}
+                {% for error in form.title.errors %}
+                <p class="help-block">{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-xs-12 col-sm-4">
+            <div class="form-group {% if form.status.errors %}has-error{% endif %}">
+                <label class="control-label">Label Status:</label>
+                {{ form.status|add_class:"form-control" }}
+                {% for error in form.status.errors %}
+                <p class="help-block">{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-xs-12 col-sm-4">
+            <div class="form-group {% if form.sku.errors %}has-error{% endif %}">
+                <label class="control-label">Label SKU:</label>
+                {{ form.sku|add_class:"form-control" }}
+                {% for error in form.sku.errors %}
+                <p class="help-block">{{ error }}</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <input type="submit" class="btn btn-primary" value="Filter" />
+    <input type="button" class="btn btn-default pls-reset-btn" value="Clear" />
+</form>
+

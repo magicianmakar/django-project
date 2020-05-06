@@ -114,6 +114,11 @@
   border-color: #aaa;
 }
 
+.supplement-count {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
 .label-title {
   margin-top: 15px;
 }

@@ -31,6 +31,14 @@ class UserSupplementForm(forms.ModelForm):
     weight = forms.DecimalField()
 
 
+class UserSupplementFilterForm(forms.Form):
+    STATUSES = [('', '---------')] + [i for i in UserSupplementLabel.LABEL_STATUSES]
+
+    status = forms.ChoiceField(required=False, choices=STATUSES)
+    sku = forms.CharField(required=False)
+    title = forms.CharField(required=False)
+
+
 class CommentForm(forms.Form):
     comment = forms.CharField(widget=forms.Textarea)
     action = forms.CharField(widget=forms.HiddenInput)
