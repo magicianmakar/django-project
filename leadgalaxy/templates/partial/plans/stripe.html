@@ -38,34 +38,13 @@
                             </b>
 
                             {% if item.can_cancel %}
-                            {% if baremetrics_form_enabled %}
-                            <button class="btn
-                                           btn-danger
-                                           btn-outline
-                                           btn-xs
-                                           pull-right
-                                           {% if not item.plan.is_paused %}cancel-or-pause-sub-btn{% endif %}
-                                           itooltip"
-                                    {% if item.plan.is_paused %}
-                                    {# Shows at pause modal Cancel button or here #}
-                                    id="barecancel-trigger"
-                                    {% endif %}
-                            {% else %}
-                            <button class="btn
-                                           btn-danger
-                                           btn-outline
-                                           btn-xs
-                                           pull-right
-                                           {% if item.plan.is_paused %}cancel-sub-btn{% else %}cancel-or-pause-sub-btn{% endif %}
-                                           itooltip"
-                            {% endif %}
-                                    title="Cancel Your Subscription"
-                                    data-subscription="{{item.id}}"
-                                    data-status="{{status.status}}"
-                                    data-period-end="{{item.period_end|date:'SHORT_DATE_FORMAT'}}"
-                                    data-plan="{{item.plan.get_description}}">
-                                Cancel
-                            </button>
+                                <button
+                                    class="btn btn-danger btn-outline btn-xs pull-right"
+                                    qtip-tooltip="For cancellation requests please use the chat option to speak to our customer support team directly or email <a href='mailto:support@dropified.com'>support@dropified.com</a> (opens in new tab) - the content may read “Requesting cancellation of the Dropified service.”, with the subject line “Cancellation Request” in email cases."
+                                    data-hasqtip="0"
+                                    aria-describedby="qtip-0">
+                                        Cancel
+                                    </button>
                             {% endif %}
 
                             {% if stripe_paused_plan and item.can_cancel and not current_plan.is_paused %}
