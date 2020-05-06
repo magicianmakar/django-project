@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.db import transaction, models
+from django.db.models import Q
+from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils.decorators import method_decorator
@@ -725,9 +727,10 @@ class AllLabels(MyLabels):
 
         form = AllLabelFilterForm(self.request.GET)
         if form.is_valid():
-            label_user_id = form.cleaned_data['label_user_id']
-            if label_user_id:
-                queryset = queryset.filter(user_supplement__user_id=label_user_id)
+            label_user_name = form.cleaned_data['label_user_name']
+            if label_user_name:
+                queryset = queryset.annotate(name=Concat('user_supplement__user__first_name', models.Value(' '), 'user_supplement__user__last_name'))
+                queryset = queryset.filter(Q(user_supplement__user__email__icontains=label_user_name) | Q(name__icontains=label_user_name))
 
             product_sku = form.cleaned_data['product_sku']
             if product_sku:

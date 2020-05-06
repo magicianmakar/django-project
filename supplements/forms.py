@@ -168,7 +168,7 @@ class LabelFilterForm(forms.Form):
 
 
 class AllLabelFilterForm(forms.Form):
-    label_user_id = forms.IntegerField(required=False)
+    label_user_name = forms.CharField(required=False)
     product_sku = forms.CharField(required=False)
     title = forms.CharField(required=False)
 
