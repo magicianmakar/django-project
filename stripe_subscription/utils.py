@@ -436,6 +436,7 @@ def process_webhook_event(request, event_id, raven_client):
                                 stripe.Subscription.modify(
                                     stripe_sub.subscription_id,
                                     trial_end=trial_end,
+                                    proration_behavior='none'
                                 )
                                 # updating subscription item (switching plan)
                                 stripe.SubscriptionItem.modify(
