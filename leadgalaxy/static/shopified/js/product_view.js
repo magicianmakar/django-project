@@ -1402,6 +1402,46 @@ $('#include-product').on('click', function(e) {
     });
 });
 
+$('.delete-product-btn').click(function(e) {
+    e.preventDefault();
+
+    var btn = $(this);
+    var product = btn.attr('product-id');
+
+    swal({
+            title: "Delete Product",
+            text: "This will remove the product permanently. Are you sure you want to remove this product?",
+            type: "warning",
+            showCancelButton: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "Remove Permanently",
+            cancelButtonText: "Cancel"
+        },
+        function(isConfirmed) {
+            if (isConfirmed) {
+                $.ajax({
+                    url: '/api/product-delete',
+                    type: 'POST',
+                    data: {
+                        product: product,
+                    },
+                    success: function(data) {
+                        swal.close();
+                        toastr.success("The product has been deleted.", "Deleted!");
+
+                        setTimeout(function() {
+                            window.location.href = '/product';
+                        }, 1000);
+                    },
+                    error: function(data) {
+                        displayAjaxError('Delete Product', data);
+                    }
+                });
+            }
+        });
+});
 
 function initClippingMagic(el) {
 
