@@ -98,6 +98,7 @@ class Util:
             for line in lines:
                 line_id = line['id']
                 user_supplement = line['user_supplement']
+                pl_supplement = user_supplement.pl_supplement
                 label = user_supplement.current_label
                 item_price = int(float(line['price']) * 100)
                 quantity = line['quantity']
@@ -109,6 +110,8 @@ class Util:
 
                 line_amount = int(user_supplement.cost_price * 100)
                 wholesale_price = int(user_supplement.wholesale_price * 100)
+                pl_supplement.inventory -= quantity
+                pl_supplement.save()
 
                 PLSOrderLine.objects.create(
                     store_type=store_type,

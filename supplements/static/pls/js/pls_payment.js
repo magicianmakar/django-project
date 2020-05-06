@@ -64,6 +64,13 @@ function doMakePayment(orderDataIds, storeId, storeType) {
                 msg += " had invalid shipping country.";
                 msgStr = toastr.error(msg);
             }
+
+            if (data.inventoryError) {
+                orderStr = makePlural('item', data.inventoryError);
+                msg = data.inventoryError + " " + orderStr;
+                msg += " had not enough inventory.";
+                msgStr = toastr.error(msg);
+            }
         }
     });
 }

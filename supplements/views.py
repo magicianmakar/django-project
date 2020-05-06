@@ -185,6 +185,7 @@ class ProductEdit(Product):
         form_data['shipping_countries'] = self.supplement.shipping_countries.all()
         form_data['label_size'] = self.supplement.label_size
         form_data['weight'] = self.supplement.weight
+        form_data['inventory'] = self.supplement.inventory
         form_data['mockup_type'] = self.supplement.mockup_type
         form_data['product_information'] = self.supplement.product_information
         form_data['authenticity_certificate_url'] = self.supplement.authenticity_certificate_url
@@ -390,6 +391,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form_data['mockup_type'] = supplement.mockup_type
         form_data['mockup_slug'] = supplement.mockup_type.slug
         form_data['weight'] = supplement.weight
+        form_data['inventory'] = supplement.inventory
 
         api_data = {}
         if supplement.is_approved:
@@ -533,6 +535,7 @@ class UserSupplementView(Supplement):
         form_data['mockup_type'] = supplement.pl_supplement.mockup_type
         form_data['mockup_slug'] = supplement.pl_supplement.mockup_type.slug
         form_data['weight'] = supplement.pl_supplement.weight
+        form_data['inventory'] = supplement.pl_supplement.inventory
 
         api_data = {}
         if supplement.is_approved:

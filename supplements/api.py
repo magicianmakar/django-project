@@ -32,7 +32,7 @@ class SupplementsApi(ApiResponseMixin, View):
 
         util.store = store
 
-        success = error = invalid_country = 0
+        success = error = invalid_country = inventory_error = 0
         success_ids = []
 
         info = util.prepare_data(data['order_data_ids'])
@@ -50,6 +50,7 @@ class SupplementsApi(ApiResponseMixin, View):
             shipping_country = order['shipping_address']['country']
             shipping_country_province = slugify(order['shipping_address']['country_code'] + "-" + str(order['shipping_address']['province']))
 
+            quantity_dict = {}
             for line in order_line_items:
                 target_countries = []
                 user_supplement = line['user_supplement']
@@ -61,7 +62,16 @@ class SupplementsApi(ApiResponseMixin, View):
                         and shipping_country_province not in set(target_countries):
                     invalid_country += 1
 
-            if invalid_country > 0:
+                if user_supplement in quantity_dict:
+                    quantity_dict[user_supplement] += int(line['quantity'])
+                else:
+                    quantity_dict[user_supplement] = int(line['quantity'])
+
+            for user_supplement, qty in quantity_dict.items():
+                if user_supplement.pl_supplement.inventory < qty:
+                    inventory_error += 1
+
+            if invalid_country > 0 or inventory_error > 0:
                 continue
 
             try:
@@ -110,6 +120,7 @@ class SupplementsApi(ApiResponseMixin, View):
             'error': error,
             'successIds': success_ids,
             'invalidCountry': invalid_country,
+            'inventoryError': inventory_error,
         }
         return self.api_success(data)
 

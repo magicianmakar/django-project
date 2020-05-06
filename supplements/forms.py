@@ -29,6 +29,7 @@ class UserSupplementForm(forms.ModelForm):
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
     weight = forms.DecimalField()
+    inventory = forms.IntegerField(required=False)
 
 
 class UserSupplementFilterForm(forms.Form):
@@ -70,6 +71,7 @@ class PLSupplementForm(forms.ModelForm):
                   'weight',
                   'mockup_type',
                   'is_active',
+                  'inventory',
                   ]
 
         widgets = {
