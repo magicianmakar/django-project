@@ -53,7 +53,6 @@
 <script type="text/javascript">
 var apiData = {{ api_data|safe }};
 var storeData = {{ store_data|safe }};
-setup_full_editor('id_comment');
 
 {% if aws_available %}
 $("#uploader").plupload({

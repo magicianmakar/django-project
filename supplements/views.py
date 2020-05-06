@@ -57,7 +57,8 @@ from .forms import (
     PLSupplementEditForm,
     PLSupplementForm,
     UploadJSONForm,
-    UserSupplementForm
+    UserSupplementForm,
+    UserSupplementFilterForm
 )
 from .utils import aws_s3_context, create_rows, send_email_against_comment, payment
 
@@ -578,17 +579,42 @@ class MySupplements(LoginRequiredMixin, View):
         else:
             raise permissions.PermissionDenied()
 
+    def add_filters(self, queryset, form):
+        status = form.cleaned_data['status']
+        if status:
+            queryset = queryset.filter(current_label__status=status)
+        sku = form.cleaned_data['sku']
+        if sku:
+            queryset = queryset.filter(current_label__sku=sku)
+        title = form.cleaned_data['title']
+        if title:
+            queryset = queryset.filter(title__icontains=title)
+        return queryset
+
     def get(self, request):
         breadcrumbs = [
             {'title': 'Supplements', 'url': reverse('pls:index')},
             {'title': 'My Supplements', 'url': reverse('pls:my_supplements')},
         ]
+        form = UserSupplementFilterForm(self.request.GET)
+        queryset = request.user.models_user.pl_supplements.filter(pl_supplement__is_active=True)
 
-        supplements = [i for i in request.user.models_user.pl_supplements.filter(pl_supplement__is_active=True)]
+        if form.is_valid():
+            queryset = self.add_filters(queryset, form)
+
+        len_supplement = len(queryset)
+        if len_supplement == 1:
+            len_supplement = f"1 supplement."
+        elif len_supplement > 0:
+            len_supplement = f"{len_supplement} supplements."
+
+        supplements = [i for i in queryset]
 
         context = {
             'breadcrumbs': breadcrumbs,
             'supplements': create_rows(supplements, 4),
+            'form': UserSupplementFilterForm(self.request.GET),
+            'count': len_supplement
         }
         return render(request, "supplements/userproduct.html", context)
 

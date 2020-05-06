@@ -1,6 +1,17 @@
 {% extends "supplements/tab_view_base.html" %}
 
+{% load static %}
+{% load compress %}
+
 {% block tab_content %}
+{% include "supplements/partials/user_supplement_filter_form.html" %}
+
+{% if count %}
+<div class="supplement-count">
+    <strong> Found {{ count }}</strong>
+</div>
+{% endif %}
+
 {% for row in supplements %}
 <div class="row">
   {% for supplement in row %}
@@ -8,6 +19,12 @@
   {% endfor %}
 </div>
 {% empty %}
-  <div>No supplements yet.</div>
+  <div class="supplement-count">No supplements yet.</div>
 {% endfor %}
+{% endblock %}
+
+{% block extrajs %}
+{% compress js %}
+<script type="text/javascript" src="{% static 'product_common/js/common.js' %}"></script>
+{% endcompress %}
 {% endblock %}

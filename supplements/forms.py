@@ -31,12 +31,27 @@ class UserSupplementForm(forms.ModelForm):
     weight = forms.DecimalField()
 
 
+class UserSupplementFilterForm(forms.Form):
+    STATUSES = [('', '---------')] + [i for i in UserSupplementLabel.LABEL_STATUSES]
+
+    status = forms.ChoiceField(required=False, choices=STATUSES)
+    sku = forms.CharField(required=False)
+    title = forms.CharField(required=False)
+
+
 class CommentForm(forms.Form):
-    comment = forms.CharField(widget=forms.Textarea)
+    comment = forms.CharField(widget=forms.Textarea, required=False)
     action = forms.CharField(widget=forms.HiddenInput)
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
     image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
+
+    def clean(self):
+        comment = self.cleaned_data.get('comment')
+        upload_url = self.cleaned_data.get('upload_url')
+        if not comment and not upload_url:
+            raise forms.ValidationError('A comment or a new label is required.')
+        return self.cleaned_data
 
 
 class PLSupplementForm(forms.ModelForm):
