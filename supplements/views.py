@@ -392,6 +392,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form_data['mockup_slug'] = supplement.mockup_type.slug
         form_data['weight'] = supplement.weight
         form_data['inventory'] = supplement.inventory
+        form_data['msrp'] = supplement.msrp
 
         api_data = {}
         if supplement.is_approved:

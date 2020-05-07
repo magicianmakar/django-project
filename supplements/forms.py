@@ -30,6 +30,7 @@ class UserSupplementForm(forms.ModelForm):
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
     weight = forms.DecimalField()
     inventory = forms.IntegerField(required=False)
+    msrp = forms.CharField(disabled=True, required=False)
 
 
 class UserSupplementFilterForm(forms.Form):
@@ -69,6 +70,7 @@ class PLSupplementForm(forms.ModelForm):
                   'product_information',
                   'label_size',
                   'weight',
+                  'msrp',
                   'mockup_type',
                   'is_active',
                   'inventory',
