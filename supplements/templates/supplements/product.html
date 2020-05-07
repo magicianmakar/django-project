@@ -116,6 +116,26 @@
       </div>
     </div>
 
+    <div class="form-group {{ form.msrp.errors|yesno:'has-error,' }}">
+      <label class="col-sm-2 control-label">MSRP:</label>
+      <div class="col-sm-5">
+        <div class='input-group'>
+
+          <span class="input-group-addon">$</span>
+          {{ form.msrp|add_class:"form-control" }}
+        </div>
+        <i class="fa fa-fw fa-question-circle"
+        qtip-tooltip="Suggested Retail Price of one item"
+        qtip-my="bottom center"
+        qtip-at="top center"
+        style="font-size:16px;color:#BBB;margin-top:7px;position: absolute;right: -15px;top: 0px;"
+        ></i>
+        {% for error in form.msrp.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
+      </div>
+    </div>
+
     <div class="form-group {{ form.shipping_countries.errors|yesno:'has-error,' }}">
       {{ form.inventory.errors }}
       <label class="col-sm-2 control-label">Inventory:</label>

@@ -61,6 +61,19 @@
   </div>
 </div>
 
+{% if form.msrp.value %}
+  <div class="form-group">
+    {{ form.msrp.errors }}
+    <label class="col-sm-2 col-xs-12 control-label">MSRP:</label>
+    <div class="col-sm-10 col-xs-12">
+      <div class='input-group'>
+        <span class="input-group-addon">$</span>
+        {{ form.msrp|add_class:"form-control"|attr:"readonly" }}
+      </div>
+    </div>
+  </div>
+{% endif %}
+
 <div class="form-group">
   {{ form.inventory.errors }}
   <label class="col-sm-2 col-xs-12 control-label">Inventory:</label>
