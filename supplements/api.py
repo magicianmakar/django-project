@@ -168,6 +168,13 @@ class SupplementsApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_bulk_unmark(self, request, user, data):
+        util = Util()
+        for line_id in data['item-ids']:
+            util.mark_label_not_printed(line_id)
+
+        return self.api_success()
+
     def post_order_payout(self, request, user, data):
         order_id = data['order-id']
         try:

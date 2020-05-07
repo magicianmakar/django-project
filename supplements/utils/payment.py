@@ -227,3 +227,8 @@ class Util:
         line_item = get_object_or_404(PLSOrderLine, id=line_id)
         line_item.mark_printed()
         return line_item
+
+    def mark_label_not_printed(self, line_id):
+        line_item = get_object_or_404(PLSOrderLine, id=line_id)
+        line_item.mark_not_printed()
+        return line_item
