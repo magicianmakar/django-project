@@ -6,12 +6,13 @@
 {% load cache %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
   <head>
     <!-- Meta, title, CSS, favicons, etc. -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="google" content="notranslate">
 
     {% if request.user.is_authenticated %}
         {% if not request.session.is_hijacked_user or request.GET.ext_login %}
