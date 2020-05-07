@@ -26,8 +26,7 @@
         <div class="form-group {% if all_label_form.user_id.errors %}has-error{% endif %}">
           <label class="control-label">User:</label>
           {{ all_label_form.user_id|add_class:"form-control" }}
-          <input type="text" id="supplement-users" name="label_user_name" value="{{ request.GET.label_user_name|default:'' }}" class="form-control" autocomplete="off">
-          <input type="hidden" name="label_user_id" value="{{ request.GET.label_user_id|default:'' }}">
+          {{ all_label_form.label_user_name|add_class:"form-control" }}
           {% for error in all_label_form.label_user_id.errors %}
           <p class="help-block">{{ error }}</p>
           {% endfor %}
@@ -133,18 +132,5 @@
 <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
 <script type='application/javascript'>
   $("#id_date").datepicker();
-
-  $('#supplement-users').autocomplete({
-      serviceUrl: "{% url 'pls:autocomplete' target='users' %}",
-      minChars: 1,
-      deferRequestBy: 1000,
-      onSelect: function(suggestion) {
-        $('[name="label_user_id"]').val(suggestion.data);
-      }
-  }).on('change', function() {
-    if (!$(this).val()) {
-      $('[name="label_user_id"]').val('');
-    }
-  });
 </script>
 {% endblock %}

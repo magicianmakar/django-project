@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.db import transaction, models
+from django.db.models import Q
+from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils.decorators import method_decorator
@@ -19,6 +21,7 @@ import requests
 import simplejson as json
 from barcode import generate
 from pdfrw import PageMerge, PdfReader, PdfWriter
+from pdfrw.pagemerge import RectXObj
 from product_common import views as common_views
 from product_common.lib import views as common_lib_views
 from product_common.lib.views import PagingMixin, upload_image_to_aws, upload_object_to_aws
@@ -30,7 +33,7 @@ from shopified_core import permissions
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import app_link
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
-from supplements.lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
+from supplements.lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, make_pdf_of, pil_to_fp
 from supplements.models import (
     AuthorizeNetCustomer,
     Payout,
@@ -182,6 +185,7 @@ class ProductEdit(Product):
         form_data['shipping_countries'] = self.supplement.shipping_countries.all()
         form_data['label_size'] = self.supplement.label_size
         form_data['weight'] = self.supplement.weight
+        form_data['inventory'] = self.supplement.inventory
         form_data['mockup_type'] = self.supplement.mockup_type
         form_data['product_information'] = self.supplement.product_information
         form_data['authenticity_certificate_url'] = self.supplement.authenticity_certificate_url
@@ -312,8 +316,17 @@ class LabelMixin:
         page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
         barcode_obj = page_merge[-1]
         barcode_obj.scale(0.3, 0.7)
-        barcode_obj.x = barcode_obj.y = 8
+        barcode_obj.x = 8
+        barcode_obj.y = RectXObj(page_merge.page).h * 0.3
+        page_merge.render()
 
+        shipstation_sku = label.user_supplement.pl_supplement.shipstation_sku
+        pdf_page = make_pdf_of(shipstation_sku)
+
+        page_merge = PageMerge(base_label_pdf.pages[0]).add(pdf_page)
+        pdf_obj = page_merge[-1]
+        pdf_obj.scale(0.3, 0.6)
+        pdf_obj.y = RectXObj(page_merge.page).h * 0.07
         page_merge.render()
 
         label_pdf = BytesIO()
@@ -378,6 +391,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form_data['mockup_type'] = supplement.mockup_type
         form_data['mockup_slug'] = supplement.mockup_type.slug
         form_data['weight'] = supplement.weight
+        form_data['inventory'] = supplement.inventory
 
         api_data = {}
         if supplement.is_approved:
@@ -521,6 +535,7 @@ class UserSupplementView(Supplement):
         form_data['mockup_type'] = supplement.pl_supplement.mockup_type
         form_data['mockup_slug'] = supplement.pl_supplement.mockup_type.slug
         form_data['weight'] = supplement.pl_supplement.weight
+        form_data['inventory'] = supplement.pl_supplement.inventory
 
         api_data = {}
         if supplement.is_approved:
@@ -715,9 +730,10 @@ class AllLabels(MyLabels):
 
         form = AllLabelFilterForm(self.request.GET)
         if form.is_valid():
-            label_user_id = form.cleaned_data['label_user_id']
-            if label_user_id:
-                queryset = queryset.filter(user_supplement__user_id=label_user_id)
+            label_user_name = form.cleaned_data['label_user_name']
+            if label_user_name:
+                queryset = queryset.annotate(name=Concat('user_supplement__user__first_name', models.Value(' '), 'user_supplement__user__last_name'))
+                queryset = queryset.filter(Q(user_supplement__user__email__icontains=label_user_name) | Q(name__icontains=label_user_name))
 
             product_sku = form.cleaned_data['product_sku']
             if product_sku:

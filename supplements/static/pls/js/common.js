@@ -143,6 +143,34 @@ $(document).ready(function(){
             contentType: 'application/json',
             success: function (response) {
                 toastr.success("Successfully marked selected lines as printed.");
+                window.location.href = window.location.href;
+            }
+        });
+    });
+
+    $("#unmark-all-labels").click(function (e) {
+        e.preventDefault();
+        var data = {'item-ids': []};
+        $(".line-checkbox").each(function (i, item) {
+            if ($(item).prop('checked')) {
+                data['item-ids'].push($(item).data("id"));
+            }
+        });
+        if (data['item-ids'].length === 0) {
+            toastr.info("Please select line items to unmark labels against.");
+            return;
+        }
+
+        var url = api_url('bulk-unmark', 'supplements');
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: JSON.stringify(data),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (response) {
+                toastr.success("Successfully marked selected lines as not printed.");
+                window.location.href = window.location.href;
             }
         });
     });

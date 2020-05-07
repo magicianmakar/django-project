@@ -239,6 +239,10 @@ class PLSOrderLineMixin:
         self.is_label_printed = True
         self.save()
 
+    def mark_not_printed(self):
+        self.is_label_printed = False
+        self.save()
+
     @property
     def fulfillment_status_string(self):
         def get_string(color, value):

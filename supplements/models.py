@@ -37,6 +37,7 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
     authenticity_certificate_url = models.URLField()
     weight = models.DecimalField(max_digits=10, decimal_places=4, default=0)
     is_active = models.BooleanField(default=True)
+    inventory = models.PositiveIntegerField(default=9999)
 
     def __str__(self):
         return self.title
