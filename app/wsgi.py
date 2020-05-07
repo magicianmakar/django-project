@@ -1,12 +1,3 @@
-"""
-WSGI config for app project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/1.6/howto/deployment/wsgi/
-"""
-
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
 
@@ -16,6 +7,12 @@ from django.db.backends.signals import connection_created
 
 from raven.contrib.django.raven_compat.middleware.wsgi import Sentry
 from whitenoise.django import DjangoWhiteNoise
+
+if settings.DEBUG:
+    from django import VERSION
+    TARGET = (2, 2)
+    assert VERSION[:2] == TARGET, ('\nYou are using a different Django version, '
+                                   f'\nYour version is {VERSION[0]}.{VERSION[1]} it should be {TARGET[0]}.{TARGET[1]}')
 
 application = Sentry(get_wsgi_application())
 
