@@ -33,7 +33,7 @@
       </td>
       <td>{{ order.user.email }}</td>
       <td>{{ order.amount_string }}</td>
-      <td>{{ order.created_at_string }}</td>
+      <td>{{ order.created_at|date:"m.d.Y h:iA" }}</td>
       <td>{{ order.status_string }}</td>
     {% empty %}
       <td colspan="6">No orders yet.</td>

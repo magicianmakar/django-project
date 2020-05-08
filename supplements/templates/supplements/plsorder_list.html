@@ -39,7 +39,7 @@
       <td>{{ pls_order.user.email }}</td>
       <td>{{ pls_order.amount_string }}</td>
       <td>{{ pls_order.shipping_price_string }}</td>
-      <td>{{ pls_order.created_at_string }}</td>
+      <td>{{ pls_order.created_at|date:"m.d.Y h:iA" }}</td>
       <td>{{ pls_order.status_string }}</td>
       <td>
         <div class='order-payout-wrapper' data-order-id="{{ pls_order.id }}">

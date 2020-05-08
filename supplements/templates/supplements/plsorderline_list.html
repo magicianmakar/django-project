@@ -70,7 +70,7 @@
       <td>{{ line_item.pls_order.batch_number|default:'N/A' }}</td>
       <td>{{ line_item.fulfillment_status_string }}</td>
       <td>{{ line_item.quantity }}</td>
-      <td>{{ line_item.created_at_string }}</td>
+      <td>{{ line_item.created_at|date:"m.d.Y h:iA" }}</td>
       <td>{{ line_item.label_status_string }}</td>
       <td>
         <a href="{% url 'pls:generate_label' line_item.id %}"

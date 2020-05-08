@@ -94,7 +94,7 @@
       <td>{{ label.user_supplement.pl_supplement.title }}</td>
       <td>{{ label.sku }}</td>
       <td>{{ label.user_supplement.user.get_full_name }}</td>
-      <td>{{ label.updated_at_string }}</td>
+      <td>{{ label.updated_at|date:"m.d.Y h:iA" }}</td>
       <td><i class="fa fa-envelope"></i>&nbsp;{{ label.comment_count }}</td>
       <td><a href="{% url 'pls:label_detail' label_id=label.id %}" class="btn btn-default btn-outline btn-xs">View</a></td>
       <td><a href="{{ label.url }}" target="_blank" class="btn btn-default btn-outline btn-xs">Download</a></td>

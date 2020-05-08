@@ -148,14 +148,6 @@ class UserSupplementLabelMixin:
                 return value
 
     @property
-    def created_at_string(self):
-        return self.created_at.strftime('%m.%d.%Y %H:%M%p')
-
-    @property
-    def updated_at_string(self):
-        return self.updated_at.strftime('%m.%d.%Y %H:%M%p')
-
-    @property
     def label_id_string(self):
         return "{}".format(self.id)
 
@@ -172,10 +164,6 @@ class UserSupplementLabelMixin:
 
 
 class LabelCommentMixin:
-
-    @property
-    def created_at_string(self):
-        return self.created_at.strftime('%m.%d.%Y %H:%M%p')
 
     @property
     def sets_new_status(self):
@@ -221,10 +209,6 @@ class PLSOrderLineMixin:
     @property
     def amount_string(self):
         return "${:.2f}".format(self.amount / 100.)
-
-    @property
-    def created_at_string(self):
-        return self.created_at.strftime('%m.%d.%Y %H:%M%p')
 
     @classmethod
     def is_paid(cls, store, order_id, line_id):

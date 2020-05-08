@@ -66,10 +66,6 @@ class ProductMixin:
 class OrderMixin:
 
     @property
-    def created_at_string(self):
-        return self.created_at.strftime('%m.%d.%Y %H:%M%p')
-
-    @property
     def status_string(self):
         def get_string(color, value):
             label = f"<span class='label label-{color}'>{value}</span>"
@@ -134,9 +130,6 @@ class OrderLineMixin:
 
 
 class PayoutMixin:
-    @property
-    def created_at_string(self):
-        return self.created_at.strftime('%m.%d.%Y %H:%M%p')
 
     @property
     def amount_string(self):

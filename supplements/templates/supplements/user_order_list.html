@@ -34,7 +34,7 @@
       <td>{{ pls_order.amount_string }}</td>
       <td>{{ pls_order.sale_price_string }}</td>
       <td>{{ pls_order.user_profit_string }}</td>
-      <td>{{ pls_order.created_at_string }}</td>
+      <td>{{ pls_order.created_at|date:"m.d.Y h:iA" }}</td>
       <td>{{ pls_order.status_string }}</td>
       <td><a class="btn btn-default btn-outline btn-xs" href="{% url 'pls:my_order_detail' order_id=pls_order.id %}" >View</a></td>
     {% empty %}

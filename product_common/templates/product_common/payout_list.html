@@ -37,7 +37,7 @@
         </a>
       </td>
       <td>{{ payout.amount_string }}</td>
-      <td>{{ payout.created_at_string }}</td>
+      <td>{{ payout.created_at|date:"m.d.Y h:iA" }}</td>
       <td>{{ payout.status_string }}</td>
       <td>
         <a href="{% url 'pls:order_list' %}?refnum={{ payout.reference_number}}">

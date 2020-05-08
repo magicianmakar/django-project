@@ -11,7 +11,7 @@
         {% for comment in comments %}
         <div class="feed-element">
           <div class="media-body ">
-            <small class="text-muted float-right">{{ comment.created_at_string }}</small>
+            <small class="text-muted float-right">{{ comment.created_at|date:"m.d.Y h:iA" }}</small>
             {% if comment.sets_new_status %}
 
             <p>{{ comment.text|safe }}</p>
