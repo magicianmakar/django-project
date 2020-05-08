@@ -794,6 +794,8 @@ def get_shopify_products(store, page_url=None, limit=50, all_products=False,
         else:
             rep = requests.get(url=store.api(page_url))
 
+        rep.raise_for_status()
+
         if return_links:
             return rep.links, rep.json()['products']
         else:
@@ -812,9 +814,16 @@ def get_shopify_products(store, page_url=None, limit=50, all_products=False,
         next_page_url = None
         first_page = True
         while first_page or next_page_url:
-            links, rep = get_shopify_products(store=store, page_url=next_page_url, limit=limit,
-                                              title=title, product_type=product_type, fields=fields,
-                                              return_links=True)
+            tries = 3
+            while tries > 0:
+                try:
+                    links, rep = get_shopify_products(store=store, page_url=next_page_url, limit=limit,
+                                                      title=title, product_type=product_type, fields=fields,
+                                                      return_links=True)
+                except:
+                    tries -= 1
+                else:
+                    tries = 0
 
             if links.get('next'):
                 next_page_url = links['next']['url']
