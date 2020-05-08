@@ -41,12 +41,12 @@
         </div>
 
         <div class="row">
+          {% if label.current_label_of %}
+          {% if label.user_supplement.user.models_user == request.user.models_user %}
           <div class="col-md-5">
             <a class="btn btn-default btn-outline btn-sm btn-block" href="{% url 'pls:user_supplement' supplement_id=label.user_supplement.id %}">View Product</a>
           </div>
 
-          {% if label.current_label_of %}
-          {% if label.user_supplement.user.models_user == request.user.models_user %}
           <div class="col-md-6">
             <button {% if label.status != label.APPROVED %}disabled{% endif %}
                     id="send_to_store"
