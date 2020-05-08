@@ -125,40 +125,35 @@ def pil_to_fp(image):
     return out
 
 
-def make_pdf_of(number):
+def get_order_number_label(item):
+    order_number = item.pls_order.shipstation_order_number
+
     data = BytesIO()
     c = canvas.Canvas(data)
-    c.drawString(0, 800, number)
+    c.drawString(0, 800, order_number)
     c.save()
     data.seek(0)
 
     reader = PdfReader(data)
     writer = PdfWriter()
     writer.addpage(reader.pages[0])
-    blank_page = BytesIO()
-    writer.write(blank_page)
-    blank_page.seek(0)
+    pdf_data = BytesIO()
+    writer.write(pdf_data)
+    pdf_data.seek(0)
 
-    pdf = PdfReader(blank_page)
+    pdf = PdfReader(pdf_data)
     pdf.pages[0].Rotate = 270
     pdf_pages = PageMerge() + pdf.pages
-
-    return pdf_pages[0]
-
-
-def get_order_number_label(item):
-    order_number = item.pls_order.shipstation_order_number
-
-    pdf_page = make_pdf_of(order_number)
+    pdf_page = pdf_pages[0]
 
     label_data = BytesIO(requests.get(item.label.url).content)
     base_label_pdf = PdfReader(label_data)
 
     page_merge = PageMerge(base_label_pdf.pages[0]).add(pdf_page)
     pdf_obj = page_merge[-1]
-    pdf_obj.scale(0.3, 0.6)
-    pdf_obj.x = 12
-    pdf_obj.y = RectXObj(page_merge.page).h * 0.07
+    pdf_obj.scale(0.5, 1)
+    total_height = RectXObj(page_merge.page).h
+    pdf_obj.y = total_height * .67
 
     page_merge.render()
 
