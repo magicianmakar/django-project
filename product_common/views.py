@@ -449,13 +449,13 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
             product_sku = form.cleaned_data['product_sku']
             if product_sku:
                 queryset = queryset.filter(
-                    label__user_supplement__pl_supplement__shipstation_sku=product_sku
+                    label__user_supplement__pl_supplement__shipstation_sku__in=product_sku
                 )
 
             label_size = form.cleaned_data['label_size']
             if label_size:
                 queryset = queryset.filter(
-                    label__user_supplement__pl_supplement__label_size=label_size
+                    label__user_supplement__pl_supplement__label_size__in=label_size
                 )
 
             batch_number = form.cleaned_data['batch_number']

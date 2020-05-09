@@ -180,4 +180,6 @@ $(document).ready(function(){
     });
 
     $("#id_shipping_countries").chosen();
+    $("#id_label_size_filter").chosen();
+    $("#id_product_sku_filter").chosen();
 });

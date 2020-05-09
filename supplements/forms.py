@@ -155,11 +155,25 @@ class LineFilterForm(OrderFilterForm):
     ]
 
     line_status = forms.ChoiceField(required=False, choices=LINE_STATUSES)
-    label_size = forms.ModelChoiceField(required=False, queryset=LabelSize.objects.all())
-    product_sku = forms.CharField(required=False)
+    label_size = forms.ModelMultipleChoiceField(required=False, queryset=LabelSize.objects.all(),
+                                                widget=forms.SelectMultiple(attrs={
+                                                    'id': 'id_label_size_filter',
+                                                    'data-placeholder': 'Select label sizes'
+                                                }))
+    product_sku = forms.MultipleChoiceField(required=False,
+                                            widget=forms.SelectMultiple(
+                                                attrs={'id': 'id_product_sku_filter', 'data-placeholder': 'Select product sku'}
+                                            ))
     label_sku = forms.CharField(required=False)
     batch_number = forms.CharField(required=False)
     shipstation_status = forms.ChoiceField(required=False, choices=SHIPSTATION_STATUSES)
+
+    def __init__(self, *args, **kwargs):
+        super(LineFilterForm, self).__init__(*args, **kwargs)
+        try:
+            self.fields['product_sku'].choices = [(p.shipstation_sku, p.shipstation_sku) for p in PLSupplement.objects.all()]
+        except:
+            self.fields['product_sku'].choices = []
 
 
 class LabelFilterForm(forms.Form):
