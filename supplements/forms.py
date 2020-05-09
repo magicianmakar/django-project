@@ -22,8 +22,6 @@ class UserSupplementForm(forms.ModelForm):
     cost_price = forms.DecimalField()
     shipstation_sku = forms.CharField()
     shipping_countries = forms.CharField(required=False)
-    mockup_type = forms.CharField(required=False)
-    label_size = forms.CharField(required=False)
     action = forms.CharField(widget=forms.HiddenInput)
     image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
