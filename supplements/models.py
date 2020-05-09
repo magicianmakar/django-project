@@ -107,7 +107,10 @@ class UserSupplement(UserSupplementMixin, models.Model):
                                       related_name='user_pl_supplements')
 
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    compare_at_price = models.DecimalField(max_digits=10, decimal_places=2)
+    compare_at_price = models.DecimalField(max_digits=10,
+                                           decimal_places=2,
+                                           blank=True,
+                                           null=True)
     current_label = models.OneToOneField('UserSupplementLabel',
                                          on_delete=models.SET_NULL,
                                          related_name='current_label_of',
