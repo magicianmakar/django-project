@@ -106,7 +106,7 @@ class WooStoreApi(ApiBase):
 
                 if user.profile.plan.is_free and not user_count:
                     return self.api_error('Please Activate your account first by visiting:\n{}'.format(
-                        request.build_absolute_uri('/user/profile#plan'), status=401))
+                        request.build_absolute_uri('/user/profile#plan')), status=401)
                 else:
                     return self.api_error('Your plan does not support connecting another WooCommerce store. '
                                           'Please contact support@shopifiedapp.com to learn how to connect more stores.')

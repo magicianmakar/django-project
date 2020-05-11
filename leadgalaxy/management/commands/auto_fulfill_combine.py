@@ -218,7 +218,7 @@ class Command(DropifiedBaseCommand):
         return fulfilled
 
     def fix_api_line_items(self, order_track, api_data, errors):
-        url = order_track.store.api(f'orders')
+        url = order_track.store.api('orders')
         response = requests.get(url=url, params={'ids': order_track.order_id})
 
         # Errors only show the title of the line item

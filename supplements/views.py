@@ -610,7 +610,7 @@ class MySupplements(LoginRequiredMixin, View):
 
         len_supplement = len(queryset)
         if len_supplement == 1:
-            len_supplement = f"1 supplement."
+            len_supplement = "1 supplement."
         elif len_supplement > 0:
             len_supplement = f"{len_supplement} supplements."
 
@@ -683,7 +683,7 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
 
         len_label = context['paginator'].count
         if len_label == 1:
-            label_count = f"1 label."
+            label_count = "1 label."
         else:
             label_count = f"{len_label} labels."
 

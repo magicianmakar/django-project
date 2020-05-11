@@ -238,7 +238,7 @@ def subscription_callflex(request):
         price = 0
         charge = store.shopify.RecurringApplicationCharge.create({
             "test": settings.DEBUG,
-            "name": f'Dropified CallFlex'.strip(),
+            "name": 'Dropified CallFlex',
             "price": price,
             "capped_amount": price + 50,
             "trial_days": 0,

@@ -1557,8 +1557,8 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         price_range = p['product'].get('price_range')
         if price_range and type(price_range) is list and len(price_range) == 2:
             p['price_range'] = '{} - {}'.format(
-                money_format('{:.02f}'.format(price_range[0], i.store)),
-                money_format('{:.02f}'.format(price_range[1], i.store))
+                money_format(price_range[0], i.store),
+                money_format(price_range[1], i.store)
             )
 
         if 'images' not in p['product'] or not p['product']['images']:
@@ -2915,8 +2915,8 @@ def dropified_black_users(request):
 
     if request.method == 'POST' and 'file' in request.FILES:
         def decode_utf8(input_iterator):
-            for l in input_iterator:
-                yield l.decode('utf-8')
+            for letter in input_iterator:
+                yield letter.decode('utf-8')
 
         error_message = None
         selected_sample = request.POST['selected-sample']

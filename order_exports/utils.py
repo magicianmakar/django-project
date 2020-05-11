@@ -327,7 +327,7 @@ class ShopifyOrderExport():
             writer.writeheader()
             for order in orders:
                 if vendor != '':
-                    vendor_found = [l for l in order['line_items'] if slugify(l['vendor']) == vendor]
+                    vendor_found = [o_line for o_line in order['line_items'] if slugify(o_line['vendor']) == vendor]
                     if len(vendor_found) == 0:  # vendor not found on line items
                         continue
 

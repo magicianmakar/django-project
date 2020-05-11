@@ -1144,11 +1144,11 @@ class ShopifyStore(StoreBase):
         locations = self.get_locations(fulfillments_only=True)
 
         if locations:
-            for l in locations:
-                if name and name == l['name']:
-                    return l
-                elif location_id and location_id == l['id']:
-                    return l
+            for loc in locations:
+                if name and name == loc['name']:
+                    return loc
+                elif location_id and location_id == loc['id']:
+                    return loc
 
         if len(locations) == 1:
             if self.primary_location != locations[0]['id']:

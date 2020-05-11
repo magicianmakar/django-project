@@ -114,7 +114,7 @@ def update_elasticsearch_shopify_order(order):
             updated_at=order.updated_at,
             closed_at=order.closed_at,
             cancelled_at=order.cancelled_at,
-            product_ids=[l.product_id for l in order.shopifyorderline_set.all()]
+            product_ids=[ll.product_id for ll in order.shopifyorderline_set.all()]
         )
     )
 

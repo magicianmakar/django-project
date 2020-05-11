@@ -27,7 +27,7 @@ class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
         # wait for launch date
         if arrow.utcnow() < arrow.get('2019-09-04'):
-            self.write(f"Launch date not reached yet")
+            self.write("Launch date not reached yet")
             return
 
         # Deleting phone which passed 90+14 days inactivity
@@ -49,7 +49,7 @@ class Command(DropifiedBaseCommand):
                 if latest_logs_count <= 0:
                     self.write(f"No call logs after {exp_date} Unregistering phone number")
                     if options['preview_only']:
-                        self.write(f"Preview mode - phone wasn't deleted")
+                        self.write("Preview mode - phone wasn't deleted")
                     else:
                         client = get_twilio_client()
                         client.incoming_phone_numbers(user_phone.twilio_sid).delete()

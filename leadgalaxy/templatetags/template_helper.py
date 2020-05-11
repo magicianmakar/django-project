@@ -91,7 +91,7 @@ def json_dumps(context, data, obfuscate=None):
         data = sep.join([
             f'/* {obfuscate} {ch} variants_sku */' * rand,
             '\n' * random.randint(0, 4),
-            f"JSON.parse(",
+            "JSON.parse(",
             f' /* var {obfuscate} = {{ */ ' * rand,
             f"'{escapejs(data)}'",
             '/* ; */' * rand,

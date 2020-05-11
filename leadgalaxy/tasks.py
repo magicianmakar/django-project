@@ -1445,7 +1445,7 @@ def product_randomize_image_names(self, product_id):
     images = []
     try:
         # Get shopify product images
-        rep = requests.get(url=store.api(f'products', shopify_id, 'images'))
+        rep = requests.get(url=store.api('products', shopify_id, 'images'))
         rep.raise_for_status()
 
         images = rep.json()['images']

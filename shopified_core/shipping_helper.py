@@ -119,8 +119,8 @@ def load_uk_provincess():
     data_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'uk_provinces.csv')
     with open(data_file) as f:
         lines = f.readlines()
-        for l in lines:
-            parts = [j.strip() for j in l.split(',')]
+        for file_line in lines:
+            parts = [j.strip() for j in file_line.split(',')]
             if len(parts) == 2:
                 city = parts[0].lower()
                 province = parts[1]

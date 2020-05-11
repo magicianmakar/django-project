@@ -133,10 +133,10 @@ def ensure_title(text):
     return text
 
 
-def list_chunks(l, n):
+def list_chunks(list_to_chunk, chunk_size):
     """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i:i + n]
+    for i in range(0, len(list_to_chunk), chunk_size):
+        yield list_to_chunk[i:i + chunk_size]
 
 
 def app_link(*args, **kwargs):
@@ -336,7 +336,7 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_em
         email_html = email_html.replace('\n', '<br />')
     else:
         email_plain = bleach.clean(email_html, tags=[], strip=True).strip().split('\n')
-        email_plain = [l.strip() for l in email_plain]
+        email_plain = [email_line.strip() for email_line in email_plain]
         email_plain = '\n'.join(email_plain)
 
     if type(recipient) is not list:
