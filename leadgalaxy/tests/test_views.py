@@ -359,7 +359,7 @@ class AffiliateTestCase(BaseTestCase):
         )
 
         admitad_url.return_value = (
-            r'https://alitems.com/g/1e8d114494c02ea3d6a016525dc3e8/?'
+            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 
@@ -371,9 +371,8 @@ class AffiliateTestCase(BaseTestCase):
                 '37954', 'shopifiedapp', self.place_order_data['product']
             )
         elif admitad_url.called:
-            admitad_url.assert_called_with(
-                '1e8d114494c02ea3d6a016525dc3e8', self.place_order_data['product']
-            )
+            self.assertIn(admitad_url.call_args[0][0], settings.DROPIFIED_ADMITAD_ID)
+            self.assertEqual(admitad_url.call_args[0][1], self.place_order_data['product'])
 
         # Ensure extra query are well encoded
         self.assertIn(r'%3FSAPlaceOrder%3D{}'.format(self.place_order_data['SAPlaceOrder']), r['location'])
@@ -397,7 +396,7 @@ class AffiliateTestCase(BaseTestCase):
     @patch('leadgalaxy.utils.admitad_can_redirect', Mock(return_value=True))
     def test_user_without_affiliate_admitad(self, affiliate_url, aliexpress_url):
         affiliate_url.return_value = (
-            r'https://alitems.com/g/1e8d114494c02ea3d6a016525dc3e8/?'
+            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 
@@ -408,7 +407,8 @@ class AffiliateTestCase(BaseTestCase):
         self.assertIn(settings.DEFAULT_ALIEXPRESS_AFFILIATE, ['ali', 'admitad'])
 
         if settings.DEFAULT_ALIEXPRESS_AFFILIATE == 'admitad':
-            affiliate_url.assert_called_with('1e8d114494c02ea3d6a016525dc3e8', self.place_order_data['product'])
+            self.assertIn(affiliate_url.call_args[0][0], settings.DROPIFIED_ADMITAD_ID)
+            self.assertEqual(affiliate_url.call_args[0][1], self.place_order_data['product'])
 
             # Ensure extra query are well encoded
             self.assertIn(r'%3FSAPlaceOrder%3D{}'.format(self.place_order_data['SAPlaceOrder']), r['location'])
@@ -418,6 +418,7 @@ class AffiliateTestCase(BaseTestCase):
 
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
+    @patch('leadgalaxy.utils.admitad_can_redirect', Mock(return_value=True))
     def test_user_without_affiliate_admitad_aliexpress_can_redirect(self, affiliate_url, aliexpress_url):
         product_id = '32731090429'
         place_order_data = {
@@ -426,7 +427,7 @@ class AffiliateTestCase(BaseTestCase):
         }
 
         affiliate_url.return_value = (
-            r'https://alitems.com/g/1e8d114494c02ea3d6a016525dc3e8/?'
+            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             rf'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F{product_id}.html'
         )
 
@@ -434,7 +435,9 @@ class AffiliateTestCase(BaseTestCase):
 
         r = self.client.get('/orders/place', place_order_data)
 
-        affiliate_url.assert_called_with('1e8d114494c02ea3d6a016525dc3e8', place_order_data['product'])
+        affiliate_url.assert_called()
+        self.assertIn(affiliate_url.call_args[0][0], settings.DROPIFIED_ADMITAD_ID)
+        self.assertEqual(affiliate_url.call_args[0][1], place_order_data['product'])
 
         # Ensure extra query are well encoded
         self.assertEqual('alitems', get_domain(r['location']))
@@ -449,7 +452,7 @@ class AffiliateTestCase(BaseTestCase):
         }
 
         affiliate_url.return_value = (
-            r'https://alitems.com/g/1e8d114494c02ea3d6a016525dc3e8/?'
+            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             rf'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F{product_id}.html'
         )
 
@@ -489,7 +492,7 @@ class AffiliateTestCase(BaseTestCase):
         self.user.set_config('admitad_site_id', '987654321')
 
         affiliate_url.return_value = (
-            r'https://alitems.com/g/1e8d114494c02ea3d6a016525dc3e8/?'
+            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 
@@ -510,7 +513,7 @@ class AffiliateTestCase(BaseTestCase):
         self.user.set_config('admitad_site_id', '987654321')
 
         get_admitad_affiliate_url.return_value = (
-            r'https://alitems.com/g/1e8d114494c02ea3d6a016525dc3e8/?'
+            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
             r'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F-%2F32735736988.html'
         )
 

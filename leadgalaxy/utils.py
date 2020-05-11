@@ -13,6 +13,7 @@ import re
 import shutil
 import tempfile
 import copy
+import random
 
 from urllib.parse import urlencode, urlsplit, parse_qs, urlunsplit, urlparse
 from hashlib import sha256
@@ -1892,7 +1893,7 @@ def get_admitad_credentials(user):
 
     if not site_id:
         user_credentials = False
-        site_id = settings.DROPIFIED_ADMITAD_ID
+        site_id = random.choice(settings.DROPIFIED_ADMITAD_ID)
 
     return site_id, user_credentials
 
@@ -1905,7 +1906,7 @@ def get_admitad_affiliate_url(site_id, url):
 
 def admitad_can_redirect(product, site_id=None):
     if not site_id:
-        site_id = settings.DROPIFIED_ADMITAD_ID
+        site_id = random.choice(settings.DROPIFIED_ADMITAD_ID)
 
     cache_key = hash_text(f'{product}-{site_id}')
     cache_key = f'admitad_redirect_{cache_key}'
