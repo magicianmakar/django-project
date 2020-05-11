@@ -101,7 +101,7 @@ class Util:
                 pl_supplement = user_supplement.pl_supplement
                 label = user_supplement.current_label
                 item_price = int(float(line['price']) * 100)
-                quantity = line['quantity']
+                quantity = int(line['quantity'])
 
                 key = get_shipstation_line_key(store_type,
                                                store_id,
