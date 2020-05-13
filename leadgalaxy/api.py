@@ -631,7 +631,10 @@ class ShopifyStoreApi(ApiBase):
             event_type='subscription_cancel',
             data=json.dumps({'subscription': sub.id}))
 
-        sub.delete()
+        if data['now'] == 'true':
+            sub.delete()
+        else:
+            sub.delete(at_period_end=True)
 
         return self.api_success()
 

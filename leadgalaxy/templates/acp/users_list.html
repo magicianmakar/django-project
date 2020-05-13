@@ -278,8 +278,20 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    <a href="text-danger" class="btn btn-xs btn-danger cancel-subscription-btn"
-                                        user-id="{{users.0.id}}" charge-id="{{i.id}}">Cancel Subscription</a>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-xs btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        Cancel Subscription <span class="caret"></span>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            <li class="text-danger">
+                                                <a href="#" class="cancel-subscription-btn" user-id="{{users.0.id}}" charge-id="{{i.id}}" data-cancel-now="true">Cancel now</a>
+                                            </li>
+
+                                            <li class="text-danger">
+                                                <a href="#" class="cancel-subscription-btn" user-id="{{users.0.id}}" charge-id="{{i.id}}">Cancel when billing cycle end</a>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -844,9 +856,12 @@
             $('.cancel-subscription-btn').click(function (e) {
                 e.preventDefault();
 
+                var btn = $(e.currentTarget);
+
                 swal({
                     title: "Cancel Subscription",
-                    text: "Are you sure you want to cancel this user subscription?",
+                    text: "Are you sure you want to cancel this user subscription?\nSubscription will cancel " +
+                        (btn.data('cancel-now') ? 'immediately' : 'when billing cycle ends'),
                     type: "warning",
                     showCancelButton: true,
                     closeOnConfirm: false,
@@ -861,6 +876,7 @@
                         data: {
                             id: $(e.target).attr('charge-id'),
                             user: $(e.target).attr('user-id'),
+                            now: !!btn.data('cancel-now'),
                         },
                     }).done(function (data) {
                         toastr.success('Reloading page...', 'Subscription Canceled');
