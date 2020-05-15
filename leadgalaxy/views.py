@@ -4800,6 +4800,12 @@ def orders_place(request):
         order_data = order_data_cache(order_key)
         prefix, store, order, line = order_key.split('_')
 
+    if request.user.get_config('extension_version') == '3.41.0':
+        # Fix for ePacket selection issue
+        shipping_method = request.user.models_user.get_config('aliexpress_shipping_method')
+        if supplier and supplier.is_aliexpress and not request.GET.get('SACompany') and shipping_method != 'EMS_ZX_ZX_US':
+            return HttpResponseRedirect('{}&SACompany={}'.format(re.sub(r'&$', '', request.get_full_path()), shipping_method))
+
     if order_data:
         order_data['url'] = redirect_url
         caches['orders'].set(order_key, order_data, timeout=caches['orders'].ttl(order_key))
