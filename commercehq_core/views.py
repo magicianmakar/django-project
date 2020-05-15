@@ -1254,7 +1254,7 @@ class OrderPlaceRedirectView(RedirectView):
         if self.request.user.get_config('extension_version') == '3.41.0':
             # Fix for ePacket selection issue
             shipping_method = self.request.user.models_user.get_config('aliexpress_shipping_method')
-            if supplier and supplier.is_aliexpress and not self.request.GET.get('SACompany') and shipping_method != 'EMS_ZX_ZX_US':
+            if supplier and supplier.is_aliexpress and 'SACompany' not in self.request.GET and shipping_method and shipping_method != 'EMS_ZX_ZX_US':
                 return '{}&SACompany={}'.format(re.sub(r'&$', '', self.request.get_full_path()), shipping_method)
 
         if order_data:
