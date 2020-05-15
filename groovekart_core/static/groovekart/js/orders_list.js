@@ -264,7 +264,7 @@ $('#modal-add-order-id .supplier-type').on('change', function (e) {
     if (supplierType === 'ebay') {
         placeholder = 'https://www.ebay.com/vod/FetchOrderDetails?itemid=XXXX&transId=XXXX';
     } else if (supplierType === 'aliexpress') {
-        placeholder = 'http://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
+        placeholder = 'https://trade.aliexpress.com/order_detail.htm?orderId=XXXX';
     } else if (supplierType === 'dropified-print') {
         placeholder = 'P12345';
     } else if (supplierType === 'supplements') {

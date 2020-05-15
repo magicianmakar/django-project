@@ -1067,7 +1067,7 @@ class WooOrderUpdater:
             if track.source_type == 'ebay':
                 source = 'eBay'
         else:
-            url = 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(source_id)
+            url = 'https://trade.aliexpress.com/order_detail.htm?orderId={}'.format(source_id)
 
         note = '{} Order ID: {}\n{}'.format(source, source_id, url)
 

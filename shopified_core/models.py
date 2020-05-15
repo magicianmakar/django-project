@@ -234,7 +234,7 @@ class OrderTrackBase(models.Model):
             elif self.source_type == 'dropified-print':
                 return f"{reverse('prints:orders')}?order={self.source_id}"
             else:
-                return 'http://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
+                return 'https://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
         else:
             return None
 
