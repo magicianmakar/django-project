@@ -1329,6 +1329,7 @@ class OrderPlaceRedirectView(RedirectView):
                 'plan_id': plan.id,
                 'affiliate': affiliate if not disable_affiliate else 'disables',
                 'sub_user': self.request.user.is_subuser,
+                'extension_version': self.request.user.get_config('extension_version'),
                 'total': order_data['total'],
                 'quantity': order_data['quantity'],
                 'cart': 'SACart' in self.request.GET
