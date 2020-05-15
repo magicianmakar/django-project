@@ -451,7 +451,7 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
         params['minPrice'] = product_price
         params['maxPrice'] = product_price
 
-    r = requests.get(url="http://freight.aliexpress.com/ajaxFreightCalculateService.htm", timeout=10, params=params)
+    r = requests.get(url="https://freight.aliexpress.com/ajaxFreightCalculateService.htm", timeout=10, params=params)
 
     try:
         shippement_data = json.loads(r.text[1:-1])
