@@ -253,11 +253,18 @@ HIJACK_DISPLAY_ADMIN_BUTTON = False
 HIJACK_USE_BOOTSTRAP = True
 HIJACK_ALLOW_GET_REQUESTS = True
 
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME')
-EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_PASSWORD')
-EMAIL_PORT = 587
+if os.environ.get('SMTP_PROVIDER') == 'SES':
+    EMAIL_HOST = 'email-smtp.us-east-1.amazonaws.com'
+    EMAIL_HOST_USER = os.environ.get('SES_USERNAME')
+    EMAIL_HOST_PASSWORD = os.environ.get('SES_PASSWORD')
+else:
+    EMAIL_HOST = 'smtp.sendgrid.net'
+    EMAIL_HOST_USER = os.environ.get('SENDGRID_USERNAME')
+    EMAIL_HOST_PASSWORD = os.environ.get('SENDGRID_PASSWORD')
+
+EMAIL_PORT = int(os.environ.get('SMTP_PORT', '587'))
 EMAIL_USE_TLS = True
+
 DEFAULT_FROM_EMAIL = "support@dropified.com"
 
 if not EMAIL_HOST_USER and DEBUG:
