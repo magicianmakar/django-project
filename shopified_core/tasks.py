@@ -12,6 +12,15 @@ from .utils import url_join
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def requests_async(self, **kwargs):
+    try:
+        request_method = kwargs.pop('method').lower()
+        getattr(requests, request_method)(**kwargs).raise_for_status()
+    except:
+        raven_client.captureException()
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
 def send_email_async(self, **kwargs):
     try:
         send_mail(**kwargs)

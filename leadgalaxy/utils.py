@@ -43,6 +43,7 @@ from raven.contrib.django.raven_compat.models import client as raven_client
 
 from app.celery_base import retry_countdown
 from shopified_core import permissions
+from shopified_core.tasks import requests_async
 from shopified_core.utils import (
     safe_int,
     safe_float,
@@ -77,6 +78,7 @@ from leadgalaxy.models import (
 )
 from shopified_core.shipping_helper import (
     country_from_code,
+    ebay_country_code,
     get_uk_province,
     valide_aliexpress_province,
     support_other_in_province,
@@ -266,6 +268,7 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
                 'user': user,
                 'password_link': app_link(reverse('account_password_setup', kwargs={'register_id': account_reg.register_hash}))
             },
+            is_async=True,
         )
 
         if settings.INTERCOM_ACCESS_TOKEN:
@@ -296,10 +299,7 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
             if intercom_attributes:
                 data['custom_attributes'].update(intercom_attributes)
 
-            try:
-                requests.post('https://api.intercom.io/users', headers=headers, json=data).text
-            except:
-                raven_client.captureException()
+            requests_async.apply_async(kwargs={'method': 'post', 'headers': headers, 'json': data}, queue='priority_high')
 
         return user, True
 
@@ -471,8 +471,6 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
 
 
 def ebay_shipping_info(item_id, country_name, zip_code=''):
-    from shopified_core.shipping_helper import ebay_country_code
-
     country_code = ebay_country_code(country_name)
     if not country_code:
         return {}
