@@ -24,7 +24,6 @@ from django.utils.crypto import get_random_string
 from django.utils.module_loading import import_string
 
 import arrow
-import bleach
 import phonenumbers
 import jwt
 from tld import get_tld
@@ -333,14 +332,11 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_em
     email_html = template.render(ctx)
     email_html = transform(email_html, keep_style_tags=True)
 
+    email_plain = None
+
     if nl2br and '<head' not in email_html and '<body' not in email_html:
         email_plain = email_html
         email_html = email_html.replace('\n', '<br />')
-    else:
-        # Create Plain text version of the email
-        email_plain = bleach.clean(email_html, tags=[], strip=True).strip().split('\n')
-        email_plain = [email_line.strip() for email_line in email_plain]
-        email_plain = '\n'.join(email_plain)
 
     if type(recipient) is not list:
         recipient = [recipient]

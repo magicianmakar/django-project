@@ -111,7 +111,7 @@ class Command(DropifiedBaseCommand):
     def send_email(self, user, changes_map, cc_list=[], changes_count=None):
         # send changes_map to email template
         data = {
-            'username': user.username,
+            'user': user,
             'changes_map': changes_map,
             'have_more_changes': changes_count,
         }
@@ -131,7 +131,7 @@ class Command(DropifiedBaseCommand):
                 '[Dropified] AliExpress Product Alert',
                 recipient_list,
                 data,
-                from_email='"Dropified" <no-reply@dropified.com>'
+                from_email='Dropified <no-reply@dropified.com>'
             )
 
     def get_config(self, name, product, user, default='notify'):
