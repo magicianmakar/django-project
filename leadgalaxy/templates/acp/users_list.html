@@ -222,6 +222,31 @@
                 {% endwith %}
                 {% endif %}
 
+                {% if account_registration and not account_registration.expired %}
+                    <hr/>
+                    <h2>Password Setup Link</h2>
+                    <table class="table  dataTables">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Used</th>
+                                <th>Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="itooltip">{% date_humanize account_registration.created_at %}</span></td>
+                                <td>{{ account_registration.expired|yesno:'Yes,No' }}</td>
+                                <td>
+                                    <a href="{% url 'account_password_setup' register_id=account_registration.register_hash %}" class="btn btn-xs btn-success" target="_blank">
+                                        Setup Link
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                {% endif %}
+
                 {% if registrations %}
                     <hr/>
                     <h2>Lifetime Purchases</h2>

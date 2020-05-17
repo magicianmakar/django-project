@@ -32,6 +32,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+from django.urls import reverse
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.core.validators import validate_email, ValidationError
@@ -63,6 +64,7 @@ from shopified_core.utils import (
     ensure_title,
 )
 from leadgalaxy.models import (
+    AccountRegistration,
     GroupPlan,
     PlanRegistration,
     ShopifyOrderTrack,
@@ -254,13 +256,15 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
                 last_name=last_name[:30],
                 password=password)
 
+        account_reg = AccountRegistration.objects.create(user=user)
+
         send_email_from_template(
             tpl='register_credentials.html',
             subject='Your Dropified Account',
             recipient=email,
             data={
                 'user': user,
-                'password': password
+                'password_link': app_link(reverse('account_password_setup', kwargs={'register_id': account_reg.register_hash}))
             },
         )
 

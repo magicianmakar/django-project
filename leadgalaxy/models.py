@@ -2250,6 +2250,27 @@ class PlanRegistration(models.Model):
             return None
 
 
+class AccountRegistration(models.Model):
+    class Meta:
+        ordering = ['-created_at']
+
+    user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
+    register_hash = models.CharField(max_length=40, unique=True, editable=False)
+    expired = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+
+    def __str__(self):
+        return f'AccountRegistration: {self.user.email}'
+
+    def save(self, *args, **kwargs):
+        if not self.register_hash:
+            self.register_hash = get_random_string(64)
+
+        super().save(*args, **kwargs)
+
+
 class PlanPayment(models.Model):
     class Meta:
         ordering = ['-created_at']

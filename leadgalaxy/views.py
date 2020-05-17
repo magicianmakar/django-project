@@ -25,12 +25,13 @@ from django.contrib.auth import logout as user_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
+from django.contrib.auth.password_validation import validate_password
 from django.conf import settings
 from django.core.cache import cache, caches
 from django.core.cache.utils import make_template_fragment_key
 from django.core.mail import send_mail
 from django.urls import reverse
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.signing import Signer
 from django.db import transaction
 from django.db.models import Count, Max, F, Q
@@ -112,6 +113,7 @@ from .forms import (
     RegisterForm
 )
 from .models import (
+    AccountRegistration,
     AdminEvent,
     AppPermission,
     CaptchaCredit,
@@ -2520,9 +2522,13 @@ def acp_users_list(request):
     stripe_customer = None
     shopify_charges = []
     shopify_application_charges = []
+    account_registration = None
 
     if len(users) == 1:
         target_user = users[0]
+
+        account_registration = AccountRegistration.objects.filter(user=target_user).first()
+
         rep = requests.get('https://dashboard.stripe.com/v1/search', params={
             'count': 20,
             'include[]': 'total_count',
@@ -2637,6 +2643,7 @@ def acp_users_list(request):
         'subscribtions': subscribtions,
         'registrations': registrations,
         'shopify_charges': shopify_charges,
+        'account_registration': account_registration,
         'shopify_application_charges': shopify_application_charges,
         'random_cache': random_cache,
         'user_last_seen': user_last_seen,
@@ -5253,6 +5260,48 @@ def sudo_login(request):
             'target_user': target_user
         }
     )(request)
+
+
+def account_password_setup(request, register_id):
+    errors = []
+    registration = get_object_or_404(AccountRegistration, register_hash=register_id, expired=False)
+
+    if request.method == 'POST':
+
+        new_password1 = request.POST.get('new_password1')
+        new_password2 = request.POST.get('new_password2')
+
+        if not new_password1 or not new_password2:
+            errors.append('Password or Password verification is empty')
+        elif new_password1 != new_password2:
+            errors.append('Password and Password verification do not match')
+        else:
+            try:
+                validate_password(new_password1, user=registration.user)
+            except ValidationError as e:
+                for error in e.error_list:
+                    for message in error.messages:
+                        errors.append(message)
+
+            if not errors:
+                registration.user.set_password(new_password1)
+                registration.user.save()
+
+                registration.expired = True
+                registration.save()
+
+                registration.user.backend = settings.AUTHENTICATION_BACKENDS[0]
+                login(request, registration.user)
+                request.user = registration.user
+
+                messages.success(request, 'Your password has been changed successfully')
+
+                return HttpResponseRedirect('/')
+
+    return render(request, "registration/password_setup.html", {
+        'registration': registration,
+        'errors': errors
+    })
 
 
 @xframe_options_exempt

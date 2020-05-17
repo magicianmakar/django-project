@@ -1,6 +1,7 @@
 from django.conf.urls import url
-import django.contrib.auth.views
+from django.urls import path
 
+import django.contrib.auth.views
 import leadgalaxy.views
 import leadgalaxy.api
 
@@ -46,6 +47,8 @@ urlpatterns = [
     url(r'^accounts/register/?(?P<registration>[a-z0-9-]+)?$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/sudo/$', leadgalaxy.views.sudo_login, name='sudo_login'),
     url(r'^accounts/login/$', leadgalaxy.views.login_xframe_options_exempt, name='login'),
+    path('accounts/password/setup/<str:register_id>', leadgalaxy.views.account_password_setup, name='account_password_setup'),
+
     url(r'^accounts/password/reset/$', django.contrib.auth.views.PasswordResetView.as_view(
         template_name='registration/password_reset.html', html_email_template_name='registration/password_reset_email2.html')),
     url(r'^accounts/password_reset/done/$', django.contrib.auth.views.PasswordResetDoneView.as_view(

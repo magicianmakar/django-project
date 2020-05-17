@@ -144,6 +144,24 @@ STATICFILES_FINDERS = (
 
 WSGI_APPLICATION = 'app.wsgi.application'
 
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
 DROPIFIED_API = {
     'all': 'shopified_core.api.ShopifiedApi',
     'shopify': 'leadgalaxy.api.ShopifyStoreApi',

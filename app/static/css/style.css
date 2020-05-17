@@ -570,9 +570,6 @@ body.canvas-menu.mini-navbar nav.navbar-static-side {
 }
 .big-btn {
   border-radius: 25px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-size: 13px;
   padding: 8px 25px;
 }
 .btn:focus {

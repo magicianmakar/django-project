@@ -22,6 +22,7 @@ from .models import (
     GroupPlanChangeLog,
     PlanPayment,
     PlanRegistration,
+    AccountRegistration,
     PriceMarkupRule,
     ProductSupplier,
     ShopifyBoard,
@@ -240,6 +241,18 @@ class PlanRegistrationAdmin(admin.ModelAdmin):
 
     def view_on_site(self, obj):
         return '/accounts/register/{}'.format(obj.register_hash)
+
+
+@admin.register(AccountRegistration)
+class AccountRegistrationAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'user', 'expired', 'created_at', 'updated_at')
+    list_filter = ('expired',)
+    search_fields = ('data', 'register_hash') + USER_SEARCH_FIELDS
+    raw_id_fields = ('user',)
+    readonly_fields = ('register_hash',)
+
+    def view_on_site(self, obj):
+        return reverse('account_password_setup', kwargs={'register_id': obj.register_hash})
 
 
 @admin.register(ShopifyProductImage)
