@@ -1,21 +1,8 @@
-{% load template_helper %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hi,</p>
+{% extends 'email_base.html' %}
+
+{% block email-content %}
 
     <p>You've reached yoru shopify capped limit on your monthly recurring. You need to confirm increasing that limit to continue using CallFlex featrure.
-    <p>Please confirm that action in your profile page <a target=_blank href="{{profile_link}}">here</a> .</p>
+    <p>Please confirm that action in your profile page <a target=_blank href="{{profile_link}}">here</a>.</p>
 
-
-    <p>
-        <br>The Dropified Team<br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
-    </p>
-</body>
-</html>
+{% endblock %}

@@ -1,28 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <img class="logo" src="https://cdn.dropified.com/static/dropified-logo.png" width="220" height="50" alt="logo" />
+{% extends 'email_base.html' %}
 
-    <p>Hi,</p>
+{% block email-content %}
+
     {% if bulk %}
     <p>You have several cancelled orders in AliExpress.</p>
     {% else %}
     <p>One of your orders has been cancelled in AliExpress.</p>
     {% endif %}
 
-    <p style="margin-bottom: 10px; line-height: 36px;">
-        You can view your cancelled AliExpress orders on the 
+    <p>
+        You can view your cancelled AliExpress orders on the
         <a class="link-btn warning block" href="{{ track_url }}" target="_blank" title="tracking page">Dropified Tracking page</a>
     </p>
 
-    <p>
-        <br>The Dropified Team<br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
-    </p>
-</body>
-</html>
+{% endblock %}

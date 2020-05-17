@@ -1,23 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hello {{firstname|title}}, Welcome to Dropified!</p>
+{% extends 'email_base.html' %}
 
-    <p>Please follow this link to create your profile on Dropified:<br>
-        <a href="https://app.dropified.com/accounts/register/{{reg_hash}}">
-            https://app.dropified.com/accounts/register/{{reg_hash}}
+{% block email-content %}
+
+    <p>Welcome to Dropified!</p>
+
+    <p>Please follow this link to create your profile on Dropified:</p>
+    <p>
+        <a class="action-btn" href="https://app.dropified.com/accounts/register/{{reg_hash}}">
+            Complete Registration
         </a>
     </p>
 
-    <p>
-        The Dropified Team
-        <br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a>
-    </p>
-</body>
-</html>
+{% endblock %}

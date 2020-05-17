@@ -1,0 +1,235 @@
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>{{ title|default:'Dropified' }}</title>
+    <style type="text/css">
+        p {
+            margin: 0;
+            margin-bottom: 30px;
+            color: #294661; font-family: 'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            font-weight: 300; }
+
+        a {
+            box-sizing: border-box;
+            color: #348eda;
+            font-weight: 400;
+            text-decoration: none; }
+
+        h2 {
+            margin: 0;
+            margin-bottom: 30px;
+            font-family: 'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            font-weight: 300;
+            line-height: 1.5;
+            font-size: 24px;
+            color: #294661 !important; }
+
+        .action-btn {
+            box-sizing: border-box;
+            border-color: #348eda;
+            font-weight: 400;
+            text-decoration: none;
+            display: inline-block;
+            margin: 0; color: #ffffff;
+            background-color: #348eda;
+            border: solid 1px #348eda;
+            border-radius: 2px;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 12px 45px;
+        }
+
+        .text-center {
+            text-align: center; }
+
+    </style>
+    <style media="all" type="text/css">
+    @media only screen and (max-width: 480px) {
+        table[class=body] h1 {
+            font-size: 24px !important;
+        }
+
+        table[class=body] h2 {
+            font-size: 20px !important;
+        }
+
+        table[class=body] h3 {
+            font-size: 14px !important;
+        }
+
+        table[class=body] .content,
+        table[class=body] .wrapper {
+            padding: 15px !important;
+        }
+
+        table[class=body] .container {
+            width: 100% !important;
+            padding: 0 !important;
+        }
+
+        table[class=body] .column {
+            width: 100% !important;
+        }
+
+        table[class=body] .stats .column {
+            width: 50% !important;
+        }
+
+        table[class=body] .hero-image,
+        table[class=body] .thumb {
+            width: 100% !important;
+            height: auto !important;
+        }
+
+        table[class=body] .btn table,
+        table[class=body] .btn a {
+            width: 100% !important;
+        }
+
+        table[class=body] .credits table {
+            table-layout: auto !important;
+        }
+
+        table[class=body] .credits .label {
+            font-size: 11px !important;
+        }
+    }
+    </style>
+    <style type="text/css">
+    @font-face {
+        font-family: 'Open Sans';
+        font-style: normal;
+        font-weight: 300;
+        src: local('Open Sans Light'), local('OpenSans-Light'), url(https://fonts.gstatic.com/s/opensans/v13/DXI1ORHCpsQm3Vp6mXoaTYnF5uFdDttMLvmWuJdhhgs.ttf) format('truetype');
+    }
+
+    @font-face {
+        font-family: 'Open Sans';
+        font-style: normal;
+        font-weight: 400;
+        src: local('Open Sans'), local('OpenSans'), url(https://fonts.gstatic.com/s/opensans/v13/cJZKeOuBrn4kERxqtaUH3aCWcynf_cDxXwCLxiixG1c.ttf) format('truetype');
+    }
+
+    @font-face {
+        font-family: 'Open Sans';
+        font-style: normal;
+        font-weight: 600;
+        src: local('Open Sans Semibold'), local('OpenSans-Semibold'), url(https://fonts.gstatic.com/s/opensans/v13/MTP_ySUJH_bn48VBG8sNSonF5uFdDttMLvmWuJdhhgs.ttf) format('truetype');
+    }
+    </style>
+    <!--[if mso]>
+<style>
+                  h1, h2, h3, h4,
+                  p, ol, ul {
+                    font-family: Arial, sans-serif !important;
+                  }
+                </style>
+<![endif]-->
+</head>
+
+<body style="font-size:16px; background-color:#fdfdfd; margin:0; padding:0; font-family:'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; -webkit-text-size-adjust:100%; line-height:1.5; -ms-text-size-adjust:100%; -webkit-font-smoothing:antialiased; height:100% !important; width:100% !important; ">
+    <table class="body" style="box-sizing:border-box; border-spacing:0; mso-table-rspace:0pt; mso-table-lspace:0pt; width:100%; background-color:#fdfdfd; border-collapse:separate !important; " width="100%" bgcolor="#FDFDFD">
+        <tbody>
+            <tr style="">
+                <td style="box-sizing: border-box; padding: 0; font-family: 'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-size: 16px; vertical-align: top;" valign="top"><br>
+                </td>
+                <td class="container" style="box-sizing:border-box; padding:0; font-family:'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-size:16px; vertical-align:top; display:block; width:600px; max-width:600px; margin:0 auto !important; " width="600" valign="top">
+                    <div class="content" style="box-sizing:border-box; display:block; max-width:600px; margin:0 auto; padding:10px; ">
+                        <div class="header" style="box-sizing: border-box; width: 100%; margin-bottom: 30px; margin-top: 15px;">
+                            <table style="box-sizing: border-box; width: 100%; border-spacing: 0; mso-table-rspace: 0pt; mso-table-lspace: 0pt; border-collapse: separate !important;" width="100%">
+                                <tbody>
+                                    <tr>
+                                        <td class="align-left" style="box-sizing: border-box; padding: 0; font-family: 'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-size: 16px; vertical-align: top; text-align: left;" valign="top" align="left">
+                                            <a href="https://app.dropified.com" style="box-sizing: border-box; color: #348eda; font-weight: 400; text-decoration: none;" moz-do-not-send="true">
+                                                <img src="https://cdn.dropified.com/static/dropified-logo.png" alt="Dropified" style="max-width: 100%; border-style: none;" moz-do-not-send="true" height="42">
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="block" style="box-sizing:border-box; width:100%; margin-bottom:30px; background:#ffffff; border:1px solid #f0f0f0; ">
+                            <table style="box-sizing:border-box; width:100%; border-spacing:0; mso-table-rspace:0pt; mso-table-lspace:0pt; border-collapse:separate !important; " width="100%">
+                                <tbody>
+                                    <tr style="">
+                                        <td class="wrapper" style="box-sizing:border-box; font-family:'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-size:16px; vertical-align:top; padding:30px; " valign="top">
+                                            <table style="box-sizing:border-box; width:100%; border-spacing:0; mso-table-rspace:0pt; mso-table-lspace:0pt; border-collapse:separate !important; " width="100%">
+                                                <tbody>
+                                                    <tr style="">
+                                                        <td style="box-sizing:border-box; padding:0; font-family:'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-size:16px; vertical-align:top; " valign="top">
+                                                            <div class="mktEditable" id="block-one" style="box-sizing:border-box; ">
+                                                                <h2>
+                                                                    {% if name %}
+                                                                        Hi {{ name | title }},
+                                                                    {% elif user and user.first_name %}
+                                                                        Hi {{ user.first_name | title }},
+                                                                    {% elif firstname %}
+                                                                        Hi {{ firstname | title }},
+                                                                    {% else %}
+                                                                        Hi,
+                                                                    {% endif %}
+                                                                </h2>
+                                                                    {% block email-content %}{% endblock %}
+
+                                                                    <p>
+                                                                        Sincerely,<br>
+                                                                        Dropified Team
+                                                                    </p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="footer" style="box-sizing: border-box; clear: both; width: 100%;">
+        <table style="box-sizing: border-box; width: 100%; border-spacing: 0; mso-table-rspace: 0pt; mso-table-lspace: 0pt; font-size: 12px; border-collapse: separate !important;" width="100%">
+            <tbody>
+                <tr style="font-size: 12px;">
+                    <td class="align-center" style="box-sizing: border-box; font-family: 'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; vertical-align: top; font-size: 12px; text-align: center; padding: 20px 0;" valign="top" align="center">
+                <a href="https://app.dropified.com" style="box-sizing: border-box; color: #348eda; font-weight: 400; text-decoration: none; font-size: 12px;" moz-do-not-send="true">
+                    <img src="https://cdn.dropified.com/static/dropified-logo.png" alt="Dropified" style="max-width: 100%; border-style: none; font-size: 12px;" moz-do-not-send="true" height="36">
+                </a>
+
+                        <p class="tagline" style="color: #294661; font-family: 'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 400; margin-bottom: 5px; margin: 10px 0 20px;">
+                            Product Research &amp; Fulfillment Solution
+                        </p>
+
+                        <p style="margin: 0; color: #294661; font-family: 'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-weight: 300; font-size: 12px; margin-bottom: 5px;">
+                            {% now "Y" %}&copy; Dropified LLC. 909 Irving Road, Bessemer, AL 35022 USA
+                        </p>
+
+                        <p style="margin: 0; color: #294661; font-family: 'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-weight: 300; font-size: 12px; margin-bottom: 5px;">
+                            <a href="https://www.dropified.com/blog/" style="box-sizing: border-box; color: #348eda; font-weight: 400; text-decoration: none; font-size: 12px; padding: 0 5px;" moz-do-not-send="true">Blog</a>
+
+                            <a href="https://twitter.com/dropified" style="box-sizing: border-box; color: #348eda; font-weight: 400; text-decoration: none; font-size: 12px; padding: 0 5px;" moz-do-not-send="true">Twitter</a>
+
+                            <a href="https://facebook.com/dropified" style="box-sizing: border-box; color: #348eda; font-weight: 400; text-decoration: none; font-size: 12px; padding: 0 5px;" moz-do-not-send="true">Facebook</a>
+
+                            <a href="https://www.linkedin.com/company/dropified" style="box-sizing: border-box; color: #348eda; font-weight: 400; text-decoration: none; font-size: 12px; padding: 0 5px;" moz-do-not-send="true">LinkedIn</a>
+                        </p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p style="margin: 0; color: #294661; font-family: 'Open Sans', 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif; font-weight: 300; font-size: 12px; margin-bottom: 5px; text-align: center;">
+        If you no longer wish to receive these emails, click on
+        the following link to update your email preferences:
+            <a href="https://app.dropified.com/user/profile" moz-do-not-send="true">Unsubscribe</a>
+        <br>
+    </p>
+</body>
+
+</html>

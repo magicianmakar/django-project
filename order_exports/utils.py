@@ -547,12 +547,13 @@ class ShopifyTrackOrderExport():
 
     def send_email(self, url):
         data = {
-            'url': url
+            'url': url,
+            'user': self.user,
         }
 
         send_email_from_template(
             tpl='tracked_order_export.html',
-            subject='[Dropified] Aliexpress IDs & Tracking Numbers Export',
+            subject='[Dropified] Tracking Numbers Export',
             recipient=self.user.email,
             data=data
         )

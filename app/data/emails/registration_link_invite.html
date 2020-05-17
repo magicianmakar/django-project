@@ -1,23 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hello,</p>
+{% extends 'email_base.html' %}
 
-    <p>Welcome to Dropified!</p>
-    <p>Your account has been created by our team but your profile needs to be completed.<br>
-        To finish creating your account and update your profile, please visit the following link:<br>
-        <a href="https://app.dropified.com/accounts/register/{{reg_hash}}">https://app.dropified.com/accounts/register/{{reg_hash}}</a>
-    </p>
-
+{% block email-content %}
+    <p>Your account has been created by our team but your profile needs to be completed.</p>
+    <p> To finish creating your account and update your profile, please visit the following link:</p>
     <p>
-        The Dropified Team
-        <br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a>
+        <a class="action-btn" href="https://app.dropified.com/accounts/register/{{reg_hash}}">Complete Registration</a>
     </p>
-</body>
-</html>
+{% endblock %}

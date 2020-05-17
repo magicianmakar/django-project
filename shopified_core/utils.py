@@ -28,6 +28,7 @@ import bleach
 import phonenumbers
 import jwt
 from tld import get_tld
+from premailer import transform
 
 
 ALIEXPRESS_REJECTED_STATUS = {
@@ -330,11 +331,13 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_em
     ctx = Context(data)
 
     email_html = template.render(ctx)
+    email_html = transform(email_html, keep_style_tags=True)
 
     if nl2br and '<head' not in email_html and '<body' not in email_html:
         email_plain = email_html
         email_html = email_html.replace('\n', '<br />')
     else:
+        # Create Plain text version of the email
         email_plain = bleach.clean(email_html, tags=[], strip=True).strip().split('\n')
         email_plain = [email_line.strip() for email_line in email_plain]
         email_plain = '\n'.join(email_plain)
@@ -343,7 +346,7 @@ def send_email_from_template(tpl, subject, recipient, data, nl2br=False, from_em
         recipient = [recipient]
 
     if from_email is None:
-        from_email = '"Dropified" <support@dropified.com>'
+        from_email = 'Dropified <support@dropified.com>'
 
     kwargs = dict(subject=subject,
                   recipient_list=recipient,

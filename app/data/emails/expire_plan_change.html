@@ -1,11 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
+{% extends 'email_base.html' %}
+
+{% block email-content %}
     <p>
         <a href="https://app.dropified.com/admin/leadgalaxy/userprofile/{{ profile.id }}/">
             {{ profile.user.email }}
@@ -16,10 +11,4 @@
         <b>{{ new_plan.title }}</b>
     </p>
 
-    <p>
-        The Dropified Team
-        <br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a>
-    </p>
-</body>
-</html>
+{% endblock %}

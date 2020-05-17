@@ -1,21 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hello,</p>
+{% extends 'email_base.html' %}
 
-    <p>Duplicate Account has been detected for: {{email}}<br>
-       After solving the issue, reply to this ticket to notify the user<br>
-    </p>
+{% block email-content %}
 
     <p>
-        The Dropified Team
-        <br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a>
+        Duplicate Account has been detected for: {{email}}<br>
+        After solving the issue, reply to this ticket to notify the user<br>
     </p>
-</body>
-</html>
+
+{% endblock %}

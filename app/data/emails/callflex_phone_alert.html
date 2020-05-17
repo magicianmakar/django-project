@@ -1,22 +1,8 @@
-{% load template_helper %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hi, {{ user.profile.name }}</p>
+{% extends 'email_base.html' %}
 
+{% block email-content %}
 
-    <p>Your CallFlex Phone number "{{ twilio_phone.incoming_number }}" will soon expire due to inactivity (no incoming calls in past 90 days) and will be removed from your account in {{ exp_days }} days.</p>
+    <p>Your CallFlex Phone number <strong>{{ twilio_phone.incoming_number }}</strong> will soon expire due to inactivity in that last 90 days and will be removed from your account in {{ exp_days }} days.</p>
     <p>If you wish to keep your number, you can simply make a call to it yourself before the final expiration date.</p>
 
-
-    <p>
-        <br>The Dropified Team<br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
-    </p>
-</body>
-</html>
+{% endblock %}

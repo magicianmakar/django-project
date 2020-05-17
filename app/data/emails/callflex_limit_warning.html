@@ -1,21 +1,8 @@
-{% load template_helper %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hi,</p>
+{% extends 'email_base.html' %}
+
+{% block email-content %}
 
     <p>You're about to reach {{ callflex_limit }} of your {{ phone_type }} monthly limit.</p>
-    <p>We recommend to purchase extra minutes <a target=_blank href="{{purchase_link}}">here</a> .</p>
+    <p>We recommend to purchase extra minutes <a target=_blank href="{{purchase_link}}">here</a>.</p>
 
-
-    <p>
-        <br>The Dropified Team<br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
-    </p>
-</body>
-</html>
+{% endblock %}

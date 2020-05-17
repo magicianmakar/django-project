@@ -1,20 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hi,</p>
+{% extends 'email_base.html' %}
+
+{% block email-content %}
 
     <p>New comment added to label {{ comment.label.label_id_string }}:</p>
 
-    <p>{{ comment.text|safe }}</p>
+    <p>{{ comment.text }}</p>
 
-    <p>
-        <br>The Dropified Team<br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
-    </p>
-</body>
-</html>
+{% endblock %}

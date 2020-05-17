@@ -1,12 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hi,</p>
+{% extends 'email_base.html' %}
+
+{% block email-content %}
 
     <p>Your Dropified account has been locked due to an excessive amount of unsuccessful sign in attempts.</p>
     <p>Your account will automatically unlock in 10 minutes or you may click the link below to unlock now.</p>
@@ -14,9 +8,4 @@
         <a href="{{unlock_link}}">Unlock account</a> <br/>
     </p>
 
-    <p>
-        <br>The Dropified Team<br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
-    </p>
-</body>
-</html>
+{% endblock %}

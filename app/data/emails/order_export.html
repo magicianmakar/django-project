@@ -1,22 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hi,</p>
+{% extends 'email_base.html' %}
 
-    <p>We have just exported some orders for you:<br>
+{% block email-content %}
 
-    <p>You can find a page with the orders by clicking the link below.<br/>
-    <a href="{{ url }}">Click Here To Access The Orders</a></p>
+    <p>Your orders export is ready to download</p>
 
-    <p>
-        The Dropified Team
-        <br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a>
-    </p>
-</body>
-</html>
+    <p class="text-center"><a class="action-btn" href="{{ url }}">Download</a></p>
+
+{% endblock %}

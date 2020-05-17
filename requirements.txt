@@ -25,6 +25,7 @@ coverage==4.5.2
 cryptography==2.9
 cssselect2==0.3.0
 cssselect==1.0.3
+cssutils==1.0.2
 curlify==2.1.1
 dj-database-url==0.5.0
 django-admin-sortable2==0.7
@@ -84,6 +85,7 @@ pdfrw==0.4
 phonenumbers==8.9.10
 Pillow==5.2.0
 ply==3.11
+premailer==3.7.0
 psycopg2==2.7.4
 pusher==2.0.1
 pyactiveresource==2.1.2

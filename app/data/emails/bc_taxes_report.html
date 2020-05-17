@@ -1,28 +1,11 @@
-{% load template_helper %}
-{% load phone_numbers %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
+{% extends 'email_base.html' %}
 
-    <p>Here is a BigCommerce Revenue Report for {{ report_date }}</p>
+{% block email-content %}
+
+    <p>You will find in attachements BigCommerce Revenue Report for {{ report_date }}</p>
     <p>BC App ID : <b>{{ bc_app_id }}</b></p>
     <p>Total BC Stores: <b>{{ totals.total_bc_stores }}</b></p>
     <p>Total Revenue <b>{% money_format totals.total_revenue %}</b></p>
     <p>Total Revenue Share (to BC Report form): <b>{% money_format totals.total_revenue_share %}</b></p>
 
-
-        (Detailed Sheet is attached)</p>
-
-
-
-    <p>
-        <br>The Dropified Team<br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
-    </p>
-</body>
-</html>
+{% endblock %}

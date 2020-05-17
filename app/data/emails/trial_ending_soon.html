@@ -1,12 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title></title>
-    {% include "partial/email/css.html" %}
-</head>
-<body>
-    <p>Hi,</p>
+{% extends 'email_base.html' %}
+
+{% block email-content %}
 
     <p>Just wanted to check in with you for 2 main reasons:</p>
     <p>
@@ -32,10 +26,4 @@
         Thanks,
     </p>
 
-    <p>
-        Chase Bowers<br><br>
-        Dropified Creator<br>
-        <a href="mailto:support@dropified.com">support@dropified.com</a><br>
-    </p>
-</body>
-</html>
+{% endblock %}
