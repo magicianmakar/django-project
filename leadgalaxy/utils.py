@@ -271,7 +271,7 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
             is_async=True,
         )
 
-        if settings.INTERCOM_ACCESS_TOKEN:
+        if not settings.DEBUG and settings.INTERCOM_ACCESS_TOKEN:
             headers = {
                 'Authorization': 'Bearer {}'.format(settings.INTERCOM_ACCESS_TOKEN),
                 'Accept': 'application/json'
@@ -285,7 +285,7 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
                 "custom_attributes": {}
             }
 
-            if intercom_attributes.get('phone'):
+            if intercom_attributes and intercom_attributes.get('phone'):
                 data['phone'] = intercom_attributes['phone']
                 del intercom_attributes['phone']
 

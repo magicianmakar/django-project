@@ -2255,11 +2255,11 @@ class AccountRegistration(models.Model):
         ordering = ['-created_at']
 
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
-    register_hash = models.CharField(max_length=40, unique=True, editable=False)
+    register_hash = models.TextField(unique=True, editable=False)
     expired = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submission date')
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'AccountRegistration: {self.user.email}'
