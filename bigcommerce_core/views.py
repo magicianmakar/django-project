@@ -172,7 +172,7 @@ def load(request):
 
 @xframe_options_exempt
 def uninstall(request):
-    pass
+    return JsonResponse({'status': 'ok'})
 
 
 @login_required
