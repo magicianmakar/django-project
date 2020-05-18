@@ -875,8 +875,8 @@ class WooProductChangeManager(ProductChangeManager):
             r.raise_for_status()
 
             self.product.update_data(product_data)
-        except:
-            if r.status_code not in [400, 401, 402, 403, 404, 429]:
+        except Exception as e:
+            if http_excption_status_code(e) not in [400, 401, 402, 403, 404, 429]:
                 raven_client.captureException(extra={
                     'rep': r.text,
                     'data': api_product_data,
@@ -910,6 +910,7 @@ class BigCommerceProductChangeManager(ProductChangeManager):
             api_product_data['availability'] = 'available'
 
     def handle_variant_price_change(self, api_product_data, product_data, variant_change):
+        variant_id = 0
         idx = self.get_variant(api_product_data, variant_change)
         if idx is not None:
             variant_id = api_product_data['variants'][idx]['id']
@@ -983,6 +984,7 @@ class BigCommerceProductChangeManager(ProductChangeManager):
 
     def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
         if self.config['quantity_change'] == 'update':
+            variant_id = 0
             idx = self.get_variant(api_product_data, variant_change)
             if idx is not None:
                 variant_id = api_product_data['variants'][idx]['id']
@@ -999,6 +1001,7 @@ class BigCommerceProductChangeManager(ProductChangeManager):
         pass
 
     def handle_variant_removed(self, api_product_data, product_data, variant_change):
+        variant_id = 0
         idx = self.get_variant(api_product_data, variant_change)
         if idx is not None:
             variant_id = api_product_data['variants'][idx]['id']

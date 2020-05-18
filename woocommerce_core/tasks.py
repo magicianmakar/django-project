@@ -184,6 +184,7 @@ def product_export(store_id, product_id, user_id, publish=None):
         api_data = add_product_attributes_to_api_data(api_data, saved_data, attributes)
         api_data = add_store_tags_to_api_data(api_data, store, saved_data.get('tags', []))
 
+        product_data = None
         r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post('products', api_data)
         if not r.ok:
             is_image_error = False
