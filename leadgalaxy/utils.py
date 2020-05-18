@@ -299,7 +299,14 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
             if intercom_attributes:
                 data['custom_attributes'].update(intercom_attributes)
 
-            requests_async.apply_async(kwargs={'method': 'post', 'headers': headers, 'json': data}, queue='priority_high')
+            requests_async.apply_async(
+                kwargs={
+                    'url': 'https://api.intercom.io/users',
+                    'method': 'post',
+                    'headers': headers,
+                    'json': data
+                },
+                queue='priority_high')
 
         return user, True
 
