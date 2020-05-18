@@ -939,8 +939,8 @@ class BigCommerceProductChangeManager(ProductChangeManager):
                     if new_price > current_price:
                         self.product_data_changed = True
                         if len(product_data['variants']) > 0:
-                            product_data['variants'][idx]['sale_price'] = new_price
-                            product_data['variants'][idx]['price'] = new_compare_at_price
+                            api_product_data['variants'][idx]['sale_price'] = new_price
+                            api_product_data['variants'][idx]['price'] = new_compare_at_price
                         else:
                             product_data['price'] = new_price
                             product_data['compare_at_price'] = new_compare_at_price
@@ -949,8 +949,8 @@ class BigCommerceProductChangeManager(ProductChangeManager):
                 else:
                     self.product_data_changed = True
                     if len(product_data['variants']) > 0:
-                        product_data['variants'][idx]['sale_price'] = new_price
-                        product_data['variants'][idx]['price'] = new_compare_at_price
+                        api_product_data['variants'][idx]['sale_price'] = new_price
+                        api_product_data['variants'][idx]['price'] = new_compare_at_price
                     else:
                         product_data['price'] = new_price
                         product_data['compare_at_price'] = new_compare_at_price
