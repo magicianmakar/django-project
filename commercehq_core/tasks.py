@@ -12,8 +12,19 @@ import requests
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from app.celery_base import celery_app, CaptureFailure, retry_countdown
-from shopified_core import utils
 from shopified_core import permissions
+from shopified_core.utils import (
+    add_http_schema,
+    all_possible_cases,
+    get_domain,
+    get_fileext_from_url,
+    get_filename_from_url,
+    get_mimetype,
+    hash_url_filename,
+    http_exception_response,
+    http_excption_status_code,
+    safe_float
+)
 
 from .utils import format_chq_errors, CHQOrderUpdater
 from .models import (
@@ -60,7 +71,7 @@ def product_save(req_data, user_id):
         original_url = req_data.get('original_url')
 
     try:
-        import_store = utils.get_domain(original_url)
+        import_store = get_domain(original_url)
     except:
         raven_client.captureException(extra={'original_url': original_url})
 
@@ -178,7 +189,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
         for h, var in list(p.get('variants_images', {}).items()):
             for idx, img in enumerate(p.get('images', [])):
-                if utils.hash_url_filename(img) == h:
+                if hash_url_filename(img) == h:
                     variants_thmbs[var] = img
                     thumbs_idx[idx] = var
 
@@ -201,9 +212,9 @@ def product_export(store_id, product_id, user_id, publish=None):
                 'progress': 'Uploading Images ({:,.2f}%)'.format(((idx + 1) * 100 / len(p['images'])) - 1),
             })
 
-            content = requests.get(utils.add_http_schema(img))
-            mimetype = utils.get_mimetype(img, default=content.headers.get('Content-Type'))
-            filename = utils.get_filename_from_url(img)
+            content = requests.get(add_http_schema(img))
+            mimetype = get_mimetype(img, default=content.headers.get('Content-Type'))
+            filename = get_filename_from_url(img)
 
             if is_thumb:
                 # Upload the variant thumbnail
@@ -248,13 +259,13 @@ def product_export(store_id, product_id, user_id, publish=None):
 
         weight = p.get('weight', 1.0)
         if p['weight_unit'] == 'g':
-            weight = utils.safe_float(weight, 0.0) / 1000.0
+            weight = safe_float(weight, 0.0) / 1000.0
         elif p['weight_unit'] == 'lb':
-            weight = utils.safe_float(weight, 0.0) * 0.45359237
+            weight = safe_float(weight, 0.0) * 0.45359237
         elif p['weight_unit'] == 'oz':
-            weight = utils.safe_float(weight, 0.0) * 0.0283495
+            weight = safe_float(weight, 0.0) * 0.0283495
         else:
-            weight = utils.safe_float(weight, 0.0)
+            weight = safe_float(weight, 0.0)
 
         weight = '{:.02f}'.format(weight)
 
@@ -274,8 +285,8 @@ def product_export(store_id, product_id, user_id, publish=None):
             'type': p.get('type') or 'Default',
             'shipping_weight': weight,
 
-            'price': utils.safe_float(p['price']),
-            'compare_price': utils.safe_float(p['compare_at_price'], ''),
+            'price': safe_float(p['price']),
+            'compare_price': safe_float(p['compare_at_price'], ''),
 
             'options': [],
             'variants': [],
@@ -304,10 +315,10 @@ def product_export(store_id, product_id, user_id, publish=None):
             for v in p['variants']:
                 vars_list.append(v['values'])
 
-            vars_list = utils.all_possible_cases(vars_list)
+            vars_list = all_possible_cases(vars_list)
 
-            product_price = utils.safe_float(p['price'])
-            product_compare_at = utils.safe_float(p['compare_at_price'], '')
+            product_price = safe_float(p['price'])
+            product_compare_at = safe_float(p['compare_at_price'], '')
             for idx, variants in enumerate(vars_list):
                 if type(variants) is list:
                     title = ' / '.join(variants)
@@ -328,8 +339,8 @@ def product_export(store_id, product_id, user_id, publish=None):
                 var_info = {
                     'default': idx == 0,
                     'title': title,
-                    'price': utils.safe_float(data_variants_info.get('price'), product_price),
-                    'compare_price': utils.safe_float(data_variants_info.get('price'), product_compare_at),
+                    'price': safe_float(data_variants_info.get('price'), product_price),
+                    'compare_price': safe_float(data_variants_info.get('price'), product_compare_at),
                     'shipping_weight': weight,
                     'variant': variants,
                     'images': []
@@ -367,7 +378,8 @@ def product_export(store_id, product_id, user_id, publish=None):
         })
 
     except Exception as e:
-        raven_client.captureException(extra=utils.http_exception_response(e))
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            raven_client.captureException(extra=http_exception_response(e))
 
         store.pusher_trigger('product-export', {
             'success': False,
@@ -396,13 +408,13 @@ def product_update(product_id, data):
             weight = p.get('weight', 1.0)
 
             if p['weight_unit'] == 'g':
-                weight = utils.safe_float(weight, 0.0) / 1000.0
+                weight = safe_float(weight, 0.0) / 1000.0
             elif p['weight_unit'] == 'lb':
-                weight = utils.safe_float(weight, 0.0) * 0.45359237
+                weight = safe_float(weight, 0.0) * 0.45359237
             elif p['weight_unit'] == 'oz':
-                weight = utils.safe_float(weight, 0.0) * 0.0283495
+                weight = safe_float(weight, 0.0) * 0.0283495
             else:
-                weight = utils.safe_float(weight, 0.0)
+                weight = safe_float(weight, 0.0)
 
             p['shipping_weight'] = '{:.02f}'.format(weight)
 
@@ -448,12 +460,12 @@ def product_update(product_id, data):
                 'progress': 'Uploading Images ({:,.2f}%)'.format(((idx + 1) * 100 / len(images_need_upload)) - 1),
             })
 
-            content = requests.get(utils.add_http_schema(img))
-            mimetype = utils.get_mimetype(img, default=content.headers.get('Content-Type'))
+            content = requests.get(add_http_schema(img))
+            mimetype = get_mimetype(img, default=content.headers.get('Content-Type'))
 
             r = store.request.post(
                 url=store.get_api_url('files'),
-                files={'files': (utils.get_filename_from_url(img), content.content, mimetype, {'Expires': '0'})},
+                files={'files': (get_filename_from_url(img), content.content, mimetype, {'Expires': '0'})},
                 data={'type': 'variant_images' if have_variant_images else 'product_images'}
             )
 
@@ -514,7 +526,8 @@ def product_update(product_id, data):
         })
 
     except Exception as e:
-        raven_client.captureException(extra=utils.http_exception_response(e))
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            raven_client.captureException(extra=http_exception_response(e))
 
         store.pusher_trigger('product-update', {
             'success': False,
@@ -534,9 +547,9 @@ def create_image_zip(self, images, product_id):
 
         with ZipFile(filename, 'w') as images_zip:
             for i, img_url in enumerate(images):
-                img_url = utils.add_http_schema(img_url)
+                img_url = add_http_schema(img_url)
 
-                image_name = 'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
+                image_name = 'image-{}.{}'.format(i + 1, get_fileext_from_url(img_url, fallback='jpg'))
                 images_zip.writestr(image_name, requests.get(img_url).content)
 
         product_filename = 'product-images.zip'
@@ -579,7 +592,8 @@ def order_save_changes(self, data):
         })
 
     except Exception as e:
-        raven_client.captureException(extra=utils.http_exception_response(e))
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            raven_client.captureException(extra=http_exception_response(e))
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)

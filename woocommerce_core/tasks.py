@@ -15,9 +15,13 @@ from django.template.defaultfilters import truncatewords
 from raven.contrib.django.raven_compat.models import client as raven_client
 
 from app.celery_base import celery_app, CaptureFailure, retry_countdown
-from shopified_core import utils
 from shopified_core import permissions
-
+from shopified_core.utils import (
+    get_domain,
+    http_exception_response,
+    http_excption_status_code,
+    get_fileext_from_url
+)
 from .models import WooStore, WooProduct, WooSupplier
 from .utils import (
     format_woo_errors,
@@ -79,7 +83,7 @@ def product_save(req_data, user_id):
         original_url = req_data.get('original_url')
 
     try:
-        import_store = utils.get_domain(original_url)
+        import_store = get_domain(original_url)
     except:
         raven_client.captureException(extra={'original_url': original_url})
 
@@ -259,7 +263,8 @@ def product_export(store_id, product_id, user_id, publish=None):
         })
 
     except Exception as e:
-        raven_client.captureException(extra=utils.http_exception_response(e))
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            raven_client.captureException(extra=http_exception_response(e))
 
         store.pusher_trigger('product-export', {
             'success': False,
@@ -303,7 +308,8 @@ def product_update(product_id, data):
         })
 
     except Exception as e:
-        raven_client.captureException(extra=utils.http_exception_response(e))
+        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+            raven_client.captureException(extra=http_exception_response(e))
 
         store.pusher_trigger('product-update', {
             'success': False,
@@ -323,7 +329,7 @@ def create_image_zip(self, images, product_id):
 
         with ZipFile(filename, 'w') as images_zip:
             for i, img_url in enumerate(images):
-                image_name = 'image-{}.{}'.format(i + 1, utils.get_fileext_from_url(img_url, fallback='jpg'))
+                image_name = 'image-{}.{}'.format(i + 1, get_fileext_from_url(img_url, fallback='jpg'))
                 images_zip.writestr(image_name, requests.get(img_url, verify=not settings.DEBUG).content)
 
         product_filename = 'product-images.zip'
@@ -357,7 +363,6 @@ def get_latest_order_note_task(store_id, order_id):
         data['success'] = True
         data['note'] = note
     except Exception:
-        raven_client.captureException()
         data['success'] = False
 
     store.pusher_trigger('get-order-note', data)
@@ -382,10 +387,10 @@ def order_save_changes(self, data):
         })
 
     except Exception as e:
-        if utils.http_excption_status_code(e) in [401, 402, 403, 404]:
+        if http_excption_status_code(e) in [401, 402, 403, 404]:
             return
 
-        raven_client.captureException(extra=utils.http_exception_response(e))
+        raven_client.captureException(extra=http_exception_response(e))
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)

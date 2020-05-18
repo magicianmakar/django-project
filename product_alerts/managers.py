@@ -1,6 +1,7 @@
 import copy
 import requests
 import simplejson as json
+from json import JSONDecodeError
 
 from raven.contrib.django.raven_compat.models import client as raven_client
 
@@ -99,7 +100,7 @@ class ProductChangeManager():
 
             return product_data
 
-        except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout):
+        except (requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout, JSONDecodeError):
             self.product_change.status = 2  # Failed
             self.product_change.save()
 
