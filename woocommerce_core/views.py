@@ -1201,7 +1201,7 @@ class OrderPlaceRedirectView(RedirectView):
             disable_affiliate = True
 
         if self.request.GET.get('supplier'):
-            supplier = WooSupplier.objects.get(id=self.request.GET['supplier'])
+            supplier = get_object_or_404(WooSupplier, id=self.request.GET['supplier'])
             permissions.user_can_view(self.request.user, supplier.product)
 
             product = supplier.short_product_url()

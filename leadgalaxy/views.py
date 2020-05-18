@@ -4709,7 +4709,7 @@ def orders_place(request):
         disable_affiliate = True
 
     if request.GET.get('supplier'):
-        supplier = ProductSupplier.objects.get(id=request.GET['supplier'])
+        supplier = get_object_or_404(ProductSupplier, id=request.GET['supplier'])
         permissions.user_can_view(request.user, supplier.product)
 
         product = supplier.short_product_url()

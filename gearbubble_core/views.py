@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse, reverse_lazy
 from django.conf import settings
 from django.db.models import Q
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.core.cache import cache, caches
 from django.http import Http404, JsonResponse
 
@@ -452,7 +452,7 @@ class OrderPlaceRedirectView(RedirectView):
             disable_affiliate = True
 
         if self.request.GET.get('supplier'):
-            supplier = GearBubbleSupplier.objects.get(id=self.request.GET['supplier'])
+            supplier = get_object_or_404(GearBubbleSupplier, id=self.request.GET['supplier'])
             permissions.user_can_view(self.request.user, supplier.product)
 
             product = supplier.short_product_url()
