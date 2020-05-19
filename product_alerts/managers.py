@@ -991,7 +991,7 @@ class BigCommerceProductChangeManager(ProductChangeManager):
                 variant_id = api_product_data['variants'][idx]['id']
             if variant_id > 0:
                 self.product_data_changed = True
-                product_data['variants'][idx]['inventory_level'] = variant_change.get('new_value')
+                api_product_data['variants'][idx]['inventory_level'] = variant_change.get('new_value')
                 api_product_data['variants'][idx]['inventory_level'] = variant_change.get('new_value')
             elif len(api_product_data.get('variants', [])) == 0 or variant_id < 0:
                 api_product_data['inventory_level'] = variant_change.get('new_value')
