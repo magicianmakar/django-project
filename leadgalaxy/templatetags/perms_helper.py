@@ -45,5 +45,7 @@ def supplier_type(s):
         return 'Aliexpress'
     elif s == 'ebay':
         return 'eBay'
+    elif s == 'pls':
+        return 'Dropified'
     else:
         return s.title()
