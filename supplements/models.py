@@ -116,6 +116,7 @@ class UserSupplement(UserSupplementMixin, models.Model):
                                          related_name='current_label_of',
                                          null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
         return self.title

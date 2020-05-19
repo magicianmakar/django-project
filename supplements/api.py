@@ -12,12 +12,12 @@ from lib.exceptions import capture_exception, capture_message
 
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import get_store_api
+from shopified_core.utils import get_store_api, safe_int
 from shopified_core import permissions
 
 from .lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
-from .models import Payout, PLSOrder
+from .models import Payout, PLSOrder, UserSupplement
 from .utils.payment import Util, get_shipping_cost
 from django.utils.text import slugify
 
@@ -255,3 +255,17 @@ class SupplementsApi(ApiResponseMixin, View):
                 'source_id': order.stripe_transaction_id,
             }
         })
+
+    def post_delete_usersupplement(self, request, user, data):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            pk = safe_int(data['product'])
+            try:
+                product = UserSupplement.objects.get(id=pk, user=request.user.models_user)
+            except UserSupplement.DoesNotExist:
+                return self.api_error('Supplement not found', status=404)
+
+            product.is_deleted = True
+            product.save(update_fields=['is_deleted'])
+            return self.api_success()
+        else:
+            raise permissions.PermissionDenied()

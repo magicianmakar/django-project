@@ -571,6 +571,7 @@ class UserSupplementView(Supplement):
             UserSupplement,
             user=user.models_user,
             id=supplement_id,
+            is_deleted=False,
         )
 
     def save_supplement(self, form):
@@ -603,7 +604,7 @@ class MySupplements(LoginRequiredMixin, View):
             {'title': 'My Supplements', 'url': reverse('pls:my_supplements')},
         ]
         form = UserSupplementFilterForm(self.request.GET)
-        queryset = request.user.models_user.pl_supplements.filter(pl_supplement__is_active=True)
+        queryset = request.user.models_user.pl_supplements.filter(pl_supplement__is_active=True).exclude(is_deleted=True)
 
         if form.is_valid():
             queryset = self.add_filters(queryset, form)

@@ -179,6 +179,42 @@ $(document).ready(function(){
         $('.line-checkbox').prop('checked', $(this).prop('checked'));
     });
 
+    $('.delete-product-btn').click(function(e) {
+        var btn = $(this);
+        var product = btn.parents('.product-box').attr('product-id');
+        var data = {'product': product};
+
+        swal({
+                title: "Delete Supplement",
+                text: "Are you sure you want to delete this supplement?",
+                type: "warning",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                showLoaderOnConfirm: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "Delete",
+                cancelButtonText: "Cancel"
+            },
+            function(isConfirmed) {
+                if (isConfirmed) {
+                    $.ajax({
+                        url: api_url('delete_usersupplement', 'supplements'),
+                        type: 'POST',
+                        data: data,
+                        success: function(data) {
+                            swal.close();
+                            toastr.success("The Supplement has been deleted.", "Deleted!");
+                            window.location.reload();
+                        },
+                        error: function(data) {
+                            displayAjaxError('Delete Supplement', data);
+                        }
+                    });
+                }
+            }
+        );
+    });
+
     $("#id_shipping_countries").chosen();
     $("#id_label_size_filter").chosen();
     $("#id_product_sku_filter").chosen();

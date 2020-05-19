@@ -202,3 +202,11 @@
   top: 20px;
   margin: 0 10px 0 0;
 }
+
+.delete-product-btn {
+  position: absolute;
+  top: 5px;
+  right: 20px;
+  background-color: #cc6666;
+  border: none;
+}
