@@ -1,9 +1,6 @@
 import time
-import traceback
 
 from lib.exceptions import capture_exception
-
-from django.conf import settings
 
 from shopified_core.management import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
@@ -89,9 +86,6 @@ class Command(DropifiedBaseCommand):
                 self.update_pending_orders(order_sync)
 
             except:
-                if settings.DEBUG:
-                    traceback.print_exc()
-
                 capture_exception(extra={'store': order_sync.store, 'user': order_sync.store.user})
 
                 self.reset_stores(order_sync.store.pk)

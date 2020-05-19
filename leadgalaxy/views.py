@@ -1,5 +1,4 @@
 import re
-import traceback
 import csv
 import io
 import hmac
@@ -175,15 +174,6 @@ def webhook(request, provider, option):
         except Exception:
             capture_exception()
 
-            send_mail(subject='Dropified: Webhook exception',
-                      recipient_list=['chase@dropified.com', 'ma7dev@gmail.com'],
-                      from_email=settings.DEFAULT_FROM_EMAIL,
-                      message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
-                              traceback.format_exc(),
-                              utils.format_data(dict(iter(request.GET.items())), False),
-                              utils.format_data(dict(iter(request.POST.items())), False),
-                              utils.format_data(request.META, False)))
-
             raise Http404('Error during proccess')
 
         if status == 'new':
@@ -226,15 +216,6 @@ def webhook(request, provider, option):
 
             except Exception:
                 capture_exception()
-
-                send_mail(subject='Dropified: Webhook Cancel/Refund exception',
-                          recipient_list=['chase@dropified.com', 'ma7dev@gmail.com'],
-                          from_email=settings.DEFAULT_FROM_EMAIL,
-                          message='EXCEPTION: {}\nGET:\n{}\nPOST:\n{}\nMETA:\n{}'.format(
-                              traceback.format_exc(),
-                              utils.format_data(dict(iter(request.GET.items())), False),
-                              utils.format_data(dict(iter(request.POST.items())), False),
-                              utils.format_data(request.META, False)))
 
                 raise Http404('Error during proccess')
 
@@ -4418,9 +4399,6 @@ def orders_view(request):
                         if supplier.is_dropified_print:
                             open_print_on_demand = True
                 except:
-                    if settings.DEBUG:
-                        traceback.print_exc()
-
                     capture_exception()
 
         order['mixed_supplier_types'] = len(order['supplier_types']) > 1

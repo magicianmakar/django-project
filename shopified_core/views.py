@@ -1,4 +1,3 @@
-import traceback
 from django.utils.module_loading import import_string
 
 from django.conf import settings
@@ -76,9 +75,6 @@ class ShopifiedApiBase(ApiResponseMixin, View):
             return self.api_error(e.description(), status=401)
 
         except:
-            if settings.DEBUG:
-                traceback.print_exc()
-
             capture_exception()
 
             return self.api_error('Internal Server Error')

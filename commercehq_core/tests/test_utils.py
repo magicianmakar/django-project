@@ -1,5 +1,4 @@
 import json
-import traceback
 
 from unittest.mock import patch, Mock
 
@@ -298,7 +297,6 @@ class OrdersTestCase(BaseTestCase):
             self.assertEqual(note1, utils.get_chq_order_note(store, order_id))
 
         except Exception as e:
-            traceback.print_exc()
             self.assertEqual(http_excption_status_code(e), 500)
 
     @tag('slow')
@@ -315,7 +313,6 @@ class OrdersTestCase(BaseTestCase):
 
             self.assertEqual(note, utils.get_chq_order_note(store, order_id))
         except Exception as e:
-            traceback.print_exc()
             self.assertEqual(http_excption_status_code(e), 500)
 
 

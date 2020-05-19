@@ -1,5 +1,4 @@
 import sys
-import traceback
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -39,9 +38,6 @@ class DropifiedBaseCommand(BaseCommand):
             self.stdout.write('Exit...')
 
         except:
-            if settings.DEBUG:
-                traceback.print_exc()
-
             capture_exception()
 
         if self.progress_bar:
