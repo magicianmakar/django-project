@@ -42,7 +42,7 @@
     function calculateVariantProperty(prop, exp) {
         $(products).each(function(i, product) {
             $(product.variants).each(function(j, variant) {
-                var original_price = original_products[i].variants[j][prop];
+                var original_price = original_products[i].variants[j][prop] || 0;
                 var formula = calculationMethod(exp);
                 if (formula && (original_price || typeof(original_price) === 'number')) {
                     if (formula) {
