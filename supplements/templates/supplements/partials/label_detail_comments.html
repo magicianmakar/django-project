@@ -19,7 +19,7 @@
             {% else %}
 
             <strong>{{ comment.user.get_full_name }}</strong> wrote. <br>
-            <div class="well">
+            <div class="well {% if comment.is_private %} bg-private{% endif %}">
               {{ comment.text|safe }}
             </div>
 
@@ -47,7 +47,10 @@
       </div>
       {% endfor %}
       {% endif %}
-
+      <label id="private-note" class="onoffswitch">
+        <input type="checkbox" name="is_private">
+        &nbsp;Leave private note
+      </label>
       <input type='hidden' name='action' value='comment' />
       {{ form.upload_url }}
       {{ form.image_data_url }}

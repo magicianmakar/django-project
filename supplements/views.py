@@ -279,7 +279,7 @@ class LabelMixin:
         user_supplement.images.all().delete()
         user_supplement.images.create(image_url=upload_url, position=0)
 
-    def create_comment(self, comments, text, new_status=''):
+    def create_comment(self, comments, text, new_status='', is_private=False):
         tags = bleach.sanitizer.ALLOWED_TAGS + [
             'span',
             'p',
@@ -289,7 +289,8 @@ class LabelMixin:
         text = bleach.clean(text, tags=tags, attributes=attributes)
         comment = comments.create(user=self.request.user,
                                   text=text,
-                                  new_status=new_status)
+                                  new_status=new_status,
+                                  is_private=is_private)
         send_email_against_comment(comment)
         return comment
 
@@ -807,9 +808,14 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         )
 
         context = self.get_context_data(label=label)
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            comments = comments.all().order_by('-created_at')
+        else:
+            comments = comments.all().exclude(is_private=True).order_by('-created_at')
+
         context.update({
             'form': CommentForm(initial=form_data),
-            'comments': comments.all().order_by('-created_at'),
+            'comments': comments,
         })
 
         return render(request, "supplements/label_detail.html", context)
@@ -837,7 +843,8 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             form = CommentForm(request.POST)
             if form.is_valid():
                 comment = form.cleaned_data['comment']
-                self.create_comment(comments, comment)
+                is_private = form.cleaned_data['is_private']
+                self.create_comment(comments, comment, is_private=is_private)
                 upload_url = form.cleaned_data['upload_url']
                 if upload_url:
                     image_data = form.cleaned_data['image_data_url']

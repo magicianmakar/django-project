@@ -210,3 +210,14 @@
   background-color: #cc6666;
   border: none;
 }
+
+.bg-private {
+  background-color: #fcf8e3 !important;
+}
+
+#private-note {
+  display: flex;
+  width: fit-content;
+  line-height: 2rem;
+  cursor: pointer;
+}

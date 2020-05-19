@@ -170,6 +170,7 @@ class LabelComment(models.Model, LabelCommentMixin):
 
     text = models.TextField()
     new_status = models.CharField(max_length=8, blank=True, default='')
+    is_private = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
 

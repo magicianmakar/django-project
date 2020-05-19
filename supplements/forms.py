@@ -45,6 +45,7 @@ class CommentForm(forms.Form):
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
     image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
+    is_private = forms.BooleanField(required=False)
 
     def clean(self):
         comment = self.cleaned_data.get('comment')

@@ -53,6 +53,7 @@
 <script type="text/javascript">
 var apiData = {{ api_data|safe }};
 var storeData = {{ store_data|safe }};
+$("#id_comment").attr("placeholder", "Leave a comment...");
 
 {% if aws_available %}
 $("#uploader").plupload({
@@ -106,6 +107,15 @@ $("#uploader").plupload({
     }
 });
 {% endif %}
+
+$("input[name='is_private']").change(function() {
+  $("#id_comment").toggleClass('bg-private', $(this).is(":checked"));
+  if($(this).is(":checked")) {
+    $("#id_comment").attr("placeholder", "Leave a private note...");
+  } else {
+    $("#id_comment").attr("placeholder", "Leave a comment...");
+  }
+});
 
 </script>
 {% endblock %}
