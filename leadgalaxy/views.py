@@ -886,7 +886,7 @@ def webhook(request, provider, option):
             email = request.GET['email']
             try:
                 user = User.objects.get(email=email)
-                data = {'user': {'email': user.email, "is_stripe": user.profile.plan.is_stripe()}}
+                data = {'user': {'email': user.email, "is_stripe": user.profile.plan.is_stripe(), "is_subuser": user.is_subuser}}
             except User.DoesNotExist:
                 data = {'user': False}
             if 'callback' in request.GET:
