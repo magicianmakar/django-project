@@ -6,7 +6,7 @@ from urllib.parse import parse_qs, urlparse
 import requests
 
 from requests.exceptions import HTTPError
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -200,7 +200,7 @@ class BigCommerceStoreApi(ApiBase):
                 supplier_url = rep.headers.get('location')
 
                 if '/deep_link.htm' in supplier_url:
-                    raven_client.captureMessage(
+                    capture_message(
                         'Deep link in redirection',
                         level='warning',
                         extra={
@@ -473,7 +473,7 @@ class BigCommerceStoreApi(ApiBase):
             r.raise_for_status()
             target_line_item['quantity_shipped'] = target_line_item['quantity']
         except:
-            raven_client.captureException(level='warning', extra={'response': r.text})
+            capture_exception(level='warning', extra={'response': r.text})
             return self.api_error('BigCommerce API Error')
 
         if len(utils.get_unfulfilled_items(product_data)) == 0:
@@ -485,7 +485,7 @@ class BigCommerceStoreApi(ApiBase):
         try:
             store = BigCommerceStore.objects.get(id=int(data.get('store')))
         except BigCommerceStore.DoesNotExist:
-            raven_client.captureException()
+            capture_exception()
             return self.api_error('Store {} not found'.format(data.get('store')), status=404)
 
         if not user.can('place_orders.sub', store):
@@ -506,7 +506,7 @@ class BigCommerceStoreApi(ApiBase):
             assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
         except AssertionError as e:
-            raven_client.captureMessage('Invalid supplier order ID')
+            capture_message('Invalid supplier order ID')
             return self.api_error(str(e), status=501)
         except UnicodeEncodeError:
             return self.api_error('Order ID is invalid', status=501)

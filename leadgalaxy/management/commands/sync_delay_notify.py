@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from leadgalaxy.models import UserProfile, ShopifyOrderTrack
 from shopified_core.management import DropifiedBaseCommand
@@ -67,7 +67,7 @@ class Command(DropifiedBaseCommand):
                     self.write_success('Notified {} orders to {}'.format(delayed_orders_count, user.email))
 
                 except:
-                    raven_client.captureException()
+                    capture_exception()
 
             if user.get_config('sync_delay_notify_push'):
                 emails.append(user.email)

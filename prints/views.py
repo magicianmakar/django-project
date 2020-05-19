@@ -5,7 +5,7 @@ from django.http import JsonResponse, Http404, HttpResponse
 from django.shortcuts import render, get_object_or_404, reverse
 from django.contrib.auth.decorators import login_required
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from shopified_core.utils import aws_s3_context
 from leadgalaxy.models import PriceMarkupRule
@@ -208,7 +208,7 @@ def tracking(request, order_id):
             assert item.get('sku') in skus.keys(), 'Item does not exist'
 
     except:
-        raven_client.captureException()
+        capture_exception()
         return Http404
 
     # TODO: check if correct quantity was shipped
@@ -228,7 +228,7 @@ def tracking(request, order_id):
         })
 
         if response.status_code != 200:
-            raven_client.captureMessage(response.content.decode("utf-8"), level='warning')
+            capture_message(response.content.decode("utf-8"), level='warning')
             return response
 
     return response

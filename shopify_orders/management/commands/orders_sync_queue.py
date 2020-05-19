@@ -5,7 +5,7 @@ from shopify_orders.models import ShopifySyncStatus
 from leadgalaxy.models import ShopifyStore, GroupPlan, AppPermission, UserProfile
 from leadgalaxy import utils
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 
 class Command(DropifiedBaseCommand):
@@ -109,7 +109,7 @@ class Command(DropifiedBaseCommand):
                 self.queued_store.append(store.id)
             except:
                 sync.sync_status = 4
-                raven_client.captureException()
+                capture_exception()
 
             sync.save()
 

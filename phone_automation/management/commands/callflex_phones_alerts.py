@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 from shopified_core.utils import last_executed
 from phone_automation.models import TwilioPhoneNumber
 from shopified_core.management import DropifiedBaseCommand
@@ -61,5 +61,5 @@ class Command(DropifiedBaseCommand):
                             self.write(f"No call logs after {exp_date} email already sent before")
 
                 except:
-                    raven_client.captureException()
+                    capture_exception()
         self.write(f"Total users notified: {total_users_notified} ")

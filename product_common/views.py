@@ -8,7 +8,7 @@ from django.views import View
 from django.views.generic.list import ListView
 
 import simplejson as json
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_message
 
 from shopified_core.utils import get_store_api, get_track_model
 
@@ -266,7 +266,7 @@ class OrdersShippedWebHookView(View, BaseMixin):
 
             api_result = StoreApi.post_order_fulfill_update(self.request, order.user, data)
             if api_result.status_code != 200:
-                raven_client.captureMessage('Unable to update tracking for supplement', extra={
+                capture_message('Unable to update tracking for supplement', extra={
                     'api_result': json.loads(api_result.content.decode("utf-8")),
                     'api_data': data
                 }, level='warning')

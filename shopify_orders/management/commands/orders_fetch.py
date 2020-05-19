@@ -1,7 +1,7 @@
 import time
 import traceback
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from django.conf import settings
 
@@ -92,7 +92,7 @@ class Command(DropifiedBaseCommand):
                 if settings.DEBUG:
                     traceback.print_exc()
 
-                raven_client.captureException(extra={'store': order_sync.store, 'user': order_sync.store.user})
+                capture_exception(extra={'store': order_sync.store, 'user': order_sync.store.user})
 
                 self.reset_stores(order_sync.store.pk)
 
@@ -191,7 +191,7 @@ class Command(DropifiedBaseCommand):
                 order = get_shopify_order(store, order_id)
                 update_shopify_order(store, order, sync_check=False)
             except:
-                raven_client.captureException()
+                capture_exception()
 
     def load_saved_orders(self, store):
         self.saved_orders = {}

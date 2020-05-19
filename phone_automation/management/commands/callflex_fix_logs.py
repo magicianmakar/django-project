@@ -1,4 +1,4 @@
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from phone_automation.models import TwilioLog
 from shopified_core.management import DropifiedBaseCommand
@@ -18,4 +18,4 @@ class Command(DropifiedBaseCommand):
                 self.write(twilio_log.twilio_metadata['To'] + " Json check passed")
             except:
                 self.stderr.write(" Json check failed!")
-                raven_client.captureException()
+                capture_exception()

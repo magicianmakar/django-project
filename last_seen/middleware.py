@@ -1,6 +1,8 @@
 from .models import user_seen
 from django.http import Http404
 
+from lib.exceptions import capture_exception
+
 from . import settings
 
 
@@ -36,7 +38,6 @@ class LastSeenMiddleware(object):
 
                     user_seen(request.user, module=module, interval=interval)
             except:
-                from raven.contrib.django.raven_compat.models import client as raven_client
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
 
         return self.get_response(request)

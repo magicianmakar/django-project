@@ -14,7 +14,7 @@ from django.contrib.auth import logout as user_logout
 import shopify
 from requests_oauthlib import OAuth2Session
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from shopified_core import permissions
 from leadgalaxy.models import User, ShopifyStore, UserProfile, GroupPlan
@@ -55,7 +55,7 @@ def verify_hmac_signature(request):
     message_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
 
     if message_hash != request.GET.get('hmac'):
-        raven_client.captureMessage('HMAC Verification failed', level='warning', request=request)
+        capture_message('HMAC Verification failed', level='warning', request=request)
         raise PermissionDenied('HMAC Verification failed')
 
 
@@ -96,15 +96,15 @@ def subscribe_user_to_default_plan(user):
 
     if not user.stripe_customer.can_trial:
         try:
-            subscription_end_trial(user, raven_client, delete_on_error=True)
+            subscription_end_trial(user, delete_on_error=True)
 
         except SubscriptionException:
-            raven_client.captureException()
+            capture_exception()
             StripeSubscription.objects.filter(subscription_id=sub.id).delete()
             raise
 
         except:
-            raven_client.captureException()
+            capture_exception()
             raise
 
     profile = user.profile
@@ -127,7 +127,7 @@ def index(request):
             return HttpResponseRedirect('/accounts/login/')
 
     except:
-        raven_client.captureException()
+        capture_exception()
         return HttpResponseRedirect('/accounts/login/')
 
     if request.user.is_authenticated:
@@ -200,7 +200,7 @@ def install(request, store):
 def callback(request):
     verify_hmac_signature(request)
     if request.session.get('shopify_state', True) != request.GET.get('state', False):
-        raven_client.captureMessage(
+        capture_message(
             'State does not match',
             level='warning', request=request,
             extra={'Current': request.GET.get('state'),
@@ -232,14 +232,14 @@ def callback(request):
         try:
             detach_webhooks(store)
         except:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
 
         store.update_token(token)
 
         try:
             attach_webhooks(store)
         except:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
 
         messages.success(request, 'Your store <b>{}</b> has been re-installed!'.format(store.title))
 
@@ -262,9 +262,9 @@ def callback(request):
             pass
         except ShopifyStore.MultipleObjectsReturned:
             # TODO: Handle multi stores
-            raven_client.captureException()
+            capture_exception()
         except:
-            raven_client.captureException()
+            capture_exception()
 
     if user.is_authenticated:
         from_shopify_store = user.profile.from_shopify_app_store()
@@ -315,7 +315,7 @@ def callback(request):
             plans_url = request.build_absolute_uri('/user/profile#plan')
 
             if user.profile.plan.is_free:
-                raven_client.captureMessage(
+                capture_message(
                     'Activate your account first',
                     level='warning',
                     extra={'user': user.email, 'store': store, 'pos': 2}
@@ -362,7 +362,7 @@ def callback(request):
                 user.save()
 
         except:
-            raven_client.captureException()
+            capture_exception()
             return JsonResponse({'error': 'An error occurred when installing Dropified on your store.'}, status=500)
 
         store.save()

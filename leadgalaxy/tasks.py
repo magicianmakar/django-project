@@ -20,7 +20,7 @@ from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 from django.utils.text import slugify
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 from app.celery_base import celery_app, CaptureFailure, retry_countdown, api_exceed_limits_countdown
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
@@ -94,18 +94,8 @@ def export_product(req_data, target, user_id):
 
     user = User.objects.get(id=user_id)
 
-    raven_client.user_context({
-        'id': user.id,
-        'username': user.username,
-        'email': user.email
-    })
-
-    raven_client.extra_context({
-        'target': target,
-        'store': store,
-        'product': req_data.get('product'),
-        'from_extension': ('access_token' in req_data)
-    })
+    # raven_client.user_context({'id': user.id, 'username': user.username, 'email': user.email})
+    # raven_client.extra_context({'target': target, 'store': store, 'product': req_data.get('product'), 'from_extension': ('access_token' in req_data)}) # noqa
 
     if store or target != 'save-for-later':
         try:
@@ -113,7 +103,7 @@ def export_product(req_data, target, user_id):
             permissions.user_can_view(user, store)
 
         except (ShopifyStore.DoesNotExist, ValueError):
-            raven_client.captureException()
+            capture_exception()
 
             return {
                 'error': 'Selected store (%s) not found' % (store)
@@ -148,7 +138,7 @@ def export_product(req_data, target, user_id):
     try:
         import_store = get_domain(original_url)
     except:
-        raven_client.captureException(extra={'original_url': original_url})
+        capture_exception(extra={'original_url': original_url})
 
         return {
             'error': 'Original URL is not set.'
@@ -188,7 +178,7 @@ def export_product(req_data, target, user_id):
                                 if image.get('src'):
                                     update_product_data_images(product, image['src'], shopify_images[i]['src'])
                     except:
-                        raven_client.captureException(level='warning')
+                        capture_exception(level='warning')
 
                 del api_data
             else:
@@ -260,7 +250,7 @@ def export_product(req_data, target, user_id):
                                 rep.raise_for_status()
                                 shopify_images = rep.json()['product'].get('images', [])
                             except:
-                                raven_client.captureException(level='warning')
+                                capture_exception(level='warning')
 
                         # Variant mapping
                         variants_mapping = utils.get_mapping_from_product(product_to_map)
@@ -275,7 +265,7 @@ def export_product(req_data, target, user_id):
                         if mapped:
                             r = mapped
                     except Exception:
-                        raven_client.captureException()
+                        capture_exception()
 
                 del api_data
 
@@ -309,26 +299,26 @@ def export_product(req_data, target, user_id):
                     return {'error': 'Shopify Error: {}'.format(shopify_error)}
 
         except (JSONDecodeError, requests.exceptions.ConnectTimeout):
-            raven_client.captureException(extra={
+            capture_exception(extra={
                 'rep': r.text
             })
 
             return {'error': 'Shopify API is not available, please try again.'}
 
         except ShopifyProduct.DoesNotExist:
-            raven_client.captureException()
+            capture_exception()
             return {
                 'error': "Product {} does not exist".format(req_data.get('product'))
             }
 
         except PermissionDenied as e:
-            raven_client.captureException()
+            capture_exception()
             return {
                 'error': "Product: {}".format(str(e))
             }
 
         except:
-            raven_client.captureException()
+            capture_exception()
             print('WARNING: SHOPIFY EXPORT EXCEPTION:')
 
             return {'error': 'Shopify API Error'}
@@ -377,13 +367,13 @@ def export_product(req_data, target, user_id):
                         sync_shopify_product_quantities.apply_async(args=[product.id], countdown=countdown_quantities)
 
                 except ShopifyProduct.DoesNotExist:
-                    raven_client.captureException()
+                    capture_exception()
                     return {
                         'error': "Product {} does not exist".format(req_data['product'])
                     }
 
                 except PermissionDenied as e:
-                    raven_client.captureException()
+                    capture_exception()
                     return {
                         'error': "Product: {}".format(str(e))
                     }
@@ -412,13 +402,13 @@ def export_product(req_data, target, user_id):
                         raise
 
             except ShopifyProduct.DoesNotExist:
-                raven_client.captureException()
+                capture_exception()
                 return {
                     'error': "Product {} does not exist".format(req_data['product'])
                 }
 
             except PermissionDenied as e:
-                raven_client.captureException()
+                capture_exception()
                 return {
                     'error': "Product: {}".format(str(e))
                 }
@@ -473,7 +463,7 @@ def export_product(req_data, target, user_id):
                     product.set_default_supplier(supplier, commit=True)
 
             except PermissionDenied as e:
-                raven_client.captureException()
+                capture_exception()
                 return {
                     'error': "Add Product: {}".format(str(e))
                 }
@@ -491,7 +481,7 @@ def export_product(req_data, target, user_id):
         try:
             record_import_metric(time.time() - start)
         except:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
 
     del parsed_data
     del req_data
@@ -531,7 +521,7 @@ def duplicate_parent_variants(req_data, api_data):
                             if match:
                                 variant['price'] = parent_variant['price']
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
 
 def duplicate_product_mapping(req_data, product_to_map, variants_mapping):
@@ -563,7 +553,7 @@ def duplicate_product_mapping(req_data, product_to_map, variants_mapping):
     except ShopifyProduct.DoesNotExist:
         return
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -600,7 +590,7 @@ def sync_shopify_product_quantities(self, product_id):
     except ShopifyProduct.DoesNotExist:
         pass
     except Exception as e:
-        raven_client.captureException()
+        capture_exception()
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_sync_shopify_{}'.format(product_id), self.request.retries)
@@ -627,7 +617,7 @@ def sync_shopify_orders(self, store_id, elastic=False):
         need_import = shopify_count - saved_count
 
         if need_import > 0:
-            raven_client.captureMessage('Sync Store Orders', level='info', extra={
+            capture_message('Sync Store Orders', level='info', extra={
                 'store': store.title,
                 'es': bool(es),
                 'missing': need_import
@@ -672,7 +662,7 @@ def sync_shopify_orders(self, store_id, elastic=False):
                 need_import, shopify_count, imported, store.shop, took))
 
     except Exception:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -710,17 +700,17 @@ def update_shopify_order(self, store_id, order_id, shopify_order=None, from_webh
             })
 
     except AssertionError:
-        raven_client.captureMessage('Store is being imported', extra={'store': store})
+        capture_message('Store is being imported', extra={'store': store})
 
     except ShopifyStore.DoesNotExist:
-        raven_client.captureException()
+        capture_exception()
 
     except Exception as e:
         if http_excption_status_code(e) in [401, 402, 403, 404]:
             return
 
         if http_excption_status_code(e) != 429:
-            raven_client.captureException(level='warning', extra={
+            capture_exception(level='warning', extra={
                 'Store': store_id,
                 'Order': order_id,
                 'from_webhook': from_webhook,
@@ -756,7 +746,7 @@ def smartmemeber_webhook_call(subdomain, data):
         assert len(raw_rep) and 'email' in rep.json()
 
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True)
@@ -789,7 +779,7 @@ def generate_feed(self, feed_id, nocache=False, by_fb=False):
         feed.generation_time = -1
         feed.save()
 
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
@@ -803,7 +793,7 @@ def generate_chq_feed(self, feed_id, nocache=False, by_fb=False):
         feed.generation_time = -1
         feed.save()
 
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
@@ -822,7 +812,7 @@ def generate_woo_feed(self, feed_id, nocache=False, by_fb=False):
         feed.generation_time = -1
         feed.save()
 
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
@@ -836,7 +826,7 @@ def generate_gear_feed(self, feed_id, nocache=False, by_fb=False):
         feed.generation_time = -1
         feed.save()
 
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
@@ -856,7 +846,7 @@ def generate_gkart_feed(self, feed_id, nocache=False, by_fb=False):
         feed.generation_time = -1
         feed.save()
 
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=600)
@@ -875,7 +865,7 @@ def generate_bigcommerce_feed(self, feed_id, nocache=False, by_fb=False):
         feed.generation_time = -1
         feed.save()
 
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, ignore_result=True)
@@ -890,7 +880,7 @@ def manage_product_change(change_id):
 
     except Exception as e:
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
-            raven_client.captureException()
+            capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -913,7 +903,7 @@ def bulk_edit_products(self, store, products):
 
         except:
             errors.append(truncatewords(title, 10))
-            raven_client.captureException()
+            capture_exception()
 
     store.pusher_trigger('bulk-edit-connected', {
         'task': self.request.id,
@@ -939,7 +929,7 @@ def search_shopify_products(self, store, title, category, status, ppp, page):
             all_products.append(product)
     except:
         errors.append('Server Error')
-        raven_client.captureException()
+        capture_exception()
 
     paginator = SimplePaginator(all_products, post_per_page)
     page = min(max(1, page), paginator.num_pages)
@@ -962,7 +952,7 @@ def generate_order_export(self, order_export_id):
         api = ShopifyOrderExport(order_export)
         api.generate_export()
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(bind=True, base=CaptureFailure)
@@ -972,7 +962,7 @@ def generate_tracked_order_export(self, params):
         track_order_export.generate_tracked_export(params)
 
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(bind=True, base=CaptureFailure)
@@ -983,7 +973,7 @@ def generate_order_export_query(self, order_export_id):
         api = ShopifyOrderExport(order_export)
         api.generate_query(send_email=False)
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(bind=True, base=CaptureFailure)
@@ -1018,7 +1008,7 @@ def create_image_zip(self, images, product_id):
             'url': url
         })
     except Exception:
-        raven_client.captureException()
+        capture_exception()
 
         product.store.pusher_trigger('images-download', {
             'success': False,
@@ -1039,7 +1029,7 @@ def order_save_changes(self, data):
 
     except Exception as e:
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
-            raven_client.captureException(extra=http_exception_response(e))
+            capture_exception(extra=http_exception_response(e))
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
@@ -1110,7 +1100,7 @@ def sync_product_exclude(self, store_id, product_id):
         })
 
     except Exception:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -1203,7 +1193,7 @@ def calculate_sales(self, user_id, period):
         pusher.trigger("user_{}".format(user_id), 'sales-calculated', data)
 
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -1242,7 +1232,7 @@ def calculate_user_statistics(self, user_id):
         pusher.trigger("user_{}".format(user_id), 'user-statistics-calculated', {'task': self.request.id})
 
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -1278,7 +1268,7 @@ def shopify_orders_risk(self, store, order_ids):
             except:
                 risks = []
                 errors.append(order_id)
-                raven_client.captureException()
+                capture_exception()
 
         score = 0.0
 
@@ -1519,7 +1509,7 @@ def store_transfer(self, options):
             json={'text': ':heavy_check_mark: Store {} has been transferred to {} account'.format(store.shop, to_user.email)}
         )
     except:
-        raven_client.captureException()
+        capture_exception()
         requests.post(
             url=options['response_url'],
             json={'text': ':x: Server Error when transferring {} to {} account'.format(options['shop'], options['to'])}
@@ -1539,7 +1529,7 @@ def delete_shopify_store(self, store_id):
         products = delete_model_from_db(ShopifyProduct, match)
         tracks = delete_model_from_db(ShopifyOrderTrack, match)
 
-        raven_client.captureMessage('Delete Store', level='info', extra={
+        capture_message('Delete Store', level='info', extra={
             'store': store.shop,
             'orders': orders,
             'products': products,
@@ -1553,7 +1543,7 @@ def delete_shopify_store(self, store_id):
 
         store.delete()
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -1569,9 +1559,9 @@ def delete_user(self, user_id):
 
         user.delete()
 
-        raven_client.captureMessage('Delete User', level='info', extra={'Saved Products': products})
+        capture_message('Delete User', level='info', extra={'Saved Products': products})
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 def link_variants_to_new_images(product, new_data, req_data):

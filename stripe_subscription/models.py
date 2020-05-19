@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.crypto import get_random_string
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 import simplejson as json
 import arrow
@@ -137,7 +137,7 @@ class StripeCustomer(models.Model):
                 if sub_plan['id'] == plan_stripe_id:
                     return subscription.subscription
         except:
-            raven_client.captureException()
+            capture_exception()
             return False
 
     @cached_property

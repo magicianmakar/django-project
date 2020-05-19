@@ -9,7 +9,7 @@ from simplejson import JSONDecodeError
 from shopified_core.management import DropifiedBaseCommand
 from bigcommerce_core.models import BigCommerceOrderTrack
 from bigcommerce_core import utils
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 
 class Command(DropifiedBaseCommand):
@@ -73,7 +73,7 @@ class Command(DropifiedBaseCommand):
                         order.hidden = True
                         order.save()
 
-                        raven_client.captureMessage('Ignore Order Track', level='warning', extra={
+                        capture_message('Ignore Order Track', level='warning', extra={
                             'type': 'bigcommerce',
                             'id': order.id,
                             'errors': 'bigcommerce'
@@ -85,11 +85,11 @@ class Command(DropifiedBaseCommand):
 
                 if (timezone.now() - self.start_at) > timezone.timedelta(seconds=uptime * 60):
                     extra = {'delta': (timezone.now() - self.start_at).total_seconds()}
-                    raven_client.captureMessage('Auto fulfill taking too long', level="warning", extra=extra)
+                    capture_message('Auto fulfill taking too long', level="warning", extra=extra)
                     break
 
             except:
-                raven_client.captureException()
+                capture_exception()
 
         results = 'Fulfilled Orders: {fulfilled} / {need_fulfill}'.format(**counter)
         self.write(results)
@@ -134,7 +134,7 @@ class Command(DropifiedBaseCommand):
                         return False
 
                     else:
-                        raven_client.captureException(
+                        capture_exception(
                             level='warning',
                             extra={'order_track': order_track.id, 'response': e.response.text}
                         )
@@ -155,10 +155,10 @@ class Command(DropifiedBaseCommand):
 
                 else:
                     extra = {'order_track': order_track.id, 'response': rep.text}
-                    raven_client.captureException(extra=extra)
+                    capture_exception(extra=extra)
 
             except:
-                raven_client.captureException()
+                capture_exception()
 
             finally:
                 tries -= 1

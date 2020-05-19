@@ -4,7 +4,7 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from django.utils.decorators import method_decorator
 from django.conf import settings
@@ -76,7 +76,7 @@ class GearBubbleApi(ApiBase):
 
                 subscribe_user_to_default_plan(user)
             else:
-                raven_client.captureMessage(
+                capture_message(
                     'Add Extra GearBubble Store',
                     level='warning',
                     extra={
@@ -352,7 +352,7 @@ class GearBubbleApi(ApiBase):
         try:
             store = GearBubbleStore.objects.get(id=safe_int(data.get('store')))
         except GearBubbleStore.DoesNotExist:
-            raven_client.captureException()
+            capture_exception()
             return self.api_error('Store {} not found'.format(data.get('store')), status=404)
 
         if not user.can('place_orders.sub', store):
@@ -371,7 +371,7 @@ class GearBubbleApi(ApiBase):
             assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
         except AssertionError as e:
-            raven_client.captureMessage('Invalid supplier order ID')
+            capture_message('Invalid supplier order ID')
             return self.api_error(str(e), status=501)
         except UnicodeEncodeError:
             return self.api_error('Order ID is invalid', status=501)
@@ -469,7 +469,7 @@ class GearBubbleApi(ApiBase):
             r = store.request.post(api_url, json={'fulfillment': fulfillment})
             r.raise_for_status()
         except Exception:
-            raven_client.captureException(level='warning', extra={'response': r.text})
+            capture_exception(level='warning', extra={'response': r.text})
             return self.api_error('GearBubble API Error')
 
         return self.api_success()
@@ -626,7 +626,7 @@ class GearBubbleApi(ApiBase):
                 supplier_url = rep.headers.get('location')
 
                 if '/deep_link.htm' in supplier_url:
-                    raven_client.captureMessage(
+                    capture_message(
                         'Deep link in redirection',
                         level='warning',
                         extra={

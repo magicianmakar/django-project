@@ -3,7 +3,7 @@ import arrow
 import itertools
 
 import phonenumbers
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from django.views.generic import View
 from django.utils.decorators import method_decorator
@@ -323,7 +323,7 @@ class ApiBase(ApiResponseMixin, View):
                 try:
                     order['order']['phoneCountry'] = f"+{phonenumbers.country_code_for_region(order['shipping_address']['country_code'])}"
                 except:
-                    raven_client.captureException()
+                    capture_exception()
 
             if user.models_user.get_config('_aliexpress_telephone_workarround'):
                 order['order']['telephone_workarround'] = True
@@ -339,7 +339,7 @@ class ApiBase(ApiResponseMixin, View):
             except ObjectDoesNotExist:
                 pass
             except:
-                raven_client.captureException()
+                capture_exception()
 
             return JsonResponse(order, safe=False)
         else:

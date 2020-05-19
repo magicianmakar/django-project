@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from app.celery_base import celery_app, CaptureFailure
 from .utils import url_join
@@ -17,7 +17,7 @@ def requests_async(self, **kwargs):
         request_method = kwargs.pop('method').lower()
         getattr(requests, request_method)(**kwargs).raise_for_status()
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -25,7 +25,7 @@ def send_email_async(self, **kwargs):
     try:
         send_mail(**kwargs)
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -47,7 +47,7 @@ def update_intercom_tags(self, email, attribute_id, attribute_value):
             response = requests.post(url, headers=headers, json=data)
             response.raise_for_status()
         except:
-            raven_client.captureException()
+            capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
@@ -70,7 +70,7 @@ def update_baremetrics_attributes(self, email, attribute_id, attribute_value):
             response = requests.post(url, headers=headers, json=data)
             response.raise_for_status()
         except:
-            raven_client.captureException()
+            capture_exception()
 
 
 # TODO: Remove this task
@@ -108,7 +108,7 @@ def keen_order_event(self, event_name, event_data):
 
         keen.add_event(event_name, event_data)
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=30)
@@ -117,7 +117,7 @@ def keen_send_event(self, event_name, event_data):
         if not settings.DEBUG and settings.KEEN_PROJECT_ID:
             keen.add_event(event_name, event_data)
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)

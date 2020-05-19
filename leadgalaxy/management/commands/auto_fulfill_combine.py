@@ -12,7 +12,7 @@ from leadgalaxy.models import ShopifyOrderTrack
 from leadgalaxy import utils
 from leadgalaxy import tasks
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 
 class Command(DropifiedBaseCommand):
@@ -100,14 +100,14 @@ class Command(DropifiedBaseCommand):
                         self.write('Fulfill Progress: %d' % counter['fulfilled'])
 
                 if (timezone.now() - self.start_at) > timezone.timedelta(seconds=uptime * 60):
-                    raven_client.captureMessage(
+                    capture_message(
                         'Auto fulfill taking too long',
                         level="warning",
                         extra={'delta': (timezone.now() - self.start_at).total_seconds()})
 
                     break
             except:
-                raven_client.captureException()
+                capture_exception()
 
         self.write('Fulfilled Orders: {} / {}'.format(
             counter['fulfilled'], counter['need_fulfill']))
@@ -191,13 +191,13 @@ class Command(DropifiedBaseCommand):
                     return False
 
                 if "An error occurred, please try again" not in rep.text:
-                    raven_client.captureException(extra={
+                    capture_exception(extra={
                         'order_track': first_order.id,
                         'response': rep.text
                     })
 
             except:
-                raven_client.captureException()
+                capture_exception()
             finally:
                 tries -= 1
 

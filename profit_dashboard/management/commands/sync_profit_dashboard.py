@@ -1,7 +1,7 @@
 import arrow
 
 from tqdm import tqdm
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
@@ -76,7 +76,7 @@ class Command(DropifiedBaseCommand):
                     source_ids.append(track.source_id)
 
                 except:
-                    raven_client.captureException()
+                    capture_exception()
 
             if progress:
                 obar.update(steps)

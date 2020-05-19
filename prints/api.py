@@ -7,7 +7,7 @@ from django.db import transaction
 from django.db.models import ObjectDoesNotExist
 from django.views.generic import View
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
@@ -256,7 +256,7 @@ class PrintsApi(ApiResponseMixin, View):
                     track_content_type = ContentType.objects.get_for_model(track)
 
                 except ObjectDoesNotExist:
-                    raven_client.captureException(level='warning')
+                    capture_exception(level='warning')
                     continue
 
                 item.track_content_type = track_content_type

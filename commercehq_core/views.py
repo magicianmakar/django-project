@@ -4,7 +4,7 @@ import simplejson as json
 import requests
 import jwt
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from django.conf import settings
 from django.contrib import messages
@@ -160,7 +160,7 @@ def product_alerts(request):
                 if p.get('id') is not None:
                     product_variants[str(p['id'])] = p
     except:
-        raven_client.captureException()
+        capture_exception()
 
     product_changes = []
     for i in changes:
@@ -715,7 +715,7 @@ class OrdersList(ListView):
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             api_error = 'Store API Error'
-            raven_client.captureException()
+            capture_exception()
 
         context['store'] = self.get_store()
         context['selected_menu'] = 'orders:all'
@@ -737,7 +737,7 @@ class OrdersList(ListView):
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             api_error = 'Store API Error'
-            raven_client.captureException()
+            capture_exception()
 
         context['user_filter'] = get_orders_filter(self.request)
 
@@ -1051,7 +1051,7 @@ class OrdersList(ListView):
                     r = store.request.post(url=fulfilments_url, json={'items': tracked_unfulfilled})
                     r.raise_for_status()
                 except Exception as e:
-                    raven_client.captureException(level='warning', extra=http_exception_response(e))
+                    capture_exception(level='warning', extra=http_exception_response(e))
 
             order['mixed_supplier_types'] = len(order['supplier_types']) > 1
 

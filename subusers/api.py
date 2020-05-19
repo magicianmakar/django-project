@@ -1,7 +1,7 @@
 from django.views.generic import View
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_message
 
 from leadgalaxy.forms import EmailForm
 from leadgalaxy.models import PlanRegistration, AccessToken
@@ -82,7 +82,7 @@ class SubusersApi(ApiResponseMixin, View):
             return self.api_error('An Invitation is already sent to this email', status=501)
 
         if user.models_user.get_config('_limit_subusers_invite'):
-            raven_client.captureMessage('Sub User Invite Attempts', level='warning')
+            capture_message('Sub User Invite Attempts', level='warning')
             return self.api_error('Server Error', status=501)
 
         plan = get_plan(plan_slug='subuser-plan')

@@ -10,7 +10,7 @@ from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from leadgalaxy import utils
 from shopified_core.utils import safe_int
@@ -108,11 +108,11 @@ def index(request):
 
     except json.JSONDecodeError:
         context['api_error'] = 'Unexpected response content'
-        raven_client.captureException()
+        capture_exception()
 
     except requests.exceptions.ConnectTimeout:
         context['api_error'] = 'Connection Timeout'
-        raven_client.captureException()
+        capture_exception()
 
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 429:
@@ -125,10 +125,10 @@ def index(request):
             context['api_error'] = 'Access Token Error'
         else:
             context['api_error'] = 'Unknown Error {}'.format(e.response.status_code)
-            raven_client.captureException()
+            capture_exception()
     except:
         context['api_error'] = 'Shopify API Error'
-        raven_client.captureException()
+        capture_exception()
 
     return render(request, 'profit_dashboard/index.html', context)
 
@@ -232,7 +232,7 @@ def facebook_accounts(request):
         facebook_access.get_or_update_token(access_token, expires_in)
         accounts = facebook_access.get_api_accounts()
     except:
-        raven_client.captureException()
+        capture_exception()
         return JsonResponse({'error': 'User token error'}, status=404)
 
     return JsonResponse({
@@ -309,7 +309,7 @@ def facebook_campaign(request):
             'config_options': config_options
         })
     except:
-        raven_client.captureException()
+        capture_exception()
         return JsonResponse({'error': 'Ad Account Not found'}, status=404)
 
 

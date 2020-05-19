@@ -13,7 +13,7 @@ from supplements.lib.authorizenet import charge_customer_profile
 from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
 from woocommerce_core.models import WooStore
 from bigcommerce_core.models import BigCommerceStore
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 from shopified_core.utils import safe_float
 
 
@@ -47,7 +47,7 @@ def get_shipping_cost(shipping_country_code, shipping_province_code, total_weigh
                 cost = shipping_rate['shipping_cost']
     except:
         cost = False
-        raven_client.captureException()
+        capture_exception()
     return cost
 
 

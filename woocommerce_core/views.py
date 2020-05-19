@@ -5,7 +5,7 @@ import arrow
 import jwt
 import requests
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from django.conf import settings
 from django.contrib import messages
@@ -135,7 +135,7 @@ def product_alerts(request):
             for p in products:
                 product_variants[str(p['id'])] = p
     except:
-        raven_client.captureException()
+        capture_exception()
 
     product_changes = []
     for i in changes:
@@ -686,7 +686,7 @@ class OrdersList(ListView):
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             api_error = 'Store API Error'
-            raven_client.captureException()
+            capture_exception()
 
         context['store'] = store = self.get_store()
         context['status'] = self.request.GET.get('status', 'any')
@@ -704,7 +704,7 @@ class OrdersList(ListView):
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             api_error = 'Store API Error'
-            raven_client.captureException()
+            capture_exception()
 
         if api_error:
             messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
@@ -1073,7 +1073,7 @@ class OrdersTrackList(ListView):
             try:
                 context['orders'] = get_tracking_products(self.get_store(), context['orders'], self.paginate_by)
             except Exception as e:
-                raven_client.captureException(extra=utils.http_exception_response(e))
+                capture_exception(extra=utils.http_exception_response(e))
 
             context['shipping_carriers'] = store_shipping_carriers(self.get_store())
 
@@ -1081,7 +1081,7 @@ class OrdersTrackList(ListView):
             error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             error = 'Store API Error'
-            raven_client.captureException()
+            capture_exception()
 
         if error:
             messages.error(self.request, f'Error while trying to show your Store Orders: {error}')

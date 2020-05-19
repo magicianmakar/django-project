@@ -12,7 +12,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from unidecode import unidecode
 from collections import Counter
 from base64 import b64encode
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from django.db.models import Q
 from django.db import transaction
@@ -161,7 +161,7 @@ def get_product_attributes_dict(store):
         attributes = store.wcapi.get('products/attributes').json()
         return {a['name']: a['id'] for a in attributes if a.get('name')}
     except:
-        raven_client.captureException()
+        capture_exception()
         return {}
 
 
@@ -558,7 +558,7 @@ def cache_fulfillment_data(order_tracks, orders_max=None, output=None):
                 output.write(f'    WooCommerce Cache Error for {store.title}:{store.id} page {page}')
                 output.write(f'    HTTP Code: {http_excption_status_code(e)} Error: {http_exception_response(e)}')
 
-            raven_client.captureException(extra=http_exception_response(e))
+            capture_exception(extra=http_exception_response(e))
 
     cache.set_many(cache_data, timeout=3600)
 

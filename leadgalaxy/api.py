@@ -22,7 +22,7 @@ from django.shortcuts import render, get_object_or_404
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 from app.celery_base import celery_app
 
 from stripe_subscription.stripe_api import stripe
@@ -246,13 +246,11 @@ class ShopifyStoreApi(ApiBase):
         count = safe_int(data.get('count'))
 
         if count == 60:
-            raven_client.context.merge(raven_client.get_data_from_request(request))
-            raven_client.captureMessage('Celery Task is taking too long.', level='warning')
+            # raven_client.context.merge(raven_client.get_data_from_request(request))
+            capture_message('Celery Task is taking too long.', level='warning')
 
         if count > 120 and count < 125:
-            raven_client.captureMessage('Terminate Celery Task.',
-                                        extra={'task': data.get('id')},
-                                        level='warning')
+            capture_message('Terminate Celery Task.', extra={'task': data.get('id')}, level='warning')
 
             task.revoke(terminate=True)
             return self.api_error('Export Error', status=500)
@@ -486,7 +484,7 @@ class ShopifyStoreApi(ApiBase):
                 else:
                     response = 'ClippingMagic API Error'
 
-            raven_client.captureMessage('ClippingMagic API Error', level='warning', extra=res)
+            capture_message('ClippingMagic API Error', level='warning', extra=res)
 
             return self.api_error(response, status=500)
 
@@ -514,10 +512,10 @@ class ShopifyStoreApi(ApiBase):
             if e.response.status_code == 403:
                 return self.api_error("Invalid YouZign API credentials", status=403)
             else:
-                raven_client.captureException()
+                capture_exception()
 
         except Exception:
-            raven_client.captureException()
+            capture_exception()
 
         return self.api_error("YouZign API Error")
 
@@ -613,7 +611,7 @@ class ShopifyStoreApi(ApiBase):
         try:
             charge.refund(amount=int(amount * 100))
         except stripe.error.InvalidRequestError as e:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
             return self.api_error(str(e))
 
         return self.api_success()
@@ -893,7 +891,7 @@ class ShopifyStoreApi(ApiBase):
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id)
                 product.user_supplement_id = user_supplement
             except:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
                 return self.api_error('Product supplier is not correct', status=500)
 
         elif 'click.aliexpress.com' in original_link.lower():
@@ -943,7 +941,7 @@ class ShopifyStoreApi(ApiBase):
             if user.models_user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
                 utils.update_shopify_product_vendor(store, product.shopify_id, product.default_supplier.supplier_name)
         except:
-            raven_client.captureException()
+            capture_exception()
 
         return self.api_success({
             'reload': not data.get('export')
@@ -993,7 +991,7 @@ class ShopifyStoreApi(ApiBase):
             if user.models_user.get_config('update_product_vendor') and product.default_supplier and product.shopify_id:
                 utils.update_shopify_product_vendor(product.store, product.shopify_id, product.default_supplier.supplier_name)
         except:
-            raven_client.captureException()
+            capture_exception()
 
         return self.api_success()
 
@@ -1459,7 +1457,7 @@ class ShopifyStoreApi(ApiBase):
             if 'already fulfilled' not in rep.text and \
                'please try again' not in rep.text and \
                'Internal Server Error' not in rep.text:
-                raven_client.captureException(
+                capture_exception(
                     level='warning',
                     extra={'response': rep.text})
 
@@ -1589,7 +1587,7 @@ class ShopifyStoreApi(ApiBase):
                 raise PermissionDenied()
 
         except ShopifyStore.DoesNotExist:
-            raven_client.captureException()
+            capture_exception()
             return self.api_error('Store {} not found'.format(data.get('store')), status=404)
 
         order_id = data.get('order_id')
@@ -1616,7 +1614,7 @@ class ShopifyStoreApi(ApiBase):
                 raise PermissionDenied()
             permissions.user_can_view(user, store)
         except ShopifyStore.DoesNotExist:
-            raven_client.captureException()
+            capture_exception()
             return self.api_error('Store {} not found'.format(data.get('store')), status=404)
 
         # Mark Order as Ordered
@@ -1641,7 +1639,7 @@ class ShopifyStoreApi(ApiBase):
                 # Handle a regression in the extension migration tool (1b59df9)
                 return self.api_success({'message': 'Nothing to import (Aliexpress ID is empty)'}, status=202)
             else:
-                raven_client.captureException(level='warning', tags={'oberlo': from_oberlo, 'shop': store.shop})
+                capture_exception(level='warning', tags={'oberlo': from_oberlo, 'shop': store.shop})
 
             return self.api_error(str(e), status=501)
 
@@ -1660,7 +1658,7 @@ class ShopifyStoreApi(ApiBase):
                 if e.response.status_code in [401, 402, 403, 404, 429]:
                     return self.api_error('Shopify API Error', status=e.response.status_code)
                 else:
-                    raven_client.captureException(level='warning')
+                    capture_exception(level='warning')
                     return self.api_error('Shopify API Error', status=500)
 
             if line:
@@ -1907,7 +1905,7 @@ class ShopifyStoreApi(ApiBase):
                 order_details = json.loads(data.get('order_details'))
                 order_data['aliexpress']['order_details'] = order_details
         except:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
 
         if data.get('bundle') and data['bundle'] != 'false':
             if not order_data.get('bundle'):
@@ -2333,7 +2331,7 @@ class ShopifyStoreApi(ApiBase):
                 supplier_url = rep.headers.get('location')
 
                 if '/deep_link.htm' in supplier_url:
-                    raven_client.captureMessage(
+                    capture_message(
                         'Deep link in redirection',
                         level='warning',
                         extra={
@@ -2346,14 +2344,14 @@ class ShopifyStoreApi(ApiBase):
                 user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)
             except:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
                 return self.api_error('Product supplier is not correct', status=422)
 
         elif get_domain(supplier_url) == 'alitems':
             supplier_url = parse_qs(urlparse(supplier_url).query)['ulp'].pop()
 
         elif 'app.oberlo.com/suppliers' not in supplier_url:
-            raven_client.captureMessage('Unsupported Import Source', level='warning', extra={'url': supplier_url})
+            capture_message('Unsupported Import Source', level='warning', extra={'url': supplier_url})
 
         supplier_url = remove_link_query(supplier_url)
 

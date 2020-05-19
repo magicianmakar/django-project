@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import PlanRegistration
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 
 class Command(DropifiedBaseCommand):
@@ -26,7 +26,7 @@ class Command(DropifiedBaseCommand):
                 continue
             except:
                 self.stdout.write('WARNING: Get Email Exception for: {}'.format(reg.email), self.style.WARNING)
-                raven_client.captureException()
+                capture_exception()
                 continue
 
             profile = user.profile

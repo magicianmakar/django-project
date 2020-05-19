@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.db.models.signals import post_save, m2m_changed, post_delete
 from django.contrib.auth.models import User
 
+from lib.exceptions import capture_exception
 from leadgalaxy.models import (
     UserProfile,
     GroupPlan,
@@ -110,8 +111,7 @@ def userprofile_creation(sender, instance, created, **kwargs):
 
                 customer.stripe_save(cus)
         except:
-            from raven.contrib.django.raven_compat.models import client as raven_client
-            raven_client.captureException()
+            capture_exception()
 
 
 @receiver(post_save, sender=ShopifyStore)

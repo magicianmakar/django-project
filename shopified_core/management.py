@@ -8,7 +8,7 @@ from django.db import connection
 import requests
 from tqdm import tqdm
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 
 class DropifiedBaseCommand(BaseCommand):
@@ -24,7 +24,7 @@ class DropifiedBaseCommand(BaseCommand):
             management_command = sys.argv[1] if len(sys.argv) > 1 else ''
             if not settings.DEBUG and management_command != 'test':
                 self.stderr.write('Web app is not available %s' % sys.argv[-1])
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
 
                 return
 
@@ -42,7 +42,7 @@ class DropifiedBaseCommand(BaseCommand):
             if settings.DEBUG:
                 traceback.print_exc()
 
-            raven_client.captureException()
+            capture_exception()
 
         if self.progress_bar:
             self.progress_bar.close()

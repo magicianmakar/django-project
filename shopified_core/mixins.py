@@ -1,6 +1,6 @@
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 import simplejson as json
 
@@ -74,7 +74,7 @@ class ApiResponseMixin():
                 raise ApiLoginException('unvalid_access_token')
 
             if token != authorization and not data.get('newrelic'):
-                raven_client.captureMessage(
+                capture_message(
                     'Authorization Different From Access Token',
                     extra={
                         'aut': authorization,
@@ -90,7 +90,7 @@ class ApiResponseMixin():
             else:
                 if user != request.user and not user.is_superuser:
                     if request.method != 'GET':
-                        raven_client.captureMessage(
+                        capture_message(
                             'Different account login',
                             extra={'Request User': request.user, 'API User': user},
                             level='warning'
@@ -112,7 +112,7 @@ class ApiResponseMixin():
         except User.DoesNotExist:
             return None
         except:
-            raven_client.captureException()
+            capture_exception()
             return None
 
         return user
@@ -120,7 +120,7 @@ class ApiResponseMixin():
     def dispatch(self, request, *args, **kwargs):
         if request.method.lower() not in self.http_method_names:
             if request.method != 'OPTIONS':
-                raven_client.captureMessage('Unsupported Request Method', extra={'method': request.method})
+                capture_message('Unsupported Request Method', extra={'method': request.method})
 
             return self.http_method_not_allowed(request, *args, **kwargs)
 
@@ -136,11 +136,7 @@ class ApiResponseMixin():
 
         user = self.get_user(request, assert_login=assert_login)
         if user:
-            raven_client.user_context({
-                'id': user.id,
-                'username': user.username,
-                'email': user.email
-            })
+            # raven_client.user_context({'id': user.id, 'username': user.username, 'email': user.email})
 
             extension_version = request.META.get('HTTP_X_EXTENSION_VERSION')
             if extension_version:
@@ -150,7 +146,7 @@ class ApiResponseMixin():
         handler = getattr(self, method_name, None)
 
         if not handler:
-            raven_client.captureMessage('Non-handled endpoint', extra={'method': method_name})
+            capture_message('Non-handled endpoint', extra={'method': method_name})
             return self.api_error('Non-handled endpoint', status=405)
 
         res = handler(request, user, self.data)
@@ -158,7 +154,7 @@ class ApiResponseMixin():
             res = self.response
 
         if res is None:
-            raven_client.captureMessage('API Response is empty')
+            capture_message('API Response is empty')
             res = self.api_error('Internal Server Error', 500)
 
         return res

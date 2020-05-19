@@ -5,7 +5,7 @@ import arrow
 import jwt
 import requests
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from django.conf import settings
 from django.contrib import messages
@@ -103,7 +103,7 @@ def auth(request):
 
             subscribe_user_to_default_plan(user)
         else:
-            raven_client.captureMessage(
+            capture_message(
                 'Add Extra BigCommerce Store',
                 level='warning',
                 extra={
@@ -164,7 +164,7 @@ def load(request):
             messages.error(request, 'Couldn\'t find this store')
             return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
         except:
-            raven_client.captureException()
+            capture_exception()
 
     messages.error(request, 'Verification failed')
     return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
@@ -239,7 +239,7 @@ def product_alerts(request):
             for p in products:
                 product_variants[str(p['id'])] = p
     except:
-        raven_client.captureException()
+        capture_exception()
 
     product_changes = []
     for i in changes:
@@ -737,7 +737,7 @@ class OrdersList(ListView):
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             api_error = 'Store API Error'
-            raven_client.captureException()
+            capture_exception()
 
         context['store'] = store = self.get_store()
         context['status'] = self.request.GET.get('status', 'any')
@@ -755,7 +755,7 @@ class OrdersList(ListView):
             api_error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             api_error = 'Store API Error'
-            raven_client.captureException()
+            capture_exception()
 
         if api_error:
             messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
@@ -1134,7 +1134,7 @@ class OrdersTrackList(ListView):
             error = f'HTTP Error: {http_excption_status_code(e)}'
         except:
             error = 'Store API Error'
-            raven_client.captureException()
+            capture_exception()
 
         if error:
             messages.error(self.request, f'Error while trying to show your Store Orders: {error}')

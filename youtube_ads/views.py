@@ -9,7 +9,7 @@ from django.core.paginator import Paginator
 from django.core.validators import URLValidator
 from django.core.exceptions import ValidationError
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from .utils import Youtube, get_videos_info, get_channels_info
 from .models import VideosList
@@ -119,7 +119,7 @@ def index(request):
                 error = str(e)
             else:
                 error = "Sorry! Something went wrong, we're working on it. Please try again in a few minutes."
-                raven_client.captureException()
+                capture_exception()
 
     return render(request, 'youtube_ads/index.html', {
         'related': 'r' in request.GET,
@@ -175,7 +175,7 @@ def channels(request):
                 error = 'Invalid Channel: %s' % request.GET.get('q')
             else:
                 error = "Sorry! Something went wrong, we're working on it. Please try again in a few minutes."
-                raven_client.captureException()
+                capture_exception()
 
     return render(request, 'youtube_ads/channels.html', {
         'channels': {},

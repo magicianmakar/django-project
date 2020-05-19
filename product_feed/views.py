@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, Http404
 from django.utils import timezone
 from django.http import JsonResponse
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_message
 
 from shopified_core import permissions
 from leadgalaxy.models import ShopifyStore
@@ -196,7 +196,7 @@ def get_shopify_product_feed(request, store_id, revision=None):
     if feed_s3_url:
         return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
-        raven_client.captureMessage('Product Feed not found', level='warning')
+        capture_message('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
 
 
@@ -306,7 +306,7 @@ def get_chq_product_feed(request, store_id, revision=None):
     if feed_s3_url:
         return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
-        raven_client.captureMessage('Product Feed not found', level='warning')
+        capture_message('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
 
 
@@ -416,7 +416,7 @@ def get_woo_product_feed(request, store_id, revision=None):
     if feed_s3_url:
         return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
-        raven_client.captureMessage('Product Feed not found', level='warning')
+        capture_message('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
 
 
@@ -502,7 +502,7 @@ def get_gear_product_feed(request, store_id, revision=None):
     if feed_s3_url:
         return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
-        raven_client.captureMessage('Product Feed not found', level='warning')
+        capture_message('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
 
 
@@ -612,7 +612,7 @@ def get_gkart_product_feed(request, store_id, revision=None):
     if feed_s3_url:
         return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
-        raven_client.captureMessage('Product Feed not found', level='warning')
+        capture_message('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')
 
 
@@ -722,5 +722,5 @@ def get_bigcommerce_product_feed(request, store_id, revision=None):
     if feed_s3_url:
         return HttpResponseRedirect(f'{feed_s3_url}?v={feed.updated_version}')
     else:
-        raven_client.captureMessage('Product Feed not found', level='warning')
+        capture_message('Product Feed not found', level='warning')
         raise Http404('Product Feed not found')

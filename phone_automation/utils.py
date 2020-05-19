@@ -8,7 +8,7 @@ import re
 import dateutil.parser
 from twilio.rest import Client
 from shopified_core.utils import last_executed
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 from shopified_core.utils import safe_int, app_link
 from django.urls import reverse
 from shopified_core.utils import send_email_from_template
@@ -105,7 +105,7 @@ def get_month_totals(user, phone_type="tollfree"):
         total += safe_int(month_total_duration['call_duration__sum'])
 
     except:
-        raven_client.captureException()
+        capture_exception()
 
     return total
 
@@ -173,7 +173,7 @@ def get_orders_by_phone(user, phone, phone_raw):
                 for shopify_order in resp_customer_orders.json()['orders']:
                     orders['shopify'].append(shopify_order)
         except:
-            raven_client.captureException()
+            capture_exception()
 
     for woo_store in woo_stores:
         try:
@@ -190,7 +190,7 @@ def get_orders_by_phone(user, phone, phone_raw):
                     if woo_order not in orders['woo']:
                         orders['woo'].append(woo_order)
         except:
-            raven_client.captureException()
+            capture_exception()
 
     for chq_store in chq_stores:
         try:
@@ -212,7 +212,7 @@ def get_orders_by_phone(user, phone, phone_raw):
                             if chq_order not in orders['chq']:
                                 orders['chq'].append(chq_order)
         except:
-            raven_client.captureException()
+            capture_exception()
 
     for gear_store in gear_stores:
         try:
@@ -230,7 +230,7 @@ def get_orders_by_phone(user, phone, phone_raw):
                     if gear_order not in orders['gear']:
                         orders['gear'].append(gear_order)
         except:
-            raven_client.captureException()
+            capture_exception()
 
     return orders
 
@@ -262,7 +262,7 @@ def get_orders_by_id(user, order_id):
             for shopify_order in resp_customer_orders.json()['orders']:
                 orders['shopify'].append(shopify_order)
         except:
-            raven_client.captureException()
+            capture_exception()
 
     for woo_store in woo_stores:
         try:
@@ -271,7 +271,7 @@ def get_orders_by_id(user, order_id):
             for woo_order in resp_customer_orders.json():
                 orders['woo'].append(woo_order)
         except:
-            raven_client.captureException()
+            capture_exception()
 
     for chq_store in chq_stores:
         try:
@@ -289,7 +289,7 @@ def get_orders_by_id(user, order_id):
                     orders['chq'].append(chq_order)
 
         except:
-            raven_client.captureException()
+            capture_exception()
 
     for gear_store in gear_stores:
         try:
@@ -303,7 +303,7 @@ def get_orders_by_id(user, order_id):
             for gear_order in resp_customer_orders.json()['orders']:
                 orders['gear'].append(gear_order)
         except:
-            raven_client.captureException()
+            capture_exception()
 
     for bigcommerce_store in bigcommerce_stores:
         try:
@@ -318,7 +318,7 @@ def get_orders_by_id(user, order_id):
             for bigcommerce_order in resp_customer_orders.json():
                 orders['bigcommerce'].append(bigcommerce_order)
         except:
-            raven_client.captureException()
+            capture_exception()
 
     return orders
 

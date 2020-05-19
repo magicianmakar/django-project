@@ -6,7 +6,7 @@ from django.conf import settings
 
 from app.celery_base import celery_app, CaptureFailure
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
 from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_order
@@ -102,7 +102,7 @@ def fulfill_aliexpress_order(store, order_id, line_id=None):
     try:
         rep.raise_for_status()
     except:
-        raven_client.captureException()
+        capture_exception()
 
     return rep.ok
 
@@ -135,4 +135,4 @@ def index_shopify_order(self, order_pk):
         pass
 
     except:
-        raven_client.captureException()
+        capture_exception()

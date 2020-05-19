@@ -39,7 +39,7 @@ from django.core.validators import validate_email, ValidationError
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from app.celery_base import retry_countdown
 from shopified_core import permissions
@@ -138,8 +138,7 @@ def get_plan(plan_hash=None, plan_slug=None, payment_gateway=None):
         else:
             return plan.get(slug=plan_slug)
     except:
-        raven_client.captureMessage('Plan Not Found',
-                                    extra={'plan_hash': plan_hash, 'plan_slug': plan_slug})
+        capture_message('Plan Not Found', extra={'plan_hash': plan_hash, 'plan_slug': plan_slug})
 
         return None
 
@@ -165,7 +164,7 @@ def apply_plan_registrations(email=''):
             continue
 
         except Exception:
-            raven_client.captureException(extra={'email': reg.email})
+            capture_exception(extra={'email': reg.email})
             continue
 
 
@@ -311,7 +310,7 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
         return user, True
 
     else:
-        raven_client.captureMessage('New User Registration Exists', extra={
+        capture_message('New User Registration Exists', extra={
             'name': fullname,
             'email': email,
             'count': User.objects.filter(email__iexact=email).count()
@@ -468,7 +467,7 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
         shippement_data = json.loads(r.text[1:-1])
         cache.set(shippement_key, shippement_data, timeout=43200)
     except requests.exceptions.ConnectTimeout:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
         cache.set(shippement_key, shippement_data, timeout=120)
         shippement_data = {}
     except:
@@ -501,7 +500,7 @@ def ebay_shipping_info(item_id, country_name, zip_code=''):
 
         cache.set(shippement_key, shippement_data, timeout=43200)
     except requests.exceptions.ConnectTimeout:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
         cache.set(shippement_key, shippement_data, timeout=120)
         shippement_data = {}
     except:
@@ -622,7 +621,7 @@ def duplicate_product(product, store=None):
             product.data = json.dumps(product_data)
 
         except Exception:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
 
     product.save()
 
@@ -1336,7 +1335,7 @@ def create_shopify_webhook(store, topic):
         return webhook
 
     except Exception as e:
-        raven_client.captureException(extra=http_exception_response(e))
+        capture_exception(extra=http_exception_response(e))
         return None
 
 
@@ -1346,10 +1345,10 @@ def get_shopify_webhook(store, topic):
     except ShopifyWebhook.DoesNotExist:
         return None
     except ShopifyWebhook.MultipleObjectsReturned:
-        raven_client.captureException()
+        capture_exception()
         return ShopifyWebhook.objects.filter(store=store, topic=topic).first()
     except:
-        raven_client.captureException()
+        capture_exception()
         return None
 
 
@@ -1390,7 +1389,7 @@ def check_webhooks(store):
             break
 
     if have_http:
-        raven_client.captureMessage('HTTP Webhook Detected', level='info', tags={'store': store.shop})
+        capture_message('HTTP Webhook Detected', level='info', tags={'store': store.shop})
 
         detach_webhooks(store, delete_too=True)
         attach_webhooks(store)
@@ -1632,7 +1631,7 @@ def order_track_fulfillment(**kwargs):
     except ShopifyOrderLine.DoesNotExist:
         pass
     except:
-        raven_client.captureException()
+        capture_exception()
 
     data = {
         "fulfillment": {
@@ -1964,9 +1963,7 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
 
         errorCode = r['errorCode']
         if errorCode != 20010000:
-            raven_client.captureMessage('Aliexpress Promotion Error',
-                                        extra={'errorCode': errorCode, 'response': r},
-                                        level='warning')
+            capture_message('Aliexpress Promotion Error', extra={'errorCode': errorCode, 'response': r}, level='warning')
             return None
 
         if len(r['result']['promotionUrls']):
@@ -1976,14 +1973,12 @@ def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
 
             return promotion_url
         else:
-            raven_client.captureMessage('Aliexpress Promotion Not Found',
-                                        extra={'response': r, 'product': urls},
-                                        level='warning')
+            capture_message('Aliexpress Promotion Not Found', extra={'response': r, 'product': urls}, level='warning')
 
             return None
 
     except:
-        raven_client.captureException(level='warning', extra={'response': rep})
+        capture_exception(level='warning', extra={'response': rep})
 
     return None
 
@@ -2254,10 +2249,10 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
         # update collections
         ProductCollections().update_product_collects_shopify_id(product)
     except ShopifyStore.DoesNotExist:
-        raven_client.captureException()
+        capture_exception()
 
     except Exception as e:
-        raven_client.captureException(level='warning', extra={
+        capture_exception(level='warning', extra={
             'Store': store.title,
             'Product': shopify_id,
             'Retries': self.request.retries if self else None
@@ -2702,7 +2697,7 @@ class ProductCollections(object):
             collections = [{'title': collection.get('title'), 'id': collection.get('id')} for collection in
                            response.get('custom_collections', [])]
         except:
-            raven_client.captureException()
+            capture_exception()
             collections = []
 
         return collections
@@ -2752,4 +2747,4 @@ class ProductCollections(object):
             product.save()
 
         except:
-            raven_client.captureException()
+            capture_exception()

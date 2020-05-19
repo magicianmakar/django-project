@@ -11,7 +11,7 @@ from django.core.cache import cache, caches
 from django.utils.functional import cached_property
 
 from unidecode import unidecode
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from .models import CommerceHQStore, CommerceHQProduct, CommerceHQBoard, CommerceHQOrderTrack
 from shopified_core import permissions
@@ -123,7 +123,7 @@ def duplicate_product(product, store=None):
             product.data = json.dumps(product_data)
 
         except Exception:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
 
     product.save()
 
@@ -795,7 +795,7 @@ def add_aftership_to_store_carriers(store):
         return r.json()
 
     except:
-        raven_client.captureException()
+        capture_exception()
         return None
 
 
@@ -969,7 +969,7 @@ def order_track_fulfillment(order_track, user_config=None):
             if not rep.ok and 'Warehouse ID' in rep.text:
                 raise
 
-            raven_client.captureException(level='warning', extra=http_exception_response(e))
+            capture_exception(level='warning', extra=http_exception_response(e))
 
     try:
         last_shipment = (total_quantity - total_shipped - quantity) == 0

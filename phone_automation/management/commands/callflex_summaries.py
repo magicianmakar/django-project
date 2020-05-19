@@ -1,4 +1,4 @@
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 import phone_automation.notifications_utils as notifications
 from phone_automation.models import TwilioSummary
@@ -24,4 +24,4 @@ class Command(DropifiedBaseCommand):
                     self.stdout.write('Processing monthly summaries for summary ID:' + str(twilio_summary.id))
                     summary_notification.process_process_monthly()
             except:
-                raven_client.captureException()
+                capture_exception()

@@ -1,5 +1,5 @@
 from leadgalaxy.signals import main_subscription_canceled, main_subscription_updated
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 from stripe_subscription.models import StripeSubscription
 from shopify_subscription.models import ShopifySubscription
 from django.db.models.signals import post_save
@@ -15,7 +15,7 @@ def process_callflex_recurings_delete(sender, **kwargs):
             sub = custom_callflex_subscription.refresh()
             sub.delete(at_period_end=True)
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
 
 main_subscription_canceled.connect(process_callflex_recurings_delete)
@@ -36,7 +36,7 @@ def process_callflex_recurings_update(sender, **kwargs):
         for custom_callflex_subscription in custom_callflex_subscriptions:
             custom_callflex_subscription.delete()
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
 
 main_subscription_updated.connect(process_callflex_recurings_update)
@@ -57,7 +57,7 @@ def process_sub_upd_stripe(sender, instance, created, **kwargs):
             for custom_callflex_subscription in custom_callflex_subscriptions:
                 custom_callflex_subscription.safe_delete()
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
 
 @receiver(post_save, sender=ShopifySubscription)
@@ -70,4 +70,4 @@ def process_sub_upd_shopify(sender, instance, created, **kwargs):
             for phone in user.twilio_phone_numbers.exclude(status='released'):
                 phone.delete()
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')

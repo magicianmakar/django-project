@@ -4,7 +4,6 @@ import re
 import time
 
 import requests
-from raven.contrib.django.raven_compat.models import client as raven_client
 
 from shopified_core.exceptions import ApiProcessException
 from leadgalaxy.utils import order_track_fulfillment
@@ -26,12 +25,6 @@ class ShopifyOrderImport():
 
         if self.store is None:
             raise Exception("Store not set.")
-
-        raven_client.user_context({
-            'id': self.store.user.id,
-            'username': self.store.user.username,
-            'email': self.store.user.email
-        })
 
     def _get_response_from_url(self, url, params=None):
         """Access any given url and return the corresponding response"""

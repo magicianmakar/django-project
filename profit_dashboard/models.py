@@ -10,7 +10,7 @@ from django.conf import settings
 from django.db import models
 from django.utils import timezone
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from facebook_business.api import FacebookAdsApi
 from facebook_business.adobjects.user import User as FBUser
@@ -52,12 +52,12 @@ class FacebookAccess(models.Model):
                 self.access_token = ''
                 self.expires_in = None
 
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
             else:
-                raven_client.captureException()
+                capture_exception()
 
         except:
-            raven_client.captureException()
+            capture_exception()
 
         super(FacebookAccess, self).save(*args, **kwargs)
 

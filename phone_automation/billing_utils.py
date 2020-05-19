@@ -8,7 +8,7 @@ from shopified_core.utils import app_link
 from shopified_core.utils import send_email_from_template
 from django.urls import reverse
 from .models import CallflexShopifyUsageCharge
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_message
 from shopified_core.utils import last_executed
 
 
@@ -23,7 +23,7 @@ class CallflexOveragesBilling:
         try:
             upcoming_invoice = stripe.Invoice.upcoming(customer=self.user.stripe_customer.customer_id)
         except:
-            raven_client.captureMessage("No Upcoming Invoice. Skipping this user.")
+            capture_message("No Upcoming Invoice. Skipping this user.")
             return False
 
         upcoming_invoice_item = False

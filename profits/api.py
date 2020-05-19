@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.views.generic import View
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core.utils import safe_int
 from shopified_core.mixins import ApiResponseMixin
@@ -175,7 +175,7 @@ class ProfitsApi(ApiResponseMixin, View):
             facebook_access.get_or_update_token(access_token, expires_in)
             accounts = facebook_access.get_api_accounts()
         except:
-            raven_client.captureException()
+            capture_exception()
             return JsonResponse({'error': 'User token error'}, status=404)
 
         return JsonResponse({
@@ -241,7 +241,7 @@ class ProfitsApi(ApiResponseMixin, View):
                 'config_options': config_options
             })
         except:
-            raven_client.captureException()
+            capture_exception()
             return JsonResponse({'error': 'Ad Account Not found'}, status=404)
 
     def post_facebook_remove_account(self, request, user, data):

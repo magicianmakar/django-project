@@ -1,6 +1,6 @@
 from datetime import timedelta
 from django.utils import timezone
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 import arrow
 from phone_automation.models import TwilioPhoneNumber
 from phone_automation.utils import get_twilio_client
@@ -56,4 +56,4 @@ class Command(DropifiedBaseCommand):
                         user_phone.delete()
                         self.write(f"Phone {user_phone.twilio_sid} was deleted")
             except:
-                raven_client.captureException()
+                capture_exception()

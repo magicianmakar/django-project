@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.cache import cache
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import send_email_from_template, using_replica
@@ -75,10 +75,10 @@ class Command(DropifiedBaseCommand):
                 ProductChange.objects.filter(id__in=[j.id for j in changes_list]).update(notified_at=timezone.now())
 
             except User.DoesNotExist:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
 
             except:
-                raven_client.captureException()
+                capture_exception()
 
         if len(ignored_users):
             self.write('Notfiy {} ignored users'.format(len(ignored_users)))

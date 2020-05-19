@@ -14,7 +14,7 @@ from shopify_orders.models import ShopifyOrderLog
 from leadgalaxy import utils
 from leadgalaxy import tasks
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 
 class Command(DropifiedBaseCommand):
@@ -82,7 +82,7 @@ class Command(DropifiedBaseCommand):
                 if last_executed(f'order-auto-fulfill2-{order.id}', 21600):
                     if not last_executed(f'order-auto-fulfill-sync-{order.id}', 21600):
                         utils.get_tracking_orders(order.store, [order])
-                        raven_client.captureMessage('Skipping Order with issue', tags={'track': order.id, 'store': order.store.shop})
+                        capture_message('Skipping Order with issue', tags={'track': order.id, 'store': order.store.shop})
 
                     self.progress_write(f'Skipping Order #{order.id} for {order.store.shop}')
                     counter['skipped'] += 1
@@ -98,14 +98,14 @@ class Command(DropifiedBaseCommand):
                         self.write('Fulfill Progress: %d' % counter['fulfilled'])
 
                 if (timezone.now() - self.start_at) > timezone.timedelta(seconds=uptime * 60):
-                    raven_client.captureMessage(
+                    capture_message(
                         'Auto fulfill taking too long',
                         level="warning",
                         extra={'delta': (timezone.now() - self.start_at).total_seconds()})
 
                     break
             except:
-                raven_client.captureException()
+                capture_exception()
 
         self.write(f"Fulfilled Orders: {counter['fulfilled']} / {counter['need_fulfill']} - Skipped: {counter['skipped']}")
 
@@ -113,10 +113,7 @@ class Command(DropifiedBaseCommand):
         store = order.store
         user = store.user
 
-        self.raven_context_from_store(raven_client, store, tags={
-            'order': order.order_id,
-            'track': order.id
-        })
+        # self.raven_context_from_store(raven_client, store, tags={'order': order.order_id, 'track': order.id})
 
         api_data, line = utils.order_track_fulfillment(
             order_track=order,
@@ -132,7 +129,7 @@ class Command(DropifiedBaseCommand):
 
         while tries > 0 or locations:
             if tries < -3:
-                raven_client.captureMessage('Fulfillment Loop Detected')
+                capture_message('Fulfillment Loop Detected')
                 break
 
             try:
@@ -217,7 +214,7 @@ class Command(DropifiedBaseCommand):
 
                                             return False
 
-                        raven_client.captureMessage('Invalid fulfillment order line', extra={
+                        capture_message('Invalid fulfillment order line', extra={
                             'shop': order.store.shop,
                             'order_track': order.id,
                             'r': r.text,
@@ -261,7 +258,7 @@ class Command(DropifiedBaseCommand):
                             continue
                         else:
 
-                            raven_client.captureMessage('Add Fulfillment Error', extra={
+                            capture_message('Add Fulfillment Error', extra={
                                 'order_track': order.id,
                                 'response': r.text
                             }, level='warning')
@@ -282,7 +279,7 @@ class Command(DropifiedBaseCommand):
                             if r.ok:
                                 continue
                             else:
-                                raven_client.captureMessage('Add Fulfillment Workarround Error', extra={
+                                capture_message('Add Fulfillment Workarround Error', extra={
                                     'order_track': order.id,
                                     'response': r.text
                                 })
@@ -295,7 +292,7 @@ class Command(DropifiedBaseCommand):
 
                         self.log_fulfill_error(order, 'Shopify Manual Fulfillement bug')
 
-                        raven_client.captureException(extra={
+                        capture_exception(extra={
                             'order_track': order.id,
                             'response': rep.text
                         })
@@ -332,7 +329,7 @@ class Command(DropifiedBaseCommand):
 
                             self.store_locations[order.store.id] = location['id']
                         else:
-                            raven_client.captureMessage('No location found', extra={'track': order.id, 'store': order.store.shop})
+                            capture_message('No location found', extra={'track': order.id, 'store': order.store.shop})
 
                             self.log_fulfill_error(order, 'No location found', shopify_api=False)
 
@@ -343,7 +340,7 @@ class Command(DropifiedBaseCommand):
 
                 elif locations:
                     # we are trying locations but we don't hand this excption
-                    raven_client.captureMessage('Unhandled Shopify status Loop Detected', extra=http_exception_response(e))
+                    capture_message('Unhandled Shopify status Loop Detected', extra=http_exception_response(e))
                     locations = []
 
                 elif e.response.status_code in [401, 402, 403]:
@@ -355,13 +352,13 @@ class Command(DropifiedBaseCommand):
                     return False
 
                 if "An error occurred, please try again" not in rep.text:
-                    raven_client.captureException(extra={
+                    capture_exception(extra={
                         'order_track': order.id,
                         'response': rep.text
                     })
 
             except Exception as e:
-                raven_client.captureException(extra=http_exception_response(e))
+                capture_exception(extra=http_exception_response(e))
             finally:
                 tries -= 1
 

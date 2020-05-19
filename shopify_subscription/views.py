@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from django.views.decorators.csrf import csrf_protect
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core import permissions
 from shopified_core.utils import app_link
@@ -88,7 +88,7 @@ def subscription_plan(request):
                     'location': app_link('/shopify/install', store.shop.split('.')[0], reinstall=store.id)
                 })
             else:
-                raven_client.captureException()
+                capture_exception()
                 return JsonResponse({'error': 'Shopify API Error'}, status=403)
 
         sub, created = ShopifySubscription.objects.update_or_create(
@@ -254,7 +254,7 @@ def subscription_callflex(request):
                 'location': app_link('/shopify/install', store.shop.split('.')[0], reinstall=store.id)
             })
         else:
-            raven_client.captureException()
+            capture_exception()
             return JsonResponse({'error': 'Shopify API Error'}, status=403)
 
     return JsonResponse({

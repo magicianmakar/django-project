@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.core.cache import cache
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from app.celery_base import celery_app, CaptureFailure
 
@@ -29,7 +29,7 @@ def import_orders(self, store_id, parsed_orders, file_index=0):
             'file_index': file_index,
         })
     except Exception:
-        raven_client.captureException()
+        capture_exception()
 
         store.pusher_trigger('order-import', {
             'success': False,
@@ -56,7 +56,7 @@ def approve_imported_orders(self, user_id, data, pusher_store_id):
             'success': True
         })
     except Exception:
-        raven_client.captureException()
+        capture_exception()
 
         pusher_store.pusher_trigger('order-import-approve', {
             'success': False

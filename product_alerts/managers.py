@@ -3,7 +3,7 @@ import requests
 import simplejson as json
 from json import JSONDecodeError
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core.utils import app_link, safe_float, http_exception_response
 from leadgalaxy.models import PriceMarkupRule
@@ -108,7 +108,7 @@ class ProductChangeManager():
             self.product_change.status = 2  # Failed
             self.product_change.save()
             if http_excption_status_code(e) not in [400, 401, 402, 403, 404, 429]:
-                raven_client.captureException()
+                capture_exception()
 
         return None
 
@@ -393,7 +393,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
                 _api_data = copy.deepcopy(api_product_data)
                 _api_data.update(dict(body_html=None, images=None, image=None))
 
-                raven_client.captureException(extra={
+                capture_exception(extra={
                     'rep': r.text,
                     'data': _api_data,
                     'changes': json.loads(self.product_change.data),
@@ -533,7 +533,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
 
         except Exception as e:
             if r.status_code not in [401, 402, 403, 404, 429]:
-                raven_client.captureException(extra={
+                capture_exception(extra={
                     'rep': r.text,
                     'data': api_product_data,
                 }, tags={
@@ -541,7 +541,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                     'store': self.product.store,
                 })
             else:
-                raven_client.captureException(extra=http_exception_response(e))
+                capture_exception(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
         pass
@@ -729,7 +729,7 @@ class GrooveKartProductChangeManager(ProductChangeManager):
 
         except Exception as e:
             if r.status_code not in [401, 402, 403, 404, 429]:
-                raven_client.captureException(extra={
+                capture_exception(extra={
                     'rep': r.text,
                     'data': api_product_data,
                 }, tags={
@@ -737,7 +737,7 @@ class GrooveKartProductChangeManager(ProductChangeManager):
                     'store': self.product.store,
                 })
             else:
-                raven_client.captureException(extra=http_exception_response(e))
+                capture_exception(extra=http_exception_response(e))
 
     def add_price_history(self, variant_id, variant_change):
         pass
@@ -878,7 +878,7 @@ class WooProductChangeManager(ProductChangeManager):
             self.product.update_data(product_data)
         except Exception as e:
             if http_excption_status_code(e) not in [400, 401, 402, 403, 404, 429]:
-                raven_client.captureException(extra={
+                capture_exception(extra={
                     'rep': r.text,
                     'data': api_product_data,
                 }, tags={
@@ -1029,7 +1029,7 @@ class BigCommerceProductChangeManager(ProductChangeManager):
             self.product.update_data(product_data)
         except:
             if r.status_code not in [401, 402, 403, 404, 429]:
-                raven_client.captureException(extra={
+                capture_exception(extra={
                     'rep': r.text,
                     'data': api_product_data,
                 }, tags={

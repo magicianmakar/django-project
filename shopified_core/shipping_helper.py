@@ -10,7 +10,7 @@ from fuzzyset import FuzzySet
 from django.conf import settings
 from django.core.cache import cache
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_message
 
 from shopified_core.utils import hash_list
 
@@ -219,11 +219,9 @@ def get_fr_city_info(city, zip_code=None, orig_city=None):
             match['nom'] = orig_city or city
             return match
         else:
-            raven_client.captureMessage('[FR Address] Too many Zip Matchs',
-                                        extra={'zip_code': zip_code, 'city': city, 'match_count': len(zip_code_matchs)})
+            capture_message('[FR Address] Too many Zip Matchs', extra={'zip_code': zip_code, 'city': city, 'match_count': len(zip_code_matchs)})
 
-    raven_client.captureMessage('[FR Address] No Match Found',
-                                extra={'zip_code': zip_code, 'city': city})
+    capture_message('[FR Address] No Match Found', extra={'zip_code': zip_code, 'city': city})
 
 
 def fix_fr_address(shipping_address):

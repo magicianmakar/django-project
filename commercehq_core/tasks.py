@@ -9,7 +9,7 @@ from django.utils.text import slugify
 from django.template.defaultfilters import truncatewords
 
 import requests
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from app.celery_base import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
@@ -36,17 +36,11 @@ from .models import (
 
 @celery_app.task(base=CaptureFailure)
 def product_save(req_data, user_id):
-
     store = req_data.get('store')
     data = req_data['data']
-
     user = User.objects.get(id=user_id)
 
-    raven_client.extra_context({
-        'store': store,
-        'product': req_data.get('product'),
-        'from_extension': ('access_token' in req_data)
-    })
+    # raven_client.extra_context({'store': store, 'product': req_data.get('product'), 'from_extension': ('access_token' in req_data)})
 
     if store:
         try:
@@ -54,7 +48,7 @@ def product_save(req_data, user_id):
             permissions.user_can_view(user, store)
 
         except (CommerceHQStore.DoesNotExist, ValueError):
-            raven_client.captureException()
+            capture_exception()
 
             return {
                 'error': 'Selected store (%s) not found' % (store)
@@ -73,7 +67,7 @@ def product_save(req_data, user_id):
     try:
         import_store = get_domain(original_url)
     except:
-        raven_client.captureException(extra={'original_url': original_url})
+        capture_exception(extra={'original_url': original_url})
 
         return {
             'error': 'Original URL is not set.'
@@ -100,7 +94,7 @@ def product_save(req_data, user_id):
             }
 
         except PermissionDenied as e:
-            raven_client.captureException()
+            capture_exception()
             return {
                 'error': "Product: {}".format(str(e))
             }
@@ -143,7 +137,7 @@ def product_save(req_data, user_id):
             product.set_default_supplier(supplier, commit=True)
 
         except PermissionDenied as e:
-            raven_client.captureException()
+            capture_exception()
             return {
                 'error': "Add Product: {}".format(str(e))
             }
@@ -379,7 +373,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
     except Exception as e:
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
-            raven_client.captureException(extra=http_exception_response(e))
+            capture_exception(extra=http_exception_response(e))
 
         store.pusher_trigger('product-export', {
             'success': False,
@@ -527,7 +521,7 @@ def product_update(product_id, data):
 
     except Exception as e:
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
-            raven_client.captureException(extra=http_exception_response(e))
+            capture_exception(extra=http_exception_response(e))
 
         store.pusher_trigger('product-update', {
             'success': False,
@@ -565,7 +559,7 @@ def create_image_zip(self, images, product_id):
             'url': url
         })
     except Exception:
-        raven_client.captureException()
+        capture_exception()
 
         product.store.pusher_trigger('images-download', {
             'success': False,
@@ -593,7 +587,7 @@ def order_save_changes(self, data):
 
     except Exception as e:
         if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
-            raven_client.captureException(extra=http_exception_response(e))
+            capture_exception(extra=http_exception_response(e))
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)

@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 
 import arrow
 import simplejson as json
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core.management import DropifiedBaseCommand
 from stripe_subscription.models import CustomStripePlan, CustomStripeSubscription
@@ -114,4 +114,4 @@ class Command(DropifiedBaseCommand):
                 custom_stripe_subscription.save()
 
             except:
-                raven_client.captureException()
+                capture_exception()

@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from twilio.base.exceptions import TwilioRestException
 from twilio.twiml.voice_response import VoiceResponse, Gather
@@ -79,7 +79,7 @@ def index(request):
         twilio_stats['total_duration_month_limit'] = get_month_limit(user)
         twilio_stats['today_uniq_callers_count'] = today_twilio_logs.values('from_number').distinct().count()
     except:
-        raven_client.captureException()
+        capture_exception()
         latest_twilio_logs = []
         twilio_stats = False
 
@@ -171,7 +171,7 @@ def call_logs(request):
         twilio_logs = twilio_logs.order_by('-created_at')
 
     except:
-        raven_client.captureException()
+        capture_exception()
         twilio_logs = []
         twilio_stats = False
 
@@ -286,7 +286,7 @@ def provision(request):
                             overages_warning_phone_price = settings.EXTRA_LOCAL_NUMBER_PRICE
                             overages.add_invoice('extra_number', overages_warning_phone_price, False)
                     except Exception:
-                        raven_client.captureException()
+                        capture_exception()
                         messages.error(request,
                                        'Error while provisioning phone number. Please subscribe to a CallFlex plan')
                         return HttpResponseRedirect(reverse('phone_automation_provision'))
@@ -328,11 +328,11 @@ def provision(request):
             return HttpResponseRedirect(reverse('phone_automation_index'))
 
         except TwilioRestException:
-            raven_client.captureException()
+            capture_exception()
             messages.error(request, 'Error while provisioning this phone number. Please try another one.')
             return HttpResponseRedirect(reverse('phone_automation_provision'))
         except Exception:
-            raven_client.captureException()
+            capture_exception()
 
             messages.error(request, 'Error while provisioning this phone number, please try another one. ')
             return HttpResponseRedirect(reverse('phone_automation_provision'))
@@ -440,7 +440,7 @@ def provision_release(request, twilio_phone_number_id):
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
     except:
-        raven_client.captureException()
+        capture_exception()
         messages.error(request, 'Error while removing phone number. ')
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
@@ -489,7 +489,7 @@ def status_callback(request):
                     overages.add_invoice('extra_minutes', extra_minute_price * safe_float(
                         request.POST.get('CallDuration')) / 60, False)
             except:
-                raven_client.captureException()
+                capture_exception()
         # fetch recordings
         try:
             client = get_twilio_client()
@@ -506,14 +506,14 @@ def status_callback(request):
                 # TODO: billing recordings can be added here later
 
         except:
-            raven_client.captureException()
+            capture_exception()
 
         # Process alerts
         try:
             alert_notification = notifications.AlertNotification(twilio_phone_number, twilio_log)
             alert_notification.process_alerts()
         except:
-            raven_client.captureException()
+            capture_exception()
 
     return HttpResponse(status=200)
 
@@ -625,7 +625,7 @@ def call_flow(request):
             next_step = phone.automation.steps.get(step=phone.automation.first_step)
             response.redirect(next_step.url)
         except:
-            raven_client.captureException()
+            capture_exception()
             response.reject()
 
     return HttpResponse(str(response), content_type='application/xml')
@@ -919,7 +919,7 @@ def reports_numbers(request):
             stats['total_minutes'] = safe_int(twilio_logs.aggregate(Sum('call_duration'))['call_duration__sum'])
             twilio_phone_number.stats = stats
     except:
-        raven_client.captureException()
+        capture_exception()
 
     return render(request, 'phone_automation/reports_numbers.html', {
         'selected_menu': 'tools:phone_automation:reports',
@@ -973,7 +973,7 @@ def reports_companies(request):
             stats['total_minutes'] = safe_int(twilio_logs.aggregate(Sum('call_duration'))['call_duration__sum'])
             twilio_company.stats = stats
     except:
-        raven_client.captureException()
+        capture_exception()
 
     return render(request, 'phone_automation/reports_companies.html', {
         'selected_menu': 'tools:phone_automation:reports',

@@ -24,6 +24,7 @@ from .models import (
 )
 from .stripe_api import stripe
 
+from lib.exceptions import capture_exception, capture_message
 from shopified_core.utils import safe_str
 from leadgalaxy.models import GroupPlan, UserProfile
 from leadgalaxy.utils import register_new_user
@@ -124,7 +125,7 @@ def format_coupon(cou, duration=True):
     return text
 
 
-def subscription_end_trial(user, raven_client, delete_on_error=False):
+def subscription_end_trial(user, delete_on_error=False):
     for item in user.stripesubscription_set.all():
         sub = item.retrieve()
 
@@ -150,7 +151,7 @@ def subscription_end_trial(user, raven_client, delete_on_error=False):
                 raise SubscriptionException('Subscription Error: {}'.format(message))
 
             except:
-                raven_client.captureException()
+                capture_exception()
 
                 if delete_on_error:
                     sub.delete()
@@ -371,7 +372,7 @@ def invoice_extra_stores():
     return invoiced
 
 
-def process_webhook_event(request, event_id, raven_client):
+def process_webhook_event(request, event_id):
     event = stripe.Event.retrieve(event_id)
 
     if event.type == 'invoice.payment_failed':
@@ -451,7 +452,7 @@ def process_webhook_event(request, event_id, raven_client):
 
                                 update_subscription(customer.user, plan, sub)
                 except:
-                    raven_client.captureException(level='warning')
+                    capture_exception(level='warning')
 
         except StripeCustomer.DoesNotExist:
             return HttpResponse('Customer not found (1st invoice, skipping)')
@@ -473,7 +474,7 @@ def process_webhook_event(request, event_id, raven_client):
         # checking if it's a custom single subscription ( when mixing yearly/monthly )
         try:
             if sub['plan']['metadata']['custom']:
-                raven_client.captureMessage('Single Custom Subscription Event', level='info')
+                capture_message('Single Custom Subscription Event', level='info')
                 return HttpResponse('Subscription Updated')
         except:
             pass
@@ -494,7 +495,7 @@ def process_webhook_event(request, event_id, raven_client):
 
                 customer.user.set_config('registration_discount', ':{}'.format(reg_coupon))
             except:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
 
         except StripeCustomer.DoesNotExist:
             if sub_plan.metadata.get('click_funnels') or sub_plan.metadata.get('lifetime') or request.GET.get('cf'):
@@ -539,7 +540,7 @@ def process_webhook_event(request, event_id, raven_client):
 
                             customer.refresh()
                         except:
-                            raven_client.captureException()
+                            capture_exception()
                             return HttpResponse('Cloud Not Register User')
             else:
                 return HttpResponse('Customer Not Found')
@@ -581,7 +582,7 @@ def process_webhook_event(request, event_id, raven_client):
         # checking if it's a custom single subscription ( when mixing yearly/monthly )
         try:
             if sub['plan']['metadata']['custom']:
-                raven_client.captureMessage('Single Custom Subscription Event', level='info')
+                capture_message('Single Custom Subscription Event', level='info')
                 return HttpResponse('ok')
         except:
             pass
@@ -617,7 +618,7 @@ def process_webhook_event(request, event_id, raven_client):
         # checking if it's a custom single subscription ( when mixing yearly/monthly )
         try:
             if sub['plan']['metadata']['custom']:
-                raven_client.captureMessage('Single Custom Subscription Event', level='info')
+                capture_message('Single Custom Subscription Event', level='info')
                 return HttpResponse('Custom Subscription Deleted')
         except:
             pass

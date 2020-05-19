@@ -11,7 +11,7 @@ from django.db.models import Q
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core import permissions
 from shopified_core.utils import (
@@ -96,7 +96,7 @@ def get_store_categories(store):
         # Id can be "int as string" or None
         return [c for c in result['categories'] if c.get('id')]
     except:
-        raven_client.captureException()
+        capture_exception()
         return []
 
 
@@ -685,7 +685,7 @@ class OrderListQuery(object):
             else:
                 r.raise_for_status()
         except:
-            raven_client.captureException()
+            capture_exception()
             return []
 
     def count(self, attempts=1):
@@ -712,7 +712,7 @@ class OrderListQuery(object):
                 if attempts > 0:
                     continue
 
-                raven_client.captureException()
+                capture_exception()
                 return 0
 
     def update_params(self, update):

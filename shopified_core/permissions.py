@@ -11,7 +11,7 @@ from gearbubble_core.models import GearBubbleStore
 from groovekart_core.models import GrooveKartStore
 from bigcommerce_core.models import BigCommerceStore
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_message
 
 
 def get_object_user(obj):
@@ -266,7 +266,7 @@ def can_add_product(user, ignore_daily_limit=False):
 
         if day_count + 1 > profile.get_config_value('_daily_products_limit', 2000):
             if day_count % 10 == 0 and day_count <= 3000:
-                raven_client.captureMessage('Daily limit reached', extra={'user': user.email, 'day_count': day_count})
+                capture_message('Daily limit reached', extra={'user': user.email, 'day_count': day_count})
 
             can_add = False
 

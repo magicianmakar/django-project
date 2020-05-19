@@ -1,4 +1,4 @@
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from app.celery_base import celery_app, CaptureFailure
 from shopified_core.utils import hash_url_filename
@@ -26,7 +26,7 @@ def generate_mockup(self, store_type, store_id, sku, variant_id, uploaded_images
         })
 
     except:
-        raven_client.captureException()
+        capture_exception()
         store.pusher_trigger('prints-mockup', {
             'sku': sku,
             'success': False,

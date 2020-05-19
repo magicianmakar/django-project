@@ -3,7 +3,7 @@ import requests
 from tempfile import mktemp
 from zipfile import ZipFile
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 from pusher import Pusher
 
 from django.contrib.auth import get_user_model
@@ -34,18 +34,15 @@ def product_save(req_data, user_id):
     User = get_user_model()
     store = req_data.get('store')
     data = req_data['data']
-    product_data = req_data.get('product')
     user = User.objects.get(id=user_id)
-    from_extension = 'access_token' in req_data
-    extra_context = {'store': store, 'product': product_data, 'from_extension': from_extension}
-    raven_client.extra_context(extra_context)
+    # raven_client.extra_context({'store': store, 'product': req_data.get('product'), 'from_extension': ('access_token' in req_data)})
 
     if store:
         try:
             store = GearBubbleStore.objects.get(id=store)
             permissions.user_can_view(user, store)
         except (GearBubbleStore.DoesNotExist, ValueError):
-            raven_client.captureException()
+            capture_exception()
             return {'error': 'Selected store (%s) not found' % (store)}
         except PermissionDenied as e:
             return {'error': "Store: {}".format(str(e))}
@@ -59,7 +56,7 @@ def product_save(req_data, user_id):
     try:
         import_store = utils.get_domain(original_url)
     except:
-        raven_client.captureException(extra={'original_url': original_url})
+        capture_exception(extra={'original_url': original_url})
 
         return {'error': 'Original URL is not set.'}
 
@@ -78,10 +75,10 @@ def product_save(req_data, user_id):
             product = GearBubbleProduct.objects.get(id=req_data['product'])
             permissions.user_can_edit(user, product)
         except GearBubbleProduct.DoesNotExist:
-            raven_client.captureException()
+            capture_exception()
             return {'error': "Product {} does not exist".format(req_data['product'])}
         except PermissionDenied as e:
-            raven_client.captureException()
+            capture_exception()
             return {'error': "Product: {}".format(str(e))}
 
         product.update_data(data)
@@ -117,7 +114,7 @@ def product_save(req_data, user_id):
             product.set_default_supplier(supplier, commit=True)
 
         except PermissionDenied as e:
-            raven_client.captureException()
+            capture_exception()
             return {
                 'error': "Add Product: {}".format(str(e))
             }
@@ -165,7 +162,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
     except Exception as e:
         response = e.response.text if hasattr(e, 'response') else ''
-        raven_client.captureException(extra={'response': response})
+        capture_exception(extra={'response': response})
         pusher_data['error'] = format_gear_errors(e)
 
         return store.pusher_trigger('product-export', pusher_data)
@@ -198,7 +195,7 @@ def product_update(product_id, data):
 
     except Exception as e:
         response = e.response.text if hasattr(e, 'response') else ''
-        raven_client.captureException(extra={'response': response})
+        capture_exception(extra={'response': response})
         pusher_data['error'] = format_gear_errors(e)
 
         return store.pusher_trigger('product-update', pusher_data)
@@ -230,7 +227,7 @@ def create_image_zip(self, images, product_id):
             'url': url
         })
     except Exception:
-        raven_client.captureException()
+        capture_exception()
 
         product.store.pusher_trigger('images-download', {
             'success': False,
@@ -266,7 +263,7 @@ def calculate_user_statistics(self, user_id):
         pusher.trigger("user_{}".format(user_id), 'gear-user-statistics-calculated', {'task': self.request.id})
 
     except:
-        raven_client.captureException()
+        capture_exception()
 
 
 @celery_app.task(base=CaptureFailure, bind=True)
@@ -288,7 +285,7 @@ def order_save_changes(self, data):
         })
 
     except Exception as e:
-        raven_client.captureException(extra=utils.http_exception_response(e))
+        capture_exception(extra=utils.http_exception_response(e))
 
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)

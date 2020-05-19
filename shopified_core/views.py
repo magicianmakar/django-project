@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.views.generic import View
 
 import requests
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from .mixins import ApiResponseMixin
 from .exceptions import ApiLoginException
@@ -50,7 +50,7 @@ class ShopifiedApiBase(ApiResponseMixin, View):
             # Check if HTTP request method is supported
             if request.method.upper() not in self.http_method_names:
                 if request.method != 'OPTIONS':
-                    raven_client.captureMessage('Unsupported Request Method', extra={'method': request.method})
+                    capture_message('Unsupported Request Method', extra={'method': request.method})
 
                 return self.http_method_not_allowed(request, *args, **kwargs)
 
@@ -69,7 +69,7 @@ class ShopifiedApiBase(ApiResponseMixin, View):
             return self.api_error('Permission Denied: %s' % reason, status=403)
 
         except requests.Timeout:
-            raven_client.captureException()
+            capture_exception()
             return self.api_error('API Request Timeout', status=501)
 
         except ApiLoginException as e:
@@ -79,6 +79,6 @@ class ShopifiedApiBase(ApiResponseMixin, View):
             if settings.DEBUG:
                 traceback.print_exc()
 
-            raven_client.captureException()
+            capture_exception()
 
             return self.api_error('Internal Server Error')

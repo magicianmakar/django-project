@@ -13,7 +13,7 @@ from django.db.models.query_utils import Q
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core.utils import app_link, send_email_from_template, clean_query_id
 from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment
@@ -50,11 +50,7 @@ class ShopifyOrderExport():
 
         self.order_export.save()
 
-        raven_client.user_context({
-            'id': self.store.user.id,
-            'username': self.store.user.username,
-            'email': self.store.user.email
-        })
+        # raven_client.user_context({'id': self.store.user.id, 'username': self.store.user.username, 'email': self.store.user.email})
 
     def _get_response_from_url(self, url, params=None):
         request_url = self.store.api(url)
@@ -192,7 +188,7 @@ class ShopifyOrderExport():
             log.csv_url = url
 
         except Exception:
-            raven_client.captureException()
+            capture_exception()
 
             log.successful = False
             log.finished_by = timezone.now()
@@ -232,7 +228,7 @@ class ShopifyOrderExport():
             log.save()
 
         except Exception:
-            raven_client.captureException()
+            capture_exception()
             log.finished_by = timezone.now()
             log.save()
 

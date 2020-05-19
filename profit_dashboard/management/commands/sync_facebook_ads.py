@@ -3,7 +3,7 @@ from datetime import date
 from django.utils import timezone
 from django.db.models import Q
 from tqdm import tqdm
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 from facebook_business.exceptions import FacebookRequestError
 
 from shopified_core.management import DropifiedBaseCommand
@@ -22,7 +22,7 @@ def attach_account(account, stdout=None):
 
     except FacebookRequestError as e:
         if e.api_error_code() == 17:  # (#17) User request limit reached
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
             stdout.write('Facebook API limit')
 
         elif e.api_error_code() == 190:  # (#190) Error validating access token
@@ -30,16 +30,16 @@ def attach_account(account, stdout=None):
             facebook_access.expires_in = None
             facebook_access.save()
 
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
             stdout.write('Facebook Invalid Token')
 
         else:
-            raven_client.captureException()
+            capture_exception()
 
         stdout.write(' * API Call error: {}'.format(repr(e)))
 
     except Exception as e:
-        raven_client.captureException()
+        capture_exception()
         stdout.write(' * Error: {}'.format(repr(e)))
 
 

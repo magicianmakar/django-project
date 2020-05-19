@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.core.exceptions import PermissionDenied
 
 import requests
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
@@ -119,7 +119,7 @@ class CHQStoreApi(ApiBase):
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id)
                 product.user_supplement_id = user_supplement
             except:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
                 return self.api_error('Product supplier is not correct', status=500)
 
         elif 'click.aliexpress.com' in original_link.lower():
@@ -290,7 +290,7 @@ class CHQStoreApi(ApiBase):
 
             permissions.user_can_view(user, store)
         except CommerceHQStore.DoesNotExist:
-            raven_client.captureException()
+            capture_exception()
             return self.api_error('Store {} not found'.format(data.get('store')), status=404)
 
         # Mark Order as Ordered
@@ -303,7 +303,7 @@ class CHQStoreApi(ApiBase):
             source_id.encode('ascii')
 
         except AssertionError as e:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
 
             return self.api_error(str(e), status=501)
 
@@ -483,7 +483,7 @@ class CHQStoreApi(ApiBase):
 
                 subscribe_user_to_default_plan(user)
             else:
-                raven_client.captureMessage(
+                capture_message(
                     'Add Extra CHQ Store',
                     level='warning',
                     extra={
@@ -716,7 +716,7 @@ class CHQStoreApi(ApiBase):
             try:
                 rep.raise_for_status()
             except:
-                raven_client.captureException(
+                capture_exception(
                     level='warning',
                     extra={'response': rep.text})
 
@@ -770,7 +770,7 @@ class CHQStoreApi(ApiBase):
                 supplier_url = rep.headers.get('location')
 
                 if '/deep_link.htm' in supplier_url:
-                    raven_client.captureMessage(
+                    capture_message(
                         'Deep link in redirection',
                         level='warning',
                         extra={
@@ -783,7 +783,7 @@ class CHQStoreApi(ApiBase):
                 user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)
             except:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
                 return self.api_error('Product supplier is not correct', status=422)
 
         supplier_url = remove_link_query(supplier_url)

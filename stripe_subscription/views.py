@@ -6,7 +6,7 @@ from django.urls import reverse
 
 import arrow
 import simplejson as json
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core.utils import app_link
 from leadgalaxy.models import GroupPlan
@@ -48,14 +48,14 @@ def customer_source(request):
             user.save()
 
     except stripe.error.CardError as e:
-        raven_client.captureException()
+        capture_exception()
 
         return JsonResponse({
             'error': 'Credit Card Error: {}'.format(str(e))
         }, status=500)
 
     except:
-        raven_client.captureException()
+        capture_exception()
 
         return JsonResponse({
             'error': 'Credit Card Error, Please try again'
@@ -163,7 +163,7 @@ def subscription_plan(request):
                 sub.save()
 
             except (SubscriptionException, stripe.error.CardError, stripe.error.InvalidRequestError) as e:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
                 msg = 'Subscription Error: {}'.format(str(e))
                 if 'This customer has no attached payment source' in str(e):
                     msg = 'Please add your billing information first'
@@ -171,7 +171,7 @@ def subscription_plan(request):
                 return JsonResponse({'error': msg}, status=500)
 
             except:
-                raven_client.captureException()
+                capture_exception()
                 return JsonResponse({'error': 'Server Error'}, status=500)
 
             profile = user.profile
@@ -197,7 +197,7 @@ def subscription_plan(request):
             update_subscription(user, plan, sub)
 
         except (SubscriptionException, stripe.error.CardError, stripe.error.InvalidRequestError) as e:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
             msg = 'Subscription Error: {}'.format(str(e))
             if 'This customer has no attached payment source' in str(e):
                 msg = 'Please add your billing information first'
@@ -205,12 +205,12 @@ def subscription_plan(request):
             return JsonResponse({'error': msg}, status=500)
 
         except:
-            raven_client.captureException()
+            capture_exception()
             return JsonResponse({'error': 'Server Error'}, status=500)
 
         if not user.stripe_customer.can_trial:
             try:
-                subscription_end_trial(user, raven_client, delete_on_error=True)
+                subscription_end_trial(user, delete_on_error=True)
 
             except SubscriptionException as e:
                 StripeSubscription.objects.filter(subscription_id=sub.id).delete()
@@ -218,7 +218,7 @@ def subscription_plan(request):
                 return JsonResponse({'error': str(e)}, status=500)
 
             except:
-                raven_client.captureException()
+                capture_exception()
                 return JsonResponse({'error': 'Server Error'}, status=500)
 
         profile = user.profile
@@ -293,25 +293,25 @@ def clippingmagic_subscription(request):
             )
 
     except ClippingMagicPlan.DoesNotExist:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Selected Credit not found'
         }, status=500)
 
     except stripe.error.CardError as e:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Credit Card Error: {}'.format(str(e))
         }, status=500)
 
     except stripe.error.InvalidRequestError as e:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
         return JsonResponse({'error': 'Invoice payment error: {}'.format(str(e))}, status=500)
 
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Credit Card Error, Please try again'
@@ -385,25 +385,25 @@ def captchacredit_subscription(request):
             )
 
     except CaptchaCreditPlan.DoesNotExist:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Selected Credit not found'
         }, status=500)
 
     except stripe.error.CardError as e:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Credit Card Error: {}'.format(str(e))
         }, status=500)
 
     except stripe.error.InvalidRequestError as e:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
         return JsonResponse({'error': 'Invoice payment error: {}'.format(str(e))}, status=500)
 
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Credit Card Error, Please try again'
@@ -473,15 +473,15 @@ def invoice_pay(request, invoice_id):
             refresh_invoice_cache(request.user.stripe_customer)
 
         except stripe.error.CardError as e:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
             return JsonResponse({'error': 'Invoice payment error: {}'.format(str(e))}, status=500)
 
         except stripe.error.InvalidRequestError as e:
-            raven_client.captureException(level='warning')
+            capture_exception(level='warning')
             return JsonResponse({'error': 'Invoice payment error: {}'.format(str(e))}, status=500)
 
         except:
-            raven_client.captureException()
+            capture_exception()
             return JsonResponse({'error': 'Invoice was not paid, please try again.'}, status=500)
 
         else:
@@ -545,25 +545,25 @@ def callflexcredit_subscription(request):
         callflexcredit.save()
 
     except CallflexCreditsPlan.DoesNotExist:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Selected Credit not found'
         }, status=500)
 
     except stripe.CardError as e:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Credit Card Error: {}'.format(e.message)
         }, status=500)
 
     except stripe.InvalidRequestError as e:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
         return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
 
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Credit Card Error, Please try again'
@@ -658,24 +658,24 @@ def callflex_subscription(request):
         custom_stripe_subscription.save()
 
     except CustomStripePlan.DoesNotExist:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Selected Credit not found'
         }, status=500)
 
     except stripe.error.CardError as e:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Credit Card Error: {}'.format(e.message)
         }, status=500)
 
     except stripe.error.InvalidRequestError:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
         return JsonResponse({'error': 'Invoice payment error. Please check your CC data. '}, status=500)
     except Exception as e:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
         return JsonResponse({
             'error': 'Error occurred {}'.format(e.message)
@@ -694,7 +694,7 @@ def custom_subscription_cancel(request):
         custom_subscription.safe_delete()
 
     except stripe.error.InvalidRequestError as e:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
         return JsonResponse({'error': 'Invoice payment error: {}'.format(e.message)}, status=500)
 
     return JsonResponse({'status': 'ok'})

@@ -1,4 +1,4 @@
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 from django.db.models import Sum
 from phone_automation import billing_utils as billing
 from shopified_core.management import DropifiedBaseCommand
@@ -59,7 +59,7 @@ class Command(DropifiedBaseCommand):
                 else:
                     overages.update_overages()
             except:
-                raven_client.captureException()
+                capture_exception()
 
         # Process users who have unpaid shopify usage
         unpaid_usage_charges = CallflexShopifyUsageCharge.objects
@@ -76,7 +76,7 @@ class Command(DropifiedBaseCommand):
                     unpaid_usage_charge.status = "paid"
                     unpaid_usage_charge.save()
             except:
-                raven_client.captureException()
+                capture_exception()
         # count how many unpaid usage charges are in queue
         unpaid_usage_charges_user = unpaid_usage_charges.filter(status='not_paid').values('user').\
             order_by('user').annotate(total_amount=Sum('amount'))

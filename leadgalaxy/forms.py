@@ -12,7 +12,7 @@ from django.conf import settings
 from .models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission, SubuserBigCommercePermission
 from shopified_core.utils import login_attempts_exceeded, unlock_account_email, unique_username, send_email_from_template
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 
 class BsErrorList(ErrorList):
@@ -68,7 +68,7 @@ class RegisterForm(forms.ModelForm):
         except AssertionError as e:
             raise forms.ValidationError(str(e))
         except Exception:
-            raven_client.captureException()
+            capture_exception()
             raise forms.ValidationError('Username is already registred to an other account.')
 
         raise forms.ValidationError('Username is already registred to an other account.')
@@ -214,15 +214,14 @@ class EmailAuthenticationForm(AuthenticationForm):
 
             validate_email(username)
         except:
-            raven_client.captureException()
+            capture_exception()
             raise
 
         if login_attempts_exceeded(username):
             unlock_email = unlock_account_email(username)
 
-            raven_client.captureMessage('Maximum login attempts reached',
-                                        extra={'username': username, 'from': 'WebApp', 'unlock_email': unlock_email},
-                                        level='warning')
+            capture_message('Maximum login attempts reached',
+                            extra={'username': username, 'from': 'WebApp', 'unlock_email': unlock_email}, level='warning')
 
             raise ValidationError(
                 "You have reached the maximum login attempts. Please try again later.",
@@ -250,7 +249,7 @@ class EmailAuthenticationForm(AuthenticationForm):
             if len(paid_plan_users) == 1:
                 return paid_plan_users.pop().username
             else:
-                raven_client.captureException()
+                capture_exception()
 
                 send_email_from_template(
                     tpl='login_duplicate.html',
@@ -268,7 +267,7 @@ class EmailAuthenticationForm(AuthenticationForm):
                 )
 
         except:
-            raven_client.captureException()
+            capture_exception()
 
             raise ValidationError(
                 self.error_messages['invalid_login'],

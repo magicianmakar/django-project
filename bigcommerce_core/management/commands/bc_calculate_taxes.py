@@ -4,7 +4,7 @@ from io import StringIO
 from datetime import datetime
 
 import arrow
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from django.conf import settings
 from django.core.mail import EmailMessage
@@ -86,7 +86,7 @@ class Command(DropifiedBaseCommand):
                         totals['total_revenue'] += monthly_revenue
                         totals['total_revenue_share'] += monthly_revenue_share
             except:
-                raven_client.captureException()
+                capture_exception()
 
         email_data = {
             'bc_app_id': settings.BIGCOMMERCE_APP_ID,

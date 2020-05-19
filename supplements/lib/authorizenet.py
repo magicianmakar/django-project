@@ -10,7 +10,7 @@ from authorizenet.apicontrollers import (
     getCustomerPaymentProfileController
 )
 from authorizenet.constants import constants
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_message
 
 
 def to_price(price):
@@ -105,7 +105,7 @@ def create_payment_profile(payment_data, customer_profile_id):
         return (response.customerPaymentProfileId, error)
 
     error = message = response.messages.message[0]['text']
-    raven_client.captureMessage(message, level='warning')
+    capture_message(message, level='warning')
     return ('', error)
 
 

@@ -12,7 +12,7 @@ from django.db import transaction
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
@@ -87,7 +87,7 @@ class GrooveKartApi(ApiBase):
 
                 subscribe_user_to_default_plan(user)
             else:
-                raven_client.captureMessage(
+                capture_message(
                     'Add Extra GrooveKart Store',
                     level='warning',
                     extra={
@@ -399,7 +399,7 @@ class GrooveKartApi(ApiBase):
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)
                 product.user_supplement_id = user_supplement
             except:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
                 return self.api_error('Product supplier is not correct', status=422)
 
         elif 'click.aliexpress.com' in original_link.lower():
@@ -528,7 +528,7 @@ class GrooveKartApi(ApiBase):
             r = store.request.post(api_url, json=fulfillment)
             r.raise_for_status()
         except Exception:
-            raven_client.captureException(level='warning', extra={'response': r.text})
+            capture_exception(level='warning', extra={'response': r.text})
             return self.api_error('GrooveKart API Error')
 
         return self.api_success()
@@ -573,7 +573,7 @@ class GrooveKartApi(ApiBase):
                 supplier_url = rep.headers.get('location')
 
                 if '/deep_link.htm' in supplier_url:
-                    raven_client.captureMessage(
+                    capture_message(
                         'Deep link in redirection',
                         level='warning',
                         extra={
@@ -588,7 +588,7 @@ class GrooveKartApi(ApiBase):
                 user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id)
             except:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
                 return self.api_error('Product supplier is not correct', status=422)
 
         product = GrooveKartProduct(
@@ -634,7 +634,7 @@ class GrooveKartApi(ApiBase):
         try:
             store = GrooveKartStore.objects.get(id=safe_int(data.get('store')))
         except GrooveKartStore.DoesNotExist:
-            raven_client.captureException()
+            capture_exception()
             return self.api_error('Store {} not found'.format(data.get('store')), status=404)
 
         if not user.can('place_orders.sub', store):
@@ -653,7 +653,7 @@ class GrooveKartApi(ApiBase):
             assert len(source_id) > 0, 'Empty Order ID'
             source_id.encode('ascii')
         except AssertionError as e:
-            raven_client.captureMessage('Invalid supplier order ID')
+            capture_message('Invalid supplier order ID')
             return self.api_error(str(e), status=501)
         except UnicodeEncodeError:
             return self.api_error('Order ID is invalid', status=501)

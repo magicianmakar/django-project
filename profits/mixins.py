@@ -8,7 +8,7 @@ from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from shopified_core.utils import safe_int
 from shopified_core.paginators import SimplePaginator
@@ -121,6 +121,6 @@ class ProfitDashboardMixin():
 
         except:
             context['api_error'] = 'API Error'
-            raven_client.captureException()
+            capture_exception()
 
         return context

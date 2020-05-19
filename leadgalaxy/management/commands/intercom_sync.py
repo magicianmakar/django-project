@@ -5,7 +5,7 @@ from leadgalaxy.models import UserProfile
 
 import arrow
 import requests
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 
 class Command(DropifiedBaseCommand):
@@ -33,7 +33,7 @@ class Command(DropifiedBaseCommand):
             except KeyboardInterrupt:
                 break
             except:
-                raven_client.captureException()
+                capture_exception()
 
     def update_user(self, profile):
         user = profile.user
@@ -73,4 +73,4 @@ class Command(DropifiedBaseCommand):
                 json=data)
             r.raise_for_status()
         except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as e:
-            raven_client.captureException(e)
+            capture_exception(e)

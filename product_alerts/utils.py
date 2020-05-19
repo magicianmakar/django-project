@@ -1,7 +1,7 @@
 import re
 
 from django.conf import settings
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 import requests
 from munch import Munch
@@ -174,7 +174,7 @@ def monitor_product(product, stdout=None):
         product.save()
 
     except Exception as e:
-        raven_client.captureException()
+        capture_exception()
 
         if stdout:
             if not rep:

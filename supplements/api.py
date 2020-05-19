@@ -8,7 +8,7 @@ from django.utils.crypto import get_random_string
 from django.views.generic import View
 
 from pdfrw import PdfWriter
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from leadgalaxy.utils import aws_s3_upload
 from shopified_core.mixins import ApiResponseMixin
@@ -82,7 +82,7 @@ class SupplementsApi(ApiResponseMixin, View):
                 )
             except Exception:
                 error += len(order_line_items)
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
             else:
                 shipstation_data = prepare_shipstation_data(pls_order,
                                                             order,
@@ -104,7 +104,7 @@ class SupplementsApi(ApiResponseMixin, View):
                         api_result = StoreApi.post_order_fulfill(request, user, data)
                         if api_result.status_code != 200:
                             error += 1
-                            raven_client.captureMessage('Unable to track supplement', extra={
+                            capture_message('Unable to track supplement', extra={
                                 'api_result': json.loads(api_result.content.decode("utf-8")),
                                 'api_data': data
                             }, level='warning')

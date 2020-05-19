@@ -17,7 +17,7 @@ import texttable
 import simplejson as json
 from munch import Munch
 
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception, capture_message
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
@@ -173,7 +173,7 @@ def webhook(request, provider, option):
                 'payer_id': request.POST['payer_id'],
             }
         except Exception:
-            raven_client.captureException()
+            capture_exception()
 
             send_mail(subject='Dropified: Webhook exception',
                       recipient_list=['chase@dropified.com', 'ma7dev@gmail.com'],
@@ -225,7 +225,7 @@ def webhook(request, provider, option):
                 return HttpResponse('ok')
 
             except Exception:
-                raven_client.captureException()
+                capture_exception()
 
                 send_mail(subject='Dropified: Webhook Cancel/Refund exception',
                           recipient_list=['chase@dropified.com', 'ma7dev@gmail.com'],
@@ -295,8 +295,7 @@ def webhook(request, provider, option):
                     expire = request.GET.get('expire')
                     if expire:
                         if expire != '1y':
-                            raven_client.captureMessage('Unsupported Expire format',
-                                                        extra={'expire': expire})
+                            capture_message('Unsupported Expire format', extra={'expire': expire})
 
                         expire_date = timezone.now() + timezone.timedelta(days=365)
                         data['expire_date'] = expire_date.isoformat()
@@ -313,7 +312,7 @@ def webhook(request, provider, option):
                     except User.DoesNotExist:
                         user = None
                     except Exception:
-                        raven_client.captureException()
+                        capture_exception()
                         user = None
 
                     if user:
@@ -366,11 +365,9 @@ def webhook(request, provider, option):
                     tags['sale_type'] = 'Bundle'
                     tags['sale_title'] = bundle.title
 
-                raven_client.captureMessage('JVZoo New Purchase',
-                                            extra={'name': data['fullname'], 'email': data['email'],
-                                                   'trans_type': trans_type, 'payment': payment.id},
-                                            tags=tags,
-                                            level='info')
+                capture_message('JVZoo New Purchase',
+                                extra={'name': data['fullname'], 'email': data['email'], 'trans_type': trans_type, 'payment': payment.id},
+                                tags=tags, level='info')
 
                 return JsonResponse({'status': 'ok'})
 
@@ -422,16 +419,14 @@ def webhook(request, provider, option):
                 payment.save()
 
                 if new_refund:
-                    raven_client.captureMessage('JVZoo User Cancel/Refund',
-                                                extra={'name': data['fullname'], 'email': data['email'],
-                                                       'trans_type': trans_type, 'payment': payment.id},
-                                                tags={'trans_type': trans_type},
-                                                level='info')
+                    capture_message('JVZoo User Cancel/Refund',
+                                    extra={'name': data['fullname'], 'email': data['email'], 'trans_type': trans_type, 'payment': payment.id},
+                                    tags={'trans_type': trans_type}, level='info')
 
                 return JsonResponse({'status': 'ok'})
 
         except Exception:
-            raven_client.captureException()
+            capture_exception()
             return JsonResponse({'error': 'Server Error'}, status=500)
 
         return JsonResponse({'status': 'ok', 'warning': 'Unknown'})
@@ -492,8 +487,7 @@ def webhook(request, provider, option):
                 expire = request.GET.get('expire')
                 if expire:
                     if expire != '1y':
-                        raven_client.captureMessage('Unsupported Expire format',
-                                                    extra={'expire': expire})
+                        capture_message('Unsupported Expire format', extra={'expire': expire})
 
                     expire_date = timezone.now() + timezone.timedelta(days=365)
                     data['expire_date'] = expire_date.isoformat()
@@ -510,7 +504,7 @@ def webhook(request, provider, option):
                 except User.DoesNotExist:
                     user = None
                 except Exception:
-                    raven_client.captureException()
+                    capture_exception()
                     user = None
 
                 if user:
@@ -563,11 +557,9 @@ def webhook(request, provider, option):
                 tags['sale_type'] = 'Bundle'
                 tags['sale_title'] = bundle.title
 
-            raven_client.captureMessage('Zaxaa New Purchase',
-                                        extra={'name': data['fullname'], 'email': data['email'],
-                                               'trans_type': trans_type, 'payment': payment.id},
-                                        tags=tags,
-                                        level='info')
+            capture_message('Zaxaa New Purchase',
+                            extra={'name': data['fullname'], 'email': data['email'], 'trans_type': trans_type, 'payment': payment.id},
+                            tags=tags, level='info')
 
             return JsonResponse({'status': 'ok'})
 
@@ -621,11 +613,10 @@ def webhook(request, provider, option):
             payment.save()
 
             if new_refund:
-                raven_client.captureMessage('Zaxaa User Cancel/Refund',
-                                            extra={'name': data['fullname'], 'email': data['email'],
-                                                   'trans_type': trans_type, 'payment': payment.id},
-                                            tags={'trans_type': trans_type},
-                                            level='info')
+                capture_message('Zaxaa User Cancel/Refund',
+                                extra={'name': data['fullname'], 'email': data['email'], 'trans_type': trans_type, 'payment': payment.id},
+                                tags={'trans_type': trans_type},
+                                level='info')
 
         return HttpResponse('ok')
 
@@ -659,8 +650,7 @@ def webhook(request, provider, option):
             elif 'shop' in topic or 'app' in topic:
                 shop_data = json.loads(request.body)
             else:
-                raven_client.captureMessage('Non-handled Shopify Topic',
-                                            extra={'topic': topic, 'store': store})
+                capture_message('Non-handled Shopify Topic', extra={'topic': topic, 'store': store})
 
                 return JsonResponse({'status': 'ok', 'warning': 'Non-handled Topic'})
 
@@ -767,7 +757,7 @@ def webhook(request, provider, option):
             else:
                 raise Exception('WEBHOOK: options not found: {}'.format(topic))
         except:
-            raven_client.captureException()
+            capture_exception()
 
             return JsonResponse({'status': 'ok', 'warning': 'Processing exception'})
 
@@ -778,7 +768,7 @@ def webhook(request, provider, option):
                 try:
                     utils.verify_shopify_webhook(store, request)
                 except:
-                    raven_client.captureException(level='warning')
+                    capture_exception(level='warning')
                     continue
 
                 topic = option.replace('-', '/')
@@ -813,12 +803,12 @@ def webhook(request, provider, option):
                         store.save()
 
                 else:
-                    raven_client.captureMessage('Shopify GDPR Topic', level='warning', extra={'topic': topic})
+                    capture_message('Shopify GDPR Topic', level='warning', extra={'topic': topic})
                     return HttpResponse('ok')
 
             return HttpResponse('ok')
         except:
-            raven_client.captureException()
+            capture_exception()
 
             return JsonResponse({'status': 'ok', 'warning': 'Processing exception'}, status=500)
 
@@ -828,12 +818,9 @@ def webhook(request, provider, option):
         event = json.loads(request.body)
 
         try:
-            return process_webhook_event(request, event['id'], raven_client)
+            return process_webhook_event(request, event['id'])
         except:
-            if settings.DEBUG:
-                traceback.print_exc()
-
-            raven_client.captureException()
+            capture_exception()
             return HttpResponse('Server Error', status=500)
 
     elif provider in ['instapage', 'instantpage'] and option == 'register':
@@ -849,7 +836,7 @@ def webhook(request, provider, option):
             user, created = utils.register_new_user(email, fullname, intercom_attributes=intercom_attrs)
 
             if created:
-                raven_client.captureMessage(
+                capture_message(
                     'InstaPage Registration',
                     level='warning',
                     extra={
@@ -860,7 +847,7 @@ def webhook(request, provider, option):
 
                 return HttpResponse('ok')
             else:
-                raven_client.captureMessage('InstaPage registration email exists', extra={
+                capture_message('InstaPage registration email exists', extra={
                     'name': fullname,
                     'email': email,
                     'exists': User.objects.filter(email__iexact=email).exists()
@@ -869,7 +856,7 @@ def webhook(request, provider, option):
                 return HttpResponse('Email is already registed to an other user')
 
         except:
-            raven_client.captureException()
+            capture_exception()
 
     elif provider == 'clickfunnels' and option == 'register':
         try:
@@ -891,7 +878,7 @@ def webhook(request, provider, option):
             user, created = utils.register_new_user(email, fullname, intercom_attributes=intercom_attrs)
 
             if created:
-                raven_client.captureMessage(
+                capture_message(
                     'Clickfunnels Registration',
                     level='warning',
                     extra={
@@ -902,7 +889,7 @@ def webhook(request, provider, option):
 
                 return HttpResponse('ok')
             else:
-                raven_client.captureMessage('Clickfunnels registration email exists', extra={
+                capture_message('Clickfunnels registration email exists', extra={
                     'name': fullname,
                     'email': email,
                     'exists': User.objects.filter(email__iexact=email).exists()
@@ -911,7 +898,7 @@ def webhook(request, provider, option):
                 return HttpResponse('Email is already registed to an other user')
 
         except:
-            raven_client.captureException()
+            capture_exception()
 
     elif provider == 'clickfunnels' and option == 'checklogin':
         try:
@@ -928,7 +915,7 @@ def webhook(request, provider, option):
             else:
                 return HttpResponse({}, "text/javascript")
         except:
-            raven_client.captureException()
+            capture_exception()
             return HttpResponse({}, "text/javascript")
 
     elif provider == 'price-monitor' and request.method == 'POST':
@@ -1003,7 +990,7 @@ def webhook(request, provider, option):
         try:
             assert request_from, 'Slack Support Staff Check'
         except:
-            raven_client.captureException()
+            capture_exception()
             return HttpResponse(':octagonal_sign: _Dropified Support Staff Only (ID: {})_'.format(request.POST['user_id']))
 
         if request.POST['command'] == '/store-transfer':
@@ -1473,7 +1460,7 @@ def webhook(request, provider, option):
             return JsonResponse({'status': 'ok'})
 
     else:
-        raven_client.captureMessage('Unknown Webhook Provider')
+        capture_message('Unknown Webhook Provider')
         return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'}, status=500)
 
 
@@ -1623,7 +1610,7 @@ def products_list(request, tpl='grid'):
     try:
         assert not request.is_ajax(), 'AJAX Request Detected - Products List'
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
     products, paginator, page = get_product(**args)
 
@@ -2389,7 +2376,7 @@ def get_shipping_info(request):
         else:
             shippement_data = utils.aliexpress_shipping_info(item_id, country_code)
     except requests.Timeout:
-        raven_client.captureException()
+        capture_exception()
 
         if request.GET.get('type') == 'json':
             return JsonResponse({'error': 'Aliexpress Server Timeout'}, status=501)
@@ -3125,7 +3112,7 @@ def autocomplete(request, target):
             return JsonResponse({'error': 'Store not found'}, status=404)
 
         except PermissionDenied:
-            raven_client.captureException()
+            capture_exception()
             return JsonResponse({'error': 'Permission Denied'}, status=403)
 
         suppliers = ProductSupplier.objects.only('supplier_name') \
@@ -3162,7 +3149,7 @@ def autocomplete(request, target):
             return JsonResponse({'error': 'Store not found'}, status=404)
 
         except PermissionDenied:
-            raven_client.captureException()
+            capture_exception()
             return JsonResponse({'error': 'Permission Denied'}, status=403)
 
         shipping_methods = ShopifyOrderShippingLine.objects.only('title') \
@@ -3583,7 +3570,7 @@ def orders_view(request):
         return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, quote_plus(request.GET.urlencode())))
 
     except:
-        raven_client.captureException()
+        capture_exception()
 
     if not request.user.can('orders.use'):
         return render(request, 'upgrade.html', {'selected_menu': 'orders:all', })
@@ -4092,11 +4079,11 @@ def orders_view(request):
 
                 except json.JSONDecodeError:
                     api_error = 'Unexpected response content'
-                    raven_client.captureException()
+                    capture_exception()
 
                 except requests.exceptions.ConnectTimeout:
                     api_error = 'Connection Timeout'
-                    raven_client.captureException()
+                    capture_exception()
 
                 except requests.exceptions.HTTPError as e:
                     if e.response.status_code == 429:
@@ -4107,10 +4094,10 @@ def orders_view(request):
                         api_error = 'Your Shopify Store is not on a paid plan'
                     else:
                         api_error = 'Unknown Error {}'.format(e.response.status_code)
-                        raven_client.captureException()
+                        capture_exception()
                 except:
                     api_error = 'Unknown Error'
-                    raven_client.captureException()
+                    capture_exception()
 
                 if api_error:
                     cache.delete(cache_key)
@@ -4434,7 +4421,7 @@ def orders_view(request):
                     if settings.DEBUG:
                         traceback.print_exc()
 
-                    raven_client.captureException()
+                    capture_exception()
 
         order['mixed_supplier_types'] = len(order['supplier_types']) > 1
 
@@ -4512,7 +4499,7 @@ def orders_track(request):
     try:
         assert not request.is_ajax(), 'AJAX Request Detected - Orders Track'
     except:
-        raven_client.captureException(level='warning')
+        capture_exception(level='warning')
 
     visited_time = arrow.now().timestamp
     request.user.profile.set_config_value('orders_track_visited_at', visited_time)
@@ -4698,7 +4685,7 @@ def orders_place(request):
         return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, quote_plus(request.GET.urlencode())))
 
     except:
-        raven_client.captureException()
+        capture_exception()
 
     product = None
     supplier = None
@@ -4963,7 +4950,7 @@ def product_alerts(request):
             for p in products:
                 product_variants[str(p['id'])] = p['variants']
     except:
-        raven_client.captureException()
+        capture_exception()
 
     inventory_item_ids = []
     for i in changes:
@@ -5121,7 +5108,7 @@ def register(request, registration=None, subscribe_plan=None):
             try:
                 assert request.GET.get('l') and request.GET.get('l') in subscribe_plan.register_hash
             except:
-                raven_client.captureException(level='warning')
+                capture_exception(level='warning')
                 return HttpResponseRedirect(funnel_url)
 
         registration = None
@@ -5157,7 +5144,7 @@ def register(request, registration=None, subscribe_plan=None):
                         new_user.stripe_customer.save()
 
                 except:
-                    raven_client.captureException()
+                    capture_exception()
 
             elif registration is None or registration.get_usage_count() is None:
                 utils.apply_plan_registrations(form.cleaned_data['email'])
@@ -5204,7 +5191,7 @@ def register(request, registration=None, subscribe_plan=None):
                 reg_coupon = reg_coupon.metadata.msg
         except:
             reg_coupon = None
-            raven_client.captureException()
+            capture_exception()
 
         if not reg_coupon:
             raise Http404('Coupon Not Found')

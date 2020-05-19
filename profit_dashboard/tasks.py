@@ -1,4 +1,4 @@
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from app.celery_base import celery_app, CaptureFailure
 
@@ -20,7 +20,7 @@ def fetch_facebook_insights(self, store_id, facebook_access_ids):
             'success': True
         })
     except Exception:
-        raven_client.captureException()
+        capture_exception()
 
         store.pusher_trigger('facebook-insights', {
             'success': False,

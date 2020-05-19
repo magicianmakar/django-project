@@ -10,7 +10,7 @@ from django.views.generic import View
 from django.template.defaultfilters import slugify
 
 import arrow
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_message
 
 from leadgalaxy.api import ShopifyStoreApi
 from commercehq_core.api import CHQStoreApi
@@ -50,10 +50,10 @@ class ShopifiedApi(ApiResponseMixin, View):
         if core_utils.login_attempts_exceeded(email):
             unlock_email = core_utils.unlock_account_email(email)
 
-            raven_client.context.merge(raven_client.get_data_from_request(request))
-            raven_client.captureMessage('Maximum login attempts reached',
-                                        extra={'email': email, 'from': 'API', 'unlock_email': unlock_email},
-                                        level='warning')
+            # raven_client.context.merge(raven_client.get_data_from_request(request))
+            capture_message('Maximum login attempts reached',
+                            extra={'email': email, 'from': 'API', 'unlock_email': unlock_email},
+                            level='warning')
 
             return self.api_error('You have reached the maximum login attempts.\nPlease try again later.', status=403)
 

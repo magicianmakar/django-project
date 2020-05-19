@@ -11,7 +11,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
-from raven.contrib.django.raven_compat.models import client as raven_client
+from lib.exceptions import capture_exception
 
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
@@ -347,7 +347,7 @@ class GrooveKartProduct(ProductBase):
                 if attempts > 0:
                     continue
 
-                raven_client.captureException()
+                capture_exception()
                 raise
 
     def get_config(self):
