@@ -52,7 +52,7 @@ $(document).ready(function(){
             e.preventDefault();
             var fileUrl = form.image_data_url.value;
             if (action === 'approve') {
-                if (fileUrl === "" && labelUrl === undefined) {
+                if (fileUrl === "" && (labelUrl === undefined || labelUrl === "")) {
                     toastr.error('A PDF label is required to submit a product for approval');
                 } else {
                     swal({
