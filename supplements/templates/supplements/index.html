@@ -3,6 +3,10 @@
 {% block tab_content %}
 
 <div class="row">
+  {% include "supplements/partials/supplement_filter_form.html" %}
+</div>
+
+<div class="row">
   {% for supplement in supplements %}
   <div class="col-xs-12 col-md-3">
     {% include "supplements/partials/product.html" with item=supplement %}

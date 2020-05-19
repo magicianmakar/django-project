@@ -58,6 +58,7 @@ from .forms import (
     PayoutForm,
     PLSupplementEditForm,
     PLSupplementForm,
+    PLSupplementFilterForm,
     UploadJSONForm,
     UserSupplementForm,
     UserSupplementFilterForm
@@ -79,6 +80,21 @@ class Index(common_views.IndexView):
 
     def get_queryset(self):
         queryset = super().get_queryset()
+
+        form = PLSupplementFilterForm(self.request.GET)
+        if form.is_valid():
+            title = form.cleaned_data['title']
+            if title:
+                queryset = queryset.filter(title__icontains=title)
+
+            tags = form.cleaned_data['tags']
+            if tags:
+                queryset = queryset.filter(tags__iexact=tags)
+
+            product_type = form.cleaned_data['product_type']
+            if product_type:
+                queryset = queryset.filter(category__iexact=product_type)
+
         if not self.request.user.can('pls_admin.use') \
                 and not self.request.user.can('pls_staff.use'):
             return queryset.filter(is_active=True)
@@ -96,6 +112,7 @@ class Index(common_views.IndexView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context['supplements'] = context['products']
+        context['form'] = PLSupplementFilterForm(self.request.GET)
         return context
 
 

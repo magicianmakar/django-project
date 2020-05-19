@@ -117,6 +117,17 @@ class PLSupplementEditForm(PLSupplementForm):
         self.fields['thumbnail'].required = False
 
 
+class PLSupplementFilterForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['tags'].choices = [("", "Tagged with")] + list(PLSupplement.objects.values_list('tags', 'tags').distinct())
+        self.fields['product_type'].choices = [("", "Product Type")] + list(PLSupplement.objects.values_list('category', 'category').distinct())
+
+    title = forms.CharField(required=False)
+    tags = forms.ChoiceField(required=False, choices=[])
+    product_type = forms.ChoiceField(required=False, choices=[])
+
+
 class OrderFilterForm(forms.Form):
     STATUSES = [('', '---------')] + PLSOrder.STATUSES
 

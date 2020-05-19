@@ -203,6 +203,38 @@
   margin: 0 10px 0 0;
 }
 
+.customSelect {
+  position: relative;
+}
+
+.customSelect select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.customSelect:after {
+  content: '\f0d7';
+  top: 0;
+  height: 33px;
+  padding: 9px 0px 0px 15px;
+  border-left: 1px solid #e5e6e7;
+  position: absolute;
+  font-family: FontAwesome;
+  right: 18px;
+  cursor: pointer;
+  pointer-events: none;
+}
+
+/* adding bootstrap 3 media query */
+@media(min-width:992px) {
+  .padding-zero-left {
+    padding-left: 0px;
+  }
+  .padding-zero-right {
+    padding-right: 0px;
+  }
+}
+
 .delete-product-btn {
   position: absolute;
   top: 5px;
