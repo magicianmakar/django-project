@@ -1030,7 +1030,7 @@ class MyOrders(common_views.OrderView):
             'Order #',
             'Shipping Cost',
             'Supplement',
-            'Supplement URL'
+            'Supplement URL',
             'Quantity',
             'Cost (USD)',
         ])
