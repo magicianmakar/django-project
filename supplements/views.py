@@ -308,7 +308,8 @@ class LabelMixin:
                                   text=text,
                                   new_status=new_status,
                                   is_private=is_private)
-        send_email_against_comment(comment)
+        if not is_private:
+            send_email_against_comment(comment)
         return comment
 
     def add_barcode_to_label(self, label):
