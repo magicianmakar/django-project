@@ -44,7 +44,7 @@ class UtilTestCase(BaseTestCase):
 
         variants = get_supplier_variants('aliexpress', 32955059114)
 
-        self.assertEqual(len(variants), 15)
+        self.assertEqual(len(variants), 17)
 
         for v in variants:
             self.assertIn('sku', v)
