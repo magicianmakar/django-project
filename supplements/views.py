@@ -998,6 +998,15 @@ class OrderDetail(LoginRequiredMixin, View):
         return render(request, "supplements/order_detail.html", context)
 
 
+class MyOrderDetail(OrderDetail):
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+
 class MyOrders(common_views.OrderView):
     template_name = 'supplements/user_order_list.html'
     model = PLSOrder

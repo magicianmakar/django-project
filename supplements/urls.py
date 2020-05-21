@@ -54,7 +54,7 @@ urlpatterns = [
         name='order_detail'),
 
     url(r'^my/order/(?P<order_id>[0-9]+)$$',
-        supplements.views.OrderDetail.as_view(),
+        supplements.views.MyOrderDetail.as_view(),
         name='my_order_detail'),
 
     url(r'^payout/list$',
