@@ -13,6 +13,7 @@ class UserSupplementForm(forms.ModelForm):
                   'tags',
                   'price',
                   'compare_at_price',
+                  'label_presets',
                   ]
 
         widgets = {
@@ -23,12 +24,12 @@ class UserSupplementForm(forms.ModelForm):
     shipstation_sku = forms.CharField()
     shipping_countries = forms.CharField(required=False)
     action = forms.CharField(widget=forms.HiddenInput)
-    image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
     weight = forms.DecimalField()
     inventory = forms.IntegerField(required=False)
     msrp = forms.CharField(disabled=True, required=False)
+    label_presets = forms.CharField(widget=forms.HiddenInput, required=False)
 
 
 class UserSupplementFilterForm(forms.Form):
@@ -43,14 +44,17 @@ class CommentForm(forms.Form):
     comment = forms.CharField(widget=forms.Textarea, required=False)
     action = forms.CharField(widget=forms.HiddenInput)
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
-    image_data_url = forms.CharField(widget=forms.HiddenInput, required=False)
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
     is_private = forms.BooleanField(required=False)
+    label_presets = forms.CharField(widget=forms.HiddenInput, required=False)
+    # Placeholder field only used for validation
+    mockup_urls = forms.CharField(widget=forms.HiddenInput, required=False)
 
     def clean(self):
         comment = self.cleaned_data.get('comment')
         upload_url = self.cleaned_data.get('upload_url')
-        if not comment and not upload_url:
+        mockup_urls = self.cleaned_data.get('mockup_urls')
+        if not comment and not upload_url and not mockup_urls:
             raise forms.ValidationError('A comment or a new label is required.')
         return self.cleaned_data
 

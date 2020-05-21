@@ -55,7 +55,7 @@ function getPostExportPusherHandler(productId) {
                 pusher.unsubscribe(channel_hash);
 
                 if (data.success) {
-                    getCorrectRef(btn,'reset');
+                    getCorrectRef(btn, 'reset');
                     toastr.success("Product successfully exported", "Product Export");
                     $('#modal-send-to-store').find('.close').trigger('click');
                     redirectToMySupplements();
@@ -98,17 +98,17 @@ function sendToStore(storeType, storeId, publish) {
     });
 }
 
-function sendSampleLabelToStore (storeType, storeId, publish) {
+function sendSampleLabelToStore(storeType, storeId, publish) {
     var form = document.getElementById('user_supplement_form');
     form.action.value = 'preapproved';
     form.upload_url.value = $('#sample_label').attr('data-label-url');
     var url = $('#sample_label').attr('data-post-url');
     $.ajax({
-        url:  url,
+        url: url,
         data: $('form#user_supplement_form').serialize(),
-        type:  'post',
-        dataType:  'json',
-        success:  function (res) {
+        type: 'post',
+        dataType: 'json',
+        success: function(res) {
             window.apiData = JSON.parse(res.data);
             sendToStore(storeType, storeId, publish);
         },

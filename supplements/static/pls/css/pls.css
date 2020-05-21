@@ -1,3 +1,11 @@
+.loader {
+  background: url(/static/loader.gif) no-repeat center center;
+  z-index: 1;
+  width: 32px;
+  height: 32px;
+  margin: 8px 0 0 32px;
+}
+
 #canvas {
   display: none;
 }
@@ -225,16 +233,6 @@
   pointer-events: none;
 }
 
-/* adding bootstrap 3 media query */
-@media(min-width:992px) {
-  .padding-zero-left {
-    padding-left: 0px;
-  }
-  .padding-zero-right {
-    padding-right: 0px;
-  }
-}
-
 .delete-product-btn {
   position: absolute;
   top: 5px;
@@ -252,4 +250,190 @@
   width: fit-content;
   line-height: 2rem;
   cursor: pointer;
+}
+
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+.modal-preview {
+  border: 1px solid #bfc0c1;
+  /*display: flex;*/
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+}
+
+#mockup-editor .mockup-canvas {
+  position: absolute;
+  cursor: grab;
+}
+
+#mockup-editor .btn-group {
+  margin: 5px 0;
+  display: block;
+  float: left;
+  clear: left;
+}
+
+#mockup-editor .btn-group:last-child {
+  margin-bottom: 0;
+}
+
+#mockup-editor .btn-group.hidden {
+  margin: 0;
+}
+
+.img-select {
+  font-size: 0.8em;
+  text-align: left;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.img-select-opt {
+  cursor: pointer;
+}
+
+.previews {
+  text-align: center;
+  margin-left: -10px;
+}
+
+.preview-text {
+  text-align: center;
+}
+
+#mockup-editor {
+  display: flex;
+  justify-content: space-between;
+}
+
+#mockup-editor > div {
+  position: relative;
+}
+
+#mockup-editor .zoom-slider {
+  margin-top: 2px;
+  float: left;
+}
+
+#mockup-editor .ui-slider-vertical {
+  height: 394px;
+}
+
+#mockup-editor .ui-slider-vertical .ui-slider-handle {
+  margin-left: 2px;
+}
+
+#mockup-editor .canvas-group {
+  border: 1px solid #bfc0c1;
+  position: relative;
+  height: 400px;
+  width: 420px;
+  margin-left: 20px;
+  padding: 0px 10px;
+}
+
+#save-mockup {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
+
+.mockup-img {
+  width: 95%;
+  position: relative;
+  top: -17px;
+  cursor: pointer;
+  -webkit-user-drag: none;
+}
+
+.mockup-item {
+  height: 120px;
+  width: 120px;
+  border: 1px solid #bfc0c1;
+  margin: 10px 0 0 10px;
+  float: left;
+}
+
+.mockup-select {
+  position: relative;
+  left: 39px;
+  z-index: 1;
+}
+
+.mockup-save {
+  text-align: right;
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.mockup-save .progress {
+  display: none;
+  width: 100%;
+  margin: 8px 20px 0 0;
+}
+
+.mockup-save .progress-bar.clone {
+  display: none;
+}
+#modal-mockup-images .modal-content .sk-spinner {
+  display: none;
+  position: absolute;
+  top: 40%;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+}
+#modal-mockup-images .modal-content.loading .sk-spinner {
+  display: block;
+}
+
+#modal-mockup-images .modal-content.loading .modal-body:after {
+    content: '';
+    background-color: rgba(255, 255, 255, 0.7);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2000;
+}
+
+.flex {
+  display: flex;
+}
+
+#mockup-thumbnails {
+  margin: 0 0 15px;
+}
+
+#mockup-thumbnails:empty {
+  display: none;
+}
+
+#mockup-thumbnails:before {
+  content: "New Mockups:";
+}
+
+#mockup-thumbnails img {
+  max-width: 70px;
+  padding: 0 15px;
+}
+
+/* adding bootstrap 3 media query */
+@media(min-width:992px) {
+  .padding-zero-left {
+    padding-left: 0px;
+  }
+  .padding-zero-right {
+    padding-right: 0px;
+  }
 }

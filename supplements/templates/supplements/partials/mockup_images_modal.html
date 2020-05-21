@@ -1,0 +1,91 @@
+<input type="hidden" name="current_label" value="{{ label_url }}">
+
+<div id="modal-mockup-images" class="modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">{{ form.mockup_slug.value|title }} Mockups</h4>
+      </div>
+      <div class="modal-body">
+        <div class="sk-spinner sk-spinner-double-bounce">
+            <div class="sk-double-bounce1"></div>
+            <div class="sk-double-bounce2"></div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <p>Upload a new label will restart label reviewing process</p>
+            <div class="flex">
+              <input type="file" accept=".pdf" class="form-control" id="label">
+              {% if approved_label_url %}
+              <a id="approved-label-mockup" href="{{ approved_label_url }}" class="btn btn-success m-l">Use Sample Label</a>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="col-md-12">
+            <div id="mockup-editor" class="m-t hidden">
+              <div>
+                <div class="zoom-slider"></div>
+                <div class="canvas-group"></div>
+                <div class="btn-group btn-index hidden" role="group" aria-label="...">
+                </div>
+                <div class="btn-group btn-control hidden" role="group" aria-label="...">
+                  <button type="button" class="btn btn-success active" data-type="label">Label</button>
+                  <button type="button" class="btn btn-success" data-type="mockup">Mockup</button>
+                </div>
+                <button id="save-mockup" class="btn btn-primary hidden">Save Mockup</button>
+              </div>
+
+              <div style="width: 380px;">
+                <h4 class="text-left m-t-none">Select images to send to store</h4>
+                <div class="img-select">
+                  <span class="img-select-opt">SELECT ALL</span>
+                  <span>|</span>
+                  <span class="img-select-opt">SELECT NONE</span>
+                </div>
+                <div class="previews">
+                  <div class="mockup-item">
+                    <input type="checkbox" class="mockup-select" name="" value="">
+                    <img class="mockup-img" id="front_shadow_mockup" src="" alt="">
+                  </div>
+                  <div class="mockup-item">
+                    <input type="checkbox" class="mockup-select" name="" value="">
+                    <img class="mockup-img" id="front_mockup" src="" alt="">
+                  </div>
+                  <div class="mockup-item">
+                    <input type="checkbox" class="mockup-select" name="" value="">
+                    <img class="mockup-img" id="back_shadow_mockup" src="" alt="">
+                  </div>
+                  <div class="mockup-item">
+                    <input type="checkbox" class="mockup-select" name="" value="">
+                    <img class="mockup-img" id="back_mockup" src="" alt="">
+                  </div>
+                  <div class="mockup-item">
+                    <input type="checkbox" class="mockup-select" name="" value="">
+                    <img class="mockup-img" id="group_of_3" src="" alt="">
+                  </div>
+                  <div class="mockup-item">
+                    <input type="checkbox" class="mockup-select" name="" value="">
+                    <img class="mockup-img" id="group_of_5" src="" alt="">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div class="mockup-save">
+          <button id="save-mockups" class="btn btn-primary" disabled>Generate Selected Images</button>
+          <div class="progress-bar clone">
+            <span class="sr-only"></span>
+          </div>
+          <div class="progress mockup-save-progress">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

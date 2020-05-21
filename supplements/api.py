@@ -1,4 +1,3 @@
-import base64
 import json
 from io import BytesIO
 from decimal import Decimal
@@ -15,7 +14,7 @@ from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import get_store_api, safe_int
 from shopified_core import permissions
 
-from .lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
+from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import Payout, PLSOrder, UserSupplement
 from .utils.payment import Util, get_shipping_cost
@@ -192,22 +191,6 @@ class SupplementsApi(ApiResponseMixin, View):
         order.save()
 
         return self.api_success()
-
-    def post_ajaxify_label(self, request, user, data):
-        image_data = data['image_data_url']
-        mockup_type = data['mockup_slug']
-        label_image = data_url_to_pil_image(image_data)
-        bottle_mockup = get_mockup(label_image, mockup_type)
-        image_fp = pil_to_fp(bottle_mockup)
-        image_fp.seek(0)
-        image_fp.name = 'mockup.png'
-
-        img_data = image_fp.getvalue()
-        data = base64.b64encode(img_data)
-        image_data = data.decode()
-        data_url = f'data:image/jpeg;base64,{image_data}'
-
-        return self.api_success({'data_url': data_url})
 
     def post_calculate_shipping_cost(self, request, user, data):
         shipping_price = get_shipping_cost(data['country-code'], data.get('province-code'), data['total-weight'])

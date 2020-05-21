@@ -29,10 +29,11 @@ from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 
 from shopified_core import permissions
+from shopified_core.utils import aws_s3_context as images_aws_s3_context
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import app_link
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
-from supplements.lib.image import data_url_to_pil_image, get_mockup, get_order_number_label, pil_to_fp
+from supplements.lib.image import get_order_number_label
 from supplements.models import (
     AuthorizeNetCustomer,
     Payout,
@@ -277,24 +278,15 @@ class LabelMixin:
         new_label = user_supplement.labels.create(url=url)
 
         if user_supplement.current_label:
-            kwargs = {'label_id': user_supplement.current_label.id}
-            reverse_url = reverse('pls:label_detail', kwargs=kwargs)
-            comments = new_label.comments
+            reverse_url = reverse('pls:label_detail', kwargs={
+                'label_id': user_supplement.current_label.id
+            })
             comment = (f"There is an <a href='{reverse_url}'>"
                        f"older version</a> of this label.")
-            self.create_comment(comments, comment)
+            self.create_comment(new_label.comments, comment)
+
         user_supplement.current_label = new_label
         user_supplement.save()
-
-    def save_image(self, user, image, user_supplement):
-        upload_url = upload_supplement_object_to_aws(
-            user_supplement,
-            image,
-            image.name,
-        )
-
-        user_supplement.images.all().delete()
-        user_supplement.images.create(image_url=upload_url, position=0)
 
     def create_comment(self, comments, text, new_status='', is_private=False):
         tags = bleach.sanitizer.ALLOWED_TAGS + [
@@ -375,7 +367,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         )
 
         pls_images = ProductImage.objects.filter(
-            product_id=user_supplement.pl_supplement_id)
+            product_id=user_supplement.pl_supplement_id
+        )
 
         UserSupplementImage.objects.bulk_create([
             UserSupplementImage(position=i.position,
@@ -402,6 +395,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form_data['weight'] = supplement.weight
         form_data['inventory'] = supplement.inventory
         form_data['msrp'] = supplement.msrp
+        form_data['label_presets'] = json.dumps(supplement.mockup_type.get_label_presets())
 
         api_data = {}
         if supplement.is_approved:
@@ -421,6 +415,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             store_types=store_type_and_data['store_types'],
             product_information=supplement.product_information,
             authenticity_cert=supplement.authenticity_certificate_url,
+            mockup_layers=supplement.mockup_type.get_layers(),
         )
 
         if 'label_url' in form_data:
@@ -445,28 +440,26 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         if form.is_valid():
             new_user_supplement = self.save_supplement(form)
 
+            # Always use saved label URL for pre-approved labels
             upload_url = form.cleaned_data['upload_url']
-            if upload_url:
-                if form.cleaned_data['action'] != 'preapproved':
-                    image_data = form.cleaned_data['image_data_url']
-                    mockup_type = form.cleaned_data['mockup_slug']
-                    label_image = data_url_to_pil_image(image_data)
-                    bottle_mockup = get_mockup(label_image, mockup_type)
-                    image_fp = pil_to_fp(bottle_mockup)
-                    image_fp.seek(0)
-                    image_fp.name = 'mockup.png'
-                    self.save_image(user, image_fp, new_user_supplement)
+            if form.cleaned_data['action'] == 'preapproved':
+                upload_url = new_user_supplement.pl_supplement.approved_label_url
                 self.save_label(user, upload_url, new_user_supplement)
+            elif upload_url:
+                self.save_label(user, upload_url, new_user_supplement)
+
+            # Old images should be removed when new label is uploaded
+            mockup_urls = request.POST.getlist('mockup_urls')
+            if len(mockup_urls) or upload_url:
+                new_user_supplement.images.all().delete()
+                for position, mockup_url in enumerate(mockup_urls):
+                    new_user_supplement.images.create(image_url=mockup_url, position=position)
 
             if not new_user_supplement.images.count():
                 self.copy_images(new_user_supplement)
 
-            if form.cleaned_data['action'] == 'approve':
-                new_user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
-                new_user_supplement.current_label.save()
-                url = reverse("pls:my_labels") + "?s=1"
-                return redirect(url)
-
+            is_draft_label = new_user_supplement.current_label is not None \
+                and new_user_supplement.current_label.status != UserSupplementLabel.DRAFT
             if form.cleaned_data['action'] == 'preapproved':
                 new_user_supplement.current_label.status = UserSupplementLabel.APPROVED
                 new_user_supplement.current_label.generate_sku()
@@ -485,6 +478,13 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                     api_data = self.get_api_data(new_user_supplement)
                 return JsonResponse({'data': api_data, 'success': True})
 
+            elif form.cleaned_data['action'] == 'approve' \
+                    or upload_url and is_draft_label:  # Restart review process
+                new_user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
+                new_user_supplement.current_label.save()
+                url = reverse("pls:my_labels") + "?s=1"
+                return redirect(url)
+
             kwargs = {'supplement_id': new_user_supplement.id}
             return self.get_redirect_url(**kwargs)
 
@@ -500,6 +500,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
     def get(self, request, supplement_id):
         aws = aws_s3_context()
+        aws_images = images_aws_s3_context()
         context = self.get_supplement_data(request.user, supplement_id)
 
         context.update({
@@ -508,6 +509,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             'aws_available': aws['aws_available'],
             'aws_policy': aws['aws_policy'],
             'aws_signature': aws['aws_signature'],
+            'aws_images': aws_images,
         })
         return render(request, self.template_name, context)
 
@@ -546,6 +548,7 @@ class UserSupplementView(Supplement):
         form_data['mockup_slug'] = supplement.pl_supplement.mockup_type.slug
         form_data['weight'] = supplement.pl_supplement.weight
         form_data['inventory'] = supplement.pl_supplement.inventory
+        form_data['label_presets'] = supplement.get_label_presets_json()
 
         api_data = {}
         if supplement.is_approved:
@@ -572,6 +575,7 @@ class UserSupplementView(Supplement):
             authenticity_cert=supplement.pl_supplement.authenticity_certificate_url,
             status_url=status_url,
             is_submitted=is_submitted,
+            mockup_layers=supplement.pl_supplement.mockup_type.get_layers(),
         )
 
         if 'label_url' in form_data:
@@ -582,7 +586,6 @@ class UserSupplementView(Supplement):
     def get_form(self):
         user_supplement = UserSupplement.objects.get(id=self.supplement_id)
         return UserSupplementForm(self.request.POST,
-                                  self.request.FILES,
                                   instance=user_supplement)
 
     def get_supplement(self, user, supplement_id):
@@ -811,6 +814,8 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             aws_available=aws['aws_available'],
             aws_policy=aws['aws_policy'],
             aws_signature=aws['aws_signature'],
+            aws_images=images_aws_s3_context(),
+            mockup_layers=user_supplement.pl_supplement.mockup_type.get_layers(),
         )
 
     def get(self, request, label_id):
@@ -823,6 +828,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
         form_data = dict(
             mockup_slug=label.user_supplement.pl_supplement.mockup_type.slug,
+            label_presets=label.user_supplement.get_label_presets_json(),
         )
 
         context = self.get_context_data(label=label)
@@ -861,26 +867,28 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             form = CommentForm(request.POST)
             if form.is_valid():
                 comment = form.cleaned_data['comment']
-                is_private = form.cleaned_data['is_private']
-                self.create_comment(comments, comment, is_private=is_private)
+                if comment:
+                    is_private = form.cleaned_data['is_private']
+                    self.create_comment(comments, comment, is_private=is_private)
+
+                # Restart review process for new labels
                 upload_url = form.cleaned_data['upload_url']
                 if upload_url:
-                    image_data = form.cleaned_data['image_data_url']
-                    mockup_type = form.cleaned_data['mockup_slug']
-                    label_image = data_url_to_pil_image(image_data)
-                    bottle_mockup = get_mockup(label_image, mockup_type)
-                    image_fp = pil_to_fp(bottle_mockup)
-                    image_fp.seek(0)
-                    image_fp.name = 'mockup.png'
+                    user_supplement.label_presets = request.POST.get('label_presets') or '{}'
                     self.save_label(user, upload_url, user_supplement)
-                    self.save_image(user, image_fp, user_supplement)
-
                     user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
                     user_supplement.current_label.save()
-                    kwargs = {'label_id': user_supplement.current_label.id}
-                    reverse_url = reverse('pls:label_detail', kwargs=kwargs)
 
-                return redirect(reverse_url)
+                # Old images should be removed when new label is uploaded
+                mockup_urls = request.POST.getlist('mockup_urls')
+                if len(mockup_urls) or upload_url:
+                    user_supplement.images.all().delete()
+                    for position, mockup_url in enumerate(mockup_urls):
+                        user_supplement.images.create(image_url=mockup_url, position=position)
+
+                return redirect(reverse('pls:label_detail', kwargs={
+                    'label_id': user_supplement.current_label.id
+                }))
 
         elif action in (label.APPROVED, label.REJECTED):
             label.status = action

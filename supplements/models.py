@@ -1,3 +1,7 @@
+import base64
+from io import BytesIO
+
+from PIL import Image
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -111,6 +115,7 @@ class UserSupplement(UserSupplementMixin, models.Model):
                                            decimal_places=2,
                                            blank=True,
                                            null=True)
+    label_presets = models.TextField(default='{}', blank=True)
     current_label = models.OneToOneField('UserSupplementLabel',
                                          on_delete=models.SET_NULL,
                                          related_name='current_label_of',
@@ -123,6 +128,12 @@ class UserSupplement(UserSupplementMixin, models.Model):
 
     def get_weight(self, quantity):
         return self.pl_supplement.weight * quantity
+
+    def get_label_presets_json(self):
+        if self.label_presets != '{}':
+            return self.label_presets
+        else:
+            return json.dumps(self.pl_supplement.mockup_type.get_label_presets())
 
 
 class UserSupplementImage(model_base.AbstractImage):
@@ -262,3 +273,121 @@ class MockupType(models.Model):
 
     def __str__(self):
         return self.name
+
+    def get_label_presets(self):
+        if self.slug == 'bottle':
+            presets = [
+                # front_shadow_mockup
+                [{'left': 0.17, 'top': -0.57, 'size': 0.64}],
+                # front_mockup
+                [{'left': 0.17, 'top': -0.57, 'size': 0.64, 'layers': {'shadow': False}}],
+                # back_shadow_mockup
+                [{'left': -0.13, 'top': -0.57, 'size': 0.64}],
+                # back_mockup
+                [{'left': -0.13, 'top': -0.57, 'size': 0.64, 'layers': {'shadow': False}}],
+                # group_of_3
+                [
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': -0.222, 'bgTop': 0.15, 'bgSize': 0.8},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.425, 'bgTop': 0.15, 'bgSize': 0.8},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.06, 'bgTop': 0.11, 'bgSize': 0.88}
+                ],
+                # group_of_5
+                [
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': -0.14, 'bgTop': 0.35, 'bgSize': 0.51},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.62, 'bgTop': 0.35, 'bgSize': 0.51},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': -0.02, 'bgTop': 0.29, 'bgSize': 0.61},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.4, 'bgTop': 0.29, 'bgSize': 0.61},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.15, 'bgTop': 0.24, 'bgSize': 0.7}
+                ],
+            ]
+        elif self.slug == 'container':
+            presets = [
+                [{'left': 0.44, 'top': 0.01, 'size': 0.41}],
+                [{'left': 0.44, 'top': 0.01, 'size': 0.41, 'layers': {'shadow': False}}],
+                [{'left': 0.05, 'top': -0.19, 'size': 0.57}],
+                [{'left': 0.05, 'top': -0.19, 'size': 0.57, 'layers': {'shadow': False}}],
+                [
+                    {'name': 'Left', 'left': 0.44, 'top': 0.01, 'size': 0.41, 'bgLeft': -0.137, 'bgTop': 0.185, 'bgSize': 0.78},
+                    {'name': 'Right', 'left': 0.44, 'top': 0.01, 'size': 0.4039, 'bgLeft': 0.3525, 'bgTop': 0.185, 'bgSize': 0.78},
+                    {'name': 'Top', 'left': 0.44, 'top': 0.01, 'size': 0.41, 'bgLeft': 0.03, 'bgTop': 0.125, 'bgSize': 0.9005}
+                ],
+                [
+                    {'name': '3 Left', 'left': 0.44, 'top': 0.01, 'size': 0.41, 'bgLeft': -0.0825, 'bgTop': 0.4, 'bgSize': 0.5},
+                    {'name': '3 Right', 'left': 0.44, 'top': 0.01, 'size': 0.41, 'bgLeft': 0.585, 'bgTop': 0.4, 'bgSize': 0.5},
+                    {'name': '2 Left', 'left': 0.44, 'top': 0.01, 'size': 0.41, 'bgLeft': 0.01, 'bgTop': 0.36, 'bgSize': 0.5738},
+                    {'name': '2 Right', 'left': 0.44, 'top': 0.01, 'size': 0.41, 'bgLeft': 0.38, 'bgTop': 0.36, 'bgSize': 0.5738},
+                    {'name': 'Top', 'left': 0.44, 'top': 0.01, 'size': 0.41, 'bgLeft': 0.1545, 'bgTop': 0.3225, 'bgSize': 0.6542}
+                ]
+            ]
+        elif self.slug == 'tincture':
+            presets = [
+                [{'left': 0.06, 'top': -1.16, 'size': 0.92}],
+                [{'left': 0.06, 'top': -1.16, 'size': 0.92, 'layers': {'shadow': False}}],
+                [{'left': -0.22, 'top': -1.16, 'size': 0.92}],
+                [{'left': -0.22, 'top': -1.16, 'size': 0.92, 'layers': {'shadow': False}}],
+                [
+                    {'left': 0.06, 'top': -1.16, 'size': 0.92, 'bgLeft': -0.26, 'bgTop': 0.02, 'bgSize': 1},
+                    {'left': 0.06, 'top': -1.16, 'size': 0.92, 'bgLeft': 0.255, 'bgTop': 0.02, 'bgSize': 1},
+                    {'left': 0.06, 'top': -1.16, 'size': 0.92, 'bgLeft': -0.04, 'bgTop': -0.03, 'bgSize': 1.08}
+                ],
+                [
+                    {'left': 0.06, 'top': -1.16, 'size': 0.92, 'bgLeft': -0.31, 'bgTop': 0.11, 'bgSize': 0.86},
+                    {'left': 0.06, 'top': -1.16, 'size': 0.92, 'bgLeft': 0.45, 'bgTop': 0.11, 'bgSize': 0.86},
+                    {'left': 0.06, 'top': -1.16, 'size': 0.92, 'bgLeft': -0.20, 'bgTop': 0.02, 'bgSize': 1},
+                    {'left': 0.06, 'top': -1.16, 'size': 0.92, 'bgLeft': 0.20, 'bgTop': 0.02, 'bgSize': 1},
+                    {'left': 0.06, 'top': -1.16, 'size': 0.92, 'bgLeft': -0.04, 'bgTop': -0.03, 'bgSize': 1.08}
+                ],
+            ]
+        else:
+            presets = []
+        return presets
+
+    def get_layers(self):
+        # Shown in proper drawing order
+        if self.slug == 'bottle':
+            layers = [
+                {'layer': 'base_shadow', 'mode': 'source-over', 'file': 'base_shadow.png', 'background': True},
+                {'layer': 'bottle', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'bottle_mask.png'},
+                {'layer': 'label', 'mode': 'source-in', 'saveSize': 1000},
+                {'layer': 'shadow', 'mode': 'multiply', 'file': 'bottle_shadows.png'},
+                {'layer': 'light', 'mode': 'screen', 'file': 'bottle_highlights.png'},
+            ]
+        elif self.slug == 'container':
+            layers = [
+                {'layer': 'container', 'mode': 'source-over', 'file': 'container.png'},
+                {'layer': 'mask', 'mode': 'multiply', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'multiply', 'saveSize': 860, 'position': {
+                    'top': 0.3186, 'left': 0.1767, 'right': 0.6465, 'bottom': 0.5023
+                }, 'file': 'DROP_80013_AntiWrinkleCream_BroadSpec_4oz_OUTLINED.jpg'},
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png'},
+                {'layer': 'light', 'mode': 'screen', 'file': 'reflections.png'},
+            ]
+        elif self.slug == 'tincture':
+            layers = [
+                {'layer': 'bottle', 'mode': 'source-over', 'file': 'tincture_bottle_30.png', 'background': True},
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadows_30.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask_30.png'},
+                {'layer': 'label', 'mode': 'source-in', 'saveSize': 900, 'file': 'DROP_80001_HempOil_500mg_1oz_OUTLINED.jpg'},
+                {'layer': 'dark', 'mode': 'multiply', 'file': 'darken_30.png'},
+                {'layer': 'light', 'mode': 'screen', 'file': 'reflections_30.png'},
+            ]
+        else:
+            layers = []
+
+        for layer in layers:
+            if not layer.get('file'):
+                continue
+
+            image = Image.open(f"app/static/pls-mockup/{self.slug}/{layer['file']}")
+            raw_image = BytesIO()
+            ext = layer['file'].split('.')[-1]  # From PIL.Image.SAVE
+            ext = {'jpg': 'jpeg'}.get(ext, ext)
+            image.save(raw_image, format=ext)
+            raw_image.seek(0)
+            raw_image.name = layer['file']
+
+            image_data = base64.b64encode(raw_image.getvalue()).decode()
+            layer['file'] = f'data:image/{ext};base64,{image_data}'
+
+        return layers

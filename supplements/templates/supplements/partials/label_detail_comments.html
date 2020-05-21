@@ -55,33 +55,43 @@
       {{ form.upload_url }}
       {{ form.image_data_url }}
       {{ form.mockup_slug }}
+      {{ form.label_presets }}
       <canvas id='canvas'></canvas>
       <div class='form-group row'>
         {{ form.comment.errors }}
         {{ form.comment|add_class:"form-control" }}
       </div>
       <div class="hr-line-dashed"></div>
+
+      <!-- No spaces between tags for :empty selector -->
+      <div id="mockup-thumbnails"></div>
+
       <div class='form-group row label-comment-action'>
         <div class="col-sm-4">
 
           <div class="custom-file label-detail">
-            <input id="upload" data-toggle="modal" data-target="#modal-upload-image" class="custom-file-input">
-            <label for="upload" class="custom-file-label" data-placeholder="Choose file...">
-              Choose new label...
-            </label>
+            <input type="file" accept=".pdf" class="form-control" id="single-label-upload">
           </div>
 
         </div>
 
-        <div class='col-sm-2'>
-          <button class='btn btn-primary btn-sm'
+        <div class='col-sm-4'>
+          <a href=""
+             data-toggle="modal"
+             data-target="#modal-mockup-images"
+             data-backdrop="static"
+             class="btn btn-success">
+            Customize Label
+          </a>
+
+          <button class='btn btn-primary'
                   type="submit"
                   data-loading-text="Please wait...">
             <i class='fa fa-reply'></i> Submit
           </button>
         </div>
-        <div class='col-sm-2 col-sm-offset-4'>
-          <input class='btn btn-default btn-outline btn-sm'
+        <div class='col-sm-2 col-sm-offset-2'>
+          <input class='btn btn-default btn-outline'
                   type='reset' value="Discard" />
         </div>
       </div>

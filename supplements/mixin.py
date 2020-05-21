@@ -28,7 +28,7 @@ class PLSupplementMixin:
         return ", ".join(sorted(groups))
 
     def to_dict(self):
-        image_urls = [i.image_url for i in self.images.all()]
+        image_urls = [i.image_url for i in self.images.all().order_by('position')]
         shipping_countries = self.shipping_countries.all()
 
         data = dict(
@@ -60,7 +60,7 @@ class PLSupplementMixin:
 class UserSupplementMixin(PLSupplementMixin):
 
     def to_dict(self):
-        image_urls = [i.image_url for i in self.images.all()]
+        image_urls = [i.image_url for i in self.images.all().order_by('position')]
 
         data = dict(
             title=self.title,

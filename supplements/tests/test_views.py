@@ -187,6 +187,7 @@ class SupplementTestCase(PLSBaseTestCase):
             upload_url='http://example.com/test',
             image_data_url=image_data_url,
             mockup_slug='bottle',
+            mockup_urls='https://example.com/example.png',
         )
 
         self.assertEqual(self.user.pl_supplements.count(), 1)
@@ -206,6 +207,7 @@ class SupplementTestCase(PLSBaseTestCase):
 
         # Test without image.
         del data['upload_url']
+        del data['mockup_urls']
         response = self.client.post(self.get_url(), data=data)
         self.assertEqual(self.user.pl_supplements.count(), 3)
         self.assertEqual(UserSupplementImage.objects.count(), 1)
@@ -248,6 +250,7 @@ class SupplementTestCase(PLSBaseTestCase):
             upload_url='http://example.com/test',
             image_data_url=image_data_url,
             mockup_slug='bottle',
+            mockup_urls='https://example.com/example.png',
         )
 
         self.assertEqual(UserSupplementImage.objects.count(), 0)
@@ -316,12 +319,15 @@ class LabelDetailTestCase(PLSBaseTestCase):
             data = base64.b64encode(reader.read()).decode()
             image_data_url = f'data:image/png;base64,{data}'
 
+        label_presets = '[{"size":"1"}]'
         data = dict(
             action="comment",
             comment="New comment",
             upload_url="http://example.com/test",
             image_data_url=image_data_url,
             mockup_slug='bottle',
+            mockup_urls='https://example.com/example.png',
+            label_presets=label_presets,
         )
 
         self.assertEqual(self.label.comments.count(), 0)
@@ -333,6 +339,7 @@ class LabelDetailTestCase(PLSBaseTestCase):
         self.assertRedirects(response, url)
         self.assertEqual(label.comments.count(), 1)
         self.assertEqual(label.status, UserSupplementLabel.AWAITING_REVIEW)
+        self.assertEqual(label.current_label_of.label_presets, label_presets)
 
     def test_post_comment(self):
         self.client.force_login(self.user)
