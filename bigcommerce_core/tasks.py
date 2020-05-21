@@ -353,21 +353,24 @@ def create_image_zip(self, images, product_id):
 
 
 @celery_app.task(base=CaptureFailure)
-def get_latest_order_note_task(store_id, order_id):
+def get_latest_order_note_task(store_id, order_ids):
     store = BigCommerceStore.objects.get(pk=store_id)
-    data = {'order_id': order_id}
+    have_error = False
 
-    try:
-        note = get_latest_order_note(store, order_id)
-        data['success'] = True
-        data['note'] = note
-    except Exception as e:
-        if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
-            capture_exception(extra=http_exception_response(e))
+    for order_id in order_ids:
+        data = {'order_id': order_id, 'success': False}
 
-        data['success'] = False
+        if not have_error:
+            try:
+                data['success'] = True
+                data['note'] = get_latest_order_note(store, order_id)
 
-    store.pusher_trigger('get-order-note', data)
+            except Exception as e:
+                have_error = True
+                if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
+                    capture_exception(extra=http_exception_response(e))
+
+        store.pusher_trigger('get-order-note', data)
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)

@@ -670,9 +670,8 @@ class BigCommerceStoreApi(ApiBase):
     def get_order_notes(self, request, user, data):
         store = BigCommerceStore.objects.get(id=data['store'])
         permissions.user_can_view(user, store)
-        order_ids = data.getlist('order_ids[]')
+        order_ids = data.get('order_ids').split(',')
 
-        for order_id in order_ids:
-            tasks.get_latest_order_note_task.apply_async(args=[store.id, order_id], expires=120)
+        tasks.get_latest_order_note_task.apply_async(args=[store.id, order_ids], expires=120)
 
-        return self.api_success({})
+        return self.api_success()

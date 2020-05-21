@@ -816,12 +816,11 @@ class WooStoreApi(ApiBase):
     def get_order_notes(self, request, user, data):
         store = WooStore.objects.get(id=data['store'])
         permissions.user_can_view(user, store)
-        order_ids = data.getlist('order_ids[]')
+        order_ids = data.get('order_ids').split(',')
 
-        for order_id in order_ids:
-            tasks.get_latest_order_note_task.apply_async(args=[store.id, order_id], expires=120)
+        tasks.get_latest_order_note_task.apply_async(args=[store.id, order_ids], expires=120)
 
-        return self.api_success({})
+        return self.api_success()
 
     def post_reviews_export(self, request, user, data):
         store = WooStore.objects.get(id=data['store'])
@@ -832,4 +831,4 @@ class WooStoreApi(ApiBase):
         for review in reviews:
             utils.send_review_to_woocommerce_store(store, product_id, review)
 
-        return self.api_success({})
+        return self.api_success()

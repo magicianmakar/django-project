@@ -872,8 +872,8 @@ function pusherSub() {
     var getOrderNotes = function() {
         var param = getOrderNotesParam();
         if (param.order_ids.length > 0) {
-            var api_path = api_url('order-notes', 'woo') + '?' + $.param(param);
-            return $.get(api_path);
+            param.order_ids = param.order_ids.join(',');
+            return $.get(api_url('order-notes', 'woo') + '?' + $.param(param));
         }
     };
 

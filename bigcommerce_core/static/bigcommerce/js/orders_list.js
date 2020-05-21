@@ -853,6 +853,7 @@ function pusherSub() {
     var getOrderNotes = function() {
         var param = getOrderNotesParam();
         if (param.order_ids.length > 0) {
+            param.order_ids = param.order_ids.join(',');
             var api_path = api_url('order-notes', 'bigcommerce') + '?' + $.param(param);
             return $.get(api_path);
         }
