@@ -4706,8 +4706,6 @@ def orders_place(request):
     if not disable_affiliate:
         if request.user.get_config('_disable_affiliate_permanent'):
             disable_affiliate = True
-        elif 'aliexpress' in product and service == 'admitad':
-            disable_affiliate = not utils.admitad_can_redirect(product, admitad_site_id)
 
     if not disable_affiliate:
         if supplier and supplier.is_ebay:

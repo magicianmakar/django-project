@@ -1912,31 +1912,6 @@ def get_admitad_affiliate_url(site_id, url):
     return affiliate_link_set_query(api_url, 'ulp', url)
 
 
-def admitad_can_redirect(product, site_id=None):
-    if not site_id:
-        site_id = random.choice(settings.DROPIFIED_ADMITAD_ID)
-
-    cache_key = hash_text(f'{product}-{site_id}')
-    cache_key = f'admitad_redirect_{cache_key}'
-
-    saved = cache.get(cache_key)
-    if saved is not None:
-        return saved
-
-    rep = requests.get(
-        url=f'https://alitems.com/g/{site_id}/',
-        params={
-            'ulp': f'{product}?SAPlaceOrder=30_2295000301630_4966649364542'
-        },
-        allow_redirects=True
-    )
-
-    can_redirect = 'SAPlaceOrder' in rep.url
-    cache.set(cache_key, can_redirect, timeout=3600)
-
-    return can_redirect
-
-
 def get_aliexpress_affiliate_url(appkey, trackingID, urls, services='ali'):
     promotion_key = 'promotion_links__{}'.format(hash_text(urls))
     promotion_url = cache.get(promotion_key)

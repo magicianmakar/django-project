@@ -72,5 +72,5 @@ class Command(DropifiedBaseCommand):
                 },
                 json=data)
             r.raise_for_status()
-        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout) as e:
-            capture_exception(e)
+        except (requests.exceptions.HTTPError, requests.exceptions.ConnectionError, requests.exceptions.ConnectTimeout):
+            capture_exception(level='warning')

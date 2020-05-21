@@ -27,7 +27,7 @@ from leadgalaxy.tasks import delete_shopify_store
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
 from shopify_orders.utils import get_elastic
 
-from shopified_core.utils import base64_encode, get_domain
+from shopified_core.utils import base64_encode
 
 
 class ProfileViewTestCase(BaseTestCase):
@@ -350,7 +350,6 @@ class AffiliateTestCase(BaseTestCase):
 
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
-    @patch('leadgalaxy.utils.admitad_can_redirect', Mock(return_value=True))
     def test_user_without_affiliate(self, aliexpress_url, admitad_url):
         aliexpress_url.return_value = (
             r'http://s.click.aliexpress.com/deep_link.htm?'
@@ -379,7 +378,6 @@ class AffiliateTestCase(BaseTestCase):
 
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
-    @patch('leadgalaxy.utils.admitad_can_redirect', Mock(return_value=True))
     @patch('leadgalaxy.models.UserProfile.can', Mock(return_value=True))
     def test_user_disable_affiliate(self, get_aliexpress_affiliate_url, get_admitad_affiliate_url):
         self.user.set_config('_disable_affiliate', True)
@@ -393,7 +391,6 @@ class AffiliateTestCase(BaseTestCase):
 
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
-    @patch('leadgalaxy.utils.admitad_can_redirect', Mock(return_value=True))
     def test_user_without_affiliate_admitad(self, affiliate_url, aliexpress_url):
         affiliate_url.return_value = (
             rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
@@ -417,55 +414,6 @@ class AffiliateTestCase(BaseTestCase):
             self.assertIn('UaqMb3a?SAPlaceOrder=30_982219948094_2178977955902', r['location'])
 
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
-    @patch('leadgalaxy.utils.get_admitad_affiliate_url')
-    @patch('leadgalaxy.utils.admitad_can_redirect', Mock(return_value=True))
-    def test_user_without_affiliate_admitad_aliexpress_can_redirect(self, affiliate_url, aliexpress_url):
-        product_id = '32731090429'
-        place_order_data = {
-            'product': f'https://www.aliexpress.com/item/{product_id}.html',
-            'SAPlaceOrder': '1_123_123'
-        }
-
-        affiliate_url.return_value = (
-            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
-            rf'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F{product_id}.html'
-        )
-
-        aliexpress_url.return_value = 'http://s.click.aliexpress.com/e/UaqMb3a?SAPlaceOrder=30_982219948094_2178977955902'
-
-        r = self.client.get('/orders/place', place_order_data)
-
-        affiliate_url.assert_called()
-        self.assertIn(affiliate_url.call_args[0][0], settings.DROPIFIED_ADMITAD_ID)
-        self.assertEqual(affiliate_url.call_args[0][1], place_order_data['product'])
-
-        # Ensure extra query are well encoded
-        self.assertEqual('alitems', get_domain(r['location']))
-
-    @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
-    @patch('leadgalaxy.utils.get_admitad_affiliate_url')
-    def test_user_without_affiliate_admitad_aliexpress_can_not_redirect(self, affiliate_url, aliexpress_url):
-        product_id = '4000603129160'
-        place_order_data = {
-            'product': f'https://www.aliexpress.com/item/{product_id}.html',
-            'SAPlaceOrder': '1_123_123'
-        }
-
-        affiliate_url.return_value = (
-            rf'https://alitems.com/g/{settings.DROPIFIED_ADMITAD_ID[0]}/?'
-            rf'ulp=https%3A%2F%2Fwww.aliexpress.com%2Fitem%2F{product_id}.html'
-        )
-
-        aliexpress_url.return_value = 'http://s.click.aliexpress.com/e/UaqMb3a?SAPlaceOrder=30_982219948094_2178977955902'
-
-        r = self.client.get('/orders/place', place_order_data)
-
-        affiliate_url.assert_not_called()
-
-        # Ensure extra query are well encoded
-        self.assertEqual('aliexpress', get_domain(r['location']))
-
-    @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
     @patch('leadgalaxy.models.UserProfile.can', Mock(return_value=True))
     def test_user_with_affiliate_aliexpress(self, affiliate_url):
         self.user.set_config('aliexpress_affiliate_key', '12345678')
@@ -487,7 +435,6 @@ class AffiliateTestCase(BaseTestCase):
 
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     @patch('leadgalaxy.models.UserProfile.can', Mock(return_value=True))
-    @patch('leadgalaxy.utils.admitad_can_redirect', Mock(return_value=True))
     def test_user_with_affiliate_admitad(self, affiliate_url):
         self.user.set_config('admitad_site_id', '987654321')
 
@@ -505,7 +452,6 @@ class AffiliateTestCase(BaseTestCase):
 
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
-    @patch('leadgalaxy.utils.admitad_can_redirect', Mock(return_value=True))
     @patch('leadgalaxy.models.UserProfile.can', Mock(return_value=True))
     def test_user_with_both_affiliates(self, get_aliexpress_affiliate_url, get_admitad_affiliate_url):
         self.user.set_config('aliexpress_affiliate_key', '12345678')

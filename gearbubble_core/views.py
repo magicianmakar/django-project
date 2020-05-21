@@ -31,7 +31,6 @@ from shopified_core.utils import (
 )
 from shopified_core.tasks import keen_order_event
 from leadgalaxy.utils import (
-    admitad_can_redirect,
     get_aliexpress_credentials,
     get_admitad_credentials,
     get_aliexpress_affiliate_url,
@@ -479,8 +478,6 @@ class OrderPlaceRedirectView(RedirectView):
         if not disable_affiliate:
             if self.request.user.get_config('_disable_affiliate_permanent'):
                 disable_affiliate = True
-            elif 'aliexpress' in product and service == 'admitad':
-                disable_affiliate = not admitad_can_redirect(product, admitad_site_id)
 
         redirect_url = False
         if not disable_affiliate:
