@@ -22,7 +22,7 @@
     {% include "supplements/partials/label_filter_form.html" %}
 
     <div class="row">
-      <div class="col-sm-4">
+      <div class="col-sm-3">
         <div class="form-group {% if all_label_form.user_id.errors %}has-error{% endif %}">
           <label class="control-label">User:</label>
           {{ all_label_form.user_id|add_class:"form-control" }}
@@ -33,7 +33,7 @@
         </div>
       </div>
 
-      <div class="col-sm-4">
+      <div class="col-sm-3">
         <div class="form-group {% if all_label_form.product_sku.errors %}has-error{% endif %}">
           <label class="control-label">Supplement SKU:</label>
           {{ all_label_form.product_sku|add_class:"form-control" }}
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <div class="col-sm-4">
+      <div class="col-sm-3">
         <div class="form-group {% if all_label_form.title.errors %}has-error{% endif %}">
           <label class="control-label">Supplement Title:</label>
           {{ all_label_form.title|add_class:"form-control" }}
@@ -52,9 +52,19 @@
           {% endfor %}
         </div>
       </div>
+
+      <div class="col-sm-3">
+        <div class="form-group {% if all_label_form.product_sku.errors %}has-error{% endif %}">
+          <label class="control-label">Sort By:</label>
+          {{ all_label_form.sort|add_class:"form-control" }}
+          {% for error in all_label_form.title.errors %}
+          <p class="help-block">{{ error }}</p>
+          {% endfor %}
+        </div>
+      </div>
     </div>
 
-    <input type="submit" class="btn btn-primary" value="Filter" />
+    <input type="submit" class="btn btn-primary" value="Filter & Sort" />
     <input type="button" class="btn btn-default pls-reset-btn" value="Clear" />
   </form>
 </div>

@@ -200,9 +200,15 @@ class LabelFilterForm(forms.Form):
 
 
 class AllLabelFilterForm(forms.Form):
+    SORT_STATUSES = [
+        ('-updated_at', 'Newest Labels First'),
+        ('updated_at', 'Oldest Labels First'),
+    ]
+
     label_user_name = forms.CharField(required=False)
     product_sku = forms.CharField(required=False)
     title = forms.CharField(required=False)
+    sort = forms.ChoiceField(required=False, choices=SORT_STATUSES)
 
 
 class BillingForm(forms.Form):

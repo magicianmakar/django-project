@@ -730,6 +730,13 @@ class AllLabels(MyLabels):
         else:
             raise permissions.PermissionDenied()
 
+    def get_ordering(self):
+        order_by = self.request.GET.get('sort', '-updated_at')
+        allowed_values = ['updated_at', '-updated_at']
+        if order_by not in allowed_values:
+            order_by = '-updated_at'
+        return order_by
+
     def add_filters(self, queryset):
         return queryset
 
@@ -746,8 +753,13 @@ class AllLabels(MyLabels):
         if form.is_valid():
             label_user_name = form.cleaned_data['label_user_name']
             if label_user_name:
-                queryset = queryset.annotate(name=Concat('user_supplement__user__first_name', models.Value(' '), 'user_supplement__user__last_name'))
-                queryset = queryset.filter(Q(user_supplement__user__email__icontains=label_user_name) | Q(name__icontains=label_user_name))
+                queryset = queryset.annotate(
+                    name=Concat('user_supplement__user__first_name', models.Value(' '), 'user_supplement__user__last_name')
+                ).filter(
+                    Q(user_supplement__user__email__icontains=label_user_name)
+                    | Q(user_supplement__user_id=label_user_name)
+                    | Q(name__icontains=label_user_name)
+                )
 
             product_sku = form.cleaned_data['product_sku']
             if product_sku:
