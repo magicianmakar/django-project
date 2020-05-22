@@ -182,12 +182,15 @@ class SupplementsApi(ApiResponseMixin, View):
             return self.api_error('Order not found', status=404)
 
         reference_number = data['reference-number']
-        try:
-            payout = Payout.objects.get(reference_number=reference_number)
-        except Payout.DoesNotExist:
-            return self.api_error('Payout not found', status=404)
+        if reference_number:
+            try:
+                payout = Payout.objects.get(reference_number=reference_number)
+            except Payout.DoesNotExist:
+                return self.api_error('Payout not found', status=404)
 
-        order.payout = payout
+            order.payout = payout
+        else:
+            order.payout = None
         order.save()
 
         return self.api_success()

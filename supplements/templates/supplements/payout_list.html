@@ -21,10 +21,12 @@
   {% csrf_token %}
   <div class="row">
     <div class="col-sm-4">
-      <div class="form-group">
-        {{ add_form.reference_number.errors }}
+      <div class="form-group {{ add_form.reference_number.errors|yesno:'has-error,' }}">
         <label class="control-label">Reference Number:</label>
         {{ add_form.reference_number|add_class:"form-control" }}
+        {% for error in add_form.reference_number.errors %}
+        <p class="help-block">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
     <div class="col-sm-2">

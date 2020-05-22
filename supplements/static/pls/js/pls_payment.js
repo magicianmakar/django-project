@@ -86,8 +86,6 @@ function makeData(orderDataIds) {
     var quantity, unitPrice, amount, total = 0.0, storeType, storeId;
     var total_weight=0;
 
-
-
     $.each(orderDataIds, function (i, item) {
         line = $("div.payment-btn-wrapper[order-data-id=" + item + "]");
         orderNumber = $(line).attr('order-number');
@@ -153,8 +151,6 @@ function makePayment(orderDataIds,country_code,province_code) {
             toastr.warning("Error calculating shipping");
         }
     });
-
-
 
 }
 
