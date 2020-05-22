@@ -286,6 +286,7 @@ class LabelMixin:
             self.create_comment(new_label.comments, comment)
 
         user_supplement.current_label = new_label
+        user_supplement.current_label.generate_sku()
         user_supplement.save()
 
     def create_comment(self, comments, text, new_status='', is_private=False):
@@ -462,7 +463,6 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                 and new_user_supplement.current_label.status != UserSupplementLabel.DRAFT
             if form.cleaned_data['action'] == 'preapproved':
                 new_user_supplement.current_label.status = UserSupplementLabel.APPROVED
-                new_user_supplement.current_label.generate_sku()
                 self.add_barcode_to_label(new_user_supplement.current_label)
                 new_user_supplement.current_label.save()
 
@@ -897,7 +897,6 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             label_class = 'label-danger'
             if action == label.APPROVED:
                 label_class = 'label-primary'
-                label.generate_sku()
                 self.add_barcode_to_label(label)
                 label.save()
 

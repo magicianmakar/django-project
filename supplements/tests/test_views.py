@@ -371,6 +371,8 @@ class LabelDetailTestCase(PLSBaseTestCase):
         with patch('product_common.lib.views.aws_s3_upload',
                    side_effect=return_urls), \
                 patch('requests.get', return_value=mock_response):
+            self.label.sku = '123'
+            self.label.save()
             self.assertEqual(self.label.comments.count(), 0)
             response = self.client.post(self.get_url(), data=data)
             self.assertRedirects(response, self.get_url())
