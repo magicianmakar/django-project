@@ -63,7 +63,7 @@
 
         <hr>
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-6">
                 <div class="checkbox" @click="toggleBeep">
                     <div v-bind:class="{'checked': model.config.play_beep}" class="icheckbox_square-blue">
                         <input type="checkbox">
@@ -73,6 +73,20 @@
                         Play a beep sound before recording?
                     </label>
                 </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                        <label>Recording length limit</label>
+                        <select class="form-control" v-model="model.config.recording_length_limit">
+                            <option value="30">30 seconds</option>
+                            <option value="60">1 minute</option>
+                            <option value="180">3 minutes</option>
+                            <option value="300">5 minutes</option>
+                            <option value="600">10 minutes</option>
+                            <option value="3600">1 Hour</option>
+                        </select>
+                </div>
+
             </div>
         </div>
     </div>

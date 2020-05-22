@@ -705,7 +705,8 @@ def call_flow_record(request):
     elif config.get('say'):
         response.say(config.get('say'), voice=config.get('voice'))
 
-    response.record(timeout=5, playBeep=config.get('play_beep', True), action=reverse('phone_automation_call_flow_hangup'))
+    response.record(timeout=5, playBeep=config.get('play_beep', True), maxLength=config.get('recording_length_limit', 3600),
+                    action=reverse('phone_automation_call_flow_hangup'))
     return HttpResponse(str(response), content_type='application/xml')
 
 
