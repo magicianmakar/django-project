@@ -457,9 +457,9 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
             if ('products_ids' in data) {
                 // check if current product is already connected to shopify..
                 if ($('#export-btn').attr('target') === 'shopify-update') {
-                  toastr.success('The variants are splitted into new products now.\r\nThe new products will get connected to shopify very soon.', 'Product Split!');
+                  toastr.success('The variants are now split into new products.\r\nThe new products will get connected to shopify very soon.', 'Product Split!');
                 } else {
-                  toastr.success('The variants are splitted into new products now.', 'Product Split!');
+                  toastr.success('The variants are now split into new products.', 'Product Split!');
                 }
                 setTimeout(function() { window.location.href = '/product'; }, 500);
             }

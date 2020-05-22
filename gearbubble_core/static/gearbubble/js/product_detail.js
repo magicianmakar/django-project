@@ -313,10 +313,10 @@ $('#modal-pick-variant .btn-submit').click(function(e) {
             if ('products_ids' in data) {
                 // check if current product is already connected to shopify..
                 if ($('#product-export-btn').attr('target') === 'shopify-update') {
-                  toastr.success('The variants are splitted into new products now.\r\n' +
+                  toastr.success('The variants are now split into new products.\r\n' +
                     'The new products will get connected to shopify very soon.', 'Product Split!');
                 } else {
-                  toastr.success('The variants are splitted into new products now.', 'Product Split!');
+                  toastr.success('The variants are now split into new products.', 'Product Split!');
                 }
                 setTimeout(function() { window.location.href = '/gear/products'; }, 500);
             }
