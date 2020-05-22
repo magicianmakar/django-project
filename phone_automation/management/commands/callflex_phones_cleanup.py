@@ -1,7 +1,6 @@
 from datetime import timedelta
 from django.utils import timezone
 from lib.exceptions import capture_exception
-import arrow
 from phone_automation.models import TwilioPhoneNumber
 from phone_automation.utils import get_twilio_client
 from shopified_core.management import DropifiedBaseCommand
@@ -25,10 +24,18 @@ class Command(DropifiedBaseCommand):
         )
 
     def start_command(self, *args, **options):
-        # wait for launch date
-        if arrow.utcnow() < arrow.get('2019-09-04'):
-            self.write("Launch date not reached yet")
-            return
+
+        # Deleting phone which marked for deletion and passed 30 days
+        marked_user_phones = TwilioPhoneNumber.objects.filter(status='scheduled_deletion')
+        if options['user_id']:
+            marked_user_phones = marked_user_phones.filter(user_id=options['user_id'])
+        for marked_user_phone in marked_user_phones.iterator():
+            if marked_user_phone.removable:
+                try:
+                    self.write(f"Deleting marked phone {marked_user_phone}")
+                    marked_user_phone.safe_delete()
+                except:
+                    capture_exception()
 
         # Deleting phone which passed 90+14 days inactivity
         exp_date = timezone.now() + timedelta(days=-104)

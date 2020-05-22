@@ -430,7 +430,9 @@ def provision_release(request, twilio_phone_number_id):
     removal_avail_date = twilio_phone_number.created_at + timedelta(days=30)
 
     if not request.user.can('phone_automation_unlimited_phone_numbers.use') and timezone.now() < removal_avail_date:
-        messages.error(request, 'You can not remove this phone number until {}'.format(removal_avail_date.strftime("%b %d, %Y")))
+        messages.error(request, 'Your phone number was scheduled for deletion on {}'.format(removal_avail_date.strftime("%b %d, %Y")))
+        twilio_phone_number.status = 'scheduled_deletion'
+        twilio_phone_number.save()
         return HttpResponseRedirect(reverse('phone_automation_index'))
 
     try:

@@ -147,7 +147,16 @@
                                             <a id="sms-automation" type="button" data-toggle="modal" data-target="#sms-automation-hint" class="btn btn-xs btn-info ">SMS Automation</a>
                                             {% endif %}
                                             <a href="{% url template_config.url.namespace|add:'phone_automation_provision_edit' twilio_phone_number_id=twilio_phone_number.id %}" class="btn btn-xs btn-info board-edit btn-circled-adjust" title="Edit"><i class="fa fa-edit"></i></a>
-                                            <a data-twilio_phone_number_id={{ twilio_phone_number.pk }} _href="{% url template_config.url.namespace|add:'phone_automation_provision_release' twilio_phone_number_id=twilio_phone_number.pk %}" class="btn btn-xs btn-danger remove-provision btn-circled-adjust" title="Delete"><i class="fa fa-times"></i></a>
+
+                                            {% if twilio_phone_number.status == "scheduled_deletion" %}
+                                                <div class="color-red" style="font-size: 10px;">Scheduled to delete on {{ twilio_phone_number.date_remove_allowed }}</div>
+                                            {% else %}
+                                                <a data-twilio_phone_number_id={{ twilio_phone_number.pk }} _href="{% url template_config.url.namespace|add:'phone_automation_provision_release' twilio_phone_number_id=twilio_phone_number.pk %}"
+                                                   class="btn btn-xs btn-danger {%  if twilio_phone_number.removable %}remove-provision{% else %}schedule-remove-provision{% endif %} btn-circled-adjust" title="Delete"
+                                                    data-datedelete="{{ twilio_phone_number.date_remove_allowed }}"><i class="fa fa-times"></i></a>
+                                            {% endif %}
+
+
                                         </td>
                                     </tr>
                                 </tbody>
@@ -287,6 +296,27 @@
                 bLengthChange: true,
                 iDisplayLength: 50,
                 order: [],
+            });
+
+            $('.schedule-remove-provision').click(function(e) {
+                var href = $(this).attr('_href');
+                var datedelete = $(this).data('datedelete');
+                swal({
+                        title: "Schedule Deleting Phone Number?",
+                        text: "You're phone number can not be deleted until "+datedelete+". This will schedule deleting your incoming phone number right when possible. \n\nYou will not be able to use this number again. \n\nAre you sure you want to continue?",
+                        type: "warning",
+                        showCancelButton: true,
+                        closeOnCancel: true,
+                        closeOnConfirm: false,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "Yes, schedule deleting my number",
+                        cancelButtonText: "No, keep my number"
+                    },
+                    function(isConfirmed) {
+                        if (isConfirmed) {
+                            window.location.href = href;
+                        }
+                    });
             });
 
             $('.remove-provision').click(function(e) {

@@ -20,11 +20,13 @@ from .utils import (
 )
 from leadgalaxy.utils import aws_s3_get_key
 from stripe_subscription.models import CustomStripeSubscription
+from datetime import timedelta
 
 PHONE_NUMBER_STATUSES = (
     ('active', 'Incoming calls allowed'),
     ('inactive', 'Forwardning all incoming calls'),
     ('released', 'Released'),
+    ('scheduled_deletion', 'Scheduled for deletion'),
 )
 
 PHONE_NUMBER_TYPES = (
@@ -226,6 +228,18 @@ class TwilioPhoneNumber(models.Model):
             pass
         self.status = "released"
         self.save()
+
+    @property
+    def removable(self):
+        removal_avail_date = self.created_at + timedelta(days=30)
+        if not self.user.can('phone_automation_unlimited_phone_numbers.use') and timezone.now() < removal_avail_date:
+            return False
+        else:
+            return True
+
+    @property
+    def date_remove_allowed(self):
+        return self.created_at + timedelta(days=30)
 
 
 class TwilioUpload(models.Model):
