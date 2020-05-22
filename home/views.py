@@ -100,14 +100,14 @@ def home_page_view(request):
 
 
 class GotoPage(View):
-    def get_failure_url(self, url_name):
+    def get_failure_url(self):
         messages.warning(self.request, 'Please connect your store first.')
         return redirect('/')
 
     def get(self, request, url_name='index'):
         user = request.user
         if not user.is_authenticated:
-            return self.get_failure_url(url_name)
+            return self.get_failure_url()
 
         try:
             stores = all_stores(self.request)['user_stores']['all']
@@ -115,7 +115,7 @@ class GotoPage(View):
             stores = []
 
         if not stores:
-            return self.get_failure_url(url_name)
+            return self.get_failure_url()
 
         store = stores[0]
         url = store.get_page_url(url_name)
