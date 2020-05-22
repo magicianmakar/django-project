@@ -34,7 +34,7 @@
 
     <script type="text/x-template" id="product-row-tpl">
       <tr :product-id="product.id">
-          <td style="padding-left:10px" colspan="6">
+          <td style="padding-left:10px" :colspan="product.variants.length <= 1 ? '2' : '6'">
               <img
                 class=""
                 style="width: 50px"
