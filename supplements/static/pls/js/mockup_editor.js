@@ -15,6 +15,14 @@ var MockupEditor = (function() {
         useControls: window.location.href.indexOf('debug=1') > -1,
         control: 'label',  // label or mockup
         controlIndex: null,
+        dataURLtoFile: function(dataurl, filename) {
+            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while(n--){
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, {type:mime});
+        },
         setLabel: function(fileData) {
             MockupEditor.mockupLayers.forEach(function(layer) {
                 if (layer.layer === 'label') {
@@ -415,7 +423,7 @@ $('#save-mockups').on('click', function(e) {
 
     var selectedMockups = $('.previews .mockup-item [type="checkbox"]:checked + img');
     selectedMockups.each(function() {
-        mockupsUploader.addFile(new o.File(null, {data: this.src}));
+        mockupsUploader.addFile(MockupEditor.dataURLtoFile(this.src, $(this).attr('id') + 'img.png'));
     });
     var labelInput = $('#modal-mockup-images [type="file"]').get(0);
     if (labelInput.files.length) {
