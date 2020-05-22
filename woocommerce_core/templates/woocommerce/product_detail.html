@@ -853,7 +853,7 @@
 
 {% block extracss %}
 <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
-<link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
 
 {% compress css %}
 <link href="{% static 'css/trix.css' %}" rel="stylesheet">
@@ -872,8 +872,8 @@
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/plupload.full.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 
 <script type="text/javascript">
 
@@ -951,9 +951,8 @@ $(function() {
     {% if aws_available and request.user|can:'image_uploader.use' %}
 
     $("#uploader").plupload({
-        runtimes : 'html5,flash',
-        flash_swf_url : '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/Moxie.swf',
-        url : "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com:443/",
+        runtimes : 'html5',
+        url : "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/",
         file_name_name: false,
         multipart: true,
         multipart_params : {

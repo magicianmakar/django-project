@@ -63,8 +63,7 @@ $('#images').on('click', '.delete-image', function(e) {
 loadImages();
 
 var imagesUploader = new plupload.Uploader({
-    runtimes: 'html5,flash',
-    flash_swf_url: '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/Moxie.swf',
+    runtimes: 'html5',
     browse_button: 'add-images',
     container: document.getElementById('add-images-wrapper'),
 

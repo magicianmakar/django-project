@@ -321,7 +321,7 @@ input.custom-file-input[type=file] {
 <script type="text/javascript">
     $.fn.bootstrapBtn = $.fn.button.noConflict();
     window.plupload_Config = {
-        url: "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com:443/",
+        url: "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/",
         AWSAccessKeyId: "{% app_setting 'AWS_ACCESS_KEY_ID' %}",
         policy: "{{aws_policy|escapejs}}",
         signature: "{{aws_signature|escapejs}}",
@@ -333,7 +333,7 @@ input.custom-file-input[type=file] {
 
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js" type="text/javascript"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js" type="text/javascript"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/plupload.full.min.js" type="text/javascript"></script>
 
 {% compress js %}
 <script src="{% static 'js/tag-it.min.js' %}" type="text/javascript"></script>

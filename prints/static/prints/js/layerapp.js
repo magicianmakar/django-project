@@ -114,8 +114,7 @@ $('[name="ships_from"]').on('change', reloadCustomSizes);
 
 function getNewUploader() {
     return new plupload.Uploader({
-        runtimes: 'html5,flash',
-        flash_swf_url: '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/Moxie.swf',
+        runtimes: 'html5',
         browse_button: 'pickfiles',
         container: document.getElementById('plcontainer'),
 

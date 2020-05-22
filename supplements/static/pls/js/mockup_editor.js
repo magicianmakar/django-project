@@ -436,8 +436,7 @@ $('#save-mockups').on('click', function(e) {
 });
 
 var mockupsUploader = new plupload.Uploader({
-    runtimes: 'html5,flash',
-    flash_swf_url: '//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/Moxie.swf',
+    runtimes: 'html5',
     browse_button: document.getElementById('save-mockups'),
 
     url: window.plupload_Config.url,

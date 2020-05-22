@@ -132,7 +132,7 @@
 {% block extracss %}
 {{ block.super }}
 <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
-<link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+<link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
@@ -141,8 +141,8 @@
 </script>
 
 <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js"></script>
-<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/plupload.full.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>
@@ -155,7 +155,7 @@ setup_full_editor('id_description');
 
 {% if aws_available %}
 window.plupload_Config = {
-  url: "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com:443/",
+  url: "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/",
   uploadedUrl: "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/",
   AWSAccessKeyId: "{% app_setting 'AWS_ACCESS_KEY_ID' %}",
   policy: "{{aws_policy|escapejs}}",
