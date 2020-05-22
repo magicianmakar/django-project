@@ -54,7 +54,8 @@ class Command(DropifiedBaseCommand):
 
         totals = {"total_bc_stores": 0,
                   "total_revenue": 0,
-                  "total_revenue_share": 0}
+                  "total_revenue_share": 0,
+                  "plans": {}}
 
         # using iterator to minimize memory usage
         for user in users.iterator():
@@ -85,6 +86,12 @@ class Command(DropifiedBaseCommand):
                         totals['total_bc_stores'] += 1
                         totals['total_revenue'] += monthly_revenue
                         totals['total_revenue_share'] += monthly_revenue_share
+                        try:
+                            plan_total = totals['plans'][user.profile.plan.id]
+                            plan_total.total_bc_users += 1
+                        except:
+                            totals['plans'][user.profile.plan.id] = {'title': user.profile.plan.title, 'total_bc_users': 1}
+
             except:
                 capture_exception()
 
@@ -94,6 +101,7 @@ class Command(DropifiedBaseCommand):
             'report_date': datetime.now(),
             'totals': totals
         }
+
         self.send_report(email_data, options['email'])
 
     @staticmethod
