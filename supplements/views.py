@@ -29,7 +29,7 @@ from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 
 from shopified_core import permissions
-from shopified_core.utils import aws_s3_context as images_aws_s3_context
+from shopified_core.utils import aws_s3_context as images_aws_s3_context, safe_int
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import app_link
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
@@ -757,7 +757,7 @@ class AllLabels(MyLabels):
                     name=Concat('user_supplement__user__first_name', models.Value(' '), 'user_supplement__user__last_name')
                 ).filter(
                     Q(user_supplement__user__email__icontains=label_user_name)
-                    | Q(user_supplement__user_id=label_user_name)
+                    | Q(user_supplement__user_id=safe_int(label_user_name, None))
                     | Q(name__icontains=label_user_name)
                 )
 
