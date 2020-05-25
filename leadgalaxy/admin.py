@@ -247,7 +247,7 @@ class PlanRegistrationAdmin(admin.ModelAdmin):
 class AccountRegistrationAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'user', 'expired', 'created_at', 'updated_at')
     list_filter = ('expired',)
-    search_fields = ('data', 'register_hash') + USER_SEARCH_FIELDS
+    search_fields = ('register_hash',) + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
     readonly_fields = ('register_hash',)
 
