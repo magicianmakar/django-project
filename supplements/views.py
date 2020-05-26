@@ -909,6 +909,9 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             label_class = 'label-danger'
             if action == label.APPROVED:
                 label_class = 'label-primary'
+                # If a label does not have SKU, needs to be generated for barcode
+                if label.sku == '':
+                    label.generate_sku()
                 self.add_barcode_to_label(label)
                 label.save()
 
