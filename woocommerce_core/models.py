@@ -144,8 +144,10 @@ class WooStore(StoreBase):
         self.prepare_data('billing', order)
 
         order['shipping']['phone'] = order['billing']['phone']
-        order['shipping_address'] = order.pop('shipping')
-        order['billing_address'] = order.pop('billing')
+        shipping_address = order['shipping_address'] = order.pop('shipping')
+        billing_address = order['billing_address'] = order.pop('billing')
+        order['shipping_address']['address2'] = shipping_address['address_2']
+        order['billing_address']['address2'] = billing_address['address_2']
         order['created_at'] = order.pop('date_created')
 
         for item in order['line_items']:
