@@ -283,13 +283,13 @@ class LabelMixin:
             })
             comment = (f"There is an <a href='{reverse_url}'>"
                        f"older version</a> of this label.")
-            self.create_comment(new_label.comments, comment)
+            self.create_comment(new_label.comments, comment, send_email=False)
 
         user_supplement.current_label = new_label
         user_supplement.current_label.generate_sku()
         user_supplement.save()
 
-    def create_comment(self, comments, text, new_status='', is_private=False):
+    def create_comment(self, comments, text, new_status='', is_private=False, send_email=True):
         tags = bleach.sanitizer.ALLOWED_TAGS + [
             'span',
             'p',
@@ -301,7 +301,7 @@ class LabelMixin:
                                   text=text,
                                   new_status=new_status,
                                   is_private=is_private)
-        if not is_private:
+        if send_email and not is_private:
             send_email_against_comment(comment)
         return comment
 
