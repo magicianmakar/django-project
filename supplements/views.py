@@ -969,15 +969,7 @@ class Order(common_views.OrderView):
         return queryset
 
 
-class OrderDetail(LoginRequiredMixin, View):
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
-            return super().dispatch(request, *args, **kwargs)
-        else:
-            raise permissions.PermissionDenied()
-
+class OrderDetailMixin(LoginRequiredMixin, View):
     def get_breadcrumbs(self, order):
         return [
             {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
@@ -1020,7 +1012,18 @@ class OrderDetail(LoginRequiredMixin, View):
         return render(request, "supplements/order_detail.html", context)
 
 
-class MyOrderDetail(OrderDetail):
+class OrderDetail(OrderDetailMixin):
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+
+class MyOrderDetail(OrderDetailMixin):
+
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.profile.is_black or request.user.can('pls.use'):
