@@ -60,7 +60,4 @@ urlpatterns = [
                                                                    extra_context={'site_header': 'Dropified'}), name='password_reset_confirm'),
     url(r'^accounts/reset/done/$', django.contrib.auth.views.PasswordResetCompleteView.as_view(
         template_name='registration/password_reset_complete2.html', extra_context={'site_header': 'Dropified'}), name='password_reset_complete'),
-
-    url(r'^robots\.txt$', leadgalaxy.views.robots_txt, name='robots_txt'),
-    url(r'^crossdomain\.xml$', leadgalaxy.views.crossdomain, name='crossdomain'),
 ]

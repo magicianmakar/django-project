@@ -34,8 +34,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.signing import Signer
 from django.db.models import Count, Max, F, Q
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import render, get_object_or_404, render_to_response, redirect
-from django.template import RequestContext
+from django.shortcuts import render, get_object_or_404, redirect
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -5348,33 +5347,4 @@ def user_invoices_download(request, invoice_id):
     response.write(buffer.getvalue())
     buffer.close()
 
-    return response
-
-
-def crossdomain(request):
-    html = """
-        <cross-domain-policy>
-            <allow-access-from domain="*.photopea.com"/>
-            <site-control permitted-cross-domain-policies="master-only"/>
-            <allow-http-request-headers-from domain="*.photopea.com" headers="*" secure="true"/>
-        </cross-domain-policy>
-    """
-    return HttpResponse(html, content_type='application/xml')
-
-
-def robots_txt(request):
-    return HttpResponse("User-agent: *\nDisallow: /\n", content_type='text/plain')
-
-
-def handler404(request):
-    response = render_to_response('404.html', {},
-                                  context_instance=RequestContext(request))
-    response.status_code = 404
-    return response
-
-
-def handler500(request):
-    response = render_to_response('500.html', {},
-                                  context_instance=RequestContext(request))
-    response.status_code = 500
     return response
