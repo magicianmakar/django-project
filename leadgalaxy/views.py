@@ -1748,7 +1748,7 @@ def product_view(request, pid):
         'user': product.user,
         'created_at': product.created_at,
         'updated_at': product.updated_at,
-        'product': json.loads(product.data),
+        'product': product.parsed,
         'notes': product.notes,
         'alert_config': alert_config,
         'last_check': last_check,
@@ -1762,7 +1762,7 @@ def product_view(request, pid):
     p['images'] = p['product']['images']
     p['original_url'] = p['product'].get('original_url')
 
-    if (p['original_url'] and len(p['original_url'])):
+    if p['original_url'] and len(p['original_url']):
         if 'aliexpress' in p['original_url'].lower():
             try:
                 p['original_product_id'] = re.findall('([0-9]+).html', p['original_url'])[0]
@@ -1804,6 +1804,7 @@ def product_view(request, pid):
         'exp': arrow.utcnow().replace(hours=6).timestamp
     }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
 
+    original_images = []
     if product.parent_product is None:
         if original:
             original_images = original.get('images', [])
