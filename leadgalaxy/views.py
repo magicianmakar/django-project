@@ -32,7 +32,6 @@ from django.core.mail import send_mail
 from django.urls import reverse
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.signing import Signer
-from django.db import transaction
 from django.db.models import Count, Max, F, Q
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
 from django.shortcuts import render, get_object_or_404, render_to_response, redirect
@@ -2972,38 +2971,70 @@ def dropified_black_users(request):
 
 
 @login_required
-def acp_groups_install(request):
-    if not request.user.is_superuser:
+def acp_cards(request):
+    if not request.user.is_staff:
         raise PermissionDenied()
 
-    plan = GroupPlan.objects.get(id=request.GET.get('default'))
-    vip_plan = GroupPlan.objects.get(id=request.GET.get('vip'))
-    users = User.objects.filter(profile__plan=None)
+    params = {
+        'key': 'a83a65bf491b17abe78590ea4d61c225',
+        'token': settings.TRELLO_TOKEN
+    }
 
-    if (request.GET.get('confirm', 'no') != 'yes'):
-        default_count = 0
-        vip_count = 0
-        for user in users:
-            if 'VIP Members' in user.groups.all().values_list('name', flat=True):
-                vip_count += 1
-            else:
-                default_count += 1
+    def get_boards(ids=False):
+        all_boards = cache.get('boards_lists')
+        if not all_boards:
+            all_boards = requests.get(
+                url='https://api.trello.com/1/' + url_join('organizations/cs_tdm/boards'),
+                params=params
+            ).json()
 
-        return HttpResponse('Total: %d - Default: %d - VIP: %d' % (default_count + vip_count, default_count, vip_count))
+            cache.set('boards_lists', all_boards, timeout=500)
 
-    count = 0
-    with transaction.atomic():
-        for user in users:
-            if 'VIP Members' in user.groups.all().values_list('name', flat=True):
-                profile = UserProfile(user=user, plan=vip_plan)
-            else:
-                profile = UserProfile(user=user, plan=plan)
+        if ids:
+            all_boards = [i['shortLink'] for i in boards]
 
-            profile.save()
+        return all_boards
 
-            count += 1
+    def get_boards_lists(board, title=None):
+        cach_key = f"boards_lists2_{hash_list([board['shortLink'], board['dateLastActivity']])}"
+        lists = cache.get(cach_key)
+        if not lists:
+            lists = requests.get(
+                url='https://api.trello.com/1/' + url_join('boards', board['shortLink'], 'lists'),
+                params=params
+            ).json()
 
-    return HttpResponse('Done, changed: %d' % count)
+            cache.set(cach_key, lists, timeout=3600)
+
+        if title:
+            lists = [i for i in lists if i['name'].lower() == title.lower()]  # .pop()
+
+        return lists
+
+    def get_list_cards(card_id):
+        return requests.get(
+            url='https://api.trello.com/1/' + url_join('lists', card_id, 'cards'),
+            params=params
+        ).json()
+
+    def get_all_cards():
+        all_cards = []
+        for board in get_boards():
+            for blist in get_boards_lists(board, request.GET.get('list', 'to do')):
+                for card in get_list_cards(blist['id']):
+                    card['board'] = board
+                    card['list'] = blist
+                    all_cards.append(card)
+
+        return sorted(all_cards, key=lambda k: k['dateLastActivity'], reverse=True)
+
+    cards = get_all_cards()
+
+    return render(request, 'acp/cards.html', {
+        'cards': cards,
+        'page': 'acp_groups',
+        'breadcrumbs': ['ACP', 'Support', 'Cards']
+    })
 
 
 @login_required

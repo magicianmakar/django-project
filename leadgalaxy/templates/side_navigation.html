@@ -58,9 +58,8 @@
         <li class="item"><a href="{% url 'acp_groups' %}">Plans</a></li>
         <li class="item"><a href="{% url 'dropified_black_users' %}">DB Users</a></li>
         {% if request.user.is_superuser %}
-        <li class="item m-b"><a href="/pages/">Pages</a></li>
-        {% else %}
-        <li class="item m-b"></li>
+        <li class="item"><a href="{% url 'acp_cards' %}">Cards</a></li>
+        <li class="item"><a href="/pages/">Pages</a></li>
         {% endif %}
 
       {% endif %}

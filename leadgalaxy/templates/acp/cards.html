@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load template_helper %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+
+             <div class="ibox-title">
+                <h5>Cards<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                        <i class="fa fa-wrench"></i>
+                    </a>
+
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+
+            <div class="ibox-content">
+                <p style="margin-bottom:20px"></p>
+                <table class="table table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Board</th>
+                            <th style="width:500px;">Desc</th>
+                            <th>List</th>
+                            <th>Attachements</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in cards %}
+                        <tr>
+                            <td data-order="{{ item.pos }}"><a target="_blank" href="{{ item.shortUrl }}">{{item.name}}</a></td>
+                            <td><b><a target="_blank" href="#" onclick="window.dt.api(true).search(this.text).draw(); return false;">{{ item.board.name }}</a></b></td>
+                            <td style="width:500px;">{{ item.desc | urlize | linebreaks }}</td>
+                            <td>{{ item.list.name }}</td>
+                            <td>{{ item.badges.attachments }}</td>
+                            <td data-order="{{ item.dateLastActivity }}"><a target="_blank" href="#">{% date_humanize item.dateLastActivity %}</a></td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="3">No cards found</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+
+    td p {
+        max-width: 500px;
+        overflow: hidden;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
+
+    <script type="text/javascript">
+        window.dt = $('.dataTables').dataTable({
+            responsive: true,
+            autoWidth: false,
+            dom: 'T<"clear">lfrtip',
+            bLengthChange: false,
+            iDisplayLength: 50,
+            order: [],
+            tableTools: {
+                sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
+            }
+        });
+
+    </script>
+{% endblock %}

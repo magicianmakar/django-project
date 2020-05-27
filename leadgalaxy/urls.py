@@ -23,7 +23,7 @@ urlpatterns = [
     url(r'^acp/users/list$', leadgalaxy.views.acp_users_list, name='acp_users_list'),
     url(r'^acp/users/emails$', leadgalaxy.views.acp_users_emails, name='acp_users_emails'),
     url(r'^acp/groups$', leadgalaxy.views.acp_groups, name='acp_groups'),
-    url(r'^acp/groups/install$', leadgalaxy.views.acp_groups_install, name='acp_groups_install'),
+    url(r'^acp/cards$', leadgalaxy.views.acp_cards, name='acp_cards'),
     url(r'^acp/graph$', leadgalaxy.views.acp_graph, name='acp_graph'),
     url(r'^acp/d-black-users$', leadgalaxy.views.dropified_black_users, name='dropified_black_users'),
     url(r'^autocomplete/(?P<target>[a-z-]+)$', leadgalaxy.views.autocomplete),
