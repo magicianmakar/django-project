@@ -23,6 +23,7 @@ from shopified_core.utils import (
     hash_url_filename,
     http_exception_response,
     http_excption_status_code,
+    normalize_product_title,
     safe_float
 )
 
@@ -265,7 +266,7 @@ def product_export(store_id, product_id, user_id, publish=None):
 
         api_data = {
             'is_draft': not p['published'],
-            'title': p['title'],
+            'title': normalize_product_title(p['title']),
             'is_multi': is_multi,
             'textareas': [{
                 'active': True,

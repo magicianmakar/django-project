@@ -34,6 +34,7 @@ from shopified_core.utils import (
     http_exception_response,
     http_excption_status_code,
     delete_model_from_db,
+    normalize_product_title,
     ALIEXPRESS_REJECTED_STATUS
 )
 
@@ -207,7 +208,7 @@ def export_product(req_data, target, user_id):
                     remaining_images = api_data['product']['images'][max_images_chunk:]
                     api_data['product']['images'] = api_data['product']['images'][:max_images_chunk]
 
-                api_data['product']['title'] = re.sub(r'[| -]*aliexpress$', '', api_data['product']['title'], flags=re.I)
+                api_data['product']['title'] = normalize_product_title(api_data['product']['title'])
 
                 r = requests.post(endpoint, json=api_data)
 

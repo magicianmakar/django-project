@@ -33,6 +33,7 @@ from shopified_core.utils import (
     http_excption_status_code,
     get_top_most_commons,
     get_first_valid_option,
+    normalize_product_title,
     order_data_cache
 )
 from shopified_core.shipping_helper import (
@@ -41,7 +42,7 @@ from shopified_core.shipping_helper import (
     valide_aliexpress_province,
     country_from_code,
     province_from_code,
-    support_other_in_province,
+    support_other_in_province
 )
 
 import leadgalaxy.utils as leadgalaxy_utils
@@ -107,7 +108,7 @@ def format_woo_errors(e):
 
 
 def update_product_api_data(api_data, data, store):
-    api_data['name'] = data['title']
+    api_data['name'] = normalize_product_title(data['title'])
     api_data['status'] = 'publish' if data['published'] else 'draft'
     api_data['price'] = str(data['price'])
     if data['compare_at_price']:

@@ -1059,6 +1059,14 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
     })
 
 
+def normalize_product_title(title):
+    if title:
+        title = re.sub(r'[| -]*(product *on *)?(Aliexpress|Alibaba)(.com)?', ' ', title.strip(), flags=re.I)
+        title = re.sub(r'[ ]{2,}', ' ', title, flags=re.I)
+
+        return title.strip()
+
+
 def products_filter(res, fdata, tags_field='tags'):
     if fdata.get('title'):
         title = decode_params(fdata.get('title'))

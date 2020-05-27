@@ -22,6 +22,7 @@ from shopified_core.utils import (
     decode_params,
     extension_hash_text,
     get_next_page_from_request,
+    normalize_product_title,
 )
 
 from shopified_core.utils import base64_encode
@@ -390,6 +391,29 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(url_join(base_url, 'api/products', 233330, '/variants'), base_url + '/api/products/233330/variants')
 
         self.assertEqual(url_join(base_url, 'api', 'products', 233330, '/variants'), base_url + '/api/products/233330/variants')
+
+    def test_normalize_product_title(self):
+        titles = {
+            'Allwinner V3s Lqfp128 Quad-core Cpu Processor Chip': 'Allwinner V3s Lqfp128 Quad-core Cpu Processor Chip',
+            'Allwinner V3s Lqfp128 Quad-core Cpu On Aliexpress Processor Chip': 'Allwinner V3s Lqfp128 Quad-core Cpu On Processor Chip',
+            'Allwinner V3s Lqfp128    Quad-core Cpu Processor Chip -   Avialble in Bulk in Alibaba ': 'Allwinner V3s Lqfp128 Quad-core Cpu Processor Chip - Avialble in Bulk in', # noqa
+        }
+
+        suffixes = [
+            'Product on Alibaba.com',
+            'Product on Alibaba',
+            'Product on AliExpress',
+            'Product   on   aliexpress.com',
+            '- AliExpress',
+            '  AliExpress',
+            '- aliexpress.com',
+            '- Alibaba.com',
+            '- Alibaba '
+        ]
+
+        for title, match in titles.items():
+            for s in suffixes:
+                self.assertEqual(normalize_product_title(f'{title} {s}'), match)
 
 
 class ShippingHelperFunctionsTestCase(BaseTestCase):

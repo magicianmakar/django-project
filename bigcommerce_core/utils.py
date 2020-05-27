@@ -27,6 +27,7 @@ from shopified_core.utils import (
     get_top_most_commons,
     get_first_valid_option,
     order_data_cache,
+    normalize_product_title
 )
 from shopified_core.shipping_helper import (
     get_uk_province,
@@ -34,7 +35,7 @@ from shopified_core.shipping_helper import (
     valide_aliexpress_province,
     country_from_code,
     province_from_code,
-    support_other_in_province,
+    support_other_in_province
 )
 
 import leadgalaxy.utils as leadgalaxy_utils
@@ -92,7 +93,7 @@ def format_bigcommerce_errors(e):
 
 
 def update_product_api_data(api_data, data):
-    api_data['name'] = data['title']
+    api_data['name'] = normalize_product_title(data['title'])
     api_data['type'] = 'physical'
     api_data['is_visible'] = True if data['published'] else False
     api_data['price'] = safe_float(data['price'])
