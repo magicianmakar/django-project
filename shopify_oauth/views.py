@@ -370,7 +370,7 @@ def callback(request):
         attach_webhooks(store)
 
         if from_shopify_store:
-            messages.success(request, 'Please select a plan to start your free trial!')
+            messages.success(request, 'Please select a plan to activate your free trial!')
             return HttpResponseRedirect('/user/profile#plan')
         else:
             messages.success(request, 'Your store <b>{}</b> has been added!'.format(store.title))
