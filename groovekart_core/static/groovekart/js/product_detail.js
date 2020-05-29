@@ -946,7 +946,7 @@ function renderImages() {
         buttons.push($('<a>', {
             'title': "Download",
             'class': "btn btn-info btn-xs itooltip download-image",
-            'href': el,
+            'href': 'https://app.dropified.com/api/ali/get-image?' + $.param({url: el}),
             'download': i + '-' + cleanImageLink(el).split('/').pop(),
             'html': '<i class="fa fa-download"></i>'
         }));
