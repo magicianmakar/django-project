@@ -8,9 +8,7 @@
     <p>Total BC Stores: <b>{{ totals.total_bc_stores }}</b></p>
     <p>Total Revenue <b>{% money_format totals.total_revenue %}</b></p>
     <p>Total Revenue Share (to BC Report form): <b>{% money_format totals.total_revenue_share %}</b></p>
-
     <p>BC Users by plans:</p>
-
     {% for plan_id,plan in totals.plans.items  %}
         <div>{{ plan.title }} : <b>{{ plan.total_bc_users }}</b> users</div>
     {% endfor %}

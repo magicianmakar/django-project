@@ -49,10 +49,11 @@ class Command(DropifiedBaseCommand):
         writer = csv.writer(attachment_csv_file)
 
         labels = ['BC App Id', 'BC Store URL', 'BC Store Title', 'User Email', 'User Name', 'Date Joined', 'On Trial',
-                  'Client Monthly Revenue', 'Client Monthly Revenue Share']
+                  'Client Monthly Revenue', 'Client Monthly Revenue Share', 'Only BigCommerce Connected']
         writer.writerow(labels)
 
         totals = {"total_bc_stores": 0,
+                  "total_only_bc_stores": 0,
                   "total_revenue": 0,
                   "total_revenue_share": 0,
                   "plans": {}}
@@ -79,8 +80,28 @@ class Command(DropifiedBaseCommand):
                             monthly_revenue_share = safe_float(monthly_revenue / active_stores.count()) * \
                                 (safe_float(REVENUE_TAX_PERCENT) / 100)
                             data_item.append('No')
+                        if user.email in ['bigninking@gmail.com',
+                                          'dgzanezebi@gmail.com',
+                                          'ben@thedevelopmentmachine.com',
+                                          'kevin@thedevelopmentmachine.com',
+                                          'greg@thedevelopmentmachine.com',
+                                          'jake@thedevelopmentmachine.com',
+                                          'riley@dropified.com',
+                                          'matt.crawford@bigcommerce.com',
+                                          'online@ksbsol.com']:
+                            monthly_revenue = 0
+                            monthly_revenue_share = 0
+
                         data_item.append('${:.2f}'.format(monthly_revenue))
                         data_item.append('${:.2f}'.format(monthly_revenue_share))
+
+                        all_stores_count = user.profile.get_stores_count()
+
+                        if user.profile.get_bigcommerce_stores().count() == all_stores_count:
+                            data_item.append('Yes')
+                            totals['total_only_bc_stores'] += 1
+                        else:
+                            data_item.append('No')
                         writer.writerow(data_item)
 
                         totals['total_bc_stores'] += 1
