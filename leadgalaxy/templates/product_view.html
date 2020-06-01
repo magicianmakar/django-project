@@ -841,6 +841,7 @@
                     <div class="row">
                         <div class="col-sm-9 text-right">
                             <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> Save</button>
+                            <a href="{% url 'product_alerts' %}?store={{product.qelem.store_id}}&product={{product.id}}" class="btn btn-success filter-col-item" target="_blank"><i class="fa fa-line-chart"></i>View Alerts</a>
                         </div>
                     </div>
                 </form>
