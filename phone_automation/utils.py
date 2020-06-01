@@ -178,13 +178,15 @@ def get_orders_by_phone(user, phone, phone_raw):
     for woo_store in woo_stores:
         try:
             for phone_woo in phone_all_formats:
-                resp_customer_orders = woo_store.wcapi.get("orders?search=" + phone_woo + "&status=processing")
+                params = {'search': phone_woo, 'status': 'processing'}
+                resp_customer_orders = woo_store.wcapi.get("orders", params=params)
                 resp_customer_orders.raise_for_status()
                 for woo_order in resp_customer_orders.json():
                     if woo_order not in orders['woo']:
                         orders['woo'].append(woo_order)
                 # another status processing
-                resp_customer_orders = woo_store.wcapi.get("orders?search=" + phone_woo + "&status=pending")
+                params = {'search': phone_woo, 'status': 'pending'}
+                resp_customer_orders = woo_store.wcapi.get("orders", params=params)
                 resp_customer_orders.raise_for_status()
                 for woo_order in resp_customer_orders.json():
                     if woo_order not in orders['woo']:
@@ -266,7 +268,7 @@ def get_orders_by_id(user, order_id):
 
     for woo_store in woo_stores:
         try:
-            resp_customer_orders = woo_store.wcapi.get("orders?include=" + order_id + "")
+            resp_customer_orders = woo_store.wcapi.get("orders", params={'include': order_id})
             resp_customer_orders.raise_for_status()
             for woo_order in resp_customer_orders.json():
                 orders['woo'].append(woo_order)

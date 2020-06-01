@@ -282,9 +282,8 @@ class WooProduct(ProductBase):
         variants = []
         page = 1
         while page:
-            params = urlencode({'page': page, 'per_page': 100})
-            path = 'products/{}/variations?{}'.format(self.source_id, params)
-            r = self.store.wcapi.get(path)
+            params = {'page': page, 'per_page': 100}
+            r = self.store.wcapi.get(f'products/{self.source_id}/variations', params=params)
             r.raise_for_status()
             fetched_variants = r.json()
             variants.extend(fetched_variants)

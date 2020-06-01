@@ -2,7 +2,7 @@ import re
 import json
 from functools import cmp_to_key
 from lxml import etree
-from urllib.parse import urlencode, parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 
@@ -238,7 +238,8 @@ class WooStoreApi(ApiBase):
 
         rep = None
         try:
-            rep = store.wcapi.get('products?page=1&per_page=1')
+            params = {'page': 1, 'per_page': 1}
+            rep = store.wcapi.get('products', params=params)
             rep.raise_for_status()
 
             return self.api_success({'store': store.get_store_url()})
@@ -266,7 +267,7 @@ class WooStoreApi(ApiBase):
                 params['search'] = data['query']
 
             try:
-                r = store.wcapi.get('products?{}'.format(urlencode(params)))
+                r = store.wcapi.get('products', params=params)
                 r.raise_for_status()
             except HTTPError:
                 return self.api_error('WooCommerce API Error', status=500)

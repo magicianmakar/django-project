@@ -5,7 +5,6 @@ import arrow
 import requests
 import copy
 
-from urllib.parse import urlencode
 from math import ceil
 from measurement.measures import Weight
 from decimal import Decimal, ROUND_HALF_UP
@@ -537,8 +536,7 @@ def cache_fulfillment_data(order_tracks, orders_max=None, output=None):
                 page = 1
                 while page:
                     params = {'page': page, 'per_page': 100, 'include': chunk_include}
-                    query_string = urlencode(params)
-                    r = store.wcapi.get('orders?{}'.format(query_string))
+                    r = store.wcapi.get('orders', params=params)
                     r.raise_for_status()
 
                     orders = r.json()
@@ -620,7 +618,7 @@ def order_id_from_name(store, order_name, default=None):
     if not order_number:
         return default
 
-    r = store.wcapi.get('orders?{}'.format(urlencode({'search': order_name})))
+    r = store.wcapi.get('orders', params={'search': order_name})
 
     if r.ok:
         orders = r.json()
@@ -642,7 +640,7 @@ def get_tracking_products(store, tracker_orders, per_page=50):
         return tracker_orders
 
     params = {'include': ','.join(ids), 'per_page': per_page}
-    r = store.get_wcapi(timeout=15).get('products?{}'.format(urlencode(params)))
+    r = store.get_wcapi(timeout=15).get('products', params=params)
     r.raise_for_status()
 
     products = {}
@@ -684,7 +682,7 @@ def get_tracking_products(store, tracker_orders, per_page=50):
         variation_id = tracked.line.get('variation_id')
         if not variations['data'].get(variation_id):
             variations['params']['include'] = ','.join(set(variations['params']['include']))
-            r = store.wcapi.get(f"{variations['path']}?{urlencode(variations['params'])}")
+            r = store.wcapi.get(f"{variations['path']}", params=variations['params'])
             r.raise_for_status()
             api_variations = r.json()
             for v in api_variations:
@@ -707,7 +705,7 @@ def get_tracking_orders(store, tracker_orders, per_page=50):
         return tracker_orders
 
     params = {'include': ','.join(ids), 'per_page': per_page}
-    r = store.wcapi.get('orders?{}'.format(urlencode(params)))
+    r = store.wcapi.get('orders', params=params)
     r.raise_for_status()
 
     orders = {}
@@ -746,8 +744,7 @@ def get_woo_products(store, page=1, limit=50, all_products=False, product_ids=No
         params = {'page': page, 'per_page': limit}
         if product_ids is not None:
             params['include'] = ','.join(product_ids)
-        path = 'products?{}'.format(urlencode(params))
-        r = store.wcapi.get(path)
+        r = store.wcapi.get('products', params=params)
         r.raise_for_status()
         for product in r.json():
             yield product
@@ -952,7 +949,7 @@ def get_product_data(store, product_ids=None):
             product_ids = [str(product_id) for product_id in product_ids]
             params['include'] = ','.join(product_ids)
 
-        r = store.wcapi.get('products?{}'.format(urlencode(params)))
+        r = store.wcapi.get('products', params=params)
         r.raise_for_status()
         products = r.json()
 
@@ -1018,9 +1015,7 @@ class WooListQuery(object):
         return self._response is not None
 
     def get_response(self):
-        params = urlencode(self._params)
-        endpoint = '{}?{}'.format(self._endpoint, params)
-        self._response = self._store.wcapi.get(endpoint)
+        self._response = self._store.wcapi.get(self._endpoint, params=self._params)
         self._response.raise_for_status()
 
         return self._response
