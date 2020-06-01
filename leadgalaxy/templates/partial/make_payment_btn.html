@@ -14,11 +14,14 @@
      {% endif %}
      class='payment-btn-wrapper'
      >
-     <button class="btn btn-success btn-xs dropdown-toggle pay-for-supplement"
+     <button class="btn btn-xs dropdown-toggle pay-for-supplement {% if item.refunded %}btn-danger{% else %}btn-success{% endif %}"
       {% if not item.product.is_label_approved %}
       disabled
       {% endif %}
       >
        Make Payment
+       {% if item.refunded %}
+          {% include 'partial/help_tooltip.html' with help="This Item was Refunded" qtipstyle="color:#fff" qtipicon="exclamation-triangle" %}
+       {% endif %}
      </button>
 </div>
