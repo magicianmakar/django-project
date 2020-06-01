@@ -527,7 +527,7 @@ class ShopifyTrackOrderExport():
                         'Shopify Item': order.line_id,
                         'Shopify Product Title': order_title,
                         'Supplier Order ID': order.source_id,
-                        'Tracking Number': order.source_tracking,
+                        'Tracking Number': f'="{order.source_tracking}"' if order.source_tracking else '',  # excel formula to format value as text,
                     })
 
                 start += steps
