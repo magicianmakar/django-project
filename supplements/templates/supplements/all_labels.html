@@ -26,7 +26,7 @@
         <div class="form-group {% if all_label_form.user_id.errors %}has-error{% endif %}">
           <label class="control-label">User:</label>
           {{ all_label_form.user_id|add_class:"form-control" }}
-          {{ all_label_form.label_user_name|add_class:"form-control" }}
+          {% render_field all_label_form.label_user_name class="form-control" placeholder='Name, Email, ID' %}
           {% for error in all_label_form.label_user_id.errors %}
           <p class="help-block">{{ error }}</p>
           {% endfor %}
