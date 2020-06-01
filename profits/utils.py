@@ -15,6 +15,7 @@ from gearbubble_core import utils as gear_utils
 from groovekart_core import utils as gkart_utils
 from bigcommerce_core import utils as bigcommerce_utils
 from groovekart_core.models import GrooveKartOrderTrack
+from bigcommerce_core.models import BigCommerceOrderTrack
 
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import safe_float
@@ -37,6 +38,8 @@ ALIEXPRESS_CANCELLED_STATUS = [
 def get_stores(user, store_type):
     if store_type == 'gkart':
         return user.profile.get_gkart_stores()
+    elif store_type == 'bigcommerce':
+        return user.profile.get_bigcommerce_stores()
     else:
         raise NotImplementedError('Store Type')
 
@@ -63,6 +66,8 @@ def get_store_from_request(request, store_type=''):
 def get_store_order_track(store_type):
     if store_type == 'gkart':
         return GrooveKartOrderTrack
+    elif store_type == 'bigcommerce':
+        return BigCommerceOrderTrack
     else:
         raise NotImplementedError('Store Type')
 

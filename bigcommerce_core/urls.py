@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^product/variants/(?P<store_id>[0-9]+)/(?P<pid>[0-9]+)$', bigcommerce_core.views.VariantsEditView.as_view(), name='variants_edit'),
     url(r'^orders$', bigcommerce_core.views.OrdersList.as_view(), name='orders_list'),
     url(r'^orders/track$', bigcommerce_core.views.OrdersTrackList.as_view(), name='orders_track'),
+    url(r'^profit-dashboard$', bigcommerce_core.views.ProfitDashboardView.as_view(), name='profits'),
     url(r'^boards/list$', bigcommerce_core.views.BoardsList.as_view(), name='boards_list'),
     url(r'^boards/(?P<pk>[0-9]+)$', bigcommerce_core.views.BoardDetailView.as_view(), name='board_detail'),
     url(r'^orders/place$', bigcommerce_core.views.OrderPlaceRedirectView.as_view(), name='orders_place'),

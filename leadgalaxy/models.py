@@ -100,6 +100,7 @@ SUBUSER_GKART_STORE_PERMISSIONS = (
 SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS = (
     *SUBUSER_STORE_PERMISSIONS_BASE,
     ('send_to_bigcommerce', 'Send products to BigCommerce'),
+    ('view_profit_dasbharod', 'View profit dashboard')
 )
 
 PRICE_MARKUP_TYPES = (

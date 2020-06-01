@@ -102,6 +102,9 @@ class BigCommerceStore(StoreBase):
     def get_admin_url(self):
         return self.get_store_url('manage')
 
+    def get_admin_order_details(self, order_id):
+        return f'{self.get_admin_url()}/v2/index.php?controller=AdminOrders&id_order={order_id}&vieworder'
+
     def get_suppliers(self):
         return self.bigcommercesupplier_set.all().order_by('-is_default')
 

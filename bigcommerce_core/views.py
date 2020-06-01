@@ -25,7 +25,9 @@ from django.core.cache.utils import make_template_fragment_key
 from bigcommerce.api import BigcommerceApi
 from supplements.models import PLSOrderLine
 
+from profits.mixins import ProfitDashboardMixin
 from shopified_core import permissions
+from shopified_core.decorators import PlatformPermissionRequired
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
@@ -1396,3 +1398,20 @@ class OrderPlaceRedirectView(RedirectView):
             cache.set(event_key, True, timeout=3600)
 
         return redirect_url
+
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(PlatformPermissionRequired('bigcommerce'), name='dispatch')
+class ProfitDashboardView(ProfitDashboardMixin, ListView):
+    store_type = 'bigcommerce'
+    store_model = BigCommerceStore
+    base_template = 'base_bigcommerce_core.html'
+
+    def get_context_data(self, **kwargs):
+        # Check for new orders in BigCommerce
+        current_page = safe_int(self.request.GET.get('page'), 1)
+        if current_page == 1:
+            self.get_store()
+            pass
+
+        return super().get_context_data(**kwargs)
