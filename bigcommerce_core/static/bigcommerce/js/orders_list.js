@@ -940,8 +940,5 @@ $(function () {
         }
     });
 */
-    setTimeout(function() {
-        window.location.reload();
-    }, 3500 * 1000);
 });
 })(user_filter, sub_conf);

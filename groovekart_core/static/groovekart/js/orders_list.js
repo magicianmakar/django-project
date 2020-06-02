@@ -1052,9 +1052,5 @@ $(function () {
             createdAtEnd.format(createdAtEnd.year() == moment().year() ? 'MMMM D' : 'MMMM D, YYYY'));
     }
 
-
-    setTimeout(function() {
-        window.location.reload();
-    }, 3500 * 1000);
 });
 })(user_filter, sub_conf);

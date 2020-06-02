@@ -923,9 +923,5 @@ $(function () {
     });
 
     setupDateRangePicker('#created_at_daterange', 'input[name="created_at_daterange"]', true);
-
-    setTimeout(function() {
-        window.location.reload();
-    }, 3500 * 1000);
 });
 })(user_filter, sub_conf);
