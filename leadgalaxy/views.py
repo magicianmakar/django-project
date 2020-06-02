@@ -3674,7 +3674,7 @@ class OrdersView(TemplateView):
 
     def get_user_settings(self):
         # User settings
-        self.config.update(dict(
+        self.config.update(
             order_custom_note=self.models_user.get_config('order_custom_note'),
             epacket_shipping=bool(self.models_user.get_config('epacket_shipping')),
             aliexpress_shipping_method=self.models_user.get_config('aliexpress_shipping_method'),
@@ -3688,7 +3688,7 @@ class OrdersView(TemplateView):
             show_actual_supplier=self.models_user.get_config('_show_actual_supplier', False) or self.models_user.id in [883, 21064, 24767],
             order_risk_all_getaways=self.models_user.get_config('_order_risk_all_getaways', False),
             aliexpress_mobile_order=self.models_user.can('aliexpress_mobile_order.use')
-        ))
+        )
 
         self.config['admitad_site_id'], self.config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)
 
@@ -3701,7 +3701,7 @@ class OrdersView(TemplateView):
         self.page_start = safe_int(self.request.GET.get('page_start'), 1)
         self.page_num += self.page_start - 1
 
-        self.filters.update(dict(
+        self.filters.update(
             sort=utils.get_orders_filter(self.request, 'sort', 'asc'),
             status=utils.get_orders_filter(self.request, 'status', 'open'),
             fulfillment=utils.get_orders_filter(self.request, 'fulfillment', 'unshipped,partial'),
@@ -3720,12 +3720,15 @@ class OrdersView(TemplateView):
             product_filter=[i for i in self.request.GET.getlist('product') if safe_int(i)],
             supplier_filter=self.request.GET.get('supplier_name'),
             shipping_method_filter=self.request.GET.get('shipping_method_name'),
-        ))
+
+            order_risk_levels_enabled=self.models_user.get_config('order_risk_levels_enabled'),
+            user_filter=utils.get_orders_filter(self.request),
+
+            created_at_daterange=self.request.GET.get('created_at_daterange', now.replace(days=-30).format('MM/DD/YYYY-')),
+        )
 
         if self.filters.product_filter:
             self.filters.product_filter = self.models_user.shopifyproduct_set.filter(id__in=self.filters.product_filter)
-
-        self.filters.created_at_daterange = self.request.GET.get('created_at_daterange', '{}-'.format(now.replace(days=-30).format('MM/DD/YYYY')))
 
         if self.request.GET.get('shop') or self.filters.query or self.filters.query_order or self.filters.query_customer \
                 or self.filters.query_customer_id:
@@ -3766,6 +3769,7 @@ class OrdersView(TemplateView):
             and not self.request.GET.get('live')
 
         self.sync.support_product_filter = shopify_orders_utils.support_product_filter(self.store) and self.models_user.can('exclude_products.use')
+        self.sync.shipping_method_filter_enabled = self.filters.shipping_method_filter and self.sync.store_order_synced
 
         self.es = shopify_orders_utils.get_elastic()
         self.sync.es_search_enabled = self.es and shopify_orders_utils.is_store_indexed(store=self.store) \
@@ -4494,22 +4498,19 @@ class OrdersView(TemplateView):
             self.request.user.get_config('_orders_debug') or \
             settings.DEBUG
 
-        self.ctx.update({
-            'orders': self.orders,
-            'store': self.store,
-            'paginator': self.paginator,
-            'current_page': self.current_page,
-            'open_orders': self.open_orders,
-            'shipping_method_filter_enabled': self.filters.shipping_method_filter and self.sync.store_order_synced,
-            'order_risk_levels_enabled': self.models_user.get_config('order_risk_levels_enabled'),
-            'user_filter': utils.get_orders_filter(self.request),
-            'countries': countries,
-            'order_debug': order_debug,
-            'open_print_on_demand': open_print_on_demand,
+        self.ctx.update(
+            orders=self.orders,
+            store=self.store,
+            paginator=self.paginator,
+            current_page=self.current_page,
+            open_orders=self.open_orders,
+            countries=countries,
+            order_debug=order_debug,
+            open_print_on_demand=open_print_on_demand,
             **self.config,
             **self.filters,
             **self.sync,
-        })
+        )
 
     def render_to_response(self, context, **response_kwargs):
         if self.bulk_queue:
