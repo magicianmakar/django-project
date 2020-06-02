@@ -37,8 +37,9 @@ class GotoPageTestCase(BaseTestCase):
 
     def test_shopify(self):
         self.store = ShopifyStoreFactory(user=self.user)
-        response = self.client.get(self.shopify_url)
-        self.assertRedirects(response, self.make_url('orders'))
+        response = self.client.get(self.shopify_url, follow=False)
+
+        self.assertEqual(response.url, self.make_url('orders'))
 
     @patch('commercehq_core.views.OrdersList.paginator_class'
            '._orders_count_request')
