@@ -127,8 +127,8 @@
         }
         if (store_type === 'bigcommerce') {
             shop = shop_url.match(/(?:https?:\/\/)?([^\/]+)/);
-        } 
-        
+        }
+
         if (!shop || shop.length != 2) {
             swal('Add Store', 'Store URL is not correct!', 'error');
             return;
@@ -436,16 +436,14 @@
 
         var newUrl = '/shopify/install/' + $(this).attr('store-shop') + '?reinstall=' + $(this).attr('store-id');
 
+        setTimeout(function () {
+            window.location.href = newUrl;
+        }, 2000);
+
         ga('send', 'event', {
             eventCategory: $(this).hasClass('label-danger') ?  'Store Upgrade' : 'Store Reinstall',
             eventAction: 'Shopify',
             eventLabel: $(this).attr('store-shop'),
-            hitCallback: function() {
-                window.location.href = newUrl;
-            },
-            hitCallbackFail : function () {
-                window.location.href = newUrl;
-            }
         });
     });
 
