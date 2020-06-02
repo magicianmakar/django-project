@@ -4,7 +4,6 @@ import io
 import hmac
 import random
 import time
-import zlib
 
 from hashlib import sha1
 from urllib.parse import urlencode, quote_plus
@@ -14,7 +13,7 @@ import requests
 import jwt
 import texttable
 import simplejson as json
-from munch import Munch
+from munch import Munch, munchify
 
 from lib.exceptions import capture_exception, capture_message
 
@@ -37,9 +36,11 @@ from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http40
 from django.shortcuts import render, get_object_or_404, redirect
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.generic.base import TemplateView
 
 from infinite_pagination.paginator import InfinitePaginator
 
@@ -981,8 +982,6 @@ def webhook(request, provider, option):
                     'to': text[2],
                     'response_url': request.POST['response_url'],
                 }
-
-                print(options)
 
             except:
                 return HttpResponse(":x: Invalid Command Format")
@@ -3568,216 +3567,255 @@ def save_image_s3(request):
     })
 
 
-def orders_view(request):
-    try:
-        if not request.user.is_authenticated:
-            mixing = ApiResponseMixin()
-            user = mixing.get_user(request)
-            if user:
-                user.backend = settings.AUTHENTICATION_BACKENDS[0]
-                login(request, user)
-                request.user = user
+class OrdersView(TemplateView):
+    template_name = 'orders_new.html'
 
-    except ApiLoginException:
-        return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, quote_plus(request.GET.urlencode())))
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.can('orders.use'):
+            return HttpResponseRedirect(f"{reverse('upgrade_required')}?feature=orders")
 
-    except:
-        capture_exception()
+        self.orders = []
+        self.post_per_page = 20
 
-    if not request.user.can('orders.use'):
-        return render(request, 'upgrade.html', {'selected_menu': 'orders:all', })
+        self.user = self.request.user
+        self.models_user = self.request.user.models_user
 
-    bulk_queue = bool(request.GET.get('bulk_queue'))
-    if bulk_queue and not request.user.can('bulk_order.use'):
-        return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."}, status=402)
+        # Bulk is used to return JSON formatted data for Bulk Ordering feature
+        self.bulk_queue = bool(self.request.GET.get('bulk_queue'))
+        if self.bulk_queue and not request.user.can('bulk_order.use'):
+            return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."}, status=402)
 
-    all_orders = []
-    store = None
-    post_per_page = safe_int(request.GET.get('ppp'), 20)
-    page = safe_int(request.GET.get('page'), 1)
-    page_start = safe_int(request.GET.get('page_start'), 1)
-    page += page_start - 1
+        # Get or guess the current store from the request
+        self.store = utils.get_store_from_request(request)
 
-    store = utils.get_store_from_request(request)
-    if not store:
-        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'orders_list'}))
+        if not self.store:
+            # TODO: possible redirection loop
+            return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'orders_list'}))
 
-    if not request.user.can('place_orders.sub', store):
-        messages.warning(request, "You don't have access to this store orders")
-        return HttpResponseRedirect('/')
+        # Check if sub user have access to Orders page
+        if not request.user.can('place_orders.sub', self.store):
+            messages.warning(request, "You don't have access to this store orders")
+            return HttpResponseRedirect('/')
 
-    models_user = request.user.models_user
+        # Reset user filter settings
+        if self.request.GET.get('reset') == '1':
+            self.user.profile.del_config_values('_orders_filter_', True)
 
-    if request.GET.get('reset') == '1':
-        request.user.profile.del_config_values('_orders_filter_', True)
+        return super().dispatch(request, *args, **kwargs)
 
-    breadcrumbs = [
-        {'url': '/orders', 'title': 'Orders'},
-        {'url': '/orders?store={}'.format(store.id), 'title': store.title},
-    ]
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
-    # Check if the extension is up-to-date
-    latest_release = cache.get('extension_min_version')
-    user_version = request.user.get_config('extension_version')
+        self.get_pagination()
+        self.check_extension_version()
 
-    # User settings
-    order_custom_note = models_user.get_config('order_custom_note')
-    epacket_shipping = bool(models_user.get_config('epacket_shipping'))
-    aliexpress_shipping_method = models_user.get_config('aliexpress_shipping_method')
-    auto_ordered_mark = bool(models_user.get_config('auto_ordered_mark', True))
-    order_custom_line_attr = bool(models_user.get_config('order_custom_line_attr'))
-    use_relative_dates = bool(models_user.get_config('use_relative_dates', True))
-    fix_order_variants = models_user.get_config('fix_order_variants')
-    aliexpress_fix_address = models_user.get_config('aliexpress_fix_address', True)
-    aliexpress_fix_city = models_user.get_config('aliexpress_fix_city', True)
-    german_umlauts = models_user.get_config('_use_german_umlauts', False)
-    show_actual_supplier = models_user.get_config('_show_actual_supplier', False) or models_user.id in [883, 21064, 24767]
-    order_risk_all_getaways = models_user.get_config('_order_risk_all_getaways', False)
-    aliexpress_mobile_order = models_user.can('aliexpress_mobile_order.use')
+        context.update(self.get_user_settings())
+        context.update(self.get_filters())
+        context.update(self.get_sync_status())
 
-    if user_version and latest_release \
-            and version_compare(user_version, latest_release) < 0 \
-            and cache.get('extension_required', False):
-        messages.warning(
-            request, 'You are using version <b>{}</b> of the extension, the latest version is <b>{}.</b> '
-            '<a href="/pages/13">View Upgrade Instructions</a>'.format(user_version, latest_release))
+        context.update(self.proccess_orders())
 
-    # Admitad ID
-    admitad_site_id, user_admitad_credentials = utils.get_admitad_credentials(request.user.models_user)
+        context.update({
+            'breadcrumbs': self.get_breadcrumbs()
+        })
 
-    # Filters
-    sort = utils.get_orders_filter(request, 'sort', 'asc')
-    status = utils.get_orders_filter(request, 'status', 'open')
-    fulfillment = utils.get_orders_filter(request, 'fulfillment', 'unshipped,partial')
-    financial = utils.get_orders_filter(request, 'financial', 'paid,partially_refunded')
-    sort_field = utils.get_orders_filter(request, 'sort', 'created_at')
-    sort_type = utils.get_orders_filter(request, 'desc', checkbox=True)
-    connected_only = utils.get_orders_filter(request, 'connected', checkbox=True)
-    awaiting_order = utils.get_orders_filter(request, 'awaiting_order', checkbox=True)
+        return context
 
-    query = decode_params(request.GET.get('query') or request.GET.get('id'))
-    query_order = decode_params(request.GET.get('query_order') or request.GET.get('id'))
-    query_customer = decode_params(request.GET.get('query_customer'))
-    query_customer_id = request.GET.get('query_customer_id')
-    query_address = request.GET.getlist('query_address')
+    def get_breadcrumbs(self):
+        return [
+            {'url': '/orders', 'title': 'Orders'},
+            {'url': f'/orders?store={self.store.id}', 'title': self.store.title},
+        ]
 
-    product_filter = request.GET.getlist('product')
-    supplier_filter = request.GET.get('supplier_name')
-    shipping_method_filter = request.GET.get('shipping_method_name')
+    def get_pagination(self):
+        self.page_num = safe_int(self.request.GET.get('page'), 1)
+        self.page_start = safe_int(self.request.GET.get('page_start'), 1)
+        self.page_num += self.page_start - 1
 
-    date_now = arrow.get(timezone.now())
-    created_at_daterange = request.GET.get('created_at_daterange',
-                                           '{}-'.format(date_now.replace(days=-30).format('MM/DD/YYYY')))
+    def check_extension_version(self):
+        # Check if the extension is up-to-date
+        latest_release = cache.get('extension_min_version')
+        user_version = self.request.user.get_config('extension_version')
 
-    if request.GET.get('shop') or query or query_order or query_customer or query_customer_id:
-        status, fulfillment, financial = ['any', 'any', 'any']
-        connected_only = False
-        awaiting_order = False
-        created_at_daterange = None
+        if user_version and latest_release and version_compare(user_version, latest_release) < 0 and cache.get('extension_required', False):
+            messages.warning(
+                self.request, 'You are using version <b>{}</b> of the extension, the latest version is <b>{}.</b> '
+                '<a href="/pages/13">View Upgrade Instructions</a>'.format(user_version, latest_release))
 
-    if request.GET.get('old') == '1':
-        shopify_orders_utils.disable_store_sync(store)
-    elif request.GET.get('old') == '0':
-        shopify_orders_utils.enable_store_sync(store)
+    def get_user_settings(self):
+        # User settings
+        config = dict(
+            order_custom_note=self.models_user.get_config('order_custom_note'),
+            epacket_shipping=bool(self.models_user.get_config('epacket_shipping')),
+            aliexpress_shipping_method=self.models_user.get_config('aliexpress_shipping_method'),
+            auto_ordered_mark=bool(self.models_user.get_config('auto_ordered_mark', True)),
+            order_custom_line_attr=bool(self.models_user.get_config('order_custom_line_attr')),
+            use_relative_dates=bool(self.models_user.get_config('use_relative_dates', True)),
+            fix_order_variants=self.models_user.get_config('fix_order_variants'),
+            aliexpress_fix_address=self.models_user.get_config('aliexpress_fix_address', True),
+            aliexpress_fix_city=self.models_user.get_config('aliexpress_fix_city', True),
+            german_umlauts=self.models_user.get_config('_use_german_umlauts', False),
+            show_actual_supplier=self.models_user.get_config('_show_actual_supplier', False) or self.models_user.id in [883, 21064, 24767],
+            order_risk_all_getaways=self.models_user.get_config('_order_risk_all_getaways', False),
+            aliexpress_mobile_order=self.models_user.can('aliexpress_mobile_order.use')
+        )
 
-    created_at_start, created_at_end = None, None
-    if created_at_daterange:
-        try:
-            daterange_list = created_at_daterange.split('-')
+        config['admitad_site_id'], config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)
 
-            tz = timezone.localtime(timezone.now()).strftime(' %z')
+        self.config = munchify(config)
 
-            created_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').datetime
+        return self.config
 
-            if len(daterange_list) > 1 and daterange_list[1]:
-                created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
-                created_at_end = created_at_end.span('day')[1].datetime
+    def get_filters(self):
+        now = arrow.get(timezone.now())
 
-        except:
-            pass
+        self.filters = munchify(dict(
+            sort=utils.get_orders_filter(self.request, 'sort', 'asc'),
+            status=utils.get_orders_filter(self.request, 'status', 'open'),
+            fulfillment=utils.get_orders_filter(self.request, 'fulfillment', 'unshipped,partial'),
+            financial=utils.get_orders_filter(self.request, 'financial', 'paid,partially_refunded'),
+            sort_field=utils.get_orders_filter(self.request, 'sort', 'created_at'),
+            sort_type=utils.get_orders_filter(self.request, 'desc', checkbox=True),
+            connected_only=utils.get_orders_filter(self.request, 'connected', checkbox=True),
+            awaiting_order=utils.get_orders_filter(self.request, 'awaiting_order', checkbox=True),
 
-    store_order_synced = shopify_orders_utils.is_store_synced(store)
-    store_sync_enabled = store_order_synced \
-        and (shopify_orders_utils.is_store_sync_enabled(store) or request.GET.get('new')) \
-        and not request.GET.get('live')
+            query=decode_params(self.request.GET.get('query') or self.request.GET.get('id')),
+            query_order=decode_params(self.request.GET.get('query_order') or self.request.GET.get('id')),
+            query_customer=decode_params(self.request.GET.get('query_customer')),
+            query_customer_id=self.request.GET.get('query_customer_id'),
+            query_address=self.request.GET.getlist('query_address'),
 
-    support_product_filter = shopify_orders_utils.support_product_filter(store) and models_user.can('exclude_products.use')
+            product_filter=self.request.GET.getlist('product'),
+            supplier_filter=self.request.GET.get('supplier_name'),
+            shipping_method_filter=self.request.GET.get('shipping_method_name'),
+        ))
 
-    es = shopify_orders_utils.get_elastic()
-    es_search_enabled = es and shopify_orders_utils.is_store_indexed(store=store) and not request.GET.get('elastic') == '0'
+        self.filters.created_at_daterange = self.request.GET.get('created_at_daterange', '{}-'.format(now.replace(days=-30).format('MM/DD/YYYY')))
 
-    if not store_sync_enabled:
-        if ',' in fulfillment:
+        if self.request.GET.get('shop') or self.filters.query or self.filters.query_order or self.filters.query_customer \
+                or self.filters.query_customer_id:
+            self.filters.status = 'any'
+            self.filters.fulfillment = 'any'
+            self.filters.financial = 'any'
+            self.filters.connected_only = False
+            self.filters.awaiting_order = False
+            self.filters.created_at_daterange = None
+
+        self.filters.created_at_start, self.filters.created_at_end = None, None
+        if self.filters.created_at_daterange:
+            try:
+                daterange_list = self.filters.created_at_daterange.split('-')
+
+                tz = timezone.localtime(timezone.now()).strftime(' %z')
+
+                self.filters.created_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').datetime
+
+                if len(daterange_list) > 1 and daterange_list[1]:
+                    self.filters.created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                    self.filters.created_at_end = self.filters.created_at_end.span('day')[1].datetime
+
+            except:
+                pass
+
+        return self.filters
+
+    def get_sync_status(self):
+        if self.request.GET.get('old') == '1':
+            shopify_orders_utils.disable_store_sync(self.store)
+        elif self.request.GET.get('old') == '0':
+            shopify_orders_utils.enable_store_sync(self.store)
+
+        self.sync = munchify({})
+        self.sync.store_order_synced = shopify_orders_utils.is_store_synced(self.store)
+        self.sync.store_sync_enabled = self.sync.store_order_synced \
+            and (shopify_orders_utils.is_store_sync_enabled(self.store) or self.request.GET.get('new')) \
+            and not self.request.GET.get('live')
+
+        self.sync.support_product_filter = shopify_orders_utils.support_product_filter(self.store) and self.models_user.can('exclude_products.use')
+
+        self.es = shopify_orders_utils.get_elastic()
+        self.sync.es_search_enabled = self.es and shopify_orders_utils.is_store_indexed(store=self.store) \
+            and not self.request.GET.get('elastic') == '0'
+
+        # Start background syncing task
+        orders_sync_check_key = f'store_orders_sync_check_{self.store.id}'
+        if self.sync.store_sync_enabled and cache.get(orders_sync_check_key) is None:
+            cache.set(orders_sync_check_key, True, timeout=43200)
+            tasks.sync_shopify_orders.apply_async(
+                args=[self.store.id],
+                kwargs={'elastic': self.sync.es_search_enabled},
+                expires=600)
+
+        return self.sync
+
+    def get_orders(self):
+        if not self.sync.store_sync_enabled:
+            self.get_orders_from_api()
+        elif self.sync.es_search_enabled:
+            self.get_orders_from_es()
+        else:
+            self.get_orders_from_db()
+
+    def get_orders_from_api(self):
+        if ',' in self.filters.fulfillment:
             # Direct API call doesn't support more that one fulfillment status
-            fulfillment = 'unshipped'
+            self.filters.fulfillment = 'unshipped'
 
-        if ',' in financial:
-            financial = 'paid'
+        if ',' in self.filters.financial:
+            self.filters.financial = 'paid'
 
-        if created_at_start:
-            created_at_start = arrow.get(created_at_start).isoformat()
+        if self.filters.created_at_start:
+            self.filters.created_at_start = arrow.get(self.filters.created_at_start).isoformat()
 
-        if created_at_end:
-            created_at_end = arrow.get(created_at_end).isoformat()
+        if self.filters.created_at_end:
+            self.filters.created_at_end = arrow.get(self.filters.created_at_end).isoformat()
 
-        if query_order and not query:
-            query = query_order
+        if self.filters.query_order and not self.filters.query:
+            self.filters.query = self.filters.query_order
 
-        if query:
-            order_id = shopify_orders_utils.order_id_from_name(store, query)
+        if self.filters.query:
+            order_id = shopify_orders_utils.order_id_from_name(self.store, self.filters.query)
         else:
             order_id = None
 
-        open_orders = store.get_orders_count(status, fulfillment, financial,
-                                             query=safe_int(order_id, query),
-                                             created_range=[created_at_start, created_at_end])
-
-        paginator = ShopifyOrderPaginator([], post_per_page)
-        paginator.set_store(store)
-        paginator.set_page_info(request.GET.get('page'))
-        paginator.set_order_limit(post_per_page)
+        paginator = ShopifyOrderPaginator([], self.post_per_page)
+        paginator.set_store(self.store)
+        paginator.set_page_info(self.request.GET.get('page'))
+        paginator.set_order_limit(self.post_per_page)
         paginator.set_filter(
-            status,
-            fulfillment,
-            financial,
-            created_at_start,
-            created_at_end
+            self.filters.status,
+            self.filters.fulfillment,
+            self.filters.financial,
+            self.filters.created_at_start,
+            self.filters.created_at_end
         )
-        paginator.set_reverse_order(sort == 'desc' and sort != 'created_at')
-        paginator.set_query(safe_int(order_id, query))
 
-        open_orders = paginator.orders_count()
+        paginator.set_reverse_order(self.filters.sort == 'desc' and self.filters.sort != 'created_at')
+        paginator.set_query(safe_int(order_id, self.filters.query))
 
-        page = min(max(1, page), paginator.num_pages)
-        current_page = paginator.page(page)
-        page = current_page
+        self.paginator = paginator
+        self.open_orders = paginator.orders_count()
 
-        # Update outdated order data by comparing last update timestamp
-        _page = ShopifyOrder.objects.filter(store=store, order_id__in=[i['id'] for i in page])
-        _update_page = shopify_orders_utils.sort_orders(page, _page)
+        self.page_num = min(max(1, self.page_num), paginator.num_pages)
+        self.current_page = paginator.page(self.page_num)
 
-        countdown = 1
-        for order in _update_page:
-            if arrow.get(order['updated_at']).timestamp > order['db_updated_at'] and not settings.DEBUG:
-                tasks.update_shopify_order.apply_async(
-                    args=[store.id, order['id']],
-                    kwargs={'shopify_order': order, 'from_webhook': False},
-                    countdown=countdown)
+        db_page = ShopifyOrder.objects.filter(store=self.store, order_id__in=[i['id'] for i in self.current_page])
+        _update_page = shopify_orders_utils.sort_orders(self.current_page, db_page)
+        self.sync_orders_with_db(_update_page)
 
-                countdown = countdown + 1
-
-    elif es_search_enabled:
-        _must_term = [{'term': {'store': store.id}}]
+    def get_orders_from_es(self):
+        _must_term = [{'term': {'store': self.store.id}}]
         _must_not_term = []
 
-        if query_order:
-            order_id = shopify_orders_utils.order_id_from_name(store, query_order)
+        if self.filters.query_order:
+            order_id = shopify_orders_utils.order_id_from_name(self.store, self.filters.query_order)
 
             if order_id:
                 _must_term.append({'term': {'order_id': order_id}})
             else:
-                source_id = safe_int(query_order.replace('#', '').strip(), 123)
-                order_ids = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
+                source_id = safe_int(self.filters.query_order.replace('#', '').strip(), 123)
+                order_ids = ShopifyOrderTrack.objects.filter(store=self.store, source_id=source_id) \
                                                      .defer('data') \
                                                      .values_list('order_id', flat=True)
                 if len(order_ids):
@@ -3787,17 +3825,17 @@ def orders_view(request):
                         }
                     })
                 else:
-                    _must_term.append({'term': {'order_id': safe_int(query_order, 0)}})
+                    _must_term.append({'term': {'order_id': safe_int(self.filters.query_order, 0)}})
 
-        if status == 'open':
+        if self.filters.status == 'open':
             _must_not_term.append({"exists": {'field': 'closed_at'}})
             _must_not_term.append({"exists": {'field': 'cancelled_at'}})
-        elif status == 'closed':
+        elif self.filters.status == 'closed':
             _must_term.append({"exists": {'field': 'closed_at'}})
-        elif status == 'cancelled':
+        elif self.filters.status == 'cancelled':
             _must_term.append({"exists": {'field': 'cancelled_at'}})
 
-        if fulfillment == 'unshipped,partial':
+        if self.filters.fulfillment == 'unshipped,partial':
             _must_term.append({
                 'bool': {
                     'should': [
@@ -3812,14 +3850,14 @@ def orders_view(request):
                     ]
                 }
             })
-        elif fulfillment == 'unshipped':
+        elif self.filters.fulfillment == 'unshipped':
             _must_not_term.append({"exists": {'field': 'fulfillment_status'}})
-        elif fulfillment == 'shipped':
+        elif self.filters.fulfillment == 'shipped':
             _must_term.append({'term': {'fulfillment_status': 'fulfilled'}})
-        elif fulfillment == 'partial':
+        elif self.filters.fulfillment == 'partial':
             _must_term.append({'term': {'fulfillment_status': 'partial'}})
 
-        if financial == 'paid,partially_refunded':
+        if self.filters.financial == 'paid,partially_refunded':
             _must_term.append({
                 'bool': {
                     'should': [
@@ -3828,56 +3866,56 @@ def orders_view(request):
                     ]
                 }
             })
-        elif financial != 'any':
-            _must_term.append({'term': {'financial_status': financial}})
+        elif self.filters.financial != 'any':
+            _must_term.append({'term': {'financial_status': self.filters.self.filters.financial}})
 
-        if query_customer_id:
+        if self.filters.query_customer_id:
             # Search by customer ID first
-            _must_term.append({'match': {'customer_id': query_customer_id}})
+            _must_term.append({'match': {'customer_id': self.filters.query_customer_id}})
 
-        elif query_customer:
+        elif self.filters.query_customer:
             # Try to find the customer email in the search query
-            customer_email = re.findall(r'[\w\._\+-]+@[\w\.-]+', query_customer)
+            customer_email = re.findall(r'[\w\._\+-]+@[\w\.-]+', self.filters.query_customer)
 
             if customer_email:
                 _must_term.append({'match': {'customer_email': customer_email[0].lower()}})
             else:
-                _must_term.append({'match': {'customer_name': query_customer.lower()}})
+                _must_term.append({'match': {'customer_name': self.filters.query_customer.lower()}})
 
-        if query_address and len(query_address):
+        if self.filters.query_address and len(self.filters.query_address):
             # Note: query_address must be lower-cased depending on the Elasticsearch cluster used (probably the default analyzer)
             # Our production require country codes to be uppercase
             _must_term.append({
-                'terms': {'country_code': query_address}
+                'terms': {'country_code': self.filters.query_address}
             })
 
-        if created_at_start and created_at_end:
+        if self.filters.created_at_start and self.filters.created_at_end:
             _must_term.append({
                 "range": {
                     "created_at": {
-                        "gte": created_at_start.isoformat(),
-                        "lte": created_at_end.isoformat(),
+                        "gte": self.filters.created_at_start.isoformat(),
+                        "lte": self.filters.created_at_end.isoformat(),
                     }
                 }
             })
-        elif created_at_start:
+        elif self.filters.created_at_start:
             _must_term.append({
                 "range": {
                     "created_at": {
-                        "gte": created_at_start.isoformat(),
+                        "gte": self.filters.created_at_start.isoformat(),
                     }
                 }
             })
-        elif created_at_end:
+        elif self.filters.created_at_end:
             _must_term.append({
                 "range": {
                     "created_at": {
-                        "lte": created_at_end.isoformat(),
+                        "lte": self.filters.created_at_end.isoformat(),
                     }
                 }
             })
 
-        if connected_only == 'true':
+        if self.filters.connected_only == 'true':
             _must_term.append({
                 'range': {
                     'connected_items': {
@@ -3886,7 +3924,7 @@ def orders_view(request):
                 }
             })
 
-        if awaiting_order == 'true':
+        if self.filters.awaiting_order == 'true':
             _must_term.append({
                 'range': {
                     'need_fulfillment': {
@@ -3896,11 +3934,11 @@ def orders_view(request):
             })
 
         product_ids_search = []
-        if product_filter:
-            product_ids_search += product_filter
+        if self.filters.product_filter:
+            product_ids_search += self.filters.product_filter
 
-        if supplier_filter:
-            products = ShopifyProduct.objects.filter(default_supplier__supplier_name=supplier_filter)
+        if self.filters.supplier_filter:
+            products = ShopifyProduct.objects.filter(default_supplier__supplier_name=self.filters.supplier_filter)
             product_ids_search += [product.id for product in products]
 
         if product_ids_search:
@@ -3910,8 +3948,8 @@ def orders_view(request):
                 }
             })
 
-        if sort_field not in ['created_at', 'updated_at', 'total_price', 'country_code']:
-            sort_field = 'created_at'
+        if self.filters.sort_field not in ['created_at', 'updated_at', 'total_price', 'country_code']:
+            self.filters.sort_field = 'created_at'
 
         body = {
             'query': {
@@ -3921,27 +3959,26 @@ def orders_view(request):
                 },
             },
             'sort': [{
-                sort_field: 'desc' if sort_type == 'true' else 'asc'
+                self.filters.sort_field: 'desc' if self.filters.sort_type == 'true' else 'asc'
             }],
-            'size': post_per_page,
-            'from': (page - 1) * post_per_page
+            'size': self.post_per_page,
+            'from': (self.page_num - 1) * self.post_per_page
         }
 
-        matchs = es.search(index='shopify-order', doc_type='order', body=body)
+        matchs = self.es.search(index='shopify-order', doc_type='order', body=body)
         hits = matchs['hits']['hits']
         orders = ShopifyOrder.objects.filter(id__in=[i['_id'] for i in hits])
-        paginator = FakePaginator(range(0, matchs['hits']['total']), post_per_page)
+        paginator = FakePaginator(range(0, matchs['hits']['total']), self.post_per_page)
         paginator.set_orders(orders)
 
-        page = min(max(1, page), paginator.num_pages)
-        current_page = paginator.page(page)
-        page = current_page
+        page_num = min(max(1, self.page_num), paginator.num_pages)
+        self.current_page = paginator.page(page_num)
+        self.paginator = paginator
+        self.open_orders = matchs['hits']['total']
 
-        open_orders = matchs['hits']['total']
-
-        if open_orders:
+        if matchs['hits']['total']:
             rep = requests.get(
-                url=store.api('orders'),
+                url=self.store.api('orders'),
                 params={
                     'ids': ','.join([str(i['_source']['order_id']) for i in hits]),
                     'status': 'any',
@@ -3955,549 +3992,504 @@ def orders_view(request):
             db_orders = ShopifyOrder.objects.filter(id__in=[i['_id'] for i in hits]) \
                                             .only('order_id', 'updated_at', 'closed_at', 'cancelled_at')
 
-            page = shopify_orders_utils.sort_es_orders(shopify_orders, hits, db_orders)
+            self.current_page = shopify_orders_utils.sort_es_orders(shopify_orders, hits, db_orders)
 
-            countdown = 1
-            for order in page:
-                shopify_update_at = arrow.get(order['updated_at']).timestamp
-                if shopify_update_at > order['db_updated_at'] or shopify_update_at > order['es_updated_at']:
+            self.sync_order_with_db_from_es(self.current_page)
 
-                    tasks.update_shopify_order.apply_async(
-                        args=[store.id, order['id']],
-                        kwargs={'shopify_order': order, 'from_webhook': False},
-                        countdown=countdown,
-                        expires=1800)
+    def get_orders_from_db(self):
+        orders = ShopifyOrder.objects.filter(store=self.store).only('order_id', 'updated_at', 'closed_at', 'cancelled_at')
 
-                    countdown = countdown + 1
+        if ShopifySyncStatus.objects.get(store=self.store).sync_status == 6:
+            messages.info(self.request, 'Your Store Orders are being imported')
 
-    else:
-        orders = ShopifyOrder.objects.filter(store=store).only('order_id', 'updated_at', 'closed_at', 'cancelled_at')
-
-        if ShopifySyncStatus.objects.get(store=store).sync_status == 6:
-            messages.info(request, 'Your Store Orders are being imported')
-
-        if query_order:
-            order_id = shopify_orders_utils.order_id_from_name(store, query_order)
+        if self.filters.query_order:
+            order_id = shopify_orders_utils.order_id_from_name(self.store, self.filters.query_order)
 
             if order_id:
                 orders = orders.filter(order_id=order_id)
             else:
-                source_id = safe_int(query_order.replace('#', '').strip(), 123)
-                order_ids = ShopifyOrderTrack.objects.filter(store=store, source_id=source_id) \
+                source_id = safe_int(self.filters.query_order.replace('#', '').strip(), 123)
+                order_ids = ShopifyOrderTrack.objects.filter(store=self.store, source_id=source_id) \
                                                      .defer('data') \
                                                      .values_list('order_id', flat=True)
                 if len(order_ids):
                     orders = orders.filter(order_id__in=order_ids)
                 else:
-                    orders = orders.filter(order_id=safe_int(query_order, 0))
+                    orders = orders.filter(order_id=safe_int(self.filters.query_order, 0))
 
-        if created_at_start:
-            orders = orders.filter(created_at__gte=created_at_start)
+        if self.filters.created_at_start:
+            orders = orders.filter(created_at__gte=self.filters.created_at_start)
 
-        if created_at_end:
-            orders = orders.filter(created_at__lte=created_at_end)
+        if self.filters.created_at_end:
+            orders = orders.filter(created_at__lte=self.filters.created_at_end)
 
-        if safe_int(query_customer_id):
-            order_ids = shopify_orders_utils.order_ids_from_customer_id(store, query_customer_id)
+        if safe_int(self.filters.query_customer_id):
+            order_ids = shopify_orders_utils.order_ids_from_customer_id(self.store, self.filters.query_customer_id)
             if len(order_ids):
                 orders = orders.filter(order_id__in=order_ids)
             else:
                 orders = orders.filter(order_id=-1)  # Show Not Found message
 
-        if query_address and len(query_address):
-            orders = orders.filter(Q(country_code__in=query_address))
+        if self.filters.query_address and len(self.filters.query_address):
+            orders = orders.filter(Q(country_code__in=self.filters.query_address))
 
-        query = None
+        self.filters.query = None
 
-        if status == 'open':
+        if self.filters.status == 'open':
             orders = orders.filter(closed_at=None, cancelled_at=None)
-        elif status == 'closed':
+        elif self.filters.status == 'closed':
             orders = orders.exclude(closed_at=None)
-        elif status == 'cancelled':
+        elif self.filters.status == 'cancelled':
             orders = orders.exclude(cancelled_at=None)
 
-        if fulfillment == 'unshipped,partial':
+        if self.filters.fulfillment == 'unshipped,partial':
             orders = orders.filter(Q(fulfillment_status=None) | Q(fulfillment_status='partial'))
-        elif fulfillment == 'unshipped':
+        elif self.filters.fulfillment == 'unshipped':
             orders = orders.filter(fulfillment_status=None)
-        elif fulfillment == 'shipped':
+        elif self.filters.fulfillment == 'shipped':
             orders = orders.filter(fulfillment_status='fulfilled')
-        elif fulfillment == 'partial':
+        elif self.filters.fulfillment == 'partial':
             orders = orders.filter(fulfillment_status='partial')
 
-        if financial == 'paid,partially_refunded':
+        if self.filters.financial == 'paid,partially_refunded':
             orders = orders.filter(Q(financial_status='paid') | Q(financial_status='partially_refunded'))
-        elif financial != 'any':
-            orders = orders.filter(financial_status=financial)
+        elif self.filters.financial != 'any':
+            orders = orders.filter(financial_status=self.filters.financial)
 
-        if connected_only == 'true':
-            if support_product_filter:
+        if self.filters.connected_only == 'true':
+            if self.sync.support_product_filter:
                 orders = orders.filter(connected_items__gt=0)
             else:
                 orders = orders.annotate(connected=Max('shopifyorderline__product_id')).filter(connected__gt=0)
 
-        if awaiting_order == 'true':
-            if support_product_filter:
+        if self.filters.awaiting_order == 'true':
+            if self.sync.support_product_filter:
                 orders = orders.filter(need_fulfillment__gt=0)
             else:
                 orders = orders.annotate(tracked=Count('shopifyorderline__track')).exclude(tracked=F('items_count'))
 
-        if product_filter:
-            if request.GET.get('exclude_products'):
-                orders = orders.exclude(shopifyorderline__product_id__in=product_filter, items_count__lte=len(product_filter)).distinct()
+        if self.filters.product_filter:
+            if self.request.GET.get('exclude_products'):
+                orders = orders.exclude(shopifyorderline__product_id__in=self.filters.product_filter,
+                                        items_count__lte=len(self.filters.product_filter)).distinct()
             else:
-                orders = orders.filter(shopifyorderline__product_id__in=product_filter).distinct()
+                orders = orders.filter(shopifyorderline__product_id__in=self.filters.product_filter).distinct()
 
-        if supplier_filter:
-            orders = orders.filter(shopifyorderline__product__default_supplier__supplier_name=supplier_filter).distinct()
+        if self.filters.supplier_filter:
+            orders = orders.filter(shopifyorderline__product__default_supplier__supplier_name=self.filters.supplier_filter).distinct()
 
-        if shipping_method_filter:
-            orders = orders.filter(shipping_lines__title=shipping_method_filter)
+        if self.filters.shipping_method_filter:
+            orders = orders.filter(shipping_lines__title=self.filters.shipping_method_filter)
 
-        if sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
-            sort_desc = '-' if sort_type == 'true' else ''
+        if self.filters.sort_field in ['created_at', 'updated_at', 'total_price', 'country_code']:
+            sort_desc = '-' if self.filters.sort_type == 'true' else ''
 
-            if sort_field == 'created_at':
-                sort_field = 'order_id'
+            if self.filters.sort_field == 'created_at':
+                self.filters.sort_field = 'order_id'
 
-            orders = orders.order_by(sort_desc + sort_field)
+            orders = orders.order_by(sort_desc + self.filters.sort_field)
 
-        paginator = SimplePaginator(orders, post_per_page)
-        page = min(max(1, page), paginator.num_pages)
-        current_page = paginator.page(page)
-        page = current_page
+        paginator = SimplePaginator(orders, self.post_per_page)
+        page_num = min(max(1, self.page_num), paginator.num_pages)
 
-        open_orders = paginator.count
+        self.current_page = paginator.page(page_num)
+        self.open_orders = paginator.count
+        self.paginator = paginator
 
-        if page.object_list:
-            cache_list = ['{i.order_id}-{i.updated_at}{i.closed_at}{i.cancelled_at}'.format(i=i) for i in page]
-            cache_key = 'saved_orders_%s' % hash_list(cache_list)
-            shopify_orders = cache.get(cache_key)
-            if shopify_orders is None or cache.get('saved_orders_clear_{}'.format(store.id)):
-                rep = requests.get(
-                    url=store.api('orders'),
-                    params={
-                        'ids': ','.join([str(i.order_id) for i in page]),
-                        'status': 'any',
-                        'fulfillment_status': 'any',
-                        'financial_status': 'any',
-                    }
-                )
+        if self.current_page.object_list:
+            rep = requests.get(
+                url=self.store.api('orders'),
+                params={
+                    'ids': ','.join([str(i.order_id) for i in self.current_page]),
+                    'status': 'any',
+                    'fulfillment_status': 'any',
+                    'financial_status': 'any',
+                }
+            )
 
-                api_error = None
-                try:
-                    rep.raise_for_status()
-                    shopify_orders = rep.json()['orders']
+            rep.raise_for_status()
 
-                except json.JSONDecodeError:
-                    api_error = 'Unexpected response content'
-                    capture_exception()
+            shopify_orders = rep.json()['orders']
 
-                except requests.exceptions.ConnectTimeout:
-                    api_error = 'Connection Timeout'
-                    capture_exception()
+            self.current_page = shopify_orders_utils.sort_orders(shopify_orders, self.current_page)
 
-                except requests.exceptions.HTTPError as e:
-                    if e.response.status_code == 429:
-                        api_error = 'API Rate Limit'
-                    elif e.response.status_code == 404:
-                        api_error = 'Store Not Found'
-                    elif e.response.status_code == 402:
-                        api_error = 'Your Shopify Store is not on a paid plan'
-                    else:
-                        api_error = 'Unknown Error {}'.format(e.response.status_code)
-                        capture_exception()
-                except:
-                    api_error = 'Unknown Error'
-                    capture_exception()
+            self.sync_orders_with_db_from_api(self.current_page)
 
-                if api_error:
-                    cache.delete(cache_key)
+    def sync_orders_with_db(self, current_page):
+        countdown = 1
+        for order in current_page:
+            if arrow.get(order['updated_at']).timestamp > order['db_updated_at']:
+                tasks.update_shopify_order.apply_async(
+                    args=[self.store.id, order['id']],
+                    kwargs={'shopify_order': order, 'from_webhook': False},
+                    countdown=countdown)
 
-                    return render(request, 'orders_new.html', {
-                        'store': store,
-                        'api_error': api_error,
-                        'page': 'orders',
-                        'selected_menu': 'orders:all',
-                        'breadcrumbs': breadcrumbs
-                    })
+                countdown = countdown + 1
 
-                cache.set(cache_key, zlib.compress(json.dumps(shopify_orders).encode()), timeout=300)
-                cache.delete('saved_orders_clear_{}'.format(store.id))
-            else:
-                shopify_orders = json.loads(zlib.decompress(shopify_orders))
+    def sync_order_with_db_from_es(self, current_page):
+        countdown = 1
+        for order in current_page:
+            shopify_update_at = arrow.get(order['updated_at']).timestamp
+            if shopify_update_at > order['db_updated_at'] or shopify_update_at > order['es_updated_at']:
 
-            page = shopify_orders_utils.sort_orders(shopify_orders, page)
+                tasks.update_shopify_order.apply_async(
+                    args=[self.store.id, order['id']],
+                    kwargs={'shopify_order': order, 'from_webhook': False},
+                    countdown=countdown,
+                    expires=1800)
 
-            # Update outdated order data by comparing last update timestamp
-            countdown = 1
-            for order in page:
-                if arrow.get(order['updated_at']).timestamp > order['db_updated_at']:
-                    tasks.update_shopify_order.apply_async(
-                        args=[store.id, order['id']],
-                        kwargs={'shopify_order': order, 'from_webhook': False},
-                        countdown=countdown,
-                        expires=1800)
+                countdown = countdown + 1
 
-                    countdown = countdown + 1
-        else:
-            page = []
+    def sync_orders_with_db_from_api(self, current_page):
+        countdown = 1
+        for order in current_page:
+            if arrow.get(order['updated_at']).timestamp > order['db_updated_at']:
+                tasks.update_shopify_order.apply_async(
+                    args=[self.store.id, order['id']],
+                    kwargs={'shopify_order': order, 'from_webhook': False},
+                    countdown=countdown,
+                    expires=1800)
 
-    orders_sync_check_key = 'store_orders_sync_check_{}'.format(store.id)
-    if store_sync_enabled and cache.get(orders_sync_check_key) is None:
-        cache.set(orders_sync_check_key, True, timeout=43200)
-        tasks.sync_shopify_orders.apply_async(
-            args=[store.id],
-            kwargs={'elastic': es_search_enabled},
-            expires=600)
+                countdown = countdown + 1
 
-    products_cache = {}
-    auto_orders = models_user.can('auto_order.use')
-
-    orders_cache = {}
-    orders_ids = []
-    products_ids = []
-    for order in page:
-        orders_ids.append(order['id'])
-        for line in order['line_items']:
-            line_id = line.get('product_id')
-            products_ids.append(line_id)
-
-    orders_track = {}
-    for i in ShopifyOrderTrack.objects.filter(store=store, order_id__in=orders_ids).defer('data'):
-        orders_track['{}-{}'.format(i.order_id, i.line_id)] = i
-
-    orders_log = {}
-    for i in ShopifyOrderLog.objects.filter(store=store, order_id__in=orders_ids):
-        orders_log[i.order_id] = i
-
-    changed_variants = {}
-    for i in ShopifyOrderVariant.objects.filter(store=store, order_id__in=orders_ids):
-        changed_variants['{}-{}'.format(i.order_id, i.line_id)] = i
-
-    images_list = {}
-    res = ShopifyProductImage.objects.filter(store=store, product__in=products_ids)
-    for i in res:
-        images_list['{}-{}'.format(i.product, i.variant)] = i.image
-
-    products_list = {}
-    product_ids = []
-    for order in page:
-        for line in order['line_items']:
-            if line['product_id']:
-                product_ids.append(line['product_id'])
-
-    for p in ShopifyProduct.objects.filter(store=store, shopify_id__in=product_ids).select_related('default_supplier'):
-        if p.shopify_id not in products_list:
-            products_list[p.shopify_id] = p
-
-    open_print_on_demand = False
-    for index, order in enumerate(page):
-        created_at = arrow.get(order['created_at'])
-        try:
-            created_at = created_at.to(request.session['django_timezone'])
-        except:
-            pass
-
-        order['date'] = created_at
-        order['date_str'] = created_at.format('MM/DD/YYYY')
-        order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
-        order['order_url'] = store.get_link('/admin/orders/%d' % order['id'])
-        order['order_api_url'] = store.api('orders', order['id'])
-        order['store'] = store
-        order['placed_orders'] = 0
-        order['connected_lines'] = 0
-        order['lines_count'] = len(order['line_items'])
-        order['refunded_lines'] = []
-        order['order_log'] = orders_log.get(order['id'])
-        order['supplier_types'] = set()
-        order['is_fulfilled'] = order.get('fulfillment_status') == 'fulfilled'
-        order['pending_payment'] = (order['financial_status'] == 'pending'
-                                    and (order['gateway'] == 'paypal' or 'amazon' in order['gateway'].lower()))
-
-        if type(order['refunds']) is list:
-            for refund in order['refunds']:
-                for refund_line in refund['refund_line_items']:
-                    order['refunded_lines'].append(refund_line['line_item_id'])
-
-        for i, el in enumerate((order['line_items'])):
-            if request.GET.get('line_id'):
-                if safe_int(request.GET['line_id']) != el['id']:
+    def filter_orders(self):
+        for order in self.current_page:
+            line_items = []
+            for line in order['line_items']:
+                if type(line.get('tip')) is dict:
+                    order['total_tip'] = line['price']
                     continue
 
-            order['line_items'][i]['refunded'] = el['id'] in order['refunded_lines']
+                line_items.append(line)
 
-            order['line_items'][i]['image'] = {
-                'store': store.id,
-                'product': el['product_id'],
-                'variant': el['variant_id']
-            }
+            order['line_items'] = line_items
 
-            order['line_items'][i]['image_src'] = images_list.get('{}-{}'.format(el['product_id'], el['variant_id']))
+    def load_models_cache(self):
+        self.products_cache = {}
+        self.orders_ids = []
+        self.products_ids = []
+        for order in self.current_page:
+            self.orders_ids.append(order['id'])
+            for line in order['line_items']:
+                if line['product_id']:
+                    self.products_ids.append(line['product_id'])
 
-            order_track = orders_track.get('{}-{}'.format(order['id'], el['id']))
-            changed_variant = changed_variants.get('{}-{}'.format(order['id'], el['id']))
+        self.orders_track = {}
+        for i in ShopifyOrderTrack.objects.filter(store=self.store, order_id__in=self.orders_ids).defer('data'):
+            self.orders_track['{}-{}'.format(i.order_id, i.line_id)] = i
 
-            order['line_items'][i]['order_track'] = order_track
-            order['line_items'][i]['changed_variant'] = changed_variant
+        self.orders_log = {}
+        for i in ShopifyOrderLog.objects.filter(store=self.store, order_id__in=self.orders_ids):
+            self.orders_log[i.order_id] = i
 
-            variant_id = changed_variant.variant_id if changed_variant else el['variant_id']
-            variant_title = changed_variant.variant_title if changed_variant else el['variant_title']
+        self.changed_variants = {}
+        for i in ShopifyOrderVariant.objects.filter(store=self.store, order_id__in=self.orders_ids):
+            self.changed_variants['{}-{}'.format(i.order_id, i.line_id)] = i
 
-            order['line_items'][i]['variant_link'] = store.get_link('/admin/products/{}/variants/{}'.format(el['product_id'], variant_id))
+        self.images_list = {}
+        res = ShopifyProductImage.objects.filter(store=self.store, product__in=self.products_ids)
+        for i in res:
+            self.images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
-            if not el['product_id']:
-                if variant_id:
-                    product = ShopifyProduct.objects.filter(store=store, title=el['title'], shopify_id__gt=0).first()
+        self.products_list_cache = {}
+        for p in ShopifyProduct.objects.filter(store=self.store, shopify_id__in=self.products_ids).select_related('default_supplier'):
+            if p.shopify_id not in self.products_list_cache:
+                self.products_list_cache[p.shopify_id] = p
+
+    def proccess_orders(self):
+        self.get_orders()
+        self.filter_orders()
+        self.load_models_cache()
+
+        orders_cache = {}
+        open_print_on_demand = False
+        for index, order in enumerate(self.current_page):
+            created_at = arrow.get(order['created_at'])
+            try:
+                created_at = created_at.to(self.request.session['django_timezone'])
+            except:
+                pass
+
+            order['date'] = created_at
+            order['date_str'] = created_at.format('MM/DD/YYYY')
+            order['date_tooltip'] = created_at.format('YYYY/MM/DD HH:mm:ss')
+            order['order_url'] = self.store.get_link('/admin/orders/%d' % order['id'])
+            order['order_api_url'] = self.store.api('orders', order['id'])
+            order['store'] = self.store
+            order['placed_orders'] = 0
+            order['connected_lines'] = 0
+            order['lines_count'] = len(order['line_items'])
+            order['refunded_lines'] = []
+            order['order_log'] = self.orders_log.get(order['id'])
+            order['supplier_types'] = set()
+            order['is_fulfilled'] = order.get('fulfillment_status') == 'fulfilled'
+            order['pending_payment'] = (order['financial_status'] == 'pending'
+                                        and (order['gateway'] == 'paypal' or 'amazon' in order['gateway'].lower()))
+
+            if type(order['refunds']) is list:
+                for refund in order['refunds']:
+                    for refund_line in refund['refund_line_items']:
+                        order['refunded_lines'].append(refund_line['line_item_id'])
+
+            for i, line_item in enumerate(order['line_items']):
+                if self.request.GET.get('line_id'):
+                    if safe_int(self.request.GET['line_id']) != line_item['id']:
+                        continue
+
+                line_item['refunded'] = line_item['id'] in order['refunded_lines']
+
+                line_item['image'] = {
+                    'store': self.store.id,
+                    'product': line_item['product_id'],
+                    'variant': line_item['variant_id']
+                }
+
+                line_item['image_src'] = self.images_list.get('{}-{}'.format(line_item['product_id'], line_item['variant_id']))
+
+                order_track = self.orders_track.get('{}-{}'.format(order['id'], line_item['id']))
+                changed_variant = self.changed_variants.get('{}-{}'.format(order['id'], line_item['id']))
+
+                line_item['order_track'] = order_track
+                line_item['changed_variant'] = changed_variant
+
+                variant_id = changed_variant.variant_id if changed_variant else line_item['variant_id']
+                variant_title = changed_variant.variant_title if changed_variant else line_item['variant_title']
+
+                line_item['variant_link'] = self.store.get_link('/admin/products/{}/variants/{}'.format(line_item['product_id'], variant_id))
+
+                if not line_item['product_id']:
+                    if variant_id:
+                        product = ShopifyProduct.objects.filter(store=self.store, title=line_item['title'], shopify_id__gt=0).first()
+                    else:
+                        product = None
+                elif line_item['product_id'] in self.products_cache:
+                    product = self.products_cache[line_item['product_id']]
                 else:
-                    product = None
-            elif el['product_id'] in products_cache:
-                product = products_cache[el['product_id']]
-            else:
-                product = products_list.get(el['product_id'])
+                    product = self.products_list_cache.get(line_item['product_id'])
 
-            if order_track or el['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
-                order['placed_orders'] += 1
+                if order_track or line_item['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
+                    order['placed_orders'] += 1
 
-            country_code = order.get('shipping_address', {}).get('country_code')
-            if not country_code:
-                country_code = order.get('customer', {}).get('default_address', {}).get('country_code')
+                country_code = order.get('shipping_address', {}).get('country_code')
+                if not country_code:
+                    country_code = order.get('customer', {}).get('default_address', {}).get('country_code')
 
-            supplier = None
-            bundle_data = []
-            if product and product.have_supplier():
-                if changed_variant:
-                    variant_id = changed_variant.variant_id
-                    variant_title = changed_variant.variant_title
+                supplier = None
+                bundle_data = []
+                if product and product.have_supplier():
+                    if changed_variant:
+                        variant_id = changed_variant.variant_id
+                        variant_title = changed_variant.variant_title
 
-                    order['line_items'][i]['variant_id'] = variant_id
-                    order['line_items'][i]['variant_title'] = variant_title
-                else:
-                    variant_id = product.get_real_variant_id(variant_id)
+                        line_item['variant_id'] = variant_id
+                        line_item['variant_title'] = variant_title
+                    else:
+                        variant_id = product.get_real_variant_id(variant_id)
 
-                supplier = product.get_supplier_for_variant(variant_id)
-                if supplier:
-                    shipping_method = product.get_shipping_for_variant(
-                        supplier_id=supplier.id,
-                        variant_id=variant_id,
-                        country_code=country_code)
-                else:
-                    shipping_method = None
+                    supplier = product.get_supplier_for_variant(variant_id)
+                    if supplier:
+                        shipping_method = product.get_shipping_for_variant(
+                            supplier_id=supplier.id,
+                            variant_id=variant_id,
+                            country_code=country_code)
+                    else:
+                        shipping_method = None
 
-                order['line_items'][i]['product'] = product
-                is_paid = False
-                is_pls = order['line_items'][i]['is_pls'] = supplier.is_pls
-                if is_pls:
-                    is_paid = PLSOrderLine.is_paid(store, order['id'], el['id'])
+                    line_item['product'] = product
+                    is_paid = False
+                    is_pls = line_item['is_pls'] = supplier.is_pls
+                    if is_pls:
+                        is_paid = PLSOrderLine.is_paid(self.store, order['id'], line_item['id'])
 
-                    # pass orders without PLS products (when one store is used in multiple account)
-                    try:
-                        order['line_items'][i]['weight'] = product.user_supplement.get_weight(order['line_items'][i]['quantity'])
-                    except:
-                        order['line_items'][i]['weight'] = False
+                        # pass orders without PLS products (when one store is used in multiple account)
+                        try:
+                            line_item['weight'] = product.user_supplement.get_weight(line_item['quantity'])
+                        except:
+                            line_item['weight'] = False
 
-                order['line_items'][i]['is_paid'] = is_paid
-                order['line_items'][i]['supplier'] = supplier
-                order['line_items'][i]['shipping_method'] = shipping_method
-                order['line_items'][i]['supplier_type'] = supplier.supplier_type()
+                    line_item['is_paid'] = is_paid
+                    line_item['supplier'] = supplier
+                    line_item['shipping_method'] = shipping_method
+                    line_item['supplier_type'] = supplier.supplier_type()
 
-                if supplier:
-                    order['supplier_types'].add(supplier.supplier_type())
+                    if supplier:
+                        order['supplier_types'].add(supplier.supplier_type())
 
-                if fix_order_variants and supplier.is_aliexpress:
-                    mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
-                    if not mapped:
-                        utils.fix_order_variants(store, order, product)
+                    if self.config.fix_order_variants and supplier.is_aliexpress:
+                        mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                        if not mapped:
+                            utils.fix_order_variants(self.store, order, product)
 
-                bundles = product.get_bundle_mapping(variant_id)
-                if bundles:
-                    product_bundles = []
-                    for idx, b in enumerate(bundles):
-                        b_product = ShopifyProduct.objects.filter(id=b['id']).select_related('default_supplier').first()
-                        if not b_product:
-                            continue
-
-                        b_variant_id = b_product.get_real_variant_id(b['variant_id'])
-                        b_supplier = b_product.get_supplier_for_variant(b_variant_id)
-                        if b_supplier:
-                            b_shipping_method = b_product.get_shipping_for_variant(
-                                supplier_id=b_supplier.id,
-                                variant_id=b_variant_id,
-                                country_code=country_code)
-                        else:
-                            continue
-
-                        b_variant_mapping = b_product.get_variant_mapping(name=b_variant_id, for_extension=True, mapping_supplier=True)
-                        if b_variant_id and b_variant_mapping:
-                            b_variants = b_variant_mapping
-                        else:
-                            b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
-
-                        product_bundles.append({
-                            'product': b_product,
-                            'supplier': b_supplier,
-                            'shipping_method': b_shipping_method,
-                            'quantity': b['quantity'] * el['quantity'],
-                            'data': b
-                        })
-
-                        bundle_data.append({
-                            'title': b_product.title,
-                            'quantity': b['quantity'] * el['quantity'],
-                            'product_id': b_product.id,
-                            'source_id': b_supplier.get_source_id(),
-                            'order_url': app_link('orders/place', supplier=b_supplier.id, SABundle=True),
-                            'variants': b_variants,
-                            'shipping_method': b_shipping_method,
-                            'country_code': country_code,
-                            'supplier_type': b_supplier.supplier_type(),
-                        })
-
-                    order['line_items'][i]['bundles'] = product_bundles
-                    order['line_items'][i]['is_bundle'] = len(bundle_data) > 0
-                    order['have_bundle'] = True
-
-                order['connected_lines'] += 1
-
-            products_cache[el['product_id']] = product
-
-            order, customer_address, order['corrections'] = utils.shopify_customer_address(
-                order=order,
-                aliexpress_fix=aliexpress_fix_address and supplier and supplier.is_aliexpress,
-                aliexpress_fix_city=aliexpress_fix_city,
-                german_umlauts=german_umlauts,
-                return_corrections=True)
-
-            if auto_orders and customer_address and not order['pending_payment']:
-                try:
-                    order_data = {
-                        'id': '{}_{}_{}'.format(store.id, order['id'], el['id']),
-                        'quantity': el['quantity'],
-                        'shipping_address': customer_address,
-                        'order_id': order['id'],
-                        'line_id': el['id'],
-                        'product_id': product.id if product else None,
-                        'source_id': supplier.get_source_id() if supplier else None,
-                        'supplier_id': supplier.get_store_id() if supplier else None,
-                        'supplier_type': supplier.supplier_type() if supplier else None,
-                        'total': safe_float(el['price'], 0.0),
-                        'store': store.id,
-                        'order': {
-                            'phone': {
-                                'number': customer_address.get('phone'),
-                                'country': customer_address['country_code']
-                            },
-                            'note': order_custom_note,
-                            'epacket': epacket_shipping,
-                            'aliexpress_shipping_method': aliexpress_shipping_method,
-                            'auto_mark': auto_ordered_mark,  # Auto mark as Ordered
-                        },
-                        'products': bundle_data,
-                        'is_bundle': len(bundle_data) > 0
-                    }
-
-                    if order_custom_line_attr and el.get('properties'):
-                        item_note = ''
-
-                        for prop in el['properties']:
-                            if not prop['name'] or prop['name'].startswith('_'):
+                    bundles = product.get_bundle_mapping(variant_id)
+                    if bundles:
+                        product_bundles = []
+                        for idx, b in enumerate(bundles):
+                            b_product = ShopifyProduct.objects.filter(id=b['id']).select_related('default_supplier').first()
+                            if not b_product:
                                 continue
 
-                            item_note = '{}{}: {}\n'.format(item_note, prop['name'], prop['value'])
-
-                        if item_note:
-                            if not models_user.get_config('_plain_attribute_note'):
-                                item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
+                            b_variant_id = b_product.get_real_variant_id(b['variant_id'])
+                            b_supplier = b_product.get_supplier_for_variant(b_variant_id)
+                            if b_supplier:
+                                b_shipping_method = b_product.get_shipping_for_variant(
+                                    supplier_id=b_supplier.id,
+                                    variant_id=b_variant_id,
+                                    country_code=country_code)
                             else:
-                                item_note = item_note.strip()
+                                continue
 
-                            order_data['order']['item_note'] = item_note
-                            order['line_items'][i]['item_note'] = item_note
+                            b_variant_mapping = b_product.get_variant_mapping(name=b_variant_id, for_extension=True, mapping_supplier=True)
+                            if b_variant_id and b_variant_mapping:
+                                b_variants = b_variant_mapping
+                            else:
+                                b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
 
-                    if product:
-                        mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
-                        if variant_id and mapped:
-                            order_data['variant'] = mapped
-                        else:
-                            order_data['variant'] = variant_title.split('/') if variant_title else ''
+                            product_bundles.append({
+                                'product': b_product,
+                                'supplier': b_supplier,
+                                'shipping_method': b_shipping_method,
+                                'quantity': b['quantity'] * line_item['quantity'],
+                                'data': b
+                            })
 
-                    if product and product.have_supplier():
-                        orders_cache['order_{}'.format(order_data['id'])] = order_data
-                        order['line_items'][i]['order_data_id'] = order_data['id']
+                            bundle_data.append({
+                                'title': b_product.title,
+                                'quantity': b['quantity'] * line_item['quantity'],
+                                'product_id': b_product.id,
+                                'source_id': b_supplier.get_source_id(),
+                                'order_url': app_link('orders/place', supplier=b_supplier.id, SABundle=True),
+                                'variants': b_variants,
+                                'shipping_method': b_shipping_method,
+                                'country_code': country_code,
+                                'supplier_type': b_supplier.supplier_type(),
+                            })
 
-                        order['line_items'][i]['order_data'] = order_data
+                        line_item['bundles'] = product_bundles
+                        line_item['is_bundle'] = len(bundle_data) > 0
+                        order['have_bundle'] = True
 
-                        if supplier.is_dropified_print:
-                            open_print_on_demand = True
-                except:
-                    capture_exception()
+                    order['connected_lines'] += 1
 
-        order['mixed_supplier_types'] = len(order['supplier_types']) > 1
+                self.products_cache[line_item['product_id']] = product
 
-        all_orders.append(order)
+                order, customer_address, order['corrections'] = utils.shopify_customer_address(
+                    order=order,
+                    aliexpress_fix=self.config.aliexpress_fix_address and supplier and supplier.is_aliexpress,
+                    aliexpress_fix_city=self.config.aliexpress_fix_city,
+                    german_umlauts=self.config.german_umlauts,
+                    return_corrections=True)
 
-    active_orders = {}
-    for i in orders_ids:
-        active_orders['active_order_{}'.format(i)] = True
+                if customer_address and not order['pending_payment']:
+                    try:
+                        order_data = {
+                            'id': '{}_{}_{}'.format(self.store.id, order['id'], line_item['id']),
+                            'quantity': line_item['quantity'],
+                            'shipping_address': customer_address,
+                            'order_id': order['id'],
+                            'line_id': line_item['id'],
+                            'product_id': product.id if product else None,
+                            'source_id': supplier.get_source_id() if supplier else None,
+                            'supplier_id': supplier.get_store_id() if supplier else None,
+                            'supplier_type': supplier.supplier_type() if supplier else None,
+                            'total': safe_float(line_item['price'], 0.0),
+                            'store': self.store.id,
+                            'order': {
+                                'phone': {
+                                    'number': customer_address.get('phone'),
+                                    'country': customer_address['country_code']
+                                },
+                                'note': self.config.order_custom_note,
+                                'epacket': self.config.epacket_shipping,
+                                'aliexpress_shipping_method': self.config.aliexpress_shipping_method,
+                                'auto_mark': self.config.auto_ordered_mark,
+                            },
+                            'products': bundle_data,
+                            'is_bundle': len(bundle_data) > 0
+                        }
 
-    caches['orders'].set_many(orders_cache, timeout=86400 if bulk_queue else 21600)
-    caches['orders'].set_many(active_orders, timeout=86400 if bulk_queue else 3600)
+                        if self.config.order_custom_line_attr and line_item.get('properties'):
+                            item_note = ''
 
-    if store_order_synced:
-        countries = get_counrties_list()
-    else:
-        countries = []
+                            for prop in line_item['properties']:
+                                if not prop['name'] or prop['name'].startswith('_'):
+                                    continue
 
-    if product_filter:
-        product_filter = models_user.shopifyproduct_set.filter(id__in=product_filter)
+                                item_note = '{}{}: {}\n'.format(item_note, prop['name'], prop['value'])
 
-    order_debug = request.session.get('is_hijacked_user') or \
-        (request.user.is_superuser and request.GET.get('debug')) or \
-        request.user.get_config('_orders_debug') or \
-        settings.DEBUG
+                            if item_note:
+                                if not self.models_user.get_config('_plain_attribute_note'):
+                                    item_note = 'Here are custom information for the ordered product:\n{}'.format(item_note).strip()
+                                else:
+                                    item_note = item_note.strip()
 
-    if bulk_queue:
-        return format_queueable_orders(request, all_orders, current_page)
+                                order_data['order']['item_note'] = item_note
+                                line_item['item_note'] = item_note
 
-    return render(request, 'orders_new.html', {
-        'orders': all_orders,
-        'store': store,
-        'paginator': paginator,
-        'current_page': current_page,
-        'open_orders': open_orders,
-        'query_order': query_order,
-        'sort': sort_field,
-        'sort_type': sort_type,
-        'status': status,
-        'financial': financial,
-        'fulfillment': fulfillment,
-        'query': query,
-        'connected_only': connected_only,
-        'awaiting_order': awaiting_order,
-        'product_filter': product_filter,
-        'supplier_filter': supplier_filter,
-        'shipping_method_filter': shipping_method_filter,
-        'shipping_method_filter_enabled': models_user.get_config('shipping_method_filter') and store_order_synced,
-        'order_risk_levels_enabled': models_user.get_config('order_risk_levels_enabled'),
-        'user_filter': utils.get_orders_filter(request),
-        'store_order_synced': store_order_synced,
-        'store_sync_enabled': store_sync_enabled,
-        'es_search_enabled': es_search_enabled,
-        'countries': countries,
-        'created_at_daterange': created_at_daterange,
-        'admitad_site_id': admitad_site_id,
-        'user_admitad_credentials': user_admitad_credentials,
-        'show_actual_supplier': show_actual_supplier,
-        'use_relative_dates': use_relative_dates,
-        'order_risk_all_getaways': order_risk_all_getaways,
-        'aliexpress_mobile_order': aliexpress_mobile_order,
-        'order_debug': order_debug,
-        'use_fulfillbox': bool(settings.FULFILLBOX_API_URL and models_user.can('fulfillbox.use')),
-        'open_print_on_demand': open_print_on_demand,
-        'page': 'orders',
-        'selected_menu': 'orders:all',
-        'breadcrumbs': breadcrumbs
-    })
+                        if product:
+                            mapped = product.get_variant_mapping(name=variant_id, for_extension=True, mapping_supplier=True)
+                            if variant_id and mapped:
+                                order_data['variant'] = mapped
+                            else:
+                                order_data['variant'] = variant_title.split('/') if variant_title else ''
+
+                        if product and product.have_supplier():
+                            orders_cache['order_{}'.format(order_data['id'])] = order_data
+                            line_item['order_data_id'] = order_data['id']
+
+                            line_item['order_data'] = order_data
+
+                            if supplier.is_dropified_print:
+                                open_print_on_demand = True
+                    except:
+                        capture_exception()
+
+            order['mixed_supplier_types'] = len(order['supplier_types']) > 1
+
+            self.orders.append(order)
+
+        active_orders = {}
+        for i in self.orders_ids:
+            active_orders['active_order_{}'.format(i)] = True
+
+        caches['orders'].set_many(orders_cache, timeout=86400 if self.bulk_queue else 21600)
+        caches['orders'].set_many(active_orders, timeout=86400 if self.bulk_queue else 3600)
+
+        if self.sync.store_order_synced:
+            countries = get_counrties_list()
+        else:
+            countries = []
+
+        if self.filters.product_filter:
+            self.filters.product_filter = self.models_user.shopifyproduct_set.filter(id__in=self.filters.product_filter)
+
+        order_debug = self.request.session.get('is_hijacked_user') or \
+            (self.request.user.is_superuser and self.request.GET.get('debug')) or \
+            self.request.user.get_config('_orders_debug') or \
+            settings.DEBUG
+
+        ctx = {
+            'orders': self.orders,
+            'store': self.store,
+            'paginator': self.paginator,
+            'current_page': self.current_page,
+            'open_orders': self.open_orders,
+            'shipping_method_filter_enabled': self.filters.shipping_method_filter and self.sync.store_order_synced,
+            'order_risk_levels_enabled': self.models_user.get_config('order_risk_levels_enabled'),
+            'user_filter': utils.get_orders_filter(self.request),
+            'countries': countries,
+            'order_debug': order_debug,
+            'open_print_on_demand': open_print_on_demand,
+            'page': 'orders',
+            'selected_menu': 'orders:all',
+        }
+
+        return ctx
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.bulk_queue:
+            return format_queueable_orders(self.request, self.orders, self.current_page)
+        else:
+            return super().render_to_response(context, **response_kwargs)
 
 
 @login_required

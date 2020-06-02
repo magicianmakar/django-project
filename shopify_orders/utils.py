@@ -164,7 +164,6 @@ def update_shopify_order(store, data, sync_check=True):
 
     connected_items = 0
     need_fulfillment = len(data.get('line_items', []))
-
     for line in data.get('line_items', []):
         cache_key = 'export_product_{}_{}'.format(store.id, line['product_id'])
         product = cache.get(cache_key)
@@ -179,7 +178,7 @@ def update_shopify_order(store, data, sync_check=True):
         if product:
             connected_items += 1
 
-        if track or line['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded):
+        if track or line['fulfillment_status'] == 'fulfilled' or (product and product.is_excluded) or type(line.get('tip')) is dict:
             need_fulfillment -= 1
 
         ShopifyOrderLine.objects.update_or_create(

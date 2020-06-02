@@ -553,6 +553,11 @@
                                     </div>
                                     <div class="col-md-2 xs-text-right">
                                         <b>{% money_format order.total_price store %}</b>
+                                        {% if order.total_tip %}
+                                            -
+                                            <b class="text-success">Tip: {% money_format order.total_tip store %}</b>
+                                        {% endif %}
+
                                         <div>
                                             {% if shipping_method_filter_enabled %}
                                                 {% if order.shipping_lines %}
