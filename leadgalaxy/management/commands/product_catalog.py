@@ -92,8 +92,6 @@ class Command(DropifiedBaseCommand):
     def show_catalog_for_store(self, store_title, product_catalogs):
         self.write('For store: {}'.format(store_title), self.style.WARNING)
         for supplier_domain, line_items_count in list(product_catalogs.items()):
-            if supplier_domain is None:
-                print(supplier_domain)
             self.write('{:3,} line items connected to {}'.format(
                 line_items_count,
                 supplier_domain.title()),

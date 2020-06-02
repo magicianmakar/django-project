@@ -205,7 +205,6 @@ class SupplementsApi(ApiResponseMixin, View):
 
     def post_sync_order(self, request, user, data):
         try:
-            print(data.get('source_id'))
             order = PLSOrder.objects.get(
                 stripe_transaction_id=data.get('source_id'),
                 user=request.user.models_user

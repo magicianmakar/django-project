@@ -156,8 +156,7 @@ class ProductCommonApi(ApiResponseMixin, View):
                                                   user,
                                                   currency,
                                                   amount)
-            except Exception as e:
-                print(e)
+            except Exception:
                 error += len(lines)
             else:
                 shipstation_data = prepare_shipstation_data(payment_order,

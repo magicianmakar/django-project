@@ -247,7 +247,6 @@ def subscription_callflex(request):
         })
 
     except Exception as e:
-        print(e)
         if hasattr(e, 'response') and e.response.code == 401:
             return JsonResponse({
                 'status': 'redirect',
