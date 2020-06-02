@@ -13,7 +13,7 @@ import requests
 import jwt
 import texttable
 import simplejson as json
-from munch import Munch, munchify
+from munch import Munch
 
 from lib.exceptions import capture_exception, capture_message
 
@@ -3569,14 +3569,51 @@ def save_image_s3(request):
 
 class OrdersView(TemplateView):
     template_name = 'orders_new.html'
+    post_per_page = 20
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        # Template context
+        self.ctx = Munch()
+
+        # current User & Store
+        self.user = None
+        self.models_user = None
+        self.store = None
+
+        self.bulk_queue = False  # return JSON-formated data for Bulk Ordering feature
+
+        # User settings, current filter and store sync status
+        self.config = Munch()
+        self.filters = Munch()
+        self.sync = Munch()
+
+        self.page_num = 0
+        self.page_start = 0
+
+        # Caching
+        self.products_cache = {}
+        self.orders_ids = []
+        self.products_ids = []
+        self.orders_track = {}
+        self.orders_log = {}
+        self.changed_variants = {}
+        self.images_list = {}
+        self.products_list_cache = {}
+
+        # ES
+        self.es = None
+
+        self.orders = []  # found orders list
+        self.paginator = None  # current paginator, can be API, ES or DB paginator
+        self.open_orders = None  # Found orders count
+        self.current_page = None  # current Page instance returned by paginator
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if not request.user.can('orders.use'):
             return HttpResponseRedirect(f"{reverse('upgrade_required')}?feature=orders")
-
-        self.orders = []
-        self.post_per_page = 20
 
         self.user = self.request.user
         self.models_user = self.request.user.models_user
@@ -3610,28 +3647,23 @@ class OrdersView(TemplateView):
         self.get_pagination()
         self.check_extension_version()
 
-        context.update(self.get_user_settings())
-        context.update(self.get_filters())
-        context.update(self.get_sync_status())
+        self.proccess_orders()
 
-        context.update(self.proccess_orders())
-
-        context.update({
-            'breadcrumbs': self.get_breadcrumbs()
-        })
+        context.update(self.ctx)
 
         return context
 
     def get_breadcrumbs(self):
-        return [
+        self.ctx.page = 'orders'
+        self.ctx.selected_menu = 'orders:all'
+
+        self.ctx.breadcrumbs = [
             {'url': '/orders', 'title': 'Orders'},
             {'url': f'/orders?store={self.store.id}', 'title': self.store.title},
         ]
 
     def get_pagination(self):
-        self.page_num = safe_int(self.request.GET.get('page'), 1)
-        self.page_start = safe_int(self.request.GET.get('page_start'), 1)
-        self.page_num += self.page_start - 1
+        pass
 
     def check_extension_version(self):
         # Check if the extension is up-to-date
@@ -3645,7 +3677,7 @@ class OrdersView(TemplateView):
 
     def get_user_settings(self):
         # User settings
-        config = dict(
+        self.config.update(dict(
             order_custom_note=self.models_user.get_config('order_custom_note'),
             epacket_shipping=bool(self.models_user.get_config('epacket_shipping')),
             aliexpress_shipping_method=self.models_user.get_config('aliexpress_shipping_method'),
@@ -3659,18 +3691,20 @@ class OrdersView(TemplateView):
             show_actual_supplier=self.models_user.get_config('_show_actual_supplier', False) or self.models_user.id in [883, 21064, 24767],
             order_risk_all_getaways=self.models_user.get_config('_order_risk_all_getaways', False),
             aliexpress_mobile_order=self.models_user.can('aliexpress_mobile_order.use')
-        )
+        ))
 
-        config['admitad_site_id'], config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)
-
-        self.config = munchify(config)
+        self.config['admitad_site_id'], self.config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)
 
         return self.config
 
     def get_filters(self):
         now = arrow.get(timezone.now())
 
-        self.filters = munchify(dict(
+        self.page_num = safe_int(self.request.GET.get('page'), 1)
+        self.page_start = safe_int(self.request.GET.get('page_start'), 1)
+        self.page_num += self.page_start - 1
+
+        self.filters.update(dict(
             sort=utils.get_orders_filter(self.request, 'sort', 'asc'),
             status=utils.get_orders_filter(self.request, 'status', 'open'),
             fulfillment=utils.get_orders_filter(self.request, 'fulfillment', 'unshipped,partial'),
@@ -3686,10 +3720,13 @@ class OrdersView(TemplateView):
             query_customer_id=self.request.GET.get('query_customer_id'),
             query_address=self.request.GET.getlist('query_address'),
 
-            product_filter=self.request.GET.getlist('product'),
+            product_filter=[i for i in self.request.GET.getlist('product') if safe_int(i)],
             supplier_filter=self.request.GET.get('supplier_name'),
             shipping_method_filter=self.request.GET.get('shipping_method_name'),
         ))
+
+        if self.filters.product_filter:
+            self.filters.product_filter = self.models_user.shopifyproduct_set.filter(id__in=self.filters.product_filter)
 
         self.filters.created_at_daterange = self.request.GET.get('created_at_daterange', '{}-'.format(now.replace(days=-30).format('MM/DD/YYYY')))
 
@@ -3726,7 +3763,6 @@ class OrdersView(TemplateView):
         elif self.request.GET.get('old') == '0':
             shopify_orders_utils.enable_store_sync(self.store)
 
-        self.sync = munchify({})
         self.sync.store_order_synced = shopify_orders_utils.is_store_synced(self.store)
         self.sync.store_sync_enabled = self.sync.store_order_synced \
             and (shopify_orders_utils.is_store_sync_enabled(self.store) or self.request.GET.get('new')) \
@@ -3867,7 +3903,7 @@ class OrdersView(TemplateView):
                 }
             })
         elif self.filters.financial != 'any':
-            _must_term.append({'term': {'financial_status': self.filters.self.filters.financial}})
+            _must_term.append({'term': {'financial_status': self.filters.financial}})
 
         if self.filters.query_customer_id:
             # Search by customer ID first
@@ -3935,7 +3971,7 @@ class OrdersView(TemplateView):
 
         product_ids_search = []
         if self.filters.product_filter:
-            product_ids_search += self.filters.product_filter
+            product_ids_search += [product.id for product in self.filters.product_filter]
 
         if self.filters.supplier_filter:
             products = ShopifyProduct.objects.filter(default_supplier__supplier_name=self.filters.supplier_filter)
@@ -3992,7 +4028,7 @@ class OrdersView(TemplateView):
             db_orders = ShopifyOrder.objects.filter(id__in=[i['_id'] for i in hits]) \
                                             .only('order_id', 'updated_at', 'closed_at', 'cancelled_at')
 
-            self.current_page = shopify_orders_utils.sort_es_orders(shopify_orders, hits, db_orders)
+            self.current_page.object_list = shopify_orders_utils.sort_es_orders(shopify_orders, hits, db_orders)
 
             self.sync_order_with_db_from_es(self.current_page)
 
@@ -4111,7 +4147,7 @@ class OrdersView(TemplateView):
 
             shopify_orders = rep.json()['orders']
 
-            self.current_page = shopify_orders_utils.sort_orders(shopify_orders, self.current_page)
+            self.current_page.object_list = shopify_orders_utils.sort_orders(shopify_orders, self.current_page)
 
             self.sync_orders_with_db_from_api(self.current_page)
 
@@ -4165,40 +4201,37 @@ class OrdersView(TemplateView):
             order['line_items'] = line_items
 
     def load_models_cache(self):
-        self.products_cache = {}
-        self.orders_ids = []
-        self.products_ids = []
         for order in self.current_page:
             self.orders_ids.append(order['id'])
             for line in order['line_items']:
                 if line['product_id']:
                     self.products_ids.append(line['product_id'])
 
-        self.orders_track = {}
         for i in ShopifyOrderTrack.objects.filter(store=self.store, order_id__in=self.orders_ids).defer('data'):
             self.orders_track['{}-{}'.format(i.order_id, i.line_id)] = i
 
-        self.orders_log = {}
         for i in ShopifyOrderLog.objects.filter(store=self.store, order_id__in=self.orders_ids):
             self.orders_log[i.order_id] = i
 
-        self.changed_variants = {}
         for i in ShopifyOrderVariant.objects.filter(store=self.store, order_id__in=self.orders_ids):
             self.changed_variants['{}-{}'.format(i.order_id, i.line_id)] = i
 
-        self.images_list = {}
         res = ShopifyProductImage.objects.filter(store=self.store, product__in=self.products_ids)
         for i in res:
             self.images_list['{}-{}'.format(i.product, i.variant)] = i.image
 
-        self.products_list_cache = {}
         for p in ShopifyProduct.objects.filter(store=self.store, shopify_id__in=self.products_ids).select_related('default_supplier'):
             if p.shopify_id not in self.products_list_cache:
                 self.products_list_cache[p.shopify_id] = p
 
     def proccess_orders(self):
+        self.get_user_settings()
+        self.get_filters()
+        self.get_sync_status()
+
         self.get_orders()
         self.filter_orders()
+
         self.load_models_cache()
 
         orders_cache = {}
@@ -4459,15 +4492,12 @@ class OrdersView(TemplateView):
         else:
             countries = []
 
-        if self.filters.product_filter:
-            self.filters.product_filter = self.models_user.shopifyproduct_set.filter(id__in=self.filters.product_filter)
-
         order_debug = self.request.session.get('is_hijacked_user') or \
             (self.request.user.is_superuser and self.request.GET.get('debug')) or \
             self.request.user.get_config('_orders_debug') or \
             settings.DEBUG
 
-        ctx = {
+        self.ctx.update({
             'orders': self.orders,
             'store': self.store,
             'paginator': self.paginator,
@@ -4479,11 +4509,10 @@ class OrdersView(TemplateView):
             'countries': countries,
             'order_debug': order_debug,
             'open_print_on_demand': open_print_on_demand,
-            'page': 'orders',
-            'selected_menu': 'orders:all',
-        }
-
-        return ctx
+            **self.config,
+            **self.filters,
+            **self.sync,
+        })
 
     def render_to_response(self, context, **response_kwargs):
         if self.bulk_queue:
