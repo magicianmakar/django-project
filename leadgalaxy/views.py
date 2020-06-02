@@ -51,10 +51,11 @@ from shopified_core.shipping_helper import get_counrties_list, country_from_code
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.exceptions import ApiLoginException
 from shopify_orders import utils as shopify_orders_utils
-from commercehq_core.models import CommerceHQProduct
-from groovekart_core.models import GrooveKartStore, GrooveKartProduct
-from woocommerce_core.models import WooProduct
-from bigcommerce_core.models import BigCommerceProduct
+from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
+from woocommerce_core.models import WooProduct, WooSupplier
+from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier
+from groovekart_core.models import GrooveKartStore, GrooveKartProduct, GrooveKartSupplier
+from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier
 from product_alerts.models import ProductChange
 from stripe_subscription.stripe_api import stripe
 from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
@@ -256,7 +257,7 @@ def webhook(request, provider, option):
                                         .format(webhook_type, (bundle.title if bundle else plan.title)))
 
             elif request.method != 'POST':
-                raise Exception('Unexpected HTTP Method: {}'.request.method)
+                raise Exception(f'Unexpected HTTP Method: {request.method}')
 
             params = dict(iter(request.POST.items()))
 
@@ -311,11 +312,13 @@ def webhook(request, provider, option):
                     data['jvzoo'] = params
                     reg = utils.generate_plan_registration(plan=None, bundle=bundle, data=data)
 
+                    user = None
+
                     try:
                         user = User.objects.get(email__iexact=data['email'])
                         user.profile.apply_registration(reg)
                     except User.DoesNotExist:
-                        user = None
+                        pass
 
                     send_email_from_template(
                         tpl='webhook_bundle_purchase.html',
@@ -448,7 +451,7 @@ def webhook(request, provider, option):
                                     .format(webhook_type, (bundle.title if bundle else plan.title)))
 
         elif request.method != 'POST':
-            raise Exception('Unexpected HTTP Method: {}'.request.method)
+            raise Exception(f'Unexpected HTTP Method: {request.method}')
 
         params = dict(iter(request.POST.items()))
 
@@ -2182,12 +2185,12 @@ def boards_list(request):
         raise PermissionDenied()
 
     search_title = request.GET.get('search') or None
-    boards_list = request.user.models_user.shopifyboard_set.all()
+    user_boards_list = request.user.models_user.shopifyboard_set.all()
     if search_title is not None:
-        boards_list = boards_list.filter(title__icontains=search_title)
-    boards_count = len(boards_list)
+        user_boards_list = user_boards_list.filter(title__icontains=search_title)
+    boards_count = len(user_boards_list)
 
-    paginator = SimplePaginator(boards_list, 10)
+    paginator = SimplePaginator(user_boards_list, 10)
     page = safe_int(request.GET.get('page'), 1)
     page = min(max(1, page), paginator.num_pages)
     current_page = paginator.page(page)
@@ -2243,17 +2246,6 @@ def boards(request, board_id):
 
 
 def get_shipping_info(request):
-    if request.GET.get('chq'):
-        from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
-    if request.GET.get('woo'):
-        from woocommerce_core.models import WooProduct, WooSupplier
-    if request.GET.get('gear'):
-        from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier
-    if request.GET.get('gkart'):
-        from groovekart_core.models import GrooveKartProduct, GrooveKartSupplier
-    if request.GET.get('bigcommerce'):
-        from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier
-
     request_url = request.GET.get('url')
     if request_url:
         request_url = utils.set_url_query(request_url, 'useLocalAddress', 'false')
@@ -2696,6 +2688,7 @@ def acp_graph(request):
         data.products_count = (using_replica(ShopifyProduct).filter(user=user) if user else using_replica(ShopifyProduct).all()).count()
         data.users_count = using_replica(User).all().count()
 
+    tracking_count = {}
     if graph_type == 'tracking' and not request.GET.get('aff_only'):
         if time_threshold:
             tracking_count = {
@@ -2898,6 +2891,10 @@ def dropified_black_users(request):
 
         if not selected_sample and not new_sample:
             error_message = 'Sample name is not set'
+
+        spamreader = None
+        email_field = 'email'
+        tracking_field = 'tracking_number'
 
         if request.FILES["file"].content_type != 'text/csv':
             error_message = 'Uploaded file is not a CSV file'
@@ -4550,7 +4547,6 @@ def orders_track(request):
     sorting = request.GET.get('sort', '-update')
     sorting = order_map.get(sorting, 'status_updated_at')
 
-    store = None
     post_per_page = safe_int(request.GET.get('ppp'), 20)
     page = safe_int(request.GET.get('page'), 1)
     query = request.GET.get('query')
@@ -4810,6 +4806,8 @@ def orders_place(request):
         cache.set(limit_check_key, arrow.utcnow().timestamp, timeout=3600)
 
     # Save Auto fulfill event
+    event_key = None
+    store = None
     event_data = {}
     order_data = None
     order_key = request.GET.get('SAPlaceOrder')
