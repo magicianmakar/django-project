@@ -172,9 +172,7 @@
             update_add_button();
 
             $('.add-alert').click(function() {
-                var company = $("#company_id").val();
-                var url = "{%  url 'phone_automation_notifications_alert_create' %}" + company + '/';
-                window.location.href = url;
+                window.location.href = "{%  url 'phone_automation_notifications_alert_create' %}" + $("#company_id").val() + '/';
             });
         });
 </script>

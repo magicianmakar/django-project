@@ -4,7 +4,6 @@ $(document).ready(function(){
     });
 
     $('#user_supplement_form input[type=submit]').click(function() {
-        var action = $(this).data('action');
-        document.user_supplement_form.action.value = action;
+        document.user_supplement_form.action.value = $(this).data('action');
     });
 });

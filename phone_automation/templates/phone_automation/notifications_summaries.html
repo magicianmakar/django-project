@@ -168,8 +168,7 @@
 
             $('.add-summary').click(function() {
                 var company = $("#company_id").val();
-                var url = "{% url template_config.url.namespace|add:'phone_automation_notifications_summary_create' %}" + company + '/';
-                window.location.href = url;
+                window.location.href = "{% url template_config.url.namespace|add:'phone_automation_notifications_summary_create' %}" + company + '/';
             });
         });
     </script>

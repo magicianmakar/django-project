@@ -851,28 +851,21 @@
         {% endif %}
 
         {% if request.user|can:'aliextractor.use' %}
-
-
             <div id="tab-ae" class="tab-pane">
                 <div class="panel-body">
-                <!-- Product view -->
-                <div class=" row">
-
-                    <div class="col-md-12 ae-extension-check">
-                        {% include "partial/ae-tab-default.html" %}
+                    <div class=" row">
+                        <div class="col-md-12 ae-extension-check">
+                            {% include "partial/ae-tab-default.html" %}
+                        </div>
+                        <div class="col-md-12 ae-extension-content"></div>
                     </div>
-
-                    <div class="col-md-12 ae-extension-content">
-                    </div>
-
                 </div>
-
             </div>
         {% endif %}
 
         </div>
-</div>
     </div>
+</div>
 </div>
 
 <div id="modal-add-image" class="modal fade" aria-hidden="true">

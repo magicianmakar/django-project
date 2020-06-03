@@ -802,7 +802,7 @@ $(function() {
     }).mouseleave(function(e) {
         var el = this;
         tout = setTimeout(function() {
-            var elTop = $(el).prop('el-top') || $(el).outerHeight() - (($(el).outerHeight() / 3) * 1);
+            var elTop = $(el).prop('el-top') || $(el).outerHeight() - ($(el).outerHeight() / 3);
             $(el).animate({
                 top: "-" + elTop + "px",
             }, 300);

@@ -83,7 +83,7 @@
                         </div>
                     </div>
                     <div class="form-group col-xs-3">
-                        <label for="product-type">Compare at price</label>
+                        <label for="product-compare-at">Compare at price</label>
                         <div class="input-group">
                             <span class="input-group-addon">{% money_format None product.store  %}</span>
                             <input type="text" class="form-control" id="product-compare-at"
@@ -91,7 +91,7 @@
                         </div>
                     </div>
                     <div class="form-group col-xs-3">
-                        <label for="product-type" style="display: block">Weight</label>
+                        <label for="product-weight" style="display: block">Weight</label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="product-weight" style="width:70%">
                             <select name="product-weight-unit" id="product-weight-unit" class="input-group-addon form-control" style="width:30%;padding: 0 5px">
@@ -109,7 +109,7 @@
                         <input type="text" class="form-control" id="product-type" placeholder="Product Type">
                     </div>
                     <div class="form-group col-xs-6">
-                        <label for="product-type">Tags</label>
+                        <label for="product-tag">Tags</label>
                         <input type="text" class="form-control tag-it" value="{{ product.parsed.tags|default:'' }}" id="product-tag" placeholder="Product Tags">
                     </div>
                     <div class="form-group col-xs-3">
@@ -187,11 +187,11 @@
                             </div>
 
                             <div id="variants" class="row well"
-                                 style="margin:5px 0px 10px 0;padding: 20px 0 0px; {% if commercehq_product %}display:none{% endif %}">
+                                 style="margin:5px 0 10px 0;padding: 20px 0 0; {% if commercehq_product %}display:none{% endif %}">
 
                                 <div class="variant-simple form-group col-xs-10" style="display:none">
                                     <input type="text" class="form-control" id="product-variant-name" style="width: 150px" placeholder="Title">
-                                    <input type="text" class="form-control" id="product-variant-values" style="margin: 10px 0px;" placeholder="Values (separated by comma)">
+                                    <input type="text" class="form-control" id="product-variant-values" style="margin: 10px 0;" placeholder="Values (separated by comma)">
                                     <a href="#" class="btn btn-danger btn-xs remove-variant">Remove</a>
                                 </div>
                                 <div class="area col-xs-12">
@@ -550,25 +550,23 @@
         </div>
         {% endif %}
 
-
-        {% if request.user|can:'aliextractor.use' %}
+            {% if request.user|can:'aliextractor.use' %}
             <div id="tab-ae" class="tab-pane">
                 <div class="panel-body">
-                <!-- Product view -->
-                <div class=" row">
-                    <div class="col-md-12 ae-extension-check">
-                        {% include "partial/ae-tab-default.html" %}
-                    </div>
-                    <div class="col-md-12 ae-extension-content">
+                    <!-- Product view -->
+                    <div class="row">
+                        <div class="col-md-12 ae-extension-check">
+                            {% include "partial/ae-tab-default.html" %}
+                        </div>
+                        <div class="col-md-12 ae-extension-content"></div>
                     </div>
                 </div>
             </div>
-        {% endif %}
+            {% endif %}
+        </div>
+        </div>
     </div>
 </div>
-    </div>
-</div>
-
 <div id="modal-add-image" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
