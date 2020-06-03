@@ -1,5 +1,12 @@
 #!/bin/bash
 
+grep -E 'def [a-z].+\(.+=(\[\]|\{\})' --exclude-dir='venv*' --include '*.py' --recursive .
+if [ "$?" == "0" ]; then
+    echo
+    echo "[-] Using mutable default arguments"
+    exit -1
+fi
+
 grep datetime.strptime --exclude-dir='venv*' --include="*.py" --recursive .
 if [ "$?" == "0" ]; then
     echo
