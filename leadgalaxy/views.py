@@ -312,11 +312,8 @@ def webhook(request, provider, option):
                     data['jvzoo'] = params
                     reg = utils.generate_plan_registration(plan=None, bundle=bundle, data=data)
 
-                    user = None
-
                     try:
-                        user = User.objects.get(email__iexact=data['email'])
-                        user.profile.apply_registration(reg)
+                        User.objects.get(email__iexact=data['email']).profile.apply_registration(reg)
                     except User.DoesNotExist:
                         pass
 
@@ -507,10 +504,9 @@ def webhook(request, provider, option):
                 reg = utils.generate_plan_registration(plan=None, bundle=bundle, data=data)
 
                 try:
-                    user = User.objects.get(email__iexact=data['email'])
-                    user.profile.apply_registration(reg)
+                    User.objects.get(email__iexact=data['email']).profile.apply_registration(reg)
                 except User.DoesNotExist:
-                    user = None
+                    pass
 
                 send_email_from_template(
                     tpl='webhook_bundle_purchase.html',
@@ -561,9 +557,6 @@ def webhook(request, provider, option):
                 user = User.objects.get(email__iexact=data['email'])
             except User.DoesNotExist:
                 user = None
-
-            new_refund = PlanPayment.objects.filter(payment_id=params['trans_receipt'],
-                                                    transaction_type=trans_type).count() == 0
 
             new_refund = True  # Disable this check until we see Zaxaa behavior
 
@@ -1075,13 +1068,13 @@ def webhook(request, provider, option):
             args = request.POST['text'].split(' ')
             if len(args) == 2:
                 email = args[0]
-                credits = args[1]
-                if credits == 'review':
-                    credits = 1000
+                credits_count = args[1]
+                if credits_count == 'review':
+                    credits_count = 1000
                     is_review_bonus = True
             elif len(args) == 1:
                 email = args[0]
-                credits = 1000
+                credits_count = 1000
             else:
                 return HttpResponse(':x: Number of arguments is not correct {}'.format(request.POST['text']))
 
@@ -1089,20 +1082,20 @@ def webhook(request, provider, option):
 
             if is_review_bonus and user.can('aliexpress_captcha.use'):
                 user.set_config('_double_orders_limit', arrow.utcnow().timestamp)
-                return HttpResponse('{} Double Orders Limit for *{}*'.format(credits, email))
+                return HttpResponse('{} Double Orders Limit for *{}*'.format(credits_count, email))
 
             try:
                 captchacredit = CaptchaCredit.objects.get(user=user)
-                captchacredit.remaining_credits += safe_int(credits, 0)
+                captchacredit.remaining_credits += safe_int(credits_count, 0)
                 captchacredit.save()
 
             except CaptchaCredit.DoesNotExist:
                 captchacredit.objects.create(
                     user=user,
-                    remaining_credits=credits
+                    remaining_credits=credits_count
                 )
 
-            return HttpResponse('{} Captcha Credits added to *{}*'.format(credits, email))
+            return HttpResponse('{} Captcha Credits added to *{}*'.format(credits_count, email))
 
         elif request.POST['command'] == '/dash-facebook-reset':
             args = request.POST['text'].split(' ')
@@ -1383,7 +1376,7 @@ def webhook(request, provider, option):
             if user.is_superuser or user.is_staff:
                 return HttpResponse(f':x: Can not login as {email} (Staff account)')
 
-            token = token = jwt.encode({
+            token = jwt.encode({
                 'id': user.id,
                 'exp': arrow.utcnow().replace(hours=1).timestamp
             }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
@@ -1447,7 +1440,6 @@ def webhook(request, provider, option):
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None, load_boards=False):
     products = []
-    paginator = None
     page = safe_int(request.GET.get('page'), 1)
     models_user = request.user.models_user
     user = request.user
@@ -1553,21 +1545,21 @@ def link_product_board(products, boards):
 
     fetch_key = 'link_product_board_%s' % hash_text(reduce(lambda x, y: '{}.{}'.format(x, y), fetch_list))
 
-    boards = cache.get(fetch_key)
-    if boards is None:
+    cached_boards = cache.get(fetch_key)
+    if cached_boards is None:
         fetched = ShopifyProduct.objects.prefetch_related('shopifyboard_set') \
                                         .only('id') \
                                         .filter(id__in=[i['id'] for i in products])
 
-        boards = {}
+        cached_boards = {}
         for i in fetched:
             board = i.shopifyboard_set.first()
-            boards[i.id] = {'title': board.title} if board else None
+            cached_boards[i.id] = {'title': board.title} if board else None
 
-        cache.set(fetch_key, boards, timeout=3600)
+        cache.set(fetch_key, cached_boards, timeout=3600)
 
     for i, v in enumerate(products):
-        products[i]['board'] = boards.get(v['id'])
+        products[i]['board'] = cached_boards.get(v['id'])
 
     return products
 
@@ -2210,7 +2202,7 @@ def boards_list(request):
 
 
 @login_required
-def boards(request, board_id):
+def boards_view(request, board_id):
     if not request.user.can('view_product_boards.sub'):
         raise PermissionDenied()
 
@@ -2987,7 +2979,7 @@ def acp_cards(request):
             cache.set('boards_lists', all_boards, timeout=500)
 
         if ids:
-            all_boards = [i['shortLink'] for i in boards]
+            all_boards = [i['shortLink'] for i in all_boards]
 
         return all_boards
 
@@ -5068,11 +5060,11 @@ def bundles_bonus(request, bundle_id):
 
                 reg.expired = True
             except User.DoesNotExist:
-                user = None
+                pass
 
             reg.save()
 
-            messages.success(request, 'Bundle %s has been added to your account.' % bundle.title)
+            messages.success(request, f'Bundle {bundle.title} has been added to your account.')
             return HttpResponseRedirect('/')
 
     else:
