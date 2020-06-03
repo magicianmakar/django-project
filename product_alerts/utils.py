@@ -237,7 +237,6 @@ def match_sku_title_with_mapping_title(sku, mapping):
     """ Match a title with a mapping return by get_variant_mapping
 
     Args:
-        title: str
         mapping: list(dict), ex: [{title: Red, sku: 1:1}, {title: XL, sku: 2:10}]
     """
 
@@ -271,12 +270,7 @@ def match_sku_with_shopify_sku(sku, shopify_sku):
 
 
 def match_sku_title_with_shopify_variant_title(sku, variant):
-    """ Match a title with a mapping return by get_variant_mapping
-
-    Args:
-        title: str
-        mapping: list(dict), ex: [{title: Red, sku: 1:1}, {title: XL, sku: 2:10}]
-    """
+    """ Match a title with a mapping return by get_variant_mapping """
 
     ali_sku_titles = ';'.join(sorted(option['option_title'] for option in parse_supplier_sku(sku, sort=True)))
 

@@ -580,7 +580,10 @@ def order_track_fulfillment(order_track, user_config=None):
     return changed, fulfillment_data
 
 
-def get_variant_value(label, value, color_textures={}):
+def get_variant_value(label, value, color_textures=None):
+    if not color_textures:
+        color_textures = {}
+
     texture = color_textures.get(value)
     if texture:
         # TODO: Sending correct label(not Color) erases variant_name

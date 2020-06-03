@@ -74,7 +74,7 @@ class ProductBase(models.Model):
 
         return self.user_supplement.is_approved
 
-    def get_bundle_mapping(self, variant=None, default=[]):
+    def get_bundle_mapping(self, variant=None, default=None):
         try:
             bundle_map = json.loads(self.bundle_map)
         except:
@@ -83,6 +83,9 @@ class ProductBase(models.Model):
         if variant is None:
             return bundle_map
         else:
+            if default is None:
+                default = []
+
             return bundle_map.get(str(variant), default)
 
     def set_bundle_mapping(self, mapping):

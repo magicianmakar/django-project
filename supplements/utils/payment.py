@@ -63,7 +63,7 @@ class Util:
 
         get_shipstation_line_key = PLSOrderLine.get_shipstation_key
         total_weight = 0
-        wholesale_price = amount = shipping_price = 0
+        wholesale_price = amount = 0
         for line in lines:
             user_supplement = line['user_supplement']
             quantity = int(line['quantity'])

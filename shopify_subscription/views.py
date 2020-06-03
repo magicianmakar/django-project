@@ -184,7 +184,7 @@ def subscription_charged(request, store):
                 captchacredit.save()
 
             except CaptchaCredit.DoesNotExist:
-                captchacredit.objects.create(
+                CaptchaCredit.objects.create(
                     user=request.user.models_user,
                     remaining_credits=charge['credits']
                 )

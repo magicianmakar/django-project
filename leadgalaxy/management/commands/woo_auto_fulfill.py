@@ -112,6 +112,7 @@ class Command(DropifiedBaseCommand):
         tries = 3
 
         while tries > 0:
+            r = None
             try:
                 r = store.wcapi.put('orders/{}'.format(order_track.order_id), api_data)
                 r.raise_for_status()
@@ -139,7 +140,7 @@ class Command(DropifiedBaseCommand):
                     return False
 
                 else:
-                    extra = {'order_track': order_track.id, 'response': r.text}
+                    extra = {'order_track': order_track.id, 'response': r.text if r else ''}
                     capture_exception(extra=extra)
 
             except:

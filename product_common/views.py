@@ -39,8 +39,8 @@ class IndexView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             {'title': 'Products', 'url': reverse(f'{self.namespace}:index')},
         ]
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         self.add_paging_context(context)
 
         context.update({
@@ -330,8 +330,8 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             {'title': 'Orders', 'url': reverse(f'{self.namespace}:order_list')},
         ]
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         context['form'] = self.form
         context['breadcrumbs'] = self.get_breadcrumbs()
         self.add_paging_context(context)
@@ -387,8 +387,8 @@ class PayoutView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
 
         return queryset
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         context['form'] = self.form
         context['breadcrumbs'] = self.get_breadcrumbs()
         self.add_paging_context(context)
@@ -477,8 +477,8 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
             {'title': 'Order Items', 'url': reverse(f'{self.namespace}:orderitem_list')},
         ]
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         context['form'] = self.form
         context['breadcrumbs'] = self.get_breadcrumbs()
         self.add_paging_context(context)

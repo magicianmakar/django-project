@@ -105,10 +105,9 @@ class Command(DropifiedBaseCommand):
                 if sub_user.profile.subuser_stores.filter(is_active=True).count():
                     cc_list.append(sub_user.email)
 
-        self.send_email(user, changes_map, cc_list=cc_list, changes_count=changes_count)
-        return changes_map
+        self.send_email(user, user_changes_map, cc_list=cc_list, changes_count=changes_count)
 
-    def send_email(self, user, changes_map, cc_list=[], changes_count=None):
+    def send_email(self, user, changes_map, cc_list=None, changes_count=None):
         # send changes_map to email template
         data = {
             'user': user,
@@ -123,7 +122,7 @@ class Command(DropifiedBaseCommand):
                 changes_map['added']]):
 
             recipient_list = [user.email]
-            if len(cc_list):
+            if cc_list:
                 recipient_list = recipient_list + cc_list
 
             send_email_from_template(

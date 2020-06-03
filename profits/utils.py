@@ -231,7 +231,7 @@ def get_costs_from_track(track, commit=False):
         return costs
 
 
-def get_profit_details(store, store_type, date_range, limit=20, page=1, orders_map={}, refunds_list=[], user_timezone=''):
+def get_profit_details(store, store_type, date_range, limit=20, page=1, orders_map=None, refunds_list=None, user_timezone=''):
     """
     Returns each refund, order and aliexpress fulfillment sorted by date
     """

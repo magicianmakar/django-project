@@ -33,9 +33,9 @@ def user_get_gkart_boards(self):
 
 
 class GrooveKartStoreSession(Session):
-    def __init__(self, store, *args, **kwargs):
+    def __init__(self, store):
         self._store = store
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
     def post(self, *args, **kwargs):
         kwargs = self.update_json_data(kwargs)

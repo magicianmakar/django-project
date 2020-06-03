@@ -74,7 +74,7 @@ class ShopifyOrderImport():
             'loading': loading
         })
 
-    def fill_line_items(self, orders={}):
+    def fill_line_items(self, orders):
         self._send_pusher_notification('Loading Line Items', 50)
         orders_half_length = len(orders) / 2
         orders_count = 0
@@ -112,7 +112,7 @@ class ShopifyOrderImport():
 
         return orders
 
-    def find_orders(self, orders={}):
+    def find_orders(self, orders):
         self._send_pusher_notification('Loading Orders', 20)
         orders_half_length = len(orders) / 2
         orders_count = 0

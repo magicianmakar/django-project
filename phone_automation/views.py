@@ -367,12 +367,10 @@ def provision(request):
                     .local \
                     .list(voice_enabled=True, sms_enabled=True, area_code=areacode, contains=mask, page_size=12)
             else:
-                phone_type == "tollfree"
                 numbers = client.available_phone_numbers(country_code) \
                     .toll_free \
                     .list(voice_enabled=True, sms_enabled=True, area_code=areacode, contains=mask, page_size=12)
         except Exception:
-            numbers = []
             messages.error(request, 'Error while searching phone number. Try another search patterns.')
 
         twilio_phone_numbers_pool = numbers

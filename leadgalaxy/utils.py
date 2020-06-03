@@ -92,9 +92,13 @@ from django.utils.deprecation import MiddlewareMixin
 Cookie.Morsel._reserved['samesite'] = 'SameSite'
 
 
-def upload_from_url(url, stores=[]):
+def upload_from_url(url, stores=None):
     # Domains are taken from allowed stores plus store's CDN
-    allowed_stores = stores + ['alicdn', 'aliimg', 'ebayimg', 'sunfrogshirts']
+    allowed_stores = ['alicdn', 'aliimg', 'ebayimg', 'sunfrogshirts']
+
+    if stores:
+        allowed_stores.extend(stores)
+
     allowed_paths = [r'^https?://s3.amazonaws.com/feather(-client)?-files-aviary-prod-us-east-1/']  # Aviary
     allowed_domains = ['%s.s3.amazonaws.com' % i for i in [settings.S3_STATIC_BUCKET, settings.S3_UPLOADS_BUCKET]]
     allowed_domains += ['cdn.shopify.com', 'cdn2.shopify.com', 'shopifiedapp.s3.amazonaws.com', 'ecx.images-amazon.com',
@@ -116,7 +120,10 @@ def random_filename(filename):
     return '{}.{}'.format(random_hash(), '.'.join(ext))
 
 
-def generate_plan_registration(plan, data={}, bundle=None, sender=None):
+def generate_plan_registration(plan, data=None, bundle=None, sender=None):
+    if data is None:
+        data = {}
+
     reg = PlanRegistration(plan=plan, bundle=bundle, sender=sender, email=data['email'], data=json.dumps(data))
     reg.register_hash = random_hash()
     reg.save()

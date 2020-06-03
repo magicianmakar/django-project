@@ -8,10 +8,13 @@ from shopified_core.utils import safe_str
 
 
 class ShopifyOrderPaginator(Paginator):
-    reverse_order = False
-    query = None
-    page_info = None
-    page_encode_len = 8
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.query = None
+        self.reverse_order = False
+        self.page_info = None
+        self.page_encode_len = 8
 
     def set_store(self, store):
         self.store = store

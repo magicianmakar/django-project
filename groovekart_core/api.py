@@ -524,11 +524,12 @@ class GrooveKartApi(ApiBase):
 
         api_url = store.get_api_url('trackings.json')
 
+        r = None
         try:
             r = store.request.post(api_url, json=fulfillment)
             r.raise_for_status()
         except Exception:
-            capture_exception(level='warning', extra={'response': r.text})
+            capture_exception(level='warning', extra={'response': r.text if r else ''})
             return self.api_error('GrooveKart API Error')
 
         return self.api_success()

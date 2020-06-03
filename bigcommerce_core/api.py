@@ -451,6 +451,7 @@ class BigCommerceStoreApi(ApiBase):
             if line_item['id'] == line_id:
                 target_line_item = line_item
 
+        r = None
         try:
             data = {
                 'tracking_number': tracking_number,
@@ -473,7 +474,7 @@ class BigCommerceStoreApi(ApiBase):
             r.raise_for_status()
             target_line_item['quantity_shipped'] = target_line_item['quantity']
         except:
-            capture_exception(level='warning', extra={'response': r.text})
+            capture_exception(level='warning', extra={'response': r.text if r else ''})
             return self.api_error('BigCommerce API Error')
 
         if len(utils.get_unfulfilled_items(product_data)) == 0:

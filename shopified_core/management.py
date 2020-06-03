@@ -61,7 +61,7 @@ class DropifiedBaseCommand(BaseCommand):
         else:
             self.stdout.write(self.style.SUCCESS(msg))
 
-    def raven_context_from_store(self, client, store, tags={}):
+    def raven_context_from_store(self, client, store, tags=None):
         client.user_context({
             'id': store.user.id,
             'username': store.user.username,

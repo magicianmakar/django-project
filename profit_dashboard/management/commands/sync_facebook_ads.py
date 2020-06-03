@@ -2,7 +2,6 @@ from datetime import date
 
 from django.utils import timezone
 from django.db.models import Q
-from tqdm import tqdm
 from lib.exceptions import capture_exception
 from facebook_business.exceptions import FacebookRequestError
 
@@ -57,7 +56,7 @@ class Command(DropifiedBaseCommand):
         self.write('Syncing {} Facebook Accounts'.format(count))
 
         if progress:
-            obar = tqdm(total=count)
+            self.progress_total(count)
 
         for access in facebook_access_list:
             # Update token if its about to expire
@@ -72,8 +71,6 @@ class Command(DropifiedBaseCommand):
                     stdout=self.stdout
                 )
 
-            if progress:
-                obar.update(1)
+            self.progress_update()
 
-        if progress:
-            obar.close()
+        self.progress_close()

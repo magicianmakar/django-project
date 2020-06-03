@@ -9,7 +9,7 @@ import ctypes
 import simplejson as json
 from functools import wraps
 from copy import deepcopy
-from urllib.parse import urlencode, urlparse, parse_qs, ParseResult
+from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
 
 from django.conf import settings
 from django.core import serializers
@@ -78,11 +78,11 @@ def safe_str(v, default=''):
         return default
 
 
-def safe_json(v, default={}):
+def safe_json(v, default=None):
     try:
         return json.loads(v)
     except:
-        return default
+        return {} if default is None else default
 
 
 def dict_val(data, name, default=None):
@@ -860,7 +860,7 @@ def slugify_menu(selected_menu):
     return selected_menu.replace(':', '-').replace('_', '-')
 
 
-def encode_api_token(data={}):
+def encode_api_token(data):
     token = jwt.encode(data, settings.API_SECRECT_KEY, algorithm='HS256')
     if isinstance(token, bytes):
         token = token.decode('utf-8')
@@ -911,10 +911,10 @@ def get_next_page_from_request(request, page):
     url = urlparse(request.get_raw_uri())
     params = parse_qs(url.query)
     params['page'] = page
-    return ParseResult(
+    return urlunparse((
         url.scheme, url.netloc, url.path,
         url.params, urlencode(params, doseq=True), url.fragment
-    ).geturl()
+    ))
 
 
 def format_queueable_orders(request, orders, current_page, store_type='shopify'):

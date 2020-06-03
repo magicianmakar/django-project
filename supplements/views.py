@@ -110,8 +110,8 @@ class Index(common_views.IndexView):
     def get_breadcrumbs(self):
         return [{'title': 'Supplements', 'url': reverse('pls:index')}]
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         context['supplements'] = context['products']
         context['form'] = PLSupplementFilterForm(self.request.GET)
         return context
@@ -700,8 +700,8 @@ class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
         else:
             return f"{len_comment} comments"
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         self.add_paging_context(context)
 
         len_label = context['paginator'].count
@@ -771,8 +771,8 @@ class AllLabels(MyLabels):
 
         return queryset
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         context['all_label_form'] = AllLabelFilterForm(self.request.GET)
         return context
 
@@ -805,7 +805,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             {'title': 'Label', 'url': self.request.path},
         ]
 
-    def get_context_data(self, *args, **kwargs):
+    def get_context_data(self, **kwargs):
         user_supplement = kwargs['label'].user_supplement
         aws = aws_s3_context()
         api_data = self.get_api_data(user_supplement)
@@ -977,7 +977,7 @@ class OrderDetailMixin(LoginRequiredMixin, View):
             {'title': order.order_number, 'url': reverse('pls:order_detail', kwargs={'order_id': order.id})}
         ]
 
-    def get_context_data(self, *args, **kwargs):
+    def get_context_data(self, **kwargs):
         order = kwargs['order']
 
         line_items = [dict(
@@ -1152,8 +1152,8 @@ class PayoutView(common_views.PayoutView):
             {'title': 'Payouts', 'url': reverse('pls:payout_list')},
         ]
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
         add_form = getattr(self, 'add_form', False)
         context['add_form'] = add_form or add_form()
         return context
@@ -1226,8 +1226,8 @@ class Billing(LoginRequiredMixin, TemplateView):
             'Billing',
         ]
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
         try:
             self.request.user.authorize_net_customer.retrieve()
@@ -1333,8 +1333,8 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
             {'title': 'Import / Export', 'url': reverse('pls:upload_json')},
         ]
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
 
         context.update({
             'breadcrumbs': self.get_breadcrumbs(),

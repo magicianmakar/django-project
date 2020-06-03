@@ -177,6 +177,8 @@ class ShopifiedApi(ApiResponseMixin, View):
                 store_model = GrooveKartStore
             elif store_type == 'bigcommerce':
                 store_model = BigCommerceStore
+            else:
+                return self.api_error("Store type not found", status=422)
 
             store = store_model.objects.get(id=store_id)
             permissions.user_can_edit(user, store)

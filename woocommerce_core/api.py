@@ -615,12 +615,13 @@ class WooStoreApi(ApiBase):
 
         line_items = [{'id': line_id, 'product_id': product_id, 'meta_data': meta_data}]
 
+        r = None
         try:
             data = {'line_items': line_items, 'status': 'processing'}
             r = store.wcapi.put('orders/{}'.format(order_id), data)
             r.raise_for_status()
         except:
-            capture_exception(level='warning', extra={'response': r.text})
+            capture_exception(level='warning', extra={'response': r.text if r else ''})
             return self.api_error('WooCommerce API Error')
 
         if len(utils.get_unfulfilled_items(r.json())) == 0:

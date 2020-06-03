@@ -165,7 +165,7 @@ def get_product_attributes_dict(store):
         return {}
 
 
-def add_product_attributes_to_api_data(api_data, data, attributes=[]):
+def add_product_attributes_to_api_data(api_data, data, attributes=None):
     variants = data.get('variants', [])
 
     if variants:
@@ -174,7 +174,7 @@ def add_product_attributes_to_api_data(api_data, data, attributes=[]):
         for num, variant in enumerate(variants):
             name, options = variant.get('title'), variant.get('values', [])
             attribute = {'position': num + 1, 'options': options, 'variation': True}
-            if attributes.get(name):
+            if attributes and attributes.get(name):
                 attribute['id'] = attributes.get(name)
             else:
                 attribute['name'] = name
@@ -193,7 +193,10 @@ def get_image_id_by_hash(api_data, product_data):
     return image_id_by_hash
 
 
-def create_variants_api_data(data, image_id_by_hash, attributes=[]):
+def create_variants_api_data(data, image_id_by_hash, attributes=None):
+    if not attributes:
+        attributes = {}
+
     variants = data.get('variants', [])
     variants_info = data.get('variants_info', {})
     variants_images = list(data.get('variants_images', {}).items())

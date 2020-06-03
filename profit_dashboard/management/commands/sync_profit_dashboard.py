@@ -1,6 +1,5 @@
 import arrow
 
-from tqdm import tqdm
 from lib.exceptions import capture_exception
 
 from shopified_core.management import DropifiedBaseCommand
@@ -44,7 +43,7 @@ class Command(DropifiedBaseCommand):
 
         count = tracks.count()
         if progress:
-            obar = tqdm(total=count)
+            self.progress_total(count)
 
         start = 0
         steps = 5000
@@ -78,8 +77,7 @@ class Command(DropifiedBaseCommand):
                 except:
                     capture_exception()
 
-            if progress:
-                obar.update(steps)
+            self.progress_update()
 
             start += steps
 
@@ -94,5 +92,4 @@ class Command(DropifiedBaseCommand):
             if is_duplicated:
                 self.write('Duplicated cost found! Reset costs before sync is advise. (--reset)')
 
-        if progress:
-            obar.close()
+        self.progress_close()

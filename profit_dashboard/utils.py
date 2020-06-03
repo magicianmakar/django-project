@@ -392,7 +392,7 @@ def get_refund_amount(transactions):
     return refund_amount
 
 
-def get_profit_details(store, date_range, limit=20, page=1, orders_map={}, refunds_list=[], store_timezone=''):
+def get_profit_details(store, date_range, limit=20, page=1, orders_map=None, refunds_list=None, store_timezone=''):
     """
     Returns each refund, order and aliexpress fulfillment sorted by date
     """

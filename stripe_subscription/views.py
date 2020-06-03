@@ -379,7 +379,7 @@ def captchacredit_subscription(request):
             captchacredit.save()
 
         except CaptchaCredit.DoesNotExist:
-            captchacredit.objects.create(
+            CaptchaCredit.objects.create(
                 user=user,
                 remaining_credits=captchacredit_plan.allowed_credits
             )

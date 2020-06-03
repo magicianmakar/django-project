@@ -37,7 +37,7 @@ class ShopifyAPI:
 
         return data['count']
 
-    def recurring_charges(self, params={}, active=False):
+    def recurring_charges(self, params=None, active=False):
         links, data = self._get_resource(
             resource='recurring_application_charges',
             params=params,
@@ -50,7 +50,7 @@ class ShopifyAPI:
 
         return charges
 
-    def application_charges(self, params={}, active=False):
+    def application_charges(self, params=None, active=False):
         links, data = self._get_resource(
             resource='application_charges',
             params=params,

@@ -7,10 +7,14 @@ from . import utils
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
-def generate_mockup(self, store_type, store_id, sku, variant_id, uploaded_images=[], paired=True):
+def generate_mockup(self, store_type, store_id, sku, variant_id, uploaded_images=None, paired=True):
+    if uploaded_images is None:
+        uploaded_images = []
+
+    store = None
     try:
-        StoreModel = utils.get_store_model(store_type)
-        store = StoreModel.objects.get(pk=store_id)
+        store_model = utils.get_store_model(store_type)
+        store = store_model.objects.get(pk=store_id)
 
         layer_app = utils.LayerApp()
         mockup = layer_app.generate_mockup(variant_id, *uploaded_images, paired=paired)
@@ -27,8 +31,10 @@ def generate_mockup(self, store_type, store_id, sku, variant_id, uploaded_images
 
     except:
         capture_exception()
-        store.pusher_trigger('prints-mockup', {
-            'sku': sku,
-            'success': False,
-            'error': 'Mockup not generated',
-        })
+
+        if store:
+            store.pusher_trigger('prints-mockup', {
+                'sku': sku,
+                'success': False,
+                'error': 'Mockup not generated',
+            })

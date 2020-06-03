@@ -38,11 +38,10 @@ class Command(DropifiedBaseCommand):
             return
 
         if options['store_progress']:
-            stores_bar = tqdm(total=stores.count())
+            self.progress_total(stores.count())
 
         for store in stores:
-            if options['store_progress']:
-                stores_bar.update(1)
+            self.progress_update()
 
             if not is_store_synced(store):
                 self.write(f'Store {store.shop} is not synced')
@@ -83,8 +82,7 @@ class Command(DropifiedBaseCommand):
 
             orders_bar.close()
 
-        if options['store_progress']:
-            stores_bar.close()
+        self.progress_close()
 
     def get_orders_iterator(self, orders, count):
         start = 0

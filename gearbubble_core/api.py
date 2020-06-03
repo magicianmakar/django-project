@@ -465,11 +465,12 @@ class GearBubbleApi(ApiBase):
         fulfillment = {'tracking_number': tracking_number, 'tracking_company': provider_name}
         api_url = store.get_api_url('orders/{}/private_fulfillments'.format(order_id))
 
+        r = None
         try:
             r = store.request.post(api_url, json={'fulfillment': fulfillment})
             r.raise_for_status()
         except Exception:
-            capture_exception(level='warning', extra={'response': r.text})
+            capture_exception(level='warning', extra={'response': r.text if r else ''})
             return self.api_error('GearBubble API Error')
 
         return self.api_success()

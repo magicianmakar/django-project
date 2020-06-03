@@ -3,7 +3,7 @@ import requests
 import simplejson as json
 from json import JSONDecodeError
 
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 
 from shopified_core.utils import app_link, safe_float, http_exception_response
 from leadgalaxy.models import PriceMarkupRule
@@ -204,6 +204,9 @@ class ProductChangeManager():
                 'url': app_link('bigcommerce/product', self.product.id),
                 'target_url': self.product.bigcommerce_url,
             }
+        else:
+            capture_message("Unknow store type in Alerts manager", extra={'type': self.product_change.store_type})
+            common_data = {}
 
         if self.product_changes:
             for product_change in self.product_changes:
@@ -720,6 +723,7 @@ class GrooveKartProductChangeManager(ProductChangeManager):
 
     def update_product(self, api_product_data, product_data):
         store = self.product.store
+        r = None
         try:
             for groovekart_change in self.groovekart_changes:
                 api_endpoint = store.get_api_url(groovekart_change['api_url'])
@@ -728,9 +732,9 @@ class GrooveKartProductChangeManager(ProductChangeManager):
             self.product.update_data(product_data)
 
         except Exception as e:
-            if r.status_code not in [401, 402, 403, 404, 429]:
+            if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
                 capture_exception(extra={
-                    'rep': r.text,
+                    'rep': r.text if r else '',
                     'data': api_product_data,
                 }, tags={
                     'product': self.product.id,
@@ -866,6 +870,7 @@ class WooProductChangeManager(ProductChangeManager):
         update_endpoint = 'products/{}'.format(self.product.source_id)
         variants_update_endpoint = 'products/{}/variations/batch'.format(self.product.source_id)
 
+        r = None
         try:
             r = self.product.store.wcapi.put(update_endpoint, api_product_data)
             r.raise_for_status()
@@ -879,7 +884,7 @@ class WooProductChangeManager(ProductChangeManager):
         except Exception as e:
             if http_excption_status_code(e) not in [400, 401, 402, 403, 404, 429]:
                 capture_exception(extra={
-                    'rep': r.text,
+                    'rep': r.text if r else '',
                     'data': api_product_data,
                 }, tags={
                     'product': self.product.id,
@@ -1019,6 +1024,7 @@ class BigCommerceProductChangeManager(ProductChangeManager):
 
     def update_product(self, api_product_data, product_data):
         store = self.product.store
+        r = None
         try:
             r = store.request.put(
                 url=store.get_api_url('v3/catalog/products/%s' % self.product.source_id),
@@ -1027,10 +1033,10 @@ class BigCommerceProductChangeManager(ProductChangeManager):
             r.raise_for_status()
 
             self.product.update_data(product_data)
-        except:
-            if r.status_code not in [401, 402, 403, 404, 429]:
+        except Exception as e:
+            if http_excption_status_code(e) not in [401, 402, 403, 404, 429]:
                 capture_exception(extra={
-                    'rep': r.text,
+                    'rep': r.text if r else '',
                     'data': api_product_data,
                 }, tags={
                     'product': self.product.id,

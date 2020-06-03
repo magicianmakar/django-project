@@ -119,7 +119,10 @@ class ShopifyOrderExport():
 
         return response.json()['count']
 
-    def _get_orders(self, params={}, limit=250, page=1):
+    def _get_orders(self, params=None, limit=250, page=1):
+        if params is None:
+            params = {}
+
         url = '/admin/orders.json'
 
         params['limit'] = limit
@@ -304,8 +307,10 @@ class ShopifyOrderExport():
 
         return lines
 
-    def create_csv(self, orders=[]):
-        url = ''
+    def create_csv(self, orders=None):
+        if orders is None:
+            orders = []
+
         vendor = slugify(self.order_export.filters.vendor.strip())
 
         with open(self.file_path, 'w') as csv_file:
