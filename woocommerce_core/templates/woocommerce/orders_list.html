@@ -663,7 +663,7 @@
     </div>
 </div>
 
-{% include "common/partial/modal_add_order_id.html" %}
+{% include "common/partial/modal_add_order_id.html" with store_title=store.title %}
 
 {% include "woocommerce/partial/woocommerce_product_selector.html" %}
 {% include "supplements/partials/make_payment_modal.html" %}
