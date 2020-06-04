@@ -981,8 +981,7 @@
         </div>
     </div>
 </div>
-
-{% include "common/partial/modal_add_order_id.html" %}
+{% include "common/partial/modal_add_order_id.html" with store_title=store.title %}
 
 {% verbatim %}
 <script id="variant-change-item-template" type="text/x-handlebars-template">
