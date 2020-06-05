@@ -1,24 +1,24 @@
 import json
-from io import BytesIO
 from decimal import Decimal
+from io import BytesIO
 
 from django.conf import settings
 from django.utils.crypto import get_random_string
+from django.utils.text import slugify
 from django.views.generic import View
 
 from pdfrw import PdfWriter
-from lib.exceptions import capture_exception, capture_message
 
 from leadgalaxy.utils import aws_s3_upload
+from lib.exceptions import capture_exception, capture_message
+from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import get_store_api, safe_int
-from shopified_core import permissions
 
 from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import Payout, PLSOrder, UserSupplement
 from .utils.payment import Util, get_shipping_cost
-from django.utils.text import slugify
 
 
 class SupplementsApi(ApiResponseMixin, View):
