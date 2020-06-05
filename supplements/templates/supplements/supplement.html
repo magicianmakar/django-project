@@ -13,18 +13,33 @@
 
 {% block tab_content %}
 <div class="tabs-container">
+  {% url 'pls:user_supplement' supplement_id=supplement.id as pls_user_supplement %}
+  {% url 'pls:supplement' supplement_id=supplement.id as pls_supplement %}
+  {{user_supplement}}
   <ul class="nav nav-tabs scrolling-tabs">
+    {% if request.path == pls_user_supplement or request.path == pls_supplement %}
     <li class="nav-item active">
       <a class="nav-link" data-toggle="tab" href="#edit">Edit</a>
     </li>
+    {% else %}
+    <li class="nav-item">
+      <a class="nav-link" href="{{ pls_user_supplement }}">Edit</a>
+    </li>
+    {% endif %}
     <li class="nav-item">
       <a class="nav-link" data-toggle="tab" href="#info">Info</a>
     </li>
+    {% block history_tab %}{% endblock %}
   </ul>
 
   <div class="tab-content">
+    {% if request.path == pls_user_supplement or request.path == pls_supplement %}
     <div class="tab-pane fade in active m-t" id="edit">
       <form id="user_supplement_form" name="user_supplement_form" method="POST" class="form-horizontal" role="form">
+    {% else %}
+    <div class="tab-pane fade m-t" id="edit">
+    {% endif %}
+      <form id="user_supplement_form" name="user_supplement_form" method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
           {% csrf_token %}
           {{ form.non_field_errors }}
           {{ form.action }}
@@ -102,6 +117,8 @@
       </div>
       {% endif %}
     </div>
+
+    {% block history_content %}{% endblock %}
   </div>
 </div>
 {% endblock %}

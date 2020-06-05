@@ -40,22 +40,7 @@
           </div>
         </div>
 
-        <div class="row">
-          {% if label.current_label_of %}
-          {% if label.user_supplement.user.models_user == request.user.models_user %}
-          <div class="col-md-5">
-            <a class="btn btn-default btn-outline btn-sm btn-block" href="{% url 'pls:user_supplement' supplement_id=label.user_supplement.id %}">View Product</a>
-          </div>
-
-          <div class="col-md-6">
-            <button {% if label.status != label.APPROVED %}disabled{% endif %}
-                    id="send_to_store"
-                    type="button"
-                    class="btn btn-primary btn-sm btn-block"><i class="fa fa-arrow-right"></i> Send to Store</button>
-          </div>
-          {% endif %}
-        </div>
-
+        {% if user_buttons and label.current_label_of %}
         <div class="row m-t">
           {% if pls_admin or pls_staff %}
           <div class="col-md-5">
@@ -72,15 +57,20 @@
             <form method="POST" role="form">
               <input type="hidden" name="action" value="{{ label.APPROVED }}" />
               <button type="submit"
-                      class="btn btn-primary btn-sm btn-block add-loader"
+                      class="btn btn-primary btn-sm btn-block"
                       title="Approve"
                       data-loading-text="Please wait..."><i class="fa fa-thumbs-up"></i> Approve</button>
             </form>
           </div>
           {% endif %}
-
-          {% endif %}
         </div>
+        {% else %}
+        <div class="row">
+          <div class="col-md-5">
+            <a class="btn btn-default btn-outline btn-sm btn-block" href="{% url 'pls:user_supplement' supplement_id=label.user_supplement.id %}">View Product</a>
+          </div>
+        </div>
+        {% endif %}
 
         <div class="row m-t">
           <div class="col-md-5">

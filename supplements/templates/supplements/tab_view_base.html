@@ -7,7 +7,6 @@
 {% block main-container %}
 {% url 'pls:index' as pls_index %}
 {% url 'pls:my_supplements' as pls_my_supplements %}
-{% url 'pls:my_labels' as pls_my_labels %}
 {% url 'pls:all_labels' as pls_all_labels %}
 {% url 'pls:my_orders' as pls_my_orders %}
 {% url 'pls:product' as pls_product %}
@@ -30,12 +29,6 @@
     <li class="active"><a data-toggle="tab" href="#tab-1">My Supplements</a></li>
     {% else %}
     <li><a href="{% url 'pls:my_supplements' %}">My Supplements</a></li>
-    {% endif %}
-
-    {% if request.path ==  pls_my_labels %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">My Labels</a></li>
-    {% else %}
-    <li><a href="{% url 'pls:my_labels' %}">My Labels</a></li>
     {% endif %}
 
     {% if request.path ==  pls_my_orders %}

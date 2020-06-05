@@ -437,3 +437,8 @@
     padding-right: 0px;
   }
 }
+
+.comment-history {
+  max-height: 550px;
+  overflow: auto;
+}

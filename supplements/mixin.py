@@ -148,6 +148,14 @@ class UserSupplementLabelMixin:
                 return value
 
     @property
+    def created_at_string(self):
+        return self.created_at.strftime('%m.%d.%Y %H:%M')
+
+    @property
+    def updated_at_string(self):
+        return self.updated_at.strftime('%m.%d.%Y %H:%M')
+
+    @property
     def label_id_string(self):
         return "{}".format(self.id)
 
@@ -164,6 +172,10 @@ class UserSupplementLabelMixin:
 
 
 class LabelCommentMixin:
+
+    @property
+    def created_at_string(self):
+        return self.created_at.strftime('%m.%d.%Y %H:%M')
 
     @property
     def sets_new_status(self):

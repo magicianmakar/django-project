@@ -132,7 +132,7 @@ class Product(common_views.ProductAddView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Add New Supplement', 'url': reverse('pls:product')},
         ]
 
@@ -192,7 +192,7 @@ class ProductEdit(Product):
     def get_breadcrumbs(self, supplement_id):
         kwargs = {'supplement_id': supplement_id}
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Edit Supplement', 'url': reverse('pls:product_edit', kwargs=kwargs)},
         ]
 
@@ -415,6 +415,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         store_type_and_data = self.get_store_data(user)
 
         data = dict(
+            supplement=supplement,
             form_data=form_data,
             image_urls=form_data.pop('image_urls'),
             label_template_url=form_data.pop('label_template_url'),
@@ -471,6 +472,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
             is_draft_label = new_user_supplement.current_label is not None \
                 and new_user_supplement.current_label.status != UserSupplementLabel.DRAFT
+
             if form.cleaned_data['action'] == 'preapproved':
                 new_user_supplement.current_label.status = UserSupplementLabel.APPROVED
                 self.add_barcode_to_label(new_user_supplement.current_label)
@@ -492,8 +494,6 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                     or upload_url and is_draft_label:  # Restart review process
                 new_user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
                 new_user_supplement.current_label.save()
-                url = reverse("pls:my_labels") + "?s=1"
-                return redirect(url)
 
             kwargs = {'supplement_id': new_user_supplement.id}
             return self.get_redirect_url(**kwargs)
@@ -543,9 +543,39 @@ class UserSupplementView(Supplement):
                       kwargs={'supplement_id': supplement_id})
         breadcrumbs = [
             {'title': 'Supplements', 'url': reverse('pls:index')},
-            {'title': 'User Supplement', 'url': url},
+            {'title': 'My Supplements', 'url': url},
         ]
         return breadcrumbs
+
+    def get_label_context_data(self, *args, **kwargs):
+        user_supplement = kwargs['label'].user_supplement
+        aws = aws_s3_context()
+        api_data = self.get_api_data(user_supplement)
+        store_type_and_data = self.get_store_data(self.request.user)
+        new_version_url = None
+        current_label = user_supplement.current_label
+        if current_label:
+            new_version_url = reverse('pls:label_detail',
+                                      kwargs={'label_id': current_label.id})
+        all_comments = []
+        for label in user_supplement.labels.all():
+            comments = label.comments.all().order_by('-created_at')
+            if comments:
+                all_comments.append(comments)
+
+        return dict(
+            label=kwargs['label'],
+            api_data=api_data,
+            store_data=store_type_and_data['store_data'],
+            store_types=store_type_and_data['store_types'],
+            new_version_url=new_version_url,
+            aws_available=aws['aws_available'],
+            aws_policy=aws['aws_policy'],
+            aws_signature=aws['aws_signature'],
+            all_comments=all_comments,
+            aws_images=images_aws_s3_context(),
+            mockup_layers=user_supplement.pl_supplement.mockup_type.get_layers(),
+        )
 
     def get_supplement_data(self, user, supplement_id):
         supplement = self.get_supplement(user, supplement_id)
@@ -565,14 +595,19 @@ class UserSupplementView(Supplement):
             api_data = self.get_api_data(supplement)
 
         store_type_and_data = self.get_store_data(user)
-        status_url = None
         is_submitted = False
+        label_context = {}
         if supplement.current_label:
-            status_url = reverse('pls:label_detail',
-                                 kwargs={'label_id': supplement.current_label.id})
             is_submitted = supplement.current_label.status != UserSupplementLabel.DRAFT
+            label_context = self.get_label_context_data(label=supplement.current_label)
+
+        comment_form_data = dict(
+            mockup_slug=supplement.pl_supplement.mockup_type.slug,
+            label_presets=supplement.get_label_presets_json(),
+        )
 
         data = dict(
+            supplement=supplement,
             form_data=form_data,
             image_urls=form_data.pop('image_urls'),
             label_template_url=form_data.pop('label_template_url'),
@@ -583,13 +618,16 @@ class UserSupplementView(Supplement):
             store_types=store_type_and_data['store_types'],
             product_information=supplement.pl_supplement.product_information,
             authenticity_cert=supplement.pl_supplement.authenticity_certificate_url,
-            status_url=status_url,
             is_submitted=is_submitted,
             mockup_layers=supplement.pl_supplement.mockup_type.get_layers(),
+            comment_form=CommentForm(initial=comment_form_data),
+            user_buttons=True,
         )
 
         if 'label_url' in form_data:
             data['label_url'] = form_data.pop('label_url')
+
+        data.update(label_context)
 
         return data
 
@@ -608,6 +646,156 @@ class UserSupplementView(Supplement):
 
     def save_supplement(self, form):
         return form.save()
+
+
+class LabelHistory(UserSupplementView):
+    template_name = 'supplements/label_history.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def add_barcode_to_label(self, label):
+        data = BytesIO()
+        generate('CODE128', label.sku, output=data)
+
+        data.seek(0)
+        drawing = svg2rlg(data)
+
+        barcode_data = BytesIO()
+        renderPDF.drawToFile(drawing, barcode_data)
+
+        barcode_data.seek(0)
+        barcode_pdf = PdfReader(barcode_data)
+        barcode_pdf.pages[0].Rotate = 270
+        barcode_pages = PageMerge() + barcode_pdf.pages
+        barcode_page = barcode_pages[0]
+
+        label_data = BytesIO(requests.get(label.url).content)
+        base_label_pdf = PdfReader(label_data)
+
+        page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
+        barcode_obj = page_merge[-1]
+        barcode_obj.scale(0.3, 0.7)
+        barcode_obj.x = barcode_obj.y = 8
+
+        page_merge.render()
+
+        label_pdf = BytesIO()
+        PdfWriter().write(label_pdf, base_label_pdf)
+
+        label_pdf.seek(0)
+
+        label.url = upload_supplement_object_to_aws(
+            label.user_supplement,
+            label_pdf,
+            'label.pdf',
+        )
+
+    def get_breadcrumbs(self, supplement_id):
+        supplement = self.get_supplement(self.request.user, supplement_id)
+        url = reverse('pls:user_supplement',
+                      kwargs={'supplement_id': supplement.id})
+        breadcrumbs = [
+            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': supplement.title, 'url': url},
+            {'title': 'Label History', 'url': self.request.path},
+        ]
+        return breadcrumbs
+
+    def get_redirect_url(self, supplement_id):
+        kwargs = {'supplement_id': supplement_id}
+        return reverse('pls:label_history', kwargs=kwargs)
+
+    @transaction.atomic
+    def post(self, request, supplement_id):
+        user = request.user
+        user_name = user.get_full_name()
+
+        user_supplement = self.get_supplement(user, supplement_id)
+        label_id = user_supplement.current_label.id
+
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            self.label = label = get_object_or_404(UserSupplementLabel, id=label_id)
+        else:
+            self.label = label = get_object_or_404(UserSupplementLabel, id=label_id, user_supplement__user=request.user.models_user)
+
+        comments = label.comments
+
+        reverse_url = self.get_redirect_url(user_supplement.id)
+
+        action = request.POST['action']
+        form = CommentForm()
+
+        if action == 'comment':
+            form = CommentForm(request.POST)
+            if form.is_valid():
+                comment = form.cleaned_data['comment']
+                if comment:
+                    is_private = form.cleaned_data['is_private']
+                    self.create_comment(comments, comment, is_private=is_private)
+
+                # Restart review process for new labels
+                upload_url = form.cleaned_data['upload_url']
+                if upload_url:
+                    user_supplement.label_presets = request.POST.get('label_presets') or '{}'
+                    self.save_label(user, upload_url, user_supplement)
+                    user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
+                    user_supplement.current_label.save()
+
+                # Old images should be removed when new label is uploaded
+                mockup_urls = request.POST.getlist('mockup_urls')
+                if len(mockup_urls) or upload_url:
+                    user_supplement.images.all().delete()
+                    for position, mockup_url in enumerate(mockup_urls):
+                        user_supplement.images.create(image_url=mockup_url, position=position)
+
+                return redirect(reverse_url)
+
+        elif action in (label.APPROVED, label.REJECTED):
+            label.status = action
+            label.save()
+
+            label_class = 'label-danger'
+            if action == label.APPROVED:
+                label_class = 'label-primary'
+                # If a label does not have SKU, needs to be generated for barcode
+                if label.sku == '':
+                    label.generate_sku()
+                self.add_barcode_to_label(label)
+                label.save()
+
+            comment = (f"<strong>{user_name}</strong> set the status to "
+                       f"<span class='label {label_class}'>"
+                       f"{label.status_string}</span>")
+            self.create_comment(comments, comment, new_status=action)
+            return redirect(reverse_url)
+
+        context = self.get_supplement_data(user, user_supplement.id)
+        context.update({
+            'breadcrumbs': self.get_breadcrumbs(supplement_id),
+            'comment_form': form,
+        })
+
+        return render(request, self.template_name, context)
+
+
+class AdminLabelHistory(LabelHistory):
+    template_name = 'supplements/label_history_admin.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get_redirect_url(self, supplement_id):
+        kwargs = {'supplement_id': supplement_id}
+        return reverse('pls:admin_label_history', kwargs=kwargs)
 
 
 class MySupplements(LoginRequiredMixin, View):
@@ -658,80 +846,52 @@ class MySupplements(LoginRequiredMixin, View):
         return render(request, "supplements/userproduct.html", context)
 
 
-class MyLabels(LoginRequiredMixin, ListView, PagingMixin):
-    paginate_by = 20
-    ordering = '-updated_at'
-    template_name = 'supplements/my_labels.html'
-    model = UserSupplementLabel
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
-            return super().dispatch(request, *args, **kwargs)
-        else:
-            raise permissions.PermissionDenied()
-
-    def get_breadcrumbs(self):
-        return [
-            {'title': 'Supplements', 'url': reverse('pls:index')},
-            {'title': 'My Labels', 'url': reverse('pls:my_labels')},
-        ]
-
-    def add_filters(self, queryset):
-        user = self.request.user.models_user
-        queryset = queryset.filter(user_supplement__user=user)
-        queryset = queryset.filter(current_label_of__isnull=False)
-        return queryset
+class MyLabels(LoginRequiredMixin, PagingMixin):
 
     def get_queryset(self):
-        queryset = super().get_queryset().exclude(status=UserSupplementLabel.DRAFT)
+        queryset = super().get_queryset()
         queryset = self.add_filters(queryset)
 
         form = self.form = LabelFilterForm(self.request.GET)
         if form.is_valid():
             status = form.cleaned_data['status']
             if status:
-                queryset = queryset.filter(status=status)
+                queryset = queryset.filter(current_label__status=status)
 
             sku = form.cleaned_data['sku']
             if sku:
-                queryset = queryset.filter(sku=sku)
+                queryset = queryset.filter(labels__sku=sku)
 
             created_at = form.cleaned_data['date']
             if created_at:
-                queryset = queryset.filter(created_at__date=created_at)
+                queryset = queryset.filter(current_label__updated_at__date=created_at)
 
         return queryset
 
-    def get_label_comment_count(self, label):
-        len_comment = label.comments.count()
-        if len_comment == 1:
-            return "1 comment"
-        else:
-            return f"{len_comment} comments"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
         self.add_paging_context(context)
 
-        len_label = context['paginator'].count
-        if len_label == 1:
-            label_count = "1 label."
+        len_supplements = context['paginator'].count
+        if len_supplements == 1:
+            supplements_count = "1 user supplement."
         else:
-            label_count = f"{len_label} labels."
+            supplements_count = f"{len_supplements} user supplements."
 
         context.update({
             'breadcrumbs': self.get_breadcrumbs(),
-            'label_count': label_count,
-            'labels': context['object_list'],
-            'show_alert': self.request.GET.get('s') == '1',
+            'supplements_count': supplements_count,
+            'user_supplements': context['object_list'],
             'form': self.form,
         })
         return context
 
 
-class AllLabels(MyLabels):
-    template_name = 'supplements/all_labels.html'
+class AllUserSupplements(MyLabels, ListView):
+    paginate_by = 20
+    ordering = '-created_at'
+    template_name = 'supplements/all_user_supplements.html'
+    model = UserSupplement
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
@@ -741,19 +901,22 @@ class AllLabels(MyLabels):
             raise permissions.PermissionDenied()
 
     def get_ordering(self):
-        order_by = self.request.GET.get('sort', '-updated_at')
-        allowed_values = ['updated_at', '-updated_at']
-        if order_by not in allowed_values:
-            order_by = '-updated_at'
-        return order_by
+        order_by = self.request.GET.get('sort', 'newest')
+        sort_map = {
+            'newest': '-current_label__updated_at',
+            'oldest': 'current_label__updated_at'
+        }
+        if order_by not in ['newest', 'oldest']:
+            order_by = 'newest'
+        return sort_map[order_by]
 
     def add_filters(self, queryset):
-        return queryset
+        return queryset.exclude(current_label__isnull=True)
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
-            {'title': 'All Labels', 'url': reverse('pls:all_labels')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'User Supplements', 'url': reverse('pls:all_user_supplements')},
         ]
 
     def get_queryset(self):
@@ -764,20 +927,20 @@ class AllLabels(MyLabels):
             label_user_name = form.cleaned_data['label_user_name']
             if label_user_name:
                 queryset = queryset.annotate(
-                    name=Concat('user_supplement__user__first_name', models.Value(' '), 'user_supplement__user__last_name')
+                    name=Concat('user__first_name', models.Value(' '), 'user__last_name')
                 ).filter(
-                    Q(user_supplement__user__email__icontains=label_user_name)
-                    | Q(user_supplement__user_id=safe_int(label_user_name, None))
+                    Q(user__email__icontains=label_user_name)
+                    | Q(user_id=safe_int(label_user_name, None))
                     | Q(name__icontains=label_user_name)
                 )
 
             product_sku = form.cleaned_data['product_sku']
             if product_sku:
-                queryset = queryset.filter(user_supplement__pl_supplement__shipstation_sku__iexact=product_sku)
+                queryset = queryset.filter(pl_supplement__shipstation_sku__iexact=product_sku)
 
             title = form.cleaned_data['title']
             if title:
-                queryset = queryset.filter(user_supplement__pl_supplement__title__icontains=title)
+                queryset = queryset.filter(pl_supplement__title__icontains=title)
 
         return queryset
 
@@ -828,7 +991,6 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
         return dict(
             label=kwargs['label'],
-            breadcrumbs=self.get_breadcrumbs(),
             api_data=api_data,
             store_data=store_type_and_data['store_data'],
             store_types=store_type_and_data['store_types'],
@@ -866,79 +1028,6 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
         return render(request, "supplements/label_detail.html", context)
 
-    @transaction.atomic
-    def post(self, request, label_id):
-        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
-            self.label = label = get_object_or_404(UserSupplementLabel, id=label_id)
-        else:
-            self.label = label = get_object_or_404(UserSupplementLabel, id=label_id, user_supplement__user=request.user.models_user)
-
-        user_supplement = label.user_supplement
-        comments = label.comments
-
-        user = request.user
-        user_name = user.get_full_name()
-
-        kwargs = {'label_id': label_id}
-        reverse_url = reverse('pls:label_detail', kwargs=kwargs)
-
-        action = request.POST['action']
-        form = CommentForm()
-
-        if action == 'comment':
-            form = CommentForm(request.POST)
-            if form.is_valid():
-                comment = form.cleaned_data['comment']
-                if comment:
-                    is_private = form.cleaned_data['is_private']
-                    self.create_comment(comments, comment, is_private=is_private)
-
-                # Restart review process for new labels
-                upload_url = form.cleaned_data['upload_url']
-                if upload_url:
-                    user_supplement.label_presets = request.POST.get('label_presets') or '{}'
-                    self.save_label(user, upload_url, user_supplement)
-                    user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
-                    user_supplement.current_label.save()
-
-                # Old images should be removed when new label is uploaded
-                mockup_urls = request.POST.getlist('mockup_urls')
-                if len(mockup_urls) or upload_url:
-                    user_supplement.images.all().delete()
-                    for position, mockup_url in enumerate(mockup_urls):
-                        user_supplement.images.create(image_url=mockup_url, position=position)
-
-                return redirect(reverse('pls:label_detail', kwargs={
-                    'label_id': user_supplement.current_label.id
-                }))
-
-        elif action in (label.APPROVED, label.REJECTED):
-            label.status = action
-            label.save()
-
-            label_class = 'label-danger'
-            if action == label.APPROVED:
-                label_class = 'label-primary'
-                # If a label does not have SKU, needs to be generated for barcode
-                if label.sku == '':
-                    label.generate_sku()
-                self.add_barcode_to_label(label)
-                label.save()
-
-            comment = (f"<strong>{user_name}</strong> set the status to "
-                       f"<span class='label {label_class}'>"
-                       f"{label.status_string}</span>")
-            self.create_comment(comments, comment, new_status=action)
-            return redirect(reverse_url)
-
-        context = self.get_context_data(label=label)
-        context.update({
-            'form': form,
-            'comments': comments.all().order_by('-created_at'),
-        })
-
-        return render(request, "supplements/label_detail.html", context)
-
 
 class OrdersShippedWebHook(common_views.OrdersShippedWebHookView):
     order_model = PLSOrder
@@ -961,7 +1050,7 @@ class Order(common_views.OrderView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Payments', 'url': reverse('pls:order_list')},
         ]
 
@@ -982,8 +1071,8 @@ class Order(common_views.OrderView):
 class OrderDetailMixin(LoginRequiredMixin, View):
     def get_breadcrumbs(self, order):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
-            {'title': 'Payments', 'url': reverse('pls:order_list')},
+            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': 'My Payments', 'url': reverse('pls:my_orders')},
             {'title': order.order_number, 'url': reverse('pls:order_detail', kwargs={'order_id': order.id})}
         ]
 
@@ -1153,7 +1242,7 @@ class PayoutView(common_views.PayoutView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Payouts', 'url': reverse('pls:payout_list')},
         ]
 
@@ -1198,7 +1287,7 @@ class OrderItemListView(common_views.OrderItemListView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Order Items', 'url': reverse('pls:orderitem_list')},
         ]
 
@@ -1334,7 +1423,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Import / Export', 'url': reverse('pls:upload_json')},
         ]
 
