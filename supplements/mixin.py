@@ -192,6 +192,11 @@ class PLSOrderMixin:
     def shipping_price_string(self):
         return "${:.2f}".format(self.shipping_price / 100.)
 
+    @property
+    def item_total(self):
+        total = sum(self.order_items.values_list('amount', flat=True))
+        return "${:.2f}".format(total / 100.)
+
 
 class PLSOrderLineMixin:
 

@@ -1008,13 +1008,8 @@ class OrderDetailMixin(LoginRequiredMixin, View):
         shipping_address = util.get_order(order.store_order_id).get('shipping_address')
 
         return dict(
-            order=order.order_number,
-            payment_id=order.stripe_transaction_id,
-            total_price=order.amount_string,
-            sale_price=order.sale_price_string,
-            user_profit=order.user_profit_string,
+            order=order,
             shipping_address=shipping_address,
-            shipping_price=order.shipping_price_string,
             breadcrumbs=self.get_breadcrumbs(order),
             line_items=line_items
         )
