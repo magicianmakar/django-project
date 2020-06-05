@@ -9,6 +9,14 @@
 
 {% block tab_content %}
 
+{% if no_orders %}
+<div class="alert alert-info alert-dismissable">
+  <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+  There were no orders to add in this payout.
+  Hence, no empty payout is ceated.
+</div>
+{% endif %}
+
 <div>
   {% include "supplements/partials/filter_form.html" %}
 </div>

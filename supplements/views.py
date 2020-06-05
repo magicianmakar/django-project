@@ -1247,6 +1247,7 @@ class PayoutView(common_views.PayoutView):
     namespace = 'pls'
     add_form = PayoutForm
     order_class = PLSOrder
+    template_name = 'supplements/payout_list.html'
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
@@ -1272,14 +1273,19 @@ class PayoutView(common_views.PayoutView):
         if form.is_valid():
             ref_number = form.cleaned_data['reference_number']
             with transaction.atomic():
-                payout = self.model.objects.create(reference_number=ref_number)
                 orders = self.order_class.objects.filter(
                     is_fulfilled=True,
                     payout__isnull=True,
                 )
-                for order in orders:
-                    order.payout = payout
-                    order.save()
+                if orders.count():
+                    payout = self.model.objects.create(reference_number=ref_number)
+                    orders.update(payout=payout)
+                else:
+                    context = self.get(request).context_data
+                    context['add_form'] = form
+                    context['no_orders'] = True
+
+                    return render(request, self.template_name, context)
 
             return redirect(request.path)
 
