@@ -21,6 +21,7 @@ import requests
 import simplejson as json
 from barcode import generate
 from pdfrw import PageMerge, PdfReader, PdfWriter
+from pdfrw.pagemerge import RectXObj
 from product_common import views as common_views
 from product_common.lib import views as common_lib_views
 from product_common.lib.views import PagingMixin, upload_image_to_aws, upload_object_to_aws
@@ -33,7 +34,7 @@ from shopified_core.utils import aws_s3_context as images_aws_s3_context, safe_i
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import app_link
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
-from supplements.lib.image import get_order_number_label
+from supplements.lib.image import get_order_number_label, make_pdf_of
 from supplements.models import (
     AuthorizeNetCustomer,
     Payout,
@@ -327,8 +328,17 @@ class LabelMixin:
         page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
         barcode_obj = page_merge[-1]
         barcode_obj.scale(0.3, 0.7)
-        barcode_obj.x = barcode_obj.y = 8
+        barcode_obj.x = 8
+        barcode_obj.y = RectXObj(page_merge.page).h * 0.05
+        page_merge.render()
 
+        shipstation_sku = label.user_supplement.pl_supplement.shipstation_sku
+        pdf_page = make_pdf_of(shipstation_sku)
+
+        page_merge = PageMerge(base_label_pdf.pages[0]).add(pdf_page)
+        pdf_obj = page_merge[-1]
+        pdf_obj.scale(0.3, 0.6)
+        pdf_obj.y = RectXObj(page_merge.page).h * 0.65
         page_merge.render()
 
         label_pdf = BytesIO()
