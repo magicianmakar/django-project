@@ -37,7 +37,7 @@
       <span class="main-value">{{ totals.orders_count }}</span>
       <dl class="dl-horizontal">
         <dt>Orders per day</dt>
-        <dd>{{ totals.orders_per_day }}</dd>
+        <dd>{{ totals.orders_per_day|floatformat:"-2" }}</dd>
         <dt>Fulfillments</dt>
         <dd>{{ totals.fulfillments_count }}</dd>
         <dt>Fulfillments per day</dt>
