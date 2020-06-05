@@ -3,21 +3,21 @@ from decimal import Decimal
 from datetime import timedelta
 from io import BytesIO
 
-from django.utils.safestring import mark_safe
+from django import template
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.db import transaction, models
+from django.db import models, transaction
 from django.db.models import Q
 from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.utils import timezone
 from django.utils.decorators import method_decorator
+from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.list import ListView
-from django import template
-from django.utils import timezone
 
 import bleach
 import requests
@@ -33,12 +33,14 @@ from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 
 from shopified_core import permissions
-from shopified_core.utils import aws_s3_context as images_aws_s3_context, safe_int
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import app_link
+from shopified_core.utils import aws_s3_context as images_aws_s3_context
+from shopified_core.utils import safe_int
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
 from supplements.lib.image import get_order_number_label, make_pdf_of
 from supplements.models import (
+    SUPPLEMENTS_SUPPLIER,
     AuthorizeNetCustomer,
     Payout,
     PLSOrder,
@@ -47,29 +49,28 @@ from supplements.models import (
     ShippingGroup,
     UserSupplement,
     UserSupplementImage,
-    UserSupplementLabel,
-    SUPPLEMENTS_SUPPLIER,
+    UserSupplementLabel
 )
 
 from .forms import (
+    AllLabelFilterForm,
     BillingForm,
     CommentForm,
     LabelFilterForm,
-    AllLabelFilterForm,
     LineFilterForm,
     MyOrderFilterForm,
     OrderFilterForm,
     PayoutFilterForm,
     PayoutForm,
     PLSupplementEditForm,
-    PLSupplementForm,
     PLSupplementFilterForm,
+    PLSupplementForm,
     UploadJSONForm,
-    UserSupplementForm,
     ReportsQueryForm,
+    UserSupplementForm,
     UserSupplementFilterForm
 )
-from .utils import aws_s3_context, create_rows, send_email_against_comment, payment, report
+from .utils import aws_s3_context, create_rows, payment, report, send_email_against_comment
 
 register = template.Library()
 

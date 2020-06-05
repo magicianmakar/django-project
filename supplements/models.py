@@ -1,10 +1,11 @@
 import base64
 from io import BytesIO
 
-from PIL import Image
 from django.contrib.auth.models import User
 from django.db import models
 
+import simplejson as json
+from PIL import Image
 from product_common import models as model_base
 
 from .mixin import (
@@ -17,7 +18,6 @@ from .mixin import (
     UserSupplementLabelMixin,
     UserSupplementMixin
 )
-import simplejson as json
 
 SUPPLEMENTS_SUPPLIER = 'Supplements on Demand'
 
