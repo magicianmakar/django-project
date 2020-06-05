@@ -525,5 +525,5 @@ mockupsUploader.init();
 
 var currentLabel = $('[name="current_label"]').val();
 if (currentLabel) {
-    addLabelImage(currentLabel);
+    addLabelImage('https://app.dropified.com/api/ali/get-image?' + $.param({url: currentLabel}));
 }
