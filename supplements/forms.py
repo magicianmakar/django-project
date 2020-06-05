@@ -201,8 +201,8 @@ class LabelFilterForm(forms.Form):
 
 class AllLabelFilterForm(forms.Form):
     SORT_STATUSES = [
-        ('-updated_at', 'Newest Labels First'),
-        ('updated_at', 'Oldest Labels First'),
+        ('newest', 'Newest Labels First'),
+        ('oldest', 'Oldest Labels First'),
     ]
 
     label_user_name = forms.CharField(required=False)

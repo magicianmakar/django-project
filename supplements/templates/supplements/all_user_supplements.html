@@ -3,20 +3,6 @@
 
 {% block tab_content %}
 
-{% if show_alert %}
-<div class="alert alert-success alert-dismissable">
-  <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-  Your label has been submitted for approval, and you can follow its status
-  on this page. You will receive an email if any action is needed.
-</div>
-{% endif %}
-
-<div class='label-title'>
-  <h3>Labels</h3>
-</div>
-
-<hr />
-
 <div>
   <form role="form" autocomplete="off">
     {% include "supplements/partials/label_filter_form.html" %}
@@ -70,7 +56,7 @@
 </div>
 
 <div class='label-count'>
-  <strong>Found {{ label_count }}</strong>
+  <strong>Found {{ supplements_count }}</strong>
 </div>
 
 <table class='table table-striped'>
@@ -80,36 +66,42 @@
     <th>Supplement</th>
     <th>Label SKU</th>
     <th>User</th>
-    <th>Date</th>
+    <th>Label Updated Date</th>
     <th>Comments</th>
     <th>View</th>
     <th>Download</th>
   </thead>
   <tbody>
-    {% for label in labels %}
+    {% for supplement in user_supplements %}
     <tr>
       <td>
         <span class='label
-        {% if label.status == "approved" %}
+        {% if supplement.current_label.status == "approved" %}
         label-primary
-        {% elif label.status == "awaiting" %}
+        {% elif supplement.current_label.status == "awaiting" %}
         label-warning
-        {% elif label.status == "rejected" %}
+        {% elif supplement.current_label.status == "rejected" %}
         label-danger
         {% endif %}'>
-          {{ label.status_string }}
+          {{ supplement.current_label.status_string }}
         </span>
       </td>
-      <td>{{ label.user_supplement.pl_supplement.shipstation_sku }}</td>
-      <td>{{ label.user_supplement.pl_supplement.title }}</td>
-      <td>{{ label.sku }}</td>
-      <td>{{ label.user_supplement.user.get_full_name }}</td>
-      <td>{{ label.updated_at|date:"m.d.Y h:iA" }}</td>
-      <td><i class="fa fa-envelope"></i>&nbsp;{{ label.comment_count }}</td>
-      <td><a href="{% url 'pls:label_detail' label_id=label.id %}" class="btn btn-default btn-outline btn-xs">View</a></td>
-      <td><a href="{{ label.url }}" target="_blank" class="btn btn-default btn-outline btn-xs">Download</a></td>
+      <td>{{ supplement.pl_supplement.shipstation_sku }}</td>
+      <td>{{ supplement.pl_supplement.title }}</td>
+      <td>{{ supplement.current_label.sku }}</td>
+      <td>{{ supplement.user.get_full_name }}</td>
+      <td>{{ supplement.current_label.updated_at_string }}</td>
+      <td>
+        <i class="fa fa-envelope"></i>&nbsp;{{ supplement.current_label.comment_count }}
+      </td>
+      <td>
+        <a href="{% url 'pls:admin_label_history' supplement_id=supplement.id %}" class="btn btn-default btn-outline btn-xs">View</a>
+      </td>
+      <td>
+        <a href="{{ supplement.current_label.url }}" target="_blank" class="btn btn-default btn-outline btn-xs">Download</a>
+      </td>
     {% empty %}
-      <td colspan="8">No labels found.</td>
+      <td colspan="8">No user supplements found.</td>
     </tr>
     {% endfor %}
   </tbody>

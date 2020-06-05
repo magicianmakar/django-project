@@ -25,21 +25,25 @@ urlpatterns = [
         supplements.views.MySupplements.as_view(),
         name='my_supplements'),
 
-    url(r'^my/label/list$',
-        supplements.views.MyLabels.as_view(),
-        name='my_labels'),
-
     url(r'^my/order/list$',
         supplements.views.MyOrders.as_view(),
         name='my_orders'),
 
-    url(r'^label/list$',
-        supplements.views.AllLabels.as_view(),
-        name='all_labels'),
+    url(r'^usersupplements/list$',
+        supplements.views.AllUserSupplements.as_view(),
+        name='all_user_supplements'),
 
     url(r'^label/(?P<label_id>[0-9]+)$',
         supplements.views.Label.as_view(),
         name='label_detail'),
+
+    url(r'^usersupplement/(?P<supplement_id>[0-9]+)/history$',
+        supplements.views.LabelHistory.as_view(),
+        name='label_history'),
+
+    url(r'^usersupplements/(?P<supplement_id>[0-9]+)/history$',
+        supplements.views.AdminLabelHistory.as_view(),
+        name='admin_label_history'),
 
     url(r'^shipstation/webhook/order_shipped$',
         supplements.views.OrdersShippedWebHook.as_view(),

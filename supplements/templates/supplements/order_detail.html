@@ -1,4 +1,4 @@
-{% extends "supplements/tab_view_admin.html" %}
+{% extends "supplements/tab_view_base.html" %}
 
 {% load static %}
 {% load perms_helper %}
@@ -10,7 +10,7 @@
 
 <div class="row">
   <div class="col-md-6 col-sm-6">
-    <h2 class="h2">Payment #{{ payment_id }}</h2>
+    <h2 class="h2">Payment #{{ order.stripe_transaction_id }}</h2>
   </div>
   <div class="col-md-6 col-sm-6 text-right">
     <span class="h3">Shipping Address</span>
@@ -18,7 +18,7 @@
 </div>
 <div class="row">
   <div class="col-md-6 col-sm-6">
-    <span class="h5">Your order number is #{{ order }}. A summary of your order is shown below.</span>
+    <span class="h5">Your store order number is #{{ order.order_number }}. A summary of your order is shown below.</span>
   </div>
   <div class="col-md-6 col-sm-6 text-right">
     <span class="h5"><b>{{ shipping_address|key_value:'first_name' }} {{ shipping_address|key_value:'last_name' }}</b></span>
@@ -63,36 +63,33 @@
 </table>
 
 <div class="row">
-  <div class="col-md-2 col-md-offset-9 text-right">
-    <span class="h5"><b>Sale Price</b>:</span>
-  </div>
-  <div class="col-md-1 text-right">
-    {{sale_price}}
+  <div class="col-md-2 col-md-offset-10 text-right m-b">
+    {{ order.status_string }}
   </div>
 </div>
 <div class="row">
   <div class="col-md-2 col-md-offset-9 text-right">
-    <span class="h5"><b>User Profit</b>:</span>
+    <span class="h5"><b>Sub Total</b>:</span>
   </div>
   <div class="col-md-1 text-right">
-    {{user_profit}}
+    {{ order.item_total }}
   </div>
 </div>
 <div class="row">
   <div class="col-md-2 col-md-offset-9 text-right">
-    <span class="h5"><b>Shipping Price</b>:</span>
+    <span class="h5"><b>Shipping Cost</b>:</span>
   </div>
   <div class="col-md-1 text-right">
-    {{shipping_price}}
+    {{ order.shipping_price_string }}
   </div>
 </div>
 <br>
 <div class="row">
   <div class="col-md-2 col-md-offset-9 text-right">
-    <span class="h4"><b>Total Price</b>:</span>
+    <span class="h4"><b>Total Cost</b>:</span>
   </div>
   <div class="col-md-1 text-right">
-    <span class="h4">{{total_price}}</span>
+    <span class="h4">{{ order.amount_string }}</span>
   </div>
 </div>
 

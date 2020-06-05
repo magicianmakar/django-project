@@ -148,6 +148,14 @@ class UserSupplementLabelMixin:
                 return value
 
     @property
+    def created_at_string(self):
+        return self.created_at.strftime('%m.%d.%Y %H:%M')
+
+    @property
+    def updated_at_string(self):
+        return self.updated_at.strftime('%m.%d.%Y %H:%M')
+
+    @property
     def label_id_string(self):
         return "{}".format(self.id)
 
@@ -164,6 +172,10 @@ class UserSupplementLabelMixin:
 
 
 class LabelCommentMixin:
+
+    @property
+    def created_at_string(self):
+        return self.created_at.strftime('%m.%d.%Y %H:%M')
 
     @property
     def sets_new_status(self):
@@ -191,6 +203,11 @@ class PLSOrderMixin:
     @property
     def shipping_price_string(self):
         return "${:.2f}".format(self.shipping_price / 100.)
+
+    @property
+    def item_total(self):
+        total = sum(self.order_items.values_list('amount', flat=True))
+        return "${:.2f}".format(total / 100.)
 
 
 class PLSOrderLineMixin:
