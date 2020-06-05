@@ -22,10 +22,10 @@ def send_email_against_comment(comment):
 
     subject = f'New comment added to label: {label.label_id_string}.'
     if comment.new_status == label.APPROVED:
-        subject = f'label {label.label_id_string} was approved.'
+        subject = f'Label {label.label_id_string} was approved.'
 
     elif comment.new_status == label.REJECTED:
-        subject = f'label {label.label_id_string} was rejected.'
+        subject = f'Label {label.label_id_string} was rejected.'
 
     data = dict(comment=comment)
     recipient = label.user_supplement.user.email

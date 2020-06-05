@@ -4,6 +4,6 @@
 
     <p>New comment added to label {{ comment.label.label_id_string }}:</p>
 
-    <p>{{ comment.text }}</p>
+    <p>{{ comment.text|safe }}</p>
 
 {% endblock %}
