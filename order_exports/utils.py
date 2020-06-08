@@ -520,7 +520,7 @@ class ShopifyTrackOrderExport():
             capture_message("Exporting a lot of orders", extra=params)
 
         start = 0
-        steps = 1000
+        steps = 200
 
         api = ShopifyAPI(self.store)
         with open(self.file_path, 'w') as csv_file:
