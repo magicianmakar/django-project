@@ -191,7 +191,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
         self.client.force_login(self.user)
         with patch('leadgalaxy.models.requests.get',
                    return_value=self.mock_order_response), \
-                patch('supplements.utils.payment.charge_customer_profile',
+                patch('supplements.mixin.AuthorizeNetCustomerMixin.charge',
                       return_value=self.transaction_id), \
                 patch('supplements.lib.shipstation.requests.post',
                       return_value=self.mock_response), \
