@@ -16,6 +16,7 @@ from groovekart_core import utils as gkart_utils
 from bigcommerce_core import utils as bigcommerce_utils
 from groovekart_core.models import GrooveKartOrderTrack
 from bigcommerce_core.models import BigCommerceOrderTrack
+from woocommerce_core.models import WooOrderTrack
 
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import safe_float
@@ -40,6 +41,8 @@ def get_stores(user, store_type):
         return user.profile.get_gkart_stores()
     elif store_type == 'bigcommerce':
         return user.profile.get_bigcommerce_stores()
+    elif store_type == 'woo':
+        return user.profile.get_woo_stores()
     else:
         raise NotImplementedError('Store Type')
 
@@ -68,6 +71,8 @@ def get_store_order_track(store_type):
         return GrooveKartOrderTrack
     elif store_type == 'bigcommerce':
         return BigCommerceOrderTrack
+    elif store_type == 'woo':
+        return WooOrderTrack
     else:
         raise NotImplementedError('Store Type')
 
