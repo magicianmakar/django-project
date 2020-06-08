@@ -86,6 +86,9 @@ class WooStore(StoreBase):
     def get_admin_url(self):
         return self.get_store_url() + '/wp-admin'
 
+    def get_admin_order_details(self, order_id):
+        return f'{self.get_admin_url()}/post.php?post={order_id}&action=edit'
+
     def get_authorize_url(self, params, url=None):
         if not url:
             url = self.get_store_url()

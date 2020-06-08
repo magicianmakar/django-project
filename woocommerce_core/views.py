@@ -24,7 +24,9 @@ from django.contrib.auth import get_user_model
 from django.core.cache.utils import make_template_fragment_key
 
 from supplements.models import PLSOrderLine
+from profits.mixins import ProfitDashboardMixin
 from shopified_core import permissions
+from shopified_core.decorators import PlatformPermissionRequired
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
@@ -1343,3 +1345,20 @@ class OrderPlaceRedirectView(RedirectView):
             cache.set(event_key, True, timeout=3600)
 
         return redirect_url
+
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(PlatformPermissionRequired('woocommerce'), name='dispatch')
+class ProfitDashboardView(ProfitDashboardMixin, ListView):
+    store_type = 'woo'
+    store_model = WooStore
+    base_template = 'base_woocommerce_core.html'
+
+    def get_context_data(self, **kwargs):
+        # Check for new orders in WooCommerce
+        current_page = safe_int(self.request.GET.get('page'), 1)
+
+        if current_page == 1:
+            self.get_store()
+
+        return super().get_context_data(**kwargs)

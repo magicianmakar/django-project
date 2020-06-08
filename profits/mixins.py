@@ -40,6 +40,8 @@ class ProfitDashboardMixin():
                     tasks.sync_gkart_store_profits.delay(sync.id, self.store.id)
                 elif self.store_type == 'bigcommerce':
                     tasks.sync_bigcommerce_store_profits.delay(sync.id, self.store.id)
+                elif self.store_type == 'woo':
+                    tasks.sync_woocommerce_store_profits.delay(sync.id, self.store.id)
                 else:
                     raise NotImplementedError('Profits Sync')
 

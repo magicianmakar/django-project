@@ -84,6 +84,7 @@ SUBUSER_CHQ_STORE_PERMISSIONS = (
 SUBUSER_WOO_STORE_PERMISSIONS = (
     *SUBUSER_STORE_PERMISSIONS_BASE,
     ('send_to_woo', 'Send products to WooCommerce'),
+    ('view_profit_dashboard', 'View profit dashboard')
 )
 
 SUBUSER_GEAR_STORE_PERMISSIONS = (
@@ -100,7 +101,7 @@ SUBUSER_GKART_STORE_PERMISSIONS = (
 SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS = (
     *SUBUSER_STORE_PERMISSIONS_BASE,
     ('send_to_bigcommerce', 'Send products to BigCommerce'),
-    ('view_profit_dasbharod', 'View profit dashboard')
+    ('view_profit_dashboard', 'View profit dashboard')
 )
 
 PRICE_MARKUP_TYPES = (

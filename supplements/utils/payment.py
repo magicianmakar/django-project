@@ -9,7 +9,6 @@ from commercehq_core.models import CommerceHQStore
 from groovekart_core.models import GrooveKartStore
 from leadgalaxy.models import ShopifyStore
 from shopified_core.shipping_helper import country_from_code
-from supplements.lib.authorizenet import charge_customer_profile
 from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
 from woocommerce_core.models import WooStore
 from bigcommerce_core.models import BigCommerceStore
@@ -134,12 +133,8 @@ class Util:
                     unit_price=line_amount,
                 ))
 
-            auth_net_customer = user.authorize_net_customer
-
-            transaction_id = charge_customer_profile(
+            transaction_id = user.authorize_net_customer.charge(
                 amount,
-                auth_net_customer.customer_id,
-                auth_net_customer.payment_id,
                 auth_net_lines,
             )
 
