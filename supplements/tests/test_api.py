@@ -167,26 +167,6 @@ class MakePaymentTestCase(PLSBaseTestCase):
 
         self.do_test()
 
-    def test_post_long_title(self):
-        name = "Fish Oil name longer than 31 chars - 1250mg Lemon Flavor"
-        self.user_supplement.title = name
-        self.user_supplement.save()
-
-        self.client.force_login(self.user)
-        with patch('leadgalaxy.models.requests.get',
-                   return_value=self.mock_order_response), \
-                patch('supplements.utils.payment.charge_customer_profile',
-                      side_effect=Exception('long title')), \
-                patch('supplements.lib.shipstation.requests.post',
-                      return_value=self.mock_response):
-            response = self.client.post(self.url,
-                                        data=json.dumps(self.data),
-                                        content_type='application/json')
-
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(Order.objects.all().count(), 0)
-        self.assertEqual(OrderLine.objects.all().count(), 0)
-
     def do_test(self, count=1):
         self.client.force_login(self.user)
         with patch('leadgalaxy.models.requests.get',
