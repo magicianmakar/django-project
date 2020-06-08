@@ -315,11 +315,12 @@ class PayoutMixin:
 
 
 class AuthorizeNetCustomerMixin:
-    def charge(self, amount):
+    def charge(self, amount, line_items):
         return charge_customer_profile(
             amount,
             self.customer_id,
             self.payment_id,
+            line_items,
         )
 
     def retrieve(self):
