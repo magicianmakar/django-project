@@ -13,7 +13,7 @@ from django.db.models.query_utils import Q
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 
 from shopified_core.utils import app_link, send_email_from_template, clean_query_id
 from leadgalaxy.utils import aws_s3_upload, order_track_fulfillment
@@ -436,7 +436,10 @@ class ShopifyTrackOrderExport():
 
         orders = ShopifyOrderTrack.objects.filter(user=self.user, store=self.store).defer('data')
 
-        date = params.get('date', '{}-'.format(arrow.get(timezone.now()).replace(days=-30).format('MM/DD/YYYY')))
+        if params.get('date'):
+            date = params['date']
+        else:
+            date = arrow.get(timezone.now()).replace(days=-30).format('MM/DD/YYYY-')
 
         if params["query"]:
             date = None
@@ -455,7 +458,7 @@ class ShopifyTrackOrderExport():
                     created_at_end = created_at_end.span('day')[1].datetime
 
             except:
-                pass
+                capture_exception(level='warning')
 
         if params["query"]:
             order_id = shopify_orders_utils.order_id_from_name(self.store, params["query"])
@@ -493,10 +496,29 @@ class ShopifyTrackOrderExport():
         if created_at_end:
             orders = orders.filter(created_at__lte=created_at_end)
 
-        self.create_track_orders_csv(orders)
+        params['date_from'] = created_at_start
+        params['date_to'] = created_at_end
 
-    def create_track_orders_csv(self, orders):
+        capture_message('Order Track Export', extra=params)
+
+        self.create_track_orders_csv(orders, params)
+
+    def create_track_orders_csv(self, orders, params):
         orders_count = orders.count()
+
+        email_data = {
+            'url': None,
+            'date_from': params['date_from'],
+            'date_to': params['date_to'],
+            'count': orders_count,
+            'user': self.user,
+        }
+
+        if not orders_count:
+            return self.send_email(email_data)
+        elif orders_count > 1000:
+            capture_message("Exporting a lot of orders", extra=params)
+
         start = 0
         steps = 1000
 
@@ -537,8 +559,9 @@ class ShopifyTrackOrderExport():
 
                 start += steps
 
-        url = self.send_to_s3()
-        self.send_email(url)
+        email_data['url'] = self.send_to_s3()
+
+        self.send_email(email_data)
 
     def send_to_s3(self):
         url = aws_s3_upload(self._s3_path, input_filename=self.file_path)
@@ -546,12 +569,7 @@ class ShopifyTrackOrderExport():
 
         return url
 
-    def send_email(self, url):
-        data = {
-            'url': url,
-            'user': self.user,
-        }
-
+    def send_email(self, data):
         send_email_from_template(
             tpl='tracked_order_export.html',
             subject='[Dropified] Tracking Numbers Export',

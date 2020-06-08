@@ -43,14 +43,18 @@ def date_humanize(context, date, html=True, relative=None):
     except:
         pass
 
+    try:
+        user = context['request'].user
+    except:
+        user = None
+
     date_str = date.humanize()
-    user = context['request'].user
 
     if relative is not None:
         if not relative:
             date_str = date.format('MM/DD/YYYY')
     else:
-        if user.is_authenticated and not bool(user.get_config('use_relative_dates', True)):
+        if user and user.is_authenticated and not bool(user.get_config('use_relative_dates', True)):
             date_str = date.format('MM/DD/YYYY')
 
     if html:

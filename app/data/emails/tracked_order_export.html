@@ -1,9 +1,23 @@
 {% extends 'email_base.html' %}
+{% load template_helper %}
 
 {% block email-content %}
 
-    <p>Your Supplier Order IDs and Tracking Numbers have finished exporting and are ready to download.</p>
+    {% if count %}
+        <p>Your Supplier Order IDs and Tracking Numbers have finished exporting and are ready to download.</p>
+    {% else %}
+        <p>Your Supplier Order IDs and Tracking Numbers have finished exporting but we could not find any data in the selected date.</p>
+        <p>Please select an other date range or contact us if the date range is correct.</p>
+    {% endif %}
 
-    <p class="text-center"><a class="action-btn" href="{{ url }}">Download</a></p>
+    <p>
+        Items from {{ date_from | date }} to {% if date_to %}{{ date_to | date }}{% else %}Now{% endif %}
+        <br>
+        Exported count: {{ count }} item{{ count|pluralize }}
+    </p>
+
+    {% if count %}
+        <p class="text-center"><a class="action-btn" href="{{ url }}">Download</a></p>
+    {% endif %}
 
 {% endblock %}
