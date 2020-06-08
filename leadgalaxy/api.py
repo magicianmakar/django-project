@@ -44,6 +44,7 @@ from shopified_core.utils import (
     order_data_cache,
     add_http_schema,
     base64_encode,
+    clean_tracking_number,
     CancelledOrderAlert
 )
 
@@ -1869,7 +1870,7 @@ class ShopifyStoreApi(ApiBase):
             if not user.can('place_orders.sub', store):
                 raise PermissionDenied()
 
-        tracking_number = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+        tracking_number = clean_tracking_number(data.get('tracking_number'))
 
         try:
             order = ShopifyOrderTrack.objects.get(id=data.get('order'))

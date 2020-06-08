@@ -20,6 +20,7 @@ from shopified_core.utils import (
     get_domain,
     remove_link_query,
     order_data_cache,
+    clean_tracking_number,
     CancelledOrderAlert
 )
 from product_alerts.utils import unmonitor_store
@@ -604,7 +605,7 @@ class CHQStoreApi(ApiBase):
                                                     order)
 
         order.source_status = data.get('status')
-        order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+        order.source_tracking = clean_tracking_number(data.get('tracking_number'))
         order.status_updated_at = timezone.now()
 
         try:
@@ -630,7 +631,7 @@ class CHQStoreApi(ApiBase):
 
             order_data['bundle'][data.get('source_id')] = {
                 'source_status': data.get('status'),
-                'source_tracking': data.get('tracking_number'),
+                'source_tracking': clean_tracking_number(data.get('tracking_number')),
                 'end_reason': data.get('end_reason'),
                 'order_details': json.loads(data.get('order_details')),
             }

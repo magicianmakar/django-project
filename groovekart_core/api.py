@@ -1,5 +1,4 @@
 import json
-import re
 import requests
 from functools import cmp_to_key
 from urllib.parse import parse_qs, urlparse
@@ -23,6 +22,7 @@ from shopified_core.utils import (
     remove_link_query,
     get_domain,
     encode_api_token,
+    clean_tracking_number
 )
 
 from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
@@ -727,7 +727,7 @@ class GrooveKartApi(ApiBase):
 
         permissions.user_can_edit(user, order)
         order.source_status = data.get('status')
-        order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+        order.source_tracking = clean_tracking_number(data.get('tracking_number'))
         order.status_updated_at = timezone.now()
 
         try:

@@ -729,6 +729,11 @@ def using_store_db(m):
         return m.objects
 
 
+def clean_tracking_number(tn):
+    tracking_number = re.sub(r'[\n\r\t]', ' ', tn).strip()
+    return ','.join(tracking_number.split())
+
+
 def serializers_orders_fields():
     return ['id', 'order_id', 'line_id', 'source_id', 'source_status', 'source_type', 'source_tracking', 'created_at', 'updated_at']
 
