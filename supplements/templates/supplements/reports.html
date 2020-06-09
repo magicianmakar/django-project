@@ -1,0 +1,432 @@
+{% extends "supplements/tab_view_admin.html" %}
+{% load static %}
+
+{% block extra_pls_css %}
+<link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
+<link href="{% static 'pls/css/reports.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block tab_content %}
+
+<div>
+  {% include "supplements/partials/reports_form.html" %}
+</div>
+
+<hr>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-lg-6 col-sm-12">
+      <div class="row profit-row">
+        <div class="col-lg-6">
+          <div class="profit-box">
+            <span>Gross Profit</span>
+            <h1>${{ gross_profit }}</h1>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="profit-box">
+            <span>Net Profit</span>
+            <h1>${{ net_profit }}</h1>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-6 col-sm-12">
+      <canvas id="avg-order-chart"></canvas>
+    </div>
+  </div>
+</div>
+
+<hr />
+
+<div class="row">
+  <div class="col-lg-6 col-sm-12">
+    <canvas id="order-count-chart"></canvas>
+  </div>
+  <div class="col-lg-6 col-sm-12">
+    <canvas id="order-cost-chart"></canvas>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-lg-6 col-sm-12">
+    <canvas id="pls-sale-chart"></canvas>
+  </div>
+  <div class="col-lg-6 col-sm-12">
+    <canvas id="pls-sku-sale-chart"></canvas>
+  </div>
+</div>
+
+<hr>
+
+<div class="container-fluid">
+  <h3 style="margin-left: 5px; margin-bottom: 30px;">Number of Supplements Sold by SKU</h3>
+  <table id="sku-table" class="table"></table>
+</div>
+
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script src="{% static 'libs/bower_components/chart.js/dist/Chart.min.js' %}"></script>
+<script src="{% static 'pls/js/reports.js' %}" type="text/javascript"></script>
+
+<script>
+
+  var colors = ['#93c47d', '#d55170', '#1642a9', '#f19c20', '#324717'];
+
+  var chartsData = JSON.parse('{{ charts_data }}')
+
+  // Order Count Chart
+
+  var order_count_data = chartsData.order_count_data;
+  var orderCountChartEl = $('#order-count-chart');
+  var orderChartConfig = {
+    type: 'line',
+    data: {
+      datasets: []
+    },
+    options: {
+      responsive: true,
+      title: {
+        display: true,
+        text: 'Order Count Chart'
+      },
+      tooltips: {
+        mode: 'index',
+        intersect: false,
+      },
+      hover: {
+        mode: 'nearest',
+        intersect: true
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          },
+          display: true,
+          scaleLabel: {
+              display: true,
+              labelString: 'Order Count'
+          }
+        }]
+      }
+    }
+  }
+
+  if (typeof(order_count_data.data[0]) == "number") {
+    orderChartConfig.data.labels = order_count_data.label_data;
+    var dataSet = {
+      label: order_count_data.dataset_label,
+      backgroundColor: colors[0],
+      borderColor: colors[0],
+      data: order_count_data.data,
+      fill: false
+    }
+    orderChartConfig.data.datasets.push(dataSet);
+  } else {
+    $(order_count_data.data).each(function(i, obj) {
+      orderChartConfig.data.labels = order_count_data.label_data;
+      var dataSet = {
+        label: order_count_data.dataset_label[i],
+        backgroundColor: colors[i],
+        borderColor: colors[i],
+        data: obj,
+        fill: false
+      }
+      orderChartConfig.data.datasets.push(dataSet);
+  });
+  }
+  var orderCountChart = new Chart(orderCountChartEl, orderChartConfig);
+
+  // Order Cost Chart
+
+  var order_cost_data = chartsData.order_cost_data;
+  var orderCostChartEl = $('#order-cost-chart');
+  var orderCostChartConfig = {
+    type: 'line',
+    data: {
+      datasets: []
+    },
+    options: {
+      responsive: true,
+      title: {
+        display: true,
+        text: 'Order Cost Chart'
+      },
+      tooltips: {
+        mode: 'index',
+        intersect: false,
+      },
+      hover: {
+        mode: 'nearest',
+        intersect: true
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          },
+          display: true,
+          scaleLabel: {
+              display: true,
+              labelString: 'Order Cost $'
+          }
+        }]
+      }
+    }
+  }
+
+  if (typeof(order_cost_data.data[0]) == "number") {
+    orderCostChartConfig.data.labels = order_cost_data.label_data;
+    var dataSet = {
+      label: order_cost_data.dataset_label,
+      backgroundColor: colors[1],
+      borderColor: colors[1],
+      data: order_cost_data.data,
+      fill: false
+    }
+    orderCostChartConfig.data.datasets.push(dataSet);
+  } else {
+    $(order_cost_data.data).each(function(i, obj) {
+      orderCostChartConfig.data.labels = order_cost_data.label_data;
+      var dataSet = {
+        label: order_cost_data.dataset_label[i],
+        backgroundColor: colors[i],
+        borderColor: colors[i],
+        data: obj,
+        fill: false
+      }
+      orderCostChartConfig.data.datasets.push(dataSet);
+  });
+  }
+  var orderCostChart = new Chart(orderCostChartEl, orderCostChartConfig);
+
+  // Supplements Sale Chart
+
+  var pls_sale_data = chartsData.pls_sale_data;
+  var plsSaleChartEl = $('#pls-sale-chart');
+  var plsSaleChartConfig = {
+    type: 'line',
+    data: {
+      datasets: []
+    },
+    options: {
+      responsive: true,
+      title: {
+        display: true,
+        text: 'Supplements Sales Chart'
+      },
+      tooltips: {
+        mode: 'index',
+        intersect: false,
+      },
+      hover: {
+        mode: 'nearest',
+        intersect: true
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          },
+          display: true,
+          scaleLabel: {
+              display: true,
+              labelString: 'No of Supplements sold'
+          }
+        }]
+      }
+    }
+  }
+
+  if (typeof(pls_sale_data.data[0]) == "number") {
+    plsSaleChartConfig.data.labels = pls_sale_data.label_data;
+    var dataSet = {
+      label: pls_sale_data.dataset_label,
+      backgroundColor: colors[2],
+      borderColor: colors[2],
+      data: pls_sale_data.data,
+      fill: false
+    }
+    plsSaleChartConfig.data.datasets.push(dataSet);
+  } else {
+    $(pls_sale_data.data).each(function(i, obj) {
+      plsSaleChartConfig.data.labels = pls_sale_data.label_data;
+      var dataSet = {
+        label: pls_sale_data.dataset_label[i],
+        backgroundColor: colors[i],
+        borderColor: colors[i],
+        data: obj,
+        fill: false
+      }
+      plsSaleChartConfig.data.datasets.push(dataSet);
+  });
+  }
+  var plsSaleChart = new Chart(plsSaleChartEl, plsSaleChartConfig);
+
+  // Supplements Sale Chart by SKU
+
+  var pls_sku_sale_data = chartsData.pls_sku_data;
+
+  var skuTableEl = $('#sku-table');
+  if (typeof(pls_sku_sale_data.data[0]) == "number") {
+    skuTableEl.append('<thead><th>SKU</th><th>' + pls_sku_sale_data.dataset_label + '</th></thead>');
+    var body = '';
+    $(pls_sku_sale_data.data).each(function(i, obj) {
+      body = body + '<tr><td>'+pls_sku_sale_data.label_data[i]+'</td><td>'+obj+'</td></tr>';
+    });
+    skuTableEl.append('<tbody>'+body+'</tbody>');
+  } else {
+    var head = '<th>SKU</th>';
+    var body = ''
+    var row = [];
+    $(pls_sku_sale_data.data).each(function(j, obj) {
+      head = head + '<th>'+ pls_sku_sale_data.dataset_label[j] +'</th>'
+      $(obj).each(function(i, obj) {
+        if (j === 0){
+          if (row[i] != undefined) {
+            row.push(row[i] + '<td>'+pls_sku_sale_data.label_data[i]+'</td>' + '<td>'+obj+'</td>');
+          } else {
+            row.push('<td>'+pls_sku_sale_data.label_data[i]+'</td>' + '<td>'+obj+'</td>');
+          }
+        } else {
+          row[i] = row[i] + '<td>'+obj+'</td>';
+        }
+      });
+    });
+    $(row).each(function(i, obj) {
+      body = body + '<tr>'+obj+'</tr>'
+    });
+    skuTableEl.append('<thead>'+head+'</thead><tbody>'+body+'</tbody>');
+  }
+
+  var plsSkuSaleChartEl = $('#pls-sku-sale-chart');
+  var plsSkuSaleChartConfig = {
+    type: 'line',
+    data: {
+      datasets: []
+    },
+    options: {
+      responsive: true,
+      title: {
+        display: true,
+        text: 'Supplements Sales Chart by SKU'
+      },
+      tooltips: {
+        mode: 'index',
+        intersect: false,
+      },
+      hover: {
+        mode: 'nearest',
+        intersect: true
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          },
+          display: true,
+          scaleLabel: {
+              display: true,
+              labelString: 'No of Supplements sold'
+          }
+        }]
+      }
+    }
+  }
+
+  if (typeof(pls_sku_sale_data.data[0]) == "number") {
+    plsSkuSaleChartConfig.data.labels = pls_sku_sale_data.label_data;
+    var dataSet = {
+      label: pls_sku_sale_data.dataset_label,
+      backgroundColor: colors[3],
+      borderColor: colors[3],
+      data: pls_sku_sale_data.data,
+      fill: false
+    }
+    plsSkuSaleChartConfig.data.datasets.push(dataSet);
+  } else {
+    $(pls_sku_sale_data.data).each(function(i, obj) {
+        plsSkuSaleChartConfig.data.labels = pls_sku_sale_data.label_data;
+        var dataSet = {
+          label: pls_sku_sale_data.dataset_label[i],
+          backgroundColor: colors[i],
+          borderColor: colors[i],
+          data: obj,
+          fill: false
+        }
+        plsSkuSaleChartConfig.data.datasets.push(dataSet);
+      });
+  }
+  var plsSkuSaleChart = new Chart(plsSkuSaleChartEl, plsSkuSaleChartConfig);
+
+  // Avg Order Count Chart
+
+  var avg_order_data = chartsData.avg_order_data;
+  var avgOrderChartEl = $('#avg-order-chart');
+  var avgOrderChartConfig = {
+    type: 'bar',
+    data: {
+      datasets: []
+    },
+    options: {
+      responsive: true,
+      title: {
+        display: true,
+        text: 'Average Orders Count per Week'
+      },
+      tooltips: {
+        mode: 'index',
+        intersect: false,
+      },
+      hover: {
+        mode: 'nearest',
+        intersect: true
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          },
+          display: true,
+          scaleLabel: {
+              display: true,
+              labelString: 'Orders Count'
+          }
+        }]
+      }
+    }
+  }
+
+  if (typeof(avg_order_data.data[0]) == "number") {
+    avgOrderChartConfig.data.labels = avg_order_data.label_data;
+    var dataSet = {
+      label: avg_order_data.dataset_label,
+      backgroundColor: colors[0],
+      borderColor: colors[0],
+      data: avg_order_data.data,
+      fill: false
+    }
+    avgOrderChartConfig.data.datasets.push(dataSet);
+  } else {
+    $(avg_order_data.data).each(function(i, obj) {
+      avgOrderChartConfig.data.labels = avg_order_data.label_data;
+      var dataSet = {
+        label: avg_order_data.dataset_label[i],
+        backgroundColor: colors[i],
+        borderColor: colors[i],
+        data: obj,
+        fill: false
+      }
+      avgOrderChartConfig.data.datasets.push(dataSet);
+  });
+  }
+  var avgOrderChart = new Chart(avgOrderChartEl, avgOrderChartConfig);
+
+  // orderCountChart.canvas.parentNode.style.height = '600px';
+  // orderCountChart.canvas.parentNode.style.width = '600px';
+</script>
+{% endblock %}

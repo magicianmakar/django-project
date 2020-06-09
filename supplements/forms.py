@@ -251,3 +251,31 @@ class UploadJSONForm(forms.Form):
             allowed_extensions=['json']
         )
         extension_validator(upload)
+
+
+class ReportsQueryForm(forms.Form):
+    PERIODS = [
+        ('', '---------'),
+        ('week', 'Past 7 Days'),
+        ('month', 'This Month'),
+        ('year', 'This Year')
+    ]
+    INTERVALS = [
+        ('day', 'Every Day'),
+        ('week', 'Every Week'),
+        ('month', 'Every Month')
+    ]
+    COMPARE_CHOICES = [
+        ('', '---------'),
+        ('2_week', 'Last 2 Weeks'),
+        ('4_week', 'Last 4 Weeks'),
+        ('2_month', 'Last 2 Months'),
+        ('4_month', 'Last 4 Months'),
+        ('2_year', 'Last 2 Years'),
+    ]
+
+    period = forms.ChoiceField(required=False, choices=PERIODS)
+    start_date = forms.DateField(required=False)
+    end_date = forms.DateField(required=False)
+    interval = forms.ChoiceField(required=False, choices=INTERVALS)
+    compare = forms.ChoiceField(required=False, choices=COMPARE_CHOICES)

@@ -1,7 +1,9 @@
 import csv
 from decimal import Decimal
+from datetime import timedelta
 from io import BytesIO
 
+from django.utils.safestring import mark_safe
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
@@ -15,6 +17,7 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.list import ListView
 from django import template
+from django.utils import timezone
 
 import bleach
 import requests
@@ -63,9 +66,10 @@ from .forms import (
     PLSupplementFilterForm,
     UploadJSONForm,
     UserSupplementForm,
+    ReportsQueryForm,
     UserSupplementFilterForm
 )
-from .utils import aws_s3_context, create_rows, send_email_against_comment, payment
+from .utils import aws_s3_context, create_rows, send_email_against_comment, payment, report
 
 register = template.Library()
 
@@ -1523,3 +1527,699 @@ class Autocomplete(View):
 
         else:
             return JsonResponse({'error': 'Unknown target'})
+
+
+class Reports(LoginRequiredMixin, TemplateView):
+    template_name = 'supplements/reports.html'
+    form = ReportsQueryForm
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get_breadcrumbs(self):
+        return [
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Reports', 'url': reverse('pls:reports')},
+        ]
+
+    def check_day_interval(self, obj, check):
+        if obj.created_at.year == check.year and \
+           obj.created_at.month == check.month and \
+           obj.created_at.day == check.day:
+            return obj
+
+    def check_range_interval(self, obj, start, end):
+        if obj.created_at > start and obj.created_at < end:
+            return obj
+
+    def get_charts_data(self, interval, start_at, end_at):
+        data = None
+        ds_l = None
+
+        check_s = start_at
+        check_e = end_at
+
+        all_orders = PLSOrder.objects.all().prefetch_related('order_items')
+
+        if interval == 'day':
+            order_count_data = []
+            order_cost_data = []
+            pls_sale_data = []
+            label_data = []
+            ds_l = '{} to {}'.format(check_s.strftime('%Y-%m-%d'), end_at.strftime('%Y-%m-%d'))
+            while check_s <= check_e:
+                filtered_orders = list(
+                    filter(
+                        lambda order: self.check_day_interval(order, check_s),
+                        list(all_orders)
+                    )
+                )
+                day_order_count = len(filtered_orders)
+                day_order_cost = sum(order.amount for order in filtered_orders)
+                order_items = []
+                for order in filtered_orders:
+                    order_items += list(order.order_items.all())
+                day_pls_sale = sum(item.quantity for item in order_items)
+                order_count_data.append(day_order_count)
+                order_cost_data.append(
+                    day_order_cost / 100.0 if day_order_cost else 0
+                )
+                pls_sale_data.append(
+                    day_pls_sale if day_pls_sale else 0
+                )
+                label_data.append(
+                    '{}-{}-{}'.format(check_s.year, check_s.month, check_s.day)
+                )
+                check_s = check_s + timedelta(days=1)
+            data = {
+                'order_count_data': {
+                    'data': order_count_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                },
+                'order_cost_data': {
+                    'data': order_cost_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                },
+                'pls_sale_data': {
+                    'data': pls_sale_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                }
+            }
+        elif interval == 'month':
+            order_count_data = []
+            order_cost_data = []
+            pls_sale_data = []
+            label_data = []
+            ds_l = 'Year {}'.format(check_s.strftime('%Y'))
+            while check_s <= check_e:
+                days_in_m = report.get_days_in_month(check_s) - 1
+                next_start = check_s + timedelta(days=days_in_m)
+                if (check_e - check_s).days < days_in_m:
+                    next_start = check_s + timedelta(days=(check_e - check_s).days + 1)
+                filtered_orders = list(
+                    filter(
+                        lambda order: self.check_range_interval(order, check_s, check_e),
+                        list(all_orders)
+                    )
+                )
+                day_order_count = len(filtered_orders)
+                day_order_cost = sum(order.amount for order in filtered_orders)
+                order_items = []
+                for order in filtered_orders:
+                    order_items += list(order.order_items.all())
+                day_pls_sale = sum(item.quantity for item in order_items)
+                order_count_data.append(day_order_count)
+                order_cost_data.append(
+                    day_order_cost / 100.0 if day_order_cost else 0
+                )
+                pls_sale_data.append(
+                    day_pls_sale if day_pls_sale else 0
+                )
+                label_data.append(next_start.strftime('%B'))
+                check_s = next_start + timedelta(days=1)
+            data = {
+                'order_count_data': {
+                    'data': order_count_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                },
+                'order_cost_data': {
+                    'data': order_cost_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                },
+                'pls_sale_data': {
+                    'data': pls_sale_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                }
+            }
+        else:
+            order_count_data = []
+            order_cost_data = []
+            pls_sale_data = []
+            label_data = []
+            ds_l = '{} to {}'.format(check_s.strftime('%Y-%m-%d'), check_e.strftime('%Y-%m-%d'))
+            count = 1
+            while check_s <= check_e:
+                if check_s.weekday() > 0:
+                    next_start = check_s + timedelta(days=(6 - check_s.weekday()))
+                else:
+                    next_start = check_s + timedelta(days=6)
+                    if (check_e - check_s).days < 6:
+                        next_start = check_s + timedelta(days=(check_e - check_s).days + 1)
+                filtered_orders = list(
+                    filter(
+                        lambda order: self.check_range_interval(order, check_s, next_start),
+                        list(all_orders)
+                    )
+                )
+                day_order_count = len(filtered_orders)
+                day_order_cost = sum(order.amount for order in filtered_orders)
+                order_items = []
+                for order in filtered_orders:
+                    order_items += list(order.order_items.all())
+                day_pls_sale = sum(item.quantity for item in order_items)
+                order_count_data.append(day_order_count)
+                order_cost_data.append(
+                    day_order_cost / 100.0 if day_order_cost else 0
+                )
+                pls_sale_data.append(
+                    day_pls_sale if day_pls_sale else 0
+                )
+                label_data.append('Week {}'.format(count))
+                check_s = next_start + timedelta(days=1)
+                if count == 4:
+                    count = 1
+                else:
+                    count += 1
+            data = {
+                'order_count_data': {
+                    'data': order_count_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                },
+                'order_cost_data': {
+                    'data': order_cost_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                },
+                'pls_sale_data': {
+                    'data': pls_sale_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                }
+            }
+
+        check_s = start_at
+        check_e = end_at
+        avg_order_count_data = []
+        avg_order_label = []
+        count = 1
+        while check_s <= check_e:
+            if check_s.weekday() > 0:
+                next_start = check_s + timedelta(days=(6 - check_s.weekday()))
+            else:
+                next_start = check_s + timedelta(days=6)
+            if (check_e - check_s).days < 6:
+                next_start = check_s + timedelta(days=(check_e - check_s).days)
+            filtered_orders = list(
+                filter(
+                    lambda order: self.check_range_interval(order, check_s, next_start),
+                    list(all_orders)
+                )
+            )
+            day_order_count = len(filtered_orders)
+            num_days = (next_start - check_s).days + 1
+            avg_order_count_data.append(round(day_order_count / num_days, 2))
+            avg_order_label.append('Week {}'.format(count))
+            check_s = next_start + timedelta(days=1)
+            if count == 4:
+                count = 1
+            else:
+                count += 1
+        data['avg_order_data'] = {
+            'data': avg_order_count_data,
+            'label_data': avg_order_label,
+            'dataset_label': ds_l
+        }
+
+        filtered_orders = list(
+            filter(
+                lambda order: self.check_range_interval(order, start_at, end_at),
+                list(all_orders)
+            )
+        )
+
+        all_sku = []
+        sku_data = []
+        for order in filtered_orders:
+            for line_item in order.order_items.all():
+                sku = line_item.label.sku
+                if sku not in all_sku:
+                    all_sku.append(sku)
+                    sku_data.append(line_item.quantity)
+                else:
+                    sku_data[all_sku.index(sku)] = sku_data[all_sku.index(sku)] + line_item.quantity
+        data['pls_sku_data'] = {
+            'data': sku_data,
+            'label_data': all_sku,
+            'dataset_label': ds_l
+        }
+
+        payout_revenue = sum(order.sale_price for order in filtered_orders)
+        payout_cost = sum(order.wholesale_price for order in filtered_orders)
+        gross_profit = (payout_revenue - payout_cost) / 100.
+        net_p_data = Payout.objects.filter(created_at__range=[
+            start_at.strftime('%Y-%m-%d'),
+            end_at.strftime('%Y-%m-%d')
+        ]).prefetch_related('payout_items').aggregate(
+            models.Sum('payout_items__amount'),
+            models.Sum('payout_items__wholesale_price'),
+            models.Sum('payout_items__shipping_price')
+        )
+        amount = net_p_data['payout_items__amount__sum']
+        amount = amount if amount else 0
+        wholesale_price = net_p_data['payout_items__wholesale_price__sum']
+        wholesale_price = wholesale_price if wholesale_price else 0
+        shipping_price = net_p_data['payout_items__shipping_price__sum']
+        shipping_price = shipping_price if shipping_price else 0
+        net_profit = (amount - wholesale_price - shipping_price) / 3
+        net_profit = round(net_profit, 2)
+        data['gross_profit'] = report.millify(gross_profit)
+        data['net_profit'] = report.millify(net_profit)
+        return data
+
+    def get_compare_charts_data(self, interval, compare):
+        val, period = compare.split('_')
+
+        ranges = []
+        now = timezone.now()
+
+        dataset_labels = None
+        data = None
+
+        if period == 'week':
+            ds_l = []
+            e_day = now
+            for i in range(int(val)):
+                ds_l.append('Week {}'.format(i + 1))
+                if e_day.weekday() == 0:
+                    e_day = e_day - timedelta(days=1)
+                s_day = e_day
+                while s_day.weekday() > 0:
+                    s_day -= timedelta(days=1)
+                ranges.insert(0, [s_day, e_day])
+                e_day = s_day - timedelta(days=1)
+            dataset_labels = ds_l
+        elif period == 'month':
+            ds_l = []
+            e_day = now
+            for i in range(int(val)):
+                s_day = e_day.replace(day=1)
+                ds_l.insert(0, s_day.strftime('%B'))
+                ranges.insert(0, [s_day, e_day])
+                e_day = s_day - timedelta(days=1)
+            dataset_labels = ds_l
+        elif period == 'year':
+            ds_l = []
+            e_day = now
+            for i in range(int(val)):
+                s_day = e_day.replace(month=1, day=1)
+                ds_l.insert(0, s_day.strftime('%Y'))
+                ranges.insert(0, [s_day, e_day])
+                e_day = s_day - timedelta(days=1)
+            dataset_labels = ds_l
+
+        all_orders = PLSOrder.objects.all().prefetch_related('order_items')
+
+        if interval == 'day':
+            order_count_data = []
+            order_cost_data = []
+            pls_sale_data = []
+            label_data = None
+            for t_range in ranges:
+                order_count_compare_data = []
+                order_cost_compare_data = []
+                pls_sale_compare_data = []
+                lables = []
+                start_at, end_at = t_range
+                while start_at <= end_at:
+                    filtered_orders = list(
+                        filter(
+                            lambda order: self.check_day_interval(order, start_at),
+                            list(all_orders)
+                        )
+                    )
+                    day_order_count = len(filtered_orders)
+                    day_order_cost = sum(order.amount for order in filtered_orders)
+                    order_items = []
+                    for order in filtered_orders:
+                        order_items += list(order.order_items.all())
+                    day_pls_sale = sum(item.quantity for item in order_items)
+                    order_count_compare_data.append(day_order_count)
+                    order_cost_compare_data.append(
+                        day_order_cost / 100.0 if day_order_cost else 0
+                    )
+                    pls_sale_compare_data.append(
+                        day_pls_sale if day_pls_sale else 0
+                    )
+                    lables.append(start_at.strftime('%A') if period == 'week' else start_at.strftime('%d'))
+                    start_at = start_at + timedelta(days=1)
+                if not label_data:
+                    label_data = lables
+                elif len(label_data) < len(lables):
+                    label_data = lables
+                order_count_data.append(order_count_compare_data)
+                order_cost_data.append(order_cost_compare_data)
+                pls_sale_data.append(pls_sale_compare_data)
+            data = {
+                'order_count_data': {
+                    'data': order_count_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                },
+                'order_cost_data': {
+                    'data': order_cost_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                },
+                'pls_sale_data': {
+                    'data': pls_sale_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                }
+            }
+        elif interval == 'month':
+            order_count_data = []
+            order_cost_data = []
+            pls_sale_data = []
+            label_data = None
+            for t_range in ranges:
+                order_count_compare_data = []
+                order_cost_compare_data = []
+                pls_sale_compare_data = []
+                lables = []
+                start_at, end_at = t_range
+                while start_at < end_at:
+                    next_start = start_at + timedelta(days=report.get_days_in_month(start_at) - 1)
+                    filtered_orders = list(
+                        filter(
+                            lambda order: self.check_range_interval(order, start_at, next_start),
+                            list(all_orders)
+                        )
+                    )
+                    day_order_count = len(filtered_orders)
+                    day_order_cost = sum(order.amount for order in filtered_orders)
+                    order_items = []
+                    for order in filtered_orders:
+                        order_items += list(order.order_items.all())
+                    day_pls_sale = sum(item.quantity for item in order_items)
+                    order_count_compare_data.append(day_order_count)
+                    order_cost_compare_data.append(
+                        day_order_cost / 100.0 if day_order_cost else 0
+                    )
+                    pls_sale_compare_data.append(
+                        day_pls_sale if day_pls_sale else 0
+                    )
+                    lables.append(start_at.strftime('%B'))
+                    start_at = next_start + timedelta(days=1)
+                if not label_data:
+                    label_data = lables
+                elif len(label_data) < len(lables):
+                    label_data = lables
+                order_count_data.append(order_count_compare_data)
+                order_cost_data.append(order_cost_compare_data)
+                pls_sale_data.append(pls_sale_compare_data)
+            data = {
+                'order_count_data': {
+                    'data': order_count_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                },
+                'order_cost_data': {
+                    'data': order_cost_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                },
+                'pls_sale_data': {
+                    'data': pls_sale_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                }
+            }
+        else:
+            order_count_data = []
+            order_cost_data = []
+            pls_sale_data = []
+            label_data = None
+            for t_range in ranges:
+                order_count_compare_data = []
+                order_cost_compare_data = []
+                pls_sale_compare_data = []
+                lables = []
+                start_at, end_at = t_range
+                count = 1
+                while start_at < end_at:
+                    next_start = start_at + timedelta(days=7)
+                    filtered_orders = list(
+                        filter(
+                            lambda order: self.check_range_interval(order, start_at, next_start),
+                            list(all_orders)
+                        )
+                    )
+                    day_order_count = len(filtered_orders)
+                    day_order_cost = sum(order.amount for order in filtered_orders)
+                    order_items = []
+                    for order in filtered_orders:
+                        order_items += list(order.order_items.all())
+                    day_pls_sale = sum(item.quantity for item in order_items)
+                    order_count_compare_data.append(day_order_count)
+                    order_cost_compare_data.append(
+                        day_order_cost / 100.0 if day_order_cost else 0
+                    )
+                    pls_sale_compare_data.append(
+                        day_pls_sale if day_pls_sale else 0
+                    )
+                    lables.append('Week {}'.format(count))
+                    if count == 4:
+                        count = 1
+                    else:
+                        count += 1
+                    start_at = next_start + timedelta(days=1)
+                if not label_data:
+                    label_data = lables
+                elif len(label_data) < len(lables):
+                    label_data = lables
+                order_count_data.append(order_count_compare_data)
+                order_cost_data.append(order_cost_compare_data)
+                pls_sale_data.append(pls_sale_compare_data)
+            data = {
+                'order_count_data': {
+                    'data': order_count_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                },
+                'order_cost_data': {
+                    'data': order_cost_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                },
+                'pls_sale_data': {
+                    'data': pls_sale_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                }
+            }
+
+        avg_order_count_data = []
+        avg_order_label_data = None
+        for t_range in ranges:
+            count = 1
+            avg_compare_data = []
+            lables = []
+            start_at, end_at = t_range
+            while start_at < end_at:
+                if start_at.weekday() > 0:
+                    next_start = start_at + timedelta(days=(6 - start_at.weekday()))
+                else:
+                    next_start = start_at + timedelta(days=6)
+                filtered_orders = list(
+                    filter(
+                        lambda order: self.check_range_interval(order, start_at, next_start),
+                        list(all_orders)
+                    )
+                )
+                day_order_count = len(filtered_orders)
+                num_days = (next_start - start_at).days + 1
+                avg_compare_data.append(round(day_order_count / num_days, 2))
+                lables.append('Week {}'.format(count))
+                start_at = next_start + timedelta(days=1)
+                if count == 4:
+                    count = 1
+                else:
+                    count += 1
+            if not avg_order_label_data:
+                avg_order_label_data = lables
+            elif len(avg_order_label_data) < len(lables):
+                avg_order_label_data = lables
+            avg_order_count_data.append(avg_compare_data)
+        data['avg_order_data'] = {
+            'data': avg_order_count_data,
+            'label_data': avg_order_label_data,
+            'dataset_label': dataset_labels
+        }
+
+        all_sku = []
+        sku_data = []
+        for t_range in ranges:
+            compare_sku = []
+            compare_sku_data = []
+            start_at, end_at = t_range
+            filtered_orders = list(
+                filter(
+                    lambda order: self.check_range_interval(order, start_at, end_at),
+                    list(all_orders)
+                )
+            )
+            for order in filtered_orders:
+                for line_item in order.order_items.all():
+                    sku = line_item.label.sku
+                    if sku not in all_sku:
+                        all_sku.append(sku)
+                    if sku not in compare_sku:
+                        compare_sku.append(sku)
+                        compare_sku_data.append(line_item.quantity)
+                    else:
+                        prev_val = compare_sku_data[compare_sku.index(sku)]
+                        compare_sku_data[compare_sku.index(sku)] = prev_val + line_item.quantity
+            final_compare_data = []
+            for sku in all_sku:
+                if sku not in compare_sku:
+                    compare_sku.append(sku)
+                    compare_sku_data.append(0)
+                final_compare_data.append(
+                    compare_sku_data[compare_sku.index(sku)]
+                )
+            sku_data.append(final_compare_data)
+        for block_index, block_c_data in enumerate(sku_data):
+            if len(block_c_data) < len(all_sku):
+                reps = len(all_sku) - len(block_c_data)
+                for i in range(reps):
+                    sku_data[block_index].append(0)
+        data['pls_sku_data'] = {
+            'data': sku_data,
+            'label_data': all_sku,
+            'dataset_label': dataset_labels
+        }
+
+        payout_revenue = 0
+        payout_cost = 0
+        for t_range in ranges:
+            start_at, end_at = t_range
+            filtered_orders = list(
+                filter(
+                    lambda order: self.check_range_interval(order, start_at, end_at),
+                    list(all_orders)
+                )
+            )
+            payout_revenue += sum(order.sale_price for order in filtered_orders)
+            payout_cost += sum(order.wholesale_price for order in filtered_orders)
+        gross_profit = (payout_revenue - payout_cost) / 100.
+        net_profit = 0
+        all_payouts = Payout.objects.all().prefetch_related('payout_items')
+        for t_range in ranges:
+            start_at, end_at = t_range
+            filtered_payouts = list(
+                filter(
+                    lambda payout: self.check_range_interval(payout, start_at, end_at),
+                    list(all_payouts)
+                )
+            )
+            payout_items = []
+            for payout in filtered_payouts:
+                payout_items += list(payout.payout_items.all())
+            amount = sum(item.amount for item in payout_items)
+            wholesale_price = sum(item.wholesale_price for item in payout_items)
+            shipping_price = sum(item.shipping_price for item in payout_items)
+            t_range_net_profit = (amount - wholesale_price - shipping_price) / 3
+            net_profit += round(t_range_net_profit, 2)
+        data['gross_profit'] = report.millify(gross_profit)
+        data['net_profit'] = report.millify(net_profit)
+        return data
+
+    def validate_compare_interval(self, compare, interval):
+        val, period = compare.split('_')
+        if interval == 'day' and period == 'year':
+            return 'week'
+        elif interval == 'month' and period == 'week':
+            return 'day'
+        elif interval == 'month' and period == 'month':
+            return 'week'
+        elif interval == 'week' and period == 'week':
+            return 'day'
+        else:
+            return interval
+
+    def validate_interval(self, start_at, end_at, interval):
+        if interval == 'day' and (end_at - start_at).days > 60:
+            return 'week'
+        if interval == 'week' and (end_at - start_at).days < 29:
+            return 'day'
+        if interval == 'month' and (end_at - start_at).days < 120:
+            if (end_at - start_at).days < 60:
+                return 'day'
+            else:
+                return 'week'
+        else:
+            return interval
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        charts_data = None
+
+        interval = None
+
+        form = self.form(self.request.GET)
+        if form.is_valid():
+            cd = form.cleaned_data
+            period = cd['period']
+            start_date = cd['start_date']
+            end_date = cd['end_date']
+            compare = cd['compare']
+
+            interval = cd['interval']
+            now = timezone.now()
+
+            if period:
+                if period == 'week':
+                    start_at = now - timedelta(days=7)
+                    end_at = now - timedelta(days=1)
+                    interval = self.validate_interval(start_at, end_at, interval)
+                    charts_data = self.get_charts_data(interval, start_at, end_at)
+                elif period == 'month':
+                    start_at = now.replace(day=1)
+                    end_at = now
+                    interval = self.validate_interval(start_at, end_at, interval)
+                    charts_data = self.get_charts_data(interval, start_at, end_at)
+                elif period == 'year':
+                    start_at = now.replace(month=1, day=1)
+                    end_at = now
+                    interval = self.validate_interval(start_at, end_at, interval)
+                    charts_data = self.get_charts_data(interval, start_at, end_at)
+            else:
+                if start_date and end_date:
+                    start_at = start_date
+                    end_at = end_date
+                    interval = self.validate_interval(start_at, end_at, interval)
+                    charts_data = self.get_charts_data(interval, start_at, end_at)
+                else:
+                    if compare:
+                        interval = self.validate_compare_interval(compare, interval)
+                        charts_data = self.get_compare_charts_data(interval, compare)
+                    else:
+                        interval = 'day'
+                        start_at = now - timedelta(days=7)
+                        end_at = now - timedelta(days=1)
+                        charts_data = self.get_charts_data(interval, start_at, end_at)
+                        cd['period'] = 'week'
+
+            cd['interval'] = interval
+            form = self.form(initial=cd)
+
+        context.update({
+            'breadcrumbs': self.get_breadcrumbs(),
+            'form': form,
+            'gross_profit': charts_data.pop('gross_profit'),
+            'net_profit': charts_data.pop('net_profit'),
+            'charts_data': mark_safe(json.dumps(charts_data))
+        })
+        return context

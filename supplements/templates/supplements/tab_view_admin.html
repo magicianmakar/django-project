@@ -12,6 +12,7 @@
 {% url 'pls:payout_list' as pls_payouts %}
 {% url 'pls:orderitem_list' as pls_orderitems %}
 {% url 'pls:upload_json' as pls_upload_json %}
+{% url 'pls:reports' as pls_reports %}
 
 {% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' %}
 <div class="tabs-container">
@@ -53,6 +54,12 @@
     <li class="active"><a data-toggle="tab" href="#tab-1">Import / Export</a></li>
     {% else %}
     <li><a href="{% url 'pls:upload_json' %}">Import / Export</a></li>
+    {% endif %}
+
+    {% if request.path == pls_reports %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">Reports</a></li>
+    {% else %}
+    <li><a href="{% url 'pls:reports' %}">Reports</a></li>
     {% endif %}
   {% endif %}
   </ul>

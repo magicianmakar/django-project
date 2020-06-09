@@ -93,4 +93,8 @@ urlpatterns = [
         supplements.views.Autocomplete.as_view(),
         name='autocomplete'),
 
+    url(r'^reports$',
+        supplements.views.Reports.as_view(),
+        name='reports'),
+
 ]
