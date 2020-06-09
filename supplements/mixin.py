@@ -295,23 +295,31 @@ class PayoutMixin:
 
     @property
     def profit_split(self):
-        profit = self.cost_price - self.wholesale_price - self.shipping_price
-        return profit / 3
+        price = self.cost_price - self.wholesale_price
+        if self.shipping_cost:
+            price -= self.shipping_cost
+
+        return price
 
     @property
     def profit_split_string(self):
-        return self.to_currency(self.profit_split)
+        return self.to_currency(self.profit_split * .25)
 
     @property
     def pls_payout(self):
-        return self.profit_split + self.wholesale_price + self.shipping_price
+        return (self.profit_split * .50) + self.wholesale_price
 
     @property
     def pls_payout_string(self):
         return self.to_currency(self.pls_payout)
 
+    @property
+    def shipping_cost_string(self):
+        if self.shipping_cost:
+            return self.to_currency(self.shipping_cost)
+
     def to_currency(self, value):
-        return "${:.2f}".format(value / 100.)
+        return "${:.2f}".format(value / 100)
 
 
 class AuthorizeNetCustomerMixin:

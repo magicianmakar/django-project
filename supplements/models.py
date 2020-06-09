@@ -225,7 +225,7 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
 
 
 class Payout(PayoutMixin, model_base.AbstractPayout):
-    pass
+    shipping_cost = models.IntegerField(null=True, blank=True)
 
 
 class AuthorizeNetCustomer(models.Model, AuthorizeNetCustomerMixin):

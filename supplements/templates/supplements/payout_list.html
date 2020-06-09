@@ -53,6 +53,7 @@
     <th>Product (Revenue)</th>
     <th>Shipping (Revenue)</th>
     <th>Wholesale Cost</th>
+    <th id="edit-column">Shipping Cost</th>
     <th>Date</th>
     <th>Status</th>
     <th>Action</th>
@@ -72,6 +73,17 @@
       <td>{{ payout.cost_price_withuot_shipping_string }}</td>
       <td>{{ payout.shipping_price_string }}</td>
       <td>{{ payout.wholesale_price_string }}</td>
+      <td>
+        {% if payout.shipping_cost %}
+        {{ payout.shipping_cost_string }}
+        {% else %}
+        <div class="shipping-cost-wrapper editable-column-wrapper" data-payout-id="{{ payout.id }}">
+          <input
+            class="shipping-cost editable-column"
+            type="text" />
+        </span>
+        {% endif %}
+      </td>
       <td>{{ payout.created_at|date:"m.d.Y h:iA" }}</td>
       <td>{{ payout.status_string }}</td>
       <td>
@@ -92,6 +104,7 @@
 
 {% block extrajs %}
 <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
 <script type='application/javascript'>
   $("#id_date").datepicker();
 </script>

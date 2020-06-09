@@ -176,6 +176,28 @@ function addOrderToPayout(orderId, referenceNumber) {
     });
 }
 
+function addShippingCostToPayout(payoutId, cost) {
+    var selector = '.shipping-cost-wrapper[data-payout-id=' + payoutId + '] input';
+    var url = api_url('shipping-cost-payout', 'supplements');
+    data = {
+        'payout_id': payoutId,
+        'cost': cost
+    };
+    $.ajax({
+        url: url,
+        type: "POST",
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function (data) {
+            $(selector).addClass('payout-success');
+        },
+        error: function (data) {
+            $(selector).addClass('payout-error');
+        }
+    });
+}
+
 $(document).ready(function () {
     'use strict';
 
@@ -217,17 +239,23 @@ $(document).ready(function () {
         addOrderToPayout(orderId, referenceNumber);
     });
 
+    $(".shipping-cost").on("blur", function () {
+        var payoutId = $(this).parent('.shipping-cost-wrapper').data('payout-id');
+        var cost = $(this).val();
+        addShippingCostToPayout(payoutId, cost);
+    });
+
     var enableEditing = false;
-    $("#payout-column").click(function () {
+    $("#edit-column").click(function () {
         if (enableEditing) {
             enableEditing = false;
-            $(".order-payout").prop('disabled', enableEditing);
+            $(".editable-column").prop('disabled', enableEditing);
             $(this).attr('title',  "Disable editing");
         } else {
             enableEditing = true;
-            $(".order-payout").prop('disabled', enableEditing);
+            $(".editable-column").prop('disabled', enableEditing);
             $(this).attr('title',  "Enable editing");
         }
     });
-    $("#payout-column").trigger('click');
+    $("#edit-column").trigger('click');
 });

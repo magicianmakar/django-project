@@ -183,18 +183,18 @@
   border: 1px solid red !important;
 }
 
-.order-payout-wrapper {
+.editable-column-wrapper {
   width: 70px;
 }
 
-.order-payout-wrapper .order-payout {
+.editable-column-wrapper .editable-column {
   border: 1px solid gray;
   border-radius: .25rem;
   padding: 2px 4px;
   width: 100%;
 }
 
-#payout-column {
+#edit-column {
   text-decoration: underline;
   cursor: pointer;
   font-weight: bold;

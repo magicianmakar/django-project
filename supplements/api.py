@@ -195,6 +195,19 @@ class SupplementsApi(ApiResponseMixin, View):
 
         return self.api_success()
 
+    def post_shipping_cost_payout(self, request, user, data):
+        payout_id = data['payout_id']
+        shipping_cost = data['cost']
+        try:
+            payout = Payout.objects.get(id=payout_id)
+        except Payout.DoesNotExist:
+            return self.api_error('Payout not found', status=404)
+
+        payout.shipping_cost = int(shipping_cost) * 100
+        payout.save()
+
+        return self.api_success()
+
     def post_calculate_shipping_cost(self, request, user, data):
         shipping_price = get_shipping_cost(data['country-code'], data.get('province-code'), data['total-weight'])
         data = {'shipping_cost': shipping_price}

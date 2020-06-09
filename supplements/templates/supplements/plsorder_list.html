@@ -23,7 +23,7 @@
     <th>Shipping Cost</th>
     <th>Date</th>
     <th>Status</th>
-    <th id="payout-column">Payout</th>
+    <th id="edit-column">Payout</th>
     <th>Print</th>
   </thead>
   <tbody>
@@ -42,10 +42,10 @@
       <td>{{ pls_order.created_at|date:"m.d.Y h:iA" }}</td>
       <td>{{ pls_order.status_string }}</td>
       <td>
-        <div class='order-payout-wrapper' data-order-id="{{ pls_order.id }}">
+        <div class="order-payout-wrapper editable-column-wrapper" data-order-id="{{ pls_order.id }}">
           <input
-            class='order-payout'
-            type='text'
+            class="order-payout editable-column"
+            type="text"
             value="{{ pls_order.payout.reference_number }}" />
         </div>
       </td>
