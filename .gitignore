@@ -1,4 +1,5 @@
 .env.dev
+env.dev.*
 *.pyc
 *.pyo
 *.sqlite3

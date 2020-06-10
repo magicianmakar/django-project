@@ -14,10 +14,13 @@ import os
 import dj_database_url
 import warnings
 
+from lib.env import setup_env
+setup_env()
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-SECRET_KEY = 'i+acxn5(akgsn!sr4^qgf(^m&*@+g1@u^t@=8s@axc41ml*f=s'
+SECRET_KEY = os.environ['SECRET_KEY']
 
 API_SECRECT_KEY = os.environ.get('API_SECRECT_KEY', 'TEST')
 ENCRYPTION_SECRECT_KEY = os.environ.get('ENCRYPTION_SECRECT_KEY', 'TEST')

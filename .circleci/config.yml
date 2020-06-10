@@ -4,6 +4,8 @@ defaults: &defaults
   docker:
     - image: circleci/python:3.6.10-node
       environment:
+        SECRET_KEY: dBEn2nkwPvlKuEwrQtBwMLlOOTm3TObmllyOb0j6ZepIqztLQh28oItsJQCbVsF1
+
         DEBUG_APP: "TRUE"
 
         DATABASE_URL: postgresql://ubuntu:@127.0.0.1:5432/circle_test
