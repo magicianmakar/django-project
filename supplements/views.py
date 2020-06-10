@@ -65,8 +65,8 @@ from .forms import (
     PLSupplementEditForm,
     PLSupplementFilterForm,
     PLSupplementForm,
-    UploadJSONForm,
     ReportsQueryForm,
+    UploadJSONForm,
     UserSupplementForm,
     UserSupplementFilterForm
 )
