@@ -792,10 +792,13 @@ class AdminLabelHistory(LabelHistory):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
+
+    def get_supplement(self, user, supplement_id):
+        return get_object_or_404(UserSupplement, id=supplement_id)
 
     def get_redirect_url(self, supplement_id):
         kwargs = {'supplement_id': supplement_id}
@@ -915,7 +918,8 @@ class AllUserSupplements(MyLabels, ListView):
         return sort_map[order_by]
 
     def add_filters(self, queryset):
-        return queryset.exclude(current_label__isnull=True)
+        return queryset.exclude(Q(current_label__isnull=True)
+                                | Q(current_label__status=UserSupplementLabel.DRAFT))
 
     def get_breadcrumbs(self):
         return [
