@@ -755,6 +755,8 @@ class GrooveKartOrderUpdater:
             url = track.get_source_url()
             if track.source_type == 'ebay':
                 source = 'eBay'
+            if track.source_type == 'supplements':
+                source = 'Supplements'
         else:
             url = 'https://trade.aliexpress.com/order_detail.htm?orderId={}'.format(source_id)
 
