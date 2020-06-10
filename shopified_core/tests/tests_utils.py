@@ -23,6 +23,7 @@ from shopified_core.utils import (
     extension_hash_text,
     get_next_page_from_request,
     normalize_product_title,
+    clean_tracking_number
 )
 
 from shopified_core.utils import base64_encode
@@ -414,6 +415,14 @@ class UtilsTestCase(BaseTestCase):
         for title, match in titles.items():
             for s in suffixes:
                 self.assertEqual(normalize_product_title(f'{title} {s}'), match)
+
+    def test_clean_tracking_number(self):
+        self.assertEqual(clean_tracking_number('LC123456789BN'), 'LC123456789BN')
+        self.assertEqual(clean_tracking_number('   LC123456789BN   '), 'LC123456789BN')
+        self.assertEqual(clean_tracking_number('XC123456789BN\n   '), 'XC123456789BN')
+        self.assertEqual(clean_tracking_number('YC123456789BN\nLC123456789CR'), 'YC123456789BN,LC123456789CR')
+        self.assertEqual(clean_tracking_number(f'\tRC123456789BN{" " * 10}LC123456789CR\n'), 'RC123456789BN,LC123456789CR')
+        self.assertEqual(clean_tracking_number(f'ZC123456789BN{" " * 10}\n{" " * 10}LC123456789CR'), 'ZC123456789BN,LC123456789CR')
 
 
 class ShippingHelperFunctionsTestCase(BaseTestCase):

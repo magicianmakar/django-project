@@ -1,0 +1,21 @@
+.profit-row {
+    margin-top: 80px;
+}
+.profit-box {
+    padding: 30px;
+    -webkit-box-shadow: 2px 2px 4px 0px rgba(194,194,194,0.5);
+    -moz-box-shadow: 2px 2px 4px 0px rgba(194,194,194,0.5);
+    box-shadow: 2px 2px 4px 0px rgba(194,194,194,0.5);
+}
+.profit-box h1 {
+    font-style: sans;
+    color: #93c47d;
+    margin: 0px;
+}
+.profit-box span {
+    font-size: 11px;
+    font-weight: bold;
+    margin-left: 3px;
+    margin-bottom: 5px;
+
+}

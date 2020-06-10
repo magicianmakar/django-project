@@ -1,4 +1,3 @@
-import re
 import json
 from functools import cmp_to_key
 from lxml import etree
@@ -23,6 +22,7 @@ from shopified_core.utils import (
     safe_int,
     get_domain,
     remove_link_query,
+    clean_tracking_number,
     CancelledOrderAlert
 )
 
@@ -733,7 +733,7 @@ class WooStoreApi(ApiBase):
                                                     order)
 
         order.source_status = data.get('status')
-        order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+        order.source_tracking = clean_tracking_number(data.get('tracking_number'))
         order.status_updated_at = timezone.now()
 
         try:

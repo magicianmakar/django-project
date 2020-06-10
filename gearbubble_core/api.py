@@ -1,5 +1,4 @@
 import json
-import re
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -22,6 +21,7 @@ from shopified_core.utils import (
     safe_int,
     remove_link_query,
     get_domain,
+    clean_tracking_number,
 )
 
 from .api_helper import GearBubbleApiHelper
@@ -492,7 +492,7 @@ class GearBubbleApi(ApiBase):
 
         permissions.user_can_edit(user, order)
         order.source_status = data.get('status')
-        order.source_tracking = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+        order.source_tracking = clean_tracking_number(data.get('tracking_number'))
         order.status_updated_at = timezone.now()
 
         try:

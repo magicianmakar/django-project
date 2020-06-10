@@ -6,8 +6,22 @@
 <div class="alert alert-info alert-dismissable">
   <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
   Your label is currently under review.
-  <u><a href="{{ status_url }}">View it's status</a></u>
 </div>
+{% endif %}
+{% endblock %}
+
+{% block history_tab %}
+{% if label %}
+{% url 'pls:label_history' supplement_id=supplement.id as pls_label_history %}
+{% if request.path == pls_label_history %}
+<li class="nav-item active">
+  <a class="nav-link" data-toggle="tab" href="#labels">Labels</a>
+</li>
+{% else %}
+<li class="nav-item">
+  <a class="nav-link" href="{{ pls_label_history }}">Labels</a>
+</li>
+{% endif %}
 {% endif %}
 {% endblock %}
 

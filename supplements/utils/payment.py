@@ -12,7 +12,6 @@ from leadgalaxy.models import ShopifyStore
 from lib.exceptions import capture_exception
 from shopified_core.shipping_helper import country_from_code
 from shopified_core.utils import safe_float
-from supplements.lib.authorizenet import charge_customer_profile
 from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
 from woocommerce_core.models import WooStore
 
@@ -134,12 +133,8 @@ class Util:
                     unit_price=line_amount,
                 ))
 
-            auth_net_customer = user.authorize_net_customer
-
-            transaction_id = charge_customer_profile(
+            transaction_id = user.authorize_net_customer.charge(
                 amount,
-                auth_net_customer.customer_id,
-                auth_net_customer.payment_id,
                 auth_net_lines,
             )
 

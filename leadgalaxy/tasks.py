@@ -965,6 +965,9 @@ def generate_tracked_order_export(self, params):
     except:
         capture_exception()
 
+    if params.get('cache_key'):
+        cache.delete(params['cache_key'])
+
 
 @celery_app.task(bind=True, base=CaptureFailure)
 def generate_order_export_query(self, order_export_id):

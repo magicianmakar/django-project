@@ -1,0 +1,184 @@
+{% extends "supplements/user_supplement.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+{% load widget_tweaks %}
+
+{% block history_content %}
+{% if label %}
+{% url 'pls:label_history' supplement_id=supplement.id as pls_label_history %}
+{% if request.path == pls_label_history %}
+<div class="tab-pane fade in active m-t" id="labels">
+{% else %}
+<div class="tab-pane fade m-t" id="labels">
+{% endif %}
+  <div class="row">
+    <div class="col-md-4">
+      {% include "supplements/partials/label_detail_image.html" %}
+    </div>
+
+    <div class="col-md-8">
+      <div class="ibox">
+        <div class="ibox-title">
+          <h5>Comments</h5>
+        </div>
+        {% if all_comments %}
+        <div class="ibox-content comment-history">
+          <div>
+            <div class="feed-activity-list">
+
+              {% for comments in all_comments %}
+              {% for comment in comments %}
+              <div class="feed-element">
+                <div class="media-body ">
+                  <small class="text-muted float-right">{{ comment.created_at_string }}</small>
+                  {% if comment.sets_new_status %}
+
+                  <p>{{ comment.text|safe }}</p>
+
+                  {% else %}
+
+                  <strong>{{ comment.user.get_full_name }}</strong> wrote. <br>
+                  <div class="well">
+                    {{ comment.text|safe }}
+                  </div>
+
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+              {% endfor %}
+
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        {% if label_url and not all_comments%}
+        <div class="m-l">
+          No comments for this label yet.
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="ibox ">
+        <div class="ibox-title">
+          <h5>Reply</h5>
+        </div>
+        <div class="ibox-content">
+          <form id="comment_form" method="POST" role="form">
+
+            {% if form.errors %}
+            {% for error in form.non_field_errors %}
+            <div class="alert alert-danger">
+              <strong>{{ error }}</strong>
+            </div>
+            {% endfor %}
+            {% endif %}
+            <label id="private-note" class="onoffswitch">
+              <input type="checkbox" name="is_private">
+              &nbsp;Leave private note
+            </label>
+            <input type='hidden' name='action' value='comment' />
+            {{ comment_form.upload_url }}
+            {{ comment_form.image_data_url }}
+            {{ comment_form.mockup_slug }}
+            {{ comment_form.label_presets }}
+            <canvas id='canvas'></canvas>
+            <div class='form-group row'>
+              {{ comment_form.comment.errors }}
+              {{ comment_form.comment|add_class:"form-control" }}
+            </div>
+            <div class="hr-line-dashed"></div>
+
+            <!-- No spaces between tags for :empty selector -->
+            <div id="mockup-thumbnails"></div>
+
+            <div class='form-group row label-comment-action'>
+              <div class="col-sm-4">
+
+                <div class="custom-file label-detail">
+                  <input type="file" accept=".pdf" class="form-control" id="single-label-upload">
+                </div>
+
+              </div>
+
+              <div class='col-sm-4'>
+                <a href=""
+                   data-toggle="modal"
+                   data-target="#modal-mockup-images"
+                   data-backdrop="static"
+                   class="btn btn-success">
+                  Customize Label
+                </a>
+
+                <button class='btn btn-primary'
+                        type="submit"
+                        data-loading-text="Please wait...">
+                  <i class='fa fa-reply'></i> Submit
+                </button>
+              </div>
+              <div class='col-sm-2 col-sm-offset-2'>
+                <input class='btn btn-default btn-outline'
+                        type='reset' value="Discard" />
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="m-t m-l">
+  No label for this supplement yet.
+</div>
+{% endif %}
+
+{% include "supplements/partials/mockup_images_modal.html" with label_url=label_url %}
+{% endblock %}
+
+
+{% block extrajs %}
+<script type="text/javascript">
+    $.fn.bootstrapBtn = $.fn.button.noConflict();
+</script>
+
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/plupload.full.min.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/plupload/2.1.9/jquery.ui.plupload/jquery.ui.plupload.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.3.200/pdf.min.js"></script>
+
+<script type="text/javascript">
+var apiData = {{ api_data|safe }};
+var storeData = {{ store_data|safe }};
+var mockupLayers = {% json_dumps mockup_layers %};
+
+{% if aws_available %}
+window.plupload_Config = {
+  url: "https://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/",
+  uploadedUrl: "http://{% app_setting 'AWS_STORAGE_BUCKET_NAME' %}.s3.amazonaws.com/",
+  AWSAccessKeyId: "{% app_setting 'AWS_ACCESS_KEY_ID' %}",
+  policy: "{{aws_policy|escapejs}}",
+  signature: "{{aws_signature|escapejs}}",
+  key: "uploads/u{{user.id}}/${filename}",
+  imgPolicy: "{{aws_images.aws_policy|escapejs}}",
+  imgSignature: "{{aws_images.aws_signature|escapejs}}",
+  saveFormID: '#comment_form',
+};
+{% endif %}
+</script>
+
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/slick/slick.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/send_to_store.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/supplement.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/mockup_editor.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/label_detail.js' %}"></script>
+{% endcompress %}
+{% endblock %}

@@ -225,7 +225,7 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
 
 
 class Payout(PayoutMixin, model_base.AbstractPayout):
-    pass
+    shipping_cost = models.IntegerField(null=True, blank=True)
 
 
 class AuthorizeNetCustomer(models.Model, AuthorizeNetCustomerMixin):
@@ -338,6 +338,48 @@ class MockupType(models.Model):
                     {'left': 0.06, 'top': -1.16, 'size': 0.92, 'bgLeft': -0.04, 'bgTop': -0.03, 'bgSize': 1.08}
                 ],
             ]
+        elif self.slug == '4oz-bottle':
+            presets = [
+                [{'left': -0.53, 'top': -0.69, 'size': 1.7}],
+                [{'left': -0.53, 'top': -0.69, 'size': 1.7, 'layers': {'shadow': False}}],
+                [{'left': -0.29, 'top': -0.88, 'size': 2.06}],
+                [{'left': -0.29, 'top': -0.88, 'size': 2.06, 'layers': {'shadow': False}}],
+                [
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.3545, 'bgTop': -0.02, 'bgSize': 1.01},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.2875, 'bgTop': -0.02, 'bgSize': 1.01},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.1875, 'bgTop': -0.07, 'bgSize': 1.09},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.035, 'bgTop': -0.07, 'bgSize': 1.09},
+                ],
+                [
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.2545, 'bgTop': 0.2125, 'bgSize': 0.6238},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.6125, 'bgTop': 0.23, 'bgSize': 0.6146},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.175, 'bgTop': 0.1875, 'bgSize': 0.6767},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.475, 'bgTop': 0.2025, 'bgSize': 0.6616},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.0895, 'bgTop': 0.16, 'bgSize': 0.7313},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.3175, 'bgTop': 0.1625, 'bgSize': 0.7308},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.0025, 'bgTop': 0.1325, 'bgSize': 0.7892},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.17, 'bgTop': 0.135, 'bgSize': 0.7892},
+                ],
+            ]
+        elif 'colored-container-' in self.slug:
+            presets = [
+                [{'left': 0.34, 'top': -0.93, 'size': 0.45}],
+                [{'left': 0.34, 'top': -0.93, 'size': 0.45, 'layers': {'shadow': False}}],
+                [{'left': -0.1, 'top': -1.6, 'size': 0.66}],
+                [{'left': -0.1, 'top': -1.6, 'size': 0.66, 'layers': {'shadow': False}}],
+                [
+                    {'name': 'Left', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': -0.137, 'bgTop': 0.045, 'bgSize': 0.78},
+                    {'name': 'Right', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.3525, 'bgTop': 0.045, 'bgSize': 0.78},
+                    {'name': 'Top', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.03, 'bgTop': -0.015, 'bgSize': 0.9005}
+                ],
+                [
+                    {'name': '3 Left', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': -0.0825, 'bgTop': 0.23, 'bgSize': 0.5},
+                    {'name': '3 Right', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.585, 'bgTop': 0.23, 'bgSize': 0.5},
+                    {'name': '2 Left', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.01, 'bgTop': 0.19, 'bgSize': 0.5738},
+                    {'name': '2 Right', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.38, 'bgTop': 0.19, 'bgSize': 0.5738},
+                    {'name': 'Top', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.1545, 'bgTop': 0.15, 'bgSize': 0.6542}
+                ]
+            ]
         else:
             presets = []
         return presets
@@ -359,7 +401,7 @@ class MockupType(models.Model):
                 {'layer': 'mask', 'mode': 'multiply', 'file': 'mask.png'},
                 {'layer': 'label', 'mode': 'multiply', 'saveSize': 860, 'position': {
                     'top': 0.3186, 'left': 0.1767, 'right': 0.6465, 'bottom': 0.5023
-                }, 'file': 'DROP_80013_AntiWrinkleCream_BroadSpec_4oz_OUTLINED.jpg'},
+                }},
                 {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png'},
                 {'layer': 'light', 'mode': 'screen', 'file': 'reflections.png'},
             ]
@@ -368,9 +410,29 @@ class MockupType(models.Model):
                 {'layer': 'bottle', 'mode': 'source-over', 'file': 'tincture_bottle_30.png', 'background': True},
                 {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadows_30.png', 'background': True},
                 {'layer': 'mask', 'mode': 'source-over', 'file': 'mask_30.png'},
-                {'layer': 'label', 'mode': 'source-in', 'saveSize': 900, 'file': 'DROP_80001_HempOil_500mg_1oz_OUTLINED.jpg'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 900},
                 {'layer': 'dark', 'mode': 'multiply', 'file': 'darken_30.png'},
                 {'layer': 'light', 'mode': 'screen', 'file': 'reflections_30.png'},
+            ]
+        elif self.slug == '4oz-bottle':
+            layers = [
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'bottle', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
+                {'combined': ['mask'], 'layer': 'light2', 'mode': 'screen', 'file': 'refractions.png'},
+            ]
+        elif 'colored-container-' in self.slug:
+            container_file = f"container-{self.slug.replace('colored-container-', '')}-gummy.png"
+            layers = [
+                {'layer': 'container', 'mode': 'source-over', 'file': container_file, 'background': True},
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1500},
+                {'combined': ['mask'], 'layer': 'shadow2', 'mode': 'source-over', 'file': 'shadow.png'},
+                {'combined': ['mask'], 'layer': 'light2', 'mode': 'screen', 'file': 'refractions.png'},
             ]
         else:
             layers = []
@@ -379,7 +441,11 @@ class MockupType(models.Model):
             if not layer.get('file'):
                 continue
 
-            image = Image.open(f"app/static/pls-mockup/{self.slug}/{layer['file']}")
+            mockup_folder = self.slug
+            if 'colored-container-' in self.slug:
+                mockup_folder = 'colored-container'
+
+            image = Image.open(f"app/static/pls-mockup/{mockup_folder}/{layer['file']}")
             raw_image = BytesIO()
             ext = layer['file'].split('.')[-1]  # From PIL.Image.SAVE
             ext = {'jpg': 'jpeg'}.get(ext, ext)

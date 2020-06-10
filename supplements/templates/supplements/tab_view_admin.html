@@ -6,21 +6,22 @@
 
 {% block main-container %}
 {% url 'pls:admin_index' as pls_admin_index %}
-{% url 'pls:all_labels' as pls_all_labels %}
+{% url 'pls:all_user_supplements' as pls_all_user_supplements %}
 {% url 'pls:product' as pls_product %}
 {% url 'pls:order_list' as pls_orders %}
 {% url 'pls:payout_list' as pls_payouts %}
 {% url 'pls:orderitem_list' as pls_orderitems %}
 {% url 'pls:upload_json' as pls_upload_json %}
+{% url 'pls:reports' as pls_reports %}
 
 {% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' %}
 <div class="tabs-container">
   <ul class="nav nav-tabs scrolling-tabs">
   {% if pls_staff or pls_admin %}
-    {% if request.path ==  pls_all_labels %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">All Labels</a></li>
+    {% if request.path ==  pls_all_user_supplements %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">User Supplements</a></li>
     {% else %}
-    <li><a href="{% url 'pls:all_labels' %}">All Labels</a></li>
+    <li><a href="{% url 'pls:all_user_supplements' %}">User Supplements</a></li>
     {% endif %}
 
     {% if request.path == pls_orderitems %}
@@ -53,6 +54,12 @@
     <li class="active"><a data-toggle="tab" href="#tab-1">Import / Export</a></li>
     {% else %}
     <li><a href="{% url 'pls:upload_json' %}">Import / Export</a></li>
+    {% endif %}
+
+    {% if request.path == pls_reports %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">Reports</a></li>
+    {% else %}
+    <li><a href="{% url 'pls:reports' %}">Reports</a></li>
     {% endif %}
   {% endif %}
   </ul>

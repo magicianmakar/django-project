@@ -284,20 +284,37 @@
     $('.export-tracked-orders').click(function(e) {
         var form_data = $('form.filter-form').serialize() +'&'+$.param({ 'store': $(this).data("store") });
 
-        $.ajax({
-            url: '/api/export-tracked-orders',
-            type: 'POST',
-            data: form_data,
-            success: function (data) {
-                swal({
-                    text: 'Your request for Orders Export has been received. \nYour CSV file will be emailed to ' + data.email,
-                    title: 'Export Orders',
-                    type: 'success'
-                });
-            },
-            error: function (data) {
-                displayAjaxError('Export Orders', data);
+        swal({
+            title: 'Export Orders',
+            text: 'Do you want to export the current page Order IDs and Tracking numbers?',
+            animation: false,
+            showCancelButton: true,
+            confirmButtonText: "Export",
+            cancelButtonText: "Cancel",
+            closeOnCancel: true,
+            closeOnConfirm: false,
+            showLoaderOnConfirm: true,
+        },
+        function(isConfirmed) {
+            if (!isConfirmed) {
+                return;
             }
+
+            $.ajax({
+                url: '/api/export-tracked-orders',
+                type: 'POST',
+                data: form_data,
+                success: function (data) {
+                    swal({
+                        text: 'Your request for Orders Export has been received. \nYour CSV file will be emailed to ' + data.email,
+                        title: 'Export Orders',
+                        type: 'success'
+                    });
+                },
+                error: function (data) {
+                    displayAjaxError('Export Orders', data);
+                }
+            });
         });
     });
 

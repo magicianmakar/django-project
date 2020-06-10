@@ -251,60 +251,21 @@ class SupplementTestCase(PLSBaseTestCase):
         self.assertEqual(UserSupplementLabel.objects.all().count(), 1)
         response = self.client.post(self.get_url(), data=data)
 
-        url = reverse('pls:my_labels') + "?s=1"
+        kwargs = {'supplement_id': self.user_supplement.id + 1}
+        url = reverse('pls:user_supplement', kwargs=kwargs)
         self.assertRedirects(response, url)
         self.assertEqual(self.user.pl_supplements.count(), 2)
         self.assertEqual(UserSupplementImage.objects.count(), 1)
         self.assertEqual(UserSupplementLabel.objects.all().count(), 2)
 
 
-class MySupplementsTestCase(PLSBaseTestCase):
+class LabelHistoryTestCase(PLSBaseTestCase):
     def get_url(self):
-        return reverse('pls:my_supplements')
+        kwargs = {'supplement_id': self.user_supplement.id}
+        return reverse('pls:label_history', kwargs=kwargs)
 
     def test_login(self):
         self.do_test_login()
-
-    def test_get(self):
-        content = self.do_test_get()
-        self.assertEqual(content.count("product-imitation"), 1)
-
-
-class MyLabelsTestCase(PLSBaseTestCase):
-    def get_url(self):
-        return reverse('pls:my_labels')
-
-    def test_login(self):
-        self.do_test_login()
-
-    def test_get(self):
-        content = self.do_test_get()
-        self.assertIn("Found 1 label.", content)
-
-
-class AllLabelsTestCase(PLSBaseTestCase):
-    def get_url(self):
-        return reverse('pls:all_labels')
-
-    def test_login(self):
-        self.do_test_login()
-
-    def test_get(self):
-        content = self.do_test_get()
-        self.assertIn("Found 1 label.", content)
-
-
-class LabelDetailTestCase(PLSBaseTestCase):
-    def get_url(self):
-        kwargs = {'label_id': self.label.id}
-        return reverse('pls:label_detail', kwargs=kwargs)
-
-    def test_login(self):
-        self.do_test_login()
-
-    def test_get(self):
-        content = self.do_test_get()
-        self.assertIn(self.label.label_id_string, content)
 
     def test_post_comment_upload(self):
         self.client.force_login(self.user)
@@ -328,9 +289,7 @@ class LabelDetailTestCase(PLSBaseTestCase):
 
         response = self.client.post(self.get_url(), data=data)
         label = UserSupplementLabel.objects.get(id=self.label.id + 1)
-        kwargs = {'label_id': label.id}
-        url = reverse('pls:label_detail', kwargs=kwargs)
-        self.assertRedirects(response, url)
+        self.assertRedirects(response, self.get_url())
         self.assertEqual(label.comments.count(), 1)
         self.assertEqual(label.status, UserSupplementLabel.AWAITING_REVIEW)
         self.assertEqual(label.current_label_of.label_presets, label_presets)
@@ -385,6 +344,56 @@ class LabelDetailTestCase(PLSBaseTestCase):
         response = self.client.post(self.get_url(), data=data)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.label.comments.count(), 0)
+
+
+class AdminLabelHistoryTestCase(PLSBaseTestCase):
+    def get_url(self):
+        kwargs = {'supplement_id': self.user_supplement.id}
+        return reverse('pls:admin_label_history', kwargs=kwargs)
+
+    def test_login(self):
+        self.do_test_login()
+
+    def test_get(self):
+        content = self.do_test_get()
+        self.assertIn(self.user_supplement.current_label.label_id_string, content)
+
+
+class MySupplementsTestCase(PLSBaseTestCase):
+    def get_url(self):
+        return reverse('pls:my_supplements')
+
+    def test_login(self):
+        self.do_test_login()
+
+    def test_get(self):
+        content = self.do_test_get()
+        self.assertEqual(content.count("product-imitation"), 1)
+
+
+class AllUserSupplementsTestCase(PLSBaseTestCase):
+    def get_url(self):
+        return reverse('pls:all_user_supplements')
+
+    def test_login(self):
+        self.do_test_login()
+
+    def test_get(self):
+        content = self.do_test_get()
+        self.assertIn("Found 1 user supplement.", content)
+
+
+class LabelDetailTestCase(PLSBaseTestCase):
+    def get_url(self):
+        kwargs = {'label_id': self.label.id}
+        return reverse('pls:label_detail', kwargs=kwargs)
+
+    def test_login(self):
+        self.do_test_login()
+
+    def test_get(self):
+        content = self.do_test_get()
+        self.assertIn(self.label.label_id_string, content)
 
 
 class OrdersShippedWebHookTestCase(BaseTestCase):

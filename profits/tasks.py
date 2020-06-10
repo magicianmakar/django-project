@@ -6,6 +6,7 @@ from app.celery_base import celery_app, CaptureFailure
 
 from groovekart_core.models import GrooveKartStore
 from bigcommerce_core.models import BigCommerceStore
+from woocommerce_core.models import WooStore
 
 from . import utils
 from . import models
@@ -17,6 +18,8 @@ def fetch_facebook_insights(self, store_id, store_type, facebook_access_ids):
         store = GrooveKartStore.objects.get(pk=store_id)
     elif store_type == 'bigcommerce':
         store = BigCommerceStore.objects.get(pk=store_id)
+    elif store_type == 'woo':
+        store = WooStore.objects.get(pk=store_id)
 
     try:
         for access in models.FacebookAccess.objects.filter(id__in=facebook_access_ids):
@@ -110,4 +113,43 @@ def sync_bigcommerce_store_profits(self, sync_id, store_id):
                     'items': json.dumps([f'{i.get("quantity", 1)} x {i.get("name")}' for i in line_items]),
                 }
             )
+    sync.save()  # Update last sync
+
+
+@celery_app.task(bind=True, base=CaptureFailure)
+def sync_woocommerce_store_profits(self, sync_id, store_id):
+    sync = models.ProfitSync.objects.get(pk=sync_id)
+    store = WooStore.objects.get(pk=store_id)
+
+    limit = 100
+    page = 1
+
+    while True:
+        wcapi = store.get_wcapi()
+        orders = wcapi.get('orders/', params={
+            'per_page': limit,
+            'page': page,
+            'orderby': 'date'
+        }).json()
+        # Empty list usually means we reached the end
+        if 'Error' in orders:
+            break
+
+        for order in orders:
+            if order.get('date_created') and order.get('date_created') != '0000-00-00T00:00:00':
+                models.ProfitOrder.objects.update_or_create(
+                    sync=sync,
+                    order_id=order.get('id'),
+                    defaults={
+                        'date': arrow.get(order.get('date_created')).datetime,
+                        'order_name': order.get('number'),
+                        'amount': order.get('total'),
+                        'items': json.dumps([f'{i.get("quantity", 1)} x {i.get("name")}' for i in order.get('line_items', [])]),
+                    }
+                )
+
+        # Lesser results than limit means we reached the end
+        if len(orders) < limit:
+            break
+        page += 1
     sync.save()  # Update last sync

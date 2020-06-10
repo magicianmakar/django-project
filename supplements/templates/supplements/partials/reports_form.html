@@ -1,0 +1,59 @@
+{% load widget_tweaks %}
+
+<form role="form" autocomplete="off">
+  <div class="row" id="reports-config">
+
+    <div class="col-sm-4">
+        <div class="form-group">
+            <label class="control-label">Choose Report Type:</label>
+            <select name="report-type" class="form-control" id="config-type" value="#config-date-range-block">
+                <option value="#config-period-block" {% if not request.GET.period and request.GET %}selected="selected"{% endif %}>Period</option>
+                <option value="#config-date-range-block" {% if request.GET.start_date %}selected="selected"{% endif %}>Date Range</option>
+                <option value="#config-compare-block" {% if request.GET.compare %}selected="selected"{% endif %}>Compare</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="config-period-block" class="col-sm-4 config-block" {% if not request.GET.period and request.GET %}style="display: none;"{% endif %}>
+        <div class="form-group">
+        <label class="control-label">Period:</label>
+            {{ form.period|add_class:"form-control" }}
+        </div>
+    </div>
+
+    <div id="config-date-range-block" class="col-sm-4 config-block" {% if not request.GET.start_date %}style="display: none;"{% endif %}>
+        <div class="form-group">
+            <label class="control-label">Date Range:</label>
+            <div class="input-group input-daterange">
+                <div class="input-group-addon">
+                    <i class='fa fa-calendar'></i>
+                </div>
+                {{ form.start_date|add_class:"form-control" }}
+                <div class="input-group-addon">to</div>
+                {{ form.end_date|add_class:"form-control" }}
+                <div class="input-group-addon">
+                    <i class='fa fa-calendar'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="config-compare-block" class="col-sm-4 config-block" {% if not request.GET.compare %}style="display: none;"{% endif %}>
+        <div class="form-group">
+            <label class="control-label">Compare:</label>
+            {{ form.compare|add_class:"form-control" }}
+        </div>
+    </div>
+
+    <div class="col-sm-4">
+        <div class="form-group">
+            <label class="control-label">Interval:</label>
+            {{ form.interval|add_class:"form-control" }}
+        </div>
+    </div>
+
+  </div>
+
+  <input type="submit" class="btn btn-primary" value="Apply" />
+  <input type="button" class="btn btn-default reports-reset-btn" value="Clear" />
+</form>

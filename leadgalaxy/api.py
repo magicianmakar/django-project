@@ -44,6 +44,7 @@ from shopified_core.utils import (
     order_data_cache,
     add_http_schema,
     base64_encode,
+    clean_tracking_number,
     CancelledOrderAlert
 )
 
@@ -1869,7 +1870,7 @@ class ShopifyStoreApi(ApiBase):
             if not user.can('place_orders.sub', store):
                 raise PermissionDenied()
 
-        tracking_number = re.sub(r'[\n\r\t]', '', data.get('tracking_number')).strip()
+        tracking_number = clean_tracking_number(data.get('tracking_number'))
 
         try:
             order = ShopifyOrderTrack.objects.get(id=data.get('order'))
@@ -2608,13 +2609,15 @@ class ShopifyStoreApi(ApiBase):
             'hidden': data.get('hidden'),
             'store_id': data.get('store'),
             'user_id': user.id,
+            'cache_key': 'track_export_{}-{}'.format(user.id, data['store'])
         }
 
-        cache_key = 'track_export_{}_{}'.format(user.id, data['store'])
+        if cache.get(params['cache_key']):
+            return self.api_error("An orders export is running, please wait until it's complete  before starting a new one", status=422)
 
-        cache.set(cache_key, True, timeout=600)
+        cache.set(params['cache_key'], True, timeout=600)
 
-        tasks.generate_tracked_order_export.apply_async(args=[params], expires=180)
+        tasks.generate_tracked_order_export.apply_async(args=[params], expires=600)
 
         return self.api_success({
             'email': user.email

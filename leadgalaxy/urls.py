@@ -24,7 +24,6 @@ urlpatterns = [
     url(r'^acp/users/emails$', leadgalaxy.views.acp_users_emails, name='acp_users_emails'),
     url(r'^acp/groups$', leadgalaxy.views.acp_groups, name='acp_groups'),
     url(r'^acp/cards$', leadgalaxy.views.acp_cards, name='acp_cards'),
-    url(r'^acp/graph$', leadgalaxy.views.acp_graph, name='acp_graph'),
     url(r'^acp/d-black-users$', leadgalaxy.views.dropified_black_users, name='dropified_black_users'),
     url(r'^autocomplete/(?P<target>[a-z-]+)$', leadgalaxy.views.autocomplete),
     url(r'^upgrade-required$', leadgalaxy.views.upgrade_required, name='upgrade_required'),

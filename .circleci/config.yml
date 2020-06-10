@@ -116,11 +116,6 @@ jobs:
           - v4-dep-
 
       - run:
-          name: Install Codecov
-          command: |
-            sudo pip install codecov
-
-      - run:
           name: Django Tests
           command: |
             source venv/bin/activate
@@ -131,11 +126,6 @@ jobs:
           command: |
             source venv/bin/activate
             coverage report --skip-covered
-            coverage html --skip-covered
-      - run:
-          name: Codecov upload
-          command: |
-            codecov --token=1e92f142-d3e3-4ef4-9feb-e4146b378ca4
 
   statics:
     <<: *defaults
