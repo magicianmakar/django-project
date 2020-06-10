@@ -497,6 +497,7 @@ YOUTUBE_CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
 # CallFlex
 PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE = os.environ.get('PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE', '12000')  # in seconds.  1 hr per month for user
 PHONE_AUTOMATION_MONTH_LIMIT_LOCAL = os.environ.get('PHONE_AUTOMATION_MONTH_LIMIT_LOCAL', '12000')  # in seconds.  1 hr per month for user
+PHONE_AUTOMATION_WARNING_LIMIT = 0.75  # percent. when reached - send warning email
 TWILIO_SID = os.environ.get('TWILIO_SID')
 TWILIO_TOKEN = os.environ.get('TWILIO_TOKEN')
 if DEBUG:
@@ -519,7 +520,6 @@ BAREMETRICS_TAGS_FIELD = os.environ.get('BAREMETRICS_TAGS_FIELD', 753)
 # Baremetrics
 BAREMETRICS_ACCESS_TOKEN = os.environ.get('BAREMETRICS_ACCESS_TOKEN')
 BAREMETRICS_JWT_TOKEN_KEY = os.environ.get('BAREMETRICS_JWT_TOKEN_KEY')
-PHONE_AUTOMATION_WARNING_LIMIT = 0.75  # percent. when reached - send warning email
 
 # BigCommerce
 BIGCOMMERCE_APP_ID = os.environ.get('BIGCOMMERCE_APP_ID')
