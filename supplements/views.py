@@ -1546,7 +1546,7 @@ class Reports(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_labels')},
+            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Reports', 'url': reverse('pls:reports')},
         ]
 
