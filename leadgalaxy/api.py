@@ -1232,6 +1232,7 @@ class ShopifyStoreApi(ApiBase):
             'sync_delay_notify_highlight',
             'randomize_image_names',
             'price_update_for_increase',
+            'compare_at_enabled',
         ]
 
         for key in data:
@@ -2500,8 +2501,9 @@ class ShopifyStoreApi(ApiBase):
         markup_value = safe_float(data.get('markup_value', ''))
 
         if not data.get('markup_compare_value', '').strip():
-            return self.api_error('Markup Value for Compare at price is not set', status=422)
-        markup_compare_value = safe_float(data.get('markup_compare_value', ''))
+            markup_compare_value = None
+        else:
+            markup_compare_value = safe_float(data.get('markup_compare_value', ''))
 
         if data.get('id'):
             rule, created = PriceMarkupRule.objects.update_or_create(

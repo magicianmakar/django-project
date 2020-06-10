@@ -2,7 +2,6 @@ $('.delete-custom-product-btn').click(function(e) {
     e.preventDefault();
     var btn = $(this);
     var product = btn.data('id');
-    console.log(btn);
 
     swal({
         title: "Delete Saved Product",

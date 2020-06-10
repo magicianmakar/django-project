@@ -165,7 +165,6 @@
                     },
                 }).done(function (data) {
                     var variants = [];
-                    console.log(data.suggestions);
                     $.map(data.suggestions, function(el) {
                         variants.push({
                             id: el.data,
@@ -184,7 +183,6 @@
                         templateResult: formatRepo,
                         templateSelection: formatRepoSelection
                     }).on('select2:select', function(e) {
-                        console.log(e.params);
                         $v.new_product.variant_id = e.params.data.id;
                         $v.new_product.variant_title = e.params.data.text;
                         $v.new_product.variant_image = e.params.data.image;
@@ -205,7 +203,6 @@
 
                 $v.new_product.quantity = parseInt($('input.quantity-value', el).val()) || 1;
 
-                console.log($v.new_product);
                 this.variant.products.push($v.new_product);
 
                 this.resetSelector();

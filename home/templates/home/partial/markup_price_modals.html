@@ -29,7 +29,7 @@
                             <div class="row form-group">
                                 <label class="col-sm-2 control-label">Markup Type</label>
                                 <div class="col-sm-3">
-                                    <select name="markup_type" class="form-control">
+                                    <select name="markup_type" class="form-control" id="markup_type">
                                         <option value="margin_percent">Increase by Percentage</option>
                                         <option value="margin_amount">Increase by Amount</option>
                                         <option value="fixed_amount">Set to Fixed Amount</option>
@@ -38,16 +38,22 @@
                             </div>
 
                             <div class="row form-group">
-                                <label class="col-sm-2 control-label">Price</label>
-                                <div class="col-sm-3">
-                                    <input type="number" name="markup_value" placeholder="Markup for Price" class="form-control" required>
+                                <label class="col-sm-2 control-label">Price Markup</label>
+                                <div class="col-sm-3 ">
+                                    <div class="input-group price-markup-cont">
+                                        <input type="number" name="markup_value" placeholder="Markup for Price" class="form-control" required>
+                                        <span class="input-group-addon">%</span>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="row form-group">
-                                <label class="col-sm-2 control-label">Compare Price</label>
+                                <label class="col-sm-2 control-label">Compare at Markup</label>
                                 <div class="col-sm-3">
-                                    <input type="number" name="markup_compare_value" placeholder="Markup for Compare At" class="form-control" required>
+                                    <div class="input-group price-markup-cont">
+                                        <input type="number" name="markup_compare_value" placeholder="Markup for Compare At" class="form-control" required>
+                                        <span class="input-group-addon">%</span>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -80,8 +86,8 @@
                                     <th class="rule-markup_type">Min Price</th>
                                     <th>Max Price</th>
                                     <th>Markup Type</th>
-                                    <th>Price</th>
-                                    <th>Compare Price</th>
+                                    <th>Price Markup</th>
+                                    <th>Compare at Markup</th>
                                     <th style="width: 150px;"></th>
                                 </tr>
                             </thead>
@@ -106,8 +112,12 @@
                                     <td class="rule-min_price" style="width:100px">{{ rule.min_price | floatformat:2 }}</td>
                                     <td class="rule-max_price">{% if rule.max_price >= 0 %}{{ rule.max_price | floatformat:2 }}{% endif %}</td>
                                     <td class="rule-markup_type text-nowrap">{{ rule.get_markup_type_display }}</td>
-                                    <td class="rule-markup_value">{{ rule.markup_value | floatformat:2 }}</td>
-                                    <td class="rule-markup_compare_value">{{ rule.markup_compare_value | floatformat:2 }}</td>
+                                    <td class="rule-markup_value">{{ rule.markup_value | floatformat:2 }}
+                                        {% if rule.markup_type == 'margin_percent' %} % {% endif %}
+                                    </td>
+                                    <td class="rule-markup_compare_value">{% if rule.markup_compare_value %}{{ rule.markup_compare_value | floatformat:2 }}{% endif %}
+                                        {% if rule.markup_type == 'margin_percent' %} % {% endif %}
+                                    </td>
                                     <td class="text-right">
                                         <a href="#" class="edit-rule" title="Edit" style="padding: 8px;" data-id="{{ rule.id }}" data-toggle="modal" data-target="#markup-rule-modal">
                                             <i class="fa fa-edit"></i>

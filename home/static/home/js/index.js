@@ -889,6 +889,9 @@
                             $('#add-rule-form input[name="markup_value"]').val(markup_rule.markup_value);
                             $('#add-rule-form input[name="markup_compare_value"]').val(markup_rule.markup_compare_value);
                             $('#add-rule-form select[name="markup_type"]').val(markup_rule.markup_type);
+
+
+                            $('#add-rule-form #markup_type').trigger('change');
                         }
                     }
                 },
@@ -914,9 +917,29 @@
         }
     });
 
+
+    $('#add-rule-form #markup_type').on('change', function(e){
+
+        if ($(e.currentTarget).val() == 'margin_percent') {
+            $('#add-rule-form .price-markup-cont .input-group-addon').show();
+        }
+        else {
+            $('#add-rule-form .price-markup-cont .input-group-addon').hide();
+        }
+    });
+
+    $('#compare_at_enabled').on('change', function (e) {
+        if (e.currentTarget.checked) {
+            $('.compare-at-row').slideDown();
+        } else {
+            $('.compare-at-row').slideUp();
+        }
+
+    });
+
     var deleteMarkupRuleClicked = function(e) {
         e.preventDefault();
-        var btn = $(this);
+        var btn = $(e.currentTarget);
 
         swal({
                 title: "Delete Price Markup Rule",
@@ -980,7 +1003,7 @@
                     tr.find('.rule-min_price').text(parseFloat(rule.min_price).toFixed(2));
                     tr.find('.rule-max_price').text(rule.max_price < 0 ? '' : parseFloat(rule.max_price).toFixed(2));
                     tr.find('.rule-markup_value').text(parseFloat(rule.markup_value).toFixed(2));
-                    tr.find('.rule-markup_compare_value').text(parseFloat(rule.markup_compare_value).toFixed(2));
+                    tr.find('.rule-markup_compare_value').text(rule.markup_compare_value ? parseFloat(rule.markup_compare_value).toFixed(2) : '');
                     tr.find('.rule-markup_type').text(rule.markup_type_display);
 
                     tr.find('.edit-rule').attr('data-id', rule.id);
@@ -1003,7 +1026,6 @@
 
     $('#chq-store-create-form').on('submit', function(e) {
         e.preventDefault();
-        console.log('submited');
         var url = $('#chq_store_api_url').val().match(/[^\/\.]+\.commercehq(?:dev|testing)?\.com/);
 
         if (!url || url.length != 1) {
@@ -1041,7 +1063,6 @@
 
         var store_data = $('#chq-store-update-form').serialize();
         store_data = store_data+'&csrfmiddlewaretoken='+Cookies.get('csrftoken');
-        console.log(store_data);
 
         $.ajax({
             url: upd_url,

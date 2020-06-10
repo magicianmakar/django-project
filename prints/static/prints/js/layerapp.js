@@ -318,7 +318,6 @@ $('.mockup-save').on('click', function(e) {
                 format: 'jpeg',
                 quality: 1
             }).then(function(image) {
-                console.log((image.size / 1024 / 1024).toFixed(2) + 'MB');  // Check size
                 var filename = inputKey + '.jpg';
                 uploader.addFile(image, filename);
                 d.resolve({'file': filename, 'name': inputName, 'key': inputKey});

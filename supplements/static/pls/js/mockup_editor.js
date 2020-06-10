@@ -77,20 +77,6 @@ var MockupEditor = (function() {
                 return mockupClone;
             });
 
-            // Resize and save mockups
-            if (window.location.href.indexOf('debug=1') > -1) {
-                console.log(JSON.stringify($.map(dimensions, function(dimension) {
-                    var dimensionMockup = {};
-                    $.each(dimension, function(key, value) {
-                        try {
-                            dimensionMockup[key] = parseFloat(value.toFixed(4));
-                        } catch(err) {
-                            dimensionMockup[key] = value;
-                        }
-                    });
-                    return dimensionMockup;
-                })));
-            }
             return dimensions;
         },
         combineLayers: function() {

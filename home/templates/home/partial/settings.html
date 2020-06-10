@@ -43,6 +43,22 @@
                 </div>
 
                 <div class="row">
+
+                    <div class="col-sm-offset-1 col-sm-5">
+                        <div class="form-group">
+                            <label for="compare_at_enabled" class="col-sm-4  control-label">
+                               Enable Compare At Override
+                                {% include 'partial/help_tooltip.html' with help="If enabled, you can set your own compare at price markup. Otherwise, supplier's non-sale price will be used. " qtipstyle="color:#BBB" %}
+                            </label>
+                            <div class="col-sm-3">
+                                <input type="checkbox" class="js-switch" id="compare_at_enabled"
+                                       name="compare_at_enabled" {% if config.compare_at_enabled %}checked="checked"{% endif %}>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="row compare-at-row" style="{% if not config.compare_at_enabled %}display:none;{% endif %}">
                     <div class="col-sm-offset-1 col-sm-5">
                         <div class="form-group">
                             <label for="auto_compare_at" class="col-sm-4 control-label" style="padding-top:0">

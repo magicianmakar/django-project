@@ -128,15 +128,7 @@
                             }
 
                             setupVariantSelection(product_data.shopified);
-                            console.log({
-                                id: product_data.shopified,
-                                title: product_data.title,
-                                short_title: truncate(product_data.title, 40),
-                                image: product_data.image,
-                                variant_id: 0,
-                                variant_title: '',
-                                variant_image: null,
-                            });
+
                             $v.new_product = {
                                 id: product_data.shopified,
                                 title: product_data.title,

@@ -191,7 +191,6 @@ function addOrdersToPrint(orders) {
     itemsReadyForPrint = {};
     totalCostItemsPrint = 0.0;
 
-    console.log(orders);
     $('#prints-total-cost').text('-');
     $('#modal-place-orders-dropified-print .table tbody > *').remove();
     var itemsLength = $.map(orders, function(order) {

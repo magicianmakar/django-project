@@ -2305,8 +2305,8 @@ class PriceMarkupRule(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     min_price = models.FloatField(default=0.0)
     max_price = models.FloatField(default=0.0)
-    markup_value = models.FloatField(default=0.0)
-    markup_compare_value = models.FloatField(default=0.0)
+    markup_value = models.FloatField(default=0.0, null=True)
+    markup_compare_value = models.FloatField(default=0.0, null=True)
     markup_type = models.CharField(max_length=25, choices=PRICE_MARKUP_TYPES, default=PRICE_MARKUP_TYPES[0][0])
 
     def __str__(self):

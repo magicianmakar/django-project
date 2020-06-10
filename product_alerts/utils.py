@@ -385,7 +385,10 @@ def calculate_price(user, old_value, new_value, current_price, current_compare_a
         new_compare_at = safe_float(str(int(new_compare_at)) + '.' + ('0' if auto_compare_at_cents <= 9 else '') + str(auto_compare_at_cents))
         new_compare_at = round(new_compare_at, 2)
 
-    if new_price is None and new_compare_at is None:
-        return [current_price, current_compare_at]
+    if new_compare_at is None:
+        new_compare_at = current_compare_at
+
+    if new_price is None:
+        new_price = current_price
 
     return [new_price, new_compare_at]
