@@ -9,18 +9,19 @@
 {% block tab_content %}
 
 <div class="row">
-  <div class="col-md-6 col-sm-6">
-    <h2 class="h2">Payment #{{ order.stripe_transaction_id }}</h2>
+  <div class="col-md-8 col-sm-8">
+    <span class="h2">Receipt for Payment #{{ order.stripe_transaction_id }}</span>
   </div>
-  <div class="col-md-6 col-sm-6 text-right">
+  <div class="col-md-4 col-sm-4 text-right">
     <span class="h3">Shipping Address</span>
   </div>
 </div>
 <div class="row">
   <div class="col-md-6 col-sm-6">
-    <span class="h5">Your store order number is #{{ order.order_number }}. A summary of your order is shown below.</span>
+    <span class="h5">A summary of your order is shown below.</span>
   </div>
   <div class="col-md-6 col-sm-6 text-right">
+    <p><b>Order #</b>{{ order.order_number }}</p>
     <span class="h5"><b>{{ shipping_address|key_value:'first_name' }} {{ shipping_address|key_value:'last_name' }}</b></span>
   </div>
 </div>
@@ -44,8 +45,8 @@
   <thead>
     <th>Item</th>
     <th>Title</th>
-    <th>Price</th>
     <th>Sku</th>
+    <th>Price</th>
   </thead>
   <tbody>
     {% for item in line_items %}
@@ -56,8 +57,8 @@
         {% endfor %}
       </td>
       <td class="product-cell">{{ item.supplement.title }}</td>
-      <td class="product-cell">{{ item.quantity }}&times;{{ item.supplement.cost_price }}</td>
       <td class="product-cell">{{ item.sku }}</td>
+      <td class="product-cell">{{ item.quantity }} &times; ${{ item.supplement.cost_price }}</td>
     {% endfor %}
   </tbody>
 </table>
