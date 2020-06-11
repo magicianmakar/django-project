@@ -118,6 +118,11 @@ jobs:
           - v4-dep-
 
       - run:
+          name: Install Coveralls
+          command: |
+            sudo pip install codecov==2.1.4
+
+      - run:
           name: Django Tests
           command: |
             source venv/bin/activate
@@ -128,6 +133,10 @@ jobs:
           command: |
             source venv/bin/activate
             coverage report --skip-covered
+      - run:
+          name: Coveralls upload
+          command: |
+            COVERALLS_REPO_TOKEN=7JAX4XqDihBV5EE5FHL4oGyI9Ybg6PRJr coveralls
 
   statics:
     <<: *defaults

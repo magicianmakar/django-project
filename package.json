@@ -12,7 +12,9 @@
   },
   "scripts": {
     "postinstall": "bower install",
-    "jshint": "scripts/jshint.sh"
+    "jshint": "scripts/jshint.sh",
+    "server": "python manage.py runserver",
+    "celery": "celery -A app.celery_base worker -Q celery,priority_high -O fair -l INFO"
   },
   "cacheDirectories": [
     "node_modules",
