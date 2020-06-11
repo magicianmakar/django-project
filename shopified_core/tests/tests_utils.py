@@ -434,9 +434,9 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(clean_tracking_number('YC123456789BN\nLC0000123456789CR'), 'YC123456789BN,LC0000123456789CR')
 
         # Single Tracking number but splitted in two lines
-        self.assertEqual(clean_tracking_number(f'CNCAI2006110481392 8'), 'CNCAI20061104813928')
+        self.assertEqual(clean_tracking_number('CNCAI2006110481392 8'), 'CNCAI20061104813928')
         self.assertEqual(clean_tracking_number(f'CNCAI2006110481392{" " * 10}8'), 'CNCAI20061104813928')
-        self.assertEqual(clean_tracking_number(f'CNCAI2006110481392\n8'), 'CNCAI20061104813928')
+        self.assertEqual(clean_tracking_number('CNCAI2006110481392\n8'), 'CNCAI20061104813928')
         self.assertEqual(clean_tracking_number(f'CNCAI2006110481392{" " * 10}\n{" " * 10}8'), 'CNCAI20061104813928')
 
 
