@@ -1432,6 +1432,9 @@ def webhook(request, provider, option):
 
             return JsonResponse({'status': 'ok'})
 
+    elif provider == 'activecampaign':
+        return JsonResponse({'status': 'ok'})
+
     else:
         capture_message('Unknown Webhook Provider')
         return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'}, status=500)
