@@ -417,12 +417,27 @@ class UtilsTestCase(BaseTestCase):
                 self.assertEqual(normalize_product_title(f'{title} {s}'), match)
 
     def test_clean_tracking_number(self):
+        # Single Tracking number
         self.assertEqual(clean_tracking_number('LC123456789BN'), 'LC123456789BN')
         self.assertEqual(clean_tracking_number('   LC123456789BN   '), 'LC123456789BN')
         self.assertEqual(clean_tracking_number('XC123456789BN\n   '), 'XC123456789BN')
+
+        # Single but duplicate Tracking number
+        self.assertEqual(clean_tracking_number('LC123456789BN\nLC123456789BN'), 'LC123456789BN')
+
+        # More than one trackign number
         self.assertEqual(clean_tracking_number('YC123456789BN\nLC123456789CR'), 'YC123456789BN,LC123456789CR')
+        self.assertEqual(clean_tracking_number('YC123456789BN\nLC123456789CR\nLC123456789DS'), 'YC123456789BN,LC123456789CR,LC123456789DS')
         self.assertEqual(clean_tracking_number(f'\tRC123456789BN{" " * 10}LC123456789CR\n'), 'RC123456789BN,LC123456789CR')
         self.assertEqual(clean_tracking_number(f'ZC123456789BN{" " * 10}\n{" " * 10}LC123456789CR'), 'ZC123456789BN,LC123456789CR')
+
+        self.assertEqual(clean_tracking_number('YC123456789BN\nLC0000123456789CR'), 'YC123456789BN,LC0000123456789CR')
+
+        # Single Tracking number but splitted in two lines
+        self.assertEqual(clean_tracking_number(f'CNCAI2006110481392 8'), 'CNCAI20061104813928')
+        self.assertEqual(clean_tracking_number(f'CNCAI2006110481392{" " * 10}8'), 'CNCAI20061104813928')
+        self.assertEqual(clean_tracking_number(f'CNCAI2006110481392\n8'), 'CNCAI20061104813928')
+        self.assertEqual(clean_tracking_number(f'CNCAI2006110481392{" " * 10}\n{" " * 10}8'), 'CNCAI20061104813928')
 
 
 class ShippingHelperFunctionsTestCase(BaseTestCase):
