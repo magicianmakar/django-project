@@ -58,6 +58,7 @@ from product_alerts.managers import ProductChangeManager
 from product_alerts.utils import (
     get_supplier_variants,
     variant_index_from_supplier_sku,
+    parse_supplier_sku
 )
 
 from product_feed.feed import (
@@ -563,6 +564,13 @@ def sync_shopify_product_quantities(self, product_id):
         product = ShopifyProduct.objects.get(pk=product_id)
         product_data = utils.get_shopify_product(product.store, product.shopify_id)
 
+        variants_map = product.get_variant_mapping()
+        variants_map = {key: json.loads(value) for key, value in list(variants_map.items())}
+        for variant in product_data['variants']:
+            attributes = variant.get('attributes', [])
+            options = [{'title': option['option']} for option in attributes]
+            variants_map.setdefault(str(variant['id']), options)
+
         if not product.default_supplier:
             return
 
@@ -583,8 +591,12 @@ def sync_shopify_product_quantities(self, product_id):
                         else:
                             continue
 
-                product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
-                time.sleep(0.5)
+                variant_sku = ';'.join(f"{option['option_group']}:{option['option_id']}" for option in parse_supplier_sku(sku))
+                parsed_sku = ';'.join(f"{option['sku']}" for option in variants_map[str(product_data['variants'][idx]['id'])])
+
+                if parsed_sku == variant_sku:
+                    product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
+                    time.sleep(0.5)
 
         cache.delete('product_inventory_sync_shopify_{}_{}'.format(product.id, product.default_supplier.id))
 
