@@ -8,6 +8,7 @@ import boto.elastictranscoder
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -52,7 +53,7 @@ SHOPIFY_USAGE_STATUSES = (
 
 class TwilioAutomation(models.Model):
     DEFAULT_TITLE = "Untitled CallFlow"
-    user = models.ForeignKey(User, related_name='twilio_automations', null=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='twilio_automations', null=True, blank=True, on_delete=models.CASCADE)
 
     title = models.CharField(max_length=255, default='')
     first_step = models.IntegerField(default=0)
@@ -163,8 +164,8 @@ class TwilioCompany(models.Model):
 
 class TwilioPhoneNumber(models.Model):
     user = models.ForeignKey(User, related_name='twilio_phone_numbers', on_delete=models.CASCADE)
-    automation = models.ForeignKey(TwilioAutomation, related_name='phones', null=True, on_delete=models.CASCADE)
-    company = models.ForeignKey(TwilioCompany, related_name='phones', null=True, on_delete=models.CASCADE)
+    automation = models.ForeignKey(TwilioAutomation, related_name='phones', null=True, blank=True, on_delete=models.CASCADE)
+    company = models.ForeignKey(TwilioCompany, related_name='phones', null=True, blank=True, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default='')
 
     incoming_number = models.CharField(max_length=50, default='', blank=True)
@@ -173,10 +174,10 @@ class TwilioPhoneNumber(models.Model):
     type = models.CharField(max_length=50, default='tollfree', choices=PHONE_NUMBER_TYPES)
     country_code = models.CharField(max_length=10, default='', blank=True)
     twilio_sid = models.CharField(max_length=50, default='', blank=True)
-    twilio_metadata = JSONField(default=dict)
+    twilio_metadata = JSONField(default=dict, blank=True, encoder=DjangoJSONEncoder)
     sms_enabled = models.BooleanField(default=False)
     custom_subscription = models.ForeignKey(CustomStripeSubscription, related_name='twilio_phone_numbers', null=True,
-                                            on_delete=models.CASCADE)
+                                            blank=True, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
 
@@ -192,6 +193,12 @@ class TwilioPhoneNumber(models.Model):
 
     def __str__(self):
         return f'{self.title} ({self.incoming_number})'
+
+    def refresh_phone_properties(self):
+        if not settings.DEBUG and self.twilio_sid:
+            client = get_twilio_client()
+            number = client.incoming_phone_numbers(self.twilio_sid).fetch()
+            self.twilio_metadata = number._properties
 
     def last_two_month_usage(self):
         date_start = arrow.get(timezone.now()).replace(hour=0, minute=0, second=0, day=1, months=-1).datetime

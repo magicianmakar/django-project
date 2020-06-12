@@ -44,7 +44,7 @@ class TwilioAutomationForm(forms.ModelForm):
 
     class Meta:
         model = TwilioAutomation
-        exclude = ('user',)
+        exclude = []
 
 
 class TwilioPhoneNumberForm(forms.ModelForm):

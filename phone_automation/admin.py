@@ -71,6 +71,11 @@ class TwilioPhoneNumberAdmin(admin.ModelAdmin):
     def plan(self, obj):
         return obj.user.profile.plan
 
+    def save_model(self, request, instance, *args, **kwargs):
+        instance.refresh_phone_properties()
+
+        super(TwilioPhoneNumberAdmin, self).save_model(request, instance, *args, **kwargs)
+
 
 @admin.register(TwilioStep)
 class TwilioStepAdmin(admin.ModelAdmin):

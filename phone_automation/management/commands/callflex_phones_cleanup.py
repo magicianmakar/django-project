@@ -1,6 +1,10 @@
 from datetime import timedelta
+
 from django.utils import timezone
+from django.db.models import Q
+
 from lib.exceptions import capture_exception
+
 from phone_automation.models import TwilioPhoneNumber
 from phone_automation.utils import get_twilio_client
 from shopified_core.management import DropifiedBaseCommand
@@ -39,7 +43,8 @@ class Command(DropifiedBaseCommand):
 
         # Deleting phone which passed 90+14 days inactivity
         exp_date = timezone.now() + timedelta(days=-104)
-        user_phones = TwilioPhoneNumber.objects
+        # Never delete Dropified CS Number: +18443112873
+        user_phones = TwilioPhoneNumber.objects.filter(~Q(incoming_number='+18443112873'))
         if options['user_id']:
             user_phones = user_phones.filter(user_id=options['user_id'])
 
