@@ -1091,7 +1091,8 @@ class OrderDetailMixin(LoginRequiredMixin, View):
             id=i.id,
             sku=i.label.sku,
             quantity=i.quantity,
-            supplement=i.label.user_supplement.to_dict()
+            supplement=i.label.user_supplement.to_dict(),
+            line_total="${:.2f}".format((i.amount * i.quantity) / 100.)
         ) for i in order.order_items.all()]
 
         util = payment.Util()

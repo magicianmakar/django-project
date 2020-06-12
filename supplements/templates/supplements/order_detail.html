@@ -47,6 +47,7 @@
     <th>Title</th>
     <th>Sku</th>
     <th>Price</th>
+    <th>Total</th>
   </thead>
   <tbody>
     {% for item in line_items %}
@@ -59,6 +60,7 @@
       <td class="product-cell">{{ item.supplement.title }}</td>
       <td class="product-cell">{{ item.sku }}</td>
       <td class="product-cell">{{ item.quantity }} &times; ${{ item.supplement.cost_price }}</td>
+      <td class="product-cell">{{ item.line_total }}</td>
     {% endfor %}
   </tbody>
 </table>

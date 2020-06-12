@@ -1,3 +1,4 @@
+from django.db.models import F, Sum
 from django.shortcuts import reverse
 from django.utils.html import format_html
 
@@ -206,8 +207,8 @@ class PLSOrderMixin:
 
     @property
     def item_total(self):
-        total = sum(self.order_items.values_list('amount', flat=True))
-        return "${:.2f}".format(total / 100.)
+        result = self.order_items.aggregate(total=Sum(F('amount') * F('quantity')))
+        return "${:.2f}".format(result['total'] / 100.)
 
 
 class PLSOrderLineMixin:
