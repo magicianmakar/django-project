@@ -363,21 +363,21 @@ class MockupType(models.Model):
             ]
         elif 'colored-container-' in self.slug:
             presets = [
-                [{'left': 0.34, 'top': -0.93, 'size': 0.45}],
-                [{'left': 0.34, 'top': -0.93, 'size': 0.45, 'layers': {'shadow': False}}],
-                [{'left': -0.1, 'top': -1.6, 'size': 0.66}],
-                [{'left': -0.1, 'top': -1.6, 'size': 0.66, 'layers': {'shadow': False}}],
+                [{'left': 0.22, 'top': -0.97, 'size': 0.60}],
+                [{'left': 0.22, 'top': -0.97, 'size': 0.60, 'layers': {'shadow': False}}],
+                [{'left': -0.15, 'top': -0.92, 'size': 0.6}],
+                [{'left': -0.15, 'top': -0.92, 'size': 0.6, 'layers': {'shadow': False}}],
                 [
-                    {'name': 'Left', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': -0.137, 'bgTop': 0.045, 'bgSize': 0.78},
-                    {'name': 'Right', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.3525, 'bgTop': 0.045, 'bgSize': 0.78},
-                    {'name': 'Top', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.03, 'bgTop': -0.015, 'bgSize': 0.9005}
+                    {'name': 'Left', 'left': 0.22, 'top': -0.97, 'size': 0.60, 'bgLeft': -0.137, 'bgTop': 0.045, 'bgSize': 0.78},
+                    {'name': 'Right', 'left': 0.22, 'top': -0.97, 'size': 0.60, 'bgLeft': 0.3525, 'bgTop': 0.045, 'bgSize': 0.78},
+                    {'name': 'Top', 'left': 0.22, 'top': -0.97, 'size': 0.60, 'bgLeft': 0.03, 'bgTop': -0.015, 'bgSize': 0.9005}
                 ],
                 [
-                    {'name': '3 Left', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': -0.0825, 'bgTop': 0.23, 'bgSize': 0.5},
-                    {'name': '3 Right', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.585, 'bgTop': 0.23, 'bgSize': 0.5},
-                    {'name': '2 Left', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.01, 'bgTop': 0.19, 'bgSize': 0.5738},
-                    {'name': '2 Right', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.38, 'bgTop': 0.19, 'bgSize': 0.5738},
-                    {'name': 'Top', 'left': 0.34, 'top': -0.93, 'size': 0.45, 'bgLeft': 0.1545, 'bgTop': 0.15, 'bgSize': 0.6542}
+                    {'name': '3 Left', 'left': 0.22, 'top': -0.97, 'size': 0.60, 'bgLeft': -0.0825, 'bgTop': 0.23, 'bgSize': 0.5},
+                    {'name': '3 Right', 'left': 0.22, 'top': -0.97, 'size': 0.60, 'bgLeft': 0.585, 'bgTop': 0.23, 'bgSize': 0.5},
+                    {'name': '2 Left', 'left': 0.22, 'top': -0.97, 'size': 0.60, 'bgLeft': 0.01, 'bgTop': 0.19, 'bgSize': 0.5738},
+                    {'name': '2 Right', 'left': 0.22, 'top': -0.97, 'size': 0.60, 'bgLeft': 0.38, 'bgTop': 0.19, 'bgSize': 0.5738},
+                    {'name': 'Top', 'left': 0.22, 'top': -0.97, 'size': 0.60, 'bgLeft': 0.1545, 'bgTop': 0.15, 'bgSize': 0.6542}
                 ]
             ]
         else:
