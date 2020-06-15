@@ -312,7 +312,71 @@ class LabelHistoryTestCase(PLSBaseTestCase):
         self.assertRedirects(response, self.get_url())
         self.assertEqual(self.label.comments.count(), 1)
 
-    def test_post_approve(self):
+    def test_attempt_to_approve_as_user(self):
+        self.client.force_login(self.user)
+        data = dict(
+            action=self.label.APPROVED,
+        )
+        self.label.sku = '123'
+        self.label.status = self.label.AWAITING_REVIEW
+        self.label.save()
+
+        mock_response = MagicMock()
+        with open('app/static/example-label.pdf', 'rb') as reader:
+            mock_response.content = reader.read()
+
+        return_urls = [
+            'http://example.com/test.pdf',
+            'http://example.com/test.jpg',
+        ]
+
+        self.user.profile.plan.permissions.filter(name='pls_admin.use').delete()
+        with patch('product_common.lib.views.aws_s3_upload',
+                   side_effect=return_urls), \
+                patch('requests.get', return_value=mock_response):
+
+            self.assertEqual(self.label.comments.count(), 0)
+            self.client.post(self.get_url(), data=data)
+            self.assertEqual(self.label.comments.count(), 0)
+
+            self.label.refresh_from_db()
+            self.assertNotEqual(self.label.status, self.label.APPROVED)
+
+    def test_post_error(self):
+        self.client.force_login(self.user)
+        data = dict(
+            action="error",
+        )
+
+        self.assertEqual(self.label.comments.count(), 0)
+        response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.label.comments.count(), 0)
+
+
+class AdminLabelHistoryTestCase(PLSBaseTestCase):
+    def get_url(self):
+        kwargs = {'supplement_id': self.user_supplement.id}
+        return reverse('pls:admin_label_history', kwargs=kwargs)
+
+    def test_login(self):
+        self.do_test_login()
+
+    def test_get(self):
+        content = self.do_test_get()
+        self.assertIn(self.user_supplement.current_label.label_id_string, content)
+
+    def test_admin_permission_access(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+        self.user.profile.plan.permissions.filter(name='pls_admin.use').delete()
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 403)
+
+    def test_approve_label_as_admin(self):
         self.client.force_login(self.user)
         data = dict(
             action=self.label.APPROVED,
@@ -339,30 +403,6 @@ class LabelHistoryTestCase(PLSBaseTestCase):
 
             self.label.refresh_from_db()
             self.assertTrue(self.label.url.endswith('pdf'))
-
-    def test_post_error(self):
-        self.client.force_login(self.user)
-        data = dict(
-            action="error",
-        )
-
-        self.assertEqual(self.label.comments.count(), 0)
-        response = self.client.post(self.get_url(), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(self.label.comments.count(), 0)
-
-
-class AdminLabelHistoryTestCase(PLSBaseTestCase):
-    def get_url(self):
-        kwargs = {'supplement_id': self.user_supplement.id}
-        return reverse('pls:admin_label_history', kwargs=kwargs)
-
-    def test_login(self):
-        self.do_test_login()
-
-    def test_get(self):
-        content = self.do_test_get()
-        self.assertIn(self.user_supplement.current_label.label_id_string, content)
 
 
 class MySupplementsTestCase(PLSBaseTestCase):

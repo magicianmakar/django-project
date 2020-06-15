@@ -716,10 +716,7 @@ class LabelHistory(UserSupplementView):
 
     @transaction.atomic
     def post(self, request, supplement_id):
-        user = request.user
-        user_name = user.get_full_name()
-
-        user_supplement = self.get_supplement(user, supplement_id)
+        user_supplement = self.get_supplement(request.user, supplement_id)
         label_id = user_supplement.current_label.id
 
         if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
@@ -746,7 +743,7 @@ class LabelHistory(UserSupplementView):
                 upload_url = form.cleaned_data['upload_url']
                 if upload_url:
                     user_supplement.label_presets = request.POST.get('label_presets') or '{}'
-                    self.save_label(user, upload_url, user_supplement)
+                    self.save_label(request.user, upload_url, user_supplement)
                     user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
                     user_supplement.current_label.save()
 
@@ -759,26 +756,7 @@ class LabelHistory(UserSupplementView):
 
                 return redirect(reverse_url)
 
-        elif action in (label.APPROVED, label.REJECTED):
-            label.status = action
-            label.save()
-
-            label_class = 'label-danger'
-            if action == label.APPROVED:
-                label_class = 'label-primary'
-                # If a label does not have SKU, needs to be generated for barcode
-                if label.sku == '':
-                    label.generate_sku()
-                self.add_barcode_to_label(label)
-                label.save()
-
-            comment = (f"<strong>{user_name}</strong> set the status to "
-                       f"<span class='label {label_class}'>"
-                       f"{label.status_string}</span>")
-            self.create_comment(comments, comment, new_status=action)
-            return redirect(reverse_url)
-
-        context = self.get_supplement_data(user, user_supplement.id)
+        context = self.get_supplement_data(request.user, user_supplement.id)
         context.update({
             'breadcrumbs': self.get_breadcrumbs(supplement_id),
             'comment_form': form,
@@ -803,6 +781,34 @@ class AdminLabelHistory(LabelHistory):
     def get_redirect_url(self, supplement_id):
         kwargs = {'supplement_id': supplement_id}
         return reverse('pls:admin_label_history', kwargs=kwargs)
+
+    @transaction.atomic
+    def post(self, request, supplement_id):
+        user_supplement = self.get_supplement(request.user, supplement_id)
+        label = user_supplement.current_label
+        action = request.POST.get('action')
+
+        if action in (label.APPROVED, label.REJECTED):
+            label.status = action
+            label.save()
+
+            label_class = 'label-danger'
+            if action == label.APPROVED:
+                label_class = 'label-primary'
+                # If a label does not have SKU, needs to be generated for barcode
+                if label.sku == '':
+                    label.generate_sku()
+                self.add_barcode_to_label(label)
+                label.save()
+
+            comment = (f"<strong>{request.user.get_full_name()}</strong> "
+                       f"set the status to <span class='label {label_class}'>"
+                       f"{label.status_string}</span>")
+            self.create_comment(label.comments, comment, new_status=action)
+            return redirect(self.get_redirect_url(user_supplement.id))
+
+        # Call action to comment label for admins
+        return super().post(request, supplement_id)
 
 
 class MySupplements(LoginRequiredMixin, View):
