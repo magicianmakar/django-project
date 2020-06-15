@@ -304,7 +304,15 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
         if form.is_valid():
             order_number = form.cleaned_data['order_number']
             if order_number:
-                queryset = queryset.filter(order_number=order_number)
+                try:
+                    order_number, order_id = order_number.split('-')
+                except ValueError:
+                    queryset = queryset.filter(order_number=order_number)
+                else:
+                    try:
+                        queryset = queryset.filter(id=order_id)
+                    except ValueError:
+                        queryset = queryset.filter(order_number=order_number)
 
             status = form.cleaned_data['status']
             if status:
@@ -413,7 +421,10 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 except ValueError:
                     queryset = queryset.filter(pls_order__order_number=order_number)
                 else:
-                    queryset = queryset.filter(pls_order_id=order_id)
+                    try:
+                        queryset = queryset.filter(pls_order_id=order_id)
+                    except ValueError:
+                        queryset = queryset.filter(pls_order__order_number=order_number)
 
             status = form.cleaned_data['status']
             if status:
