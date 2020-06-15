@@ -1309,9 +1309,8 @@ class OrderItemListView(common_views.OrderItemListView):
 
 class GenerateLabel(LoginRequiredMixin, View):
     def get(self, request, line_id):
-        use_latest = request.GET.get('use_latest', False)
         line_item = get_object_or_404(PLSOrderLine, id=line_id)
-        base_label_pdf = get_order_number_label(line_item, use_latest)
+        base_label_pdf = get_order_number_label(line_item)
 
         output = BytesIO()
         PdfWriter().write(output, base_label_pdf)

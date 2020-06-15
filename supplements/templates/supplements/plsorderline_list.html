@@ -74,7 +74,7 @@
       <td>{{ line_item.label_status_string }}</td>
       <td>
         <a href="{% url 'pls:generate_label' line_item.id %}"
-          class='download-order-item-label'
+          class='download-label'
           target="_blank"
           data-item-id="{{ line_item.id }}">
           Download
@@ -89,12 +89,12 @@
 
 {% include "supplements/partials/paging.html" %}
 
-{% include "supplements/partials/current_label_info_modal.html" %}
-
 {% endblock %}
 
 {% block extrajs %}
 <script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'pls/js/plsorderline_list.js' %}"></script>
+<script type='application/javascript'>
+  $("#id_date").datepicker();
+</script>
 {% endblock %}
