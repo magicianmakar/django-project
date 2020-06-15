@@ -380,6 +380,44 @@ class MockupType(models.Model):
                     {'name': 'Top', 'left': 0.22, 'top': -0.97, 'size': 0.60, 'bgLeft': 0.1545, 'bgTop': 0.15, 'bgSize': 0.6542}
                 ]
             ]
+        elif self.slug == '2500cc-powder-container':
+            presets = [
+                [{'left': 0.17, 'top': -0.57, 'size': 0.64}],
+                [{'left': 0.17, 'top': -0.57, 'size': 0.64, 'layers': {'shadow': False}}],
+                [{'left': -0.13, 'top': -0.57, 'size': 0.64}],
+                [{'left': -0.13, 'top': -0.57, 'size': 0.64, 'layers': {'shadow': False}}],
+                [
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': -0.172, 'bgTop': 0.1, 'bgSize': 0.77},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.4025, 'bgTop': 0.1, 'bgSize': 0.77},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.0725, 'bgTop': 0.07, 'bgSize': 0.85}
+                ],
+                [
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': -0.11, 'bgTop': 0.27, 'bgSize': 0.51},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.59, 'bgTop': 0.27, 'bgSize': 0.51},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': -0.02, 'bgTop': 0.21, 'bgSize': 0.61},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.4, 'bgTop': 0.21, 'bgSize': 0.61},
+                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.15, 'bgTop': 0.16, 'bgSize': 0.7}
+                ],
+            ]
+        elif self.slug == 'sour-gummies-bottle':
+            presets = [
+                [{'left': 0.2, 'top': -0.5, 'size': 0.68}],
+                [{'left': 0.2, 'top': -0.5, 'size': 0.68, 'layers': {'shadow': False}}],
+                [{'left': -0.13, 'top': -0.55, 'size': 0.71}],
+                [{'left': -0.13, 'top': -0.55, 'size': 0.71, 'layers': {'shadow': False}}],
+                [
+                    {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': -0.222, 'bgTop': 0.15, 'bgSize': 0.8},
+                    {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': 0.425, 'bgTop': 0.15, 'bgSize': 0.8},
+                    {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': 0.06, 'bgTop': 0.11, 'bgSize': 0.88}
+                ],
+                [
+                    {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': -0.14, 'bgTop': 0.35, 'bgSize': 0.51},
+                    {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': 0.62, 'bgTop': 0.35, 'bgSize': 0.51},
+                    {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': -0.02, 'bgTop': 0.29, 'bgSize': 0.61},
+                    {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': 0.4, 'bgTop': 0.29, 'bgSize': 0.61},
+                    {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': 0.15, 'bgTop': 0.24, 'bgSize': 0.7}
+                ],
+            ]
         else:
             presets = []
         return presets
@@ -433,6 +471,21 @@ class MockupType(models.Model):
                 {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1500},
                 {'combined': ['mask'], 'layer': 'shadow2', 'mode': 'source-over', 'file': 'shadow.png'},
                 {'combined': ['mask'], 'layer': 'light2', 'mode': 'screen', 'file': 'refractions.png'},
+            ]
+        elif self.slug == '2500cc-powder-container':
+            layers = [
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'container', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
+                {'layer': 'light', 'mode': 'source-over', 'file': 'refractions.png'},
+            ]
+        elif self.slug == 'sour-gummies-bottle':
+            layers = [
+                {'layer': 'container', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
+                {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png'},
             ]
         else:
             layers = []
