@@ -1793,6 +1793,13 @@ class ProductSupplier(SupplierBase):
 
         return self.product_url
 
+    def get_affiliate_link(self):
+        if self.is_ebay:
+            from leadgalaxy.utils import get_ebay_affiliate_url
+            return get_ebay_affiliate_url(self.short_product_url())
+        else:
+            return self.short_product_url()
+
     def support_auto_fulfill(self):
         """
         Return True if this supplier support auto fulfill using the extension

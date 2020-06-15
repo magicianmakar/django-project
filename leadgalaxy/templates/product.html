@@ -108,16 +108,21 @@
                         <a href="/product/{{item.id}}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
                         </div>
                         <div class="col-md-8 text-right" style="padding-left:5px">
-                        <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
-                            {% with board=item.board %}
-                                {% if board %}
-                                Board: {{board.title}}
-                                {% else %}
-                                Board
-                                {% endif %}
-                            {% endwith %}
-
-                        </button>
+                        {% if ebay_manual_affiliate_link and item.qelem.default_supplier and item.qelem.default_supplier.is_ebay %}
+                            <a href="{{ item.qelem.default_supplier.get_affiliate_link }}" class="btn btn-xs btn-outline btn-success" target="_blank">
+                                Order on eBay
+                            </a>
+                        {% else %}
+                            <button product-id="{{item.id}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right">
+                                {% with board=item.board %}
+                                    {% if board %}
+                                    Board: {{board.title}}
+                                    {% else %}
+                                    Board
+                                    {% endif %}
+                                {% endwith %}
+                            </button>
+                        {% endif %}
                         </div>
                     </div>
                 </div>

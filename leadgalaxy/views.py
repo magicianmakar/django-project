@@ -1627,6 +1627,7 @@ def products_list(request, tpl='grid'):
         'filter_products': args['filter_products'],
         'products': products,
         'store': store,
+        'ebay_manual_affiliate_link': request.user.can('ebay_manual_affiliate_link.use'),
         'page': 'product',
         'selected_menu': 'products:all',
         'breadcrumbs': breadcrumbs
@@ -3496,7 +3497,8 @@ class OrdersView(TemplateView):
             german_umlauts=self.models_user.get_config('_use_german_umlauts', False),
             show_actual_supplier=self.models_user.get_config('_show_actual_supplier', False) or self.models_user.id in [883, 21064, 24767],
             order_risk_all_getaways=self.models_user.get_config('_order_risk_all_getaways', False),
-            aliexpress_mobile_order=self.models_user.can('aliexpress_mobile_order.use')
+            aliexpress_mobile_order=self.models_user.can('aliexpress_mobile_order.use'),
+            ebay_manual_affiliate_link=self.models_user.can('ebay_manual_affiliate_link.use')
         )
 
         self.config['admitad_site_id'], self.config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)
