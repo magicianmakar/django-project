@@ -1,0 +1,83 @@
+<div id="label-warning-modal" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-md">
+    <div class="modal-content">
+      <div class="m-t-none modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">
+            &times;
+          </span>
+        </button>
+          <h4 class="modal-title">
+            &nbsp;
+          </h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="current_not_approved alert alert-warning alert-dismissible hidden" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">
+                &times;
+              </span>
+            </button>
+            This label has not been approved.
+          </div>
+          <div class="current_is_rejected alert alert-danger alert-dismissible hidden" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">
+                &times;
+              </span>
+            </button>
+            The label associated with this order item has been rejected.
+          </div>
+          <div class="newer_available alert alert-info alert-dismissible hidden" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">
+                &times;
+              </span>
+            </button>
+            There is a newer version of this label.
+          </div>
+          <div class="latest_not_approved alert alert-warning alert-dismissible hidden" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">
+                &times;
+              </span>
+            </button>
+            The latest version of this label has not been approved.
+          </div>
+          <div class="latest_is_rejected alert alert-danger alert-dismissible hidden" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+              <span aria-hidden="true">
+                &times;
+              </span>
+            </button>
+            The latest version of this label has been rejected.
+          </div>
+        </div>
+        <div class="row">
+          <div class="text-right">
+            <span class="download_latest_label hidden">
+              <a href=""
+                id="download-latest-label"
+                class='download-label btn btn-success btn-outline btn-md'
+                target="_blank"
+                data-item-id="">
+                Download newest version
+              </a>
+            </span>
+            &nbsp;
+            <span class="download_label">
+              <a href=""
+                id="download-label"
+                class='download-label btn btn-primary btn-md'
+                target="_blank"
+                data-item-id="">
+                Download this version
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -47,6 +47,17 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
     def __str__(self):
         return self.title
 
+    def get_latest_label(self):
+        qs = UserSupplementLabel.objects.filter(user_supplement__pl_supplement_id=self.id)
+        qs = qs.order_by('-created_at')
+
+        return qs.first()
+
+    def get_label_count(self):
+        qs = UserSupplementLabel.objects.filter(user_supplement__pl_supplement_id=self.id)
+
+        return qs.count()
+
 
 class ShippingGroup(models.Model):
     slug = models.CharField(max_length=100, unique=True)

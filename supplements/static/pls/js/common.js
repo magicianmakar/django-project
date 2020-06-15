@@ -1,3 +1,15 @@
+function markLabelAsPrinted() {
+    var item = $(this).data('item-id');
+    var url = api_url('mark-printed', 'supplements');
+    data = {'item-id': item};
+    $.ajax({
+        url: url,
+        type: "POST",
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: 'application/json',
+    });
+}
 $(document).ready(function(){
     $('.custom-file-input').on('change', function() {
         var fileName = $(this).val().split('\\').pop();
@@ -27,18 +39,7 @@ $(document).ready(function(){
         });
     });
 
-    $(".download-label").click(function () {
-        var item = $(this).data('item-id');
-        var url = api_url('mark-printed', 'supplements');
-        data = {'item-id': item};
-        $.ajax({
-            url: url,
-            type: "POST",
-            data: JSON.stringify(data),
-            dataType: 'json',
-            contentType: 'application/json',
-        });
-    });
+    $(".download-label").click(markLabelAsPrinted);
 
     $(".add-loader").click(function () {
         if ($(this).parents('form')[0].checkValidity()) {
