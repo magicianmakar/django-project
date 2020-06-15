@@ -795,15 +795,23 @@ class WooProductChangeManager(ProductChangeManager):
                     self.config['price_update_method'],
                     self.markup_rules
                 )
+                if current_compare_at_price:
+                    sale_price = str(new_price)
+                    regular_price = str(new_compare_at_price)
+                else:
+                    sale_price = None
+                    regular_price = str(new_price)
+
                 if self.config['price_update_for_increase']:
                     if new_price > current_price:
                         self.product_data_changed = True
-                        api_product_data['variants'][idx]['sale_price'] = str(new_price) if new_compare_at_price else None
-                        api_product_data['variants'][idx]['regular_price'] = str(new_compare_at_price) if new_compare_at_price else str(new_price)
+                        api_product_data['variants'][idx]['sale_price'] = sale_price
+                        api_product_data['variants'][idx]['regular_price'] = regular_price
                 else:
                     self.product_data_changed = True
-                    api_product_data['variants'][idx]['sale_price'] = str(new_price) if new_compare_at_price else None
-                    api_product_data['variants'][idx]['regular_price'] = str(new_compare_at_price) if new_compare_at_price else str(new_price)
+                    api_product_data['variants'][idx]['sale_price'] = sale_price
+                    api_product_data['variants'][idx]['regular_price'] = regular_price
+
             elif len(api_product_data.get('variants', [])) == 0 or variant_id < 0:
                 current_price = safe_float(api_product_data['sale_price'])
                 current_compare_at_price = safe_float(api_product_data.get('regular_price'))
@@ -820,19 +828,26 @@ class WooProductChangeManager(ProductChangeManager):
                     self.config['price_update_method'],
                     self.markup_rules
                 )
+                if current_compare_at_price:
+                    sale_price = str(new_price)
+                    regular_price = str(new_compare_at_price)
+                else:
+                    sale_price = None
+                    regular_price = str(new_price)
+
                 if self.config['price_update_for_increase']:
                     if new_price > current_price:
                         self.product_data_changed = True
                         product_data['price'] = new_price
-                        product_data['compare_at_price'] = new_compare_at_price
-                        api_product_data['sale_price'] = str(new_price) if new_compare_at_price else None
-                        api_product_data['regular_price'] = str(new_compare_at_price) if new_compare_at_price else str(new_price)
+                        product_data['compare_at_price'] = new_compare_at_price or new_price
+                        api_product_data['sale_price'] = sale_price
+                        api_product_data['regular_price'] = regular_price
                 else:
                     self.product_data_changed = True
                     product_data['price'] = new_price
-                    product_data['compare_at_price'] = new_compare_at_price
-                    api_product_data['sale_price'] = str(new_price) if new_compare_at_price else None
-                    api_product_data['regular_price'] = str(new_compare_at_price) if new_compare_at_price else str(new_price)
+                    product_data['compare_at_price'] = new_compare_at_price or new_price
+                    api_product_data['sale_price'] = sale_price
+                    api_product_data['regular_price'] = regular_price
 
     def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
         if self.config['quantity_change'] == 'update':
