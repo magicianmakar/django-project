@@ -41,7 +41,7 @@
                   {% else %}
 
                   <strong>{{ comment.user.get_full_name }}</strong> wrote. <br>
-                  <div class="well">
+                  <div class="well {% if comment.is_private %}bg-private{% endif %}">
                     {{ comment.text|safe }}
                   </div>
 
