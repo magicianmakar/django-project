@@ -181,7 +181,7 @@
                                 <label>Number of Days Passed:</label>
                             </div>
                             <div class="col-md-2">
-                                <input name="days_passed" value="{{request.GET.days_passed|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Number of Days Passed">
+                                <input name="days_passed" type="number" max="360" value="{{request.GET.days_passed|default:''}}" class="form-control" style="xpadding: 6px 0px" placeholder="Number of Days Passed">
                             </div>
                         </div>
 

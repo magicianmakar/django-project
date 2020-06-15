@@ -4466,7 +4466,7 @@ def orders_track(request):
 
     days_passed = safe_int(days_passed)
     if days_passed:
-        days_passed = min(days_passed, 30)
+        days_passed = min(days_passed, 360)
         time_threshold = timezone.now() - timezone.timedelta(days=days_passed)
         orders = orders.filter(created_at__lt=time_threshold)
 
