@@ -306,12 +306,18 @@ def make_pdf_of(number):
     return pdf_pages[0]
 
 
-def get_order_number_label(item):
+def get_order_number_label(item, use_latest=False):
+    if use_latest:
+        latest_label = item.label.user_supplement.pl_supplement.get_latest_label()
+        label_url = latest_label.url if latest_label else item.label.url
+    else:
+        label_url = item.label.url
+
     order_number = item.pls_order.shipstation_order_number
 
     pdf_page = make_pdf_of(order_number)
 
-    label_data = BytesIO(requests.get(item.label.url).content)
+    label_data = BytesIO(requests.get(label_url).content)
     base_label_pdf = PdfReader(label_data)
 
     page_merge = PageMerge(base_label_pdf.pages[0]).add(pdf_page)

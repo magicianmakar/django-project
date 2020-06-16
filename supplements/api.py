@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.conf import settings
 from django.utils.crypto import get_random_string
 from django.views.generic import View
+from django.urls import reverse
 
 from pdfrw import PdfWriter
 from lib.exceptions import capture_exception, capture_message
@@ -16,8 +17,9 @@ from shopified_core import permissions
 
 from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
-from .models import Payout, PLSOrder, UserSupplement
+from .models import Payout, PLSOrder, UserSupplement, PLSOrderLine, UserSupplementLabel
 from .utils.payment import Util, get_shipping_cost
+from .utils import user_can_download_label
 from django.utils.text import slugify
 
 
@@ -267,3 +269,38 @@ class SupplementsApi(ApiResponseMixin, View):
             return self.api_success()
         else:
             raise permissions.PermissionDenied()
+
+    def get_order_line_info(self, request, user, data):
+        item_id = safe_int(data.get('item_id'))
+
+        try:
+            order_line = PLSOrderLine.objects.get(pk=item_id)
+        except PLSOrderLine.DoesNotExist:
+            return self.api_error('Order item not found', status=404)
+
+        label = order_line.label
+
+        if not user_can_download_label(user, label):
+            raise permissions.PermissionDenied()
+
+        pl_supplement = label.user_supplement.pl_supplement
+        latest_label = pl_supplement.get_latest_label()
+        label_count = pl_supplement.get_label_count()
+        newer_available = label_count > 1 and not label == latest_label
+        current_is_rejected = label.status == UserSupplementLabel.REJECTED
+        current_is_approved = label.status == UserSupplementLabel.APPROVED
+        latest_is_rejected = latest_label.status == UserSupplementLabel.REJECTED
+        latest_is_approved = latest_label.status == UserSupplementLabel.APPROVED
+        label_url = reverse('pls:generate_label', args=(item_id,))
+        latest_label_url = label_url + '?use_latest=1'
+
+        return self.api_success({
+            'item_id': item_id,
+            'newer_available': newer_available,
+            'current_is_rejected': current_is_rejected,
+            'current_is_approved': current_is_approved,
+            'latest_is_rejected': latest_is_rejected,
+            'latest_is_approved': latest_is_approved,
+            'label_url': label_url,
+            'latest_label_url': latest_label_url,
+        })

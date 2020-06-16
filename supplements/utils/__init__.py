@@ -46,3 +46,10 @@ def aws_s3_context():
     ]
 
     return do_create_aws_s3_context(conditions)
+
+
+def user_can_download_label(user, label):
+    user_is_owner = user.models_user == label.user_supplement.user.models_user
+    if user.can('pls_admin.use') or user.can('pls_staff.use') or user_is_owner:
+        return True
+    return False
