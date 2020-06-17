@@ -15,6 +15,7 @@ from django.db.models import Q
 from django.http import HttpResponse, Http404
 from django.http import JsonResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
+from django.template.defaultfilters import truncatewords
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_protect
@@ -1134,6 +1135,22 @@ def autocomplete(request, target):
 
         except CommerceHQProduct.DoesNotExist:
             return JsonResponse({'error': 'Product not found'}, status=404)
+
+    elif target == 'title':
+        results = []
+        products = request.user.models_user.commercehqproduct_set.only('id', 'title', 'data').filter(title__icontains=q, source_id__gt=0)
+        store = request.GET.get('store')
+        if store:
+            products = products.filter(store=store)
+
+        for product in products[:10]:
+            results.append({
+                'value': (truncatewords(product.title, 10) if request.GET.get('trunc') else product.title),
+                'data': product.id,
+                'image': product.get_image()
+            })
+
+        return JsonResponse({'query': q, 'suggestions': results}, safe=False)
 
     else:
         return JsonResponse({'error': 'Unknown target'})

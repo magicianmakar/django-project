@@ -167,4 +167,52 @@
     $(function() {
         $('.view-details').trigger('click').hide('fast');
     });
+
+    $('select#product').select2({
+        placeholder: 'Select a Product',
+        ajax: {
+            url: "/chq/autocomplete/title",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return {
+                    query: params.term, // search term,
+                    store: $('#product').data('store'),
+                    page: params.page,
+                    trunc: 1
+                };
+            },
+            processResults: function(data, params) {
+                params.page = params.page || 1;
+
+                return {
+                    results: $.map(data.suggestions, function(el) {
+                        return {
+                            id: el.data,
+                            text: el.value,
+                            image: el.image,
+                        };
+                    }),
+                    pagination: {
+                        more: false
+                    }
+                };
+            },
+            cache: true
+        },
+        escapeMarkup: function(markup) {
+            return markup;
+        },
+        minimumInputLength: 1,
+        templateResult: function(repo) {
+            if (repo.loading) {
+                return repo.text;
+            }
+
+            return '<span><img src="' + repo.image + '"><a href="#">' + repo.text.replace('"', '\'') + '</a></span>';
+        },
+        templateSelection: function(data) {
+            return data.text || data.element.innerText;
+        }
+    });
 })();
