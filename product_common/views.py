@@ -13,7 +13,7 @@ from lib.exceptions import capture_message
 from shopified_core.utils import get_store_api, get_track_model
 
 from .forms import OrderFilterForm, PayoutFilterForm, ProductEditForm, ProductForm
-from .lib.shipstation import get_shipstation_orders, get_shipstation_shipments
+from .lib.shipstation import get_shipstation_shipments
 from .lib.views import BaseMixin, PagingMixin, SendToStoreMixin, upload_image_to_aws
 from .models import Order, OrderLine, Payout, Product
 
@@ -480,12 +480,6 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 elif shipstation_status == 'unfulfilled':
                     queryset = queryset.filter(pls_order__is_fulfilled=False)
 
-            cancelled = form.cleaned_data['cancelled']
-            if cancelled:
-                cancelled_order_ids = self.get_cancelled_order_ids()
-                for id, number in cancelled_order_ids.items():
-                    queryset = queryset.exclude(pls_order_id=id, pls_order__order_number=number)
-
         return queryset
 
     def get_breadcrumbs(self):
@@ -493,16 +487,6 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
             {'title': 'PLS', 'url': reverse('pls:index')},
             {'title': 'Order Items', 'url': reverse(f'{self.namespace}:orderitem_list')},
         ]
-
-    def get_cancelled_order_ids(self):
-        params = {'orderStatus': 'cancelled'}
-        orders = get_shipstation_orders(params=params)
-        cancelled_order_ids = {}
-        for order in orders:
-            number, id = order['orderNumber'].split('-')
-            cancelled_order_ids[id] = number
-
-        return cancelled_order_ids
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

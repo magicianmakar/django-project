@@ -181,7 +181,6 @@ class LineFilterForm(OrderFilterForm):
     label_sku = forms.CharField(required=False)
     batch_number = forms.CharField(required=False)
     shipstation_status = forms.ChoiceField(required=False, choices=SHIPSTATION_STATUSES)
-    cancelled = forms.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
         super(LineFilterForm, self).__init__(*args, **kwargs)
