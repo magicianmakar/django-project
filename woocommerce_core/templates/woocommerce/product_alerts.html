@@ -31,6 +31,12 @@
                                     </select>
                                     <label for="selected-actions" class="filter-col-item">Product Type:</label>
                                     <input name="product_type" type="text" class="form-control filter-col-item" value="{{product_type}}" placeholder="">
+                                    <label for="selected-actions" class="filter-col-item">Product:</label>
+                                    <select name="product" id="product" data-store="{{store.id}}">
+                                        {% if product %}
+                                        <option value="{{product.id}}" selected="">{{product.title|truncatewords:5}}</option>
+                                        {% endif %}
+                                    </select>
                                     <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>
                                 </form>
                             </div>
@@ -261,6 +267,9 @@
 {% endblock %}
 
 {% block extracss %}
+{% compress css %}
+<link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+{% endcompress %}
 <style type="text/css">
     tbody tr.header {
         height: 50px !important;
@@ -302,11 +311,37 @@
         display: inline-block;
         width: 191px;
     }
+
+    .select2-results .select2-results__options .select2-results__option {
+        min-height: 51px;
+        padding: 0;
+        border-bottom: 1px solid #ccc;
+    }
+    .select2-results .select2-results__options .select2-results__option img {
+        height: 50px;
+        float: left;
+        margin-right: 5px;
+    }
+    .select2.select2-container.select2-container--default {
+        width: 300px !important;
+    }
+    .select2-container--default .select2-selection--multiple .select2-selection__rendered li {
+        padding: 3px 0 0 10px !important;
+    }
+    .select2-container--default .select2-selection--multiple {
+        border: 1px solid #e5e6e7 !important;
+        border-radius: 0 !important;
+    }
+    .select2-container--default.select2-container--disabled .select2-selection--multiple {
+        background-color: #fff;
+    }
 </style>
 {% endblock %}
 
 {% block extrajs %}
 {% compress js %}
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'woocommerce/js/product_alerts.js' %}"></script>
 {% endcompress %}
 {% endblock %}

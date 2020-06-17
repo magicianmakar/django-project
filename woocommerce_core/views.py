@@ -20,6 +20,7 @@ from django.urls import reverse, reverse_lazy
 from django.core.cache import cache, caches
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.template.defaultfilters import truncatewords
 from django.contrib.auth import get_user_model
 from django.core.cache.utils import make_template_fragment_key
 
@@ -261,6 +262,22 @@ def autocomplete(request, target):
                 types.append(product.product_type)
 
         return JsonResponse({'query': q, 'suggestions': [{'value': i, 'data': i} for i in types]}, safe=False)
+
+    elif target == 'title':
+        results = []
+        products = request.user.models_user.wooproduct_set.only('id', 'title', 'data').filter(title__icontains=q, source_id__gt=0)
+        store = request.GET.get('store')
+        if store:
+            products = products.filter(store=store)
+
+        for product in products[:10]:
+            results.append({
+                'value': (truncatewords(product.title, 10) if request.GET.get('trunc') else product.title),
+                'data': product.id,
+                'image': product.get_image()
+            })
+
+        return JsonResponse({'query': q, 'suggestions': results}, safe=False)
 
     else:
         return JsonResponse({'error': 'Unknown target'})
