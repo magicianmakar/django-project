@@ -1432,7 +1432,7 @@ def webhook(request, provider, option):
 
             return JsonResponse({'status': 'ok'})
 
-    elif provider == 'activecampaign':
+    elif provider == 'intercom' and option == 'activecampaign':
         return JsonResponse({'status': 'ok'})
 
     else:
