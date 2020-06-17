@@ -545,6 +545,15 @@
     <script src="{% static 'shopified/js/profile.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/payment.js' %}" type="text/javascript"></script>
     <script src="{% static 'shopified/js/invoices.js' %}" type="text/javascript"></script>
+    <script src="{% static 'shopified/js/baremetrics.js' %}" type="text/javascript"></script>
 {% endcompress %}
+
+{% if baremetrics_form_enabled %}
+<script type="text/javascript">
+    var accessToken = '{% app_setting "BAREMETRICS_ACCESS_TOKEN" %}';
+    var jwtToken = '{{ baremetrics_jwt_token }}';
+    addBaremetricsForm(accessToken, jwtToken);
+</script>
+{% endif %}
 
 {% endblock %}

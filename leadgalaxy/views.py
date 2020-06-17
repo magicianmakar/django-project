@@ -3194,6 +3194,29 @@ def user_profile(request):
     callflex.phonenumber_usage_local = get_phonenumber_usage(request.user, "local")
 
     callflex.extranumber_subscriptions = request.user.customstripesubscription_set.filter(custom_plan__type='callflex_subscription')
+
+    baremetrics_jwt_token = None
+    if not request.user.is_subuser and stripe_customer:
+        subscription = None
+        while subscription is None:
+            sub = request.user.stripesubscription_set.first()
+            if sub is None:
+                break
+
+            try:
+                sub.refresh()
+                subscription = sub
+            except stripe.error.InvalidRequestError:
+                sub.delete()
+
+        if subscription and settings.BAREMETRICS_ACCESS_TOKEN \
+                and settings.BAREMETRICS_JWT_TOKEN_KEY:
+            baremetrics_jwt_token = jwt.encode({
+                "access_token_id": settings.BAREMETRICS_ACCESS_TOKEN,
+                "subscription_oids": [subscription.subscription_id],
+            }, settings.BAREMETRICS_JWT_TOKEN_KEY, "HS256").decode()
+    baremetrics_form_enabled = bool(baremetrics_jwt_token)
+
     return render(request, 'user/profile.html', {
         'countries': get_counrties_list(),
         'now': timezone.now(),
@@ -3206,6 +3229,8 @@ def user_profile(request):
         'shopify_plans': shopify_plans,
         'shopify_plans_yearly': shopify_plans_yearly,
         'stripe_customer': stripe_customer,
+        'baremetrics_form_enabled': baremetrics_form_enabled,
+        'baremetrics_jwt_token': baremetrics_jwt_token,
         'shopify_apps_customer': shopify_apps_customer,
         'clippingmagic_plans': clippingmagic_plans,
         'clippingmagic': clippingmagic,
