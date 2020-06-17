@@ -27,7 +27,7 @@
     {% if request.path == pls_orderitems %}
     <li class="active"><a data-toggle="tab" href="#tab-1">Order Items</a></li>
     {% else %}
-    <li><a href="{% url 'pls:orderitem_list' %}">Order Items</a></li>
+    <li><a href="{% url 'pls:orderitem_list' %}?cancelled=on">Order Items</a></li>
     {% endif %}
 
     {% if request.path == pls_payouts %}
