@@ -54,14 +54,15 @@
 <table class='table table-striped' >
   <thead>
     <th>Payout Reference ID</th>
-    <th>Dropified Payout</th>
-    <th>PLS Payout</th>
-    <th>TLG Payout</th>
     <th>Total Revenue</th>
     <th>Product (Revenue)</th>
     <th>Shipping (Revenue)</th>
     <th>Wholesale Cost</th>
     <th id="edit-column">Shipping Cost</th>
+    <th>Profit</th>
+    <th>Dropified Payout</th>
+    <th>TLG Payout</th>
+    <th>PLS Payout</th>
     <th>Date</th>
     <th>Status</th>
     <th>Action</th>
@@ -74,9 +75,6 @@
           {{ payout.reference_number }}
         </a>
       </td>
-      <td>{{ payout.profit_split_string }}</td>
-      <td>{{ payout.pls_payout_string }}</td>
-      <td>{{ payout.profit_split_string }}</td>
       <td>{{ payout.cost_price_string }}</td>
       <td>{{ payout.cost_price_withuot_shipping_string }}</td>
       <td>{{ payout.shipping_price_string }}</td>
@@ -92,6 +90,10 @@
         </span>
         {% endif %}
       </td>
+      <td>{{ payout.profit_string }}</td>
+      <td>{{ payout.profit_split_string }}</td>
+      <td>{{ payout.profit_split_string }}</td>
+      <td>{{ payout.pls_payout_string }}</td>
       <td>{{ payout.created_at|date:"m.d.Y h:iA" }}</td>
       <td>{{ payout.status_string }}</td>
       <td>

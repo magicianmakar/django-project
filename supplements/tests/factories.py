@@ -3,16 +3,36 @@ import factory.fuzzy
 
 
 class PLSupplementFactory(factory.DjangoModelFactory):
+    title = factory.fuzzy.FuzzyText()
+    description = factory.fuzzy.FuzzyText()
+    category = factory.fuzzy.FuzzyText()
+    tags = factory.fuzzy.FuzzyText()
+    shipstation_sku = factory.fuzzy.FuzzyText()
+    cost_price = factory.fuzzy.FuzzyDecimal(0.1)
+    product_type = factory.fuzzy.FuzzyText()
+    wholesale_price = factory.fuzzy.FuzzyDecimal(0.1)
+    label_template_url = factory.fuzzy.FuzzyText(prefix="http://", suffix=".com/image.jpeg")
+    product_information = factory.fuzzy.FuzzyText()
+    authenticity_certificate_url = factory.fuzzy.FuzzyText(prefix="http://", suffix=".com/image.jpeg")
+
     class Meta:
         model = 'supplements.PLSupplement'
 
 
 class UserSupplementFactory(factory.DjangoModelFactory):
+    title = factory.fuzzy.FuzzyText()
+    description = factory.fuzzy.FuzzyText()
+    category = factory.fuzzy.FuzzyText()
+    tags = factory.fuzzy.FuzzyText()
+    price = factory.fuzzy.FuzzyDecimal(0.1)
+
     class Meta:
         model = 'supplements.UserSupplement'
 
 
 class UserSupplementLabelFactory(factory.DjangoModelFactory):
+    url = factory.fuzzy.FuzzyText(prefix="http://", suffix=".com/image.jpeg")
+
     class Meta:
         model = 'supplements.UserSupplementLabel'
 

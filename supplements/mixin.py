@@ -307,6 +307,10 @@ class PayoutMixin:
         return self.to_currency(self.profit_split * .25)
 
     @property
+    def profit_string(self):
+        return self.to_currency(self.profit_split)
+
+    @property
     def pls_payout(self):
         return (self.profit_split * .50) + self.wholesale_price
 

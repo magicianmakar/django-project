@@ -47,6 +47,17 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
     def __str__(self):
         return self.title
 
+    def get_latest_label(self):
+        qs = UserSupplementLabel.objects.filter(user_supplement__pl_supplement_id=self.id)
+        qs = qs.order_by('-created_at')
+
+        return qs.first()
+
+    def get_label_count(self):
+        qs = UserSupplementLabel.objects.filter(user_supplement__pl_supplement_id=self.id)
+
+        return qs.count()
+
 
 class ShippingGroup(models.Model):
     slug = models.CharField(max_length=100, unique=True)
@@ -382,21 +393,21 @@ class MockupType(models.Model):
             ]
         elif self.slug == '2500cc-powder-container':
             presets = [
-                [{'left': 0.17, 'top': -0.57, 'size': 0.64}],
-                [{'left': 0.17, 'top': -0.57, 'size': 0.64, 'layers': {'shadow': False}}],
-                [{'left': -0.13, 'top': -0.57, 'size': 0.64}],
-                [{'left': -0.13, 'top': -0.57, 'size': 0.64, 'layers': {'shadow': False}}],
+                [{'left': 0.19, 'top': -0.83, 'size': 0.6}],
+                [{'left': 0.19, 'top': -0.83, 'size': 0.6, 'layers': {'shadow': False}}],
+                [{'left': 0.6, 'top': -0.83, 'size': 0.6}],
+                [{'left': 0.6, 'top': -0.83, 'size': 0.6, 'layers': {'shadow': False}}],
                 [
-                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': -0.172, 'bgTop': 0.1, 'bgSize': 0.77},
-                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.4025, 'bgTop': 0.1, 'bgSize': 0.77},
-                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.0725, 'bgTop': 0.07, 'bgSize': 0.85}
+                    {'left': 0.19, 'top': -0.83, 'size': 0.6, 'bgLeft': -0.172, 'bgTop': 0.1, 'bgSize': 0.77},
+                    {'left': 0.19, 'top': -0.83, 'size': 0.6, 'bgLeft': 0.4025, 'bgTop': 0.1, 'bgSize': 0.77},
+                    {'left': 0.19, 'top': -0.83, 'size': 0.6, 'bgLeft': 0.0725, 'bgTop': 0.07, 'bgSize': 0.85}
                 ],
                 [
-                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': -0.11, 'bgTop': 0.27, 'bgSize': 0.51},
-                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.59, 'bgTop': 0.27, 'bgSize': 0.51},
-                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': -0.02, 'bgTop': 0.21, 'bgSize': 0.61},
-                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.4, 'bgTop': 0.21, 'bgSize': 0.61},
-                    {'left': 0.17, 'top': -0.57, 'size': 0.64, 'bgLeft': 0.15, 'bgTop': 0.16, 'bgSize': 0.7}
+                    {'left': 0.19, 'top': -0.83, 'size': 0.6, 'bgLeft': -0.11, 'bgTop': 0.27, 'bgSize': 0.51},
+                    {'left': 0.19, 'top': -0.83, 'size': 0.6, 'bgLeft': 0.59, 'bgTop': 0.27, 'bgSize': 0.51},
+                    {'left': 0.19, 'top': -0.83, 'size': 0.6, 'bgLeft': -0.02, 'bgTop': 0.21, 'bgSize': 0.61},
+                    {'left': 0.19, 'top': -0.83, 'size': 0.6, 'bgLeft': 0.4, 'bgTop': 0.21, 'bgSize': 0.61},
+                    {'left': 0.19, 'top': -0.83, 'size': 0.6, 'bgLeft': 0.15, 'bgTop': 0.16, 'bgSize': 0.7}
                 ],
             ]
         elif self.slug == 'sour-gummies-bottle':
