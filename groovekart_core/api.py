@@ -797,7 +797,8 @@ class GrooveKartApi(ApiBase):
                 results.append({
                     'value': (truncatewords(product.title, 10) if data.get('trunc') else product.title),
                     'data': product.source_id,
-                    'image': product.get_image()
+                    'image': product.get_image(),
+                    'productId': product.id
                 })
 
             return self.api_success({'query': q, 'suggestions': results}, safe=False)
