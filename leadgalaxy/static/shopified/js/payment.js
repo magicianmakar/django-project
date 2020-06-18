@@ -73,27 +73,6 @@
         }
     }
 
-    function cancelStripeSubscription() {
-        var apiURL;
-        var subscriptionId = $('.cancel-sub-btn').data('subscription');
-        var subscriptionType = $('.cancel-sub-btn').data('subscription-type');
-        if (subscriptionType === "custom"){
-            apiURL = config.custom_subscription_cancel;
-        } else {
-            apiURL = config.subscription_cancel;
-        }
-
-        return $.ajax({
-            url: apiURL,
-            type: 'POST',
-            data: {
-                subscription: subscriptionId,
-                subscription_type: subscriptionType,
-                when: 'period_end'
-            }
-        });
-    }
-
     $(function() {
         if (!config.hasOwnProperty('stripe')) {
             return;
@@ -613,3 +592,24 @@
 
 
 })(config);
+
+function cancelStripeSubscription() {
+    var apiURL;
+    var subscriptionId = $('.cancel-sub-btn').data('subscription');
+    var subscriptionType = $('.cancel-sub-btn').data('subscription-type');
+    if (subscriptionType === "custom"){
+        apiURL = config.custom_subscription_cancel;
+    } else {
+        apiURL = config.subscription_cancel;
+    }
+
+    return $.ajax({
+        url: apiURL,
+        type: 'POST',
+        data: {
+            subscription: subscriptionId,
+            subscription_type: subscriptionType,
+            when: 'period_end'
+        }
+    });
+}

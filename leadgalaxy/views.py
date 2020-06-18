@@ -3215,7 +3215,6 @@ def user_profile(request):
                 "access_token_id": settings.BAREMETRICS_ACCESS_TOKEN,
                 "subscription_oids": [subscription.subscription_id],
             }, settings.BAREMETRICS_JWT_TOKEN_KEY, "HS256").decode()
-    baremetrics_form_enabled = bool(baremetrics_jwt_token)
 
     return render(request, 'user/profile.html', {
         'countries': get_counrties_list(),
@@ -3229,7 +3228,7 @@ def user_profile(request):
         'shopify_plans': shopify_plans,
         'shopify_plans_yearly': shopify_plans_yearly,
         'stripe_customer': stripe_customer,
-        'baremetrics_form_enabled': baremetrics_form_enabled,
+        'baremetrics_form_enabled': bool(settings.BAREMETRICS_ACCESS_TOKEN),
         'baremetrics_jwt_token': baremetrics_jwt_token,
         'shopify_apps_customer': shopify_apps_customer,
         'clippingmagic_plans': clippingmagic_plans,
