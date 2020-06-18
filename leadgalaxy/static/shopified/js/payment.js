@@ -73,27 +73,6 @@
         }
     }
 
-    function cancelStripeSubscription() {
-        var apiURL;
-        var subscriptionId = $('.cancel-sub-btn').data('subscription');
-        var subscriptionType = $('.cancel-sub-btn').data('subscription-type');
-        if (subscriptionType === "custom"){
-            apiURL = config.custom_subscription_cancel;
-        } else {
-            apiURL = config.subscription_cancel;
-        }
-
-        return $.ajax({
-            url: apiURL,
-            type: 'POST',
-            data: {
-                subscription: subscriptionId,
-                subscription_type: subscriptionType,
-                when: 'period_end'
-            }
-        });
-    }
-
     $(function() {
         if (!config.hasOwnProperty('stripe')) {
             return;
@@ -308,6 +287,43 @@
         });
     });
 
+    $('#modal-subscription-cancel-or-pause .confirm-cancel-btn').click(function(e) {
+        var parent = $(this).parents('.subsciption-plan');
+        var plan = parent.data('data-plan');
+
+        $(this).button('loading');
+
+        var subscription_type = $('#modal-subscription-cancel-or-pause').data('subscription-type');
+
+        if ( subscription_type=="custom" ){
+            ajax_url = config.custom_subscription_cancel;
+        }
+        else {
+            ajax_url = config.subscription_cancel;
+        }
+
+        $.ajax({
+            url: ajax_url,
+            type: 'POST',
+            data: {
+                subscription: $('#modal-subscription-cancel-or-pause').data('subscription'),
+                subscription_type: $('#modal-subscription-cancel-or-pause').data('subscription-type'),
+                when: 'period_end'
+            },
+            success: function(data) {
+                toastr.success("Your Subscription has been canceled.", "Cancel Subscription");
+                $('#modal-subscription-cancel-or-pause').modal('hide');
+
+                setTimeout(function() {
+                    window.location.reload();
+                }, 1500);
+            },
+            error: function(data) {
+                displayAjaxError('Cancel Subscription', data);
+            }
+        });
+    });
+
     $('#modal-subscription-cancel-callflex .confirm-cancel-btn').click(function(e) {
         var parent = $(this).parents('.subsciption-plan');
         var plan = parent.data('data-plan');
@@ -383,47 +399,34 @@
         );
     });
 
-    $('.cancel-sub-btn').on('click', function(e) {
-        // Canceling paused plan will use different steps
-        var cancelationSteps = $(this).data('steps') || '';
-        // Step 0 is wrapper for Cancel button
-        var cancelationStep = $(this).parents('.subscription-item');
-        if (cancelationSteps) {
-            cancelationSteps = cancelationSteps.split(',');
-            for (var i = 0, iLength = cancelationSteps.length; i < iLength; i++) {
-                cancelationStep = cancelationSteps[i];
-                var nextStep = cancelationSteps[i + 1];
-                if (nextStep) {
-                    $(cancelationStep).find('.continue-cancel').attr('data-toggle', 'modal').attr('data-target', nextStep);
-                }
-            }
+    $('.cancel-or-pause-sub-btn').click(function(e) {
+        $('#modal-subscription-cancel-or-pause').data('subscription', $(this).data('subscription'));
+        $('#modal-subscription-cancel-or-pause').data('subscription-type', $(this).data('subscription-type'));
+
+        $('#modal-subscription-cancel-or-pause .plan-name').text($(this).data('plan'));
+        $('#modal-subscription-cancel-or-pause .billing-end').text($(this).data('period-end'));
+
+        if ($(this).data('status') != 'active') {
+            $('#modal-subscription-cancel-or-pause .part-refund').hide();
+            $('#modal-subscription-cancel-or-pause .period-name').text('trial');
         }
 
-        // Show modal of first step
-        if (cancelationSteps[0]) {
-            $(cancelationSteps[0]).modal('show');
-        }
-
-        // Last step is Baremetrics Cancel Modal
-        if ($(this).data('baremetrics') === 'True') {
-            $(cancelationStep).find('.continue-cancel').attr('id', 'barecancel-trigger');
-        } else {
-            $(cancelationStep).find('.continue-cancel').addClass('direct-cancel').removeAttr('data-dismiss');
-        }
+        $('#modal-subscription-cancel-or-pause').modal('show');
     });
 
-    $('.stripe-cancel-step, .subscription-item').on('click', '.direct-cancel', function(e) {
-        $(this).button('loading');
-        cancelStripeSubscription().done(function(data) {
-            toastr.success("Your Subscription has been canceled.", "Cancel Subscription");
-            $('#modal-subscription-cancel-or-pause').modal('hide');
+    $('.cancel-sub-btn').click(function(e) {
+        $('#modal-subscription-cancel').data('subscription', $(this).data('subscription'));
+        $('#modal-subscription-cancel').data('subscription-type', $(this).data('subscription-type'));
 
-            setTimeout(function() {
-                window.location.reload();
-            }, 1500);
-        }).fail(function(data) {
-            displayAjaxError('Cancel Subscription', data);
-        });
+        $('#modal-subscription-cancel .plan-name').text($(this).data('plan'));
+        $('#modal-subscription-cancel .billing-end').text($(this).data('period-end'));
+
+        if ($(this).data('status') != 'active') {
+            $('#modal-subscription-cancel .part-refund').hide();
+            $('#modal-subscription-cancel .period-name').text('trial');
+        }
+
+        $('#modal-subscription-cancel').modal('show');
     });
 
     $('.cancel-sub-btn-callflex').click(function(e) {

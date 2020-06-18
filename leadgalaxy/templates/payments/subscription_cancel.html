@@ -1,64 +1,40 @@
-<div id="modal-subscription-cancel-or-support" class="modal stripe-cancel-step" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div id="modal-subscription-cancel" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">We're here to help.</h4>
+                <h4 class="modal-title">Cancel Subscription?</h4>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding:10px">
                 <div class="row">
                     <div class="col-md-12">
                         <p>
-                            If you are facing technical difficulties -
-                            please reach out to our Customer Success Team
-                            via the chat option. We will work to get you back
-                            to building your business!
-                        </p>
-                        <p>
-                            If not technical, it is too often we see entrepreneurs
-                            giving up on their eCommerce goals due to frustrations
-                            or low levels of success. We’d like to change that.
-                            If you’re interested, we offer a coaching call for guidance
-                            on not only Dropified, but also:
-                        </p>
-                        <ul>
-                            <li>Brand Development</li>
-                            <li>Website Elements</li>
-                            <li>Ad Creative Review</li>
-                            <li>Advertising Brainstorm</li>
-                            <li>Resource Navigation</li>
-                            <li>Product Research</li>
-                            <li>Supplier Decision Making</li>
-                        </ul>
-                        <p>This is totally free, we just want to see you succeed.</p>
-                        <p>
-                            With nothing to lose, perhaps you will get some fresh
-                            perspective and a second chance at succeeding with Dropified.
-                            We look forward to speaking with you!
+                            Are you sure you want to cancel your subscription to <b><span class="plan-name"></span></b>?<br>
+                            Your subscription will remain active through the <span class="period-name">billing</span> period ending on <span class="billing-end"></span><br>
                         </p>
                     </div>
                 </div>
+
             </div>
             <div class="modal-footer">
-                <button type="button" data-dismiss="modal" class="btn btn-default continue-cancel pull-left" style="filter: brightness(115%); color: #035b9f;">
-                    Continue
-                </button>
-                <a href="https://calendly.com/drewstrelau/nps-exploration-call" class="btn btn-success" style="filter: brightness(115%);">
-                    Book My Guidance Call
-                </a>
+                <button type="button" class="btn btn-outline btn-success pull-left" data-dismiss="modal">
+                    No, keep my subscription</button>
+
+                <button type="button" class="btn btn-outline btn-default btn-danger confirm-cancel-btn">
+                    Yes, cancel my subscription</button>
               </div>
         </div>
     </div>
 </div>
 
-<div id="modal-subscription-cancel-or-pause" class="modal stripe-cancel-step" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div id="modal-subscription-cancel-or-pause" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Remember, you can always Pause and take a breather - come back when you’re re-energized!</h4>
+                <h4 class="modal-title">Would you like to pause your account instead for only $12/mo?</h4>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="padding:10px">
                 <div class="row">
                     <div class="col-md-12">
                         <p>
@@ -77,8 +53,8 @@
 
             </div>
             <div class="modal-footer">
-                <button type="button" data-dismiss="modal" class="btn continue-cancel pull-left btn-default" style="filter: brightness(115%); color: #035b9f;">
-                        Continue</button>
+                <button type="button" id="barecancel-trigger" class="btn confirm-cancel-btn pull-left btn-default" style="filter: brightness(115%); color: #035b9f;">
+                        No, please continue to cancel my account</button>
                 <button type="button" class="btn confirm-pause-btn btn-success" style="filter: brightness(115%);" data-plan="{{stripe_paused_plan.id}}">
                         Yes, pause my account for only $12/mo.</button>
               </div>
