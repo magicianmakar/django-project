@@ -551,8 +551,7 @@
 {% if baremetrics_form_enabled %}
 <script type="text/javascript">
     var accessToken = '{% app_setting "BAREMETRICS_ACCESS_TOKEN" %}';
-    var jwtToken = '{{ baremetrics_jwt_token }}';
-    addBaremetricsForm(accessToken, jwtToken);
+    addBaremetricsForm(accessToken, '{{ baremetrics_jwt_token }}');
 </script>
 {% endif %}
 
