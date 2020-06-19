@@ -950,7 +950,7 @@ class AllUserSupplements(MyLabels, ListView):
 
             product_sku = form.cleaned_data['product_sku']
             if product_sku:
-                queryset = queryset.filter(pl_supplement__shipstation_sku__iexact=product_sku)
+                queryset = queryset.filter(pl_supplement__shipstation_sku__in=product_sku)
 
             title = form.cleaned_data['title']
             if title:
