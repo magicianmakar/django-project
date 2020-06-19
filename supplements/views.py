@@ -869,7 +869,7 @@ class MyLabels(LoginRequiredMixin, PagingMixin):
         if form.is_valid():
             status = form.cleaned_data['status']
             if status:
-                queryset = queryset.filter(current_label__status=status)
+                queryset = queryset.filter(current_label__status__in=status)
 
             sku = form.cleaned_data['sku']
             if sku:
