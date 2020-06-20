@@ -1315,7 +1315,7 @@ def webhook(request, provider, option):
                     return HttpResponse(f':x: Target is not known {add_to}')
 
             elif command == 'copy':
-                if len(command) != 3:
+                if len(args) != 3:
                     return HttpResponse(f":x: Usage: {request.POST['command']} {command} <source plan id> <destination plan id>")
 
                 if not request_from.is_superuser:
