@@ -1314,6 +1314,24 @@ def webhook(request, provider, option):
                 else:
                     return HttpResponse(f':x: Target is not known {add_to}')
 
+            elif command == 'copy':
+                if len(command) != 3:
+                    return HttpResponse(f":x: Usage: {request.POST['command']} {command} <source plan id> <destination plan id>")
+
+                if not request_from.is_superuser:
+                    return HttpResponse(f":x: Copy plan for admin only")
+
+                try:
+                    source_plan = GroupPlan.objects.get(id=args[1])
+                    destination_plan = GroupPlan.objects.get(id=args[2])
+                except GroupPlan.DoesNotExist:
+                    return HttpResponse(f":x: Plan does not exists (use plan IDs)")
+
+                for p in source_plan.permissions.all():
+                    destination_plan.permissions.add(p)
+
+                return HttpResponse(f'Permission copied from *{source_plan.title}* to *{destination_plan.title}*')
+
         elif request.POST['command'] == '/affiliate':
             args = request.POST['text'].split(' ')
             command = args[0]
