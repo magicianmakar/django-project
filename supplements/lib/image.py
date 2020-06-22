@@ -308,7 +308,7 @@ def make_pdf_of(number):
 
 def get_order_number_label(item, use_latest=False):
     if use_latest:
-        latest_label = item.label.user_supplement.pl_supplement.get_latest_label()
+        latest_label = item.label.user_supplement.labels.order_by('-created_at').first()
         label_url = latest_label.url if latest_label else item.label.url
     else:
         label_url = item.label.url

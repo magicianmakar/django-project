@@ -43,6 +43,8 @@ class LabelCommentFactory(factory.DjangoModelFactory):
 
 
 class PLSOrderFactory(factory.DjangoModelFactory):
+    store_id = factory.fuzzy.FuzzyInteger(999)
+    store_order_id = factory.fuzzy.FuzzyText()
     amount = factory.fuzzy.FuzzyInteger(999)
     sale_price = factory.fuzzy.FuzzyInteger(999)
     wholesale_price = factory.fuzzy.FuzzyInteger(999)
@@ -52,6 +54,9 @@ class PLSOrderFactory(factory.DjangoModelFactory):
 
 
 class PLSOrderLineFactory(factory.DjangoModelFactory):
+    sku = factory.fuzzy.FuzzyText()
+    shipstation_key = factory.fuzzy.FuzzyText()
+    line_id = factory.fuzzy.FuzzyInteger(999)
     amount = factory.fuzzy.FuzzyInteger(999)
     sale_price = factory.fuzzy.FuzzyInteger(999)
     wholesale_price = factory.fuzzy.FuzzyInteger(999)

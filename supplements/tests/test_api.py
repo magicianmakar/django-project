@@ -10,7 +10,13 @@ from supplements.models import PLSOrder as Order
 from supplements.models import PLSOrderLine as OrderLine
 from supplements.models import ShippingGroup
 
-from .factories import PLSupplementFactory, UserSupplementFactory, UserSupplementLabelFactory
+from .factories import (
+    PLSupplementFactory,
+    UserSupplementFactory,
+    UserSupplementLabelFactory,
+    PLSOrderLineFactory,
+    PLSOrderFactory,
+)
 
 
 class PLSBaseTestCase(BaseTestCase):
@@ -193,3 +199,39 @@ class MakePaymentTestCase(PLSBaseTestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(Order.objects.all().count(), count)
             self.assertEqual(OrderLine.objects.all().count(), count)
+
+
+class OrderLineInfoTestCase(PLSBaseTestCase):
+    def login(self):
+        self.client.login(username=self.user.username, password=self.password)
+
+    def test_get_request_to_endpoint_returns_401_if_not_logged_in(self):
+        r = self.client.get('/api/supplements/order-line-info?item_id=0')
+        self.assertEqual(r.status_code, 401)
+
+    def test_get_request_to_endpoint_returns_404_if_item_is_not_found(self):
+        self.login()
+        r = self.client.get('/api/supplements/order-line-info?item_id=0')
+        self.assertEqual(r.status_code, 404)
+
+    def test_get_request_to_endpoint_returns_200(self):
+        self.login()
+        order = PLSOrderFactory()
+        line = PLSOrderLineFactory(store_id=order.store_id,
+                                   store_order_id=order.store_order_id,
+                                   pls_order=order,
+                                   label=self.label)
+        r = self.client.get(f'/api/supplements/order-line-info?item_id={line.id}')
+        self.assertEqual(r.status_code, 200)
+
+    def test_get_request_to_endpoint_returns_403_if_not_owner_of_label(self):
+        self.login()
+        order = PLSOrderFactory()
+        user_supplement = UserSupplementFactory(user=UserFactory(), pl_supplement=PLSupplementFactory())
+        label_not_owned = UserSupplementLabelFactory(user_supplement=user_supplement)
+        line = PLSOrderLineFactory(store_id=order.store_id,
+                                   store_order_id=order.store_order_id,
+                                   pls_order=order,
+                                   label=label_not_owned)
+        r = self.client.get(f'/api/supplements/order-line-info?item_id={line.id}')
+        self.assertEqual(r.status_code, 403)

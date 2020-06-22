@@ -283,13 +283,11 @@ class SupplementsApi(ApiResponseMixin, View):
         if not user_can_download_label(user, label):
             raise permissions.PermissionDenied()
 
-        pl_supplement = label.user_supplement.pl_supplement
-        latest_label = pl_supplement.get_latest_label()
-        label_count = pl_supplement.get_label_count()
+        user_supplement = label.user_supplement
+        latest_label = user_supplement.labels.order_by('-created_at').first()
+        label_count = user_supplement.labels.count()
         newer_available = label_count > 1 and not label == latest_label
         current_is_rejected = label.status == UserSupplementLabel.REJECTED
-        current_is_approved = label.status == UserSupplementLabel.APPROVED
-        latest_is_rejected = latest_label.status == UserSupplementLabel.REJECTED
         latest_is_approved = latest_label.status == UserSupplementLabel.APPROVED
         label_url = reverse('pls:generate_label', args=(item_id,))
         latest_label_url = label_url + '?use_latest=1'
@@ -298,8 +296,6 @@ class SupplementsApi(ApiResponseMixin, View):
             'item_id': item_id,
             'newer_available': newer_available,
             'current_is_rejected': current_is_rejected,
-            'current_is_approved': current_is_approved,
-            'latest_is_rejected': latest_is_rejected,
             'latest_is_approved': latest_is_approved,
             'label_url': label_url,
             'latest_label_url': latest_label_url,
