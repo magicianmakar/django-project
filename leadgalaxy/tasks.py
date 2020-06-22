@@ -26,6 +26,7 @@ from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import (
     safe_int,
+    safe_json,
     app_link,
     get_domain,
     random_hash,
@@ -58,6 +59,7 @@ from product_alerts.managers import ProductChangeManager
 from product_alerts.utils import (
     get_supplier_variants,
     variant_index_from_supplier_sku,
+    parse_supplier_sku
 )
 
 from product_feed.feed import (
@@ -563,6 +565,9 @@ def sync_shopify_product_quantities(self, product_id):
         product = ShopifyProduct.objects.get(pk=product_id)
         product_data = utils.get_shopify_product(product.store, product.shopify_id)
 
+        variants_map = product.get_variant_mapping()
+        variants_map = {key: safe_json(value, value) for key, value in list(variants_map.items())}
+
         if not product.default_supplier:
             return
 
@@ -583,8 +588,12 @@ def sync_shopify_product_quantities(self, product_id):
                         else:
                             continue
 
-                product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
-                time.sleep(0.5)
+                variant_title = ';'.join(f"{option['option_title']}" for option in parse_supplier_sku(sku))
+                parsed_variant_title = ';'.join(f"{option['title']}" for option in variants_map[str(product_data['variants'][idx]['id'])])
+
+                if parsed_variant_title == variant_title:
+                    product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
+                    time.sleep(0.5)
 
         cache.delete('product_inventory_sync_shopify_{}_{}'.format(product.id, product.default_supplier.id))
 
