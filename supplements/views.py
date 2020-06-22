@@ -869,7 +869,7 @@ class MyLabels(LoginRequiredMixin, PagingMixin):
         if form.is_valid():
             status = form.cleaned_data['status']
             if status:
-                queryset = queryset.filter(current_label__status=status)
+                queryset = queryset.filter(current_label__status__in=status)
 
             sku = form.cleaned_data['sku']
             if sku:
@@ -950,7 +950,7 @@ class AllUserSupplements(MyLabels, ListView):
 
             product_sku = form.cleaned_data['product_sku']
             if product_sku:
-                queryset = queryset.filter(pl_supplement__shipstation_sku__iexact=product_sku)
+                queryset = queryset.filter(pl_supplement__shipstation_sku__in=product_sku)
 
             title = form.cleaned_data['title']
             if title:

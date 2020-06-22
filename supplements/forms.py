@@ -191,10 +191,12 @@ class LineFilterForm(OrderFilterForm):
 
 
 class LabelFilterForm(forms.Form):
-    STATUSES = [('', '---------')] + [i for i in UserSupplementLabel.LABEL_STATUSES
-                                      if i[0] != 'draft']
+    STATUSES = [i for i in UserSupplementLabel.LABEL_STATUSES
+                if i[0] != 'draft']
 
-    status = forms.ChoiceField(required=False, choices=STATUSES)
+    status = forms.MultipleChoiceField(required=False, choices=STATUSES,
+                                       widget=forms.SelectMultiple(
+                                           attrs={'id': 'id_label_sku_filter', 'data-placeholder': 'Select label status'}))
     sku = forms.CharField(required=False)
     date = forms.DateField(required=False)
 
@@ -206,9 +208,19 @@ class AllLabelFilterForm(forms.Form):
     ]
 
     label_user_name = forms.CharField(required=False)
-    product_sku = forms.CharField(required=False)
+    product_sku = forms.MultipleChoiceField(required=False,
+                                            widget=forms.SelectMultiple(attrs={
+                                                'id': 'id_product_supplement_sku',
+                                                'data-placeholder': 'Select product sku'}))
     title = forms.CharField(required=False)
     sort = forms.ChoiceField(required=False, choices=SORT_STATUSES)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        try:
+            self.fields['product_sku'].choices = [(p.shipstation_sku, p.shipstation_sku) for p in PLSupplement.objects.all()]
+        except:
+            self.fields['product_sku'].choices = []
 
 
 class BillingForm(forms.Form):
