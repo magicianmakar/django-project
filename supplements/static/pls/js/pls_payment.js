@@ -53,6 +53,11 @@ function doMakePayment(orderDataIds, storeId, storeType) {
                 toastr.success(msg);
             }
 
+            if (data.error == 'rejected') {
+                toastr.error(data.msg);
+                return false;
+            }
+
             if (data.error) {
                 orderStr = makePlural('item', data.error);
                 toastr.error(data.error + " " + orderStr + " failed.");
@@ -198,6 +203,18 @@ function addShippingCostToPayout(payoutId, cost) {
     });
 }
 
+function orderRejectionWarning(txt) {
+    toastr.error('Order has been rejected');
+    swal({
+        title: "Order Rejected!",
+        text: txt,
+        type: "error",
+        showCancelButton: true,
+        showConfirmButton: false,
+        cancelButtonText: "Close",
+    });
+}
+
 $(document).ready(function () {
     'use strict';
 
@@ -205,6 +222,14 @@ $(document).ready(function () {
         var orderDataId = $(this).parent().attr('order-data-id');
         var country_code = $(this).parents('.order').find('.shipping-country-code').attr('shipping-country-code');
         var province_code = $(this).parents('.order').find('.shipping-province-code').attr('shipping-province-code');
+        var deletedProduct = $(this).parent().attr('line-title');
+        var txt = 'Your order contains deleted product (' + deletedProduct + ') & has been rejected.';
+
+        // Reject order if a supplement is deleted
+        if($(this).attr('is-deleted') == "true") {
+            orderRejectionWarning(txt);
+            return false;
+        }
         makePayment([orderDataId],country_code, province_code);
     });
 
@@ -213,7 +238,23 @@ $(document).ready(function () {
         var order_id=$(this).attr('order-id');
         var country_code = $(this).parents('.order').find('.shipping-country-code').attr('shipping-country-code');
         var province_code = $(this).parents('.order').find('.shipping-province-code').attr('shipping-province-code');
+        var deletedProducts = [];
         var orderDataIds = [];
+
+        $(this).parents('.order').find('.line-checkbox').each(function (i, item) {
+            var line = $(item).parents('.line');
+            if (line.attr("is-deleted") === "true") {
+                deletedProducts.push(line.attr('line-title'));
+            }
+        });
+
+        if (deletedProducts.length) {
+            var delProducts = deletedProducts.join(', ');
+            var txt = 'Your order contains deleted product (' + delProducts + ') & has been rejected.';
+            orderRejectionWarning(txt);
+            return false;
+        }
+
         $(this).parents('.order').find('.line-checkbox:checkbox:checked').each(function (i, item) {
             var line = $(item).parents('.line');
             if (line.attr("is-pls") === "true") {

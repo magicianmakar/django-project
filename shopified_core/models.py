@@ -105,6 +105,13 @@ class ProductBase(models.Model):
 
         return variant_id
 
+    @property
+    def is_supplement_deleted(self):
+        if not self.user_supplement:
+            return True
+
+        return self.user_supplement.is_supplement_deleted
+
 
 class BoardBase(models.Model):
     class Meta:

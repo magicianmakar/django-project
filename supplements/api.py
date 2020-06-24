@@ -55,6 +55,13 @@ class SupplementsApi(ApiResponseMixin, View):
             for line in order_line_items:
                 target_countries = []
                 user_supplement = line['user_supplement']
+                if user_supplement.is_deleted:
+                    data = {
+                        'error': 'rejected',
+                        'msg': 'Your order contains deleted product & has been rejected.',
+                    }
+                    return self.api_success(data)
+
                 shipping_countries = user_supplement.shipping_countries
                 target_countries.extend(shipping_countries)
                 target_countries = set(target_countries)

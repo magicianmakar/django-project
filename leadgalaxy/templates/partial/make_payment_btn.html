@@ -12,12 +12,16 @@
      {% if not item.product.is_label_approved %}
      title="Approved label not found."
      {% endif %}
+     {% if item.product.is_supplement_deleted %}
+     title="This supplement has been deleted"
+     {% endif %}
      class='payment-btn-wrapper'
      >
      <button class="btn btn-xs dropdown-toggle pay-for-supplement {% if item.refunded %}btn-danger{% else %}btn-success{% endif %}"
       {% if not item.product.is_label_approved %}
       disabled
       {% endif %}
+      {% if item.product.is_supplement_deleted %}is-deleted="true"{% else %}is-deleted="false"{% endif %}
       >
        Make Payment
        {% if item.refunded %}

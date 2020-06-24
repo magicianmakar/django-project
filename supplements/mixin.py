@@ -131,6 +131,10 @@ class UserSupplementMixin(PLSupplementMixin):
     def shipping_groups_string(self):
         return self.pl_supplement.shipping_groups_string
 
+    @property
+    def is_supplement_deleted(self):
+        return self.is_deleted
+
 
 class UserSupplementLabelMixin:
 

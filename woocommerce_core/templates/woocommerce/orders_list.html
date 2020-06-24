@@ -435,6 +435,7 @@
                                         line-track="{{item.order_track.id|default:''}}"
                                         fulfillment-status="{{item.fulfillment_status}}"
                                         {% if item.is_pls %}is-pls="true"{% endif %}
+                                        {% if item.product.is_supplement_deleted %}is-deleted="true"{% endif %}
                                         {% if excluded_product %}excluded-product="true"{% endif %}>
                                         <div class="row source-order">
 
@@ -489,7 +490,7 @@
                                                         <td class="product-preview">
                                                           <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; "
                                                                   {% if item.is_pls %}
-                                                                    {% if item.is_paid or not item.product.is_label_approved %}
+                                                                    {% if item.is_paid or not item.product.is_label_approved or is_supplement_deleted %}
                                                                         disabled
                                                                     {% endif %}
                                                                   {% endif %} >
