@@ -146,8 +146,21 @@ def charge_customer_profile(amount, customer_id, payment_id, lines):
 
     response = controller.getresponse()
 
-    if hasattr(response.transactionResponse, 'messages'):
+    # https://developer.authorize.net/api/reference/index.html#payment-transactions-charge-a-credit-card
+    errors = []
+    if response.messages.resultCode == "Ok" \
+            and hasattr(response.transactionResponse, 'messages'):
         return response.transactionResponse.transId
+
+    if not hasattr(response, 'transactionResponse'):
+        for error in response.messages.message:
+            errors.append(f"{error['code'].text}: {error['text'].text}")
+    elif hasattr(response.transactionResponse, 'errors'):
+        for error in response.transactionResponse.errors.error:
+            errors.append(f"{error.errorCode}: {error.errorText}")
+
+    if errors:
+        capture_message('Auth.NET transaction error', extra={'authnet-errors': errors})
 
 
 def get_customer_payment_profile(profile_id, payment_id):
