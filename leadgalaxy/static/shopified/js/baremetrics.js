@@ -1,10 +1,10 @@
-function addBaremetricsForm(accessToken, jwtToken, stripeCustomerID) {
+function addBaremetricsForm(accessToken, stripeCustomerID, testMode) {
     !function(){if(window.barecancel&&window.barecancel.created)window.console&&console.error&&console.error("Barecancel snippet included twice.");else{window.barecancel={created:!0};var a=document.createElement("script");a.src="https://baremetrics-barecancel.baremetrics.com/js/application.js",a.async=!0;var b=document.getElementsByTagName("script")[0];b.parentNode.insertBefore(a,b),
 
         window.barecancel.params = {
             access_token_id: accessToken,
-            token: jwtToken,
-            // test_mode: true,  // TODO: remove before going live
+            customer_oid: stripeCustomerID,
+            test_mode: testMode,
             callback_send: function (data) {
                 var $triggerBtn = $('#barecancel-trigger');
                 $triggerBtn.button('loading');

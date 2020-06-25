@@ -56,7 +56,7 @@
                                     data-status="{{status.status}}"
                                     data-period-end="{{item.period_end|date:'SHORT_DATE_FORMAT'}}"
                                     data-plan="{{item.plan.get_description}}"
-                                    data-baremetrics="false">
+                                    data-baremetrics="{{ baremetrics_form_enabled }}">
                                 Cancel
                             </button>
 

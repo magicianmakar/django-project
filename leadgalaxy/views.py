@@ -3213,7 +3213,7 @@ def user_profile(request):
 
     callflex.extranumber_subscriptions = request.user.customstripesubscription_set.filter(custom_plan__type='callflex_subscription')
 
-    baremetrics_jwt_token = None
+    stripe_customer_id = None
     if not request.user.is_subuser and stripe_customer:
         subscription = None
         while subscription is None:
@@ -3227,12 +3227,8 @@ def user_profile(request):
             except stripe.error.InvalidRequestError:
                 sub.delete()
 
-        if subscription and settings.BAREMETRICS_ACCESS_TOKEN \
-                and settings.BAREMETRICS_JWT_TOKEN_KEY:
-            baremetrics_jwt_token = jwt.encode({
-                "access_token_id": settings.BAREMETRICS_ACCESS_TOKEN,
-                "subscription_oids": [subscription.subscription_id],
-            }, settings.BAREMETRICS_JWT_TOKEN_KEY, "HS256").decode()
+        if subscription and settings.BAREMETRICS_ACCESS_TOKEN:
+            stripe_customer_id = request.user.stripe_customer.customer_id
 
     return render(request, 'user/profile.html', {
         'countries': get_counrties_list(),
@@ -3247,7 +3243,7 @@ def user_profile(request):
         'shopify_plans_yearly': shopify_plans_yearly,
         'stripe_customer': stripe_customer,
         'baremetrics_form_enabled': bool(settings.BAREMETRICS_ACCESS_TOKEN),
-        'baremetrics_jwt_token': baremetrics_jwt_token,
+        'stripe_customer_id': stripe_customer_id,
         'shopify_apps_customer': shopify_apps_customer,
         'clippingmagic_plans': clippingmagic_plans,
         'clippingmagic': clippingmagic,

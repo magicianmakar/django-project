@@ -550,8 +550,11 @@
 
 {% if baremetrics_form_enabled %}
 <script type="text/javascript">
-    var accessToken = '{% app_setting "BAREMETRICS_ACCESS_TOKEN" %}';
-    addBaremetricsForm(accessToken, '{{ baremetrics_jwt_token }}');
+    addBaremetricsForm(
+        '{% app_setting "BAREMETRICS_ACCESS_TOKEN" %}',
+        '{{ stripe_customer_id }}',
+       {{  DEBUG|lower }}
+    );
 </script>
 {% endif %}
 
