@@ -141,6 +141,7 @@ class OrderFilterForm(forms.Form):
     refnum = forms.CharField(required=False, label='Payout ID')
     amount = forms.DecimalField(required=False)
     date = forms.DateField(required=False)
+    transactionid = forms.CharField(required=False)
 
 
 class MyOrderFilterForm(forms.Form):

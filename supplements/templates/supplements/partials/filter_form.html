@@ -31,7 +31,7 @@
 
   <div class="row">
 
-    <div class="col-sm-4">
+    <div class="col-sm-3">
       <div class="form-group">
         {{ form.refnum.errors }}
         <label class="control-label">Payout ID:</label>
@@ -39,7 +39,7 @@
       </div>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-sm-3">
       <div class="form-group">
         {{ form.amount.errors }}
         <label class="control-label">Amount:</label>
@@ -47,7 +47,7 @@
       </div>
     </div>
 
-    <div class="col-sm-4">
+    <div class="col-sm-3">
       <div class="form-group">
         {{ form.date.errors }}
         <label class="control-label">Date:</label>
@@ -57,6 +57,14 @@
           </div>
           {{ form.date|add_class:"form-control" }}
         </div>
+      </div>
+    </div>
+
+    <div class="col-sm-3">
+      <div class="form-group">
+        {{ form.transactionid.errors }}
+        <label class="control-label">Payment ID:</label>
+        {{ form.transactionid|add_class:"form-control" }}
       </div>
     </div>
 
