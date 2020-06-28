@@ -91,8 +91,51 @@
 <hr>
 
 <div class="container-fluid">
-  <h3 style="margin-left: 5px; margin-bottom: 30px;">Number of Supplements Sold by SKU</h3>
+  <h3 class="pls-header">Number of Supplements Sold by SKU</h3>
   <table id="sku-table" class="table"></table>
+</div>
+
+<hr>
+
+<div class="container-fluid">
+  <h3 class="pls-header">Top 10 Sellers</h3>
+  <div class="panel-group" id="accr">
+    {% for seller in seller_data %}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="panel-title">
+          <h4><a data-toggle="collapse" href="#collapse{{seller.user.username}}" data-parent="#accr" class="text-muted">{{seller.user.get_full_name}}</a></h4>
+        </div>
+      </div>
+      <div id="collapse{{seller.user.username}}" class="panel-collapse collapse in">
+        <div class="panel-body">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Supplement Name</th>
+                <th>SKU</th>
+                <th>Label SKU</th>
+                <th>Items Sold</th>
+                <th>Label Link</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in seller.items_data %}
+              <tr>
+                <td>{{item.item.user_supplement.pl_supplement.title}}</td>
+                <td>{{item.item.user_supplement.pl_supplement.shipstation_sku}}</td>
+                <td>{{item.item.sku}}</td>
+                <td>{{item.q}}</td>
+                <td><a href="{% url 'pls:admin_label_history' supplement_id=item.item.user_supplement.id %}">View</a></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 </div>
 
 {% endblock %}
@@ -106,7 +149,7 @@
 
   var colors = ['#d55170', '#93c47d', '#f19c20', '#1642a9', '#ab3bc8', '#f19c20'];
 
-  var chartsData = JSON.parse('{{ charts_data }}')
+  var chartsData = JSON.parse('{{ charts_data }}');
 
   // Gross Profit Chart
 
@@ -525,7 +568,5 @@
   }
   var avgOrderChart = new Chart(avgOrderChartEl, avgOrderChartConfig);
 
-  // orderCountChart.canvas.parentNode.style.height = '600px';
-  // orderCountChart.canvas.parentNode.style.width = '600px';
 </script>
 {% endblock %}

@@ -1795,19 +1795,14 @@ class Reports(LoginRequiredMixin, TemplateView):
         if obj.created_at > start and obj.created_at < end:
             return obj
 
-    def get_charts_data(self, interval, start_at, end_at):
+    def get_charts_data(self, all_orders, interval, start_at, end_at):
         data = None
         ds_l = None
 
         check_s = start_at
         check_e = end_at
 
-        all_orders = PLSOrder.objects.all().prefetch_related(
-            'order_items',
-            'order_items__label',
-            'order_items__label__user_supplement',
-            'order_items__label__user_supplement__pl_supplement'
-        )
+        all_orders = PLSOrder.objects.all().prefetch_related('order_items')
 
         if interval == 'day':
             order_count_data = []
@@ -2081,7 +2076,7 @@ class Reports(LoginRequiredMixin, TemplateView):
         data['total_profit'] = report.millify(total_profit)
         return data
 
-    def get_compare_charts_data(self, interval, compare):
+    def get_compare_charts_data(self, all_orders, interval, compare):
         val, period = compare.split('_')
 
         ranges = []
@@ -2122,12 +2117,7 @@ class Reports(LoginRequiredMixin, TemplateView):
                 e_day = s_day - timedelta(days=1)
             dataset_labels = ds_l
 
-        all_orders = PLSOrder.objects.all().prefetch_related(
-            'order_items',
-            'order_items__label',
-            'order_items__label__user_supplement',
-            'order_items__label__user_supplement__pl_supplement'
-        )
+        all_orders = PLSOrder.objects.all().prefetch_related('order_items')
 
         if interval == 'day':
             order_count_data = []
@@ -2504,6 +2494,13 @@ class Reports(LoginRequiredMixin, TemplateView):
 
         interval = None
 
+        all_orders = PLSOrder.objects.all().prefetch_related(
+            'order_items',
+            'order_items__label',
+            'order_items__label__user_supplement',
+            'order_items__label__user_supplement__pl_supplement'
+        )
+
         form = self.form(self.request.GET)
         if form.is_valid():
             cd = form.cleaned_data
@@ -2520,36 +2517,75 @@ class Reports(LoginRequiredMixin, TemplateView):
                     start_at = now - timedelta(days=6)
                     end_at = now
                     interval = self.validate_interval(start_at, end_at, interval)
-                    charts_data = self.get_charts_data(interval, start_at, end_at)
+                    charts_data = self.get_charts_data(all_orders, interval, start_at, end_at)
                 elif period == 'month':
                     start_at = now.replace(day=1)
                     end_at = now
                     interval = self.validate_interval(start_at, end_at, interval)
-                    charts_data = self.get_charts_data(interval, start_at, end_at)
+                    charts_data = self.get_charts_data(all_orders, interval, start_at, end_at)
                 elif period == 'year':
                     start_at = now.replace(month=1, day=1)
                     end_at = now
                     interval = self.validate_interval(start_at, end_at, interval)
-                    charts_data = self.get_charts_data(interval, start_at, end_at)
+                    charts_data = self.get_charts_data(all_orders, interval, start_at, end_at)
             else:
                 if start_date and end_date:
                     start_at = start_date
                     end_at = end_date
                     interval = self.validate_interval(start_at, end_at, interval)
-                    charts_data = self.get_charts_data(interval, start_at, end_at)
+                    charts_data = self.get_charts_data(all_orders, interval, start_at, end_at)
                 else:
                     if compare:
                         interval = self.validate_compare_interval(compare, interval)
-                        charts_data = self.get_compare_charts_data(interval, compare)
+                        charts_data = self.get_compare_charts_data(all_orders, interval, compare)
                     else:
                         interval = 'day'
                         start_at = now - timedelta(days=6)
                         end_at = now
-                        charts_data = self.get_charts_data(interval, start_at, end_at)
+                        charts_data = self.get_charts_data(all_orders, interval, start_at, end_at)
                         cd['period'] = 'week'
 
             cd['interval'] = interval
             form = self.form(initial=cd)
+
+        seller_track = []
+        seller_data = []
+
+        for order in all_orders:
+            d = {}
+            d['user'] = order.user
+            d['items_track'] = []
+            d['items_data'] = []
+            d['total_sales'] = order.amount / 100.
+            for item in order.order_items.all():
+                try:
+                    d_index = d['items_track'].index(item.label)
+                    d['items_data'][d_index]['q'] += item.quantity
+                except:
+                    d['items_track'].append(item.label)
+                    d['items_data'].append({'item': item.label, 'q': item.quantity})
+            try:
+                m_index = seller_track.index(order.user)
+                main = seller_data[m_index]
+                main['total_sales'] += order.amount / 100.
+                for i, item in enumerate(d['items_track']):
+                    try:
+                        m_i_index = main['items_track'].index(item)
+                        main['items_data'][m_i_index]['q'] += d['items_data'][i]['q']
+                    except:
+                        main['items_track'].append(item)
+                        main['items_data'].append(d['items_data'][i])
+                seller_data[m_index] = main
+            except:
+                seller_track.append(order.user)
+                seller_data.append(d)
+
+        seller_data.sort(key=report.sort_seller, reverse=True)
+        seller_data = seller_data[:10]
+        for seller in seller_data:
+            seller.pop('items_track')
+            seller['items_data'].sort(key=report.sort_items, reverse=True)
+            seller['items_data'] = seller['items_data'][:5]
 
         context.update({
             'breadcrumbs': self.get_breadcrumbs(),
@@ -2560,6 +2596,7 @@ class Reports(LoginRequiredMixin, TemplateView):
             'total_items': charts_data.pop('total_items'),
             'total_sale': charts_data.pop('total_sale'),
             'total_profit': charts_data.pop('total_profit'),
-            'charts_data': escapejs(mark_safe(json.dumps(charts_data)))
+            'charts_data': escapejs(mark_safe(json.dumps(charts_data))),
+            'seller_data': seller_data
         })
         return context

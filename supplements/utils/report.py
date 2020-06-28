@@ -1,17 +1,14 @@
 import math
 from calendar import monthrange
-from django.contrib.humanize.templatetags.humanize import intcomma
 
 
 def millify(n):
-    if n > 9999999:
-        millnames = ['', 'K', 'M', 'B', 'T']
-        n = float(n)
-        millidx = max(0, min(len(millnames) - 1, int(math.floor(0 if n == 0 else math.log10(abs(n)) / 3))))
+    millnames = ['', 'K', 'M', 'B', 'T']
+    n = float(n)
+    millidx = max(0, min(len(millnames) - 1,
+                         int(math.floor(0 if n == 0 else math.log10(abs(n)) / 3))))
 
-        return '{}{}'.format(round((n / 10 ** (3 * millidx)), 2), millnames[millidx])
-    else:
-        return str(intcomma(n))
+    return '{:.0f}{}'.format(n / 10 ** (3 * millidx), millnames[millidx])
 
 
 def get_days_in_month(dt):
@@ -72,3 +69,11 @@ def sort_sku_data(all_sku, sku_data, all_title, all_link):
                     data_dict.pop(key)
                     break
         return sorted_sku, sorted_data, sorted_title, sorted_link
+
+
+def sort_seller(obj):
+    return obj['total_sales']
+
+
+def sort_items(obj):
+    return obj['q']
