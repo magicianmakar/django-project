@@ -3,6 +3,7 @@ from decimal import Decimal
 from io import BytesIO
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 from django.views.generic import View
@@ -27,6 +28,11 @@ class SupplementsApi(ApiResponseMixin, View):
     http_method_names = ['get', 'post', 'delete']
 
     def post_make_payment(self, request, user, data):
+        try:
+            user.authorize_net_customer
+        except User.authorize_net_customer.RelatedObjectDoesNotExist:
+            return self.api_error('billing', status=404)
+
         util = Util()
         store = util.get_store(data['store_id'], data['store_type'])
         permissions.user_can_view(user, store)

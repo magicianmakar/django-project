@@ -76,6 +76,11 @@ function doMakePayment(orderDataIds, storeId, storeType) {
                 msg += " had not enough inventory.";
                 msgStr = toastr.error(msg);
             }
+        },
+        error: function (data) {
+            if (data.responseJSON["error"] === "billing") {
+                toastr.error("Please enter your billing information on the Billing tab.");
+            }
         }
     });
 }
