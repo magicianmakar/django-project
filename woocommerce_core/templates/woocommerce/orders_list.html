@@ -332,7 +332,7 @@
                                                 - {{order.billing.cpf}}
                                             {% endif %}
                                             <br>
-                                            {{order.shipping.address_1}}<br>
+                                            {{order.shipping.address_1}}{% if order.shipping.number %}, {{order.shipping.number}}{% endif %}<br>
                                             {{order.shipping.address_2}}
 
                                             {% if order.shipping.address_2 %}<br>{% endif %}
@@ -350,7 +350,7 @@
                                         {% else %}
                                             {{order.billing.first_name|default:''}} {{order.billing.last_name|default:''}}
                                             <br>
-                                            {{order.billing.address_1}}<br>
+                                            {{order.billing.address_1}}{% if order.billing.number %}, {{order.billing.number}}{% endif %}<br>
                                             {{order.billing.address_2}}
 
                                             {% if order.billing.address_2 %}<br>{% endif %}

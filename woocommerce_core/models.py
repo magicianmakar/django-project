@@ -134,7 +134,10 @@ class WooStore(StoreBase):
 
     def prepare_data(self, key, order):
         order[key]['name'] = order[key].pop('first_name')
-        order[key]['address1'] = order[key].pop('address_1')
+        if order[key].get('number'):
+            order[key]['address1'] = f"{order[key].pop('address_1')}, {order[key].pop('number')}"
+        else:
+            order[key]['address1'] = order[key].pop('address_1')
         order[key]['country_code'] = order[key]['country']
         order[key]['province'] = order[key].pop('state')
         order[key]['zip'] = order[key].pop('postcode')

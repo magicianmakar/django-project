@@ -831,6 +831,8 @@ def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, alie
 
     if customer_address['country_code'] == 'BR':
         customer_address = fix_br_address(customer_address)
+        if customer_address.get('number'):
+            customer_address['address1'] = f"{customer_address.get('address_1')}, {customer_address.get('number')}"
 
         cpf = None
         for data in order.get('meta_data', []):
