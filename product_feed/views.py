@@ -510,16 +510,16 @@ def gkart_product_feeds(request):
     if not request.user.can('product_feeds.use'):
         return render(request, 'groovekart/upgrade.html')
 
-        if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
-            if request.method == 'GET':
-                try:
-                    feed = GrooveKartFeedStatus.objects.get(id=request.GET['feed'])
-                    permissions.user_can_view(request.user, feed.store)
+    if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
+        if request.method == 'GET':
+            try:
+                feed = GrooveKartFeedStatus.objects.get(id=request.GET['feed'])
+                permissions.user_can_view(request.user, feed.store)
 
-                except GrooveKartFeedStatus.DoesNotExist:
-                    return JsonResponse({'error': 'Feed Not Found'}, status=500)
+            except GrooveKartFeedStatus.DoesNotExist:
+                return JsonResponse({'error': 'Feed Not Found'}, status=500)
 
-                return JsonResponse(feed.get_google_settings())
+            return JsonResponse(feed.get_google_settings())
 
         elif request.method == 'POST':
             try:

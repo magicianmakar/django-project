@@ -1,3 +1,5 @@
+import json
+
 from unittest.mock import patch, Mock
 
 from lib.test import BaseTestCase
@@ -433,6 +435,39 @@ class ProductFeeds(BaseTestCase):
         self.user.profile.plan.permissions.remove(self.permission)
         self.client.get(reverse('product_feeds', kwargs={'store_type': 'bigcommerce'}))
         self.assertTemplateUsed('bigcommerce/upgrade.html')
+
+    def test_must_set_brand_for_gkart_google_feed_settings(self):
+        self.login()
+        store = GrooveKartStoreFactory(user=self.user)
+        gkart_feed = GrooveKartFeedStatusFactory(store=store)
+        settings = {"brand_name": "Test", "gender": "Male", "age_group": "Adult"}
+        settings_str = json.dumps(settings)
+        data = {'feed': gkart_feed.id, 'type': 'google-feed-settings', 'settings': settings_str}
+        path = reverse('product_feeds', kwargs={'store_type': 'gkart'})
+        r = self.client.post(path, data)
+        self.assertEqual(settings['brand_name'], r.json()['brand_name'])
+
+    def test_must_set_gender_for_gkart_google_feed_settings(self):
+        self.login()
+        store = GrooveKartStoreFactory(user=self.user)
+        gkart_feed = GrooveKartFeedStatusFactory(store=store)
+        settings = {"brand_name": "Asd", "gender": "Male", "age_group": "Adult"}
+        settings_str = json.dumps(settings)
+        data = {'feed': gkart_feed.id, 'type': 'google-feed-settings', 'settings': settings_str}
+        path = reverse('product_feeds', kwargs={'store_type': 'gkart'})
+        r = self.client.post(path, data)
+        self.assertEqual(settings['gender'], r.json()['gender'])
+
+    def test_must_set_age_group_for_gkart_google_feed_settings(self):
+        self.login()
+        store = GrooveKartStoreFactory(user=self.user)
+        gkart_feed = GrooveKartFeedStatusFactory(store=store)
+        settings = {"brand_name": "Asd", "gender": "Male", "age_group": "Adult"}
+        settings_str = json.dumps(settings)
+        data = {'feed': gkart_feed.id, 'type': 'google-feed-settings', 'settings': settings_str}
+        path = reverse('product_feeds', kwargs={'store_type': 'gkart'})
+        r = self.client.post(path, data)
+        self.assertEqual(settings['age_group'], r.json()['age_group'])
 
 
 class GetProductFeed(BaseTestCase):
