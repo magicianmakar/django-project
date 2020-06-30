@@ -273,27 +273,33 @@
 
   var skuTableEl = $('#sku-table');
   if (typeof(pls_sku_sale_data.data[0]) == "number") {
-    skuTableEl.append('<thead><th>SKU</th><th>' + pls_sku_sale_data.dataset_label + '</th></thead>');
+    skuTableEl.append('<thead><th>SKU</th><th>Supplement Name</th><th>No of Supplements Sold</th><th>Supplement Link</th></thead>');
     var body = '';
     $(pls_sku_sale_data.data).each(function(i, obj) {
-      body = body + '<tr><td>'+pls_sku_sale_data.label_data[i]+'</td><td>'+obj+'</td></tr>';
+      body = body + '<tr><td>'+pls_sku_sale_data.label_data[i]+'</td><td>'+pls_sku_sale_data.title_data[i]+'</td><td>'+obj+'</td><td><a href="'+pls_sku_sale_data.link_data[i]+'">View</a></td></tr>';
     });
     skuTableEl.append('<tbody>'+body+'</tbody>');
   } else {
-    var head = '<th>SKU</th>';
+    var head = '<th>SKU</th><th>Supplement Name</th>';
     var body = ''
     var row = [];
-    $(pls_sku_sale_data.data).each(function(j, obj) {
+    $(pls_sku_sale_data.data).each(function(j, l_obj) {
       head = head + '<th>'+ pls_sku_sale_data.dataset_label[j] +'</th>'
-      $(obj).each(function(i, obj) {
+      if (pls_sku_sale_data.data.length == j + 1) {
+        head = head + '<th>Supplement Link</th>'
+      }
+      $(l_obj).each(function(i, obj) {
         if (j === 0){
           if (row[i] != undefined) {
-            row.push(row[i] + '<td>'+pls_sku_sale_data.label_data[i]+'</td>' + '<td>'+obj+'</td>');
+            row.push(row[i] + '<td>'+pls_sku_sale_data.label_data[i]+'</td>' + '<td>'+pls_sku_sale_data.title_data[i]+'</td>' + '<td>'+obj+'</td>');
           } else {
-            row.push('<td>'+pls_sku_sale_data.label_data[i]+'</td>' + '<td>'+obj+'</td>');
+            row.push('<td>'+pls_sku_sale_data.label_data[i]+'</td>' + '<td>'+pls_sku_sale_data.title_data[i]+'</td>' + '<td>'+obj+'</td>');
           }
         } else {
           row[i] = row[i] + '<td>'+obj+'</td>';
+        }
+        if (pls_sku_sale_data.dataset_label.length === j + 1) {
+          row[i] = row[i] + '<td><a href="'+pls_sku_sale_data.link_data[i]+'">View</a></td>';
         }
       });
     });

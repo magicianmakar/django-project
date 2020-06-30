@@ -1589,7 +1589,12 @@ class Reports(LoginRequiredMixin, TemplateView):
         check_s = start_at
         check_e = end_at
 
-        all_orders = PLSOrder.objects.all().prefetch_related('order_items')
+        all_orders = PLSOrder.objects.all().prefetch_related(
+            'order_items',
+            'order_items__label',
+            'order_items__label__user_supplement',
+            'order_items__label__user_supplement__pl_supplement'
+        )
 
         if interval == 'day':
             order_count_data = []
@@ -1786,18 +1791,26 @@ class Reports(LoginRequiredMixin, TemplateView):
 
         all_sku = []
         sku_data = []
+        all_title = []
+        all_link = []
         for order in filtered_orders:
             for line_item in order.order_items.all():
-                sku = line_item.label.sku
+                sku = line_item.label.user_supplement.pl_supplement.shipstation_sku
+                title = line_item.label.user_supplement.pl_supplement.title
+                pl_link = reverse('pls:admin_label_history', kwargs={'supplement_id': line_item.label.user_supplement.id})
                 if sku not in all_sku:
                     all_sku.append(sku)
                     sku_data.append(line_item.quantity)
+                    all_title.append(title)
+                    all_link.append(pl_link)
                 else:
                     sku_data[all_sku.index(sku)] = sku_data[all_sku.index(sku)] + line_item.quantity
         data['pls_sku_data'] = {
             'data': sku_data,
             'label_data': all_sku,
-            'dataset_label': ds_l
+            'dataset_label': ds_l,
+            'title_data': all_title,
+            'link_data': all_link
         }
 
         payout_revenue = sum(order.sale_price for order in filtered_orders)
@@ -1817,7 +1830,7 @@ class Reports(LoginRequiredMixin, TemplateView):
         wholesale_price = wholesale_price if wholesale_price else 0
         shipping_price = net_p_data['payout_items__shipping_price__sum']
         shipping_price = shipping_price if shipping_price else 0
-        net_profit = (amount - wholesale_price - shipping_price) / 3
+        net_profit = (amount - (wholesale_price + shipping_price)) / 3
         net_profit = round(net_profit, 2)
         data['gross_profit'] = report.millify(gross_profit)
         data['net_profit'] = report.millify(net_profit)
@@ -1864,7 +1877,12 @@ class Reports(LoginRequiredMixin, TemplateView):
                 e_day = s_day - timedelta(days=1)
             dataset_labels = ds_l
 
-        all_orders = PLSOrder.objects.all().prefetch_related('order_items')
+        all_orders = PLSOrder.objects.all().prefetch_related(
+            'order_items',
+            'order_items__label',
+            'order_items__label__user_supplement',
+            'order_items__label__user_supplement__pl_supplement'
+        )
 
         if interval == 'day':
             order_count_data = []
@@ -2085,6 +2103,8 @@ class Reports(LoginRequiredMixin, TemplateView):
 
         all_sku = []
         sku_data = []
+        all_title = []
+        all_link = []
         for t_range in ranges:
             compare_sku = []
             compare_sku_data = []
@@ -2097,9 +2117,13 @@ class Reports(LoginRequiredMixin, TemplateView):
             )
             for order in filtered_orders:
                 for line_item in order.order_items.all():
-                    sku = line_item.label.sku
+                    sku = line_item.label.user_supplement.pl_supplement.shipstation_sku
+                    title = line_item.label.user_supplement.pl_supplement.title
+                    pl_link = reverse('pls:admin_label_history', kwargs={'supplement_id': line_item.label.user_supplement.id})
                     if sku not in all_sku:
                         all_sku.append(sku)
+                        all_title.append(title)
+                        all_link.append(pl_link)
                     if sku not in compare_sku:
                         compare_sku.append(sku)
                         compare_sku_data.append(line_item.quantity)
@@ -2123,7 +2147,9 @@ class Reports(LoginRequiredMixin, TemplateView):
         data['pls_sku_data'] = {
             'data': sku_data,
             'label_data': all_sku,
-            'dataset_label': dataset_labels
+            'dataset_label': dataset_labels,
+            'title_data': all_title,
+            'link_data': all_link
         }
 
         payout_revenue = 0
@@ -2155,7 +2181,7 @@ class Reports(LoginRequiredMixin, TemplateView):
             amount = sum(item.amount for item in payout_items)
             wholesale_price = sum(item.wholesale_price for item in payout_items)
             shipping_price = sum(item.shipping_price for item in payout_items)
-            t_range_net_profit = (amount - wholesale_price - shipping_price) / 3
+            t_range_net_profit = (amount - (wholesale_price + shipping_price)) / 3
             net_profit += round(t_range_net_profit, 2)
         data['gross_profit'] = report.millify(gross_profit)
         data['net_profit'] = report.millify(net_profit)
