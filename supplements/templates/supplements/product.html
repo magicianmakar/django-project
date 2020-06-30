@@ -180,6 +180,12 @@
     <div class="form-group {{ form.template.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Template:</label>
       <div class='col-sm-7'>
+        {% if supplement.label_template_url %}
+        <div class="m-b-xs">
+          Click to see
+          <i><a href="{{ supplement.label_template_url }}" target="_blank">current Template.</a></i>
+        </div>
+        {% endif %}
         <div class="custom-file">
           <input id="product-template" type="file" name="template" class="custom-file-input">
           <label for="product-template" class="custom-file-label" data-placeholder="Choose template file...">
@@ -195,6 +201,12 @@
     <div class="form-group {{ form.thumbnail.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Thumbnail:</label>
       <div class='col-sm-7'>
+        {% if supplement.thumbnail %}
+        <div class="m-b-xs">
+          Click to see
+          <i><a href="{{ supplement.thumbnail }}" target="_blank">current Thumbnail.</a></i>
+        </div>
+        {% endif %}
         <div class="custom-file">
           <input id="product-thumbnail" type="file" name="thumbnail" class="custom-file-input">
           <label for="product-thumbnail" class="custom-file-label" data-placeholder="Choose thumbnail file...">
@@ -210,6 +222,12 @@
     <div class="form-group {{ form.approvedlabel.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Pre-Approved Label:</label>
       <div class='col-sm-7'>
+        {% if supplement.approved_label_url %}
+        <div class="m-b-xs">
+          Click to see
+          <i><a href="{{ supplement.approved_label_url }}" target="_blank">current Pre-Approved Label.</a></i>
+        </div>
+        {% endif %}
         <div class="custom-file">
           <input id="product-label-url" type="file" name="approvedlabel" class="custom-file-input">
           <label for="product-label-url" class="custom-file-label" data-placeholder="Choose file...">
@@ -242,6 +260,10 @@
     <div class="form-group {{ form.authenticity_certificate.errors|yesno:'has-error,' }}">
       <label class="col-sm-2 control-label">Authenticity Certificate:</label>
       <div class='col-sm-7'>
+        {% if supplement.authenticity_certificate_url %}
+        Click to see
+        <i><a href="{{ supplement.authenticity_certificate_url }}" target="_blank">current Authenticity Certificate.</a></i>
+        {% endif %}
         <div class="custom-file">
           <input id="product-certificate" type="file" name="authenticity_certificate" class="custom-file-input">
           <label for="product-certificate" class="custom-file-label" data-placeholder="Choose certificate file...">

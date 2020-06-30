@@ -211,12 +211,13 @@ class ProductEdit(Product):
         form_data['inventory'] = self.supplement.inventory
         form_data['mockup_type'] = self.supplement.mockup_type
         form_data['product_information'] = self.supplement.product_information
-        form_data['authenticity_certificate_url'] = self.supplement.authenticity_certificate_url
 
         context = {
             'breadcrumbs': self.get_breadcrumbs(supplement_id),
             'form': self.form(initial=form_data, instance=self.supplement),
         }
+        context['supplement'] = self.supplement
+
         return render(request, self.get_template(), context)
 
     def post(self, request, supplement_id):
