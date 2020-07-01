@@ -6,6 +6,7 @@ from django.conf import settings
 from django.test import tag
 from redis.exceptions import LockError
 
+from leadgalaxy.utils import aliexpress_shipping_info
 from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrder, ShopifyOrderLine
 from leadgalaxy import utils
@@ -761,6 +762,15 @@ class UtilsTestCase(BaseTestCase):
 
     def test_ensure_title_unicode(self):
         self.assertEqual(ensure_title('vari\xe9t\xe9'), 'Vari\xe9t\xe9')
+
+    def test_aliexpress_shipping_method(self):
+        data = aliexpress_shipping_info(4000869234210, "US")
+        self.assertTrue(data)
+        self.assertIn('freight', data)
+        self.assertEqual(len(data['freight']), 3)
+
+        for k in ['price', 'companyDisplayName', 'company']:
+            self.assertIn(k, data['freight'][0])
 
 
 class CustomerAddressTestCase(BaseTestCase):

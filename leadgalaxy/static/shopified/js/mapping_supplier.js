@@ -370,6 +370,10 @@
     function loadShippingMethods(e) {
         var select = $(e.target);
 
+        var shippingSelect = select.parents('.shipping-rule').find('.shipping-method');
+        shippingSelect.empty();
+        shippingSelect.trigger("chosen:updated");
+
         $.ajax({
             url: '/shipping/info',
             type: 'GET',
@@ -384,7 +388,6 @@
                 select: select
             },
             success: function(data) {
-                var shippingSelect = this.select.parents('.shipping-rule').find('.shipping-method');
                 $.each(data.freight, function(i, el) {
                     var price = parseFloat(el.price);
 

@@ -442,43 +442,52 @@ def verify_shopify_webhook(store, request, throw_excption=True):
 
 
 def aliexpress_shipping_info(aliexpress_id, country_code):
-    shippement_key = 'shipping_info_{}_{}'.format(aliexpress_id, country_code)
-    shippement_data = cache.get(shippement_key)
+    shippement_key = f'ali_shipping_info_{aliexpress_id}_{country_code}'
+    freight_data = cache.get(shippement_key)
 
-    if shippement_data is not None:
-        return shippement_data
-
-    cache_key = 'aliexpress_product_price_{}'.format(aliexpress_id)
-    product_price = cache.get(cache_key)
+    if freight_data is not None:
+        return freight_data
 
     params = {
-        'f': 'd',
-        'productid': aliexpress_id,
-        'count': '1',
-        'currencyCode': 'USD',
-        'transactionCurrencyCode': 'USD',
-        'sendGoodsCountry': '',
-        'country': country_code,
-        'province': '',
-        'city': '',
-        'userType': 'cnfm',
+        "productId": aliexpress_id,
+        "count": 1,
+        "country": country_code,
+        "provinceCode": '',
+        "cityCode": '',
+        "tradeCurrency": 'USD',
+        "userScene": 'PC_DETAIL_SHIPPING_PANEL',
+
     }
 
-    if product_price:
-        params['minPrice'] = product_price
-        params['maxPrice'] = product_price
+    headers = {
+        'referer': f'https://www.aliexpress.com/item/{aliexpress_id}.html'
+    }
 
-    r = requests.get(url="https://freight.aliexpress.com/ajaxFreightCalculateService.htm", timeout=10, params=params)
+    freight_data = []
 
     try:
-        shippement_data = json.loads(r.text[1:-1])
-        cache.set(shippement_key, shippement_data, timeout=43200)
-    except requests.exceptions.ConnectTimeout:
-        capture_exception(level='warning')
-        cache.set(shippement_key, shippement_data, timeout=120)
-        shippement_data = {}
+        r = requests.get(
+            url="https://www.aliexpress.com/aeglodetailweb/api/logistics/freight",
+            headers=headers,
+            params=params,
+            timeout=10)
+
+        freight_data = r.json()['body']['freightResult']
     except:
-        shippement_data = {}
+        capture_exception()
+
+    shippement_data = {
+        'freight': []
+    }
+
+    for i in freight_data:
+        shippement_data['freight'].append({
+            'price': i['freightAmount']['value'],
+            'companyDisplayName': i['company'],
+            'company': i['serviceName'],
+        })
+
+    cache.set(shippement_key, shippement_data, timeout=43200)
 
     return shippement_data
 
