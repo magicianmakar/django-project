@@ -325,6 +325,10 @@ class ApiBase(ApiResponseMixin, View):
                 except:
                     capture_exception()
 
+            if order.get('supplier_type') != 'ebay' and order['shipping_address']['country_code'].lower() == 'fr':
+                if order['order']['phone'] and not order['order']['phone'].startswith('0'):
+                    order['order']['phone'] = order['order']['phone'].rjust(10, '0')
+
             if user.models_user.get_config('_aliexpress_telephone_workarround'):
                 order['order']['telephone_workarround'] = True
 
