@@ -299,6 +299,14 @@ class PayoutMixin:
         return self.to_currency(self.shipping_price)
 
     @property
+    def total_shipping(self):
+        shipping = self.shipping_price
+        if self.shipping_cost:
+            shipping -= self.shipping_cost
+
+        return shipping
+
+    @property
     def profit_split(self):
         price = self.cost_price - self.wholesale_price
         if self.shipping_cost:
@@ -308,7 +316,7 @@ class PayoutMixin:
 
     @property
     def profit_split_string(self):
-        return self.to_currency(self.profit_split * .25)
+        return self.to_currency((self.profit_split * .25) + (self.total_shipping * .25))
 
     @property
     def profit_string(self):
@@ -316,11 +324,11 @@ class PayoutMixin:
 
     @property
     def pls_payout(self):
-        return (self.profit_split * .50) + self.wholesale_price
+        return (self.profit_split * .50) + self.wholesale_price + self.shipping_cost
 
     @property
     def pls_payout_string(self):
-        return self.to_currency(self.pls_payout)
+        return self.to_currency(self.pls_payout + (self.total_shipping * .5))
 
     @property
     def shipping_cost_string(self):
