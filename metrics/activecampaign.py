@@ -226,7 +226,7 @@ class ActiveCampaignAPI:
         custom_attributes = intercom_contact.get('custom_attributes') or {}
 
         # Webhook also uses two contact types: user or contact
-        if intercom_contact['role'] == 'user' or intercom_contact['type'] == 'user':
+        if intercom_contact.get('role') == 'user' or intercom_contact.get('type') == 'user':
             list_id = Lists.CUSTOMERS
             dropified_id = intercom_contact.get('external_id', intercom_contact.get('user_id'))
             external_id = ''
