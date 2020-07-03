@@ -399,7 +399,7 @@ class MockupType(models.Model):
                     {'left': 0.19, 'top': -0.83, 'size': 0.6, 'bgLeft': 0.15, 'bgTop': 0.16, 'bgSize': 0.7}
                 ],
             ]
-        elif self.slug == 'sour-gummies-bottle':
+        elif self.slug in ['sour-gummies-bottle', 'cdb-gummies']:
             presets = [
                 [{'left': 0.2, 'top': -0.5, 'size': 0.68}],
                 [{'left': 0.2, 'top': -0.5, 'size': 0.68, 'layers': {'shadow': False}}],
@@ -416,6 +416,86 @@ class MockupType(models.Model):
                     {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': -0.02, 'bgTop': 0.29, 'bgSize': 0.61},
                     {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': 0.4, 'bgTop': 0.29, 'bgSize': 0.61},
                     {'left': 0.2, 'top': -0.5, 'size': 0.68, 'bgLeft': 0.15, 'bgTop': 0.24, 'bgSize': 0.7}
+                ],
+            ]
+        elif self.slug == '2oz-pump-bottle':
+            presets = [
+                [{'left': 0.13, 'top': -0.83, 'size': 0.78}],
+                [{'left': 0.13, 'top': -0.83, 'size': 0.78, 'layers': {'shadow': False}}],
+                [{'left': 0.27, 'top': -1.36, 'size': 1.1}],
+                [{'left': 0.27, 'top': -1.36, 'size': 1.1, 'layers': {'shadow': False}}],
+                [
+                    {'left': 0.13, 'top': -0.83, 'size': 0.78, 'bgLeft': -0.24, 'bgTop': 0.06, 'bgSize': 0.93},
+                    {'left': 0.13, 'top': -0.83, 'size': 0.78, 'bgLeft': 0.26, 'bgTop': 0.06, 'bgSize': 0.93},
+                    {'left': 0.13, 'top': -0.83, 'size': 0.78, 'bgLeft': -0.04, 'bgTop': 0.01, 'bgSize': 1.03}
+                ],
+                [
+                    {'left': 0.13, 'top': -0.83, 'size': 0.78, 'bgLeft': -0.27, 'bgTop': 0.13, 'bgSize': 0.74},
+                    {'left': 0.13, 'top': -0.83, 'size': 0.78, 'bgLeft': 0.52, 'bgTop': 0.13, 'bgSize': 0.74},
+                    {'left': 0.13, 'top': -0.83, 'size': 0.78, 'bgLeft': -0.17, 'bgTop': 0.075, 'bgSize': 0.89},
+                    {'left': 0.13, 'top': -0.83, 'size': 0.78, 'bgLeft': 0.27, 'bgTop': 0.075, 'bgSize': 0.89},
+                    {'left': 0.13, 'top': -0.83, 'size': 0.78, 'bgLeft': -0.017, 'bgTop': 0.025, 'bgSize': 1.02}
+                ]
+            ]
+        elif self.slug == '4oz-cosmetic-jar':
+            presets = [
+                [{'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgTop': -0.17}],
+                [{'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgTop': -0.17, 'layers': {'shadow': False}}],
+                [{'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgTop': -0.17}],
+                [{'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgTop': -0.17, 'layers': {'shadow': False}}],
+                [
+                    {'name': 'Left', 'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgLeft': -0.09, 'bgTop': 0.06, 'bgSize': 0.64},
+                    {'name': 'Right', 'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgLeft': 0.44, 'bgTop': 0.06, 'bgSize': 0.64},
+                    {'name': 'Top', 'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgLeft': 0.105, 'bgTop': -0.01, 'bgSize': 0.77}
+                ],
+                [
+                    {'name': '3 Left', 'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgLeft': -0.057, 'bgTop': 0.28, 'bgSize': 0.41},
+                    {'name': '3 Right', 'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgLeft': 0.64, 'bgTop': 0.28, 'bgSize': 0.41},
+                    {'name': '2 Left', 'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgLeft': 0.03, 'bgTop': 0.2, 'bgSize': 0.52},
+                    {'name': '2 Right', 'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgLeft': 0.42, 'bgTop': 0.2, 'bgSize': 0.52},
+                    {'name': 'Top', 'left': 0.27, 'top': -2.61, 'size': 0.51, 'bgLeft': 0.18, 'bgTop': 0.13, 'bgSize': 0.63}
+                ]
+            ]
+        elif self.slug == 'exfoliating-cleanser':
+            presets = [
+                [{'left': -0.53, 'top': -0.69, 'size': 1.7}],
+                [{'left': -0.53, 'top': -0.69, 'size': 1.7, 'layers': {'shadow': False}}],
+                [{'left': -0.29, 'top': -0.88, 'size': 2.06}],
+                [{'left': -0.29, 'top': -0.88, 'size': 2.06, 'layers': {'shadow': False}}],
+                [
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.3545, 'bgTop': -0.02, 'bgSize': 1.01},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.2875, 'bgTop': -0.02, 'bgSize': 1.01},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.1875, 'bgTop': -0.07, 'bgSize': 1.09},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.035, 'bgTop': -0.07, 'bgSize': 1.09},
+                ],
+                [
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.2545, 'bgTop': 0.2125, 'bgSize': 0.6238},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.6125, 'bgTop': 0.23, 'bgSize': 0.6146},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.175, 'bgTop': 0.1875, 'bgSize': 0.6767},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.475, 'bgTop': 0.2025, 'bgSize': 0.6616},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': -0.0895, 'bgTop': 0.16, 'bgSize': 0.7313},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.3175, 'bgTop': 0.1625, 'bgSize': 0.7308},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.0025, 'bgTop': 0.1325, 'bgSize': 0.7892},
+                    {'left': -0.5465, 'top': -0.6803, 'size': 1.7, 'bgLeft': 0.17, 'bgTop': 0.135, 'bgSize': 0.7892},
+                ],
+            ]
+        elif self.slug == '1oz-pump-bottle':
+            presets = [
+                [{'left': -0.16, 'top': -1.38, 'size': 1.36}],
+                [{'left': -0.16, 'top': -1.38, 'size': 1.36, 'layers': {'shadow': False}}],
+                [{'left': -0.16, 'top': -1.38, 'size': 1.36}],
+                [{'left': -0.16, 'top': -1.38, 'size': 1.36, 'layers': {'shadow': False}}],
+                [
+                    {'left': -0.16, 'top': -1.38, 'size': 1.36, 'bgLeft': -0.252, 'bgTop': -0.06, 'bgSize': 1.08},
+                    {'left': -0.16, 'top': -1.38, 'size': 1.36, 'bgLeft': 0.175, 'bgTop': -0.06, 'bgSize': 1.08},
+                    {'left': -0.16, 'top': -1.38, 'size': 1.36, 'bgLeft': -0.09, 'bgTop': -0.1325, 'bgSize': 1.18}
+                ],
+                [
+                    {'left': -0.16, 'top': -1.38, 'size': 1.36, 'bgLeft': -0.37, 'bgTop': 0.03, 'bgSize': 0.94},
+                    {'left': -0.16, 'top': -1.38, 'size': 1.36, 'bgLeft': 0.42, 'bgTop': 0.03, 'bgSize': 0.94},
+                    {'left': -0.16, 'top': -1.38, 'size': 1.36, 'bgLeft': -0.252, 'bgTop': -0.06, 'bgSize': 1.08},
+                    {'left': -0.16, 'top': -1.38, 'size': 1.36, 'bgLeft': 0.175, 'bgTop': -0.06, 'bgSize': 1.08},
+                    {'left': -0.16, 'top': -1.38, 'size': 1.36, 'bgLeft': -0.09, 'bgTop': -0.1325, 'bgSize': 1.18}
                 ],
             ]
         else:
@@ -480,9 +560,45 @@ class MockupType(models.Model):
                 {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
                 {'layer': 'light', 'mode': 'source-over', 'file': 'refractions.png'},
             ]
-        elif self.slug == 'sour-gummies-bottle':
+        elif self.slug in ['sour-gummies-bottle', 'cdb-gummies']:
             layers = [
                 {'layer': 'container', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
+                {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png'},
+            ]
+        elif self.slug == '2oz-pump-bottle':
+            layers = [
+                {'layer': 'bottle', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'shadow', 'mode': 'multiply', 'file': 'shadow.png', 'background': True},
+                {'layer': 'light', 'mode': 'source-over', 'file': 'refractions.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
+                {'combined': ['mask'], 'layer': 'light2', 'mode': 'source-over', 'file': 'refractions.png'},
+            ]
+        elif self.slug == '4oz-cosmetic-jar':
+            layers = [
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'jar', 'mode': 'source-over', 'file': 'jar.png', 'background': True},
+                {'layer': 'backlight', 'mode': 'screen', 'file': 'refractions.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
+                {'combined': ['mask'], 'layer': 'light', 'mode': 'screen', 'file': 'refractions.png'},
+            ]
+        elif self.slug == 'exfoliating-cleanser':
+            layers = [
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'bottle', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
+                {'combined': ['mask'], 'layer': 'light2', 'mode': 'screen', 'file': 'refractions.png'},
+            ]
+        elif self.slug == '1oz-pump-bottle':
+            layers = [
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'bottle', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png', 'background': True},
                 {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
                 {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
                 {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png'},
