@@ -63,7 +63,7 @@ class Command(DropifiedBaseCommand):
             try:
                 active_stores = user.bigcommercestore_set.filter(is_active=True)
                 # processing only users with BG stores
-                if active_stores.count() > 0:
+                if active_stores.count() > 0 and not user.is_staff and user.email != 'joan@thedevelopmentmachine.com':
                     for bc_store in active_stores:
                         data_item = []
                         data_item.append(settings.BIGCOMMERCE_APP_ID)
@@ -108,8 +108,7 @@ class Command(DropifiedBaseCommand):
                         totals['total_revenue'] += monthly_revenue
                         totals['total_revenue_share'] += monthly_revenue_share
                         try:
-                            plan_total = totals['plans'][user.profile.plan.id]
-                            plan_total.total_bc_users += 1
+                            totals['plans'][user.profile.plan.id]['total_bc_users'] += 1
                         except:
                             totals['plans'][user.profile.plan.id] = {'title': user.profile.plan.title, 'total_bc_users': 1}
 
