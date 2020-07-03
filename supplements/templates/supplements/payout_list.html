@@ -66,6 +66,7 @@
     <th>Date</th>
     <th>Status</th>
     <th>Action</th>
+    <th>Download</th>
   </thead>
   <tbody>
     {% for payout in object_list %}
@@ -99,6 +100,11 @@
       <td>
         <a href="{% url 'pls:order_list' %}?refnum={{ payout.reference_number}}">
           View Orders
+        </a>
+      </td>
+      <td>
+        <a href="{% url 'pls:payout_list' %}?ref_id={{ payout.id}}&ref_num={{ payout.reference_number}}&export=true" target="_blank">
+          <i class="fa fa-download"></i>
         </a>
       </td>
     {% empty %}

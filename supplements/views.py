@@ -1270,6 +1270,72 @@ class PayoutView(common_views.PayoutView):
         context['add_form'] = add_form or add_form()
         return context
 
+    def get(self, *args, **kwargs):
+        csv_export = bool(self.request.GET.get('export'))
+        ref_id = self.request.GET.get('ref_id')
+        if ref_id:
+            ref_id = int(ref_id)
+
+        # Get list results the normal way
+        result = super().get(*args, **kwargs)
+
+        # Absence of these params means that payout list is requested
+        if not csv_export or not ref_id:
+            return result
+
+        response = HttpResponse(content_type='text/csv')
+        filename = f"payout-{self.request.GET.get('ref_num') or ref_id}.csv"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        writer = csv.writer(response)
+        writer.writerow([
+            'Payout #',
+            'Order #',
+            'DB SKU',
+            'Label SKU',
+            'Quantity',
+            'Wholesale Cost',
+            'Shipping Revenue',
+        ])
+
+        order_obj = self.order_class.objects.filter(payout_id=ref_id)
+        if order_obj.exists():
+            for pls_order in order_obj:
+                payout_num = pls_order.payout
+                order_num = pls_order.order_number
+                shipping_revenue = pls_order.shipping_price_string
+                order_items = pls_order.order_items.all()
+                for pls_item in order_items:
+                    user_supplement = pls_item.label.user_supplement
+                    db_sku = user_supplement.pl_supplement.shipstation_sku
+                    label_sku = pls_item.label.sku
+                    quantity = pls_item.quantity
+                    wholesale_cost = user_supplement.pl_supplement.wholesale_price
+                    wholesale_cost = "${:.2f}".format(wholesale_cost)
+
+                    data = [
+                        payout_num,
+                        order_num,
+                        db_sku,
+                        label_sku,
+                        quantity,
+                        wholesale_cost,
+                        shipping_revenue
+                    ]
+                    writer.writerow(data)
+        else:
+            data = [
+                'N/A',
+                'N/A',
+                'N/A',
+                'N/A',
+                'N/A',
+                'N/A',
+                'N/A'
+            ]
+            writer.writerow(data)
+        return response
+
     def post(self, request):
         self.add_form = form = self.add_form(request.POST)
         if form.is_valid():
