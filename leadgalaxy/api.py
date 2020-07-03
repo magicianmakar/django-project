@@ -57,6 +57,7 @@ from shopify_orders.models import (
     ShopifyOrderLog,
 )
 from product_alerts.utils import unmonitor_store
+from metrics.tasks import activecampaign_update_email
 
 from . import tasks
 from . import utils
@@ -2219,6 +2220,8 @@ class ShopifyStoreApi(ApiBase):
 
             email_change = (user.email != email)
             if email_change:
+                activecampaign_update_email.delay(user.email, email)
+
                 user.email = email
                 user.save()
 

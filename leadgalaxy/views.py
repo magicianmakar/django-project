@@ -103,6 +103,8 @@ from product_alerts.utils import variant_index_from_supplier_sku, delete_product
 
 from profit_dashboard.models import FacebookAccess
 
+from metrics.activecampaign import ActiveCampaignAPI
+
 from . import tasks
 from . import utils
 from .forms import (
@@ -1450,8 +1452,58 @@ def webhook(request, provider, option):
 
             return JsonResponse({'status': 'ok'})
 
-    elif provider == 'intercom' and option == 'activecampaign':
-        return JsonResponse({'status': 'ok'})
+    elif provider == 'activecampaign':
+        if option == 'trial':
+            user_id = request.POST.get('contact[fields][dropified_id]')
+            email = request.POST.get('contact[email]')
+            user = get_object_or_404(User, id=user_id, email=email)
+
+            api = ActiveCampaignAPI()
+            contact_data = {
+                'email': user.email,
+                'custom_fields': api.get_user_plan_data(user)
+            }
+            api.update_customer(contact_data, version='1')
+
+        return HttpResponse()
+
+    elif provider == 'intercom':
+        if option == 'activecampaign':
+            key = bytes(settings.AC_INTERCOM_SECRET, 'utf8')
+            digester = hmac.new(key=key, msg=request.body, digestmod=sha1)
+            signature = f"sha1={digester.hexdigest()}"
+            if request.META['HTTP_X_HUB_SIGNATURE'] != signature:
+                return HttpResponse(status=403)
+
+            payload = json.loads(request.body)
+            intercom_contact = payload['data']['item']
+            api = ActiveCampaignAPI()
+
+            if payload['topic'] == 'user.unsubscribed':
+                contact_data = {
+                    'email': intercom_contact['email'],
+                    'custom_fields': {
+                        'SEND_EMAILS': not intercom_contact['unsubscribed_from_emails']
+                    }
+                }
+                api.update_customer(contact_data, version='1')
+                return HttpResponse()
+
+            elif payload['topic'] in ['contact.created', 'contact.added_email']:
+                user = User.objects.filter(email=intercom_contact['email']).first()
+                if user is None:
+                    contact_data = api.get_intercom_data(intercom_contact)
+                else:
+                    contact_data = api.get_user_data(user)
+
+                api.update_customer(contact_data, version='1')
+                return HttpResponse()
+
+            capture_message('Non-handled Intercom to Active Campaign Topic', extra={'topic': payload['topic']})
+            return HttpResponse()
+
+        capture_message('Non-handled Intercom Topic', extra={'topic': option})
+        return HttpResponse()
 
     else:
         capture_message('Unknown Webhook Provider')
