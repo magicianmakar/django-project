@@ -2204,8 +2204,6 @@ class Reports(LoginRequiredMixin, TemplateView):
     def validate_interval(self, start_at, end_at, interval):
         if interval == 'day' and (end_at - start_at).days > 60:
             return 'week'
-        if interval == 'week' and (end_at - start_at).days < 29:
-            return 'day'
         if interval == 'month' and (end_at - start_at).days < 120:
             if (end_at - start_at).days < 60:
                 return 'day'
