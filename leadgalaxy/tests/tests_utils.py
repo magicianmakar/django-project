@@ -769,7 +769,7 @@ class UtilsTestCase(BaseTestCase):
         self.assertIn('freight', data)
         self.assertEqual(len(data['freight']), 3)
 
-        for k in ['price', 'companyDisplayName', 'company']:
+        for k in ['price', 'companyDisplayName', 'company', 'time', 'isTracked']:
             self.assertIn(k, data['freight'][0])
 
 

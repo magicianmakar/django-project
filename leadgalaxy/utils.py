@@ -456,7 +456,6 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
         "cityCode": '',
         "tradeCurrency": 'USD',
         "userScene": 'PC_DETAIL_SHIPPING_PANEL',
-
     }
 
     headers = {
@@ -485,6 +484,8 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
             'price': i['freightAmount']['value'],
             'companyDisplayName': i['company'],
             'company': i['serviceName'],
+            'time': i['time'],
+            'isTracked': i['tracking'],
         })
 
     cache.set(shippement_key, shippement_data, timeout=43200)
