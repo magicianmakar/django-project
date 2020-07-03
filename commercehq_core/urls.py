@@ -23,7 +23,7 @@ urlpatterns = [
     url(r'^orders$', commercehq_core.views.OrdersList.as_view(), name='orders_list'),
     url(r'^orders/place$', commercehq_core.views.OrderPlaceRedirectView.as_view(), name='orders_place'),
     url(r'^orders/track$', commercehq_core.views.OrdersTrackList.as_view(), name='orders_track'),
-
+    url(r'^profit-dashboard$', commercehq_core.views.ProfitDashboardView.as_view(), name='profits'),
     url(r'^products/update$', commercehq_core.views.product_alerts, name='product_alerts'),
 
     url(r'^subusers$', subusers.views.subusers, name='subusers'),

@@ -26,7 +26,9 @@ from django.views.generic.detail import DetailView
 from django.core.cache.utils import make_template_fragment_key
 
 from supplements.models import PLSOrderLine
+from profits.mixins import ProfitDashboardMixin
 from shopified_core import permissions
+from shopified_core.decorators import PlatformPermissionRequired
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
@@ -1451,3 +1453,20 @@ class OrdersTrackList(ListView):
             self.store = get_store_from_request(self.request)
 
         return self.store
+
+
+@method_decorator(login_required, name='dispatch')
+@method_decorator(PlatformPermissionRequired('commercehq'), name='dispatch')
+class ProfitDashboardView(ProfitDashboardMixin, ListView):
+    store_type = 'chq'
+    store_model = CommerceHQStore
+    base_template = 'base_commercehq_core.html'
+
+    def get_context_data(self, **kwargs):
+        # Check for new orders in WooCommerce
+        current_page = safe_int(self.request.GET.get('page'), 1)
+
+        if current_page == 1:
+            self.get_store()
+
+        return super().get_context_data(**kwargs)

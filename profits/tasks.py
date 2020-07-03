@@ -7,6 +7,7 @@ from app.celery_base import celery_app, CaptureFailure
 from groovekart_core.models import GrooveKartStore
 from bigcommerce_core.models import BigCommerceStore
 from woocommerce_core.models import WooStore
+from commercehq_core.models import CommerceHQStore
 
 from . import utils
 from . import models
@@ -20,6 +21,8 @@ def fetch_facebook_insights(self, store_id, store_type, facebook_access_ids):
         store = BigCommerceStore.objects.get(pk=store_id)
     elif store_type == 'woo':
         store = WooStore.objects.get(pk=store_id)
+    elif store_type == 'chq':
+        store = CommerceHQStore.objects.get(pk=store_id)
 
     try:
         for access in models.FacebookAccess.objects.filter(id__in=facebook_access_ids):
@@ -152,4 +155,30 @@ def sync_woocommerce_store_profits(self, sync_id, store_id):
         if len(orders) < limit:
             break
         page += 1
+    sync.save()  # Update last sync
+
+
+@celery_app.task(bind=True, base=CaptureFailure)
+def sync_commercehq_store_profits(self, sync_id, store_id):
+    sync = models.ProfitSync.objects.get(pk=sync_id)
+    store = CommerceHQStore.objects.get(pk=store_id)
+
+    chq_api_url = store.get_api_url('orders')
+    r = store.request.get(chq_api_url)
+    r.raise_for_status()
+
+    orders = r.json()
+
+    for order in orders.get('items', []):
+        models.ProfitOrder.objects.update_or_create(
+            sync=sync,
+            order_id=order.get('id'),
+            defaults={
+                'date': arrow.get(order['order_date']).datetime,
+                'order_name': order.get('display_number'),
+                'amount': order.get('total'),
+                'items': json.dumps([f'{i["status"].get("quantity", 1)} x {i["data"].get("title")}' for i in order.get('items', [])]),
+            }
+        )
+
     sync.save()  # Update last sync

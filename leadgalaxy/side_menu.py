@@ -119,7 +119,7 @@ def get_menu_item_data():
             'url_name': 'profit_dashboard.views.index',
             'permissions': ['profit_dashboard.view'],
             'match': re.compile(r'(/\w+)?/profit-dashboard'),
-            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo']
+            'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq']
         },
         'callflex': {
             'title': 'CallFlex',

@@ -87,6 +87,9 @@ class CommerceHQStore(StoreBase):
     def get_admin_url(self, *args):
         return self.get_api_url(*args, api=False)
 
+    def get_admin_order_details(self, order_id):
+        return f'{self.get_admin_url()}/orders/order/{order_id}'
+
     def get_store_url(self, *args):
         url = re.findall(r'([^/.]+\.commercehq(?:dev|testing)?\.com)', self.api_url).pop()
         if len(args):

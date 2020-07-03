@@ -79,6 +79,7 @@ SUBUSER_STORE_PERMISSIONS = (
 SUBUSER_CHQ_STORE_PERMISSIONS = (
     *SUBUSER_STORE_PERMISSIONS_BASE,
     ('send_to_chq', 'Send products to CHQ'),
+    ('view_profit_dashboard', 'View profit dashboard')
 )
 
 SUBUSER_WOO_STORE_PERMISSIONS = (

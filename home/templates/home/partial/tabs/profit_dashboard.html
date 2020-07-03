@@ -10,6 +10,11 @@
         {% endif %}
 
     {% elif item|model_name == 'commercehqstore' %}
+        {% if store == item %}
+            <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+        {% else %}
+            <li><a href="{% url 'chq:profits' %}?store={{item.id}}">{{item.title}}</a></li>
+        {% endif %}
     {% elif item|model_name == 'woostore' %}
         {% if store == item %}
             <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
