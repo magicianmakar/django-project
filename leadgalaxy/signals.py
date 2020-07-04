@@ -56,7 +56,9 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         change_log.plan = current_plan
         change_log.changed_at = arrow.utcnow().datetime
         change_log.save()
-        activecampaign_update_plan.delay(user.id)
+
+        if not settings.DEBUG:
+            activecampaign_update_plan.delay(user.id)
 
 
 @receiver(post_save, sender=UserProfile)
@@ -116,22 +118,32 @@ def userprofile_creation(sender, instance, created, **kwargs):
             capture_exception()
 
 
+def update_store_count_in_activecampaign(user_id):
+    if not settings.DEBUG:
+        try:
+            activecampaign_update_store_count.delay(user_id)
+        except:
+            pass
+
+
 @receiver(post_save, sender=ShopifyStore)
 def add_store_permissions(sender, instance, created, **kwargs):
     if created:
-        activecampaign_update_store_count.delay(instance.user.id)
         for codename, name in SUBUSER_STORE_PERMISSIONS:
             SubuserPermission.objects.create(store=instance, codename=codename, name=name)
+
+        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_stores.through)
 def add_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
     if action == "post_add":
-        activecampaign_update_store_count.delay(instance.user.id)
         stores = ShopifyStore.objects.filter(pk__in=pk_set)
         for store in stores:
             permissions = store.subuser_permissions.all()
             instance.subuser_permissions.add(*permissions)
+
+        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_permissions.through)
@@ -148,37 +160,41 @@ def clear_cached_template(sender, instance, pk_set, action, **kwargs):
 @receiver(post_save, sender='commercehq_core.CommerceHQStore')
 def add_chq_store_permissions(sender, instance, created, **kwargs):
     if created:
-        activecampaign_update_store_count.delay(instance.user.id)
         for codename, name in SUBUSER_CHQ_STORE_PERMISSIONS:
             SubuserCHQPermission.objects.create(store=instance, codename=codename, name=name)
+
+        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_chq_stores.through)
 def add_chq_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
     if action == "post_add":
-        activecampaign_update_store_count.delay(instance.user.id)
         stores = instance.user.models_user.commercehqstore_set.filter(pk__in=pk_set)
         for store in stores:
             permissions = store.subuser_chq_permissions.all()
             instance.subuser_chq_permissions.add(*permissions)
 
+        update_store_count_in_activecampaign(instance.user.id)
+
 
 @receiver(post_save, sender='woocommerce_core.WooStore')
 def add_woo_store_permissions(sender, instance, created, **kwargs):
     if created:
-        activecampaign_update_store_count.delay(instance.user.id)
         for codename, name in SUBUSER_WOO_STORE_PERMISSIONS:
             SubuserWooPermission.objects.create(store=instance, codename=codename, name=name)
+
+        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_woo_stores.through)
 def add_woo_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
     if action == "post_add":
-        activecampaign_update_store_count.delay(instance.user.id)
         stores = instance.user.models_user.woostore_set.filter(pk__in=pk_set)
         for store in stores:
             permissions = store.subuser_woo_permissions.all()
             instance.subuser_woo_permissions.add(*permissions)
+
+        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(post_save, sender='gearbubble_core.GearBubbleStore')
@@ -200,37 +216,41 @@ def add_gear_store_permissions_to_subuser(sender, instance, pk_set, action, **kw
 @receiver(post_save, sender='groovekart_core.GrooveKartStore')
 def add_gkart_store_permissions(sender, instance, created, **kwargs):
     if created:
-        activecampaign_update_store_count.delay(instance.user.id)
         for codename, name in SUBUSER_GKART_STORE_PERMISSIONS:
             SubuserGKartPermission.objects.create(store=instance, codename=codename, name=name)
+
+        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_gkart_stores.through)
 def add_gkart_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
     if action == "post_add":
-        activecampaign_update_store_count.delay(instance.user.id)
         stores = instance.user.models_user.groovekartstore_set.filter(pk__in=pk_set)
         for store in stores:
             permissions = store.subuser_gkart_permissions.all()
             instance.subuser_gkart_permissions.add(*permissions)
 
+        update_store_count_in_activecampaign(instance.user.id)
+
 
 @receiver(post_save, sender='bigcommerce_core.BigCommerceStore')
 def add_bigcommerce_store_permissions(sender, instance, created, **kwargs):
     if created:
-        activecampaign_update_store_count.delay(instance.user.id)
         for codename, name in SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS:
             SubuserBigCommercePermission.objects.create(store=instance, codename=codename, name=name)
+
+        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(m2m_changed, sender=UserProfile.subuser_bigcommerce_stores.through)
 def add_bigcommerce_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
     if action == "post_add":
-        activecampaign_update_store_count.delay(instance.user.id)
         stores = instance.user.models_user.bigcommercestore_set.filter(pk__in=pk_set)
         for store in stores:
             permissions = store.subuser_bigcommerce_permissions.all()
             instance.subuser_bigcommerce_permissions.add(*permissions)
+
+        update_store_count_in_activecampaign(instance.user.id)
 
 
 @receiver(post_save, sender=ShopifyOrderTrack, dispatch_uid='sync_aliexpress_fulfillment_cost')
