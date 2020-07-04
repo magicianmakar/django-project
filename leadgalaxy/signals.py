@@ -58,7 +58,10 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         change_log.save()
 
         if not settings.DEBUG:
-            activecampaign_update_plan.delay(user.id)
+            try:
+                activecampaign_update_plan.delay(user.id)
+            except:
+                pass
 
 
 @receiver(post_save, sender=UserProfile)
