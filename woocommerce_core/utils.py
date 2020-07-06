@@ -678,8 +678,9 @@ def get_tracking_products(store, tracker_orders, per_page=50):
 
     # Retrieve variation images
     for tracked in new_tracker_orders:
-        if not tracked.product:
+        if not tracked.product or not product_variations.get(tracked.product['id']):
             continue
+
         variations = product_variations[tracked.product['id']]
 
         variation_id = tracked.line.get('variation_id')
