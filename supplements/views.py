@@ -1,5 +1,6 @@
 import csv
 from decimal import Decimal
+import math
 from datetime import timedelta, datetime
 from io import BytesIO
 
@@ -401,6 +402,15 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             return get_object_or_404(PLSupplement, id=supplement_id, is_active=True)
         return get_object_or_404(PLSupplement, id=supplement_id)
 
+    def get_weight(self, weight):
+        if not weight:
+            weight = "0lb"
+        else:
+            weight_in_oz = round(float(weight - math.floor(weight)) * 16, 1)
+            weight_in_oz = f"{weight_in_oz}oz" if int(weight_in_oz) else ""
+            weight = f"{int(weight)}lb {weight_in_oz}" if int(weight) else weight_in_oz
+        return weight
+
     def get_supplement_data(self, user, supplement_id):
         supplement = self.get_supplement(user, supplement_id)
 
@@ -410,7 +420,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form_data['label_size'] = supplement.label_size
         form_data['mockup_type'] = supplement.mockup_type
         form_data['mockup_slug'] = supplement.mockup_type.slug
-        form_data['weight'] = supplement.weight
+        form_data['weight'] = self.get_weight(supplement.weight)
         form_data['inventory'] = supplement.inventory
         form_data['msrp'] = supplement.msrp
         form_data['label_presets'] = json.dumps(supplement.mockup_type.get_label_presets())
@@ -593,7 +603,7 @@ class UserSupplementView(Supplement):
         form_data['label_size'] = supplement.pl_supplement.label_size
         form_data['mockup_type'] = supplement.pl_supplement.mockup_type
         form_data['mockup_slug'] = supplement.pl_supplement.mockup_type.slug
-        form_data['weight'] = supplement.pl_supplement.weight
+        form_data['weight'] = self.get_weight(supplement.pl_supplement.weight)
         form_data['inventory'] = supplement.pl_supplement.inventory
         form_data['label_presets'] = supplement.get_label_presets_json()
 

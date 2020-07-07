@@ -26,7 +26,7 @@ class UserSupplementForm(forms.ModelForm):
     action = forms.CharField(widget=forms.HiddenInput)
     upload_url = forms.CharField(widget=forms.HiddenInput, required=False)
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
-    weight = forms.DecimalField()
+    weight = forms.CharField()
     inventory = forms.IntegerField(required=False)
     msrp = forms.CharField(disabled=True, required=False)
     label_presets = forms.CharField(widget=forms.HiddenInput, required=False)
