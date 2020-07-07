@@ -1377,7 +1377,7 @@ class OrderItemListView(common_views.OrderItemListView):
     def get_breadcrumbs(self):
         return [
             {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
-            {'title': 'Order Items', 'url': reverse('pls:orderitem_list')},
+            {'title': 'Order Items', 'url': '%s?cancelled=on' % reverse('pls:orderitem_list')},
         ]
 
 

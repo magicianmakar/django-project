@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urlencode
 
 from django.conf import settings
 
@@ -101,3 +102,15 @@ def get_shipstation_shipments(resource_url):
     response = requests.get(resource_url, headers=headers)
     data = response.json()
     return data['shipments']
+
+
+def get_shipstation_orders(params=None):
+    resource_url = f'{settings.SHIPSTATION_API_URL}/orders'
+    if params:
+        resource_url = '{}?{}'.format(resource_url, urlencode(params))
+
+    headers = {'Content-Type': 'application/json'}
+    headers.update(get_auth_header())
+    response = requests.get(resource_url, headers=headers)
+    data = response.json()
+    return data['orders']
