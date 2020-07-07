@@ -850,11 +850,13 @@ class MySupplements(LoginRequiredMixin, View):
             {'title': 'My Supplements', 'url': reverse('pls:my_supplements')},
         ]
         form = UserSupplementFilterForm(self.request.GET)
-        queryset = request.user.models_user.pl_supplements.filter(pl_supplement__is_active=True).exclude(is_deleted=True)
+        queryset = request.user.models_user.pl_supplements.filter(pl_supplement__is_active=True)
 
         if form.is_valid():
             queryset = self.add_filters(queryset, form)
 
+        temp_queryset = queryset
+        queryset = queryset.exclude(is_deleted=True)
         len_supplement = len(queryset)
         if len_supplement == 1:
             len_supplement = "1 supplement."
@@ -869,6 +871,12 @@ class MySupplements(LoginRequiredMixin, View):
             'form': UserSupplementFilterForm(self.request.GET),
             'count': len_supplement
         }
+
+        deleted_sku = len(temp_queryset.filter(is_deleted=True))
+        if deleted_sku and self.request.GET:
+            context.update({
+                'deleted_supplement_found': deleted_sku
+            })
         return render(request, "supplements/userproduct.html", context)
 
 

@@ -8,7 +8,10 @@
 
 {% if count %}
 <div class="supplement-count">
-    <strong> Found {{ count }}</strong>
+    <strong> Found {{ count }}
+      {% if deleted_supplement_found %}
+      ({{  deleted_supplement_found }} deleted supplement{{  deleted_supplement_found|pluralize }})</strong>
+      {% endif %}</strong>
 </div>
 {% endif %}
 
@@ -19,7 +22,11 @@
   {% endfor %}
 </div>
 {% empty %}
-  <div class="supplement-count">No supplements yet.</div>
+  <div class="supplement-count">No supplements found.
+    {% if deleted_supplement_found %}
+    ({{  deleted_supplement_found }} deleted supplement{{ deleted_supplement_found|pluralize }})
+    {% endif %}
+  </div>
 {% endfor %}
 {% endblock %}
 
