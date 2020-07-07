@@ -13,6 +13,7 @@ from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils import timezone
+from django.utils.html import escapejs
 from django.utils.decorators import method_decorator
 from django.utils.safestring import mark_safe
 from django.views import View
@@ -2337,6 +2338,6 @@ class Reports(LoginRequiredMixin, TemplateView):
             'form': form,
             'gross_profit': charts_data.pop('gross_profit'),
             'net_profit': charts_data.pop('net_profit'),
-            'charts_data': mark_safe(json.dumps(charts_data))
+            'charts_data': escapejs(mark_safe(json.dumps(charts_data)))
         })
         return context
