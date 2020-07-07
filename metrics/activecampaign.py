@@ -141,6 +141,8 @@ class ActiveCampaignAPI:
         return data
 
     def update_user_email(self, from_email, to_email):
+        if to_email.lower() == from_email.lower():
+            return True
         contact = self.get_or_create_contact(from_email)
         api_url = self.get_url(f"/contacts/{contact['id']}")
         r = requests.put(api_url, json={
@@ -149,10 +151,18 @@ class ActiveCampaignAPI:
             }
         })
         r.raise_for_status()
+        return True
 
     def get_user_plan_data(self, user):
         trial_ends = ''
-        if user.profile.trial_days_left > 0:
+        try:
+            trial_days_left = user.profile.trial_days_left or 0
+        except:
+            trial_days_left = 0
+
+        if user.profile.is_subuser:
+            status = 'Active'
+        elif trial_days_left > 0:
             status = 'Trial'
             trial_ends = arrow.get().replace(days=user.profile.trial_days_left + 1).format(API_DATE_FORMAT)
         elif user.profile.plan.is_free:
@@ -190,7 +200,7 @@ class ActiveCampaignAPI:
         tags = []
         if user.profile.from_shopify_app_store():
             store = user.profile.get_shopify_stores().first()
-            if store.get_info['plan_name'] in ['staff', 'staff_business']:
+            if store and store.get_info['plan_name'] in ['staff', 'staff_business']:
                 tags.append(TAGS['SHOPIFY_STAFF']['id'])
 
         if user.is_staff:
@@ -325,7 +335,8 @@ class ActiveCampaignAPI:
 
             url = self.get_url('/admin/api.php', old_version=True)
             r = requests.post(url, data=data)
-            assert r.json().get('result_code') == 1, f"{contact_data['email']} Contact not updated"
+            data = r.json()
+            assert data.get('result_code') == 1, f"{contact_data['email']} Contact not updated"
         else:
             data = {}
             if contact_data.get('firstName'):
@@ -372,6 +383,7 @@ class ActiveCampaignAPI:
         r = requests.get(api_url, headers=self.headers, params={
             'email': user.email
         })
+        r.raise_for_status()
         result = r.json()
 
         # Needs dropified ID
