@@ -10,6 +10,7 @@ function markLabelAsPrinted() {
         contentType: 'application/json',
     });
 }
+
 $(document).ready(function(){
     $('.custom-file-input').on('change', function() {
         var fileName = $(this).val().split('\\').pop();
@@ -178,6 +179,7 @@ $(document).ready(function(){
         }).catch(function (error){
             return;
         });
+    });
 
     $('.make-refund').click(function (e) {
         var orderId = $(this).data('order-id');
