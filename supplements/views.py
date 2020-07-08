@@ -1,7 +1,7 @@
 import csv
-from decimal import Decimal
 import math
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
+from decimal import Decimal
 from io import BytesIO
 
 from django import template
@@ -14,8 +14,8 @@ from django.db.models.functions import Concat
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils import timezone
-from django.utils.html import escapejs
 from django.utils.decorators import method_decorator
+from django.utils.html import escapejs
 from django.utils.safestring import mark_safe
 from django.views import View
 from django.views.generic import TemplateView
@@ -40,7 +40,7 @@ from shopified_core.utils import app_link
 from shopified_core.utils import aws_s3_context as images_aws_s3_context
 from shopified_core.utils import safe_int
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
-from supplements.lib.image import get_order_number_label, make_pdf_of
+from supplements.lib.image import get_order_number_label, get_payment_pdf, make_pdf_of
 from supplements.models import (
     SUPPLEMENTS_SUPPLIER,
     AuthorizeNetCustomer,
@@ -1450,6 +1450,26 @@ class GenerateLabel(LoginRequiredMixin, View):
 
         output.seek(0)
         return HttpResponse(output.read(), content_type='application/pdf')
+
+
+class GeneratePaymentPDF(LoginRequiredMixin, View):
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get(self, request, order_id):
+        pls_order = get_object_or_404(PLSOrder, id=order_id)
+        pdf = get_payment_pdf(pls_order)
+
+        file_name = f'{pls_order.order_number}-{pls_order.stripe_transaction_id}'
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{file_name}.pdf"'
+        response.write(pdf)
+
+        return response
 
 
 class Billing(LoginRequiredMixin, TemplateView):

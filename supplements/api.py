@@ -4,10 +4,10 @@ from io import BytesIO
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 from django.views.generic import View
-from django.urls import reverse
 
 from pdfrw import PdfWriter
 
@@ -19,20 +19,15 @@ from shopified_core.utils import get_store_api, safe_int
 
 from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
-from .models import Payout, PLSOrder, UserSupplement, PLSOrderLine, UserSupplementLabel
-from .utils.payment import Util, get_shipping_cost
+from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel
 from .utils import user_can_download_label
+from .utils.payment import Util, get_shipping_cost
 
 
 class SupplementsApi(ApiResponseMixin, View):
     http_method_names = ['get', 'post', 'delete']
 
     def post_make_payment(self, request, user, data):
-        try:
-            user.authorize_net_customer
-        except User.authorize_net_customer.RelatedObjectDoesNotExist:
-            return self.api_error('billing', status=404)
-
         util = Util()
         store = util.get_store(data['store_id'], data['store_type'])
         permissions.user_can_view(user, store)
@@ -346,3 +341,19 @@ class SupplementsApi(ApiResponseMixin, View):
             'label_url': label_url,
             'latest_label_url': latest_label_url,
         })
+
+    def get_billing_info(self, request, user, data):
+        if request.user.profile.is_black or request.user.can('pls.use'):
+            success = error = 0
+            try:
+                user.authorize_net_customer
+                success += 1
+            except User.authorize_net_customer.RelatedObjectDoesNotExist:
+                error += 1
+
+            return self.api_success({
+                'success': success,
+                'error': error,
+            })
+        else:
+            raise permissions.PermissionDenied()

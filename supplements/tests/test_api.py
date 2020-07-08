@@ -1,7 +1,7 @@
 import json
 from unittest.mock import MagicMock, patch
 
-from leadgalaxy.tests.factories import ShopifyProductFactory, ShopifyStoreFactory, UserFactory
+from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyProductFactory, ShopifyStoreFactory, UserFactory
 from lib.test import BaseTestCase
 from stripe_subscription.tests.factories import StripeCustomerFactory
 from supplements.api import SupplementsApi
@@ -439,3 +439,28 @@ class OrderLineInfoTestCase(PLSBaseTestCase):
                                    label=label_not_owned)
         r = self.client.get(f'/api/supplements/order-line-info?item_id={line.id}')
         self.assertEqual(r.status_code, 403)
+
+
+class BillingInfoTestCase(PLSBaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.user.profile.plan = GroupPlanFactory(title='Dropified Black', slug='black')
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls_admin.use', description='PLS Admin'))
+        self.user.profile.plan.save()
+        self.user.profile.save()
+
+    def test_info_success(self):
+        self.client.force_login(self.user)
+        AuthorizeNetCustomer.objects.create(user=self.user)
+
+        response = self.client.get('/api/supplements/billing-info')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['success'], 1)
+
+    def test_info_error(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get('/api/supplements/billing-info')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['error'], 1)

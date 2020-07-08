@@ -1,11 +1,19 @@
 from io import BytesIO
 from urllib.request import urlopen
 
+from django.utils import timezone
+
 import requests
 from pdfrw import PageMerge, PdfReader, PdfWriter
 from pdfrw.pagemerge import RectXObj
 from PIL import Image, ImageChops
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import cm
 from reportlab.pdfgen import canvas
+from reportlab.platypus import Image as report_img
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table
+
+from stripe_subscription.invoices.pdf import STYLES, draw_footer
 
 
 def get_elements(type):
@@ -329,3 +337,70 @@ def get_order_number_label(item, use_latest=False):
     page_merge.render()
 
     return base_label_pdf
+
+
+def get_payment_pdf(order):
+    data = BytesIO()
+    date = timezone.now().strftime('%b %d, %Y')
+    br = '<br />'
+
+    order.user.authorize_net_customer.retrieve()
+    profile = order.user.authorize_net_customer.payment_profile
+
+    billing_address = (f'{profile["bill_to"].firstName} {profile["bill_to"].lastName} {br}'
+                       f'{profile["bill_to"].address} {br}'
+                       f'{profile["bill_to"].city}, {profile["bill_to"].state}, {profile["bill_to"].zip} {br}'
+                       f'{profile["bill_to"].country}')
+
+    pdf = SimpleDocTemplate(data, pagesize=A4)
+    parts = []
+    parts.append(Paragraph(date, STYLES['text-right']))
+    logo = 'app/static/dropified-logo.png'
+    parts.append(report_img(logo, width=150, height=37, hAlign='LEFT'))
+
+    parts.append(Spacer(1, 1 * cm))
+    parts.append(Paragraph('RECEIPT', STYLES['header']))
+    parts.append(Spacer(1, .25 * cm))
+    parts.append(Paragraph(f'Order # {order.order_number}', STYLES['default']))
+    parts.append(Paragraph(f'Payment # {order.stripe_transaction_id}', STYLES['default']))
+
+    parts.append(Spacer(1, .5 * cm))
+    parts.append(Paragraph('RECEIPT FROM', STYLES['label']))
+    parts.append(Paragraph(f'Dropified LLC{br}1430 Gadsden Hwy #116 #110, Birmingham, AL 35235', STYLES['default']))
+
+    parts.append(Spacer(1, .5 * cm))
+    parts.append(Paragraph('INVOICE TO', STYLES['label']))
+    parts.append(Paragraph(billing_address, STYLES['default']))
+
+    parts.append(Spacer(1, 1 * cm))
+    line_data = [['Title', 'SKU', 'Price', 'Total']]
+    for i in order.order_items.all():
+        line_data.append([
+            i.label.user_supplement.title,
+            i.label.sku,
+            f'{i.quantity} x ${i.amount / 100.}',
+            "${:.2f}".format((i.amount * i.quantity) / 100.),
+        ])
+    line_data.append(['', '', 'Sub Total', order.item_total])
+    line_data.append(['', '', 'Shipping Cost', order.shipping_price_string])
+    line_data.append(['', '', 'Total / Amount Paid', order.amount_string])
+    table = Table(line_data, colWidths=[7 * cm, 5 * cm, 3 * cm])
+    table.setStyle([('FONT', (0, 0), (-1, -1), 'Helvetica'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 8),
+                    ('TEXTCOLOR', (0, 0), (-1, -1), (0.2, 0.2, 0.2)),
+                    ('GRID', (0, 0), (-1, -2), 1, (0.9, 0.9, 0.9)),
+                    ('GRID', (-2, -1), (-1, -1), 1, (0.9, 0.9, 0.9)),
+                    ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+                    ('BACKGROUND', (0, 0), (-1, 0), (0.9, 0.9, 0.9)), ])
+    parts.append(table)
+
+    paid_on = order.created_at.strftime('%b %d, %Y')
+    parts.append(Spacer(1, .5 * cm))
+    parts.append(Paragraph('PAID ON', STYLES['label']))
+    parts.append(Paragraph(f'{paid_on}', STYLES['default']))
+
+    parts.append(Spacer(1, 1 * cm))
+    parts.append(Paragraph('<b>Thank you for your business!</b>', STYLES['text-center']))
+    pdf.build(parts, onFirstPage=draw_footer)
+
+    return data.getvalue()

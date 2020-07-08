@@ -54,7 +54,7 @@
     <tr>
       <td>
         {% for url in item.supplement.image_urls %}
-          <img class="product-image" src="{{ url }}" alt="line_item" />
+          <img class="product-image m-r" src="{{ url }}" alt="line_item" />
         {% endfor %}
       </td>
       <td class="product-cell">{{ item.supplement.title }}</td>
@@ -115,6 +115,16 @@
   </div>
 </div>
 
+<div class="row">
+  <div class="col-md-3">
+    <a href="{% url 'pls:generate_payment_pdf' order.id %}"
+      class="btn btn-primary generate-payment-pdf"
+      target="_blank">
+      <i class="fa fa-download"></i>&nbsp; Download PDF
+    </a>
+  </div>
+</div>
+
 
 {% endblock %}
 
@@ -122,4 +132,9 @@
 {{ block.super }}
   <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
   <link href="//cdnjs.cloudflare.com/ajax/libs/plupload/2.3.6/jquery.ui.plupload/css/jquery.ui.plupload.css" rel="stylesheet">
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
 {% endblock %}

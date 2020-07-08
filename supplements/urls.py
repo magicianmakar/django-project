@@ -97,4 +97,8 @@ urlpatterns = [
         supplements.views.Reports.as_view(),
         name='reports'),
 
+    url(r'^my/order/(?P<order_id>[0-9]+)/pdf/generate$',
+        supplements.views.GeneratePaymentPDF.as_view(),
+        name='generate_payment_pdf'),
+
 ]

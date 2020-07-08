@@ -77,11 +77,6 @@ function doMakePayment(orderDataIds, storeId, storeType) {
                 msg += " had not enough inventory.";
                 msgStr = toastr.error(msg);
             }
-        },
-        error: function (data) {
-            if (data.responseJSON["error"] === "billing") {
-                toastr.error("Please enter your billing information on the Billing tab.");
-            }
         }
     });
 }
@@ -150,7 +145,11 @@ function makePayment(orderDataIds) {
             $('#modal-make-payment').modal('show');
             $('#id-make-payment-confirm').off('click').click(function () {
                 $('#modal-make-payment').modal('hide');
-                doMakePayment(orderDataIds, data.storeId, data.storeType);
+                userHasBilling().then(function (result) {
+                    doMakePayment(orderDataIds, data.storeId, data.storeType);
+                }).catch(function (error){
+                    return;
+                });
             });
         },
         error: function (api_data) {
@@ -212,6 +211,26 @@ function orderRejectionWarning(txt) {
         showCancelButton: true,
         showConfirmButton: false,
         cancelButtonText: "Close",
+    });
+}
+
+function userHasBilling() {
+    return new Promise(function (resolve, reject) {
+        $.ajax({
+            url: api_url('billing-info', 'supplements'),
+            type: 'GET',
+            success: function(data) {
+                if (data.success) {
+                    resolve();
+                } else {
+                  toastr.error("Please enter your billing information on the Billing tab.", "Billing Not Found!");
+                  reject();
+                }
+            },
+            error: function(data) {
+                displayAjaxError('Billing', data);
+            }
+        });
     });
 }
 

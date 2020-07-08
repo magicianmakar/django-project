@@ -8,7 +8,7 @@ from django.shortcuts import reverse
 from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyOrderTrackFactory, ShopifyStoreFactory, UserFactory
 from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrderLog
-from supplements.models import AuthorizeNetCustomer,Payout, UserSupplementImage, UserSupplementLabel
+from supplements.models import AuthorizeNetCustomer, UserSupplementImage, UserSupplementLabel, Payout
 
 from .factories import (
     LabelSizeFactory,
@@ -963,3 +963,81 @@ class AutocompleteTestCase(PLSBaseTestCase):
         response = self.client.get(f"{self.get_url()}?query=Test User")
         result = response.json()
         self.assertEqual(len(result['suggestions']), 1)
+
+
+class GeneratePaymentPDFTestCase(PLSBaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.store = ShopifyStoreFactory(primary_location=12)
+        self.store.user = self.user
+        self.store.save()
+        store_id = self.store.id
+
+        self.pls_order = PLSOrderFactory(shipstation_key='key',
+                                         store_type='shopify',
+                                         store_id=store_id,
+                                         store_order_id='1234',
+                                         stripe_transaction_id=1111,
+                                         order_number='4321',
+                                         user_id=self.store.user_id)
+
+        self.pls_order_line = PLSOrderLineFactory(shipstation_key='line-key',
+                                                  store_id=store_id,
+                                                  store_order_id='1234',
+                                                  line_id='5678',
+                                                  pls_order=self.pls_order,
+                                                  label=self.user_supplement.current_label)
+        self.order_data = {
+            'id': '1234',
+            'name': 'Fake project',
+            'currency': 'usd',
+            'order_number': '4321',
+            'created_at': '1/2/20',
+            'shipping_address': {
+                'name': self.user.get_full_name(),
+                'company': 'Dropified',
+                'address1': 'House 1',
+                'address2': 'Street 1',
+                'city': 'City',
+                'province': 'State',
+                'zip': '123456',
+                'country_code': 'US',
+                'country': 'United States',
+                'phone': '1234567',
+            },
+            'line_items': [{
+                'id': '5678',
+                'name': 'Item name',
+                'title': 'Item name',
+                'quantity': 1,
+                'product_id': '1234',
+                'price': 1200,
+                'sku': '123',
+            }],
+        }
+        AuthorizeNetCustomer.objects.create(
+            user=self.user,
+            payment_id=1234,
+            customer_id=6543,
+        )
+
+    def get_url(self):
+        kwargs = {'order_id': self.pls_order.id}
+        return reverse('pls:generate_payment_pdf', kwargs=kwargs)
+
+    def test_login(self):
+        self.do_test_login()
+
+    def test_get(self):
+        self.client.force_login(self.user)
+
+        mock_profile = MagicMock()
+        mock_profile.payment.creditCard = '1' * 16
+
+        with patch('supplements.mixin.get_customer_payment_profile',
+                   return_value=mock_profile):
+            response = self.client.get(self.get_url())
+
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('application/pdf', str(response.items()))

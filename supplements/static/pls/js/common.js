@@ -170,6 +170,15 @@ $(document).ready(function(){
         );
     });
 
+    $('.generate-payment-pdf').click(function (e) {
+        e.preventDefault();
+        var url = $(this).attr('href');
+        userHasBilling().then(function (result) {
+            window.open(url, '_blank');
+        }).catch(function (error){
+            return;
+        });
+
     $('.make-refund').click(function (e) {
         var orderId = $(this).data('order-id');
         var form = document.getElementById('refund_form');
