@@ -8,8 +8,12 @@ from .activecampaign import ActiveCampaignAPI
 def activecampaign_update_plan(user_id):
     api = ActiveCampaignAPI()
     user = User.objects.get(id=user_id)
+    try:
+        user_exists = api.check_user_exists(user)
+    except:
+        user_exists = False
 
-    if api.check_user_exists(user):
+    if user_exists:
         contact_data = {
             'email': user.email,
             'custom_fields': api.get_user_plan_data(user)
@@ -24,8 +28,12 @@ def activecampaign_update_plan(user_id):
 def activecampaign_update_store_count(user_id):
     api = ActiveCampaignAPI()
     user = User.objects.get(id=user_id)
+    try:
+        user_exists = api.check_user_exists(user)
+    except:
+        user_exists = False
 
-    if api.check_user_exists(user):
+    if user_exists:
         contact_data = {
             'email': user.email,
             'custom_fields': api.get_user_store_data(user)

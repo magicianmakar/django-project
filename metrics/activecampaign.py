@@ -4,18 +4,35 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.db import models
 
+from lib.exceptions import capture_message
+
 API_DATE_FORMAT = 'YYYY-MM-DD'
 NOT_AVAILABLE = '[Not Available]'
+TAGS = dict(
+    SHOPIFY_STAFF={'id': 10, 'title': 'Shopify Staff'},
+)
+CACHED_CUSTOM_FIELDS = {
+    'SIGNEDUP_AT': {'id': '18', 'title': 'Signed-up At'},
+    'TRIAL_ENDS': {'id': '19', 'title': 'Trial Ends'},
+    'STATUS': {'id': '4', 'title': 'Status'},
+    'PLAN': {'id': '2', 'title': 'Plan'},
+    'PLATFORM': {'id': '3', 'title': 'Platform'},
+    'STORES_COUNT': {'id': '6', 'title': 'Stores Count'},
+    'SHOPIFY_COUNT': {'id': '7', 'title': 'Shopify Count'},
+    'WOOCOMMERCE_COUNT': {'id': '8', 'title': 'WooCommerce Count'},
+    'COMMERCEHQ_COUNT': {'id': '9', 'title': 'CommerceHQ Count'},
+    'GROOVEKART_COUNT': {'id': '10', 'title': 'GrooveKart Count'},
+    'BIGCOMMERCE_COUNT': {'id': '11', 'title': 'BigCommerce Count'},
+    'SUB_USER': {'id': '5', 'title': 'Sub User'},
+    'DROPIFIED_ID': {'id': '12', 'title': 'Dropified ID'},
+    'EXTERNAL_ID': {'id': '13', 'title': 'External ID'},
+    'SEND_EMAILS': {'id': '17', 'title': 'Send E-mails'}
+}
 
 
 class Lists:
     CUSTOMERS = 12
     LEADS = 13
-
-
-TAGS = dict(
-    SHOPIFY_STAFF={'id': 10, 'title': 'Shopify Staff'},
-)
 
 
 def validate_contact(func):
@@ -85,7 +102,22 @@ class ActiveCampaignAPI:
         if self._custom_fields is None:
             api_url = self.get_url('/fields')
             params = {'limit': 100, 'offset': 0}
-            result = requests.get(api_url, headers=self.headers, params=params).json()
+            r = requests.get(api_url, headers=self.headers, params=params)
+
+            try:
+                r.raise_for_status()
+                result = r.json()
+            except:
+                capture_message(
+                    'Retrieve fields for ActiveCampaign',
+                    level='warning',
+                    extra={
+                        'custom_fields_result': r.content,
+                        'status_code': r.status_code
+                    }
+                )
+                self._custom_fields = CACHED_CUSTOM_FIELDS
+                return self._custom_fields
 
             self._custom_fields = {}
             count = int(result['meta']['total'])
@@ -145,7 +177,7 @@ class ActiveCampaignAPI:
             return True
         contact = self.get_or_create_contact(from_email)
         api_url = self.get_url(f"/contacts/{contact['id']}")
-        r = requests.put(api_url, json={
+        r = requests.put(api_url, headers=self.headers, json={
             'contact': {
                 'email': to_email
             }
@@ -164,7 +196,7 @@ class ActiveCampaignAPI:
             status = 'Active'
         elif trial_days_left > 0:
             status = 'Trial'
-            trial_ends = arrow.get().replace(days=user.profile.trial_days_left + 1).format(API_DATE_FORMAT)
+            trial_ends = arrow.get().replace(days=trial_days_left + 1).format(API_DATE_FORMAT)
         elif user.profile.plan.is_free:
             status = 'Cancelled'
         else:
@@ -335,8 +367,8 @@ class ActiveCampaignAPI:
 
             url = self.get_url('/admin/api.php', old_version=True)
             r = requests.post(url, data=data)
-            data = r.json()
-            assert data.get('result_code') == 1, f"{contact_data['email']} Contact not updated"
+            result = r.json()
+            assert result.get('result_code') == 1, f"{contact_data['email']} Contact not updated"
         else:
             data = {}
             if contact_data.get('firstName'):
