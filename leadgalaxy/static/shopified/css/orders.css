@@ -203,6 +203,12 @@ ul.shipping-method {
     background-color: #fff;
 }
 
+.bundle-items .payment-btn-wrapper {
+    position: absolute;
+    right: 25px;
+    top: 50px;
+}
+
 @media (max-width: 768px) {
     #page-wrapper {
         padding: 0;

@@ -202,3 +202,9 @@ ul.shipping-method {
     margin-top: 5px;
     font-weight: bold;
 }
+
+.bundle-items .payment-btn-wrapper {
+    position: absolute;
+    right: 25px;
+    top: 50px;
+}

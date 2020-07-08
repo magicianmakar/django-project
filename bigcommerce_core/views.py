@@ -972,17 +972,24 @@ class OrdersList(ListView):
                             else:
                                 b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
 
+                            quantity = b['quantity'] * item['quantity']
+                            weight = None
+                            if b_supplier.user_supplement:
+                                weight = b_supplier.user_supplement.get_weight(quantity)
+
                             product_bundles.append({
                                 'product': b_product,
                                 'supplier': b_supplier,
                                 'shipping_method': b_shipping_method,
-                                'quantity': b['quantity'] * item['quantity'],
+                                'quantity': quantity,
+                                'weight': weight,
                                 'data': b
                             })
 
                             bundle_data.append({
                                 'title': b_product.title,
-                                'quantity': b['quantity'] * item['quantity'],
+                                'quantity': quantity,
+                                'weight': weight,
                                 'product_id': b_product.id,
                                 'source_id': b_supplier.get_source_id(),
                                 'order_url': app_link('bigcommerce/orders/place', supplier=b_supplier.id, SABundle=True),
@@ -1015,10 +1022,11 @@ class OrdersList(ListView):
                             item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
 
                             try:
-                                item['weight'] = product.user_supplement.get_weight(item['quantity'])
+                                item['weight'] = supplier.user_supplement.get_weight(item['quantity'])
                             except:
                                 item['weight'] = False
 
+                        item['order_data']['weight'] = item.get('weight')
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(supplier.supplier_type())
                         item['shipping_method'] = self.get_item_shipping_method(

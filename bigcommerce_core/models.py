@@ -653,6 +653,10 @@ class BigCommerceSupplier(SupplierBase):
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
             elif self.is_ebay:
                 return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
+            elif self.is_dropified_print:
+                return int(re.findall(r'print-on-demand.+?([0-9]+)', self.product_url)[0])
+            elif self.is_pls:
+                return self.get_user_supplement_id()
         except:
             return None
 

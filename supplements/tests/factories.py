@@ -1,3 +1,4 @@
+import json
 import factory
 import factory.fuzzy
 
@@ -73,3 +74,17 @@ class LabelSizeFactory(factory.DjangoModelFactory):
 class MockupTypeFactory(factory.DjangoModelFactory):
     class Meta:
         model = 'supplements.MockupType'
+
+
+class ShippingGroupFactory(factory.DjangoModelFactory):
+    slug = factory.Iterator(['US', 'GB'])
+    name = factory.Iterator(['United States', 'United Kingdom'])
+    locations = factory.Iterator(['United States', 'United Kingdom'])
+    immutable = True
+    data = factory.Iterator([
+        json.dumps({'shipping_cost_default': 30, 'shipping_rates': [{'weight_from': 0, 'weight_to': 10, 'shipping_cost': 3.34}]}),
+        json.dumps({'shipping_cost_default': 50, 'shipping_rates': [{'weight_from': 0, 'weight_to': 10, 'shipping_cost': 6.56}]})
+    ])
+
+    class Meta:
+        model = 'supplements.ShippingGroup'

@@ -4238,7 +4238,7 @@ class OrdersView(TemplateView):
 
                         # pass orders without PLS products (when one store is used in multiple account)
                         try:
-                            line_item['weight'] = product.user_supplement.get_weight(line_item['quantity'])
+                            line_item['weight'] = supplier.user_supplement.get_weight(line_item['quantity'])
                         except:
                             line_item['weight'] = False
 
@@ -4279,17 +4279,24 @@ class OrdersView(TemplateView):
                             else:
                                 b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
 
+                            quantity = b['quantity'] * line_item['quantity']
+                            weight = None
+                            if b_supplier.user_supplement:
+                                weight = b_supplier.user_supplement.get_weight(quantity)
+
                             product_bundles.append({
                                 'product': b_product,
                                 'supplier': b_supplier,
                                 'shipping_method': b_shipping_method,
-                                'quantity': b['quantity'] * line_item['quantity'],
+                                'quantity': quantity,
+                                'weight': weight,
                                 'data': b
                             })
 
                             bundle_data.append({
                                 'title': b_product.title,
-                                'quantity': b['quantity'] * line_item['quantity'],
+                                'quantity': quantity,
+                                'weight': weight,
                                 'product_id': b_product.id,
                                 'source_id': b_supplier.get_source_id(),
                                 'order_url': app_link('orders/place', supplier=b_supplier.id, SABundle=True),
@@ -4319,6 +4326,7 @@ class OrdersView(TemplateView):
                         order_data = {
                             'id': '{}_{}_{}'.format(self.store.id, order['id'], line_item['id']),
                             'quantity': line_item['quantity'],
+                            'weight': line_item.get('weight'),
                             'shipping_address': customer_address,
                             'order_id': order['id'],
                             'line_id': line_item['id'],

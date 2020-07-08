@@ -105,6 +105,11 @@ class CommerceHQStore(StoreBase):
         order = r.json()
         order['order_number'] = order['id']
         for line in order['items']:
+            variant_id = line['data'].get('variant', None)
+            if not variant_id:
+                line['data']['variant_id'] = -1
+            else:
+                line['data']['variant_id'] = variant_id
             line['data']['quantity'] = line['status']['quantity']
         order['line_items'] = [item['data'] for item in order.pop('items')]
 
@@ -697,6 +702,8 @@ class CommerceHQSupplier(SupplierBase):
                 return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
             elif self.is_dropified_print:
                 return int(re.findall(r'print-on-demand.+?([0-9]+)', self.product_url)[0])
+            elif self.is_pls:
+                return self.get_user_supplement_id()
         except:
             return None
 

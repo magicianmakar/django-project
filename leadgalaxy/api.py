@@ -2344,7 +2344,7 @@ class ShopifyStoreApi(ApiBase):
                             'supplier_url': data.get('supplier')
                         })
 
-        elif get_domain(supplier_url) == 'dropified':
+        elif get_domain(supplier_url) == 'dropified' and 'supplement' in supplier_url:
             try:
                 user_supplement_id = int(urlparse(supplier_url).path.split('/')[-1])
                 user_supplement = UserSupplement.objects.get(id=user_supplement_id, user=user.models_user)

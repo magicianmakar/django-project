@@ -1,31 +1,27 @@
-<div order-id="{{order.id}}"
-     line-id="{{item.id}}"
-     order-data-id="{{ item.order_data_id }}"
-     order-number="{{order.name}}"
-     line-title="{{item.title}}"
-     supplier-type="{{item.supplier_type}}"
-     line-quantity="{{item.quantity}}"
-     line-price="{{item.product.user_supplement.cost_price}}"
-     store-slug="{{store.store_type}}"
-     store-id="{{store.id}}"
-     weight="{{item.weight}}"
-     {% if not item.product.is_label_approved %}
-     title="Approved label not found."
-     {% endif %}
-     {% if item.product.is_supplement_deleted %}
-     title="This supplement has been deleted"
-     {% endif %}
-     class='payment-btn-wrapper'
-     >
-     <button class="btn btn-xs dropdown-toggle pay-for-supplement {% if item.refunded %}btn-danger{% else %}btn-success{% endif %}"
-      {% if not item.product.is_label_approved %}
-      disabled
-      {% endif %}
-      {% if item.product.is_supplement_deleted %}is-deleted="true"{% else %}is-deleted="false"{% endif %}
-      >
+<div order-data-id="{{ item.order_data_id }}" class="payment-btn-wrapper">
+    <ul class="supplement-items hidden">
+    {% if item.is_bundle %}
+        {% for bundle in item.bundles %}
+        <li line-title="{{ bundle.product.title }}"
+            line-quantity="{{ bundle.quantity }}"
+            line-price="{{ bundle.supplier.user_supplement.cost_price }}"
+            weight="{{ bundle.weight }}"
+            is-deleted="{{ bundle.supplier.is_supplement_deleted|lower }}"
+            is-approved="{{ bundle.supplier.is_label_approved|lower }}"></li>
+        {% endfor %}
+    {% else %}
+        <li line-title="{{ item.title }}"
+            line-quantity="{{ item.quantity }}"
+            line-price="{{ item.supplier.user_supplement.cost_price }}"
+            weight="{{ item.weight }}"
+            is-deleted="{{ item.supplier.is_supplement_deleted|lower }}"
+            is-approved="{{ item.supplier.is_label_approved|lower }}"></li>
+    {% endif %}
+    </ul>
+    <button class="btn btn-xs dropdown-toggle pay-for-supplement {% if item.refunded %}btn-danger{% else %}btn-success{% endif %}">
        Make Payment
        {% if item.refunded %}
           {% include 'partial/help_tooltip.html' with help="This Item was Refunded" qtipstyle="color:#fff" qtipicon="exclamation-triangle" %}
        {% endif %}
-     </button>
+    </button>
 </div>

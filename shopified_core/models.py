@@ -1,12 +1,12 @@
 import json
 import re
 
+from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q
-from django.urls import reverse
-from django.contrib.auth.models import User
+from django.urls import reverse, Resolver404, resolve
+from django.utils.functional import cached_property
 
-from shopified_core.utils import get_domain
 from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
 from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, prefix_from_model, base64_encode
 
@@ -45,18 +45,55 @@ class SupplierBase(models.Model):
 
     @property
     def is_dropified(self):
-        return 'dropified.com' in self.product_url or \
-               'shopifytools-pr-' in self.product_url
+        return 'dropified.com' in self.product_url \
+               or 'shopifytools-pr-' in self.product_url \
+               or self.supplier_name == 'Dropified'
 
     @property
     def is_pls(self):
         try:
             return (
-                get_domain(self.product_url) == 'dropified'
+                (self.is_dropified and 'supplement' in self.product_url)
                 or safe_str(self.supplier_name).lower() == SUPPLEMENTS_SUPPLIER.lower()
             )
         except:
             return False
+
+    def get_user_supplement_id(self):
+        # https://app.dropified.com/supplements/usersupplement/{id}
+        product_url = '/'.join(self.product_url.split('/')[3:])
+        try:
+            resolved = resolve(f'/{product_url}')
+            url_pattern = f"{resolved.namespace}:{resolved.url_name}"
+            if url_pattern == 'pls:user_supplement':
+                return resolved.kwargs['supplement_id']
+
+        except Resolver404:
+            # TODO: catch this to make sure supplier uses supplement url
+            return None
+
+    @cached_property
+    def user_supplement(self):
+        if self.is_pls:
+            try:
+                user_supplement_id = self.get_user_supplement_id()
+                return UserSupplement.objects.get(id=user_supplement_id)
+            except UserSupplement.DoesNotExist:
+                return None
+
+    @property
+    def is_supplement_deleted(self):
+        if not self.user_supplement:
+            return True
+
+        return self.user_supplement.is_supplement_deleted
+
+    @property
+    def is_label_approved(self):
+        if not self.user_supplement:
+            return False
+
+        return self.user_supplement.is_approved
 
 
 class ProductBase(models.Model):
@@ -66,13 +103,6 @@ class ProductBase(models.Model):
     user_supplement = models.ForeignKey(UserSupplement,
                                         null=True,
                                         on_delete=models.SET_NULL)
-
-    @property
-    def is_label_approved(self):
-        if not self.user_supplement:
-            return False
-
-        return self.user_supplement.is_approved
 
     def get_bundle_mapping(self, variant=None, default=None):
         try:
@@ -104,13 +134,6 @@ class ProductBase(models.Model):
             return config.get('real_variant_map').get(str(variant_id), variant_id)
 
         return variant_id
-
-    @property
-    def is_supplement_deleted(self):
-        if not self.user_supplement:
-            return True
-
-        return self.user_supplement.is_supplement_deleted
 
 
 class BoardBase(models.Model):

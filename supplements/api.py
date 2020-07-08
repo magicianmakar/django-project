@@ -42,7 +42,7 @@ class SupplementsApi(ApiResponseMixin, View):
         success = error = invalid_country = inventory_error = 0
         success_ids = []
 
-        info = util.prepare_data(data['order_data_ids'])
+        info = util.prepare_data(request, data['order_data_ids'])
         orders, line_items, order_data_ids, error = info
 
         for order_id, order in orders.items():
@@ -110,7 +110,7 @@ class SupplementsApi(ApiResponseMixin, View):
                         data = {
                             'store': store.id,
                             'order_id': item.store_order_id,
-                            'line_id': item.line_id,
+                            'line_id': item.line_id.split('|')[0],  # Pipe separates bundles
                             'aliexpress_order_id': str(pls_order.stripe_transaction_id),
                             'source_type': 'supplements'
                         }
@@ -224,10 +224,43 @@ class SupplementsApi(ApiResponseMixin, View):
         return self.api_success()
 
     def post_calculate_shipping_cost(self, request, user, data):
-        shipping_price = get_shipping_cost(data['country-code'], data.get('province-code'), data['total-weight'])
+        StoreApi = get_store_api(data['store_type'])
+
+        shipping_info = {}
+        for order_data_id in data['order_data_ids']:
+            store_id, order_id, line_id = order_data_id.split('_')
+            api_result = StoreApi.get_order_data(request, request.user, {'order': order_data_id})
+            if api_result.status_code == 404:
+                return self.api_error("Please reload the page and try again", status=404)
+
+            order_data = json.loads(api_result.content.decode("utf-8"))
+            if order_data.get('supplier_type') != 'pls':
+                return self.api_error("Selected item is not a supplement", status=404)
+
+            if order_id not in shipping_info:
+                shipping_info[order_id] = {'total_weight': Decimal(0)}
+            shipping_info[order_id]['country_code'] = order_data['shipping_address']['country_code']
+            shipping_info[order_id]['province_code'] = order_data['shipping_address']['province_code']
+
+            if order_data['is_bundle']:
+                for b_product in order_data['products']:
+                    shipping_info[order_id]['total_weight'] += Decimal(b_product.get('weight') or 0)
+            else:
+                # Can be None or False
+                shipping_info[order_id]['total_weight'] += Decimal(order_data.get('weight') or 0)
+
+        # Don't use multiple shipping costs for now
+        shipping_info = list(shipping_info.values())[0]
+
+        shipping_price = get_shipping_cost(
+            shipping_info['country_code'],
+            shipping_info['province_code'],
+            shipping_info['total_weight']
+        )
+
         data = {'shipping_cost': shipping_price}
         if shipping_price is False:
-            return self.api_error('Shipping cost not available', status=404)
+            return self.api_error('Error calculating shipping', status=500)
         else:
             return self.api_success(data)
 

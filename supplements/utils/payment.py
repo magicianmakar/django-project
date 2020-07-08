@@ -1,3 +1,5 @@
+import copy
+import json
 from collections import defaultdict
 
 from django.db.transaction import atomic
@@ -9,11 +11,12 @@ from bigcommerce_core.models import BigCommerceStore
 from commercehq_core.models import CommerceHQStore
 from groovekart_core.models import GrooveKartStore
 from leadgalaxy.models import ShopifyStore
+from woocommerce_core.models import WooStore
+
 from lib.exceptions import capture_exception
 from shopified_core.shipping_helper import country_from_code
-from shopified_core.utils import safe_float
+from shopified_core.utils import safe_float, get_store_api
 from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
-from woocommerce_core.models import WooStore
 
 
 def complete_payment(transaction_id, pls_order_id):
@@ -28,21 +31,22 @@ def complete_payment(transaction_id, pls_order_id):
     return pls_order
 
 
-def get_shipping_cost(shipping_country_code, shipping_province_code, total_weight):
+def get_shipping_cost(country_code, province_code, total_weight):
     try:
         # getting pls country group
-        search_country_provice = str(shipping_country_code) + "-" + str(shipping_province_code)
+        search_country_provice = f"{country_code}-{province_code}"
         try:
             shipping_group = ShippingGroup.objects.get(slug__iexact=search_country_provice, data__isnull=False)
         except ShippingGroup.DoesNotExist:
-            shipping_group = ShippingGroup.objects.get(slug__iexact=shipping_country_code, data__isnull=False)
+            shipping_group = ShippingGroup.objects.get(slug__iexact=country_code, data__isnull=False)
 
         shipping_data = shipping_group.get_data()
 
         cost = shipping_data.get('shipping_cost_default')
-        shipping_rates = shipping_data.get('shipping_rates')
+        shipping_rates = shipping_data.get('shipping_rates', [])
         for shipping_rate in shipping_rates:
-            if total_weight >= shipping_rate['weight_from'] and total_weight < shipping_rate['weight_to']:
+            if total_weight >= shipping_rate['weight_from'] \
+                    and total_weight < shipping_rate['weight_to']:
                 cost = shipping_rate['shipping_cost']
     except:
         cost = False
@@ -96,19 +100,18 @@ class Util:
 
             for line in lines:
                 line_id = line['id']
-                user_supplement = line['user_supplement']
-                pl_supplement = user_supplement.pl_supplement
                 label = user_supplement.current_label
-                item_price = int(float(line['price']) * 100)
-                quantity = int(line['quantity'])
-
                 key = get_shipstation_line_key(store_type,
                                                store_id,
                                                order_id,
                                                line_id)
+                user_supplement = line['user_supplement']
+                pl_supplement = user_supplement.pl_supplement
+                quantity = int(line['quantity'])
+                item_price = int(float(line['price']) * 100)
 
-                line_amount = int(user_supplement.cost_price * 100)
-                wholesale_price = int(user_supplement.wholesale_price * 100)
+                line_amount = int(user_supplement.cost_price * 100) * quantity
+                wholesale_price = int(user_supplement.wholesale_price * 100) * quantity
                 pl_supplement.inventory -= quantity
                 pl_supplement.save()
 
@@ -151,12 +154,14 @@ class Util:
         order_cache[order_id] = order = self.store.get_order(order_id)
         return order
 
-    def prepare_data(self, order_data_ids):
+    def prepare_data(self, request, order_data_ids):
         line_items = defaultdict(list)
         effective_order_data_ids = defaultdict(list)
         orders = {}
         errors = 0
         store_type = self.store.store_type
+        models_user = request.user.models_user
+        StoreApi = get_store_api(store_type)
 
         for order_data_id in order_data_ids:
             try:
@@ -166,13 +171,19 @@ class Util:
                 continue
 
             line_id = int(line_id)
-
-            if PLSOrderLine.exists(store_type,
-                                   store_id,
-                                   order_id,
-                                   line_id):
+            if PLSOrderLine.exists(store_type, store_id, order_id, line_id):
                 continue
 
+            api_result = StoreApi.get_order_data(request, request.user, {'order': order_data_id})
+            order_data = json.loads(api_result.content.decode("utf-8"))
+            try:
+                user_supplement = models_user.pl_supplements.get(id=order_data['source_id'])
+            except:
+                errors += 1
+                continue
+
+            # Can be removed once we validate address sent to shipstation
+            # using our own {store_type}_customer_address
             order = self.get_order(order_id)
             orders[order_id] = order
 
@@ -183,25 +194,42 @@ class Util:
                 if str(line_item['id']) != str(line_id):
                     continue
 
-                product_id = line_item['product_id']
-                product = self.product_cache.get(product_id)
-                if not product:
-                    product = self.store.get_product(product_id, self.store)
-                    self.product_cache[product_id] = product
+                if order_data.get('is_bundle'):
+                    bundles = []
+                    for b_product in order_data['products']:
+                        line_item = copy.deepcopy(line_item)
+                        try:
+                            user_supplement = models_user.pl_supplements.get(id=b_product['source_id'])
+                        except:
+                            bundles = []
+                            errors += 1
+                            break
+
+                        if not user_supplement.is_approved:
+                            bundles = []
+                            break
+
+                        line_item['user_supplement'] = user_supplement
+                        line_item['quantity'] = b_product['quantity']
+                        line_item['sku'] = user_supplement.shipstation_sku
+                        line_item['label'] = user_supplement.current_label
+                        line_item['id'] = f"{line_item['id']}|{user_supplement.id}"
+                        bundles.append(line_item)
+
+                    if len(bundles) == 0:
+                        continue
+
+                    line_items[order_id] += bundles
                 else:
-                    # Some data is retrieved from pl_supplement. Due to
-                    # caching, if that data is changed, we will get stale data
-                    # without refreshing from DB.
-                    product.user_supplement.pl_supplement.refresh_from_db()
+                    if not user_supplement.is_approved:
+                        errors += 1
+                        continue
 
-                if not product.user_supplement.is_approved:
-                    continue
+                    line_item['user_supplement'] = user_supplement
+                    line_item['sku'] = user_supplement.shipstation_sku
+                    line_item['label'] = user_supplement.current_label
+                    line_items[order_id].append(line_item)
 
-                line_item['sku'] = product.user_supplement.shipstation_sku
-                label = product.user_supplement.current_label
-                line_item['user_supplement'] = product.user_supplement
-                line_item['label'] = label
-                line_items[order_id].append(line_item)
                 effective_order_data_ids[order_id].append(order_data_id)
 
         return orders, line_items, effective_order_data_ids, errors

@@ -419,7 +419,6 @@
                                         line-track="{{item.order_track.id|default:''}}"
                                         fulfillment-status="{{item.fulfillment_status}}"
                                         {% if item.is_pls %}is-pls="true"{% endif %}
-                                        {% if item.product.is_supplement_deleted %}is-deleted="true"{% endif %}
                                         {% if excluded_product %}excluded-product="true"{% endif %}>
                                         <div class="row source-order">
 
@@ -466,7 +465,7 @@
                                                         <td class="product-preview">
                                                             <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; "
                                                                 {% if item.is_pls %}
-                                                                    {% if item.is_paid or not item.product.is_label_approved or item.product.is_supplement_deleted %}
+                                                                    {% if item.is_paid or not item.supplier.is_label_approved or item.supplier.is_supplement_deleted %}
                                                                         disabled
                                                                     {% endif %}
                                                                 {% endif %} >
@@ -580,14 +579,20 @@
                                                     </div>
                                                 </div>
                                                 {% endfor %}
-
-                                                <button class="btn btn-success btn-xs order-bundle"
-                                                        store-type="bigcommerce"
-                                                        supplier-type="{{item.supplier_type}}"
-                                                        order-data="{{item.order_data_id}}"
-                                                        order-number="{{order.id}}"
-                                                        style="position:absolute;right:25px;top:50px;"
-                                                        >Order Bundle</button>
+                                                {% if item.supplier_type == 'pls' %}
+                                                    {% if not item.is_paid %}
+                                                        {% include 'partial/make_payment_btn.html' %}
+                                                    {% endif %}
+                                                {% else %}
+                                                    <button class="btn btn-success btn-xs order-bundle"
+                                                            store-type="bigcommerce"
+                                                            supplier-type="{{item.supplier_type}}"
+                                                            order-data="{{item.order_data_id}}"
+                                                            order-number="{{order.id}}"
+                                                            style="position:absolute;right:25px;top:50px;">
+                                                        Order Bundle
+                                                    </button>
+                                                {% endif %}
                                             </div>
                                             {% endif %}
 

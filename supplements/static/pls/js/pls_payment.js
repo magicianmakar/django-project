@@ -19,7 +19,7 @@ function updateStatus(orderIds) {
 }
 
 function doMakePayment(orderDataIds, storeId, storeType) {
-    var lenOrders = orderDataIds.length;
+    var lenOrders = $('#modal-make-payment .supplement-item-payment').length;
 
     if (!lenOrders) {
         toastr.warning("Please select orders for processing.");
@@ -38,6 +38,7 @@ function doMakePayment(orderDataIds, storeId, storeType) {
         'store_id': storeId,
         'store_type': storeType
     };
+
     $.ajax({
         url: url,
         type: "POST",
@@ -86,82 +87,76 @@ function doMakePayment(orderDataIds, storeId, storeType) {
 }
 
 function formatCurrency(amount) {
-        var currencyTemplate = Handlebars.compile(storePriceFormat);
-        return currencyTemplate({amount: amount});
-    }
+    var currencyTemplate = Handlebars.compile(storePriceFormat);
+    return currencyTemplate({amount: amount});
+}
 
 function makeData(orderDataIds) {
-    var data = {};
-    var items = [];
-    var quantity, unitPrice, amount, total = 0.0, storeType, storeId;
-    var total_weight=0;
+    var getLineItem = function(supplementElem) {
+        var unitPrice = supplementElem.attr('line-price');
+        var quantity = supplementElem.attr('line-quantity');
 
-    $.each(orderDataIds, function (i, item) {
-        line = $("div.payment-btn-wrapper[order-data-id=" + item + "]");
-        orderNumber = $(line).attr('order-number');
-        unitPrice = $(line).attr('line-price');
-        quantity = $(line).attr('line-quantity');
-        storeType = $(line).attr('store-slug');
-        storeId = $(line).attr('store-id');
-
-        if ($(line).attr('weight')!="False"){
-            total_weight += parseFloat($(line).attr('weight'));
+        var weight = 0;
+        if (supplementElem.attr('weight') != "False") {
+            weight = parseFloat(supplementElem.attr('weight'));
         }
 
-        amount = parseFloat(unitPrice) * quantity ;
-
-        items.push({
-            title: $(line).attr('line-title'),
-            orderNumber: orderNumber,
+        return {
+            orderNumber: supplementElem.parents('.line').attr('order-number'),
+            title: supplementElem.attr('line-title'),
             unitPrice: formatCurrency(unitPrice),
             quantity: quantity,
-            amount: formatCurrency(amount.toFixed(2))
-        });
+            amount: parseFloat(unitPrice) * quantity,
+            weight: weight
+        };
+    };
 
-        total += amount;
+    var data = {items: [], total: 0.0, total_weight: 0};
+    $.each(orderDataIds, function(i, item) {
+        line = $("div.payment-btn-wrapper[order-data-id=" + item + "]");
+
+        line.find('.supplement-items li').each(function() {
+            var lineItem = getLineItem($(this));
+            data.total_weight += lineItem.weight;
+            data.total += lineItem.amount;
+            data.items.push(lineItem);
+        });
     });
-    data.total = total;
-    data.items = items;
-    data.storeType = storeType;
-    data.storeId = storeId;
-    data.total_weight = total_weight;
+    data.storeType = window.storeType;
+    data.storeId = STORE_ID;
+    data.total_weight = parseFloat(data.total_weight.toFixed(2));
     return data;
 }
 
-function makePayment(orderDataIds,country_code,province_code) {
-    var makePaymentTemplate = Handlebars.compile($("#id-make-payment-template").html());
-    var data = makeData(orderDataIds);
-
-    var url = api_url('calculate_shipping_cost', 'supplements');
-    var post_data = {
-        'country-code': country_code,
-        'province-code': province_code,
-        'total-weight': data.total_weight
-    };
+function makePayment(orderDataIds) {
     $.ajax({
-        url: url,
+        url: api_url('calculate_shipping_cost', 'supplements'),
         type: "POST",
-        data: JSON.stringify(post_data),
+        data: JSON.stringify({
+            'order_data_ids': orderDataIds,
+            'store_type': window.storeType
+        }),
         dataType: 'json',
         contentType: 'application/json',
         success: function (api_data) {
-            data.total_shipping_cost=formatCurrency(api_data.shipping_cost.toFixed(2));
-            data.total = formatCurrency((data.total+api_data.shipping_cost).toFixed(2));
+            var data = makeData(orderDataIds);
+            data.total_shipping_cost = formatCurrency(api_data.shipping_cost.toFixed(2));
+            data.total = formatCurrency((data.total + api_data.shipping_cost).toFixed(2));
 
+            var makePaymentTemplate = Handlebars.compile($("#id-make-payment-template").html());
             var html = makePaymentTemplate(data);
+
             $('#modal-make-payment tbody').empty().append(html);
             $('#modal-make-payment').modal('show');
             $('#id-make-payment-confirm').off('click').click(function () {
                 $('#modal-make-payment').modal('hide');
                 doMakePayment(orderDataIds, data.storeId, data.storeType);
             });
-
         },
         error: function (api_data) {
-            toastr.warning("Error calculating shipping");
+            toastr.warning(getAjaxError(api_data));
         }
     });
-
 }
 
 function addOrderToPayout(orderId, referenceNumber) {
@@ -235,12 +230,11 @@ $(document).ready(function () {
             orderRejectionWarning(txt);
             return false;
         }
-        makePayment([orderDataId],country_code, province_code);
+        makePayment([orderDataId]);
     });
 
     $(".pay-selected-lines").click(function (e) {
         e.preventDefault();
-        var order_id=$(this).attr('order-id');
         var country_code = $(this).parents('.order').find('.shipping-country-code').attr('shipping-country-code');
         var province_code = $(this).parents('.order').find('.shipping-province-code').attr('shipping-province-code');
         var deletedProducts = [];
@@ -248,9 +242,11 @@ $(document).ready(function () {
 
         $(this).parents('.order').find('.line-checkbox').each(function (i, item) {
             var line = $(item).parents('.line');
-            if (line.attr("is-deleted") === "true") {
-                deletedProducts.push(line.attr('line-title'));
-            }
+            line.find('.payment-btn-wrapper .supplement-items li').each(function() {
+                if ($(this).attr("is-deleted") === "true") {
+                    deletedProducts.push($(this).attr('line-title'));
+                }
+            });
         });
 
         if (deletedProducts.length) {
@@ -267,7 +263,7 @@ $(document).ready(function () {
             }
         });
         if (orderDataIds.length) {
-            makePayment(orderDataIds,country_code,province_code);
+            makePayment(orderDataIds);
         } else {
             toastr.warning("Please select orders for processing.");
         }
@@ -304,4 +300,22 @@ $(document).ready(function () {
         }
     });
     $("#edit-column").trigger('click');
+
+    $('.payment-btn-wrapper .supplement-items').each(function() {
+        var btn = $(this).siblings('.pay-for-supplement');
+        var btnWrapper = $(this).parents('.payment-btn-wrapper');
+        $(this).find('li').each(function() {
+            if ($(this).attr('is-deleted') === 'true') {
+                btn.attr('is-deleted', 'true');
+                btnWrapper.attr('is-deleted', 'true');
+                btnWrapper.attr('title', 'This supplement has been deleted');
+            }
+
+            if ($(this).attr('is-approved') === 'false') {
+                btn.prop('disabled', true);
+                btnWrapper.attr('title', 'Approved label not found');
+                btn.parents('.bundle-items').siblings().find('.line-checkbox').prop('disabled', true);
+            }
+        });
+    });
 });

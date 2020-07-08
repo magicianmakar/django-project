@@ -158,6 +158,8 @@ class WooStore(StoreBase):
 
         for item in order['line_items']:
             item['title'] = item.pop('name')
+            if item['variation_id'] == 0:
+                item['variation_id'] = item['variant_id'] = -1
 
         return order
 
@@ -656,6 +658,8 @@ class WooSupplier(SupplierBase):
                 return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
             elif self.is_dropified_print:
                 return int(re.findall(r'print-on-demand.+?([0-9]+)', self.product_url)[0])
+            elif self.is_pls:
+                return self.get_user_supplement_id()
         except:
             return None
 

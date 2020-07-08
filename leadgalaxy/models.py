@@ -1774,6 +1774,8 @@ class ProductSupplier(SupplierBase):
                 return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
             elif self.is_dropified_print:
                 return int(re.findall(r'print-on-demand.+?([0-9]+)', self.product_url)[0])
+            elif self.is_pls:
+                return self.get_user_supplement_id()
         except:
             return None
 
@@ -1853,10 +1855,6 @@ class ProductSupplier(SupplierBase):
     @property
     def is_dropified_print(self):
         return self.supplier_type() == 'dropified-print'
-
-    @property
-    def is_dropified(self):
-        return self.supplier_name == 'Dropified'
 
     def save(self, *args, **kwargs):
         if self.source_id != self.get_source_id():

@@ -609,6 +609,8 @@ class OrdersList(ListView):
                 item['image'] = fix_gkart_image(item['image'])
                 item['variant_title'] = ' / '.join([o.get('value') for o in item.get('variants', {}).get('options', [])])
                 item['variant_link'] = '{}/v2/index.php/product/form/{}'.format(groovekart_admin, product_id)
+                if variant_id == 0:
+                    variant_id = -1
 
                 bundle_data = []
                 if product:
@@ -636,17 +638,24 @@ class OrdersList(ListView):
                             else:
                                 b_variants = b['variant_title'].split('/') if b['variant_title'] else ''
 
+                            quantity = b['quantity'] * item['quantity']
+                            weight = None
+                            if b_supplier.user_supplement:
+                                weight = b_supplier.user_supplement.get_weight(quantity)
+
                             product_bundles.append({
                                 'product': b_product,
                                 'supplier': b_supplier,
                                 'shipping_method': b_shipping_method,
-                                'quantity': b['quantity'] * item['quantity'],
+                                'quantity': quantity,
+                                'weight': weight,
                                 'data': b
                             })
 
                             bundle_data.append({
                                 'title': b_product.title,
-                                'quantity': b['quantity'] * item['quantity'],
+                                'quantity': quantity,
+                                'weight': weight,
                                 'product_id': b_product.id,
                                 'source_id': b_supplier.get_source_id(),
                                 'order_url': app_link('gkart/orders/place', supplier=b_supplier.id, SABundle=True),
@@ -669,7 +678,7 @@ class OrdersList(ListView):
 
                             # pass orders without PLS products (when one store is used in multiple account)
                             try:
-                                item['weight'] = product.user_supplement.get_weight(item['quantity'])
+                                item['weight'] = supplier.user_supplement.get_weight(item['quantity'])
                             except:
                                 item['weight'] = False
 
@@ -680,6 +689,7 @@ class OrdersList(ListView):
                         order_data['products'] = bundle_data
                         order_data['is_bundle'] = len(bundle_data) > 0
                         order_data['variant'] = self.get_order_data_variant(item)
+                        order_data['weight'] = item.get('weight')
                         order_data_id = order_data['id']
                         orders_cache['gkart_order_{}'.format(order_data_id)] = order_data
                         item['order_data_id'] = order_data_id

@@ -238,7 +238,7 @@ class PLSOrderLineMixin:
             store_type=store.store_type,
             store_id=store.id,
             store_order_id=order_id,
-            line_id=line_id,
+            line_id__startswith=line_id,
         ).exists())
 
     def mark_printed(self):

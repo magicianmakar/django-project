@@ -165,6 +165,11 @@ class GrooveKartStore(StoreBase):
         order = r.json()
         order['order_number'] = order['id']
         for line in order['line_items']:
+            variant_id = line['variants']['variant_id']
+            if variant_id == 0:
+                line['variant_id'] = -1
+            else:
+                line['variant_id'] = variant_id
             line['title'] = line['name']
 
         return order
