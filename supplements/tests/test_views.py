@@ -8,7 +8,7 @@ from django.shortcuts import reverse
 from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyOrderTrackFactory, ShopifyStoreFactory, UserFactory
 from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrderLog
-from supplements.models import UserSupplementImage, UserSupplementLabel
+from supplements.models import Payout, UserSupplementImage, UserSupplementLabel
 
 from .factories import (
     LabelSizeFactory,
@@ -610,6 +610,31 @@ class OrderListTestCase(PLSBaseTestCase):
 
 
 class PayoutListTestCase(PLSBaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.store = ShopifyStoreFactory(primary_location=12)
+        self.store.user = self.user
+        self.store.save()
+        store_id = self.store.id
+
+        self.payout = Payout.objects.create(reference_number=5241,
+                                            shipping_cost=10)
+
+        self.pls_order = PLSOrderFactory(shipstation_key='key',
+                                         store_type='shopify',
+                                         store_id=store_id,
+                                         store_order_id='12345',
+                                         stripe_transaction_id=1111,
+                                         user_id=self.store.user_id,
+                                         payout=self.payout)
+        self.pls_order_line = PLSOrderLineFactory(shipstation_key='line-key',
+                                                  store_id=store_id,
+                                                  store_order_id='12345',
+                                                  line_id='1122',
+                                                  pls_order=self.pls_order,
+                                                  label=self.user_supplement.current_label)
+
     def get_url(self):
         return reverse('pls:payout_list')
 
@@ -620,6 +645,43 @@ class PayoutListTestCase(PLSBaseTestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+
+    def test_get_csv(self):
+        self.client.force_login(self.user)
+        params = f'ref_id={self.payout.id}&ref_num={self.payout.reference_number}&export=true'
+
+        response = self.client.get(f'{self.get_url()}?{params}')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('text/csv', str(response.items()))
+
+    def test_post(self):
+        self.client.force_login(self.user)
+        PLSOrderFactory(shipstation_key='key',
+                        store_type='shopify',
+                        store_id=self.store.id,
+                        store_order_id='12345',
+                        stripe_transaction_id=1111,
+                        user_id=self.store.user_id,
+                        is_fulfilled=True)
+
+        data = dict(
+            reference_number=321,
+        )
+        self.assertEqual(Payout.objects.count(), 1)
+        response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Payout.objects.count(), 2)
+
+    def test_post_error(self):
+        self.client.force_login(self.user)
+
+        data = dict(
+            reference_number=321,
+        )
+        self.assertEqual(Payout.objects.count(), 1)
+        response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Payout.objects.count(), 1)
 
 
 class UserSupplementViewTestCase(PLSBaseTestCase):

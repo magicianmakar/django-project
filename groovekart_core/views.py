@@ -3,6 +3,7 @@ import arrow
 import simplejson as json
 import requests
 import jwt
+from copy import deepcopy
 
 from lib.exceptions import capture_exception
 
@@ -24,6 +25,7 @@ from django.core.cache.utils import make_template_fragment_key
 from profits.mixins import ProfitDashboardMixin
 
 from supplements.models import PLSOrderLine
+from supplements.tasks import update_shipstation_address
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired, HasSubuserPermission
 from shopified_core.paginators import SimplePaginator
@@ -705,6 +707,14 @@ class OrdersList(ListView):
                 item['order_track'] = order_tracks_by_item.get(key)
 
             order['mixed_supplier_types'] = len(order['supplier_types']) > 1
+
+            line_items = deepcopy(order['items'])
+            for item in line_items:
+                item.pop('order_track', None)
+                item.pop('product', None)
+                item.pop('supplier', None)
+
+            update_shipstation_address.delay(order['id'], order['name'], line_items, store.id, 'gkart')
 
         bulk_queue = bool(self.request.GET.get('bulk_queue'))
         caches['orders'].set_many(orders_cache, timeout=86400 if bulk_queue else 21600)

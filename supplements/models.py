@@ -196,6 +196,7 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
                                on_delete=models.SET_NULL,
                                null=True,
                                blank=True)
+    shipping_address_hash = models.CharField(max_length=250, null=True, blank=True)
 
 
 class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):

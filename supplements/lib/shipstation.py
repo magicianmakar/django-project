@@ -5,7 +5,7 @@ from django.conf import settings
 
 import requests
 
-from shopified_core.utils import base64_encode
+from shopified_core.utils import base64_encode, hash_text
 from supplements.models import PLSOrderLine
 
 
@@ -38,6 +38,10 @@ def prepare_shipstation_data(pls_order, order, line_items):
         bill_to = get_address(order['billing_address'])
     except KeyError:
         bill_to = ship_to
+
+    hash = hash_text(json.dumps(ship_to, sort_keys=True))
+    pls_order.shipping_address_hash = hash
+    pls_order.save()
 
     get_shipstation_line_key = PLSOrderLine.get_shipstation_key
 
@@ -74,7 +78,7 @@ def prepare_shipstation_data(pls_order, order, line_items):
 
     return {
         'orderNumber': pls_order.shipstation_order_number,
-        'orderDate': order['created_at'],
+        'orderDate': pls_order.created_at.strftime('%Y-%m-%dT%H:%M:%S%z'),
         'orderStatus': 'awaiting_shipment',
         'amountPaid': pls_order.amount / 100.,
         'shipTo': ship_to,

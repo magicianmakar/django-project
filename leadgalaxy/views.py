@@ -5,6 +5,7 @@ import hmac
 import random
 import time
 
+from copy import deepcopy
 from hashlib import sha1
 from urllib.parse import urlencode, quote_plus
 
@@ -85,6 +86,7 @@ from shopified_core.utils import (
     decode_api_token,
 )
 from shopified_core.tasks import keen_order_event, export_user_activity
+from supplements.tasks import update_shipstation_address
 from supplements.models import PLSOrderLine
 from shopify_orders.models import (
     ShopifyOrder,
@@ -3545,6 +3547,7 @@ class OrdersView(TemplateView):
         self.check_extension_version()
 
         self.proccess_orders()
+        self.get_breadcrumbs()
 
         context.update(self.ctx)
 
@@ -4387,8 +4390,15 @@ class OrdersView(TemplateView):
                         capture_exception()
 
             order['mixed_supplier_types'] = len(order['supplier_types']) > 1
-
             self.orders.append(order)
+
+            line_items = deepcopy(order['line_items'])
+            for item in line_items:
+                item.pop('order_track', None)
+                item.pop('product', None)
+                item.pop('supplier', None)
+
+            update_shipstation_address.delay(order['id'], order['order_number'], line_items, self.store.id, 'shopify')
 
         active_orders = {}
         for i in self.orders_ids:

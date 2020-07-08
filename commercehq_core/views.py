@@ -3,6 +3,7 @@ import arrow
 import simplejson as json
 import requests
 import jwt
+from copy import deepcopy
 
 from lib.exceptions import capture_exception
 
@@ -26,7 +27,7 @@ from django.views.generic.detail import DetailView
 from django.core.cache.utils import make_template_fragment_key
 
 from supplements.models import PLSOrderLine
-from profits.mixins import ProfitDashboardMixin
+from supplements.tasks import update_shipstation_address
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
 from shopified_core.paginators import SimplePaginator
@@ -47,6 +48,7 @@ from shopified_core.utils import (
 from shopified_core.tasks import keen_order_event
 from product_alerts.models import ProductChange
 from product_alerts.utils import variant_index_from_supplier_sku
+from profits.mixins import ProfitDashboardMixin
 from leadgalaxy.utils import (
     get_aliexpress_credentials,
     get_admitad_credentials,
@@ -1063,6 +1065,14 @@ class OrdersList(ListView):
                     capture_exception(level='warning', extra=http_exception_response(e))
 
             order['mixed_supplier_types'] = len(order['supplier_types']) > 1
+
+            line_items = deepcopy(order['items'])
+            for item in line_items:
+                item.pop('order_track', None)
+                item.pop('product', None)
+                item.pop('supplier', None)
+
+                update_shipstation_address.delay(order['id'], order['display_number'], line_items, self.store.id, 'chq')
 
             orders[odx] = order
 
