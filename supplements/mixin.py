@@ -4,7 +4,7 @@ from django.utils.html import format_html
 
 from bs4 import BeautifulSoup
 
-from supplements.lib.authorizenet import charge_customer_profile, get_customer_payment_profile
+from supplements.lib.authorizenet import charge_customer_profile, get_customer_payment_profile, refund_customer_profile
 
 
 class PLSupplementMixin:
@@ -214,6 +214,30 @@ class PLSOrderMixin:
         result = self.order_items.aggregate(total=Sum(F('amount') * F('quantity')))
         return "${:.2f}".format(result['total'] / 100.)
 
+    @property
+    def refund_amount(self):
+        refund = 0
+        if self.refund:
+            refund = self.refund.amount
+
+        return refund
+
+    @property
+    def refund_amount_string(self):
+        return '${:.2f}'.format(self.refund_amount)
+
+    @property
+    def refund_without_fee(self):
+        refund = 0
+        if self.refund:
+            refund = self.refund.amount - self.refund.fee
+
+        return refund
+
+    @property
+    def refund_without_fee_string(self):
+        return '${:.2f}'.format(self.refund_without_fee)
+
 
 class PLSOrderLineMixin:
 
@@ -259,6 +283,13 @@ class PLSOrderLineMixin:
             return get_string("primary", "Fulfilled")
         else:
             return get_string("warning", "Unfulfilled")
+
+    @property
+    def is_refunded(self):
+        if self.pls_order.refund:
+            return True
+
+        return False
 
 
 class PayoutMixin:
@@ -324,7 +355,11 @@ class PayoutMixin:
 
     @property
     def pls_payout(self):
-        return (self.profit_split * .50) + self.wholesale_price + self.shipping_cost
+        price = (self.profit_split * .50) + self.wholesale_price
+        if self.shipping_cost:
+            price += self.shipping_cost
+
+        return price
 
     @property
     def pls_payout_string(self):
@@ -334,6 +369,18 @@ class PayoutMixin:
     def shipping_cost_string(self):
         if self.shipping_cost:
             return self.to_currency(self.shipping_cost)
+
+    @property
+    def refund_amount(self):
+        refund = 0
+        for order in self.payout_items.all():
+            refund += order.refund.amount
+
+        return refund
+
+    @property
+    def refund_amount_string(self):
+        return '${:.2f}'.format(self.refund_amount)
 
     def to_currency(self, value):
         return "${:.2f}".format(value / 100)
@@ -346,6 +393,14 @@ class AuthorizeNetCustomerMixin:
             self.customer_id,
             self.payment_id,
             line_items,
+        )
+
+    def refund(self, amount, transaction_id):
+        return refund_customer_profile(
+            amount,
+            self.customer_id,
+            self.payment_id,
+            transaction_id,
         )
 
     def retrieve(self):

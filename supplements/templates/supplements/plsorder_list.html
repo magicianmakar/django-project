@@ -7,6 +7,13 @@
 
 {% block tab_content %}
 
+{% if error %}
+<div class="alert alert-info alert-dismissable">
+  <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+  The transaction against this order has not yet settled. Please wait for this to get settled first.
+</div>
+{% endif %}
+
 <div>
   {% include "supplements/partials/filter_form.html" %}
 </div>
@@ -21,6 +28,7 @@
     <th>Customer</th>
     <th>Total Amount</th>
     <th>Shipping Cost</th>
+    <th>Refund</th>
     <th>Date</th>
     <th>Status</th>
     <th id="edit-column">Payout</th>
@@ -39,6 +47,16 @@
       <td>{{ pls_order.user.email }}</td>
       <td>{{ pls_order.amount_string }}</td>
       <td>{{ pls_order.shipping_price_string }}</td>
+      <td>
+        {{ pls_order.refund_amount_string }}
+        {% if pls_order.refund %}
+        <i class="fa fa-fw fa-question-circle"
+          qtip-tooltip="Amount to be refunded: <b>{{ pls_order.refund_without_fee_string }}</b>"
+          qtip-my="bottom right"
+          qtip-at="top right"
+        ></i>
+        {% endif %}
+      </td>
       <td>{{ pls_order.created_at|date:"m.d.Y h:iA" }}</td>
       <td>{{ pls_order.status_string }}</td>
       <td>
@@ -54,6 +72,12 @@
           View
         </a>
       </td>
+      <td>
+        {% if not pls_order.refund %}
+        <a href="#modal-orders-refund" data-toggle="modal" class="btn btn-default btn-outline btn-xs make-refund"
+          data-order-id="{{ pls_order.id }}" {% if refund_form.errors %} style="color:#ed5565;"{% endif %}>Refund</a>
+        {% endif %}
+      </td>
     {% empty %}
       <td colspan="8">No orders yet.</td>
     </tr>
@@ -62,11 +86,13 @@
 </table>
 
 {% include "supplements/partials/paging.html" %}
+{% include "supplements/partials/orders_refund_modal.html" %}
 
 {% endblock %}
 
 {% block extrajs %}
 <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
 <script type='application/javascript'>
   $("#id_date").datepicker();

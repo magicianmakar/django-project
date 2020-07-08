@@ -13,7 +13,8 @@ from .models import (
     ShippingGroup,
     UserSupplement,
     UserSupplementImage,
-    UserSupplementLabel
+    UserSupplementLabel,
+    RefundPayments,
 )
 
 
@@ -174,4 +175,15 @@ class MockupTypeAdmin(admin.ModelAdmin):
     list_display = (
         'slug',
         'name',
+    )
+
+
+@admin.register(RefundPayments)
+class RefundPaymentsAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'amount',
+        'fee',
+        'transaction_id',
+        'created_at',
     )

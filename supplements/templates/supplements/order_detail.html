@@ -67,7 +67,11 @@
 
 <div class="row">
   <div class="col-md-2 col-md-offset-10 text-right m-b">
+    {% if order.refund %}
+    <span class="label label-warning">Refunded</span>
+    {% else %}
     {{ order.status_string }}
+    {% endif %}
   </div>
 </div>
 <div class="row">
@@ -86,6 +90,21 @@
     {{ order.shipping_price_string }}
   </div>
 </div>
+{% if order.refund %}
+<div class="row m-t">
+  <div class="col-md-2 col-md-offset-9 text-right">
+    <span class="h5"><b>Refund</b>:
+      <i class="fa fa-fw fa-question-circle"
+        qtip-tooltip="Amount to be refunded: <b>{{ order.refund_without_fee_string }}</b>"
+        qtip-my="bottom right"
+        qtip-at="top right"
+      ></i></span>
+  </div>
+  <div class="col-md-1 text-right">
+    {{ order.refund_amount_string }}
+  </div>
+</div>
+{% endif %}
 <br>
 <div class="row">
   <div class="col-md-2 col-md-offset-9 text-right">

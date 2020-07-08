@@ -146,18 +146,66 @@ def charge_customer_profile(amount, customer_id, payment_id, lines):
 
     response = controller.getresponse()
 
-    # https://developer.authorize.net/api/reference/index.html#payment-transactions-charge-a-credit-card
+    # https://developer.authorize.net/api/reference/index.html#payment-transactions-charge-a-customer-profile
     errors = []
-    if response.messages.resultCode == "Ok" \
-            and hasattr(response.transactionResponse, 'messages'):
-        return response.transactionResponse.transId
+    if response.messages.resultCode == "Ok":
+        if hasattr(response.transactionResponse, 'messages'):
+            return response.transactionResponse.transId
+        else:
+            if hasattr(response.transactionResponse, 'errors'):
+                for error in response.transactionResponse.errors.error:
+                    errors.append(f"{error.errorCode}: {error.errorText}")
+    else:
+        if hasattr(response, 'transactionResponse') and hasattr(response.transactionResponse, 'errors'):
+            for error in response.transactionResponse.errors.error:
+                errors.append(f"{error.errorCode}: {error.errorText}")
+        else:
+            for error in response.messages.message:
+                errors.append(f"{error['code'].text}: {error['text'].text}")
 
-    if not hasattr(response, 'transactionResponse'):
-        for error in response.messages.message:
-            errors.append(f"{error['code'].text}: {error['text'].text}")
-    elif hasattr(response.transactionResponse, 'errors'):
-        for error in response.transactionResponse.errors.error:
-            errors.append(f"{error.errorCode}: {error.errorText}")
+    if errors:
+        capture_message('Auth.NET transaction error', extra={'authnet-errors': errors})
+
+
+def refund_customer_profile(amount, customer_id, payment_id, trans_id):
+    profile_to_charge = apicontractsv1.customerProfilePaymentType()
+    profile_to_charge.customerProfileId = customer_id
+    profile_to_charge.paymentProfile = apicontractsv1.paymentProfile()
+    profile_to_charge.paymentProfile.paymentProfileId = payment_id
+
+    transaction_request = apicontractsv1.transactionRequestType()
+    transaction_request.transactionType = "refundTransaction"
+    transaction_request.amount = amount
+    transaction_request.refTransId = trans_id
+    transaction_request.profile = profile_to_charge
+
+    create_transaction = apicontractsv1.createTransactionRequest()
+    create_transaction.merchantAuthentication = get_merchant_auth()
+    create_transaction.transactionRequest = transaction_request
+
+    controller = createTransactionController(create_transaction)
+    if settings.AUTH_NET_PROD:
+        controller.setenvironment(constants.PRODUCTION)
+
+    controller.execute()
+
+    response = controller.getresponse()
+
+    errors = []
+    if response.messages.resultCode == "Ok":
+        if hasattr(response.transactionResponse, 'messages'):
+            return response.transactionResponse.transId
+        else:
+            if hasattr(response.transactionResponse, 'errors'):
+                for error in response.transactionResponse.errors.error:
+                    errors.append(f"{error.errorCode}: {error.errorText}")
+    else:
+        if hasattr(response, 'transactionResponse') and hasattr(response.transactionResponse, 'errors'):
+            for error in response.transactionResponse.errors.error:
+                errors.append(f"{error.errorCode}: {error.errorText}")
+        else:
+            for error in response.messages.message:
+                errors.append(f"{error['code'].text}: {error['text'].text}")
 
     if errors:
         capture_message('Auth.NET transaction error', extra={'authnet-errors': errors})

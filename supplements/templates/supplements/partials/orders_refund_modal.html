@@ -1,0 +1,71 @@
+{% load widget_tweaks %}
+
+<div id="modal-orders-refund" class="modal" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+        <form class="form-horizontal" id="refund_form" role="form" action="" method="POST">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">Refund Details</h4>
+        </div>
+        <div class="modal-body">
+          {% csrf_token %}
+            <div class="row">
+              <div class="col-md-12">
+                <input type="hidden" name="order_id" value="">
+                <div class="form-group {{ refund_form.amount.errors|yesno:'has-error,' }}">
+                  <label class="col-sm-3 col-xs-12 control-label">Amount:</label>
+                  <div class="col-sm-9 col-xs-12">
+                    <div class='input-group'>
+                      <span class="input-group-addon">$</span>
+                      {{ refund_form.amount|add_class:"form-control" }}
+                    </div>
+                    {% for error in refund_form.amount.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <div class="form-group {{ refund_form.fee.errors|yesno:'has-error,' }}">
+                  <label class="col-sm-3 col-xs-12 control-label">Restocking Fee:</label>
+                  <div class="col-sm-9 col-xs-12">
+                    <div class='input-group'>
+                      <span class="input-group-addon">$</span>
+                      {{ refund_form.fee|add_class:"form-control" }}
+                    </div>
+                    {% for error in refund_form.fee.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <div class="form-group {{ refund_form.description.errors|yesno:'has-error,' }}">
+                  <label class="col-sm-3 col-xs-12 control-label">Description:</label>
+                  <div class="col-sm-9 col-xs-12">
+                    {{ refund_form.description|add_class:"form-control" }}
+                    {% for error in refund_form.description.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <div class="form-group {{ refund_form.item_shipped.errors|yesno:'has-error,' }}">
+                  <label class="col-sm-3 col-xs-12 control-label" for="id_item_shipped">Item Shipped:</label>
+                  <div class="col-sm-9 col-xs-12" style="padding-top: 6px;">
+                    {{ refund_form.item_shipped }}
+                    {% for error in refund_form.item_shipped.errors %}
+                    <p class="help-block">{{ error }}</p>
+                    {% endfor %}
+                  </div>
+                </div>
+
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" class="btn btn-primary" value="Add Refund" />
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -198,6 +198,12 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
                                blank=True)
     shipping_address_hash = models.CharField(max_length=250, null=True, blank=True)
 
+    refund = models.OneToOneField('RefundPayments',
+                                  related_name='refund_items',
+                                  on_delete=models.SET_NULL,
+                                  null=True,
+                                  blank=True)
+
 
 class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
     """
@@ -627,3 +633,14 @@ class MockupType(models.Model):
             layer['file'] = f'data:image/{ext};base64,{image_data}'
 
         return layers
+
+
+class RefundPayments(models.Model):
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    fee = models.DecimalField(max_digits=10, decimal_places=2)
+    transaction_id = models.CharField(max_length=255, null=True)
+    item_shipped = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

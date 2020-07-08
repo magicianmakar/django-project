@@ -1,7 +1,7 @@
 from django import forms
 from django.core.validators import FileExtensionValidator
 
-from .models import LabelSize, Payout, PLSOrder, PLSupplement, UserSupplement, UserSupplementLabel
+from .models import LabelSize, Payout, PLSOrder, PLSupplement, UserSupplement, UserSupplementLabel, RefundPayments
 
 
 class UserSupplementForm(forms.ModelForm):
@@ -293,3 +293,22 @@ class ReportsQueryForm(forms.Form):
     end_date = forms.DateField(required=False)
     interval = forms.ChoiceField(required=False, choices=INTERVALS)
     compare = forms.ChoiceField(required=False, choices=COMPARE_CHOICES)
+
+
+class RefundPaymentsForm(forms.ModelForm):
+    class Meta:
+        model = RefundPayments
+        fields = [
+            'amount',
+            'description',
+            'fee',
+            'item_shipped',
+        ]
+
+    def clean(self):
+        super().clean()
+        amount = self.cleaned_data.get('amount')
+        fee = self.cleaned_data.get('fee')
+        if amount <= fee:
+            msg = 'Amount can not be less than or equal to Restocking Fee.'
+            self.add_error('amount', msg)

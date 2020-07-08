@@ -67,10 +67,11 @@ from .forms import (
     PLSupplementEditForm,
     PLSupplementFilterForm,
     PLSupplementForm,
-    ReportsQueryForm,
     UploadJSONForm,
     UserSupplementForm,
-    UserSupplementFilterForm
+    UserSupplementFilterForm,
+    ReportsQueryForm,
+    RefundPaymentsForm,
 )
 from .utils import aws_s3_context, create_rows, payment, report, send_email_against_comment
 
@@ -1075,6 +1076,8 @@ class Order(common_views.OrderView):
     ordering = '-created_at'
     filter_form = OrderFilterForm
     namespace = 'pls'
+    refund_form = RefundPaymentsForm
+    template_name = 'supplements/plsorder_list.html'
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
@@ -1101,6 +1104,42 @@ class Order(common_views.OrderView):
                 )
 
         return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = self.form
+        context['refund_form'] = self.refund_form
+        context['breadcrumbs'] = self.get_breadcrumbs()
+        self.add_paging_context(context)
+        return context
+
+    def post(self, request):
+        error = False
+        refund_form = self.refund_form = self.refund_form(request.POST)
+        if refund_form.is_valid():
+            with transaction.atomic():
+                refund = refund_form.save()
+                order_id = request.POST.get('order_id', '')
+                if order_id:
+                    order = get_object_or_404(PLSOrder, id=order_id)
+                    order.refund = refund
+                    order.save()
+                    transaction_id = request.user.authorize_net_customer.refund(
+                        refund.amount - refund.fee,
+                        order.stripe_transaction_id,
+                    )
+                    if transaction_id:
+                        refund.transaction_id = transaction_id
+                        refund.save()
+                    else:
+                        transaction.set_rollback(True)
+                        error = True
+
+        self.object_list = self.get_queryset()
+        context = self.get_context_data()
+        context['error'] = error
+
+        return render(request, self.template_name, context=context)
 
 
 class OrderDetailMixin(LoginRequiredMixin, View):

@@ -80,6 +80,13 @@
           Download
         </a>
       </td>
+      <td>
+        {% if line_item.is_refunded %}
+        <span class="label label-warning">Refunded</span>
+        {% else %}
+        <span class="label label-primary">Settled</span>
+        {% endif %}
+      </td>
     {% empty %}
       <td colspan="10">No orders yet.</td>
     </tr>

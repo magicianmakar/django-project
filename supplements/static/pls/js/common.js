@@ -170,6 +170,12 @@ $(document).ready(function(){
         );
     });
 
+    $('.make-refund').click(function (e) {
+        var orderId = $(this).data('order-id');
+        var form = document.getElementById('refund_form');
+        form.order_id.value = orderId;
+    });
+
     $("#id_shipping_countries").chosen();
     $("#id_label_size_filter").chosen();
     $("#id_product_sku_filter").chosen();

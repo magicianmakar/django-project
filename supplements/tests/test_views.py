@@ -8,7 +8,7 @@ from django.shortcuts import reverse
 from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyOrderTrackFactory, ShopifyStoreFactory, UserFactory
 from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrderLog
-from supplements.models import Payout, UserSupplementImage, UserSupplementLabel
+from supplements.models import AuthorizeNetCustomer,Payout, UserSupplementImage, UserSupplementLabel
 
 from .factories import (
     LabelSizeFactory,
@@ -597,6 +597,24 @@ class ProductEditTestCase(PLSBaseTestCase):
 
 
 class OrderListTestCase(PLSBaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        self.store = ShopifyStoreFactory(primary_location=12)
+        self.store.user = self.user
+        self.store.save()
+        store_id = self.store.id
+
+        self.pls_order = PLSOrderFactory(shipstation_key='key',
+                                         store_type='shopify',
+                                         store_id=store_id,
+                                         store_order_id='1234',
+                                         stripe_transaction_id=1111,
+                                         user_id=self.store.user_id)
+
+        AuthorizeNetCustomer.objects.create(user=self.user)
+        self.transaction_id = '2233'
+
     def get_url(self):
         return reverse('pls:order_list')
 
@@ -607,6 +625,25 @@ class OrderListTestCase(PLSBaseTestCase):
         self.client.force_login(self.user)
         response = self.client.get(self.get_url())
         self.assertEqual(response.status_code, 200)
+
+    def test_post(self):
+        self.client.force_login(self.user)
+
+        data = dict(
+            order_id=self.pls_order.id,
+            amount='12',
+            fee='2',
+            description='some description',
+            item_shipped=True,
+        )
+
+        self.assertEqual(self.pls_order.refund, None)
+        with patch('supplements.mixin.AuthorizeNetCustomerMixin.refund',
+                   return_value=self.transaction_id):
+            response = self.client.post(self.get_url(), data=data)
+            self.assertEqual(response.status_code, 200)
+            self.pls_order.refresh_from_db()
+            self.assertEqual(self.pls_order.refund.amount, 12)
 
 
 class PayoutListTestCase(PLSBaseTestCase):
