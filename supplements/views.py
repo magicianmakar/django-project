@@ -405,11 +405,11 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
     def get_weight(self, weight):
         if not weight:
-            weight = "0lb"
+            weight = "0 lb"
         else:
             weight_in_oz = round(float(weight - math.floor(weight)) * 16, 1)
-            weight_in_oz = f"{weight_in_oz}oz" if int(weight_in_oz) else ""
-            weight = f"{int(weight)}lb {weight_in_oz}" if int(weight) else weight_in_oz
+            weight_in_oz = f"{weight_in_oz} oz" if int(weight_in_oz) else ""
+            weight = f"{int(weight)} lb {weight_in_oz}" if int(weight) else weight_in_oz
         return weight
 
     def get_supplement_data(self, user, supplement_id):

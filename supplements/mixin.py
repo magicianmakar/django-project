@@ -374,7 +374,7 @@ class PayoutMixin:
     def refund_amount(self):
         refund = 0
         for order in self.payout_items.all():
-            refund += order.refund.amount
+            refund += order.refund_amount
 
         return refund
 
