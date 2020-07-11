@@ -65,7 +65,11 @@
         {{ line_item.pls_order.shipstation_order_number }}
       </td>
       <td>{{ line_item.label.user_supplement.pl_supplement.shipstation_sku }}</td>
-      <td>{{ line_item.label.sku }}</td>
+      <td>
+        <a href="{% url 'pls:admin_label_history' line_item.label.user_supplement.id %}"
+            title="View History">
+          {{ line_item.label.sku }}</a>
+      </td>
       <td>{{ line_item.label.user_supplement.pl_supplement.label_size }}</td>
       <td>{{ line_item.pls_order.batch_number|default:'N/A' }}</td>
       <td>{{ line_item.fulfillment_status_string }}</td>
