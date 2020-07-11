@@ -576,8 +576,12 @@ class UserSupplementView(Supplement):
             new_version_url = reverse('pls:label_detail',
                                       kwargs={'label_id': current_label.id})
         all_comments = []
+        comments = current_label.comments
         for label in user_supplement.labels.all():
-            comments = label.comments.all().order_by('-created_at')
+            if self.request.user.can('pls_admin.use') or self.request.user.can('pls_staff.use'):
+                comments = comments.all().order_by('-created_at')
+            else:
+                comments = comments.all().exclude(is_private=True).order_by('-created_at')
             if comments:
                 all_comments.append(comments)
 

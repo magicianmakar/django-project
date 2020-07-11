@@ -69,10 +69,12 @@
           </div>
           {% endfor %}
           {% endif %}
-          <label id="private-note" class="onoffswitch">
-            <input type="checkbox" name="is_private">
-            &nbsp;Leave private note
-          </label>
+          {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
+            <label id="private-note" class="onoffswitch">
+              <input type="checkbox" name="is_private">
+              &nbsp;Leave private note
+            </label>
+          {% endif %}
           <input type='hidden' name='action' value='comment' />
           {{ comment_form.upload_url }}
           {{ comment_form.image_data_url }}

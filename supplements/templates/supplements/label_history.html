@@ -76,10 +76,6 @@
             </div>
             {% endfor %}
             {% endif %}
-            <label id="private-note" class="onoffswitch">
-              <input type="checkbox" name="is_private">
-              &nbsp;Leave private note
-            </label>
             <input type='hidden' name='action' value='comment' />
             {{ comment_form.upload_url }}
             {{ comment_form.image_data_url }}
