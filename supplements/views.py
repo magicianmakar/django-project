@@ -1234,9 +1234,9 @@ class MyOrders(common_views.OrderView):
             if order_number:
                 queryset = queryset.filter(order_number=order_number)
 
-            stripe_id = form.cleaned_data['stripe_id']
-            if stripe_id:
-                queryset = queryset.filter(stripe_transaction_id=stripe_id)
+            transaction_id = form.cleaned_data['transaction_id']
+            if transaction_id:
+                queryset = queryset.filter(stripe_transaction_id=transaction_id)
 
             created_at = form.cleaned_data['date']
             if created_at:
