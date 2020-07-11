@@ -37,10 +37,12 @@
     <li><a href="{% url 'pls:my_orders' %}">My Payments</a></li>
     {% endif %}
 
+    {% if not request.user.is_subuser %}
     {% if request.path == pls_billing %}
     <li class="active"><a data-toggle="tab" href="#tab-1">Billing</a></li>
     {% else %}
     <li><a href="{% url 'pls:billing' %}">Billing</a></li>
+    {% endif %}
     {% endif %}
   {% endif %}
   </ul>

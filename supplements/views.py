@@ -1477,7 +1477,8 @@ class Billing(LoginRequiredMixin, TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        user = request.user
+        if (user.profile.is_black or user.can('pls.use')) and not user.is_subuser:
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
