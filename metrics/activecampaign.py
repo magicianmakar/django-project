@@ -297,7 +297,7 @@ class ActiveCampaignAPI:
         status = ''
         trial_ends = ''
         stripe_status = custom_attributes.get('stripe_subscription_status', '')
-        if stripe_status == 'trialing' or signed_up_since < 15:
+        if signed_up_since < 15 and list_id != Lists.LEADS or stripe_status == 'trialing':
             status = 'Trial'
             trial_ends = arrow.get().replace(days=16 - signed_up_since).format(API_DATE_FORMAT)
         elif stripe_status == 'active':
