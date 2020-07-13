@@ -1265,6 +1265,17 @@ $(function() {
     if (videosStoreTypeMenu.length === 1 && $('#' + videosStoreType + '-vids .training-video').length >= 0) {
         $('#store-type-video a[href="#' + videosStoreType + '-vids"]').trigger('click');
     }
+
+    if (window.location.href.match(/dropified\.com\/product\?/)) {
+        var interval = setInterval(function () {
+            var targets = $('#bt_dsers_sync, #getTopObj, .dsers-oberlo-checkoutAll');
+            if (!interval.length) {
+                clearInterval(interval);
+            } else {
+                targets.remove();
+            }
+        }, 1000);
+    }
 });
 
 var ravenOptions = {
