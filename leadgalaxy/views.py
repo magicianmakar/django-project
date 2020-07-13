@@ -86,7 +86,6 @@ from shopified_core.utils import (
     decode_api_token,
 )
 from shopified_core.tasks import keen_order_event, export_user_activity
-from supplements.tasks import update_shipstation_address
 from supplements.models import PLSOrderLine
 from shopify_orders.models import (
     ShopifyOrder,
@@ -4397,8 +4396,6 @@ class OrdersView(TemplateView):
                 item.pop('order_track', None)
                 item.pop('product', None)
                 item.pop('supplier', None)
-
-            update_shipstation_address.delay(order['id'], order['order_number'], line_items, self.store.id, 'shopify')
 
         active_orders = {}
         for i in self.orders_ids:

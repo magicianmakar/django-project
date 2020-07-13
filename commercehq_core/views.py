@@ -27,7 +27,6 @@ from django.views.generic.detail import DetailView
 from django.core.cache.utils import make_template_fragment_key
 
 from supplements.models import PLSOrderLine
-from supplements.tasks import update_shipstation_address
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
 from shopified_core.paginators import SimplePaginator
@@ -1071,8 +1070,6 @@ class OrdersList(ListView):
                 item.pop('order_track', None)
                 item.pop('product', None)
                 item.pop('supplier', None)
-
-                update_shipstation_address.delay(order['id'], order['display_number'], line_items, self.store.id, 'chq')
 
             orders[odx] = order
 

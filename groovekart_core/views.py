@@ -25,7 +25,6 @@ from django.core.cache.utils import make_template_fragment_key
 from profits.mixins import ProfitDashboardMixin
 
 from supplements.models import PLSOrderLine
-from supplements.tasks import update_shipstation_address
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired, HasSubuserPermission
 from shopified_core.paginators import SimplePaginator
@@ -713,8 +712,6 @@ class OrdersList(ListView):
                 item.pop('order_track', None)
                 item.pop('product', None)
                 item.pop('supplier', None)
-
-            update_shipstation_address.delay(order['id'], order['name'], line_items, store.id, 'gkart')
 
         bulk_queue = bool(self.request.GET.get('bulk_queue'))
         caches['orders'].set_many(orders_cache, timeout=86400 if bulk_queue else 21600)
