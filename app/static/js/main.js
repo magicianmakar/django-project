@@ -1269,7 +1269,7 @@ $(function() {
     if (window.location.href.match(/dropified\.com\/product\?/)) {
         var interval = setInterval(function () {
             var targets = $('#bt_dsers_sync, #getTopObj, .dsers-oberlo-checkoutAll');
-            if (!interval.length) {
+            if (!targets.length) {
                 clearInterval(interval);
             } else {
                 targets.remove();
