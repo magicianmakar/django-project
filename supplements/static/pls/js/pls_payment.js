@@ -114,6 +114,7 @@ function makeData(orderDataIds) {
             var lineItem = getLineItem($(this));
             data.total_weight += lineItem.weight;
             data.total += lineItem.amount;
+            lineItem.amount = formatCurrency(lineItem.amount);
             data.items.push(lineItem);
         });
     });
