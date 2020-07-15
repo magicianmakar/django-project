@@ -98,7 +98,7 @@ function makeData(orderDataIds) {
 
         return {
             orderNumber: supplementElem.parents('.line').attr('order-number'),
-            title: supplementElem.attr('line-title'),
+            title: supplementElem.attr('line-title') + ' ('+ supplementElem.attr('pl-supplement-title') + ')',
             unitPrice: formatCurrency(unitPrice),
             quantity: quantity,
             amount: parseFloat(unitPrice) * quantity,
