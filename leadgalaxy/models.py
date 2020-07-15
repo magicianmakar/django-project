@@ -28,7 +28,7 @@ from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class, upsell_page_permissions
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 
-SHOPIFY_API_VERSION = "2020-01"
+SHOPIFY_API_VERSION = "2020-04"
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),
@@ -904,6 +904,8 @@ class ShopifyStore(StoreBase):
             *pages: list or string to Shopify API resource
             version: Shoify API version to use (default: {SHOPIFY_API_VERSION})
         '''
+
+        assert '2019' not in version
 
         url = re.findall(r'[^/]+@[^@\.]+\.myshopify\.com', self.api_url)[0]
 

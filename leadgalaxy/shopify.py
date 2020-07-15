@@ -3,7 +3,6 @@ import requests
 
 class ShopifyAPI:
     store = None
-    version = '2020-04'
 
     _pagination_limit = 240
 
@@ -111,9 +110,9 @@ class ShopifyAPI:
         tries = 3
         while tries:
             if not page_info:
-                rep = requests.get(url=self.store.api(resource, version=self.version), params=params)
+                rep = requests.get(url=self.store.api(resource), params=params)
             else:
-                rep = requests.get(url=self.store.api(page_info, version=self.version))
+                rep = requests.get(url=self.store.api(page_info))
 
             if rep.ok:
                 break
