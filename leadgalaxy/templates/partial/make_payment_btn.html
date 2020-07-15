@@ -7,7 +7,8 @@
             line-price="{{ bundle.supplier.user_supplement.cost_price }}"
             weight="{{ bundle.weight }}"
             is-deleted="{{ bundle.supplier.is_supplement_deleted|lower }}"
-            is-approved="{{ bundle.supplier.is_label_approved|lower }}"></li>
+            is-approved="{{ bundle.supplier.is_label_approved|lower }}"
+            pl-supplement-title="{{  bundle.supplier.user_supplement.pl_supplement }}"></li>
         {% endfor %}
     {% else %}
         <li line-title="{{ item.title }}"
@@ -15,7 +16,8 @@
             line-price="{{ item.supplier.user_supplement.cost_price }}"
             weight="{{ item.weight }}"
             is-deleted="{{ item.supplier.is_supplement_deleted|lower }}"
-            is-approved="{{ item.supplier.is_label_approved|lower }}"></li>
+            is-approved="{{ item.supplier.is_label_approved|lower }}"
+            pl-supplement-title="{{  item.supplier.user_supplement.pl_supplement }}"></li>
     {% endif %}
     </ul>
     <button class="btn btn-xs dropdown-toggle pay-for-supplement {% if item.refunded %}btn-danger{% else %}btn-success{% endif %}">
