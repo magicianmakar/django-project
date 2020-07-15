@@ -2238,8 +2238,6 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
         # Delete Product images cache
         ShopifyProductImage.objects.filter(store=store, product=shopify_product['id']).delete()
 
-        # update collections
-        ProductCollections().update_product_collects_shopify_id(product)
     except ShopifyStore.DoesNotExist:
         capture_exception()
 
@@ -2680,67 +2678,3 @@ class ShopifyOrderUpdater:
         self.notes = data.get("notes")
         self.tags = data.get("tags")
         self.attributes = data.get("attributes")
-
-
-class ProductCollections(object):
-    def get_collections(self, store, title=''):
-        params = {'limit': 100}
-        if title:
-            params['title'] = title
-
-        try:
-            response = requests.get(url=store.api('custom_collections'), params=params).json()
-            collections = [{'title': collection.get('title'), 'id': collection.get('id')} for collection in
-                           response.get('custom_collections', [])]
-        except:
-            capture_exception()
-            collections = []
-
-        return collections
-
-    def link_product_collection(self, product, collections):
-        collections = list(map(int, collections))
-        response = requests.get(
-            url=product.store.api('collects'),
-            params={'product_id': product.shopify_id}
-        ).json()
-
-        self.unlink_product_collection(product=product, collections=[
-            {'id': collect.get('id'), 'collection_id': collect.get('collection_id')} for collect in
-            response.get('collects', [])], selected=collections)
-
-        for collection in collections:
-            if collection not in [collect.get('collection_id') for collect in response.get('collects', [])]:
-                requests.post(
-                    url=product.store.api('collects'),
-                    json={
-                        'collect': {
-                            'product_id': product.shopify_id,
-                            'collection_id': collection
-                        }
-                    }).json()
-
-        # update already linked collections
-        self.update_product_collects_shopify_id(product)
-
-    def unlink_product_collection(self, product, collections, selected):
-        selected = list(map(int, selected))
-        for collection in collections:
-            if collection['collection_id'] not in selected:
-                requests.delete(product.store.api('collects', collection['id']))
-
-    def update_product_collects_shopify_id(self, product):
-        # check if we have any unlinked product collection
-        try:
-            response = requests.get(
-                url=product.store.api('collects'),
-                params={'product_id': product.shopify_id}
-            ).json()
-
-            data = json.loads(product.data)
-            data['collections'] = [collection.get('collection_id') for collection in response.get('collects', [])]
-            product.data = json.dumps(data)
-            product.save()
-
-        except:
-            capture_exception()

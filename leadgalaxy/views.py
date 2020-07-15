@@ -1854,10 +1854,6 @@ def product_view(request, pid):
         p['product']['vendor'] = shopify_product['vendor']
         p['product']['published'] = shopify_product['published_at'] is not None
 
-        collections = utils.ProductCollections().get_collections(product.store)
-    else:
-        collections = None
-
     breadcrumbs = [{'title': 'Products', 'url': '/product'}]
 
     if product.store_id:
@@ -1893,7 +1889,6 @@ def product_view(request, pid):
         'product': p,
         'board': board,
         'original': original,
-        'collections': collections,
         'shopify_product': shopify_product,
         'extra_images': extra_images,
         'aws_available': aws['aws_available'],
@@ -3027,21 +3022,6 @@ def autocomplete(request, target):
         results = []
         for supplier in suppliers[:10]:
             results.append({'value': supplier.supplier_name})
-
-        return JsonResponse({'query': q, 'suggestions': results}, safe=False)
-    elif target == 'collections':
-        results = []
-        store = ShopifyStore.objects.get(pk=request.GET.get('store', 0))
-        collections = utils.ProductCollections().get_collections(store, q)
-
-        for collection in collections:
-            data = {'text': collection.get('title'), 'id': collection.get('id')}
-            if data and data not in results:
-                if q:
-                    if q.lower() in data.get('text').lower():
-                        results.append(data)
-                else:
-                    results.append(data)
 
         return JsonResponse({'query': q, 'suggestions': results}, safe=False)
     elif target == 'shipping-method-name':
