@@ -385,11 +385,6 @@ def export_product(req_data, target, user_id):
         else:
             pass
 
-        # update product collections
-        collections = parsed_data.get('collections')
-        if collections is not None:
-            utils.ProductCollections().link_product_collection(product, collections)
-
         product.update_data(data)
 
     elif target == 'save-for-later':  # save for later
