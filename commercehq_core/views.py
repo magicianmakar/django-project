@@ -1018,6 +1018,7 @@ class OrdersList(ListView):
                     'product_id': product.id if product else None,
                     'source_id': supplier.get_source_id() if supplier else None,
                     'supplier_id': supplier.get_store_id() if supplier else None,
+                    'supplier_type': supplier.supplier_type() if supplier else None,
                     'total': safe_float(line['price'], 0.0),
                     'store': self.store.id,
                     'order': {
