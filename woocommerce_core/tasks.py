@@ -200,6 +200,7 @@ def product_export(store_id, product_id, user_id, publish=None):
                 api_data = add_product_images_to_api_data(api_data, saved_data, user_id=user_id, from_helper=True)
                 r = store.get_wcapi(timeout=WOOCOMMERCE_API_TIMEOUT).post('products', api_data)
 
+                r.raise_for_status()
                 if r.ok:
                     product_data = r.json()
                     product.source_id = product_data['id']
