@@ -100,12 +100,12 @@ class Util:
 
             for line in lines:
                 line_id = line['id']
-                label = user_supplement.current_label
                 key = get_shipstation_line_key(store_type,
                                                store_id,
                                                order_id,
                                                line_id)
                 user_supplement = line['user_supplement']
+                label = line['label']
                 pl_supplement = user_supplement.pl_supplement
                 quantity = int(line['quantity'])
                 item_price = int(float(line['price']) * 100)

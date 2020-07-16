@@ -1,4 +1,3 @@
-from django.db.models import F, Sum
 from django.shortcuts import reverse
 from django.utils.html import format_html
 
@@ -211,8 +210,8 @@ class PLSOrderMixin:
 
     @property
     def item_total(self):
-        result = self.order_items.aggregate(total=Sum(F('amount') * F('quantity')))
-        return "${:.2f}".format(result['total'] / 100.)
+        amount = sum(self.order_items.values_list('amount', flat=True))
+        return "${:.2f}".format(amount / 100.)
 
     @property
     def refund_amount(self):
