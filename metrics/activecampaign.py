@@ -218,21 +218,6 @@ class ActiveCampaignAPI:
 
     @validate_contact
     def get_user_data(self, user):
-        # Don't count Shopify Employees as contacts
-        tags = []
-        if user.profile.from_shopify_app_store():
-            store = user.profile.get_shopify_stores().first()
-            if store and store.get_info['plan_name'] in ['staff', 'staff_business']:
-                tags.append(TAGS['SHOPIFY_STAFF']['id'])
-
-        if user.is_staff:
-            return {
-                'email': user.email,
-                'custom_fields': {
-                    'SEND_EMAILS': 'No'
-                }
-            }
-
         return {
             'email': user.email,
             'firstName': user.first_name,
