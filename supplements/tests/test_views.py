@@ -854,7 +854,11 @@ class BillingTestCase(PLSBaseTestCase):
         self.client.force_login(self.user)
 
         mock_response = MagicMock()
+        duplicate_text = 'A duplicate customer payment profile already exists.'
         mock_response.customerPaymentProfileId = 2
+
+        mock_response.messages.resultCode = 'ERROR'
+        mock_response.messages.message[0]['text'].text = duplicate_text
 
         mock_controller = MagicMock()
         mock_controller.getresponse.return_value = mock_response
@@ -892,7 +896,7 @@ class BillingTestCase(PLSBaseTestCase):
         }
 
         response = self.client.post(self.get_url(), data=data)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
 
 
 class UploadJSONTestCase(PLSBaseTestCase):

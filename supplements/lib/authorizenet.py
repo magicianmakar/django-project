@@ -102,11 +102,16 @@ def create_payment_profile(payment_data, customer_profile_id):
 
     response = controller.getresponse()
     error = ''
+    duplicate_regex = r'A duplicate customer payment profile already exists.'
     if response.messages.resultCode == 'Ok':
         return (response.customerPaymentProfileId, error)
 
-    error = message = response.messages.message[0]['text']
-    capture_message(message, level='warning')
+    error = response.messages.message[0]['text'].text
+    result = re.match(duplicate_regex, error)
+    if result:
+        return (response.customerPaymentProfileId, '')
+
+    capture_message(error, level='warning')
     return ('', error)
 
 
