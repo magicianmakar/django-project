@@ -16,23 +16,47 @@
 
 <div class="container-fluid">
   <div class="row">
+    <div class="col-lg-3">
+      <div class="profit-box">
+        <span>Revenue</span>
+        <h1>${{ revenue }}</h1>
+      </div>
+    </div>
+    <div class="col-lg-3">
+      <div class="profit-box">
+        <span>Gross Profit</span>
+        <h1>${{ gross_profit }}</h1>
+      </div>
+    </div>
+    <div class="col-lg-3">
+      <div class="profit-box">
+        <span>Customer Sales</span>
+        <h1>${{ total_sale }}</h1>
+      </div>
+    </div>
+    <div class="col-lg-3">
+      <div class="profit-box">
+        <span>Customer Profit</span>
+        <h1>${{ total_profit }}</h1>
+      </div>
+    </div>
     <div class="col-lg-6 col-sm-12">
       <div class="row profit-row">
         <div class="col-lg-6">
           <div class="profit-box">
-            <span>Gross Profit</span>
-            <h1>${{ gross_profit }}</h1>
+            <span>Total Orders</span>
+            <h1>{{ total_orders }}</h1>
           </div>
         </div>
         <div class="col-lg-6">
           <div class="profit-box">
-            <span>Net Profit</span>
-            <h1>${{ net_profit }}</h1>
+            <span>Total Items</span>
+            <h1>{{ total_items }}</h1>
           </div>
         </div>
       </div>
     </div>
-    <div class="col-lg-6 col-sm-12">
+    <div class="col-lg-6 col-sm-12" style="margin-top: 20px;">
       <canvas id="avg-order-chart"></canvas>
     </div>
   </div>
@@ -42,7 +66,7 @@
 
 <div class="row">
   <div class="col-lg-6 col-sm-12">
-    <canvas id="order-count-chart"></canvas>
+    <canvas id="gross-profit-chart"></canvas>
   </div>
   <div class="col-lg-6 col-sm-12">
     <canvas id="order-cost-chart"></canvas>
@@ -51,8 +75,14 @@
 
 <div class="row">
   <div class="col-lg-6 col-sm-12">
+    <canvas id="order-count-chart"></canvas>
+  </div>
+  <div class="col-lg-6 col-sm-12">
     <canvas id="pls-sale-chart"></canvas>
   </div>
+</div>
+
+<div class="row">
   <div class="col-lg-6 col-sm-12">
     <canvas id="pls-sku-sale-chart"></canvas>
   </div>
@@ -74,9 +104,72 @@
 
 <script>
 
-  var colors = ['#93c47d', '#d55170', '#1642a9', '#f19c20', '#324717'];
+  var colors = ['#d55170', '#93c47d', '#f19c20', '#1642a9', '#ab3bc8', '#f19c20'];
 
   var chartsData = JSON.parse('{{ charts_data }}')
+
+  // Gross Profit Chart
+
+  var gross_profit_data = chartsData.gross_profit_data;
+  var grossProfitChartEl = $('#gross-profit-chart');
+  var grossProfitChartConfig = {
+    type: 'line',
+    data: {
+      datasets: []
+    },
+    options: {
+      responsive: true,
+      title: {
+        display: true,
+        text: 'Gross Profit Chart'
+      },
+      tooltips: {
+        mode: 'index',
+        intersect: false,
+      },
+      hover: {
+        mode: 'nearest',
+        intersect: true
+      },
+      scales: {
+        yAxes: [{
+          ticks: {
+            beginAtZero: true
+          },
+          display: true,
+          scaleLabel: {
+              display: true,
+              labelString: 'Gross Profit $'
+          }
+        }]
+      }
+    }
+  }
+
+  if (typeof(gross_profit_data.data[0]) == "number") {
+    grossProfitChartConfig.data.labels = gross_profit_data.label_data;
+    var dataSet = {
+      label: gross_profit_data.dataset_label,
+      backgroundColor: colors[0],
+      borderColor: colors[0],
+      data: gross_profit_data.data,
+      fill: false
+    }
+    grossProfitChartConfig.data.datasets.push(dataSet);
+  } else {
+    $(gross_profit_data.data).each(function(i, obj) {
+      grossProfitChartConfig.data.labels = gross_profit_data.label_data;
+      var dataSet = {
+        label: gross_profit_data.dataset_label[i],
+        backgroundColor: colors[i],
+        borderColor: colors[i],
+        data: obj,
+        fill: false
+      }
+      grossProfitChartConfig.data.datasets.push(dataSet);
+  });
+  }
+  var grossProfitChart = new Chart(grossProfitChartEl, grossProfitChartConfig);
 
   // Order Count Chart
 
@@ -120,8 +213,8 @@
     orderChartConfig.data.labels = order_count_data.label_data;
     var dataSet = {
       label: order_count_data.dataset_label,
-      backgroundColor: colors[0],
-      borderColor: colors[0],
+      backgroundColor: colors[1],
+      borderColor: colors[1],
       data: order_count_data.data,
       fill: false
     }
@@ -154,7 +247,7 @@
       responsive: true,
       title: {
         display: true,
-        text: 'Order Cost Chart'
+        text: 'Revenue Chart'
       },
       tooltips: {
         mode: 'index',
@@ -172,7 +265,7 @@
           display: true,
           scaleLabel: {
               display: true,
-              labelString: 'Order Cost $'
+              labelString: 'Revenue $'
           }
         }]
       }
@@ -183,8 +276,8 @@
     orderCostChartConfig.data.labels = order_cost_data.label_data;
     var dataSet = {
       label: order_cost_data.dataset_label,
-      backgroundColor: colors[1],
-      borderColor: colors[1],
+      backgroundColor: colors[2],
+      borderColor: colors[2],
       data: order_cost_data.data,
       fill: false
     }
@@ -246,8 +339,8 @@
     plsSaleChartConfig.data.labels = pls_sale_data.label_data;
     var dataSet = {
       label: pls_sale_data.dataset_label,
-      backgroundColor: colors[2],
-      borderColor: colors[2],
+      backgroundColor: colors[3],
+      borderColor: colors[3],
       data: pls_sale_data.data,
       fill: false
     }
@@ -348,8 +441,8 @@
     plsSkuSaleChartConfig.data.labels = pls_sku_sale_data.label_data;
     var dataSet = {
       label: pls_sku_sale_data.dataset_label,
-      backgroundColor: colors[3],
-      borderColor: colors[3],
+      backgroundColor: colors[4],
+      borderColor: colors[4],
       data: pls_sku_sale_data.data,
       fill: false
     }
@@ -411,8 +504,8 @@
     avgOrderChartConfig.data.labels = avg_order_data.label_data;
     var dataSet = {
       label: avg_order_data.dataset_label,
-      backgroundColor: colors[0],
-      borderColor: colors[0],
+      backgroundColor: colors[1],
+      borderColor: colors[1],
       data: avg_order_data.data,
       fill: false
     }

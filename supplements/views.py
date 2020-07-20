@@ -1750,6 +1750,7 @@ class Reports(LoginRequiredMixin, TemplateView):
             order_count_data = []
             order_cost_data = []
             pls_sale_data = []
+            gross_profit_data = []
             label_data = []
             ds_l = '{} to {}'.format(check_s.strftime('%Y-%m-%d'), end_at.strftime('%Y-%m-%d'))
             while check_s <= check_e:
@@ -1772,6 +1773,9 @@ class Reports(LoginRequiredMixin, TemplateView):
                 pls_sale_data.append(
                     day_pls_sale if day_pls_sale else 0
                 )
+                gross_profit_data.append(
+                    sum(((order.amount - order.wholesale_price) / 100.) for order in filtered_orders)
+                )
                 label_data.append(
                     '{}-{}-{}'.format(check_s.year, check_s.month, check_s.day)
                 )
@@ -1791,12 +1795,18 @@ class Reports(LoginRequiredMixin, TemplateView):
                     'data': pls_sale_data,
                     'label_data': label_data,
                     'dataset_label': ds_l
+                },
+                'gross_profit_data': {
+                    'data': gross_profit_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
                 }
             }
         elif interval == 'month':
             order_count_data = []
             order_cost_data = []
             pls_sale_data = []
+            gross_profit_data = []
             label_data = []
             ds_l = 'Year {}'.format(check_s.strftime('%Y'))
             while check_s <= check_e:
@@ -1823,6 +1833,9 @@ class Reports(LoginRequiredMixin, TemplateView):
                 pls_sale_data.append(
                     day_pls_sale if day_pls_sale else 0
                 )
+                gross_profit_data.append(
+                    sum(((order.amount - order.wholesale_price) / 100.) for order in filtered_orders)
+                )
                 label_data.append(next_start.strftime('%B'))
                 check_s = next_start + timedelta(days=1)
             data = {
@@ -1840,12 +1853,18 @@ class Reports(LoginRequiredMixin, TemplateView):
                     'data': pls_sale_data,
                     'label_data': label_data,
                     'dataset_label': ds_l
+                },
+                'gross_profit_data': {
+                    'data': gross_profit_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
                 }
             }
         else:
             order_count_data = []
             order_cost_data = []
             pls_sale_data = []
+            gross_profit_data = []
             label_data = []
             ds_l = '{} to {}'.format(check_s.strftime('%Y-%m-%d'), check_e.strftime('%Y-%m-%d'))
             count = 1
@@ -1875,6 +1894,9 @@ class Reports(LoginRequiredMixin, TemplateView):
                 pls_sale_data.append(
                     day_pls_sale if day_pls_sale else 0
                 )
+                gross_profit_data.append(
+                    sum(((order.amount - order.wholesale_price) / 100.) for order in filtered_orders)
+                )
                 label_data.append('Week {}'.format(count))
                 check_s = next_start + timedelta(days=1)
                 if count == 4:
@@ -1894,6 +1916,11 @@ class Reports(LoginRequiredMixin, TemplateView):
                 },
                 'pls_sale_data': {
                     'data': pls_sale_data,
+                    'label_data': label_data,
+                    'dataset_label': ds_l
+                },
+                'gross_profit_data': {
+                    'data': gross_profit_data,
                     'label_data': label_data,
                     'dataset_label': ds_l
                 }
@@ -1947,7 +1974,7 @@ class Reports(LoginRequiredMixin, TemplateView):
             for line_item in order.order_items.all():
                 sku = line_item.label.user_supplement.pl_supplement.shipstation_sku
                 title = line_item.label.user_supplement.pl_supplement.title
-                pl_link = reverse('pls:admin_label_history', kwargs={'supplement_id': line_item.label.user_supplement.id})
+                pl_link = reverse('pls:supplement', kwargs={'supplement_id': line_item.label.user_supplement.id})
                 if sku not in all_sku:
                     all_sku.append(sku)
                     sku_data.append(line_item.quantity)
@@ -1955,6 +1982,12 @@ class Reports(LoginRequiredMixin, TemplateView):
                     all_link.append(pl_link)
                 else:
                     sku_data[all_sku.index(sku)] = sku_data[all_sku.index(sku)] + line_item.quantity
+        all_sku, sku_data, all_title, all_link = report.sort_sku_data(
+            all_sku,
+            sku_data,
+            all_title,
+            all_link
+        )
         data['pls_sku_data'] = {
             'data': sku_data,
             'label_data': all_sku,
@@ -1963,27 +1996,24 @@ class Reports(LoginRequiredMixin, TemplateView):
             'link_data': all_link
         }
 
-        payout_revenue = sum(order.sale_price for order in filtered_orders)
-        payout_cost = sum(order.wholesale_price for order in filtered_orders)
-        gross_profit = (payout_revenue - payout_cost) / 100.
-        net_p_data = Payout.objects.filter(created_at__range=[
-            start_at.strftime('%Y-%m-%d'),
-            end_at.strftime('%Y-%m-%d')
-        ]).prefetch_related('payout_items').aggregate(
-            models.Sum('payout_items__amount'),
-            models.Sum('payout_items__wholesale_price'),
-            models.Sum('payout_items__shipping_price')
-        )
-        amount = net_p_data['payout_items__amount__sum']
-        amount = amount if amount else 0
-        wholesale_price = net_p_data['payout_items__wholesale_price__sum']
-        wholesale_price = wholesale_price if wholesale_price else 0
-        shipping_price = net_p_data['payout_items__shipping_price__sum']
-        shipping_price = shipping_price if shipping_price else 0
-        net_profit = (amount - (wholesale_price + shipping_price)) / 3
-        net_profit = round(net_profit, 2)
+        total_amount = sum(order.amount for order in filtered_orders)
+        total_cost = sum(order.wholesale_price for order in filtered_orders)
+        gross_profit = (total_amount - total_cost) / 100.
+        total_revenue = total_cost / 100.
+        total_orders = len(filtered_orders)
+        all_items = []
+        for order in filtered_orders:
+            all_items += list(order.order_items.all())
+        total_items = sum(item.quantity for item in all_items)
+        total_sale = sum(order.sale_price for order in filtered_orders) / 100.
+        total_profit = sum((order.sale_price - order.amount) for order in filtered_orders) / 100.
+
         data['gross_profit'] = report.millify(gross_profit)
-        data['net_profit'] = report.millify(net_profit)
+        data['revenue'] = report.millify(total_revenue)
+        data['total_orders'] = report.millify(total_orders)
+        data['total_items'] = report.millify(total_items)
+        data['total_sale'] = report.millify(total_sale)
+        data['total_profit'] = report.millify(total_profit)
         return data
 
     def get_compare_charts_data(self, interval, compare):
@@ -2038,11 +2068,13 @@ class Reports(LoginRequiredMixin, TemplateView):
             order_count_data = []
             order_cost_data = []
             pls_sale_data = []
+            gross_profit_data = []
             label_data = None
             for t_range in ranges:
                 order_count_compare_data = []
                 order_cost_compare_data = []
                 pls_sale_compare_data = []
+                gross_profit_compare_data = []
                 lables = []
                 start_at, end_at = t_range
                 while start_at <= end_at:
@@ -2065,6 +2097,9 @@ class Reports(LoginRequiredMixin, TemplateView):
                     pls_sale_compare_data.append(
                         day_pls_sale if day_pls_sale else 0
                     )
+                    gross_profit_compare_data.append(
+                        sum(((order.amount - order.wholesale_price) / 100.) for order in filtered_orders)
+                    )
                     lables.append(start_at.strftime('%A') if period == 'week' else start_at.strftime('%d'))
                     start_at = start_at + timedelta(days=1)
                 if not label_data:
@@ -2074,6 +2109,7 @@ class Reports(LoginRequiredMixin, TemplateView):
                 order_count_data.append(order_count_compare_data)
                 order_cost_data.append(order_cost_compare_data)
                 pls_sale_data.append(pls_sale_compare_data)
+                gross_profit_data.append(gross_profit_compare_data)
             data = {
                 'order_count_data': {
                     'data': order_count_data,
@@ -2089,17 +2125,24 @@ class Reports(LoginRequiredMixin, TemplateView):
                     'data': pls_sale_data,
                     'label_data': label_data,
                     'dataset_label': dataset_labels
+                },
+                'gross_profit_data': {
+                    'data': gross_profit_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
                 }
             }
         elif interval == 'month':
             order_count_data = []
             order_cost_data = []
             pls_sale_data = []
+            gross_profit_data = []
             label_data = None
             for t_range in ranges:
                 order_count_compare_data = []
                 order_cost_compare_data = []
                 pls_sale_compare_data = []
+                gross_profit_compare_data = []
                 lables = []
                 start_at, end_at = t_range
                 while start_at < end_at:
@@ -2123,6 +2166,9 @@ class Reports(LoginRequiredMixin, TemplateView):
                     pls_sale_compare_data.append(
                         day_pls_sale if day_pls_sale else 0
                     )
+                    gross_profit_compare_data.append(
+                        sum(((order.amount - order.wholesale_price) / 100.) for order in filtered_orders)
+                    )
                     lables.append(start_at.strftime('%B'))
                     start_at = next_start + timedelta(days=1)
                 if not label_data:
@@ -2132,6 +2178,7 @@ class Reports(LoginRequiredMixin, TemplateView):
                 order_count_data.append(order_count_compare_data)
                 order_cost_data.append(order_cost_compare_data)
                 pls_sale_data.append(pls_sale_compare_data)
+                gross_profit_data.append(gross_profit_compare_data)
             data = {
                 'order_count_data': {
                     'data': order_count_data,
@@ -2147,17 +2194,24 @@ class Reports(LoginRequiredMixin, TemplateView):
                     'data': pls_sale_data,
                     'label_data': label_data,
                     'dataset_label': dataset_labels
+                },
+                'gross_profit_data': {
+                    'data': gross_profit_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
                 }
             }
         else:
             order_count_data = []
             order_cost_data = []
             pls_sale_data = []
+            gross_profit_data = []
             label_data = None
             for t_range in ranges:
                 order_count_compare_data = []
                 order_cost_compare_data = []
                 pls_sale_compare_data = []
+                gross_profit_compare_data = []
                 lables = []
                 start_at, end_at = t_range
                 count = 1
@@ -2182,6 +2236,9 @@ class Reports(LoginRequiredMixin, TemplateView):
                     pls_sale_compare_data.append(
                         day_pls_sale if day_pls_sale else 0
                     )
+                    gross_profit_compare_data.append(
+                        sum(((order.amount - order.wholesale_price) / 100.) for order in filtered_orders)
+                    )
                     lables.append('Week {}'.format(count))
                     if count == 4:
                         count = 1
@@ -2195,6 +2252,7 @@ class Reports(LoginRequiredMixin, TemplateView):
                 order_count_data.append(order_count_compare_data)
                 order_cost_data.append(order_cost_compare_data)
                 pls_sale_data.append(pls_sale_compare_data)
+                gross_profit_data.append(gross_profit_compare_data)
             data = {
                 'order_count_data': {
                     'data': order_count_data,
@@ -2208,6 +2266,11 @@ class Reports(LoginRequiredMixin, TemplateView):
                 },
                 'pls_sale_data': {
                     'data': pls_sale_data,
+                    'label_data': label_data,
+                    'dataset_label': dataset_labels
+                },
+                'gross_profit_data': {
+                    'data': gross_profit_data,
                     'label_data': label_data,
                     'dataset_label': dataset_labels
                 }
@@ -2269,7 +2332,7 @@ class Reports(LoginRequiredMixin, TemplateView):
                 for line_item in order.order_items.all():
                     sku = line_item.label.user_supplement.pl_supplement.shipstation_sku
                     title = line_item.label.user_supplement.pl_supplement.title
-                    pl_link = reverse('pls:admin_label_history', kwargs={'supplement_id': line_item.label.user_supplement.id})
+                    pl_link = reverse('pls:supplement', kwargs={'supplement_id': line_item.label.user_supplement.id})
                     if sku not in all_sku:
                         all_sku.append(sku)
                         all_title.append(title)
@@ -2294,6 +2357,12 @@ class Reports(LoginRequiredMixin, TemplateView):
                 reps = len(all_sku) - len(block_c_data)
                 for i in range(reps):
                     sku_data[block_index].append(0)
+        all_sku, sku_data, all_title, all_link = report.sort_sku_data(
+            all_sku,
+            sku_data,
+            all_title,
+            all_link
+        )
         data['pls_sku_data'] = {
             'data': sku_data,
             'label_data': all_sku,
@@ -2302,8 +2371,12 @@ class Reports(LoginRequiredMixin, TemplateView):
             'link_data': all_link
         }
 
-        payout_revenue = 0
-        payout_cost = 0
+        total_amount = 0
+        total_cost = 0
+        total_orders = 0
+        total_items = 0
+        total_sale = 0
+        total_profit = 0
         for t_range in ranges:
             start_at, end_at = t_range
             filtered_orders = list(
@@ -2312,29 +2385,24 @@ class Reports(LoginRequiredMixin, TemplateView):
                     list(all_orders)
                 )
             )
-            payout_revenue += sum(order.sale_price for order in filtered_orders)
-            payout_cost += sum(order.wholesale_price for order in filtered_orders)
-        gross_profit = (payout_revenue - payout_cost) / 100.
-        net_profit = 0
-        all_payouts = Payout.objects.all().prefetch_related('payout_items')
-        for t_range in ranges:
-            start_at, end_at = t_range
-            filtered_payouts = list(
-                filter(
-                    lambda payout: self.check_range_interval(payout, start_at, end_at),
-                    list(all_payouts)
-                )
-            )
-            payout_items = []
-            for payout in filtered_payouts:
-                payout_items += list(payout.payout_items.all())
-            amount = sum(item.amount for item in payout_items)
-            wholesale_price = sum(item.wholesale_price for item in payout_items)
-            shipping_price = sum(item.shipping_price for item in payout_items)
-            t_range_net_profit = (amount - (wholesale_price + shipping_price)) / 3
-            net_profit += round(t_range_net_profit, 2)
+            total_amount += sum(order.amount for order in filtered_orders)
+            total_cost += sum(order.wholesale_price for order in filtered_orders)
+            total_orders += len(filtered_orders)
+            order_items = []
+            for order in filtered_orders:
+                order_items += list(order.order_items.all())
+            total_items += sum(item.quantity for item in order_items)
+            total_sale += sum(order.sale_price for order in filtered_orders) / 100.
+            total_profit += sum((order.sale_price - order.amount) for order in filtered_orders) / 100.
+        gross_profit = (total_amount - total_cost) / 100.
+        total_revenue = total_amount / 100.
+
         data['gross_profit'] = report.millify(gross_profit)
-        data['net_profit'] = report.millify(net_profit)
+        data['revenue'] = report.millify(total_revenue)
+        data['total_orders'] = report.millify(total_orders)
+        data['total_items'] = report.millify(total_items)
+        data['total_sale'] = report.millify(total_sale)
+        data['total_profit'] = report.millify(total_profit)
         return data
 
     def validate_compare_interval(self, compare, interval):
@@ -2419,7 +2487,11 @@ class Reports(LoginRequiredMixin, TemplateView):
             'breadcrumbs': self.get_breadcrumbs(),
             'form': form,
             'gross_profit': charts_data.pop('gross_profit'),
-            'net_profit': charts_data.pop('net_profit'),
+            'revenue': charts_data.pop('revenue'),
+            'total_orders': charts_data.pop('total_orders'),
+            'total_items': charts_data.pop('total_items'),
+            'total_sale': charts_data.pop('total_sale'),
+            'total_profit': charts_data.pop('total_profit'),
             'charts_data': escapejs(mark_safe(json.dumps(charts_data)))
         })
         return context
