@@ -1,8 +1,6 @@
 import requests
 import arrow
 from django.conf import settings
-from django.contrib.auth.models import User
-from django.db import models
 
 from lib.exceptions import capture_message
 
@@ -210,20 +208,12 @@ class ActiveCampaignAPI:
         }
 
     def get_user_store_data(self, user):
-        store_counts = User.objects.filter(id=user.id).annotate(
-            shop_count=models.Count('shopifystore', distinct=True),
-            chq_count=models.Count('commercehqstore', distinct=True),
-            woo_count=models.Count('woostore', distinct=True),
-            gkart_count=models.Count('groovekartstore', distinct=True),
-            big_count=models.Count('bigcommercestore', distinct=True),
-        ).values('shop_count', 'chq_count', 'woo_count', 'gkart_count', 'big_count').first()
-
         return {
-            'SHOPIFY_COUNT': store_counts['shop_count'],
-            'WOOCOMMERCE_COUNT': store_counts['woo_count'],
-            'COMMERCEHQ_COUNT': store_counts['chq_count'],
-            'GROOVEKART_COUNT': store_counts['gkart_count'],
-            'BIGCOMMERCE_COUNT': store_counts['big_count'],
+            'SHOPIFY_COUNT': user.profile.get_shopify_stores().count(),
+            'WOOCOMMERCE_COUNT': user.profile.get_woo_stores().count(),
+            'COMMERCEHQ_COUNT': user.profile.get_chq_stores().count(),
+            'GROOVEKART_COUNT': user.profile.get_gkart_stores().count(),
+            'BIGCOMMERCE_COUNT': user.profile.get_bigcommerce_stores().count(),
         }
 
     @validate_contact
@@ -331,7 +321,7 @@ class ActiveCampaignAPI:
             }
         }
 
-    def update_customer(self, contact_data, version=['1', '3']):
+    def update_customer(self, contact_data, version='1'):
         if not contact_data.get('email'):
             return False
 
