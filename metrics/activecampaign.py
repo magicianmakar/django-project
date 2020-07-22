@@ -56,6 +56,10 @@ def validate_contact(func):
                     or 'free' in current_plan:
                 contact_data['custom_fields']['STATUS'] = 'Cancelled'
 
+            send_emails = ac_fields.get('SEND_EMAILS', '').lower()
+            if send_emails == 'no':
+                contact_data['remove_list_ids'] = f'{Lists.CUSTOMERS},{Lists.LEADS}'
+
         return contact_data
     return wrapper
 
@@ -136,14 +140,14 @@ class ActiveCampaignAPI:
 
         return self._custom_fields
 
-    def subscribe_to_list(self, contact_id, list_id=Lists.CUSTOMERS):
+    def subscribe_to_list(self, contact_id, list_id=Lists.CUSTOMERS, status=1):
         api_url = self.get_url('/contactLists')
 
         return requests.post(api_url, headers=self.headers, json={
             "contactList": {
                 "list": list_id,
                 "contact": contact_id,
-                "status": 1
+                "status": status
             }
         })
 
@@ -201,7 +205,7 @@ class ActiveCampaignAPI:
             status = 'Active'
 
         return {
-            'PLAN': user.profile.plan.get_description() or NOT_AVAILABLE,
+            'PLAN': user.profile.plan.title or NOT_AVAILABLE,
             'PLATFORM': user.profile.plan.get_payment_gateway_display() or NOT_AVAILABLE,
             'TRIAL_ENDS': trial_ends,
             'STATUS': status,
@@ -268,14 +272,14 @@ class ActiveCampaignAPI:
             external_id = intercom_contact.get('external_id')
 
         plan = custom_attributes.get('plan') or ''
-        payment_gateway = custom_attributes.get('payment_gateway')
+        payment_gateway = custom_attributes.get('payment_gateway') or ''
         if 'shopify' in plan.lower() or payment_gateway == 'shopify':
             payment_gateway = 'Shopify'
         else:
             payment_gateway = {
                 'stripe': 'Stripe',
                 'jvzoo': 'JVZoo'
-            }.get(payment_gateway)
+            }.get(payment_gateway, '')
 
         signed_up_at = intercom_contact.get('signed_up_at')
         signed_up_since = 15
@@ -311,10 +315,10 @@ class ActiveCampaignAPI:
                 'COMMERCEHQ_COUNT': custom_attributes.get('chq_count') or '0',
                 'GROOVEKART_COUNT': custom_attributes.get('gkart_count') or '0',
                 'BIGCOMMERCE_COUNT': custom_attributes.get('bigcommerce_count') or '0',
-                'PLAN': plan or NOT_AVAILABLE,
-                'PLATFORM': payment_gateway or NOT_AVAILABLE,
+                'PLAN': plan,
+                'PLATFORM': payment_gateway,
                 'TRIAL_ENDS': trial_ends,
-                'STATUS': status or NOT_AVAILABLE,
+                'STATUS': status,
                 'SIGNEDUP_AT': signed_up_at,
                 'SUB_USER': custom_attributes.get('sub_user') and 'Yes' or 'No',
                 'SEND_EMAILS': self.can_send_intercom_email(intercom_contact) and 'Yes' or 'No',
@@ -344,6 +348,12 @@ class ActiveCampaignAPI:
                 data[f"p[{contact_data['list_id']}]"] = str(contact_data['list_id'])
                 data[f"status[{contact_data['list_id']}]"] = '1'
 
+            if contact_data.get('remove_list_ids'):
+                remove_list_ids = contact_data.get('remove_list_ids', '').split(',')
+                for remove_list_id in remove_list_ids:
+                    data[f"p[{remove_list_id}]"] = str(remove_list_id)
+                    data[f"status[{remove_list_id}]"] = '2'
+
             if contact_data.get('tags'):
                 tags_to_string = {v['id']: v['title'] for k, v in TAGS.items()}
                 data['tags'] = ','.join([tags_to_string[t] for t in contact_data.get('tags')])
@@ -372,15 +382,19 @@ class ActiveCampaignAPI:
             if contact_data.get('list_id'):
                 self.subscribe_to_list(contact['id'], list_id=contact_data['list_id'])
 
+            if contact_data.get('remove_list_ids'):
+                remove_list_ids = contact_data.get('remove_list_ids', '').split(',')
+                for remove_list_id in remove_list_ids:
+                    self.subscribe_to_list(contact['id'],
+                                           list_id=remove_list_id,
+                                           status=2)
+
             for tag_id in contact_data.get('tags', []):
                 self.add_contact_tag(contact['id'], tag_id)
 
             for key, value in contact_data.get('custom_fields', {}).items():
                 field_id = self.custom_fields.get(key, {}).get('id')
                 if not field_id:
-                    continue
-
-                if not value:
                     continue
 
                 self.update_contact_field(contact['id'], field_id, value)
@@ -437,3 +451,18 @@ class ActiveCampaignAPI:
 
         data = r.json()['contact']
         return data
+
+    def search_intercom_by(self, **kwargs):
+        if not kwargs:
+            return []
+
+        field = list(kwargs.keys())[0]
+        return requests.post(
+            self.get_intercom_url('/contacts/search'),
+            headers=self.intercom_headers,
+            json={'query': {
+                'field': field,
+                'operator': '=',
+                'value': kwargs[field]
+            }}
+        )
