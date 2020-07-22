@@ -115,7 +115,7 @@ def create_payment_profile(payment_data, customer_profile_id):
     return ('', error)
 
 
-def charge_customer_profile(amount, customer_id, payment_id, lines):
+def charge_customer_profile(amount, customer_id, payment_id, line):
     profile_to_charge = apicontractsv1.customerProfilePaymentType()
     profile_to_charge.customerProfileId = customer_id
     profile_to_charge.paymentProfile = apicontractsv1.paymentProfile()
@@ -128,14 +128,13 @@ def charge_customer_profile(amount, customer_id, payment_id, lines):
 
     line_items = apicontractsv1.ArrayOfLineItem()
 
-    for line in lines:
-        assert len(line['name']) < 31
-        line_item = apicontractsv1.lineItemType()
-        line_item.itemId = str(line['line_id'])
-        line_item.name = line['name']
-        line_item.quantity = line['quantity']
-        line_item.unitPrice = to_price(line['unit_price'])
-        line_items.lineItem.append(line_item)
+    assert len(line['name']) < 31
+    line_item = apicontractsv1.lineItemType()
+    line_item.itemId = str(line['id'])
+    line_item.name = line['name']
+    line_item.quantity = line['quantity']
+    line_item.unitPrice = to_price(line['unit_price'])
+    line_items.lineItem.append(line_item)
 
     transaction_request.lineItems = line_items
 
