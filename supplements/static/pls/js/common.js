@@ -187,6 +187,23 @@ $(document).ready(function(){
         form.order_id.value = orderId;
     });
 
+    $('.mark-supplement').click(function (e) {
+        e.preventDefault();
+        var item = $(this).data('item-id');
+        var data = {'item_id': item};
+
+        $.ajax({
+            url: api_url('mark-usersupplement-unread', 'supplements'),
+            type: "POST",
+            data: JSON.stringify(data),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (response) {
+                toastr.success("The supplement has been successfully marked unread.", "Success!");
+            }
+        });
+    });
+
     $("#id_shipping_countries").chosen();
     $("#id_label_size_filter").chosen();
     $("#id_product_sku_filter").chosen();

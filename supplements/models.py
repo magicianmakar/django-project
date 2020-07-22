@@ -122,6 +122,7 @@ class UserSupplement(UserSupplementMixin, models.Model):
                                          null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False, blank=True)
+    seen_users = models.TextField(default='', blank=True, null=True)
 
     def __str__(self):
         return self.title

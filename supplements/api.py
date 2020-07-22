@@ -311,6 +311,20 @@ class SupplementsApi(ApiResponseMixin, View):
         else:
             raise permissions.PermissionDenied()
 
+    def post_mark_usersupplement_unread(self, request, user, data):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            pk = safe_int(data['item_id'])
+            try:
+                product = UserSupplement.objects.get(id=pk)
+            except UserSupplement.DoesNotExist:
+                return self.api_error('Supplement not found', status=404)
+
+            product.seen_users = ''
+            product.save(update_fields=['seen_users'])
+            return self.api_success()
+        else:
+            raise permissions.PermissionDenied()
+
     def get_order_line_info(self, request, user, data):
         item_id = safe_int(data.get('item_id'))
 

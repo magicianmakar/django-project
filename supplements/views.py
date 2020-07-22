@@ -285,15 +285,11 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
 
 class LabelMixin:
     def save_label(self, user, url, user_supplement):
+        user_name = user.get_full_name()
         new_label = user_supplement.labels.create(url=url)
 
-        if user_supplement.current_label:
-            reverse_url = reverse('pls:label_detail', kwargs={
-                'label_id': user_supplement.current_label.id
-            })
-            comment = (f"There is an <a href='{reverse_url}'>"
-                       f"older version</a> of this label.")
-            self.create_comment(new_label.comments, comment, send_email=False)
+        comment = (f"{user_name} uploaded label #{new_label.id}.")
+        self.create_comment(new_label.comments, comment, send_email=False)
 
         user_supplement.current_label = new_label
         user_supplement.current_label.generate_sku()
@@ -469,6 +465,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form = self.get_form()
         if form.is_valid():
             new_user_supplement = self.save_supplement(form)
+            new_user_supplement.mark_as_unread(user.id)
 
             # Always use saved label URL for pre-approved labels
             upload_url = form.cleaned_data['upload_url']
@@ -514,7 +511,9 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                 new_user_supplement.current_label.save()
 
             kwargs = {'supplement_id': new_user_supplement.id}
-            return self.get_redirect_url(**kwargs)
+            redirect_url = self.get_redirect_url(**kwargs)
+
+            return redirect(f'{redirect_url}?unread=True')
 
         context = self.get_supplement_data(user, self.supplement_id)
 
@@ -524,7 +523,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         return render(request, "supplements/supplement.html", context)
 
     def get_redirect_url(self, *args, **kwargs):
-        return redirect(reverse("pls:user_supplement", kwargs=kwargs))
+        return reverse("pls:user_supplement", kwargs=kwargs)
 
     def get(self, request, supplement_id):
         aws = aws_s3_context()
@@ -584,6 +583,10 @@ class UserSupplementView(Supplement):
                 comments = comments.all().exclude(is_private=True).order_by('-created_at')
             if comments:
                 all_comments.append(comments)
+
+        unread = self.request.GET.get('unread', 'False')
+        if unread != 'True':
+            user_supplement.mark_as_read(self.request.user.id)
 
         return dict(
             label=kwargs['label'],
@@ -680,43 +683,6 @@ class LabelHistory(UserSupplementView):
         else:
             raise permissions.PermissionDenied()
 
-    def add_barcode_to_label(self, label):
-        data = BytesIO()
-        generate('CODE128', label.sku, output=data)
-
-        data.seek(0)
-        drawing = svg2rlg(data)
-
-        barcode_data = BytesIO()
-        renderPDF.drawToFile(drawing, barcode_data)
-
-        barcode_data.seek(0)
-        barcode_pdf = PdfReader(barcode_data)
-        barcode_pdf.pages[0].Rotate = 270
-        barcode_pages = PageMerge() + barcode_pdf.pages
-        barcode_page = barcode_pages[0]
-
-        label_data = BytesIO(requests.get(label.url).content)
-        base_label_pdf = PdfReader(label_data)
-
-        page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
-        barcode_obj = page_merge[-1]
-        barcode_obj.scale(0.3, 0.7)
-        barcode_obj.x = barcode_obj.y = 8
-
-        page_merge.render()
-
-        label_pdf = BytesIO()
-        PdfWriter().write(label_pdf, base_label_pdf)
-
-        label_pdf.seek(0)
-
-        label.url = upload_supplement_object_to_aws(
-            label.user_supplement,
-            label_pdf,
-            'label.pdf',
-        )
-
     def get_breadcrumbs(self, supplement_id):
         supplement = self.get_supplement(self.request.user, supplement_id)
         url = reverse('pls:user_supplement',
@@ -772,7 +738,8 @@ class LabelHistory(UserSupplementView):
                     for position, mockup_url in enumerate(mockup_urls):
                         user_supplement.images.create(image_url=mockup_url, position=position)
 
-                return redirect(reverse_url)
+                user_supplement.mark_as_unread(request.user.id)
+                return redirect(f'{reverse_url}?unread=True')
 
         context = self.get_supplement_data(request.user, user_supplement.id)
         context.update({
@@ -806,6 +773,8 @@ class AdminLabelHistory(LabelHistory):
         label = user_supplement.current_label
         action = request.POST.get('action')
 
+        reverse_url = self.get_redirect_url(user_supplement.id)
+
         if action in (label.APPROVED, label.REJECTED):
             label.status = action
             label.save()
@@ -823,7 +792,9 @@ class AdminLabelHistory(LabelHistory):
                        f"set the status to <span class='label {label_class}'>"
                        f"{label.status_string}</span>")
             self.create_comment(label.comments, comment, new_status=action)
-            return redirect(self.get_redirect_url(user_supplement.id))
+
+            user_supplement.mark_as_unread(request.user.id)
+            return redirect(f'{reverse_url}?unread=True')
 
         # Call action to comment label for admins
         return super().post(request, supplement_id)
@@ -913,9 +884,9 @@ class MyLabels(LoginRequiredMixin, PagingMixin):
 
         len_supplements = context['paginator'].count
         if len_supplements == 1:
-            supplements_count = "1 user supplement."
+            supplements_count = "1 user supplement"
         else:
-            supplements_count = f"{len_supplements} user supplements."
+            supplements_count = f"{len_supplements} user supplements"
 
         context.update({
             'breadcrumbs': self.get_breadcrumbs(),
@@ -981,6 +952,20 @@ class AllUserSupplements(MyLabels, ListView):
             title = form.cleaned_data['title']
             if title:
                 queryset = queryset.filter(pl_supplement__title__icontains=title)
+
+            comments_status = form.cleaned_data['comments_status']
+            if comments_status:
+                user_id = self.request.user.id
+                seen_ids = []
+                for entry in queryset:
+                    seen_users = entry.get_seen_users_list()
+                    if 'All' in seen_users or user_id in seen_users:
+                        seen_ids.append(entry.id)
+
+                if comments_status == 'read':
+                    queryset = queryset.filter(id__in=seen_ids)
+                elif comments_status == 'unread':
+                    queryset = queryset.exclude(id__in=seen_ids)
 
         return queryset
 

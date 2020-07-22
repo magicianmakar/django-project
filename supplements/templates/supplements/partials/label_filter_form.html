@@ -1,38 +1,37 @@
 {% load widget_tweaks %}
 
-<div class="row">
-  <div class="col-sm-4">
-    <div class="form-group {% if form.status.errors %}has-error{% endif %}">
-      <label class="control-label">Label Status:</label>
-      {{ form.status|add_class:"form-control" }}
-      {% for error in form.status.errors %}
-      <p class="help-block">{{ error }}</p>
-      {% endfor %}
-    </div>
-  </div>
 
-  <div class="col-sm-4">
-    <div class="form-group {% if form.sku.errors %}has-error{% endif %}">
-      <label class="control-label">Label SKU:</label>
-      {{ form.sku|add_class:"form-control" }}
-      {% for error in form.sku.errors %}
-      <p class="help-block">{{ error }}</p>
-      {% endfor %}
-    </div>
+<div class="col-sm-3">
+  <div class="form-group {% if form.status.errors %}has-error{% endif %}">
+    <label class="control-label">Label Status:</label>
+    {{ form.status|add_class:"form-control" }}
+    {% for error in form.status.errors %}
+    <p class="help-block">{{ error }}</p>
+    {% endfor %}
   </div>
+</div>
 
-  <div class="col-sm-4">
-    <div class="form-group {% if form.sku.errors %}has-error{% endif %}">
-      <label class="control-label">Label Updated Date:</label>
-      <div class='input-group'>
-        <div class="input-group-addon">
-          <i class='fa fa-calendar'></i>
-        </div>
-        {{ form.date|add_class:"form-control" }}
+<div class="col-sm-3">
+  <div class="form-group {% if form.sku.errors %}has-error{% endif %}">
+    <label class="control-label">Label SKU:</label>
+    {{ form.sku|add_class:"form-control" }}
+    {% for error in form.sku.errors %}
+    <p class="help-block">{{ error }}</p>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="col-sm-3">
+  <div class="form-group {% if form.sku.errors %}has-error{% endif %}">
+    <label class="control-label">Label Updated Date:</label>
+    <div class='input-group'>
+      <div class="input-group-addon">
+        <i class='fa fa-calendar'></i>
       </div>
-      {% for error in form.date.errors %}
-      <p class="help-block">{{ error }}</p>
-      {% endfor %}
+      {{ form.date|add_class:"form-control" }}
     </div>
+    {% for error in form.date.errors %}
+    <p class="help-block">{{ error }}</p>
+    {% endfor %}
   </div>
 </div>

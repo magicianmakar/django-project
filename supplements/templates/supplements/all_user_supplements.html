@@ -1,11 +1,22 @@
 {% extends "supplements/tab_view_admin.html" %}
-{% load static compress widget_tweaks %}
+{% load static compress widget_tweaks perms_helper %}
 
 {% block tab_content %}
 
 <div>
   <form role="form" autocomplete="off">
-    {% include "supplements/partials/label_filter_form.html" %}
+    <div class="row">
+      {% include "supplements/partials/label_filter_form.html" %}
+      <div class="col-sm-3">
+        <div class="form-group {% if all_label_form.comments_status.errors %}has-error{% endif %}">
+          <label class="control-label">Comments:</label>
+          {{ all_label_form.comments_status|add_class:"form-control" }}
+          {% for error in all_label_form.comments_status.errors %}
+          <p class="help-block">{{ error }}</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
 
     <div class="row">
       <div class="col-sm-3">
@@ -40,10 +51,10 @@
       </div>
 
       <div class="col-sm-3">
-        <div class="form-group {% if all_label_form.product_sku.errors %}has-error{% endif %}">
+        <div class="form-group {% if all_label_form.sort.errors %}has-error{% endif %}">
           <label class="control-label">Sort By:</label>
           {{ all_label_form.sort|add_class:"form-control" }}
-          {% for error in all_label_form.title.errors %}
+          {% for error in all_label_form.sort.errors %}
           <p class="help-block">{{ error }}</p>
           {% endfor %}
         </div>
@@ -95,7 +106,11 @@
       <td>{{ supplement.user.get_full_name }}</td>
       <td>{{ supplement.current_label.updated_at_string }}</td>
       <td>
-        <i class="fa fa-envelope"></i>&nbsp;{{ supplement.current_label.comment_count }}
+        {% if supplement|is_supplement_seen:request.user %}
+        <i class="fa fa-comments"></i>&nbsp;{{ supplement.labels_comment_count }}
+        {% else %}
+        <b><i class="fa fa-envelope"></i>&nbsp;{{ supplement.labels_comment_count }}</b>
+        {% endif %}
       </td>
       <td>
         <a href="{% url 'pls:admin_label_history' supplement_id=supplement.id %}" class="btn btn-default btn-outline btn-xs">View</a>

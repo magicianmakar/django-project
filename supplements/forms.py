@@ -208,6 +208,11 @@ class AllLabelFilterForm(forms.Form):
         ('newest', 'Newest Labels First'),
         ('oldest', 'Oldest Labels First'),
     ]
+    SUPPLEMENT_STATUSES = [
+        ('', '---------'),
+        ('read', 'Read'),
+        ('unread', 'Unread'),
+    ]
 
     label_user_name = forms.CharField(required=False)
     product_sku = forms.MultipleChoiceField(required=False,
@@ -216,6 +221,7 @@ class AllLabelFilterForm(forms.Form):
                                                 'data-placeholder': 'Select product sku'}))
     title = forms.CharField(required=False)
     sort = forms.ChoiceField(required=False, choices=SORT_STATUSES)
+    comments_status = forms.ChoiceField(required=False, choices=SUPPLEMENT_STATUSES)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

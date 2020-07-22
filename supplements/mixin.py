@@ -1,3 +1,5 @@
+import simplejson as json
+
 from django.shortcuts import reverse
 from django.utils.html import format_html
 
@@ -129,6 +131,38 @@ class UserSupplementMixin(PLSupplementMixin):
     @property
     def shipping_groups_string(self):
         return self.pl_supplement.shipping_groups_string
+
+    @property
+    def labels_comment_count(self):
+        len_comment = 0
+        for label in self.labels.all():
+            len_comment += label.comments.count()
+
+        if len_comment == 1:
+            return "1 comment"
+        else:
+            return f"{len_comment} comments"
+
+    def get_seen_users_list(self):
+        try:
+            seen_users = json.loads(self.seen_users)
+        except json.errors.JSONDecodeError:
+            seen_users = []
+
+        return seen_users
+
+    def mark_as_read(self, user_id):
+        seen_users = self.get_seen_users_list()
+        if user_id not in seen_users:
+            seen_users.append(user_id)
+            self.seen_users = json.dumps(seen_users)
+            self.save()
+
+    def mark_as_unread(self, user_id):
+        seen_users = self.get_seen_users_list()
+        if 'All' not in seen_users:
+            self.seen_users = json.dumps([user_id])
+            self.save()
 
     @property
     def is_supplement_deleted(self):
