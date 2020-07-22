@@ -5,7 +5,6 @@ from collections import defaultdict
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.text import Truncator
 
 from bigcommerce_core.models import BigCommerceStore
 from commercehq_core.models import CommerceHQStore
@@ -96,8 +95,6 @@ class Util:
                 user=user,
             )
 
-            auth_net_lines = []
-
             for line in lines:
                 line_id = line['id']
                 key = get_shipstation_line_key(store_type,
@@ -129,16 +126,16 @@ class Util:
                     wholesale_price=wholesale_price,
                 )
 
-                auth_net_lines.append(dict(
-                    line_id=line_id,
-                    name=Truncator(user_supplement.title).chars(27),
-                    quantity=quantity,
-                    unit_price=line_amount,
-                ))
+            auth_net_line = dict(
+                id=pls_order.id,
+                name=f'Process Order # {pls_order.id}',
+                quantity=1,
+                unit_price=amount,
+            )
 
             transaction_id = user.authorize_net_customer.charge(
                 amount,
-                auth_net_lines,
+                auth_net_line,
             )
 
             # TODO: Add to queue.

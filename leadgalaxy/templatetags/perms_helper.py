@@ -49,3 +49,14 @@ def supplier_type(s):
         return 'Dropified'
     else:
         return s.title()
+
+
+@register.filter
+def is_supplement_seen(user_supplement, user):
+    user_id = user.id
+    seen_users = user_supplement.get_seen_users_list()
+
+    if 'All' in seen_users or user_id in seen_users:
+        return True
+
+    return False

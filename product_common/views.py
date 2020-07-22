@@ -414,6 +414,7 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
     paginate_by = 20
     ordering = '-created_at'
     filter_form = None
+    cancelled_orders_cache = {}
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -501,18 +502,18 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
         ]
 
     def get_cancelled_order_ids(self):
-        params = {'orderStatus': 'cancelled'}
-        orders = get_shipstation_orders(params=params)
-        cancelled_order_ids = {}
-        for order in orders:
-            try:
-                number, id = order['orderNumber'].split('-')
-            except ValueError:
-                continue
-            else:
-                cancelled_order_ids[id] = number
+        if not self.cancelled_orders_cache:
+            params = {'orderStatus': 'cancelled'}
+            orders = get_shipstation_orders(params=params)
+            for order in orders:
+                try:
+                    number, id = order['orderNumber'].split('-')
+                except ValueError:
+                    continue
+                else:
+                    self.cancelled_orders_cache[id] = number
 
-        return cancelled_order_ids
+        return self.cancelled_orders_cache
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
