@@ -81,18 +81,39 @@ def create_shipstation_order(pls_order, raw_data):
 def get_shipstation_shipments(resource_url):
     headers = {'Content-Type': 'application/json'}
     headers.update(get_auth_header())
-    response = requests.get(resource_url, headers=headers)
-    data = response.json()
-    return data['shipments']
+    resource_url = f'{resource_url}?pageSize=500'
+    response = requests.get(resource_url, headers=headers).json()
+
+    shipments = get_paginated_response(response, resource_url, 'shipments')
+
+    return shipments
 
 
 def get_shipstation_orders(params=None):
-    resource_url = f'{settings.SHIPSTATION_API_URL}/orders'
+    resource_url = f'{settings.SHIPSTATION_API_URL}/orders?pageSize=500'
     if params:
-        resource_url = '{}?{}'.format(resource_url, urlencode(params))
+        resource_url = '{}&{}'.format(resource_url, urlencode(params))
 
     headers = {'Content-Type': 'application/json'}
     headers.update(get_auth_header())
-    response = requests.get(resource_url, headers=headers)
-    data = response.json()
-    return data['orders']
+    response = requests.get(resource_url, headers=headers).json()
+
+    orders = get_paginated_response(response, resource_url, 'orders')
+
+    return orders
+
+
+def get_paginated_response(response, url, key):
+    headers = {'Content-Type': 'application/json'}
+    headers.update(get_auth_header())
+
+    data = response[key]
+    total_pages = response['pages']
+    next_page = 2
+    while next_page <= total_pages:
+        url = f'{url}&page={next_page}'
+        response = requests.get(url, headers=headers).json()
+        data = data + response[key]
+        next_page += 1
+
+    return data

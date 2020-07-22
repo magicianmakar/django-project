@@ -1428,6 +1428,7 @@ class OrderItemListView(common_views.OrderItemListView):
     ordering = '-created_at'
     filter_form = LineFilterForm
     namespace = 'pls'
+    cancelled_orders_cache = {}
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
