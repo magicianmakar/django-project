@@ -40,7 +40,7 @@ from shopified_core.utils import app_link
 from shopified_core.utils import aws_s3_context as images_aws_s3_context
 from shopified_core.utils import safe_int
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
-from supplements.lib.image import get_order_number_label, get_payment_pdf, make_pdf_of
+from supplements.lib.image import get_order_number_label, get_payment_pdf
 from supplements.models import (
     SUPPLEMENTS_SUPPLIER,
     AuthorizeNetCustomer,
@@ -332,18 +332,13 @@ class LabelMixin:
 
         page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
         barcode_obj = page_merge[-1]
-        barcode_obj.scale(0.3, 0.7)
-        barcode_obj.x = 8
-        barcode_obj.y = RectXObj(page_merge.page).h * 0.05
-        page_merge.render()
-
-        shipstation_sku = label.user_supplement.pl_supplement.shipstation_sku
-        pdf_page = make_pdf_of(shipstation_sku)
-
-        page_merge = PageMerge(base_label_pdf.pages[0]).add(pdf_page)
-        pdf_obj = page_merge[-1]
-        pdf_obj.scale(0.3, 0.6)
-        pdf_obj.y = RectXObj(page_merge.page).h * 0.65
+        page_height = RectXObj(page_merge.page).h
+        width, height, x = 0.3, 0.6, 8
+        if (page_height / 72) <= 1:  # Height is returned in pt. pt / 72 = 1 in
+            width, height, x = 0.2, 0.4, 12
+        barcode_obj.scale(width, height)
+        barcode_obj.x = x
+        barcode_obj.y = page_height * 0.05
         page_merge.render()
 
         label_pdf = BytesIO()
