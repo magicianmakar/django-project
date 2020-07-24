@@ -917,7 +917,8 @@ class AllUserSupplements(MyLabels, ListView):
 
     def add_filters(self, queryset):
         return queryset.exclude(Q(current_label__isnull=True)
-                                | Q(current_label__status=UserSupplementLabel.DRAFT))
+                                | Q(current_label__status=UserSupplementLabel.DRAFT)
+                                | Q(current_label__user_supplement__is_deleted=True))
 
     def get_breadcrumbs(self):
         return [
