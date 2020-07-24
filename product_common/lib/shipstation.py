@@ -81,7 +81,13 @@ def create_shipstation_order(pls_order, raw_data):
 def get_shipstation_shipments(resource_url):
     headers = {'Content-Type': 'application/json'}
     headers.update(get_auth_header())
-    resource_url = f'{resource_url}?pageSize=500'
+    if resource_url.endswith('?'):
+        resource_url = f'{resource_url}pageSize=500'
+    elif resource_url.find('?') > -1:
+        resource_url = f'{resource_url}&pageSize=500'
+    else:
+        resource_url = f'{resource_url}?pageSize=500'
+
     response = requests.get(resource_url, headers=headers).json()
 
     shipments = get_paginated_response(response, resource_url, 'shipments')
