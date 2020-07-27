@@ -1109,10 +1109,14 @@ class Order(common_views.OrderView):
                     order = get_object_or_404(PLSOrder, id=order_id)
                     order.refund = refund
                     order.save()
-                    transaction_id = request.user.authorize_net_customer.refund(
-                        refund.amount - refund.fee,
-                        order.stripe_transaction_id,
-                    )
+
+                    transaction_id = None
+                    if order.stripe_transaction_id:
+                        transaction_id = request.user.authorize_net_customer.refund(
+                            refund.amount - refund.fee,
+                            order.stripe_transaction_id,
+                        )
+
                     if transaction_id:
                         refund.transaction_id = transaction_id
                         refund.save()
@@ -1221,7 +1225,10 @@ class MyOrders(common_views.OrderView):
 
             transaction_id = form.cleaned_data['transaction_id']
             if transaction_id:
-                queryset = queryset.filter(stripe_transaction_id=transaction_id)
+                queryset = queryset.filter(
+                    Q(stripe_transaction_id=transaction_id)
+                    | Q(id=transaction_id)
+                )
 
             created_at = form.cleaned_data['date']
             if created_at:
@@ -1448,6 +1455,9 @@ class GeneratePaymentPDF(LoginRequiredMixin, View):
 
     def get(self, request, order_id):
         pls_order = get_object_or_404(PLSOrder, id=order_id)
+        if not pls_order.stripe_transaction_id:
+            return HttpResponse(status=404)
+
         pdf = get_payment_pdf(pls_order)
 
         file_name = f'{pls_order.order_number}-{pls_order.stripe_transaction_id}'

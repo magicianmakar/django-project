@@ -4,6 +4,7 @@ from io import BytesIO
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db.models import Q
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
@@ -106,7 +107,7 @@ class SupplementsApi(ApiResponseMixin, View):
                             'store': store.id,
                             'order_id': item.store_order_id,
                             'line_id': item.line_id.split('|')[0],  # Pipe separates bundles
-                            'aliexpress_order_id': str(pls_order.stripe_transaction_id),
+                            'aliexpress_order_id': str(pls_order.get_dropified_source_id()),
                             'source_type': 'supplements'
                         }
 
@@ -260,12 +261,13 @@ class SupplementsApi(ApiResponseMixin, View):
             return self.api_success(data)
 
     def post_sync_order(self, request, user, data):
-        try:
-            order = PLSOrder.objects.get(
-                stripe_transaction_id=data.get('source_id'),
-                user=request.user.models_user
-            )
-        except PLSOrder.DoesNotExist:
+        order = PLSOrder.objects.filter(
+            Q(stripe_transaction_id=data.get('source_id'))
+            | Q(id=data.get('source_id')),
+            user=request.user.models_user
+        ).first()
+
+        if order is None:
             return self.api_error('Order not found', status=404)
 
         status = {
@@ -293,7 +295,7 @@ class SupplementsApi(ApiResponseMixin, View):
                     'products': str(products_price.quantize(Decimal('0.01'))),
                     'shipping': str(shipping_price.quantize(Decimal('0.01'))),
                 }},
-                'source_id': order.stripe_transaction_id,
+                'source_id': order.get_dropified_source_id(),
             }
         })
 

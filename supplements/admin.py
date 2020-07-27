@@ -108,6 +108,10 @@ class PLSOrderAdmin(admin.ModelAdmin):
         'wholesale_price',
     )
     raw_id_fields = ('user',)
+    readonly_fields = ('stripe_transaction_id', 'payment_date')
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(PLSOrderLine)

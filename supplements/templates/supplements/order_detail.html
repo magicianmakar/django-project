@@ -115,6 +115,7 @@
   </div>
 </div>
 
+{% if order.stripe_transaction_id %}
 <div class="row">
   <div class="col-md-3">
     <a href="{% url 'pls:generate_payment_pdf' order.id %}"
@@ -124,6 +125,7 @@
     </a>
   </div>
 </div>
+{% endif %}
 
 
 {% endblock %}

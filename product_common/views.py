@@ -2,6 +2,7 @@ from decimal import Decimal
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.views import View
@@ -221,7 +222,7 @@ class OrdersShippedWebHookView(View, BaseMixin):
 
         store_type = order.store_type
         tracking_number = shipment['trackingNumber']
-        source_id = order.stripe_transaction_id
+        source_id = order.get_dropified_source_id()
         StoreApi = get_store_api(store_type)
         OrderTrack = get_track_model(store_type)
 
@@ -333,7 +334,8 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             transaction_id = form.cleaned_data['transaction_id']
             if transaction_id:
                 queryset = queryset.filter(
-                    stripe_transaction_id=transaction_id
+                    Q(stripe_transaction_id=transaction_id)
+                    | Q(id=transaction_id)
                 )
 
         return queryset

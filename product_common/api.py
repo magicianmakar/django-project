@@ -20,10 +20,11 @@ def complete_payment(transaction_id, order_id):
     This function is suppposed to run in a queue.
     """
     order = Order.objects.get(id=order_id)
-    order.status = order.PAID
-    order.payment_date = timezone.now()
-    order.stripe_transaction_id = transaction_id
-    order.save()
+    if transaction_id:
+        order.status = order.PAID
+        order.payment_date = timezone.now()
+        order.stripe_transaction_id = transaction_id
+        order.save()
     return order
 
 

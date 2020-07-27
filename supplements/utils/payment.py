@@ -23,10 +23,13 @@ def complete_payment(transaction_id, pls_order_id):
     This function is suppposed to run in a queue.
     """
     pls_order = PLSOrder.objects.get(id=pls_order_id)
-    pls_order.status = pls_order.PAID
-    pls_order.payment_date = timezone.now()
-    pls_order.stripe_transaction_id = transaction_id
-    pls_order.save()
+    # TODO: remove when pending orders aren't allowed anymore
+    # assert transaction_id, 'Payment processing failed'
+    if transaction_id:
+        pls_order.status = pls_order.PAID
+        pls_order.payment_date = timezone.now()
+        pls_order.stripe_transaction_id = transaction_id
+        pls_order.save()
     return pls_order
 
 
