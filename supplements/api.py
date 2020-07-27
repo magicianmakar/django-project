@@ -225,7 +225,7 @@ class SupplementsApi(ApiResponseMixin, View):
         shipping_info = {}
         for order_data_id in data['order_data_ids']:
             store_id, order_id, line_id = order_data_id.split('_')
-            api_result = StoreApi.get_order_data(request, request.user, {'order': order_data_id})
+            api_result = StoreApi.get_order_data(request, request.user, {'order': order_data_id, 'original': '1'})
             if api_result.status_code == 404:
                 return self.api_error("Please reload the page and try again", status=404)
 

@@ -53,3 +53,16 @@ def user_can_download_label(user, label):
     if user.can('pls_admin.use') or user.can('pls_staff.use') or user_is_owner:
         return True
     return False
+
+
+def supplement_customer_address(address):
+    mapped_countries = {
+        'UK': 'GB',
+        'United States': 'US'
+    }
+
+    if address.get('country_code'):
+        country_code = address['country_code']
+        address['country_code'] = mapped_countries.get(country_code, country_code)
+
+    return address

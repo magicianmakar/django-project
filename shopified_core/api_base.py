@@ -295,6 +295,9 @@ class ApiBase(ApiResponseMixin, View):
 
         order = order_data_cache(order_key)
         if order:
+            if data.get('original') == '1':
+                return JsonResponse(order, safe=False)
+
             if user.models_user.get_config('_static_shipping_address'):
                 order['shipping_address'] = user.models_user.get_config('_static_shipping_address')
 

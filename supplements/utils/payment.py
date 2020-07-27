@@ -16,6 +16,7 @@ from lib.exceptions import capture_exception
 from shopified_core.shipping_helper import country_from_code
 from shopified_core.utils import safe_float, get_store_api
 from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
+from supplements.utils import supplement_customer_address
 
 
 def complete_payment(transaction_id, pls_order_id):
@@ -35,6 +36,9 @@ def complete_payment(transaction_id, pls_order_id):
 
 def get_shipping_cost(country_code, province_code, total_weight):
     try:
+        address = supplement_customer_address({'country_code': country_code})
+        country_code = address['country_code']
+
         # getting pls country group
         search_country_provice = f"{country_code}-{province_code}"
         try:
@@ -174,7 +178,7 @@ class Util:
             if PLSOrderLine.exists(store_type, store_id, order_id, line_id):
                 continue
 
-            api_result = StoreApi.get_order_data(request, request.user, {'order': order_data_id})
+            api_result = StoreApi.get_order_data(request, request.user, {'order': order_data_id, 'original': '1'})
             order_data = json.loads(api_result.content.decode("utf-8"))
             try:
                 user_supplement = models_user.pl_supplements.get(id=order_data['source_id'])

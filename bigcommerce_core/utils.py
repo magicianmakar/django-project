@@ -682,7 +682,7 @@ def bigcommerce_customer_address(order, aliexpress_fix=False, german_umlauts=Fal
 
     customer_address['address1'] = customer_address.get('street_1')
     customer_address['address2'] = customer_address.get('street_2')
-    customer_address['country_code'] = customer_address.get('country')
+    customer_address['country_code'] = customer_address.get('country_iso2')
     customer_address['province_code'] = customer_address.get('state')
     customer_address['zip'] = customer_address.get('zip')
 
