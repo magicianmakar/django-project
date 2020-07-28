@@ -295,7 +295,7 @@
     tap('conversion', '{{ tapafilate_conversaion.affiliate }}', 0, {meta_data: {
         email: "{{ tapafilate_conversaion.email }}",
         name: "{{ tapafilate_conversaion.full_name | default:'' | escapejs }}",
-      }});
+      }, customer_id: '{{ tapafilate_conversaion.email }}' });
   {% else %}
     tap('detect');
   {% endif %}
