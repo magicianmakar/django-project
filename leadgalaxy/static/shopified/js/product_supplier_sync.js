@@ -2,42 +2,44 @@
 (function(sub_conf) {
     'use strict';
 
-    var pusher = new Pusher(sub_conf.key);
-    var channel = pusher.subscribe(sub_conf.channel);
     var product_sync_update_tpl;
     var count = 0;
     var success = 0;
     var fail = 0;
     var task;
 
-    channel.bind('products-supplier-sync', function(data) {
-        if (!task || data.task != task) {
-            return;
-        }
-
-        count = data.count;
-        success = data.success;
-        fail = data.fail;
-        if (data.status && data.count > 0) {
-            if (data.status == 'ok' && data.error) {
-                data['warning'] = data.error;
-                delete data['error'];
+    if (sub_conf && sub_conf.key) {
+        var pusher = new Pusher(sub_conf.key);
+        var channel = pusher.subscribe(sub_conf.channel);
+        channel.bind('products-supplier-sync', function(data) {
+            if (!task || data.task != task) {
+                return;
             }
 
-            var product_el = $(product_sync_update_tpl(data));
-            $('#modal-product-supplier-sync .progress-table tbody').append(product_el);
-            $('#modal-product-supplier-sync .progress-bar-success').css('width', (success * 100.0 / count) + '%');
-            $('#modal-product-supplier-sync .progress-bar-danger').css('width', (fail * 100.0 / count) + '%');
-        }
+            count = data.count;
+            success = data.success;
+            fail = data.fail;
+            if (data.status && data.count > 0) {
+                if (data.status == 'ok' && data.error) {
+                    data['warning'] = data.error;
+                    delete data['error'];
+                }
 
-        if (count == success + fail) {
-            $('#modal-product-supplier-sync .update-progress .pending-msg').hide();
-            $('#modal-product-supplier-sync .update-progress .complete-msg').show();
-            $('#modal-product-supplier-sync input').prop('disabled', false);
-            $('#modal-product-supplier-sync .start-update-btn').show();
-            $('#modal-product-supplier-sync .stop-update-btn').hide();
-        }
-    });
+                var product_el = $(product_sync_update_tpl(data));
+                $('#modal-product-supplier-sync .progress-table tbody').append(product_el);
+                $('#modal-product-supplier-sync .progress-bar-success').css('width', (success * 100.0 / count) + '%');
+                $('#modal-product-supplier-sync .progress-bar-danger').css('width', (fail * 100.0 / count) + '%');
+            }
+
+            if (count == success + fail) {
+                $('#modal-product-supplier-sync .update-progress .pending-msg').hide();
+                $('#modal-product-supplier-sync .update-progress .complete-msg').show();
+                $('#modal-product-supplier-sync input').prop('disabled', false);
+                $('#modal-product-supplier-sync .start-update-btn').show();
+                $('#modal-product-supplier-sync .stop-update-btn').hide();
+            }
+        });
+    }
 
     product_sync_update_tpl = Handlebars.compile($("#product-sync-update-template").html());
 
