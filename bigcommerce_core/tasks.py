@@ -35,6 +35,7 @@ from .utils import (
     create_variants_api_data,
     get_latest_order_note,
     find_or_create_category,
+    get_product_data
 )
 
 from product_alerts.utils import (
@@ -439,3 +440,133 @@ def order_save_changes(self, data):
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def products_supplier_sync(self, store_id, products, sync_price, price_markup, compare_markup, sync_inventory, cache_key):
+    store = BigCommerceStore.objects.get(id=store_id)
+    products = BigCommerceProduct.objects.filter(id__in=products, user=store.user, store=store, source_id__gt=0)
+    total_count = 0
+    for product in products:
+        if product.have_supplier() and product.default_supplier.is_aliexpress:
+            total_count += 1
+
+    push_data = {
+        'task': self.request.id,
+        'count': total_count,
+        'success': 0,
+        'fail': 0,
+    }
+    store.pusher_trigger('products-supplier-sync', push_data)
+
+    for product in products:
+        if not product.have_supplier() or not product.default_supplier.is_aliexpress:
+            continue
+
+        bigcommerce_id = product.get_bigcommerce_id()
+        supplier = product.default_supplier
+        push_data['id'] = product.id
+        push_data['title'] = product.title
+        push_data['bigcommerce_link'] = product.bigcommerce_url
+        push_data['supplier_link'] = supplier.product_url
+        push_data['status'] = 'ok'
+        push_data['error'] = None
+
+        try:
+            # Fetch supplier variants
+            supplier_variants = get_supplier_variants(supplier.supplier_type(), supplier.get_source_id())
+
+            supplier_prices = [v['price'] for v in supplier_variants]
+            supplier_min_price = min(supplier_prices)
+            supplier_max_price = max(supplier_prices)
+        except Exception:
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to load supplier data'
+            push_data['fail'] += 1
+            store.pusher_trigger('products-supplier-sync', push_data)
+            continue
+
+        try:
+            # Fetch bigcommerce variants
+            product_data = get_product_data(store, [bigcommerce_id])[bigcommerce_id]
+        except Exception:
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to load bigcommerce data'
+            push_data['fail'] += 1
+            store.pusher_trigger('products-supplier-sync', push_data)
+            continue
+
+        try:
+            # Check if there's only one price
+            seem_price = (len('variants') == 1
+                          or len(set([v['price'] for v in product_data['variants']])) == 1
+                          or len(supplier_variants) == 1
+                          or supplier_min_price == supplier_max_price)
+            # New Data
+            updated = False
+            mapped_variants = {}
+            unmapped_variants = []
+
+            if sync_price and seem_price:
+                # Use one price for all variants
+                for i, variant in enumerate(product_data['variants']):
+                    product_data['variants'][i]['price'] = round(supplier_max_price * (100 + price_markup) / 100.0, 2)
+                    product_data['variants'][i]['compare_at_price'] = round(supplier_variants[i]['price'] * (100 + compare_markup) / 100.0, 2)
+                    updated = True
+
+            if (sync_price and not seem_price) or sync_inventory:
+                for i, variant in enumerate(supplier_variants):
+                    sku = variant.get('sku')
+                    if not sku:
+                        if len(product_data['variants']) == 1 and len(supplier_variants) == 1:
+                            idx = 0
+                        else:
+                            continue
+                    else:
+                        idx = variant_index_from_supplier_sku(product, sku, product_data['variants'])
+
+                        if idx is not None:
+                            variant_id = product_data['variants'][idx]['id']
+                        if variant_id > 0:
+                            product_data['variants'][idx]['inventory_level'] = variant['availabe_qty']
+                            product_data['inventory_tracking'] = 'variant'
+                        elif len(product_data.get('variants', [])) == 0 or variant_id < 0:
+                            product_data['inventory_level'] = variant['availabe_qty']
+                            product_data['inventory_tracking'] = 'product'
+                        if idx is None:
+                            if len(product_data['variants']) == 1 and len(supplier_variants) == 1:
+                                idx = 0
+                            else:
+                                continue
+
+                    mapped_variants[str(product_data['variants'][idx]['id'])] = True
+                    # Sync price
+                    if sync_price and not seem_price:
+                        product_data['variants'][i]['price'] = round(supplier_variants[idx]['price'] * (100 + price_markup) / 100.0, 2)
+                        product_data['variants'][i]['compare_at_price'] = round(supplier_variants[idx]['price'] * (100 + compare_markup) / 100.0, 2)
+                        updated = True
+
+                # check unmapped variants
+                for variant in product_data['variants']:
+                    if not mapped_variants.get(str(variant['id']), False):
+                        unmapped_variants.append(variant['title'])
+
+            if updated or sync_inventory:
+                r = product.store.request.put(
+                    url=product.store.get_api_url('v3/catalog/products/%s' % bigcommerce_id),
+                    json=product_data
+                )
+                r.raise_for_status()
+
+            if len(unmapped_variants) > 0:
+                push_data['error'] = 'Warning - Unmapped: {}'.format(','.join(unmapped_variants))
+            push_data['success'] += 1
+        except Exception:
+            capture_exception()
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to update data'
+            push_data['fail'] += 1
+
+        store.pusher_trigger('products-supplier-sync', push_data)
+
+    cache.delete(cache_key)
