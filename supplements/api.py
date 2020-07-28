@@ -360,6 +360,8 @@ class SupplementsApi(ApiResponseMixin, View):
 
     def get_billing_info(self, request, user, data):
         if request.user.profile.is_black or request.user.can('pls.use'):
+            # TODO: AUTHNET ROLLBACK
+            return self.api_success({'success': 1, 'error': 0})
             success = error = 0
             try:
                 user.authorize_net_customer
