@@ -9,6 +9,8 @@ from math import ceil
 from collections import Counter
 from base64 import b64encode
 
+from lib.exceptions import capture_message
+
 from django.db.models import Q
 from django.db import transaction
 from django.shortcuts import get_object_or_404
@@ -598,20 +600,45 @@ def get_tracking_orders(store, tracker_orders, per_page=50):
     if not len(ids):
         return tracker_orders
 
-    r = store.request.get(
-        url=store.get_api_url('v2/orders'),
-    )
-    r.raise_for_status()
+    ids.sort()
+    min_id = safe_int(ids[0])
+    limit = 100
+    # Reduce cost of queries with search split into "min_id" hops
+    order_params = [{
+        'limit': limit,
+        'min_id': min_id,
+    }]
+    for order_id in ids:
+        order_id = safe_int(order_id)
+        if order_id > min_id + limit:  # BigCommerce Order ID are sequential int
+            min_id = order_id
+            order_params.append({
+                'limit': limit,
+                'min_id': min_id,
+            })
 
     orders = {}
     lines = {}
+    ids = list(set(ids))
+    # All orders should be found
+    for params in order_params:
+        r = store.request.get(
+            url=store.get_api_url('v2/orders'),
+            params=params
+        )
+        r.raise_for_status()
 
-    for order in r.json():
-        if str(order['id']) in ids:
-            orders[order['id']] = order
-            order['line_items'] = get_order_product_data(store, order)
-            for line in order['line_items']:
-                lines['{}-{}'.format(order['id'], line['id'])] = line
+        for order in r.json():
+            if str(order['id']) in ids:
+                ids.remove(str(order['id']))
+                orders[order['id']] = order
+                order['line_items'] = get_order_product_data(store, order)
+                for line in order['line_items']:
+                    lines['{}-{}'.format(order['id'], line['id'])] = line
+
+    if len(ids):
+        capture_message(f'Missing order ids for BigCommerce {store.pk}',
+                        extra={'ids': ','.join(ids)})
 
     new_tracker_orders = []
     for tracked in tracker_orders:
