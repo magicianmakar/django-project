@@ -133,17 +133,19 @@ class Util:
                     wholesale_price=wholesale_price,
                 )
 
-            auth_net_line = dict(
-                id=pls_order.id,
-                name=f'Process Order # {pls_order.id}',
-                quantity=1,
-                unit_price=amount,
-            )
+            # TODO: uncomment once authorize.net works again
+            transaction_id = None
+            # auth_net_line = dict(
+            #     id=pls_order.id,
+            #     name=f'Process Order # {pls_order.id}',
+            #     quantity=1,
+            #     unit_price=amount,
+            # )
 
-            transaction_id = user.authorize_net_customer.charge(
-                amount,
-                auth_net_line,
-            )
+            # transaction_id = user.authorize_net_customer.charge(
+            #     amount,
+            #     auth_net_line,
+            # )
 
             # TODO: Add to queue.
             pls_order = complete_payment(transaction_id, pls_order.id)
