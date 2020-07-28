@@ -24,7 +24,7 @@ def complete_payment(transaction_id, pls_order_id):
     This function is suppposed to run in a queue.
     """
     pls_order = PLSOrder.objects.get(id=pls_order_id)
-    # TODO: remove when pending orders aren't allowed anymore
+    # TODO: AUTHNET ROLLBACK uncomment below
     # assert transaction_id, 'Payment processing failed'
     if transaction_id:
         pls_order.status = pls_order.PAID
@@ -133,7 +133,7 @@ class Util:
                     wholesale_price=wholesale_price,
                 )
 
-            # TODO: uncomment once authorize.net works again
+            # TODO: AUTHNET ROLLBACK
             transaction_id = None
             # auth_net_line = dict(
             #     id=pls_order.id,

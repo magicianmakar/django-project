@@ -506,8 +506,88 @@ class MockupType(models.Model):
                     {'left': -0.16, 'top': -1.38, 'size': 1.36, 'bgLeft': -0.09, 'bgTop': -0.1325, 'bgSize': 1.18}
                 ],
             ]
+        elif self.slug == '4oz-pump-bottle':
+            presets = [
+                [{'left': -0.054, 'top': -1.153, 'size': 1.205}],
+                [{'left': -0.054, 'top': -1.153, 'size': 1.205, 'layers': {'shadow': False}}],
+                [{'left': 0.325, 'top': -1.012, 'size': 1.062}],
+                [{'left': 0.325, 'top': -1.012, 'size': 1.062, 'layers': {'shadow': False}}],
+                [
+                    {'left': -0.054, 'top': -1.153, 'size': 1.205, 'bgLeft': -0.34, 'bgTop': -0.07, 'bgSize': 1.08},
+                    {'left': -0.054, 'top': -1.167, 'size': 1.205, 'bgLeft': 0.213, 'bgTop': -0.078, 'bgSize': 1.08},
+                    {'left': -0.054, 'top': -1.153, 'size': 1.205, 'bgLeft': -0.118, 'bgTop': -0.133, 'bgSize': 1.18}
+                ],
+                [
+                    {'left': -0.054, 'top': -1.153, 'size': 1.205, 'bgLeft': -0.332, 'bgTop': -0.002, 'bgSize': 0.94},
+                    {'left': -0.054, 'top': -1.153, 'size': 1.205, 'bgLeft': 0.372, 'bgTop': 0, 'bgSize': 0.94},
+                    {'left': -0.054, 'top': -1.153, 'size': 1.205, 'bgLeft': -0.232, 'bgTop': -0.078, 'bgSize': 1.08},
+                    {'left': -0.054, 'top': -1.153, 'size': 1.205, 'bgLeft': 0.137, 'bgTop': -0.073, 'bgSize': 1.08},
+                    {'left': -0.054, 'top': -1.153, 'size': 1.205, 'bgLeft': -0.09, 'bgTop': -0.133, 'bgSize': 1.18}
+                ],
+            ]
+        elif self.slug == '44oz-jar-black-lid':
+            presets = [
+                [{'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': -0.223, 'bgTop': -0.395, 'bgSize': 1.429}],
+                [{'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': -0.223, 'bgTop': -0.395, 'bgSize': 1.429, 'layers': {'shadow': False}}],
+                [{'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': -0.223, 'bgTop': -0.395, 'bgSize': 1.429}],
+                [{'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': -0.223, 'bgTop': -0.395, 'bgSize': 1.429, 'layers': {'shadow': False}}],
+                [
+                    {'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': -0.2, 'bgTop': 0.013, 'bgSize': 0.833},
+                    {'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': 0.353, 'bgTop': 0.013, 'bgSize': 0.833},
+                    {'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': 0.022, 'bgTop': -0.051, 'bgSize': 0.91}
+                ],
+                [
+                    {'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': -0.152, 'bgTop': 0.151, 'bgSize': 0.599},
+                    {'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': 0.539, 'bgTop': 0.151, 'bgSize': 0.599},
+                    {'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': -0.074, 'bgTop': 0.055, 'bgSize': 0.737},
+                    {'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': 0.305, 'bgTop': 0.055, 'bgSize': 0.737},
+                    {'left': 0.136, 'top': -1.461, 'size': 0.711, 'bgLeft': 0.04, 'bgTop': -0.04, 'bgSize': 0.873}
+                ],
+            ]
+        elif self.slug == '32oz-jar-black-lid':
+            presets = [
+                [{'left': 0.155, 'top': -0.449, 'size': 0.694}],
+                [{'left': 0.155, 'top': -0.449, 'size': 0.694, 'layers': {'shadow': False}}],
+                [{'left': 0.637, 'top': -0.254, 'size': 0.49}],
+                [{'left': 0.637, 'top': -0.254, 'size': 0.49, 'layers': {'shadow': False}}],
+                [
+                    {'left': 0.151, 'top': -0.449, 'size': 0.685, 'bgLeft': -0.178, 'bgTop': 0.128, 'bgSize': 0.802},
+                    {'left': 0.151, 'top': -0.449, 'size': 0.685, 'bgLeft': 0.358, 'bgTop': 0.131, 'bgSize': 0.802},
+                    {'left': 0.151, 'top': -0.449, 'size': 0.685, 'bgLeft': 0.005, 'bgTop': 0.039, 'bgSize': 0.952}
+                ],
+                [
+                    {'left': 0.155, 'top': -0.449, 'size': 0.694, 'bgLeft': -0.147, 'bgTop': 0.261, 'bgSize': 0.599},
+                    {'left': 0.155, 'top': -0.449, 'size': 0.694, 'bgLeft': 0.544, 'bgTop': 0.261, 'bgSize': 0.599},
+                    {'left': 0.155, 'top': -0.449, 'size': 0.694, 'bgLeft': -0.069, 'bgTop': 0.178, 'bgSize': 0.737},
+                    {'left': 0.155, 'top': -0.449, 'size': 0.694, 'bgLeft': 0.31, 'bgTop': 0.178, 'bgSize': 0.737},
+                    {'left': 0.155, 'top': -0.449, 'size': 0.694, 'bgLeft': 0.045, 'bgTop': 0.093, 'bgSize': 0.873}
+                ],
+            ]
+        elif self.slug == '16oz-jar-black-lid':
+            presets = [
+                [{'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': -0.26, 'bgTop': -0.463, 'bgSize': 1.457}],
+                [{'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': -0.26, 'bgTop': -0.463, 'bgSize': 1.457, 'layers': {'shadow': False}}],
+                [{'left': 0.459, 'top': -1.773, 'size': 0.804, 'bgLeft': -0.26, 'bgTop': -0.463, 'bgSize': 1.457}],
+                [{'left': 0.459, 'top': -1.773, 'size': 0.804, 'bgLeft': -0.26, 'bgTop': -0.463, 'bgSize': 1.457, 'layers': {'shadow': False}}],
+                [
+                    {'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': -0.211, 'bgTop': -0.005, 'bgSize': 0.829},
+                    {'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': 0.358, 'bgTop': -0.005, 'bgSize': 0.829},
+                    {'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': -0.078, 'bgTop': -0.199, 'bgSize': 1.087}
+                ],
+                [
+                    {'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': -0.177, 'bgTop': 0.166, 'bgSize': 0.628},
+                    {'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': 0.539, 'bgTop': 0.166, 'bgSize': 0.628},
+                    {'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': -0.107, 'bgTop': 0.05, 'bgSize': 0.784},
+                    {'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': 0.3, 'bgTop': 0.05, 'bgSize': 0.784},
+                    {'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': -0.025, 'bgTop': -0.132, 'bgSize': 1.016}
+                ],
+            ]
         else:
-            presets = []
+            presets = [
+                [{'left': -0.3}], [{'left': -0.3, 'layers': {'shadow': False}}],
+                [{}], [{'layers': {'shadow': False}}],
+                [{}, {}, {}], [{}, {}, {}, {}, {}],
+            ]
         return presets
 
     def get_layers(self):
@@ -610,6 +690,24 @@ class MockupType(models.Model):
                 {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
                 {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
                 {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png'},
+            ]
+        elif self.slug == '4oz-pump-bottle':
+            layers = [
+                {'layer': 'bottle', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png'},
+                {'layer': 'light', 'mode': 'screen', 'file': 'highlight.png'},
+            ]
+        elif self.slug in ['44oz-jar-black-lid', '32oz-jar-black-lid', '16oz-jar-black-lid']:
+            layers = [
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'container', 'mode': 'source-over', 'file': 'container.png', 'background': True},
+                {'layer': 'refraction', 'mode': 'screen', 'file': 'refraction.png', 'background': True},
+                {'layer': 'container2', 'mode': 'source-over', 'file': 'container.png'},
+                {'layer': 'label', 'mode': 'source-over', 'saveSize': 1000},
+                {'layer': 'refraction2', 'mode': 'screen', 'file': 'refraction.png'},
+                {'layer': 'mask', 'mode': 'destination-in', 'file': 'mask.png'},
             ]
         else:
             layers = []

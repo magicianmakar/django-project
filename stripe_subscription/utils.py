@@ -316,9 +316,13 @@ def extra_store_invoice(store, extra=None):
     if extra is None:
         extra = store.extra.first()
 
+    # calculate the cost of extra store from the field.
+    extra_store_cost = store.user.profile.plan.extra_store_cost
+    extra_store_cost = int(extra_store_cost * 100)  # convert to cents
+
     invoice_item = stripe.InvoiceItem.create(
         customer=store.user.stripe_customer.customer_id,
-        amount=2700,
+        amount=extra_store_cost,
         currency="usd",
         description="Additional {} Store: {}".format(extra._invoice_name, store.title)
     )

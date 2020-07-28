@@ -15,6 +15,32 @@ var MockupEditor = (function() {
         useControls: window.location.href.indexOf('debug=1') > -1,
         control: 'label',  // label or mockup
         controlIndex: null,
+        wrapLabel: function(canvas) {
+            // http://plnkr.co/edit/83xAr99FjswWg0GHjDvJ?p=preview&preview
+            var ctx = canvas.getContext('2d');
+            function start() {
+                var iw = this.width;
+                var ih = this.height;
+
+                var xOffset = 100,
+                    yOffset = 200;
+
+                var a = 400;
+                var b = 400;
+
+                var scaleFactor = iw / (2*a); //how many times original image is greater compared to our rendering area?
+
+                // draw vertical slices
+                for (var X = 0; X < iw; X+=1) {
+                  var y = b/a * Math.sqrt(a*a - (X-a)*(X-a)); // ellipsis equation
+                  ctx.drawImage(this, X * scaleFactor, 0, 6, ih, X + xOffset, y + yOffset, 1, ih - 605 + y/2);
+                }
+            }
+
+            var img = new Image();
+            img.onload = start;
+            img.src = canvas.toDataURL();
+        },
         dataURLtoFile: function(dataurl, filename) {
             var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
                 bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
@@ -59,7 +85,7 @@ var MockupEditor = (function() {
                     );
                 }
 
-                return $.extend({}, preset, {
+                return $.extend({left: 0, top: 0, size: 1}, preset, {
                     bgLeft: preset.bgLeft || 0,
                     bgTop: preset.bgTop || 0,
                     bgSize: preset.bgSize || 1,
@@ -89,12 +115,17 @@ var MockupEditor = (function() {
                 var combined = layers.filter(function(l) {
                     return layer.combined.indexOf(l.layer) > -1;
                 });
-                combined.push($.extend({}, layer, {'mode': 'source-in'}));
+                if (layer.unmasked) {
+                    combined.push($.extend({}, layer));
+                } else {
+                    // Using previous layers to mask last one
+                    combined.push($.extend({}, layer, {'mode': 'source-in'}));
+                }
 
                 var canvas = $('<canvas width="' + layer.image.width + '" height="' + layer.image.height + '">').get(0);
                 var context = canvas.getContext('2d');
                 combined.forEach(function(l) {
-                    context.globalCompositeOperation = l.mode;
+                    context.globalCompositeOperation = l.mode || 'source-over';
                     context.drawImage(l.image, 0, 0);
                 });
                 layer.image.src = canvas.toDataURL();
@@ -236,6 +267,7 @@ var MockupEditor = (function() {
             $('#mockup-editor .canvas-group canvas').remove();
         },
         generate: function(mockups) {
+            var curveCanvas;
             generateMockups = typeof(mockups) !== 'undefined' ? mockups : MockupEditor.mockups;
             generateMockups.forEach(function(mockup) {
                 var context = mockup.canvas.getContext('2d');
@@ -245,7 +277,7 @@ var MockupEditor = (function() {
                 context.clearRect(0, 0, mockup.canvas.width, mockup.canvas.height);
                 bgContext.clearRect(0, 0, mockup.canvas.width, mockup.canvas.height);
                 mockupLayers.forEach(function(layer) {
-                    if (!layer.image) {
+                    if (!layer.image || !layer.mode) {
                         return;
                     }
                     if (mockup.layers && mockup.layers[layer.layer] === false) {

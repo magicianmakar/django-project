@@ -2021,6 +2021,8 @@ class GroupPlan(models.Model):
     products = models.IntegerField(default=0, verbose_name="Products Limit")
     boards = models.IntegerField(default=0, verbose_name="Boards Limit")
     extra_stores = models.BooleanField(default=True, verbose_name='Support adding extra stores')
+    extra_store_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=27.00,
+                                           verbose_name='Extra store cost per store(in USD)')
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
