@@ -20,8 +20,9 @@ class CallflexOveragesBilling:
 
     def add_invoice(self, invoice_type, amount, replace_flag=False, description="CallFlex Overages for"):
 
+        subscription_container = utils.get_callflex_subscription_container(self.user)
         try:
-            upcoming_invoice = stripe.Invoice.upcoming(customer=self.user.stripe_customer.customer_id)
+            upcoming_invoice = stripe.Invoice.upcoming(subscription=subscription_container.subscription_id)
         except:
             capture_message("No Upcoming Invoice. Skipping this user.")
             return False
@@ -49,6 +50,7 @@ class CallflexOveragesBilling:
         else:
             upcoming_invoice_item = stripe.InvoiceItem.create(
                 customer=self.user.stripe_customer.customer_id,
+                subscription=subscription_container.subscription_id,
                 amount=safe_int(amount * 100),
                 currency='usd',
                 description=description + ' ' + invoice_type,
@@ -61,6 +63,7 @@ class CallflexOveragesBilling:
         # update phone number overages
         # getting number of 'monthes' passed after last invoice date (to process yearly subs)
         subscription_period_start = utils.get_callflex_subscription_start(self.user)
+
         if not subscription_period_start:
             return False
         else:

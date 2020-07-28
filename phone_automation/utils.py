@@ -48,6 +48,23 @@ def get_callflex_subscription_start(user):
     return subscription_period_start
 
 
+def get_callflex_subscription_container(user):
+    try:
+        # getting callflex subscription
+        subscription = user.customstripesubscription_set.filter(custom_plan__type='callflex_subscription'). \
+            latest('created_at')
+    except CustomStripeSubscription.DoesNotExist:
+        # getting callflex subscription
+        try:
+            subscription = user.stripesubscription_set.latest('created_at')
+        except:
+            subscription = False
+    except:
+        subscription = False
+
+    return subscription
+
+
 def get_callflex_subscription_period(user):
     try:
         # getting callflex subscription
