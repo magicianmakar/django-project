@@ -1,6 +1,6 @@
 import csv
 import math
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 from io import BytesIO
 
@@ -1715,11 +1715,8 @@ class Reports(LoginRequiredMixin, TemplateView):
 
     def check_range_interval(self, obj, start, end):
         # change date object to datetime aware object for comparison
-        start = datetime.combine(start, datetime.min.time())
-        start = timezone.make_aware(start, timezone.get_current_timezone())
-
-        end = datetime.combine(end, datetime.min.time())
-        end = timezone.make_aware(end, timezone.get_current_timezone())
+        start.replace(tzinfo=timezone.get_current_timezone())
+        end.replace(tzinfo=timezone.get_current_timezone())
 
         if obj.created_at > start and obj.created_at < end:
             return obj
@@ -1990,8 +1987,9 @@ class Reports(LoginRequiredMixin, TemplateView):
 
         total_amount = sum(order.amount for order in filtered_orders)
         total_cost = sum(order.wholesale_price for order in filtered_orders)
-        gross_profit = (total_amount - total_cost) / 100.
-        total_revenue = total_cost / 100.
+        total_shipping_cost = sum(order.shipping_price for order in filtered_orders)
+        gross_profit = (total_amount - (total_cost + total_shipping_cost)) / 100.
+        total_revenue = total_amount / 100.
         total_orders = len(filtered_orders)
         all_items = []
         for order in filtered_orders:
@@ -2365,6 +2363,7 @@ class Reports(LoginRequiredMixin, TemplateView):
 
         total_amount = 0
         total_cost = 0
+        total_shipping_cost = 0
         total_orders = 0
         total_items = 0
         total_sale = 0
@@ -2379,6 +2378,7 @@ class Reports(LoginRequiredMixin, TemplateView):
             )
             total_amount += sum(order.amount for order in filtered_orders)
             total_cost += sum(order.wholesale_price for order in filtered_orders)
+            total_shipping_cost += sum(order.shipping_price for order in filtered_orders)
             total_orders += len(filtered_orders)
             order_items = []
             for order in filtered_orders:
@@ -2386,7 +2386,7 @@ class Reports(LoginRequiredMixin, TemplateView):
             total_items += sum(item.quantity for item in order_items)
             total_sale += sum(order.sale_price for order in filtered_orders) / 100.
             total_profit += sum((order.sale_price - order.amount) for order in filtered_orders) / 100.
-        gross_profit = (total_amount - total_cost) / 100.
+        gross_profit = (total_amount - (total_cost + total_shipping_cost)) / 100.
         total_revenue = total_amount / 100.
 
         data['gross_profit'] = report.millify(gross_profit)
@@ -2441,8 +2441,8 @@ class Reports(LoginRequiredMixin, TemplateView):
 
             if period:
                 if period == 'week':
-                    start_at = now - timedelta(days=7)
-                    end_at = now - timedelta(days=1)
+                    start_at = now - timedelta(days=6)
+                    end_at = now
                     interval = self.validate_interval(start_at, end_at, interval)
                     charts_data = self.get_charts_data(interval, start_at, end_at)
                 elif period == 'month':
@@ -2467,8 +2467,8 @@ class Reports(LoginRequiredMixin, TemplateView):
                         charts_data = self.get_compare_charts_data(interval, compare)
                     else:
                         interval = 'day'
-                        start_at = now - timedelta(days=7)
-                        end_at = now - timedelta(days=1)
+                        start_at = now - timedelta(days=6)
+                        end_at = now
                         charts_data = self.get_charts_data(interval, start_at, end_at)
                         cd['period'] = 'week'
 

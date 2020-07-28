@@ -18,7 +18,7 @@ def get_days_in_month(dt):
     return monthrange(dt.year, dt.month)[1]
 
 
-def sort_sku_data(all_sku, sku_data, all_link, all_title):
+def sort_sku_data(all_sku, sku_data, all_title, all_link):
     if type(sku_data[0]) == int:
         data = {}
         for i, item in enumerate(sku_data):
