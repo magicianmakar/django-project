@@ -215,7 +215,8 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
         unique_together = ['store_type',
                            'store_id',
                            'store_order_id',
-                           'line_id']
+                           'line_id',
+                           'label']
 
     is_label_printed = models.BooleanField(default=False)
     sale_price = models.IntegerField()

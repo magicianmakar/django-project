@@ -383,7 +383,7 @@ def get_payment_pdf(order):
             i.label.user_supplement.title,
             i.label.sku,
             f'{i.quantity} x ${i.label.user_supplement.cost_price}',
-            "${:.2f}".format(i.amount / 100.),
+            "${:.2f}".format((i.amount * i.quantity) / 100.),
         ])
     line_data.append(['', '', 'Sub Total', order.item_total])
     line_data.append(['', '', 'Shipping Cost', order.shipping_price_string])

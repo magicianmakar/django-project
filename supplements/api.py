@@ -106,7 +106,7 @@ class SupplementsApi(ApiResponseMixin, View):
                         data = {
                             'store': store.id,
                             'order_id': item.store_order_id,
-                            'line_id': item.line_id.split('|')[0],  # Pipe separates bundles
+                            'line_id': item.line_id,
                             'aliexpress_order_id': str(pls_order.get_dropified_source_id()),
                             'source_type': 'supplements'
                         }

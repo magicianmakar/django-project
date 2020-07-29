@@ -1,5 +1,6 @@
 import json
 from unittest.mock import MagicMock, patch
+from django.db.models import F, Sum
 
 from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyProductFactory, ShopifyStoreFactory, UserFactory
 from lib.test import BaseTestCase
@@ -136,7 +137,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
                 'id': line_id,
                 'name': 'Item name',
                 'title': 'Item name',
-                'quantity': 1,
+                'quantity': 3,
                 'product_id': product.shopify_id,
                 'price': 1200,
                 'sku': '123'
@@ -216,6 +217,11 @@ class MakePaymentTestCase(PLSBaseTestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(Order.objects.all().count(), count)
             self.assertEqual(OrderLine.objects.all().count(), count)
+            total_items_amount = OrderLine.objects.aggregate(
+                total=Sum(F('amount') * F('quantity')))['total']
+            total_order_amount = Order.objects.aggregate(
+                total=Sum(F('amount') - F('shipping_price')))['total']
+            self.assertEqual(total_items_amount, total_order_amount)
 
 
 class MakePaymentBundleTestCase(PLSBaseTestCase):
@@ -227,7 +233,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
 
         order_key = 'key'
         order_id = '1234'
-        line_id = 12345678
+        self.line_id = 12345678
 
         line_key = 'line-key'
 
@@ -262,7 +268,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
 
         self.url = '/api/supplements/make-payment'
         self.order_data_ids = [
-            f'{store_id}_{order_id}_{line_id}',
+            f'{store_id}_{order_id}_{self.line_id}',
         ]
 
         self.data = {
@@ -290,7 +296,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
                 'phone': '1234567',
             },
             'line_items': [{
-                'id': line_id,
+                'id': self.line_id,
                 'name': 'Item name',
                 'title': 'Item name',
                 'quantity': 1,
@@ -403,6 +409,9 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(Order.objects.all().count(), count)
             self.assertEqual(OrderLine.objects.all().count(), item_count)
+            line = OrderLine.objects.first()
+            if line is not None:
+                self.assertEqual(line.line_id, str(self.line_id))
 
 
 class OrderLineInfoTestCase(PLSBaseTestCase):

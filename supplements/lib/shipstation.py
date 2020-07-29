@@ -61,7 +61,8 @@ def prepare_shipstation_data(pls_order, order, line_items):
         key = get_shipstation_line_key(pls_order.store_type,
                                        pls_order.store_id,
                                        pls_order.store_order_id,
-                                       item['id'])
+                                       item['id'],
+                                       label.id)
 
         items.append({
             'name': f'Label for {label.user_supplement.title}',

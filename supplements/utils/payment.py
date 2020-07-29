@@ -1,4 +1,3 @@
-import copy
 import json
 from collections import defaultdict
 
@@ -104,18 +103,19 @@ class Util:
 
             for line in lines:
                 line_id = line['id']
+                label = line['label']
                 key = get_shipstation_line_key(store_type,
                                                store_id,
                                                order_id,
-                                               line_id)
+                                               line_id,
+                                               label.id)
                 user_supplement = line['user_supplement']
-                label = line['label']
                 pl_supplement = user_supplement.pl_supplement
                 quantity = int(line['quantity'])
                 item_price = int(float(line['price']) * 100)
 
-                line_amount = int(user_supplement.cost_price * 100) * quantity
-                wholesale_price = int(user_supplement.wholesale_price * 100) * quantity
+                line_amount = int(user_supplement.cost_price * 100)
+                wholesale_price = int(user_supplement.wholesale_price * 100)
                 pl_supplement.inventory -= quantity
                 pl_supplement.save()
 
@@ -203,7 +203,6 @@ class Util:
                 if order_data.get('is_bundle'):
                     bundles = []
                     for b_product in order_data['products']:
-                        line_item = copy.deepcopy(line_item)
                         try:
                             user_supplement = models_user.pl_supplements.get(id=b_product['source_id'])
                         except:
@@ -215,12 +214,13 @@ class Util:
                             bundles = []
                             break
 
-                        line_item['user_supplement'] = user_supplement
-                        line_item['quantity'] = b_product['quantity']
-                        line_item['sku'] = user_supplement.shipstation_sku
-                        line_item['label'] = user_supplement.current_label
-                        line_item['id'] = f"{line_item['id']}|{user_supplement.id}"
-                        bundles.append(line_item)
+                        bundles.append({
+                            **line_item,
+                            'user_supplement': user_supplement,
+                            'label': user_supplement.current_label,
+                            'sku': user_supplement.shipstation_sku,
+                            'quantity': b_product['quantity'],
+                        })
 
                     if len(bundles) == 0:
                         continue

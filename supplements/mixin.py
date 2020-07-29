@@ -1,5 +1,6 @@
 import simplejson as json
 
+from django.db.models import F, Sum
 from django.shortcuts import reverse
 from django.utils.html import format_html
 
@@ -244,8 +245,8 @@ class PLSOrderMixin:
 
     @property
     def item_total(self):
-        amount = sum(self.order_items.values_list('amount', flat=True))
-        return "${:.2f}".format(amount / 100.)
+        result = self.order_items.aggregate(total=Sum(F('amount') * F('quantity')))
+        return "${:.2f}".format(result['total'] / 100.)
 
     @property
     def refund_amount(self):
@@ -297,6 +298,10 @@ class PLSOrderLineMixin:
             store_order_id=order_id,
             line_id__startswith=line_id,
         ).exists())
+
+    @classmethod
+    def get_shipstation_key(cls, store_type, store_id, order_id, line_id, label_id):
+        return f'{store_type}-{store_id}-{order_id}-{line_id}-{label_id}'
 
     def mark_printed(self):
         self.is_label_printed = True
