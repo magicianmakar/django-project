@@ -1971,12 +1971,13 @@ class Reports(LoginRequiredMixin, TemplateView):
                     all_link.append(pl_link)
                 else:
                     sku_data[all_sku.index(sku)] = sku_data[all_sku.index(sku)] + line_item.quantity
-        all_sku, sku_data, all_title, all_link = report.sort_sku_data(
-            all_sku,
-            sku_data,
-            all_title,
-            all_link
-        )
+        if sku_data:
+            all_sku, sku_data, all_title, all_link = report.sort_sku_data(
+                all_sku,
+                sku_data,
+                all_title,
+                all_link
+            )
         data['pls_sku_data'] = {
             'data': sku_data,
             'label_data': all_sku,
@@ -2347,12 +2348,13 @@ class Reports(LoginRequiredMixin, TemplateView):
                 reps = len(all_sku) - len(block_c_data)
                 for i in range(reps):
                     sku_data[block_index].append(0)
-        all_sku, sku_data, all_title, all_link = report.sort_sku_data(
-            all_sku,
-            sku_data,
-            all_title,
-            all_link
-        )
+        if sku_data:
+            all_sku, sku_data, all_title, all_link = report.sort_sku_data(
+                all_sku,
+                sku_data,
+                all_title,
+                all_link
+            )
         data['pls_sku_data'] = {
             'data': sku_data,
             'label_data': all_sku,
