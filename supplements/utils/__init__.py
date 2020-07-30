@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.shortcuts import reverse
 
 from shopified_core.utils import do_create_aws_s3_context, send_email_from_template
 
@@ -19,6 +20,8 @@ def send_email_against_comment(comment):
     template = 'label_comment.html'
 
     label = comment.label
+    kwargs = {'supplement_id': label.user_supplement.id}
+    history_url = reverse('pls:label_history', kwargs=kwargs)
 
     subject = f'New comment added to label: {label.label_id_string}.'
     if comment.new_status == label.APPROVED:
@@ -27,7 +30,10 @@ def send_email_against_comment(comment):
     elif comment.new_status == label.REJECTED:
         subject = f'Label {label.label_id_string} was rejected.'
 
-    data = dict(comment=comment)
+    data = dict(
+        comment=comment,
+        product_url=f'{settings.APP_URL}{history_url}'
+    )
     recipient = label.user_supplement.user.email
 
     return send_email_from_template(template, subject, recipient, data)

@@ -2,8 +2,10 @@
 
 {% block email-content %}
 
-    <p>New comment added to label {{ comment.label.label_id_string }}:</p>
+    <p>New comment added to label {{ comment.label.label_id_string }}</p>
 
     <p>{{ comment.text|safe }}</p>
+
+    <p><a href="{{ product_url }}">View Product</a></p>
 
 {% endblock %}
