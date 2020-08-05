@@ -586,6 +586,10 @@ def sync_shopify_product_quantities(self, product_id):
                 variant_title = ';'.join(f"{option['option_title']}" for option in parse_supplier_sku(sku))
                 parsed_variant_title = ';'.join(f"{option['title']}" for option in variants_map[str(product_data['variants'][idx]['id'])])
 
+                # fix for shopify product with no variants (default variant)
+                if parsed_variant_title == "Default Title":
+                    parsed_variant_title = ""
+
                 if parsed_variant_title == variant_title:
                     product.set_variant_quantity(quantity=variant['availabe_qty'], variant=product_data['variants'][idx])
                     time.sleep(0.5)
