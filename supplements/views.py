@@ -1448,7 +1448,7 @@ class GenerateLabel(LoginRequiredMixin, View):
 class GeneratePaymentPDF(LoginRequiredMixin, View):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
