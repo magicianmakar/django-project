@@ -33,6 +33,8 @@ from shopified_core.shipping_helper import (
     fix_br_address,
     fix_fr_address,
     aliexpress_country_code_map,
+    CityName,
+    valide_aliexpress_province,
 )
 
 
@@ -658,3 +660,55 @@ class GetNextPageTest(BaseTestCase):
         ret_url = get_next_page_from_request(self.request, 1)
         self.assertIn('query_address=US', ret_url)
         self.assertIn('query_address=GB', ret_url)
+
+
+class CityNameTestCase(BaseTestCase):
+    def test_must_have_name_property(self):
+        self.assertEqual(CityName('Saint Louis').name, 'Saint Louis')
+
+    def test_must_return_true_if_starts_with_the_is_true(self):
+        self.assertTrue(CityName('The Bronx').starts_with_the)
+
+    def test_without_the_must_return_name_without_leading_the(self):
+        self.assertEqual(CityName('The Bronx').without_leading_the, 'Bronx')
+
+    def test_with_other_saint_title_version_must_be_correct_for_st(self):
+        self.assertEqual(CityName('St Louis').with_other_saint_title_version, 'Saint Louis')
+
+    def test_with_other_saint_title_version_must_be_correct_for_st_with_dot(self):
+        self.assertEqual(CityName('St. Louis').with_other_saint_title_version, 'Saint Louis')
+
+    def test_with_other_saint_title_version_must_be_correct_for_saint(self):
+        self.assertEqual(CityName('Saint Louis').with_other_saint_title_version, 'St Louis')
+
+    def test_with_other_saint_title_version_must_be_correct_for_lowercase_st(self):
+        self.assertEqual(CityName('st louis').with_other_saint_title_version, 'Saint louis')
+
+    def test_with_other_saint_title_version_must_be_correct_for_lowercase_st_with_dot(self):
+        self.assertEqual(CityName('st. louis').with_other_saint_title_version, 'Saint louis')
+
+    def test_with_other_saint_title_version_must_be_correct_for_lowercase_saint(self):
+        self.assertEqual(CityName('saint louis').with_other_saint_title_version, 'St louis')
+
+    def test_starting_saint_title_must_be_correct_for_st(self):
+        self.assertEqual(CityName('St Louis').starting_saint_title, 'St')
+
+    def test_starting_saint_title_must_be_correct_for_st_with_dot(self):
+        self.assertEqual(CityName('St. Louis').starting_saint_title, 'St')
+
+    def test_starting_saint_title_must_be_correct_for_saint(self):
+        self.assertEqual(CityName('Saint Louis').starting_saint_title, 'Saint')
+
+
+class ValideAliExpressProvinceTestCase(BaseTestCase):
+    def test_must_correct_cities_with_leading_thes(self):
+        valid, correct = valide_aliexpress_province('US', 'New York', 'The Bronx', True)
+        self.assertEqual(correct['city'], 'Bronx')
+
+    def test_must_correct_cities_with_st(self):
+        valid, correct = valide_aliexpress_province('US', 'Missouri', 'St Louis', True)
+        self.assertEqual(correct['city'], 'Saint louis')
+
+    def test_must_correct_cities_with_st_dot(self):
+        valid, correct = valide_aliexpress_province('US', 'Missouri', 'St. Louis', True)
+        self.assertEqual(correct['city'], 'Saint louis')
