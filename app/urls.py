@@ -34,6 +34,7 @@ urlpatterns = [
     url(r'^dropified-product/', include(('dropified_product.urls', 'dropified_product'), 'dropified_product')),
     url(r'^admin/', admin.site.urls),
     url(r'^tapfiliate/', include('tapfiliate.urls')),
+    url(r'^addons/', include('addons_core.urls')),
 ]
 
 if settings.DEBUG:

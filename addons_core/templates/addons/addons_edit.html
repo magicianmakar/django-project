@@ -1,0 +1,137 @@
+{% extends "addons/addons_base.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+    <div class="row m-b-xl">
+        <div class="col-md-8 col-md-offset-2 text-center">
+            <h1 class="text-bold">Edit <a href="{% url 'addons.details_view' slug=object.slug %}">{{ object.title }}</a> Addon</h1>
+        </div>
+    </div>
+
+    <input id="addon-id" type="hidden" value="{{ object.id }}" />
+    <div class="row">
+        <div class="form-group col-md-8 col-md-offset-2">
+            <label for="addon-title">Title</label>
+            <input class="form-control" id="addon-title" value="{{ object.title|default:'' }}" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group col-md-8 col-md-offset-2">
+            <label for="product-title">Short Description</label>
+            <textarea class="form-control" id="addon-short">{{ object.short_description|default:'' }}</textarea>
+        </div>
+
+        <div class="form-group col-md-8 col-md-offset-2">
+            <label for="product-title">Full Description</label>
+            <textarea class="form-control" id="addon-description" name="addon-description">{{ object.description|default:'' }}</textarea>
+        </div>
+    </div>
+
+    <div class="row m-t-xl">
+        <div class="form-group col-md-8 col-md-offset-2">
+            <label for="product-title">Key Benfits</label>
+        </div>
+
+    <div class="row">
+        {% for benifit in object.get_key_benfits %}
+            <div class="form-group {% if forloop.first %}col-md-3 col-md-offset-2{% else %}col-md-3{% endif %}">
+                {% include 'addons/partials/key_benifit.html' with benifit=benifit benifit_num=forloop.counter0 only %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="row m-t-xl">
+        <div class="form-group col-md-8 col-md-offset-2">
+            <label for="addon-icon">Icon URL</label>
+            <input class="form-control" id="addon-icon" value="{{ object.icon_url|default:'' }}" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group col-md-8 col-md-offset-2">
+            <label for="addon-banner">Banner Image URL</label>
+            <input class="form-control" id="addon-banner" value="{{ object.banner_url|default:'' }}" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="form-group col-md-8 col-md-offset-2">
+            <label for="addon-youtube">Youtube URL</label>
+            <input class="form-control" id="addon-youtube" value="{{ object.youtube_url|default:'' }}" />
+        </div>
+    </div>
+
+    <div class="row m-t-xl">
+        <div class="form-group col-md-3 col-md-offset-2">
+            <label for="addon-price">Price</label>
+            <div class="input-group">
+                <span class="input-group-addon">$</span>
+                <input class="form-control" id="addon-price" value="{{ object.monthly_price|default:'' }}" />
+            </div>
+        </div>
+            <div class="form-group col-md-3">
+            <label for="addon-status">Status</label>
+                <select id="addon-status" class="form-control">
+                    <option value="published" {% if object.hidden %}selected{% endif %}>Published</option>
+                    <option value="draft" {% if not object.hidden %}selected{% endif %}>Draft</option>
+                </select>
+        </div>
+    </div>
+
+    <div class="row m-t-xl">
+        <div class="form-group col-md-1 col-md-offset-2">
+            <a id="addon-edit-save" href="#" class="btn btn-success btn-lg btn-block">
+                <i class="fa fa-save "></i> Save
+            </a>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block extracss %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.css" integrity="sha512-LhZScx/m/WBAAHyiPnM+5hcsmCMjDDOgOqoT9wyIcs/QUPm6YxVNGZjQG5iP8dhWMWQAcUUTE3BkshtrlGbv2Q==" crossorigin="anonymous" />
+
+    <style>
+        .hero-banner {
+            text-align: center;
+            margin-top: 65px;
+        }
+
+        .hero-banner h1 {
+            color: black;
+            font-family: "Source Serif Pro", serif;
+            font-size: 50px;
+            font-weight: 600;
+        }
+
+        .text-bold {
+            font-weight: 900;
+            color: black;
+        }
+
+        .swal2-popup {
+            transform: scale(1.7);
+        }
+        .swal2-show {
+            -webkit-animation: none !important;
+            animation: none !important;
+        }
+    </style>
+{% endblock %}1
+
+{% block extrajs %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.js" integrity="sha512-aDa+VOyQu6doCaYbMFcBBZ1z5zro7l/aur7DgYpt7KzNS9bjuQeowEX0JyTTeBTcRd0wwN7dfg5OThSKIWYj3A==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>
+    <script type="text/javascript" src="{% static 'addons/js/addons.js' %}"></script>
+
+    <script>
+        $(function () {
+            setup_full_editor('addon-description');
+        });
+    </script>
+{% endblock %}

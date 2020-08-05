@@ -25,7 +25,7 @@ from shopified_core.utils import (
     using_store_db,
 )
 from product_alerts.utils import monitor_product
-from shopified_core.decorators import add_to_class, upsell_page_permissions
+from shopified_core.decorators import add_to_class
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 
 SHOPIFY_API_VERSION = "2020-04"
@@ -116,6 +116,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, related_name='profile', on_delete=models.CASCADE)
     plan = models.ForeignKey('GroupPlan', null=True, on_delete=models.SET_NULL)
     bundles = models.ManyToManyField('FeatureBundle', blank=True)
+    addons = models.ManyToManyField('addons_core.Addon', blank=True)
 
     subuser_parent = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='subuser_parent')
     subuser_stores = models.ManyToManyField('ShopifyStore', blank=True, related_name='subuser_stores')
@@ -420,9 +421,10 @@ class UserProfile(models.Model):
                 if i not in perms:
                     perms.append(i)
 
-        for i in upsell_page_permissions:
-            if i not in perms:
-                perms.append(i)
+        for addon in self.addons.all():
+            for i in addon.permissions.values_list('name', flat=True):
+                if i not in perms:
+                    perms.append(i)
 
         return perms
 
@@ -690,10 +692,7 @@ class UserProfile(models.Model):
 
     @property
     def is_black(self):
-        if self.is_subuser:
-            return self.subuser_parent.profile.is_black
-        else:
-            return self.plan.is_black
+        return self.can('pls.use')
 
 
 class AddressBase(models.Model):
@@ -2110,10 +2109,6 @@ class GroupPlan(models.Model):
     def is_upgradable(self):
         """ For plans that can be upgraded to a better version """
         return self.slug in ['builder', 'builder-yearly', 'builder-shopify', 'builder-yearly-shopify']
-
-    @property
-    def is_black(self):
-        return 'black' in self.slug
 
     @property
     def large_badge_image(self):

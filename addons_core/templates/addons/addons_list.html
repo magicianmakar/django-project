@@ -1,0 +1,75 @@
+{% extends "addons/addons_base.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+    <div class="row gray-bg" style="min-height: 300px">
+        <div class="col-md-12 hero-banner">
+            <h1>We Created The Foundation.</h1>
+            <h1>What Do You Want to Add On Next?</h1>
+            <h3>Try any of our add-ons for free with our 7-day free trial!</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h1 class="text-bold">Our most popular addons</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <div class="row">
+                {% for item in object_list %}
+                    {% include 'addons/partials/addon_card.html' %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block extracss %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.css" integrity="sha512-LhZScx/m/WBAAHyiPnM+5hcsmCMjDDOgOqoT9wyIcs/QUPm6YxVNGZjQG5iP8dhWMWQAcUUTE3BkshtrlGbv2Q==" crossorigin="anonymous" />
+
+    <style>
+        .hero-banner {
+            text-align: center;
+            margin-top: 65px;
+        }
+
+        .hero-banner h1 {
+            color: black;
+            font-family: "Source Serif Pro", serif;
+            font-size: 50px;
+            font-weight: 600;
+        }
+
+        .text-bold {
+            font-weight: 900;
+            color: black;
+        }
+
+        .swal2-popup {
+            transform: scale(1.7);
+        }
+        .swal2-show {
+            -webkit-animation: none !important;
+            animation: none !important;
+        }
+        .gray-bg {
+            background: url("https://cdn.shopify.com/shopifycloud/shopify_app_store/assets/v2/backgrounds/hero-073ea0d17442ccee222f7e710d062b8c05b22f59910e3aa366fa21b586660c0d.svg") no-repeat top left;
+            background-size: cover;
+        }
+
+    </style>
+{% endblock %}1
+
+{% block extrajs %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.js" integrity="sha512-aDa+VOyQu6doCaYbMFcBBZ1z5zro7l/aur7DgYpt7KzNS9bjuQeowEX0JyTTeBTcRd0wwN7dfg5OThSKIWYj3A==" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="{% static 'addons/js/addons.js' %}"></script>
+{% endblock %}

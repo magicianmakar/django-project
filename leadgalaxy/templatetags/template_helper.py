@@ -9,7 +9,6 @@ from shopified_core.utils import (
     decode_params,
     app_link as utils_app_link,
     base64_encode,
-    slugify_menu,
 )
 
 import simplejson as json
@@ -369,9 +368,6 @@ def force_https(url):
         url = url[0]
 
     return re.sub(r'https?://', '//', url)
-
-
-register.filter(slugify_menu)
 
 
 @register.filter()

@@ -91,7 +91,6 @@ def home_page_view(request):
         'markup_rules': markup_rules,
         'settings_tab': request.path == '/settings',
         'page': 'index',
-        'selected_menu': 'account:stores',
         'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
         'breadcrumbs': ['Stores'],
         'user_goals': user_goals,

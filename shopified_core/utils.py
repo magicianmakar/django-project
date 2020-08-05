@@ -873,10 +873,6 @@ def get_first_valid_option(most_commons, valid_options):
             return option
 
 
-def slugify_menu(selected_menu):
-    return selected_menu.replace(':', '-').replace('_', '-')
-
-
 def encode_api_token(data):
     token = jwt.encode(data, settings.API_SECRECT_KEY, algorithm='HS256')
     if isinstance(token, bytes):

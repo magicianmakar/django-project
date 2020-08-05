@@ -1,0 +1,19 @@
+{% if item.id in user_addons %}
+    <button class="btn {% if details %}btn-outline btn-danger btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-uninstall"
+            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Uninstalling"
+            data-title="{{ item.title }}"
+            data-endpoint='{"name": "Uninstall Addon", "target": "uninstall"}'
+            data-addon="{{ item.id }}"
+            {% if details %}style="border-radius:10px"{% endif %}>
+        <i class="fa fa-minus {% if not details %}text-danger{% endif %}"></i> Uninstall
+    </button>
+{% else %}
+    <button class="btn {% if details %}btn-success btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-install"
+            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Installing"
+            data-title="{{ item.title }}"
+            data-endpoint='{"name": "Install Addon", "target": "install"}'
+            data-addon="{{ item.id }}"
+            {% if details %}style="border-radius:10px"{% endif %}>
+        <i class="fa fa-plus {% if not details %}{% endif %}"></i> Install
+    </button>
+{% endif %}

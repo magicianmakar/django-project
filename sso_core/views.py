@@ -53,7 +53,7 @@ def validate(request):
         'email': user.email,
         'first_name': user.first_name,
         'last_name': user.last_name,
-        'is_black': user.profile.is_black or user.is_staff,
+        'is_black': user.can('pls.use') or user.is_staff,
     })
 
     return JsonResponse(info)

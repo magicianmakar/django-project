@@ -46,15 +46,8 @@ def view(request, id_article=None, slug_article=None):
         # Update this way so we don't change updated_at
         Article.objects.filter(id=article.id).update(views=article.views + 1)
 
-    selected_menu = ''
-    if not article.show_header:
-        selected_menu = slug_article.split('-')
-        selected_menu_item = '_'.join(selected_menu[1:])
-        selected_menu = f'{selected_menu[0]}:{selected_menu_item}'
-
     return render(request, 'article/view.html', {
         'article': article,
-        'selected_menu': selected_menu,
     })
 
 
@@ -76,13 +69,8 @@ def content(request, slug_article=None):
         # Update this way so we don't change updated_at
         Article.objects.filter(id=article.id).update(views=article.views + 1)
 
-    selected_menu = slug_article.split('-')
-    selected_menu_item = '_'.join(selected_menu[1:])
-    selected_menu = f'{selected_menu[0]}:{selected_menu_item}'
-
     return render(request, 'article/view.html', {
         'article': article,
-        'selected_menu': selected_menu,
     })
 
 
@@ -140,17 +128,10 @@ def edit(request, article_id):
     for i in ArticleTag.objects.all():
         tags.append(i.title)
 
-    selected_menu = ''
-    if not article.show_header:
-        selected_menu = article.slug.split('-')
-        selected_menu_item = '_'.join(selected_menu[1:])
-        selected_menu = f'{selected_menu[0]}:{selected_menu_item}'
-
     return render(request, 'article/submit.html', {
         'article': article,
         'tags': json.dumps(tags),
         'form': form,
-        'selected_menu': selected_menu,
     })
 
 

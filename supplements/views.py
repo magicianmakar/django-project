@@ -83,7 +83,7 @@ class Index(common_views.IndexView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -240,7 +240,7 @@ class ProductEdit(Product):
 class SendToStoreMixin(common_lib_views.SendToStoreMixin):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -358,7 +358,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -545,7 +545,7 @@ class UserSupplementView(Supplement):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -673,7 +673,7 @@ class LabelHistory(UserSupplementView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -798,7 +798,7 @@ class AdminLabelHistory(LabelHistory):
 class MySupplements(LoginRequiredMixin, View):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -981,7 +981,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1188,7 +1188,7 @@ class MyOrderDetail(OrderDetailMixin):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1202,7 +1202,7 @@ class MyOrders(common_views.OrderView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1474,7 +1474,7 @@ class Billing(LoginRequiredMixin, TemplateView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         user = request.user
-        if (user.profile.is_black or user.can('pls.use')) and not user.is_subuser:
+        if user.can('pls.use') and not user.is_subuser:
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1560,7 +1560,7 @@ class Billing(LoginRequiredMixin, TemplateView):
 class RemoveCreditCard(LoginRequiredMixin, View):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()

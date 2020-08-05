@@ -96,7 +96,6 @@ def index(request):
             twilio_phone_number.sms_allowed = False
 
     return render(request, 'phone_automation/index.html', {
-        'selected_menu': 'tools:phone_automation:index',
         'page': ('phone_automation', 'phone_automation_index'),
         'twilio_phone_numbers': twilio_phone_numbers.all(),
         'twilio_automations': twilio_automations.all(),
@@ -116,7 +115,6 @@ def callflows_index(request):
     twilio_automations = user.twilio_automations
 
     return render(request, 'phone_automation/automations_index.html', {
-        'selected_menu': 'tools:phone_automation:index',
         'page': ('phone_automation', 'phone_automations_index'),
         'twilio_automations': twilio_automations.all(),
         'companies': user.twilio_companies.all(),
@@ -195,7 +193,6 @@ def call_logs(request):
     charts_data = {"last_7_days": last_7_days}
 
     return render(request, 'phone_automation/call_logs.html', {
-        'selected_menu': 'tools:phone_automation:activity',
         'page': ('phone_automation', 'phone_automation_call_logs'),
         'twilio_logs': twilio_logs,
         'twilio_stats': twilio_stats,
@@ -377,7 +374,6 @@ def provision(request):
 
     return render(request, 'phone_automation/provision.html', {
         'page': 'phone_automation',
-        'selected_menu': 'tools:phone_automation:index',
         'show_filter': show_filter,
         'form': form,
         'twilio_phone_numbers_pool': twilio_phone_numbers_pool,
@@ -407,7 +403,6 @@ def provision_edit(request, twilio_phone_number_id):
         form = TwilioPhoneNumberForm(instance=twilio_phone_number, user=user)
 
     return render(request, 'phone_automation/provision_edit.html', {
-        'selected_menu': 'tools:phone_automation',
         'page': 'phone_automation',
         'form': form,
         'twilio_phone_number': twilio_phone_number,
@@ -561,7 +556,6 @@ def automate(request, twilio_automation_id=None):
     return render(request, 'phone_automation/automate.html', {
         'automation': twilio_automation,
         'page': 'phone_automation',
-        'selected_menu': 'tools:phone_automation',
         'breadcrumbs': [{'title': 'CallFlex', 'url': reverse('phone_automations_index')}, 'Automate'],
     })
 
@@ -815,7 +809,6 @@ def companies_index(request):
     twilio_companies = user.twilio_companies
 
     return render(request, 'phone_automation/companies_index.html', {
-        'selected_menu': 'tools:phone_automation:account',
         'page': ('phone_automation', 'phone_automation_account', 'phone_automation_companies_index'),
         'twilio_companies': twilio_companies.all(),
         'breadcrumbs': [{'title': 'CallFlex', 'url': reverse('phone_automation_index')}, 'My Companies'],
@@ -851,7 +844,6 @@ def companies_edit(request, company_id=False):
         form = TwilioCompanyForm(instance=twilio_company)
 
     return render(request, 'phone_automation/company_form.html', {
-        'selected_menu': 'tools:phone_automation:account',
         'page': ('phone_automation', 'phone_automation_companies_index'),
         'twilio_company': twilio_company,
         'form': form,
@@ -923,7 +915,6 @@ def reports_numbers(request):
         capture_exception()
 
     return render(request, 'phone_automation/reports_numbers.html', {
-        'selected_menu': 'tools:phone_automation:reports',
         'page': ('phone_automation', 'phone_automation_reports', 'phone_automation_reports_numbers'),
         'twilio_logs': twilio_phone_numbers,
         'companies': companies,
@@ -977,7 +968,6 @@ def reports_companies(request):
         capture_exception()
 
     return render(request, 'phone_automation/reports_companies.html', {
-        'selected_menu': 'tools:phone_automation:reports',
         'page': ('phone_automation', 'phone_automation_reports', 'phone_automation_reports_companies'),
         'twilio_logs': twilio_companies,
         'breadcrumbs': [{'title': 'CallFlex', 'url': reverse('phone_automation_index')}, 'Reports by numbers'],
@@ -994,7 +984,6 @@ def notifications_alerts(request):
     alerts = user.twilio_alerts.all()
 
     return render(request, 'phone_automation/notifications_alerts.html', {
-        'selected_menu': 'tools:phone_automation:settings',
         'page': ('phone_automation', 'phone_automation_notifications', 'phone_automation_notifications_alerts'),
         'alerts': alerts,
         'companies': user.twilio_companies.all(),
@@ -1043,7 +1032,6 @@ def notifications_alert_edit(request, company_id=False, alert_id=False):
         form = TwilioAlertForm(instance=twilio_alert)
 
     return render(request, 'phone_automation/alert_form.html', {
-        'selected_menu': 'tools:phone_automation:settings',
         'page': ('phone_automation', 'phone_automation_notifications', 'phone_automation_notifications_alerts'),
         'twilio_alert': twilio_alert,
         'form': form,
@@ -1074,7 +1062,6 @@ def notifications_summaries(request):
     summaries = user.twilio_summaries.all()
 
     return render(request, 'phone_automation/notifications_summaries.html', {
-        'selected_menu': 'tools:phone_automation:settings',
         'page': ('phone_automation', 'phone_automation_notifications', 'phone_automation_notifications_summaries'),
         'summaries': summaries,
         'companies': user.twilio_companies.all(),
@@ -1124,7 +1111,6 @@ def notifications_summary_edit(request, company_id=False, summary_id=False):
         form = TwilioSummaryForm(instance=twilio_summary)
 
     return render(request, 'phone_automation/summary_form.html', {
-        'selected_menu': 'tools:phone_automation:settings',
         'page': ('phone_automation', 'phone_automation_notifications', 'phone_automation_notifications_summaries'),
         'twilio_summary': twilio_summary,
         'form': form,

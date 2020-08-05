@@ -55,13 +55,6 @@
           font-weight: normal;
           font-style: normal;
         }
-
-        {# Dropified Black #}
-        {% if user.profile.is_black %}
-        .navbar-default {
-            background-color: #000000ad !important;
-        }
-        {% endif %}
     </style>
 
     <link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700,700i|Roboto+Slab:400,700" rel="stylesheet">
@@ -121,7 +114,7 @@
       {% include 'side_navigation.html' %}
     {% endblock %}
 
-   <div id="page-wrapper" class="gray-bg">
+   <div {% block page-wrapper-div %}id="page-wrapper" class="gray-bg"{% endblock %}>
         {% block nav %}
         <div class="row border-bottom page-search-nav">
             <nav class="navbar navbar-static-top white-bg" role="navigation" style="margin-bottom: 0">
@@ -132,13 +125,6 @@
                     {% endblock search-form %}
                 </div>
                 <ul class="nav navbar-top-links navbar-right">
-                    {% if selected_menu and selected_menu in upsell_pages and request.user.is_staff %}
-                    <li>
-                        <span>
-                            <a href="{% url 'article-content-page' slug_article=selected_menu|slugify_menu %}" id="edit-upsell" class="btn btn-primary top-button">See Upsell Page</a>
-                        </span>
-                    </li>
-                    {% endif %}
                     <li>
                         <span class="m-r-sm text-muted welcome-message">
                             {% if request.user.is_authenticated %}

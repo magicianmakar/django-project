@@ -71,7 +71,6 @@ class ProfitDashboardMixin():
 
         context = {
             'page': 'profit_dashboard',
-            'selected_menu': 'business:profit_dashboard',
             'base_template': self.base_template,
             'store': store,
             'store_type': self.store_type,

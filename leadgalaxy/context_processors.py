@@ -8,7 +8,6 @@ import arrow
 import datetime
 
 from shopified_core.permissions import can_add_store
-from shopified_core.decorators import upsell_pages
 from leadgalaxy.side_menu import (
     get_menu_structure,
     get_menu_item_data,
@@ -42,7 +41,6 @@ def extra_bundles(request):
         'tos_accept': tos_accept,
         'dropified_challenge': dropified_challenge,
         'new_menu_active': new_menu_active,
-        'upsell_pages': upsell_pages
     }
 
 

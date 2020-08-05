@@ -53,7 +53,6 @@ def index(request):
 
     error = None
     current_page = ('youtube_related' if 'r' in request.GET else 'youtube_search')
-    selected_menu = ('tools:youtube:related' if 'r' in request.GET else 'tools:youtube:search')
 
     breadcrumbs = [
         {'url': reverse('youtube_ads.views.index'), 'title': 'TubeHunt'},
@@ -101,7 +100,6 @@ def index(request):
                 'query': query,
                 'related': is_related,
                 'page': current_page,
-                'selected_menu': selected_menu,
                 'offset_next': videos[-1]['index'],
                 'offset_prev': request.GET.get('op', videos[0]['index'] - 1),
                 'search_next': search_response.get('nextPageToken'),
@@ -124,7 +122,6 @@ def index(request):
     return render(request, 'youtube_ads/index.html', {
         'related': 'r' in request.GET,
         'page': current_page,
-        'selected_menu': selected_menu,
         'error': error,
         'breadcrumbs': breadcrumbs,
     })
@@ -165,7 +162,6 @@ def channels(request):
                 'channels': channels,
                 'query': request.GET.get('q'),
                 'page': 'youtube_channels',
-                'selected_menu': 'tools:youtube:channels',
             })
 
         except Exception as e:
@@ -181,7 +177,6 @@ def channels(request):
         'channels': {},
         'query': '',
         'page': 'youtube_channels',
-        'selected_menu': 'tools:youtube:channels',
         'error': error,
         'breadcrumbs': breadcrumbs,
     })
@@ -193,7 +188,6 @@ def auth(request):
     return render(request, 'youtube_ads/auth.html', {
         'oauth_link': youtube.flow.step1_get_authorize_url(),
         'page': 'youtube_search',
-        'selected_menu': 'tools:youtube:search',
     })
 
 
@@ -217,7 +211,6 @@ def lists(request):
         'lists': lists,
         'breadcrumbs': breadcrumbs,
         'page': 'youtube_lists',
-        'selected_menu': 'tools:youtube:lists',
     })
 
 
@@ -248,7 +241,6 @@ def list_detail(request, pk):
         'video_list': video_list,
         'videos': videos,
         'page': page,
-        'selected_menu': 'tools:youtube:lists',
     }
 
     return render(request, 'youtube_ads/list_detail.html', context)

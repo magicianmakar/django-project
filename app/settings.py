@@ -80,6 +80,7 @@ INSTALLED_APPS = (
     'sso_core',
     'goals',
     'metrics',
+    'addons_core',
 
     'commercehq_core',
     'woocommerce_core',
@@ -181,6 +182,7 @@ DROPIFIED_API = {
     'metrics': 'metrics.api.MetricsApi',
     'prints': 'prints.api.PrintsApi',
     'product_common': 'product_common.api.ProductCommonApi',
+    'addons': 'addons_core.api.AddonsApi',
 }
 
 # Database

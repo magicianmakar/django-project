@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block nav %}
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="{% url 'addons.list_view' %}">
+                    <img style="max-width:125px" src="{% static 'dropified-logo.png' %}" alt="Dropified">
+                </a>
+            </div>
+            <a class="btn btn-success btn-rounded navbar-btn navbar-right m-l" href="#">My Account</a>
+            <a id="add-addon-btn" class="btn btn-success btn-rounded navbar-btn navbar-right" href="#"><i class="fa fa-plus"></i> Add Addon</a>
+            <form class="navbar-form navbar-right" action="/action_page.php">
+                <div class="form-group">
+                    <input type="text" class="form-control" placeholder="Search" style="border-radius:25px">
+                </div>
+            </form>
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="#">Categories</a></li>
+                <li><a href="#">FAQs</a></li>
+            </ul>
+        </div>
+    </nav>
+{% endblock %}
+{% block breadcrumb-area %} {% endblock %}
+{% block main-nav %}{% endblock %}
+
+{% block page-wrapper-div %}id="page-wrapper" class="white-bg" style="margin: initial"{% endblock %}

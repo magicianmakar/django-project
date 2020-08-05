@@ -11,6 +11,5 @@ def index(request):
 
     return render(request, 'aliextractor/index.html', {
         'page': 'aliextractor',
-        'selected_menu': 'tools:aliextractor',
         'breadcrumbs': [{'title': 'AliExtractor', 'url': reverse('aliextractor_index')}, 'Dashboard'],
     })

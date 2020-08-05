@@ -81,7 +81,7 @@ def product_alerts(request):
     if not request.user.can('price_changes.use'):
         return render(request, 'groovekart/upgrade.html')
 
-    show_hidden = True if request.GET.get('hidden') else False
+    show_hidden = bool(request.GET.get('hidden'))
 
     product = request.GET.get('product')
     if product:
@@ -193,7 +193,6 @@ def product_alerts(request):
         'paginator': paginator,
         'current_page': page,
         'page': 'product_alerts',
-        'selected_menu': 'products:alerts',
         'store': store,
         'category': category,
         'product_type': product_type,
@@ -216,7 +215,6 @@ class ProductsList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['breadcrumbs'] = [{'title': 'Products', 'url': reverse('gkart:products_list')}]
-        context['selected_menu'] = 'products:all'
 
         if self.request.GET.get('store', 'n') == 'n':
             context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('gkart:products_list') + '?store=n'})
@@ -250,7 +248,6 @@ class ProductDetailView(DetailView):
         context['groovekart_product'] = self.object.sync() if self.object.source_id else None
         context['product_data'] = self.object.parsed
         context['breadcrumbs'] = [{'title': 'Products', 'url': products_path}, self.object.title]
-        context['selected_menu'] = 'products:all'
 
         if self.object.store:
             store_title = self.object.store.title
@@ -306,7 +303,6 @@ class BoardsList(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['breadcrumbs'] = ['Boards']
-        context['selected_menu'] = 'products:boards'
 
         return context
 
@@ -339,7 +335,6 @@ class BoardDetailView(DetailView):
         context['products'] = page
         context['current_page'] = page
         context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('gkart:boards_list')}, self.object.title]
-        context['selected_menu'] = 'products:boards'
 
         return context
 
@@ -466,7 +461,6 @@ class OrdersList(ListView):
         default_date_range = self.get_default_date_range()
         context['created_at_daterange'] = self.request.GET.get('created_at_daterange', default_date_range)
 
-        context['selected_menu'] = 'orders:all'
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},
             {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)},
@@ -894,7 +888,6 @@ class OrdersTrackList(ListView):
             {'title': 'Tracking', 'url': reverse('gkart:orders_track')},
             {'title': store.title, 'url': '{}?store={}'.format(reverse('gkart:orders_list'), store.id)},
         ]
-        context['selected_menu'] = 'orders:tracking'
 
         sync_delay_notify_days = safe_int(self.request.user.get_config('sync_delay_notify_days'))
         sync_delay_notify_highlight = self.request.user.get_config('sync_delay_notify_highlight')
@@ -1130,7 +1123,6 @@ class ProductMappingView(DetailView):
         context['product_suppliers'] = self.get_product_suppliers(product)
         context['current_supplier'] = current_supplier = self.get_current_supplier(product)
         context['variants_map'] = self.get_variants_map(groovekart_product, product, current_supplier)
-        context['selected_menu'] = 'products:all'
 
         return context
 
@@ -1184,7 +1176,6 @@ class MappingSupplierView(DetailView):
             {'title': product.title, 'url': reverse('gkart:product_detail', args=[product.id])},
             'Advanced Mapping'
         ]
-        context['selected_menu'] = 'products:all'
 
         self.add_supplier_info(groovekart_product.get('variants', []), suppliers_map)
 
@@ -1228,7 +1219,6 @@ class MappingBundleView(DetailView):
             'product_id': product.id,
             'product': product,
             'bundle_mapping': bundle_mapping,
-            'selected_menu': 'products:all',
         })
 
         return context

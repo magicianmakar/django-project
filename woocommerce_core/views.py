@@ -76,9 +76,9 @@ from . import utils
 @login_required
 def product_alerts(request):
     if not request.user.can('price_changes.use'):
-        return render(request, 'upgrade.html', {'selected_menu': 'products:alerts'})
+        return render(request, 'upgrade.html')
 
-    show_hidden = True if request.GET.get('hidden') else False
+    show_hidden = bool(request.GET.get('hidden'))
 
     product = request.GET.get('product')
     if product:
@@ -205,7 +205,6 @@ def product_alerts(request):
         'category': category,
         'product_type': product_type,
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
-        'selected_menu': 'products:alerts'
     })
 
 
@@ -355,7 +354,6 @@ class ProductsList(ListView):
         context = super(ProductsList, self).get_context_data(**kwargs)
 
         context['breadcrumbs'] = [{'title': 'Products', 'url': reverse('woo:products_list')}]
-        context['selected_menu'] = 'products:all'
 
         if self.request.GET.get('store', 'n') == 'n':
             context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('woo:products_list') + '?store=n'})
@@ -396,7 +394,6 @@ class ProductDetailView(DetailView):
 
         context['product_data'] = self.object.parsed
         context['breadcrumbs'] = [{'title': 'Products', 'url': products}, self.object.title]
-        context['selected_menu'] = 'products:all'
 
         if self.object.store:
             store_title = self.object.store.title
@@ -479,7 +476,6 @@ class ProductMappingView(DetailView):
         context['product_suppliers'] = self.get_product_suppliers(product)
         context['current_supplier'] = current_supplier = self.get_current_supplier(product)
         context['variants_map'] = self.get_variants_map(woocommerce_product, product, current_supplier)
-        context['selected_menu'] = 'products:all'
 
         return context
 
@@ -538,7 +534,6 @@ class MappingSupplierView(DetailView):
             {'title': product.title, 'url': reverse('woo:product_detail', args=[product.id])},
             'Advanced Mapping'
         ]
-        context['selected_menu'] = 'products:all'
 
         self.add_supplier_info(woocommerce_product.get('variants', []), suppliers_map)
 
@@ -584,7 +579,6 @@ class MappingBundleView(DetailView):
             'product_id': product.id,
             'product': product,
             'bundle_mapping': bundle_mapping,
-            'selected_menu': 'products:all',
         })
 
         return context
@@ -630,7 +624,6 @@ class VariantsEditView(DetailView):
         context['store'] = self.object.store
         context['product_id'] = self.object.source_id
         context['page'] = 'product'
-        context['selected_menu'] = '3'
 
         context['breadcrumbs'] = [
             {'title': 'Products', 'url': reverse('woo:products_list')},
@@ -712,7 +705,6 @@ class OrdersList(ListView):
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},
             {'title': store.title, 'url': '{}?store={}'.format(self.url, store.id)}]
-        context['selected_menu'] = 'orders:all'
 
         try:
             if not api_error:
@@ -1140,7 +1132,6 @@ class OrdersTrackList(ListView):
             'title': context['store'].title,
             'url': '{}?store={}'.format(reverse('woo:orders_list'), context['store'].id)
         }]
-        context['selected_menu'] = 'orders:tracking'
 
         context['rejected_status'] = ALIEXPRESS_REJECTED_STATUS
 
@@ -1172,7 +1163,6 @@ class BoardsList(ListView):
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)
         context['breadcrumbs'] = ['Boards']
-        context['selected_menu'] = 'products:boards'
 
         return context
 
@@ -1207,7 +1197,6 @@ class BoardDetailView(DetailView):
         context['products'] = page
         context['current_page'] = page
         context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('woo:boards_list')}, self.object.title]
-        context['selected_menu'] = 'products:boards'
 
         return context
 

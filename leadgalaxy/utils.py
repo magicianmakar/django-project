@@ -43,7 +43,6 @@ from lib.exceptions import capture_exception, capture_message
 
 from app.celery_base import retry_countdown
 from shopified_core import permissions
-from shopified_core.tasks import requests_async
 from shopified_core.utils import (
     safe_int,
     safe_float,
@@ -230,6 +229,8 @@ def create_user_without_signals(**kwargs):
 
 
 def register_new_user(email, fullname, intercom_attributes=None, without_signals=False):
+    from shopified_core.tasks import requests_async
+
     first_name = ''
     last_name = ''
 

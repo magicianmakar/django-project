@@ -16,8 +16,6 @@ import texttable
 import simplejson as json
 from munch import Munch
 
-from lib.exceptions import capture_exception, capture_message
-
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as user_logout
@@ -44,24 +42,19 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.base import TemplateView
 
 from infinite_pagination.paginator import InfinitePaginator
-
+from lib.exceptions import capture_exception, capture_message
 from analytic_events.models import RegistrationEvent
+from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier, CommerceHQOrderTrack, CommerceHQUserUpload
+from woocommerce_core.models import WooProduct, WooSupplier, WooUserUpload
+from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier, GearUserUpload
+from groovekart_core.models import GrooveKartStore, GrooveKartProduct, GrooveKartSupplier, GrooveKartUserUpload
+from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier, BigCommerceUserUpload
+from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
+from phone_automation import billing_utils as billing
+from last_seen.models import LastSeen
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
-from shopified_core.mixins import ApiResponseMixin
-from shopified_core.exceptions import ApiLoginException
-from shopify_orders import utils as shopify_orders_utils
-from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier
-from woocommerce_core.models import WooProduct, WooSupplier
-from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier
-from groovekart_core.models import GrooveKartStore, GrooveKartProduct, GrooveKartSupplier
-from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier
-from product_alerts.models import ProductChange
-from stripe_subscription.stripe_api import stripe
-from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
-from phone_automation import billing_utils as billing
-
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     safe_int,
@@ -87,6 +80,7 @@ from shopified_core.utils import (
 )
 from shopified_core.tasks import keen_order_event, export_user_activity
 from supplements.models import PLSOrderLine
+from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
     ShopifyOrder,
     ShopifySyncStatus,
@@ -94,14 +88,16 @@ from shopify_orders.models import (
     ShopifyOrderVariant,
     ShopifyOrderLog,
 )
+from stripe_subscription.stripe_api import stripe
+from stripe_subscription.models import CustomStripePlan
+from stripe_subscription.invoices.pdf import draw_pdf
 from stripe_subscription.utils import (
     process_webhook_event,
     get_stripe_invoice,
     get_stripe_invoice_list,
 )
-
-from product_alerts.utils import variant_index_from_supplier_sku, delete_product_monitor
-
+from product_alerts.models import ProductChange
+from product_alerts.utils import variant_index_from_supplier_sku, delete_product_monitor, unmonitor_store
 from profit_dashboard.models import FacebookAccess
 
 from metrics.activecampaign import ActiveCampaignAPI
@@ -138,9 +134,6 @@ from .models import (
 from .templatetags.template_helper import money_format
 from .paginator import ShopifyOrderPaginator
 from .shopify import ShopifyAPI
-
-from functools import reduce
-from stripe_subscription.models import CustomStripePlan
 
 
 def webhook(request, provider, option):
@@ -668,7 +661,7 @@ def webhook(request, provider, option):
 
                 return JsonResponse({'status': 'ok'})
 
-            elif topic == 'orders/create' or topic == 'orders/updated':
+            elif topic in ('orders/create', 'orders/updated'):
                 new_order = topic == 'orders/create'
                 queue = 'priority_high' if new_order else 'celery'
                 countdown = 1 if new_order else random.randint(2, 9)
@@ -686,12 +679,6 @@ def webhook(request, provider, option):
                     args=[store.id, shopify_order['id']],
                     queue=queue,
                     countdown=countdown)
-
-                if store.user.can('fulfillbox.use') and store.user.get_config('auto_fulfillbox_order'):
-                    from shopify_orders.tasks import fulfill_shopify_order_line
-                    _order, customer_address = utils.shopify_customer_address(shopify_order)
-                    if topic == 'orders/create' and shopify_order['financial_status'] == 'paid':
-                        fulfill_shopify_order_line.delay(store.id, shopify_order, customer_address)
 
                 cache.delete(make_template_fragment_key('orders_status', [store.id]))
 
@@ -715,8 +702,6 @@ def webhook(request, provider, option):
                     return JsonResponse({'status': 'ok'})
 
             elif topic == 'app/uninstalled':
-                from product_alerts.utils import unmonitor_store
-
                 store.is_active = False
                 store.uninstalled_at = timezone.now()
                 store.save()
@@ -1616,7 +1601,7 @@ def link_product_board(products, boards):
     for i in boards:
         fetch_list.append('b%d-%s' % (i.id, i.updated_at))
 
-    fetch_key = 'link_product_board_%s' % hash_text(reduce(lambda x, y: '{}.{}'.format(x, y), fetch_list))
+    fetch_key = 'link_product_board_%s' % hash_list(fetch_list)
 
     cached_boards = cache.get(fetch_key)
     if cached_boards is None:
@@ -1700,7 +1685,6 @@ def products_list(request, tpl='grid'):
         'store': store,
         'ebay_manual_affiliate_link': request.user.can('ebay_manual_affiliate_link.use'),
         'page': 'product',
-        'selected_menu': 'products:all',
         'breadcrumbs': breadcrumbs
     })
 
@@ -1741,7 +1725,6 @@ def shopify_migration(request):
         'user_filter': utils.get_shopify_products_filter(request),
         'items_per_page_list': [10, 50, 100],
         'page': 'shopify_migration',
-        'selected_menu': 'products:migration',
         'breadcrumbs': breadcrumbs,
         'ppp': ppp,
         'current_page': page
@@ -1784,8 +1767,8 @@ def product_view(request, pid):
 
             if arrow.get(shopify_product['updated_at']).datetime > product.updated_at or request.GET.get('sync'):
                 tasks.update_shopify_product(
-                    product.store.id,
-                    product.shopify_id,
+                    store_id=product.store.id,
+                    shopify_id=product.shopify_id,
                     shopify_product=shopify_product,
                     product_id=product.id)
 
@@ -1895,7 +1878,6 @@ def product_view(request, pid):
         'aws_policy': aws['aws_policy'],
         'aws_signature': aws['aws_signature'],
         'page': 'product',
-        'selected_menu': 'products:all',
         'breadcrumbs': breadcrumbs,
         'token': token
     })
@@ -1925,7 +1907,6 @@ def variants_edit(request, store_id, pid):
         'product': product,
         'api_url': store.get_link(),
         'page': 'product',
-        'selected_menu': 'products:all',
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Edit Variants']
     })
 
@@ -2020,7 +2001,6 @@ def product_mapping(request, product_id):
         'product_suppliers': product_suppliers,
         'current_supplier': current_supplier,
         'page': 'product',
-        'selected_menu': 'products:all',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/product?store={}'.format(product.store.id)},
@@ -2092,7 +2072,6 @@ def mapping_supplier(request, product_id):
         'mapping_config': mapping_config,
         'countries': get_counrties_list(),
         'page': 'product',
-        'selected_menu': 'products:all',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/product/?store={}'.format(product.store.id)},
@@ -2149,7 +2128,6 @@ def mapping_bundle(request, product_id):
         'shopify_product': shopify_product,
         'bundle_mapping': bundle_mapping,
         'page': 'product',
-        'selected_menu': 'products:all',
         'breadcrumbs': [
             {'title': 'Products', 'url': '/product'},
             {'title': product.store.title, 'url': '/product?store={}'.format(product.store.id)},
@@ -2184,7 +2162,6 @@ def bulk_edit(request, what):
             'current_page': page,
             'filter_products': args['filter_products'],
             'page': 'bulk',
-            'selected_menu': 'products:bulk-edit',
             'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Bulk Edit', 'Saved']
         })
 
@@ -2233,7 +2210,6 @@ def bulk_edit(request, what):
             'products': products,
             'stores': stores,
             'page': 'bulk',
-            'selected_menu': 'products:bulk-edit',
             'breadcrumbs': breadcrumbs
         })
 
@@ -2265,7 +2241,6 @@ def boards_list(request):
         'count': boards_count,
         'paginator': paginator,
         'page': 'boards',
-        'selected_menu': 'products:boards',
         'breadcrumbs': ['Boards']
     })
 
@@ -2301,7 +2276,6 @@ def boards_view(request, board_id):
         'current_page': page,
         'searchable': True,
         'page': 'boards',
-        'selected_menu': 'products:boards',
         'breadcrumbs': [{'title': 'Boards', 'url': reverse(boards_list)}, board['title']]
     })
 
@@ -2619,7 +2593,6 @@ def acp_users_list(request):
         registrations_email = target_user.email
 
         try:
-            from last_seen.models import LastSeen
             user_last_seen = arrow.get(LastSeen.objects.when(target_user, 'website')).humanize()
         except:
             user_last_seen = ''
@@ -3286,7 +3259,6 @@ def user_profile(request):
         'example_dates': [arrow.utcnow().replace(days=-2).format('MM/DD/YYYY'), arrow.utcnow().replace(days=-2).humanize()],
         'callflex': callflex.toDict(),
         'page': 'user_profile',
-        'selected_menu': 'account:profile',
         'breadcrumbs': ['Profile']
     })
 
@@ -3367,8 +3339,6 @@ def save_image_s3(request):
     upload_url = utils.upload_file_to_s3(img_url, user.id, fp=fp)
 
     if request.GET.get('chq') or request.POST.get('chq'):
-        from commercehq_core.models import CommerceHQProduct, CommerceHQUserUpload
-
         product = CommerceHQProduct.objects.get(id=product_id)
         permissions.user_can_edit(user, product)
         CommerceHQUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
@@ -3377,8 +3347,6 @@ def save_image_s3(request):
             update_product_data_images(product, old_url, upload_url)
 
     elif request.GET.get('woo') or request.POST.get('woo'):
-        from woocommerce_core.models import WooProduct, WooUserUpload
-
         product = WooProduct.objects.get(id=product_id)
         permissions.user_can_edit(user, product)
 
@@ -3388,8 +3356,6 @@ def save_image_s3(request):
             update_product_data_images(product, old_url, upload_url)
 
     elif request.GET.get('gear') or request.POST.get('gear'):
-        from gearbubble_core.models import GearBubbleProduct, GearUserUpload
-
         product = GearBubbleProduct.objects.get(id=product_id)
         permissions.user_can_edit(user, product)
         GearUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
@@ -3398,8 +3364,6 @@ def save_image_s3(request):
             update_product_data_images(product, old_url, upload_url)
 
     elif request.GET.get('gkart') or request.POST.get('gkart'):
-        from groovekart_core.models import GrooveKartProduct, GrooveKartUserUpload
-
         product = GrooveKartProduct.objects.get(id=product_id)
         permissions.user_can_edit(user, product)
         GrooveKartUserUpload.objects.create(user=user.models_user, product=product, url=upload_url[:510])
@@ -3408,8 +3372,6 @@ def save_image_s3(request):
             update_product_data_images(product, old_url, upload_url)
 
     elif request.GET.get('bigcommerce') or request.POST.get('bigcommerce'):
-        from bigcommerce_core.models import BigCommerceProduct, BigCommerceUserUpload
-
         product = BigCommerceProduct.objects.get(id=product_id)
         permissions.user_can_edit(user, product)
 
@@ -3534,7 +3496,6 @@ class OrdersView(TemplateView):
 
     def get_breadcrumbs(self):
         self.ctx.page = 'orders'
-        self.ctx.selected_menu = 'orders:all'
 
         self.ctx.breadcrumbs = [
             {'url': '/orders', 'title': 'Orders'},
@@ -4418,7 +4379,7 @@ class OrdersView(TemplateView):
 @login_required
 def orders_track(request):
     if not request.user.can('orders.use'):
-        return render(request, 'upgrade.html', {'selected_menu': 'orders:tracking', })
+        return render(request, 'upgrade.html')
 
     try:
         assert not request.is_ajax(), 'AJAX Request Detected - Orders Track'
@@ -4589,27 +4550,11 @@ def orders_track(request):
         'reason': source_reason,
         'rejected_status': ALIEXPRESS_REJECTED_STATUS,
         'page': 'orders_track',
-        'selected_menu': 'orders:tracking',
         'breadcrumbs': [{'title': 'Orders', 'url': '/orders'}, 'Tracking', store.title]
     })
 
 
 def orders_place(request):
-    try:
-        if not request.user.is_authenticated:
-            mixing = ApiResponseMixin()
-            user = mixing.get_user(request)
-            if user:
-                user.backend = settings.AUTHENTICATION_BACKENDS[0]
-                login(request, user)
-                request.user = user
-
-    except ApiLoginException:
-        return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, quote_plus(request.GET.urlencode())))
-
-    except:
-        capture_exception()
-
     product = None
     supplier = None
 
@@ -4784,8 +4729,6 @@ def orders_place(request):
 
 @login_required
 def locate(request, what):
-    from commercehq_core.models import CommerceHQOrderTrack
-
     if what == 'order':
         aliexpress_id = safe_int(request.GET.get('aliexpress'))
 
@@ -4815,9 +4758,9 @@ def locate(request, what):
 @login_required
 def product_alerts(request):
     if not request.user.can('price_changes.use'):
-        return render(request, 'upgrade.html', {'selected_menu': 'products:alerts'})
+        return render(request, 'upgrade.html')
 
-    show_hidden = True if request.GET.get('hidden') else False
+    show_hidden = bool(request.GET.get('hidden'))
 
     product = request.GET.get('product')
     if product:
@@ -4945,7 +4888,6 @@ def product_alerts(request):
         'category': category,
         'product_type': product_type,
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
-        'selected_menu': 'products:alerts',
     })
 
 
@@ -5245,8 +5187,6 @@ def user_invoices(request, invoice_id):
 
 @login_required
 def user_invoices_download(request, invoice_id):
-    from stripe_subscription.invoices.pdf import draw_pdf
-
     if not request.user.have_stripe_billing():
         raise Http404
 

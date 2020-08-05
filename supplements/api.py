@@ -300,7 +300,7 @@ class SupplementsApi(ApiResponseMixin, View):
         })
 
     def post_delete_usersupplement(self, request, user, data):
-        if request.user.profile.is_black or request.user.can('pls.use'):
+        if request.user.can('pls.use'):
             pk = safe_int(data['product'])
             try:
                 product = UserSupplement.objects.get(id=pk, user=request.user.models_user)

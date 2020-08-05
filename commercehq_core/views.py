@@ -101,9 +101,9 @@ def store_update(request, store_id):
 @login_required
 def product_alerts(request):
     if not request.user.can('price_changes.use'):
-        return render(request, 'upgrade.html', {'selected_menu': 'products:alerts'})
+        return render(request, 'upgrade.html')
 
-    show_hidden = True if request.GET.get('hidden') else False
+    show_hidden = bool(request.GET.get('hidden'))
 
     product = request.GET.get('product')
     if product:
@@ -227,7 +227,6 @@ def product_alerts(request):
         'category': category,
         'product_type': product_type,
         'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
-        'selected_menu': 'products:alerts'
     })
 
 
@@ -250,7 +249,6 @@ class BoardsList(ListView):
     def get_context_data(self, **kwargs):
         context = super(BoardsList, self).get_context_data(**kwargs)
         context['breadcrumbs'] = ['Boards']
-        context['selected_menu'] = 'products:boards'
 
         return context
 
@@ -284,7 +282,6 @@ class BoardDetailView(DetailView):
         context['products'] = page
         context['current_page'] = page
         context['breadcrumbs'] = [{'title': 'Boards', 'url': reverse('chq:boards_list')}, self.object.title]
-        context['selected_menu'] = 'products:boards'
 
         return context
 
@@ -311,7 +308,6 @@ class ProductsList(ListView):
         context = super(ProductsList, self).get_context_data(**kwargs)
 
         context['breadcrumbs'] = [{'title': 'Products', 'url': reverse('chq:products_list')}]
-        context['selected_menu'] = 'products:all'
 
         if self.request.GET.get('store', 'n') == 'n':
             context['breadcrumbs'].append({'title': 'Non Connected', 'url': reverse('chq:products_list') + '?store=n'})
@@ -345,7 +341,6 @@ class ProductDetailView(DetailView):
         permissions.user_can_view(self.request.user, self.object)
 
         context['product_data'] = self.object.parsed
-        context['selected_menu'] = 'products:all'
 
         if self.object.source_id:
             context['commercehq_product'] = self.object.sync()
@@ -486,7 +481,6 @@ class ProductMappingView(DetailView):
             'variants_map': variants_map,
             'product_suppliers': product_suppliers,
             'current_supplier': current_supplier,
-            'selected_menu': 'products:all',
         })
 
         return context
@@ -563,7 +557,6 @@ class MappingSupplierView(DetailView):
             'mapping_config': product.get_mapping_config(),
 
             'countries': get_counrties_list(),
-            'selected_menu': 'products:all',
         })
 
         return context
@@ -623,7 +616,6 @@ class MappingBundleView(DetailView):
             'product_id': product.id,
             'product': product,
             'bundle_mapping': bundle_mapping,
-            'selected_menu': 'products:all',
         })
 
         return context
@@ -720,7 +712,6 @@ class OrdersList(ListView):
             capture_exception()
 
         context['store'] = self.get_store()
-        context['selected_menu'] = 'orders:all'
 
         context['breadcrumbs'] = [{
             'title': 'Orders',
@@ -1434,7 +1425,6 @@ class OrdersTrackList(ListView):
         context = super(OrdersTrackList, self).get_context_data(**kwargs)
 
         context['store'] = self.get_store()
-        context['selected_menu'] = 'orders:tracking'
 
         try:
             context['orders'] = get_tracking_orders(self.get_store(), context['orders'])

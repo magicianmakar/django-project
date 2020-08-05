@@ -30,6 +30,7 @@ class PLSBaseTestCase(BaseTestCase):
 
         self.user.profile.plan = GroupPlanFactory(title='Dropified Black', slug='black')
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls_admin.use', description='PLS Admin'))
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls.use', description='PLS'))
         self.user.profile.plan.save()
         self.user.profile.save()
 

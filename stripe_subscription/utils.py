@@ -31,6 +31,7 @@ from leadgalaxy.utils import register_new_user
 from analytic_events.models import SuccessfulPaymentEvent
 from tapfiliate.tasks import commission_from_stripe, successful_payment
 from leadgalaxy import signals
+from shopified_core.utils import safe_int, safe_float
 
 
 class SubscriptionException(Exception):
@@ -847,3 +848,45 @@ def normalize_charge(charge):
     if isinstance(charge.invoice, stripe.Invoice):
         charge.invoice = normalize_invoice(charge.invoice)
     return charge
+
+
+def add_invoice(sub_container, invoice_type, amount, replace_flag=False, description="Custom Invoice Item"):
+
+    amount = safe_float(amount)
+    try:
+        upcoming_invoice = stripe.Invoice.upcoming(subscription=sub_container.id)
+    except:
+        capture_message("No Upcoming Invoice. Skipping this user.")
+        return False
+
+    upcoming_invoice_item = False
+
+    for item in upcoming_invoice['lines']['data']:
+        try:
+            if item['metadata']['type'] == invoice_type:
+                upcoming_invoice_item = item
+        except:
+            pass
+
+    if upcoming_invoice_item:
+        if replace_flag:
+            new_amount = amount * 100
+        else:
+            new_amount = safe_float(upcoming_invoice_item['metadata']['exact_amount']) + (amount * 100)
+
+        stripe.InvoiceItem.modify(
+            upcoming_invoice_item['id'],
+            amount=safe_int(new_amount),
+            metadata={"type": invoice_type, "exact_amount": new_amount}
+        )
+    else:
+        upcoming_invoice_item = stripe.InvoiceItem.create(
+            customer=sub_container.customer,
+            subscription=sub_container.id,
+            amount=safe_int(amount * 100),
+            currency='usd',
+            description=description,
+            metadata={"type": invoice_type, "exact_amount": (amount * 100)}
+        )
+
+    return upcoming_invoice_item

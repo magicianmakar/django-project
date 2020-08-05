@@ -1,22 +1,20 @@
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from lib.exceptions import capture_exception, capture_message
+from django.views.generic import View
 
 import simplejson as json
 
+from lib.exceptions import capture_exception, capture_message
 from .exceptions import ApiLoginException
 
 
-class ApiResponseMixin():
-    response = None
+class ApiResponseMixin(View):
     login_non_required = []
 
     def api_error(self, description, status=500):
-        self.response = JsonResponse({
+        return JsonResponse({
             'error': description
         }, status=status)
-
-        return self.response
 
     def api_success(self, rep=None, status=200, safe=True):
         if rep is None:
@@ -25,9 +23,7 @@ class ApiResponseMixin():
         if safe:
             rep.update({'status': 'ok'})
 
-        self.response = JsonResponse(rep, status=status, safe=safe)
-
-        return self.response
+        return JsonResponse(rep, status=status, safe=safe)
 
     def method_name(self, *args):
         return '_'.join([
@@ -150,8 +146,6 @@ class ApiResponseMixin():
             return self.api_error('Non-handled endpoint', status=405)
 
         res = handler(request, user, self.data)
-        if res is None:
-            res = self.response
 
         if res is None:
             capture_message('API Response is empty')
