@@ -700,14 +700,6 @@ class BigCommerceSupplier(SupplierBase):
 
         return name
 
-    def supplier_type(self):
-        try:
-            if self.is_pls:
-                return 'pls'
-            return get_domain(self.product_url)
-        except:
-            return ''
-
     @property
     def is_aliexpress(self):
         return self.supplier_type() == 'aliexpress'

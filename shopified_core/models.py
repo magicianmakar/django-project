@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.urls import reverse, Resolver404, resolve
 from django.utils.functional import cached_property
 
+from shopified_core.utils import get_domain
 from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
 from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, prefix_from_model, base64_encode
 
@@ -50,6 +51,10 @@ class SupplierBase(models.Model):
                or self.supplier_name == 'Dropified'
 
     @property
+    def is_dropified_print(self):
+        return self.supplier_type() == 'dropified-print'
+
+    @property
     def is_pls(self):
         try:
             return (
@@ -58,28 +63,6 @@ class SupplierBase(models.Model):
             )
         except:
             return False
-
-    def get_user_supplement_id(self):
-        # https://app.dropified.com/supplements/usersupplement/{id}
-        product_url = '/'.join(self.product_url.split('/')[3:])
-        try:
-            resolved = resolve(f'/{product_url}')
-            url_pattern = f"{resolved.namespace}:{resolved.url_name}"
-            if url_pattern == 'pls:user_supplement':
-                return resolved.kwargs['supplement_id']
-
-        except Resolver404:
-            # TODO: catch this to make sure supplier uses supplement url
-            return None
-
-    @cached_property
-    def user_supplement(self):
-        if self.is_pls:
-            try:
-                user_supplement_id = self.get_user_supplement_id()
-                return UserSupplement.objects.get(id=user_supplement_id)
-            except UserSupplement.DoesNotExist:
-                return None
 
     @property
     def is_supplement_deleted(self):
@@ -94,6 +77,39 @@ class SupplierBase(models.Model):
             return False
 
         return self.user_supplement.is_approved
+
+    @cached_property
+    def user_supplement(self):
+        if self.is_pls:
+            try:
+                user_supplement_id = self.get_user_supplement_id()
+                return UserSupplement.objects.get(id=user_supplement_id)
+            except UserSupplement.DoesNotExist:
+                return None
+
+    def get_user_supplement_id(self):
+        # https://app.dropified.com/supplements/usersupplement/{id}
+        product_url = '/'.join(self.product_url.split('/')[3:])
+        try:
+            resolved = resolve(f'/{product_url}')
+            url_pattern = f"{resolved.namespace}:{resolved.url_name}"
+            if url_pattern == 'pls:user_supplement':
+                return resolved.kwargs['supplement_id']
+
+        except Resolver404:
+            # TODO: catch this to make sure supplier uses supplement url
+            return None
+
+    def supplier_type(self):
+        try:
+            if self.is_dropified and 'print-on-demand' in self.product_url:
+                return 'dropified-print'
+            if self.is_pls:
+                return 'pls'
+
+            return get_domain(self.product_url)
+        except:
+            return ''
 
 
 class ProductBase(models.Model):

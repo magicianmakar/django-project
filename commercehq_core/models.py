@@ -747,17 +747,6 @@ class CommerceHQSupplier(SupplierBase):
 
         return name
 
-    def supplier_type(self):
-        try:
-            if self.is_dropified and 'print-on-demand' in self.product_url:
-                return 'dropified-print'
-            if self.is_pls:
-                return 'pls'
-
-            return get_domain(self.product_url)
-        except:
-            return ''
-
     @property
     def is_aliexpress(self):
         return self.supplier_type() == 'aliexpress'
@@ -772,10 +761,6 @@ class CommerceHQSupplier(SupplierBase):
             return 'ebay.com' in get_domain(self.product_url, full=True)
         except:
             return False
-
-    @property
-    def is_dropified_print(self):
-        return self.supplier_type() == 'dropified-print'
 
     def save(self, *args, **kwargs):
         if self.is_default:

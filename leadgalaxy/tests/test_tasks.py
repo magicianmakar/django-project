@@ -84,7 +84,7 @@ class TasksTestCase(BaseTestCase):
         product.variants_map = json.dumps({
             '32146941476915': json.dumps([
                 {
-                    'title': 'CHINA',
+                    'title': 'China',
                     'sku': '200007763:201336100'
                 },
                 {
