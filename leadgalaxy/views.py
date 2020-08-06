@@ -4554,6 +4554,7 @@ def orders_track(request):
     })
 
 
+@login_required
 def orders_place(request):
     product = None
     supplier = None

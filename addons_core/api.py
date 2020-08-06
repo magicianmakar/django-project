@@ -2,7 +2,7 @@ from django.utils import timezone
 from django.template.defaultfilters import slugify
 
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import safe_str
+from shopified_core.utils import safe_str, safe_float
 from .models import Addon, AddonUsage
 
 
@@ -30,7 +30,7 @@ class AddonsApi(ApiResponseMixin):
         addon.icon_url = data['addon-icon']
         addon.banner_url = data['addon-banner']
         addon.youtube_url = data['addon-youtube']
-        addon.monthly_price = data['addon-price']
+        addon.monthly_price = safe_float(data['addon-price'])
         addon.hidden = data['addon-status'] == 'draft'
 
         benfits = []
