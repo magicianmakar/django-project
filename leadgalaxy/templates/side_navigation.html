@@ -3,7 +3,7 @@
 {% load template_helper %}
 {% load cache %}
 
-<nav id="side-menu" class="navbar-default sidebar navbar-static-side" role="navigation">
+<nav id="side-menu" class="navbar-default sidebar navbar-static-side {% if user|can:'pls.use' %}pls{% endif %}" role="navigation">
     <div class="sidebar-collapse">
         <div class="logo">
             <a href="{% url 'index' %}">

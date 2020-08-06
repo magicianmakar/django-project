@@ -558,3 +558,7 @@ ul.breadcrumb-right-menu li a {
 #bt_dsers_sync, .dsers-oberlo-checkoutAll {
     display: none !important;
 }
+
+.navbar-default.pls {
+    background-color: #24272e !important;
+}
