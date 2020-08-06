@@ -324,7 +324,7 @@ def get_price_markup(user, price, markup_rules):
             if markup_value > 0:
                 price = apply_markup(markup_rule.markup_type, markup_value, price)
 
-            if markup_compare_value > 0:
+            if markup_compare_value and markup_compare_value > 0:
                 compare_at = apply_markup(markup_rule.markup_type, markup_compare_value, price)
 
             return [price, compare_at]

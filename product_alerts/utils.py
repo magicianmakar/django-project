@@ -347,7 +347,7 @@ def calculate_price(user, old_value, new_value, current_price, current_compare_a
                         new_price = markup_value
                     new_price = round(new_price, 2)
 
-                if markup_compare_value > 0:
+                if markup_compare_value and markup_compare_value > 0:
                     base_compare_at = new_price or new_value
                     if markup_rule.markup_type == 'margin_percent':
                         new_compare_at = base_compare_at + base_compare_at * (markup_compare_value / 100.0)
