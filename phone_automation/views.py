@@ -601,6 +601,9 @@ def call_flow(request):
     phone = get_object_or_404(TwilioPhoneNumber, ~Q(status='released'), incoming_number=request.POST.get('To'))
     response = VoiceResponse()
 
+    if not phone.user.can('phone_automation.use'):
+        response.reject()
+
     total_duration = get_month_totals(phone.user)
     total_duration_month_limit = get_month_limit(phone.user)
 
