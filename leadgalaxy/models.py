@@ -421,10 +421,11 @@ class UserProfile(models.Model):
                 if i not in perms:
                     perms.append(i)
 
-        for addon in self.addons.all():
-            for i in addon.permissions.values_list('name', flat=True):
-                if i not in perms:
-                    perms.append(i)
+        if self.plan.support_addons:
+            for addon in self.addons.all():
+                for i in addon.permissions.values_list('name', flat=True):
+                    if i not in perms:
+                        perms.append(i)
 
         return perms
 
@@ -2008,6 +2009,8 @@ class GroupPlan(models.Model):
     extra_store_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=27.00,
                                            verbose_name='Extra store cost per store(in USD)')
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
+
+    support_addons = models.BooleanField(default=False)
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='', verbose_name='Plan name visible to users')

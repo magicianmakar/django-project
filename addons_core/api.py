@@ -51,6 +51,9 @@ class AddonsApi(ApiResponseMixin):
     def post_install(self, request, user, data):
         addon = Addon.objects.get(id=data['addon'])
 
+        if not user.profile.plan.support_addons:
+            return self.api_error("Your plan doesn't support adding Addons", 422)
+
         if user.profile.addons.filter(id=addon.id).exists():
             return self.api_error("Addon is already installed on your account", 422)
 

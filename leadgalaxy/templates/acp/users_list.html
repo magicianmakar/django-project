@@ -216,6 +216,18 @@
                                     </ul>
                                 </td>
                             </tr>
+                            {% if item.profile.plan.support_addons %}
+                            <tr>
+                                <td>Addons</td>
+                                <td>
+                                    <ul style="margin: 0;padding: 0 0 0 15px;">
+                                        {% for bundle in item.profile.addons.all %}
+                                        <li>{{bundle.title}}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                            </tr>
+                            {% endif %}
                         </table>
                     </div>
                 </div>
