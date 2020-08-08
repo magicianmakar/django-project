@@ -1,6 +1,10 @@
+import re
+from urllib.parse import parse_qs, urlparse
+
 from django.utils import timezone
 from django.template.defaultfilters import slugify
 
+from lib.exceptions import capture_exception
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import safe_str, safe_float
 from .models import Addon, AddonUsage
@@ -29,9 +33,23 @@ class AddonsApi(ApiResponseMixin):
         addon.description = data['addon-description']
         addon.icon_url = data['addon-icon']
         addon.banner_url = data['addon-banner']
-        addon.youtube_url = data['addon-youtube']
         addon.monthly_price = safe_float(data['addon-price'])
         addon.hidden = data['addon-status'] == 'draft'
+
+        youtube_id = None
+
+        if data['addon-youtube']:
+            youtube_id = re.findall('youtube.com/embed/[^?#]+', data['addon-youtube'])
+            if youtube_id:
+                youtube_id = youtube_id.pop().split('/').pop()
+
+        if not youtube_id:
+            try:
+                youtube_id = parse_qs(urlparse(data['addon-youtube']).query)['v'].pop()
+            except:
+                capture_exception(level='warning')
+
+        addon.youtube_url = f'https://www.youtube.com/embed/{youtube_id}' if youtube_id else ''
 
         benfits = []
         for i in range(0, 3):
