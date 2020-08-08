@@ -1,0 +1,10 @@
+<div class="col-md-12" method="GET">
+    <form role="search">
+        <div class="form-group addon-search center-bloc">
+          <input type="text" name="title" value="{{ request.GET.title|default:'' }}" class="form-control searchTerm" placeholder="Type to search the Addon name">
+          <button type="submit" class="searchButton">
+            <i class="fa fa-search"></i>
+         </button>
+        </div>
+    </form>
+</div>
