@@ -9,6 +9,26 @@ from django.utils.crypto import get_random_string
 from leadgalaxy.models import AppPermission
 
 
+class Category(models.Model):
+    class Meta:
+        ordering = ['sort_order']
+        verbose_name_plural = 'categories'
+
+    title = models.TextField()
+    slug = models.SlugField(unique=True, max_length=512)
+    short_description = models.TextField()
+    sort_order = models.PositiveIntegerField(help_text='Sort Order', default=0)
+    category_tag = models.TextField(blank=True)
+
+    is_visible = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Category: {self.title}'
+
+
 class Addon(models.Model):
     title = models.TextField()
     slug = models.SlugField(unique=True, max_length=512)
@@ -16,6 +36,8 @@ class Addon(models.Model):
 
     short_description = models.TextField()
     description = models.TextField()
+
+    categories = models.ManyToManyField(Category, blank=True, related_name="addons")
 
     icon_url = models.TextField(blank=True, null=True)
     banner_url = models.TextField(blank=True, null=True)

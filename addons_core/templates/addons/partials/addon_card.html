@@ -1,29 +1,25 @@
 <div class="col-lg-4">
-    <div class="ibox">
-        <div class="ibox-content no-borders">
-            <a href="{%  url 'addons.details_view' slug=item.slug %}">
-                <img class="img-rounded"
-                     {% if item.banner_url %}
-                        src="{{ item.banner_url }}"
-                     {% else %}
-                        src="https://via.placeholder.com/400x150?text={{ item.title }}"
-                     {% endif %}
-                     alt="{{ item.title }}">
-            </a>
-
-            <h3><a href="{%  url 'addons.details_view' slug=item.slug %}">{{ item.title }}</a></h3>
-
-            <p class="small">
-                {{ item.short_description | safe }}
-            </p>
-
-            <div class="text-right">
-                <div class="row">
-                    <div class="col-xs-6 text-left" style="font-size:20px;">
-                        <span style="font-size:26px;font-weight:bold;">$ {{ item.monthly_price }}</span>/mo
-                    </div>
-                    <div class="col-xs-6">
-                        {% include "addons/partials/install_button.html" with item=item %}
+    <div class="addon-card ibox">
+        <a href="{%  url 'addons.details_view' slug=item.slug %}">
+            <img class="img-responsive" width="100%"
+                 {% if item.banner_url %}
+                    src="{{ item.banner_url }}"
+                 {% else %}
+                    src="https://via.placeholder.com/400x150?text={{ item.title }}"
+                 {% endif %}
+                 alt="{{ item.title }}">
+        </a>
+        <div class="card-body">
+          <h3 class="m-b-none m-t-md addon-title-color addon-h4">{{ item.title }}</h5>
+          <p class="addon-h5 m-b-height">{{ item.short_description | safe }}</p>
+          <div class="text-right m-t-md">
+            <div class="row">
+                <div class="col-xs-6 text-left">
+                    <span class="addon-h4">${{ item.monthly_price }}</span>/mo
+                </div>
+                    <div class="col-xs-6 addon-h5">
+                        <span class="trial-days">Add-on Now</span>
+                        <p class="m-t-xs">{{ item.trial_period_days}} day{{  item.trial_period_days|pluralize }} free trial</p>
                     </div>
                 </div>
             </div>
