@@ -28,9 +28,6 @@ class AddonsListView(BaseListView, BaseTemplateView):
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
         ctx['breadcrumbs'] = ['Addons']
-        ctx['addon_category'] = ctx['addon_category'].filter(
-            addons__title__icontains=self.request.GET.get('title', ''),
-        )
 
         return ctx
 
