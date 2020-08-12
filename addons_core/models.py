@@ -36,6 +36,7 @@ class Addon(models.Model):
 
     short_description = models.TextField()
     description = models.TextField()
+    faq = models.TextField(blank=True, null=True)
 
     categories = models.ManyToManyField(Category, blank=True, related_name="addons")
 

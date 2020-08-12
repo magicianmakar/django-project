@@ -1,19 +1,26 @@
 {% if item.id in user_addons %}
-    <button class="btn {% if details %}btn-outline btn-danger btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-uninstall"
+    <button class="btn {% if details %} btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-uninstall btn-width m-b"
+            id="addon-uninstall"
             data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Uninstalling"
             data-title="{{ item.title }}"
             data-endpoint='{"name": "Uninstall Addon", "target": "uninstall"}'
             data-addon="{{ item.id }}"
-            {% if details %}style="border-radius:10px"{% endif %}>
+            data-price="{{ item.monthly_price}}"
+            data-trial="{{item.trial_period_days}}"
+            >
         <i class="fa fa-minus {% if not details %}text-danger{% endif %}"></i> Uninstall
     </button>
 {% else %}
-    <button class="btn {% if details %}btn-success btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-install"
+    <button class="btn {% if details %} btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-install"
+            id="addon-install"
             data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Installing"
             data-title="{{ item.title }}"
             data-endpoint='{"name": "Install Addon", "target": "install"}'
             data-addon="{{ item.id }}"
-            {% if details %}style="border-radius:10px"{% endif %}>
+            data-price="{{ item.monthly_price}}"
+            data-trial="{{item.trial_period_days}}"
+            >
         <i class="fa fa-plus {% if not details %}{% endif %}"></i> Install
     </button>
+    <p class="m-t-xs heading--3">Try it for FREE with our {{object.trial_period_days}}-Day Free Trial</p>
 {% endif %}

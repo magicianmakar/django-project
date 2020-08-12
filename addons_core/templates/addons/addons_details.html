@@ -1,132 +1,80 @@
 {% extends "addons/addons_base.html" %}
-
 {% load static %}
 {% load perms_helper %}
 {% load template_helper %}
 {% load compress %}
 
 {% block main-container %}
-    <div class="">
-        <div class="row gray-bg bg-cover" style="min-height: 400px">
-            <div class="row" style="margin-top: 45px;">
-                <div class="col-md-4 col-md-offset-2">
-                    <div class="col-md-12 hero-banner">
-                        <h1>{{ object.title }}</h1>
-                        <h2>{{ object.short_description }}</h2>
 
-                        <div class="text-right" style="margin-top:15px;">
-                            <div class="row">
-                                <div class="col-xs-6 text-left" style="font-size:20px;">
-                                    <span style="font-size:26px;font-weight:bold;">$ {{ object.monthly_price }}</span>/mo
-                                </div>
-                                <div class="col-xs-6">
-                                </div>
-                            </div>
+<!--- Hero Section starts here-->
+<div class="row bg-cover">
+    <div class="container">
+            <div class="col-md-6 m-t-sm">
+                <h1 class="m-b-none"><strong>{{ object.title }}</strong></h1>
+                <p class="m-t-xs heading--3">{{ object.short_description }}</p>
+                <p class="m-b"><span class="addon-price">${{ object.monthly_price }}</span>/mo</span></p>
+                <div class="m-t">
+                    {% include "addons/partials/install_button.html" with item=object details=True %}
+                    {% if user|can:'addons_edit.use' %}
+                        <div class="addon-edit">
+                            <a href={% url 'addons.edit_view' slug=object.slug %} class="btn">
+                                <i class="fa fa-pencil "></i> Edit
+                            </a>
                         </div>
-
-                        <div class="text-right" style="margin-top:15px;">
-                            <div class="row">
-                                <div class="col-xs-4 text-left" style="font-size:20px;">
-                                    {% include "addons/partials/install_button.html" with item=object details=True %}
-                                </div>
-
-                                {% if user|can:'addons_edit.use' %}
-                                <div class="col-xs-offset-5 col-xs-3 text-right" style="font-size:20px;">
-                                    <a href={% url 'addons.edit_view' slug=object.slug %} class="btn btn-white btn-lg btn-block" style="border-radius:10px">
-                                        <i class="fa fa-pencil "></i> Edit
-                                    </a>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
+                    {% endif %}
                 </div>
-
-                {% if object.youtube_url %}
-                <div class="col-md-4">
-                    <iframe width="560"
-                            height="315"
-                            src="{{ object.youtube_url }}"
-                            frameborder="0"
-                            allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen></iframe>
-                </div>
-                {% endif %}
             </div>
-        </div>
-
-        <div class="row" style="margin-top: 45px;">
-            <div class="col-md-2"></div>
-            {% for benifit in object.get_key_benfits %}
-                {% if not forloop.first %}
-                    <div class="col-md-1"></div>
-                {% endif %}
-
-                <div class="col-md-2 text-center">
-                    <div class="block key-benefit">
-                        {% if benifit.banner %}
-                        <div aria-hidden="true" style="
-                            width: 100%;
-                            height: 220px;
-                            background-image: url('{{ benifit.banner }}');
-                            background-size: contain;
-                            background-repeat: no-repeat;
-                        "></div>
-                        {% endif %}
-                        <h3 class="block__heading heading--3">{{ benifit.title }}</h3>
-                        <p class="block__content text-major">{{ benifit.description }}</p>
-                    </div>
-                </div>
-
-            {% endfor %}
-        </div>
-
-        <div class="row" style="margin-top: 45px;">
-            <div class="col-md-offset-2 col-md-8">
-                <hr class="hr grid__ruler">
+            {% if object.youtube_url %}
+            <div class="col-md-6 m-t-lg">
+                <iframe id="addon-videos" width="428"
+                        height="241"
+                        src="{{ object.youtube_url }}"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
             </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-8 col-md-offset-2">
-                <h2>{{ object.description | safe }}</h2>
-            </div>
-        </div>
-
+            {% endif %}
     </div>
+</div>
+
+<!-- Key Features Section starts here --->
+{% include "addons/partials/addon_key_features.html" with item=object %}
+
+<!-- Tab section starts here-->
+{% include "addons/partials/addon_tabs.html" with item=object %}
+
 {% endblock %}
 
 {% block extracss %}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.css" integrity="sha512-LhZScx/m/WBAAHyiPnM+5hcsmCMjDDOgOqoT9wyIcs/QUPm6YxVNGZjQG5iP8dhWMWQAcUUTE3BkshtrlGbv2Q==" crossorigin="anonymous" />
+    <link rel='stylesheet' id='flatsome-googlefonts-css' href='//fonts.googleapis.com/css?family=Poppins%3Aregular%2C700%2Cregular%2C500%7CRoboto%3Aregular%2Cregular&#038;display=swap&#038;ver=3.9' type='text/css' media='all'/>
 
     <style>
+        body {
+            font-family: Poppins !important;
+        }
         .hero-banner h1 {
             color: black;
             font-family: "Source Serif Pro", serif;
             font-size: 50px;
             font-weight: 600;
         }
-
         .hero-banner h2 {
             font-family: "Source Serif Pro", serif;
             font-weight: 400;
         }
-
         .heading--3 {
-            font-size:1.5em;
-            margin-bottom: 0.833em
+            font-size: 14px;
         }
-
         .text-major {
             font-size: 1.125em;
             margin-bottom: 0.9375em;
             line-height: 1.5;
         }
-
         .bg-cover {
-            min-height: 400px;
-            background: url("https://cdn.shopify.com/shopifycloud/shopify_app_store/assets/v2/backgrounds/hero-073ea0d17442ccee222f7e710d062b8c05b22f59910e3aa366fa21b586660c0d.svg") no-repeat top left;
-            background-size: cover;
+            padding-bottom: 30px;
+            background-color: #F5F5F5;
         }
 
         .swal2-popup {
@@ -135,6 +83,56 @@
         .swal2-show {
             -webkit-animation: none !important;
             animation: none !important;
+        }
+        .video-responsive{
+            overflow:hidden;
+            padding-bottom:56.25%;
+            position:relative;
+            height:0;
+        }
+        .video-responsive iframe{
+            left:0;
+            top:0;
+            height:100%;
+            width:100%;
+            position:absolute;
+        }
+        .wrapper-content {
+            padding-right: 0px !important;
+            padding-left: 0px !important;
+        }
+        .addon-tabs {
+            margin-top: 5px;
+        }
+        .addon-edit {
+            border: 1px solid #6288A2;
+            padding: 5px;
+            width: 30%;
+            text-align: center;
+        }
+        .addon-price {
+            font-size: 20px;
+            padding: 5px 0 5px;
+            font-weight: 500;
+        }
+        .p-t-xl {
+            padding-top: 60px;
+        }
+        .p-b-xl {
+            padding-bottom: 60px;
+        }
+        .addon-install {
+            background-color: #97C882;
+            width: 30%;
+            color: #ffffff;
+        }
+        .addon-uninstall {
+            background-color: red;
+            width: 30%;
+            color: #ffffff;
+        }
+        #addon-videos {
+            float: right;
         }
     </style>
 {% endblock %}
