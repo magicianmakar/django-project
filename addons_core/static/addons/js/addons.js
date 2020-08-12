@@ -80,10 +80,12 @@ $('#addon-edit-save').click(function (e) {
     formData.append('addon-short', $('#addon-short').val());
     formData.append('addon-description', CKEDITOR.instances['addon-description'].getData());
     formData.append('addon-faq', CKEDITOR.instances['addon-faq'].getData());
-    formData.append('addon-icon', $('#addon-icon').val());
-    formData.append('addon-banner', $('#addon-banner').val());
+    formData.append('addon-icon', $('#addon-icon')[0].files[0]);
+    formData.append('addon-banner', $('#addon-banner')[0].files[0]);
     formData.append('addon-youtube', $('#addon-youtube').val());
+    formData.append('addon-categories', $('#addon-categories').val());
     formData.append('addon-price', $('#addon-price').val());
+    formData.append('addon-trial-days', $('#addon-trial-days').val());
     formData.append('addon-status', $('#addon-status').val());
 
     [0, 1, 2].forEach(function (i) {
@@ -101,3 +103,5 @@ $('#addon-edit-save').click(function (e) {
         Swal.fire('Addon Edit', 'Could not save changes', 'error');
     });
 });
+
+$('#addon-categories').chosen();

@@ -12,14 +12,12 @@
                 </a>
             </div>
             <a class="btn btn-success btn-rounded navbar-btn navbar-right m-l" href="https://app.dropified.com/">My Account</a>
-
             {% if user|can:'addons_edit.use' %}
             <a id="add-addon-btn" class="btn btn-success btn-rounded navbar-btn navbar-right" href="#"><i class="fa fa-plus"></i> Add Addon</a>
             {% endif %}
-
-            <form class="navbar-form navbar-right">
+            <form class="navbar-form navbar-right" action="{% url 'addons.list_view' %}">
                 <div class="form-group">
-                    <input type="text" class="form-control" placeholder="Search" style="border-radius:25px">
+                    <input name="title" type="text" class="form-control" placeholder="Search" style="border-radius:25px" value="{{ request.GET.title|default:'' }}">
                 </div>
             </form>
             <ul class="nav navbar-nav navbar-right">
@@ -33,3 +31,14 @@
 {% block main-nav %}{% endblock %}
 
 {% block page-wrapper-div %}id="page-wrapper" class="white-bg" style="margin: initial"{% endblock %}
+{% block extracss %}
+{{ block.super }}
+<link rel='stylesheet' id='flatsome-googlefonts-css' href='//fonts.googleapis.com/css?family=Poppins%3Aregular%2C700%2Cregular%2C500%7CRoboto%3Aregular%2Cregular&#038;display=swap&#038;ver=3.9' type='text/css' media='all'/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.css" integrity="sha512-LhZScx/m/WBAAHyiPnM+5hcsmCMjDDOgOqoT9wyIcs/QUPm6YxVNGZjQG5iP8dhWMWQAcUUTE3BkshtrlGbv2Q==" crossorigin="anonymous" />
+<link href="{% static 'addons/css/addons.css' %}" rel="stylesheet">
+<style>
+body {
+    font-family: Poppins !important;
+}
+</style>
+{% endblock %}

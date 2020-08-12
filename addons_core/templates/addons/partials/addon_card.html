@@ -1,3 +1,5 @@
+{% load perms_helper %}
+
 <div class="col-lg-4">
     <div class="addon-card ibox">
         <a href="{%  url 'addons.details_view' slug=item.slug %}">
@@ -10,8 +12,17 @@
                  alt="{{ item.title }}">
         </a>
         <div class="card-body">
-          <h3 class="m-b-none m-t-md addon-title-color addon-h4">{{ item.title }}</h5>
-          <p class="addon-h5 m-b-height">{{ item.short_description | safe }}</p>
+          <div class="row">
+            <div class="col-md-6">
+                <h3 class="m-b-none m-t-md addon-title-color addon-h4">{{ item.title }}</h5>
+                <p class="addon-h5 m-b-height">{{ item.short_description | safe }}</p>
+            </div>
+            {% if user|can:'addons_edit.use' %}
+            <div class="col-md-6 text-right m-t-lg">
+                <a href="{% url 'addons.edit_view' item.slug %}" class="btn btn-sm btn-outline btn-default"> Edit <i class="fa fa-edit"></i> </a>
+            </div>
+            {% endif %}
+          </div>
           <div class="text-right m-t-md">
             <div class="row">
                 <div class="col-xs-6 text-left">

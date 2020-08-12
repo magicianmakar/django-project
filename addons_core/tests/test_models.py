@@ -1,10 +1,11 @@
 from decimal import Decimal
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import arrow
 from arrow import get as arrow_get  # Bypass patched mock
 
 from lib.test import BaseTestCase
+
 from .factories import AddonUsageFactory
 
 

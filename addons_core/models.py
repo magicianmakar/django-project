@@ -1,10 +1,11 @@
 import json
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
-import arrow
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.crypto import get_random_string
+
+import arrow
 
 from leadgalaxy.models import AppPermission
 

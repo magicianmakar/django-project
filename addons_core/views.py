@@ -1,12 +1,15 @@
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from django.utils.decorators import method_decorator
-from django.views.generic import TemplateView, ListView
+from django.views.generic import ListView, TemplateView
 from django.views.generic.detail import BaseDetailView
 from django.views.generic.list import BaseListView
-from django.shortcuts import get_object_or_404
 
 from addons_core.models import Addon, Category
+
+from shopified_core import permissions
 
 
 class BaseTemplateView(TemplateView):
@@ -28,6 +31,15 @@ class AddonsListView(BaseListView, BaseTemplateView):
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
         ctx['breadcrumbs'] = ['Addons']
+        title = self.request.GET.get('title', None)
+        if title:
+            ctx['search'] = True
+            ctx['search_results'] = ctx['object_list'].filter(
+                Q(title__icontains=title)
+                | Q(slug__icontains=title)
+                | Q(categories__title__icontains=title)
+                | Q(categories__slug__icontains=title)
+            )
 
         return ctx
 
@@ -52,6 +64,13 @@ class AddonsDetailsView(BaseDetailView, BaseTemplateView):
 class AddonsEditView(BaseDetailView, BaseTemplateView):
     model = Addon
     template_name = 'addons/addons_edit.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('addons_edit.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
 
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
@@ -83,6 +102,13 @@ class CategoryListView(ListView):
 
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
-        ctx['category'] = get_object_or_404(Category, slug=self.kwargs.get('slug'), is_visible=True)
+        slug = self.kwargs.get('slug')
+        ctx['category'] = get_object_or_404(Category, slug=slug, is_visible=True)
+        ctx['breadcrumbs'] = [
+            {
+                'title': 'Category',
+                'url': reverse('addons.category_view', kwargs={'slug': slug})
+            }
+        ]
 
         return ctx

@@ -17,7 +17,8 @@
                     {% include "addons/partials/install_button.html" with item=object details=True %}
                     {% if user|can:'addons_edit.use' %}
                         <div class="addon-edit">
-                            <a href={% url 'addons.edit_view' slug=object.slug %} class="btn">
+                            <a href={% url 'addons.edit_view' slug=object.slug %}
+                                class="btn btn-outline btn-default btn-lg btn-block">
                                 <i class="fa fa-pencil "></i> Edit
                             </a>
                         </div>
@@ -46,96 +47,6 @@
 
 {% endblock %}
 
-{% block extracss %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.css" integrity="sha512-LhZScx/m/WBAAHyiPnM+5hcsmCMjDDOgOqoT9wyIcs/QUPm6YxVNGZjQG5iP8dhWMWQAcUUTE3BkshtrlGbv2Q==" crossorigin="anonymous" />
-    <link rel='stylesheet' id='flatsome-googlefonts-css' href='//fonts.googleapis.com/css?family=Poppins%3Aregular%2C700%2Cregular%2C500%7CRoboto%3Aregular%2Cregular&#038;display=swap&#038;ver=3.9' type='text/css' media='all'/>
-
-    <style>
-        body {
-            font-family: Poppins !important;
-        }
-        .hero-banner h1 {
-            color: black;
-            font-family: "Source Serif Pro", serif;
-            font-size: 50px;
-            font-weight: 600;
-        }
-        .hero-banner h2 {
-            font-family: "Source Serif Pro", serif;
-            font-weight: 400;
-        }
-        .heading--3 {
-            font-size: 14px;
-        }
-        .text-major {
-            font-size: 1.125em;
-            margin-bottom: 0.9375em;
-            line-height: 1.5;
-        }
-        .bg-cover {
-            padding-bottom: 30px;
-            background-color: #F5F5F5;
-        }
-
-        .swal2-popup {
-            transform: scale(1.7);
-        }
-        .swal2-show {
-            -webkit-animation: none !important;
-            animation: none !important;
-        }
-        .video-responsive{
-            overflow:hidden;
-            padding-bottom:56.25%;
-            position:relative;
-            height:0;
-        }
-        .video-responsive iframe{
-            left:0;
-            top:0;
-            height:100%;
-            width:100%;
-            position:absolute;
-        }
-        .wrapper-content {
-            padding-right: 0px !important;
-            padding-left: 0px !important;
-        }
-        .addon-tabs {
-            margin-top: 5px;
-        }
-        .addon-edit {
-            border: 1px solid #6288A2;
-            padding: 5px;
-            width: 30%;
-            text-align: center;
-        }
-        .addon-price {
-            font-size: 20px;
-            padding: 5px 0 5px;
-            font-weight: 500;
-        }
-        .p-t-xl {
-            padding-top: 60px;
-        }
-        .p-b-xl {
-            padding-bottom: 60px;
-        }
-        .addon-install {
-            background-color: #97C882;
-            width: 30%;
-            color: #ffffff;
-        }
-        .addon-uninstall {
-            background-color: red;
-            width: 30%;
-            color: #ffffff;
-        }
-        #addon-videos {
-            float: right;
-        }
-    </style>
-{% endblock %}
 
 {% block extrajs %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.js" integrity="sha512-aDa+VOyQu6doCaYbMFcBBZ1z5zro7l/aur7DgYpt7KzNS9bjuQeowEX0JyTTeBTcRd0wwN7dfg5OThSKIWYj3A==" crossorigin="anonymous"></script>

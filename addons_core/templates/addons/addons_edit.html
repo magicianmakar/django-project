@@ -53,16 +53,26 @@
     </div>
 
     <div class="row m-t-xl">
-        <div class="form-group col-md-8 col-md-offset-2">
+        <div class="form-group col-md-4 col-md-offset-2">
             <label for="addon-icon">Icon URL</label>
-            <input class="form-control" id="addon-icon" value="{{ object.icon_url|default:'' }}" />
+            {% if object.icon_url %}
+            <div class="m-b-xs">
+              Click to see
+              <i><a href="{{ object.icon_url }}" target="_blank">current Icon.</a></i>
+            </div>
+            {% endif %}
+            <input type="file" class="form-control" id="addon-icon" accept="image/gif, image/jpeg, image/jpg, image/png" />
         </div>
-    </div>
 
-    <div class="row">
-        <div class="form-group col-md-8 col-md-offset-2">
+        <div class="form-group col-md-4">
             <label for="addon-banner">Banner Image URL</label>
-            <input class="form-control" id="addon-banner" value="{{ object.banner_url|default:'' }}" />
+            {% if object.banner_url %}
+            <div class="m-b-xs">
+              Click to see
+              <i><a href="{{ object.banner_url }}" target="_blank">current Banner.</a></i>
+            </div>
+            {% endif %}
+            <input type="file" class="form-control" id="addon-banner" accept="image/gif, image/jpeg, image/jpg, image/png" />
         </div>
     </div>
 
@@ -74,6 +84,17 @@
     </div>
 
     <div class="row m-t-xl">
+        <div class="form-group col-md-8 col-md-offset-2">
+            <label for="addon-categories">Categories</label>
+            <select id="addon-categories" class="form-control" multiple>
+                {% for category in addon_category %}
+                <option value="{{ category.id }}" {% if category in object.categories.all %}selected{% endif %}>{{ category.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="form-group col-md-3 col-md-offset-2">
             <label for="addon-price">Price</label>
             <div class="input-group">
@@ -81,12 +102,16 @@
                 <input class="form-control" id="addon-price" value="{{ object.monthly_price|default:'' }}" />
             </div>
         </div>
-            <div class="form-group col-md-3">
+        <div class="form-group col-md-2">
+            <label for="addon-trial-days">Trial Period Days</label>
+            <input class="form-control" id="addon-trial-days" value="{{ object.trial_period_days }}" />
+        </div>
+        <div class="form-group col-md-3">
             <label for="addon-status">Status</label>
-                <select id="addon-status" class="form-control">
-                    <option value="published" {% if object.hidden %}selected{% endif %}>Published</option>
-                    <option value="draft" {% if not object.hidden %}selected{% endif %}>Draft</option>
-                </select>
+            <select id="addon-status" class="form-control">
+                <option value="published" {% if not object.hidden %}selected{% endif %}>Published</option>
+                <option value="draft" {% if object.hidden %}selected{% endif %}>Draft</option>
+            </select>
         </div>
     </div>
 
@@ -100,36 +125,6 @@
 
 {% endblock %}
 
-{% block extracss %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.css" integrity="sha512-LhZScx/m/WBAAHyiPnM+5hcsmCMjDDOgOqoT9wyIcs/QUPm6YxVNGZjQG5iP8dhWMWQAcUUTE3BkshtrlGbv2Q==" crossorigin="anonymous" />
-
-    <style>
-        .hero-banner {
-            text-align: center;
-            margin-top: 65px;
-        }
-
-        .hero-banner h1 {
-            color: black;
-            font-family: "Source Serif Pro", serif;
-            font-size: 50px;
-            font-weight: 600;
-        }
-
-        .text-bold {
-            font-weight: 900;
-            color: black;
-        }
-
-        .swal2-popup {
-            transform: scale(1.7);
-        }
-        .swal2-show {
-            -webkit-animation: none !important;
-            animation: none !important;
-        }
-    </style>
-{% endblock %}1
 
 {% block extrajs %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.js" integrity="sha512-aDa+VOyQu6doCaYbMFcBBZ1z5zro7l/aur7DgYpt7KzNS9bjuQeowEX0JyTTeBTcRd0wwN7dfg5OThSKIWYj3A==" crossorigin="anonymous"></script>
