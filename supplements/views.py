@@ -1,6 +1,6 @@
 import csv
 import math
-from datetime import timedelta
+from datetime import timedelta, datetime
 from decimal import Decimal
 from io import BytesIO
 
@@ -1789,8 +1789,8 @@ class Reports(LoginRequiredMixin, TemplateView):
 
     def check_range_interval(self, obj, start, end):
         # change date object to datetime aware object for comparison
-        start.replace(tzinfo=timezone.get_current_timezone())
-        end.replace(tzinfo=timezone.get_current_timezone())
+        start = timezone.make_aware(start, timezone.get_current_timezone())
+        end = timezone.make_aware(end, timezone.get_current_timezone())
 
         if obj.created_at > start and obj.created_at < end:
             return obj
@@ -2530,8 +2530,8 @@ class Reports(LoginRequiredMixin, TemplateView):
                     charts_data = self.get_charts_data(all_orders, interval, start_at, end_at)
             else:
                 if start_date and end_date:
-                    start_at = start_date
-                    end_at = end_date
+                    start_at = datetime.combine(start_date, datetime.min.time())
+                    end_at = datetime.combine(end_date, datetime.min.time())
                     interval = self.validate_interval(start_at, end_at, interval)
                     charts_data = self.get_charts_data(all_orders, interval, start_at, end_at)
                 else:
