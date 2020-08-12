@@ -355,7 +355,6 @@ def can_use_unique_supplement(user, pl_supplement_id=0):
 
     user_count = user.pl_supplements.exclude(
         pl_supplement_id=pl_supplement_id,
-        is_active=False
     ).aggregate(c=Count('pl_supplement', distinct=True))['c']
 
     can_add = True
