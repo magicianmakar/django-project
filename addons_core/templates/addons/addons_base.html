@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% load static %}
+{% load perms_helper %}
 
 {% block nav %}
     <nav class="navbar navbar-default">
@@ -11,15 +12,19 @@
                 </a>
             </div>
             <a class="btn btn-success btn-rounded navbar-btn navbar-right m-l" href="https://app.dropified.com/">My Account</a>
+
+            {% if user|can:'addons_edit.use' %}
             <a id="add-addon-btn" class="btn btn-success btn-rounded navbar-btn navbar-right" href="#"><i class="fa fa-plus"></i> Add Addon</a>
-            <form class="navbar-form navbar-right" action="/action_page.php">
+            {% endif %}
+
+            <form class="navbar-form navbar-right">
                 <div class="form-group">
                     <input type="text" class="form-control" placeholder="Search" style="border-radius:25px">
                 </div>
             </form>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="#">Categories</a></li>
-                <li><a href="http://help.dropified.com/en/articles/4325529-addon-store-faq" target="_blank"">FAQs</a></li>
+                <li><a href="http://help.dropified.com/en/articles/4325529-addon-store-faq" target="_blank">FAQs</a></li>
             </ul>
         </div>
     </nav>
