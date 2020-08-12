@@ -1,7 +1,10 @@
+import datetime
 import json
 
 from random import choice
 from unittest.mock import patch, Mock
+
+import arrow
 
 from lib.test import BaseTestCase
 
@@ -10,6 +13,8 @@ from ..utils import (
     woo_customer_address,
     add_product_images_to_api_data,
     get_tracking_products,
+    get_customer_id,
+    get_daterange_filters,
 )
 from .factories import WooStoreFactory, WooProductFactory, WooOrderTrackFactory
 
@@ -187,3 +192,55 @@ class APIConsumptionTestCase(BaseTestCase):
 
         get_tracking_products(self.store, tracker_orders, 50)
         self.assertEqual(r.call_count, 3)
+
+
+class GetCustomerIdTestCase(BaseTestCase):
+    def setUp(self):
+        self.response = Mock()
+        self.response.json = Mock(return_value=[{'id': 12}, {'id': 13}])
+
+    def test_must_use_search_param_if_not_an_email(self):
+        with patch('woocommerce_core.models.API.get', return_value=self.response) as get:
+            store = WooStoreFactory()
+            get_customer_id(store, 'rickybobby')
+            get.assert_called_with('customers', params={'search': 'rickybobby'})
+
+    def test_must_return_id_if_not_an_email(self):
+        with patch('woocommerce_core.models.API.get', return_value=self.response):
+            store = WooStoreFactory()
+            customer_id = get_customer_id(store, 'rickybobby')
+            self.assertEqual(customer_id, 12)
+
+    def test_must_return_none_if_no_results_for_non_email(self):
+        self.response.json = Mock(return_value=[])
+        with patch('woocommerce_core.models.API.get', return_value=self.response):
+            store = WooStoreFactory()
+            customer_id = get_customer_id(store, 'rickybobby')
+            self.assertIsNone(customer_id)
+
+    def test_must_use_email_param_if_email(self):
+        with patch('woocommerce_core.models.API.get', return_value=self.response) as get:
+            store = WooStoreFactory()
+            get_customer_id(store, 'valid@email.com')
+            get.assert_called_with('customers', params={'email': 'valid@email.com'})
+
+    def test_must_return_id_if_email(self):
+        with patch('woocommerce_core.models.API.get', return_value=self.response):
+            store = WooStoreFactory()
+            customer_id = get_customer_id(store, 'valid@email.com')
+            self.assertEqual(customer_id, 12)
+
+    def test_must_return_none_if_no_results_for_email(self):
+        self.response.json = Mock(return_value=[])
+        with patch('woocommerce_core.models.API.get', return_value=self.response):
+            store = WooStoreFactory()
+            customer_id = get_customer_id(store, 'valid@email.com')
+            self.assertIsNone(customer_id)
+
+
+class GetDaterangeFiltersTestCase(BaseTestCase):
+    def test_must_return_before_and_after_in_isoformat(self):
+        after, before = datetime.date(2020, 1, 1), datetime.date(2020, 12, 31)
+        after_isoformat, before_isoformat = get_daterange_filters('01/01/2020-12/31/2020')
+        self.assertEqual(after_isoformat, arrow.get(after).isoformat())
+        self.assertEqual(before_isoformat, arrow.get(before).ceil('day').isoformat())

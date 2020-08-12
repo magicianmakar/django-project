@@ -68,6 +68,8 @@ from .utils import (
     get_order_line_fulfillment_status,
     woo_customer_address,
     get_product_data,
+    get_daterange_filters,
+    get_customer_id,
 )
 
 from . import utils
@@ -667,6 +669,20 @@ class OrdersList(ListView):
         filters = {}
         params = self.request.GET
 
+        product_id = params.get('product')
+        if product_id:
+            self.product_filter = WooProduct.objects.filter(pk=safe_int(product_id)).first()
+            filters['product'] = self.product_filter.source_id if self.product_filter else 0
+
+        daterange = params.get('created_at_daterange')
+        if daterange and not daterange == 'all':
+            filters['after'], filters['before'] = get_daterange_filters(daterange)
+
+        store = self.get_store()
+        customer = params.get('query_customer')
+        if customer:
+            filters['customer'] = get_customer_id(store, customer)
+
         if params.get('sort') in ['order_date', '!order_date']:
             filters['orderby'] = 'date'
             if params.get('sort') == 'order_date':
@@ -701,6 +717,8 @@ class OrdersList(ListView):
         context['store'] = store = self.get_store()
         context['status'] = self.request.GET.get('status', 'any')
         context['shipping_carriers'] = store_shipping_carriers(store)
+        context['created_at_daterange'] = self.request.GET.get('created_at_daterange', '')
+        context['product_filter'] = getattr(self, 'product_filter', None)
 
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},

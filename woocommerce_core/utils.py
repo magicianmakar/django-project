@@ -1,3 +1,4 @@
+import datetime
 import re
 import json
 import itertools
@@ -19,6 +20,8 @@ from django.shortcuts import get_object_or_404
 from django.core.exceptions import PermissionDenied
 from django.core.cache import cache
 from django.utils import timezone
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from shopified_core import permissions
 from shopified_core.paginators import SimplePaginator
@@ -1003,6 +1006,30 @@ def send_review_to_woocommerce_store(store, product_id, review):
     r = store.get_wcapi(version='wc/v3').post('products/reviews', data)
     if r.ok:
         return r.json()
+
+
+def get_daterange_filters(created_at_daterange):
+    after, before = created_at_daterange.split('-')
+    month, day, year = after.split('/')
+    after_date = datetime.date(int(year), int(month), int(day))
+    month, day, year = before.split('/')
+    before_date = datetime.date(int(year), int(month), int(day))
+
+    return arrow.get(after_date).isoformat(), arrow.get(before_date).ceil('day').isoformat()
+
+
+def get_customer_id(store, customer):
+    try:
+        validate_email(customer)
+    except ValidationError:
+        r = store.wcapi.get('customers', params={'search': customer})
+    else:
+        r = store.wcapi.get('customers', params={'email': customer})
+
+    r.raise_for_status()
+    results = r.json()
+
+    return results[0]['id'] if results else None
 
 
 class WooListQuery(object):

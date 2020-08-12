@@ -1315,7 +1315,7 @@ $(function () {
         var start = picker.startDate,
             end = picker.endDate;
 
-        if (start.isValid && !end.isValid()) {
+        if (start.isValid() && !end.isValid()) {
             end = moment();
         }
 
@@ -1341,7 +1341,7 @@ $(function () {
             createdAtStart = moment(dates[0], 'MM/DD/YYYY'),
             createdAtEnd = moment(dates[1], 'MM/DD/YYYY');
 
-        if (createdAtStart.isValid && !createdAtEnd.isValid()) {
+        if (createdAtStart.isValid() && !createdAtEnd.isValid()) {
             createdAtEnd = moment();
         }
 
