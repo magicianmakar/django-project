@@ -1,0 +1,57 @@
+{% extends "addons/addons_base.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+<div class="row">
+    <div class="col-md-10 col-md-offset-1" style="margin-top:15px;margin-bottom:30px">
+            <h1 class="text-bold">
+               <strong> My Addons</strong>
+            </h1>
+            {% if my_addons_count %}
+                <p>Found {{ my_addons_count }} addons</p>
+            {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-10 col-md-offset-1">
+        <div class="row">
+            {% for item in user_addons %}
+            <div class="col-lg-4">
+                <div class="addon-card ibox">
+                    <a href="{%  url 'addons.details_view' slug=item.slug %}">
+                        <img class="img-responsive" width="100%"
+                                {% if item.banner_url %}
+                                src="{{ item.banner_url }}"
+                                {% else %}
+                                src="https://via.placeholder.com/400x150?text={{ item.title }}"
+                                {% endif %}
+                                alt="{{ item.title }}">
+                    </a>
+                    <div class="card-body">
+                        <h3 class="m-b-none m-t-md"><a style="color:#000" href="{%  url 'addons.details_view' slug=item.slug %}"><u>{{ item.title }}</u></a></h5>
+                        <p class="addon-h5 m-b-height">{{ item.short_description | safe }}</p>
+                        <span class="addon-h4">Last Billed at:<strong>
+                            {% if item.addonusage_set.all.last.billed_at %}
+                            {{ item.addonusage_set.all.last.billed_at }}
+                            {% else %} N/A {% endif %}
+                            </strong>
+                        </span>                         
+                    </div>
+                </div>
+            </div>
+        {% if forloop.counter|divisibleby:"3" %}
+        </div>
+        <div class="row">
+        {% endif %}
+        {% empty %}
+        <h2>No Addons found. Click <a href="{% url 'addons.list_view' %}">here to explore</a></h2>
+    {% endfor %}
+    </div>
+</div>
+
+{% endblock %}

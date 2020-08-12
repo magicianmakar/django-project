@@ -7,4 +7,5 @@ urlpatterns = [
     path('<slug:slug>', addons_core.views.AddonsDetailsView.as_view(), name='addons.details_view'),
     path('edit/<slug>', addons_core.views.AddonsEditView.as_view(), name='addons.edit_view'),
     path('category/<slug>', addons_core.views.CategoryListView.as_view(), name='addons.category_view'),
+    path('my/addons', addons_core.views.MyAddonsListView.as_view(), name='myaddons'),
 ]

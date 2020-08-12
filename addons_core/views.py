@@ -20,7 +20,9 @@ class BaseTemplateView(TemplateView):
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
         ctx['addon_category'] = Category.objects.all().filter(is_visible=True)
-        ctx['user_addons'] = [i.id for i in self.request.user.profile.addons.all()]
+        ctx['user_addons'] = self.request.user.profile.addons.all()
+        ctx['user_addon_ids'] = [i.id for i in ctx['user_addons']]
+
         return ctx
 
 
@@ -82,6 +84,20 @@ class AddonsEditView(BaseDetailView, BaseTemplateView):
             'Edit',
             self.object.title
         ]
+
+        return ctx
+
+
+class MyAddonsListView(BaseTemplateView):
+    template_name = 'addons/myaddons_list.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs: dict) -> dict:
+        ctx = super().get_context_data(**kwargs)
+        ctx['my_addons_count'] = len(ctx['user_addon_ids'])
 
         return ctx
 

@@ -1,4 +1,4 @@
-{% if item.id in user_addons %}
+{% if item.id in user_addon_ids %}
     <button class="btn {% if details %} btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-uninstall btn-width m-b"
             id="addon-uninstall"
             data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Uninstalling"
