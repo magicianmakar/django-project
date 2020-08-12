@@ -34,6 +34,13 @@
 
     <div class="row m-t-xl">
         <div class="form-group col-md-8 col-md-offset-2">
+            <label>FAQ</label>
+            <textarea class="form-control" name="addon-faq" id="addon-faq">{{ object.faq|default:'' }}</textarea>
+        </div>
+    </div>
+
+    <div class="row m-t-xl">
+        <div class="form-group col-md-8 col-md-offset-2">
             <label for="product-title">Key Benfits</label>
         </div>
 
@@ -132,6 +139,7 @@
     <script>
         $(function () {
             setup_full_editor('addon-description');
+            setup_full_editor('addon-faq');
         });
     </script>
 {% endblock %}

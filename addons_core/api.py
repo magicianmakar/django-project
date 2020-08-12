@@ -31,6 +31,7 @@ class AddonsApi(ApiResponseMixin):
         addon.title = data['addon-title']
         addon.short_description = data['addon-short']
         addon.description = data['addon-description']
+        addon.faq = data['addon-faq']
         addon.icon_url = data['addon-icon']
         addon.banner_url = data['addon-banner']
         addon.monthly_price = safe_float(data['addon-price'])

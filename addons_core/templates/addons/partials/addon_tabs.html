@@ -1,0 +1,18 @@
+<div class="row p-t-xl p-b-xl">
+    <div class="container">
+        <div class="col-md-8">
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#addon-description">Description</a></li>
+                <li><a data-toggle="tab" href="#addon-faq">FAQ</a></li>
+            </ul>                  
+            <div class="tab-content addon-tabs">
+                <div id="addon-description" class="tab-pane fade in active">
+                    <p>{{ object.description | safe }}</p>
+                </div>
+                <div id="addon-faq" class="tab-pane fade">
+                    <p>{{ object.faq | safe}}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

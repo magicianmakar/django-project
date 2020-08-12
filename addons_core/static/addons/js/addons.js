@@ -4,23 +4,39 @@ $.fn.bootstrapTooltip = $.fn.tooltip.noConflict();
 
 $('.addon-install, .addon-uninstall').click(function (e) {
     var btn = $(e.currentTarget);
-
-    btn.bootstrapBtn('loading');
-    var endpoint = btn.data('endpoint');
-
-    $.ajax(api_url(endpoint.target, 'addons'),
-        {
-            type: 'post',
-            data: {
-                addon: btn.data('addon')
+    var btnid = e.target.id;
+    if(btnid == 'addon-install') {
+        text = 'You will charged $' + btn.data('price') + '/mo after ' + btn.data('trial') + '-Day Free Trial for this Addon. Would you like to continue?';
+    }
+    else if(btnid == 'addon-uninstall') {
+        text = 'Are you sure you want to Uninstall?';
+    }
+    Swal.fire({
+        title: btn.data("title"),
+        text: text,
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Continue',
+      }).then( function(result) {
+        if(result.value) {
+            btn.bootstrapBtn('loading');
+            var endpoint = btn.data('endpoint');
+            $.ajax(api_url(endpoint.target, 'addons'),
+                {
+                    type: 'post',
+                    data: {
+                        addon: btn.data('addon')
+                    }
+                }).done(function (data) {
+                window.location.reload();
+                }).fail(function (data) {
+                    displayAjaxError(endpoint.name, data);
+                    btn.bootstrapBtn('reset');
+                });
             }
-        }).done(function (data) {
-        window.location.reload();
-    }).fail(function (data) {
-        displayAjaxError(endpoint.name, data);
-        btn.bootstrapBtn('reset');
+        });
     });
-});
 
 $('#add-addon-btn').click(function (e) {
     e.preventDefault();
@@ -62,7 +78,8 @@ $('#addon-edit-save').click(function (e) {
     formData.append('addon-id', $('#addon-id').val());
     formData.append('addon-title', $('#addon-title').val());
     formData.append('addon-short', $('#addon-short').val());
-    formData.append('addon-description', document.editor.getData());
+    formData.append('addon-description', CKEDITOR.instances['addon-description'].getData());
+    formData.append('addon-faq', CKEDITOR.instances['addon-faq'].getData());
     formData.append('addon-icon', $('#addon-icon').val());
     formData.append('addon-banner', $('#addon-banner').val());
     formData.append('addon-youtube', $('#addon-youtube').val());
