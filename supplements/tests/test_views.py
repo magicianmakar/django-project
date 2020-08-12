@@ -29,6 +29,8 @@ class PLSBaseTestCase(BaseTestCase):
         self.user.save()
 
         self.user.profile.plan = GroupPlanFactory(title='Dropified Black', slug='black')
+        self.user.profile.plan.unique_supplements = -1
+        self.user.profile.plan.user_supplements = -1
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls_admin.use', description='PLS Admin'))
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls.use', description='PLS'))
         self.user.profile.plan.save()
@@ -116,6 +118,23 @@ class IndexTestCase(PLSBaseTestCase):
 
         content = self.do_test_get()
         self.assertEqual(content.count("product-imitation"), 2)
+
+    def test_access_new_supplement_without_limits(self):
+        self.client.force_login(self.user)
+        self.user.profile.plan.user_supplements = 0
+        self.user.profile.plan.save()
+
+        url = reverse('pls:supplement', kwargs={'supplement_id': self.supplement.id})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('pls:index'))
+
+        self.user.profile.plan.user_supplements = 1
+        self.user.profile.plan.unique_supplements = 1
+        self.user.profile.plan.save()
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('pls:index'))
 
 
 class SupplementTestCase(PLSBaseTestCase):
@@ -258,6 +277,52 @@ class SupplementTestCase(PLSBaseTestCase):
         self.assertEqual(self.user.pl_supplements.count(), 2)
         self.assertEqual(UserSupplementImage.objects.count(), 1)
         self.assertEqual(UserSupplementLabel.objects.all().count(), 2)
+
+    @patch('shopified_core.permissions.cache.get', return_value=None)
+    def test_creating_supplement_with_allowed_limit(self, cache):
+        self.client.force_login(self.user)
+
+        data = dict(
+            action="save",
+            title="New title 2",
+            description="New description 2",
+            category=self.user_supplement.category,
+            tags=self.user_supplement.tags,
+            price=self.user_supplement.price,
+            weight=self.user_supplement.pl_supplement.weight,
+            compare_at_price=self.user_supplement.compare_at_price,
+            cost_price=self.user_supplement.pl_supplement.cost_price,
+            shipstation_sku='test-sku',
+            upload_url='http://example.com/test',
+            mockup_slug='bottle',
+            mockup_urls='https://example.com/example.png',
+        )
+
+        self.assertEqual(self.user.pl_supplements.count(), 1)
+
+        self.user.profile.plan.user_supplements = 0
+        self.user.profile.plan.save()
+        response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.user.pl_supplements.count(), 1)
+
+        self.user.profile.plan.user_supplements = 5
+        self.user.profile.plan.save()
+        response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.user.pl_supplements.count(), 2)
+
+        self.user.profile.plan.unique_supplements = 0
+        self.user.profile.plan.save()
+        response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.user.pl_supplements.count(), 2)
+
+        self.user.profile.plan.unique_supplements = 1
+        self.user.profile.plan.save()
+        response = self.client.post(self.get_url(), data=data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.user.pl_supplements.count(), 3)
 
 
 class LabelHistoryTestCase(PLSBaseTestCase):

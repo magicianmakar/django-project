@@ -129,6 +129,8 @@ class UserProfile(models.Model):
     stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
     boards = models.IntegerField(default=-2)
+    unique_supplements = models.IntegerField(default=-2)
+    user_supplements = models.IntegerField(default=-2)
 
     status = models.IntegerField(default=1, choices=ENTITY_STATUS_CHOICES)
 
@@ -2005,6 +2007,8 @@ class GroupPlan(models.Model):
     stores = models.IntegerField(default=0, verbose_name="Stores Limit")
     products = models.IntegerField(default=0, verbose_name="Products Limit")
     boards = models.IntegerField(default=0, verbose_name="Boards Limit")
+    unique_supplements = models.IntegerField(default=0, verbose_name="Unique Supplements Limit")
+    user_supplements = models.IntegerField(default=0, verbose_name="User Supplements Limit")
     extra_stores = models.BooleanField(default=True, verbose_name='Support adding extra stores')
     extra_store_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=27.00,
                                            verbose_name='Extra store cost per store(in USD)')

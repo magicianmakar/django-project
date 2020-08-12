@@ -28,6 +28,9 @@ class PLSBaseTestCase(BaseTestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
+        self.user.profile.unique_supplements = -1
+        self.user.profile.user_supplements = -1
+        self.user.profile.save()
 
         self.supplement = PLSupplementFactory.create(
             title='Fish Oil',
@@ -441,7 +444,10 @@ class OrderLineInfoTestCase(PLSBaseTestCase):
     def test_get_request_to_endpoint_returns_403_if_not_owner_of_label(self):
         self.login()
         order = PLSOrderFactory()
-        user_supplement = UserSupplementFactory(user=UserFactory(), pl_supplement=PLSupplementFactory())
+        new_user = UserFactory()
+        new_user.profile.unique_supplements = -1
+        new_user.profile.user_supplements = -1
+        user_supplement = UserSupplementFactory(user=new_user, pl_supplement=PLSupplementFactory())
         label_not_owned = UserSupplementLabelFactory(user_supplement=user_supplement)
         line = PLSOrderLineFactory(store_id=order.store_id,
                                    store_order_id=order.store_order_id,

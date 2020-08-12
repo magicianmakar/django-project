@@ -1,7 +1,7 @@
 import arrow
 
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.core.cache import cache
 
 from leadgalaxy.models import ShopifyStore
@@ -300,5 +300,66 @@ def can_add_board(user):
     if (total_allowed > -1) and (user_count + 1 > total_allowed):
         if not profile.can('unlimited_boards.use'):
             can_add = False
+
+    return can_add, total_allowed, user_count
+
+
+def can_add_supplement(user):
+    """ Check if the user plan allow one more UserSupplement creation """
+
+    profile = user.profile
+
+    if profile.is_subuser:
+        return can_add_supplement(profile.subuser_parent)
+
+    user_supplements = int(profile.user_supplements)
+    if user_supplements == -2:
+        total_allowed = profile.plan.user_supplements  # -1 mean unlimited
+    else:
+        total_allowed = user_supplements
+
+    if total_allowed == -1:  # No need for query
+        return True, -1, -1
+
+    labels_count_key = 'user_supplement_count_{}'.format(user.id)
+    user_count = cache.get(labels_count_key)
+
+    if user_count is None:
+        user_count = user.pl_supplements.filter(is_deleted=False).count()
+        cache.set(labels_count_key, user_count, timeout=600)
+
+    can_add = True
+    if (total_allowed > -1) and (user_count + 1 > total_allowed):
+        can_add = False
+
+    return can_add, total_allowed, user_count
+
+
+def can_use_unique_supplement(user, pl_supplement_id=0):
+    """ Check if the user plan allow using another PLSupplement
+    to create a UserSupplement
+    """
+
+    profile = user.profile
+    if profile.is_subuser:
+        return can_use_unique_supplement(profile.subuser_parent, pl_supplement_id)
+
+    unique_supplements = int(profile.unique_supplements)
+    if unique_supplements == -2:
+        total_allowed = profile.plan.unique_supplements  # -1 mean unlimited
+    else:
+        total_allowed = unique_supplements
+
+    if total_allowed == -1:  # No need for query
+        return True, -1, -1
+
+    user_count = user.pl_supplements.exclude(
+        pl_supplement_id=pl_supplement_id,
+        is_active=False
+    ).aggregate(c=Count('pl_supplement', distinct=True))['c']
+
+    can_add = True
+    if (total_allowed > -1) and (user_count + 1 > total_allowed):
+        can_add = False
 
     return can_add, total_allowed, user_count

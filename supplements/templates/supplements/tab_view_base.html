@@ -16,7 +16,7 @@
 {% url 'pls:billing' as pls_billing %}
 {% url 'pls:upload_json' as pls_upload_json %}
 
-<div class="tabs-container">
+<div id="supplement-container" class="tabs-container">
   <ul class="nav nav-tabs scrolling-tabs">
   {% if request.user|can:'pls.use' %}
     {% if request.path ==  pls_index %}

@@ -1,5 +1,7 @@
 {% extends "supplements/tab_view_base.html" %}
 
+{% load static compress %}
+
 {% block tab_content %}
 
 <div class="row">
@@ -22,4 +24,15 @@
 </div>
 
 {% include "product_common/partials/paging.html" %}
+{% include "supplements/partials/limit_reached_modal.html" with title="Supplement" %}
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+  var limitReached = {{ limit_reached|lower }};
+</script>
+
+{% compress js %}
+<script type="text/javascript" src="{% static 'pls/js/limit_reached.js' %}"></script>
+{% endcompress %}
 {% endblock %}

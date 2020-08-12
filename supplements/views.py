@@ -5,6 +5,7 @@ from decimal import Decimal
 from io import BytesIO
 
 from django import template
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
@@ -92,6 +93,12 @@ class Index(common_views.IndexView):
     def get_queryset(self):
         queryset = super().get_queryset()
 
+        if self.request.GET.get('only_unique'):
+            unique_supplement_ids = UserSupplement.objects.filter(
+                user=self.request.user.models_user
+            ).values_list('pl_supplement_id')
+            queryset = queryset.filter(id__in=unique_supplement_ids)
+
         form = PLSupplementFilterForm(self.request.GET)
         if form.is_valid():
             title = form.cleaned_data['title']
@@ -124,6 +131,12 @@ class Index(common_views.IndexView):
         context = super().get_context_data(**kwargs)
         context['supplements'] = context['products']
         context['form'] = PLSupplementFilterForm(self.request.GET)
+
+        can_add, total_allowed, user_count = permissions.can_add_supplement(self.request.user)
+        context['limit_reached'] = not can_add
+        context['total_allowed'] = total_allowed
+        context['user_count'] = user_count
+
         return context
 
 
@@ -359,6 +372,27 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        # Permission check for new supplements only
+        if request.resolver_match.url_name == 'supplement':
+            can_add, total_allowed, user_count = permissions.can_add_supplement(request.user)
+            if not can_add:
+                messages.error(request, f"Your plan allow up to {total_allowed} "
+                               + f"supplements, currently you have {user_count} supplements.")
+                return redirect('pls:index')
+            else:
+                total_allowed = total_allowed if total_allowed > -1 else 'unlimited'
+                only_unique_filter = f"{reverse('supplements:index')}?only_unique=1"
+                add_supplements_text = f'<br>You can still create {total_allowed} supplement ' \
+                                       + f'variations, click <a href="{only_unique_filter}">here</a> to see which.'
+
+            unique_permissions = permissions.can_use_unique_supplement(request.user, kwargs.get('supplement_id'))
+            unique_can_add, unique_total_allowed, unique_user_count = unique_permissions
+            if not unique_can_add:
+                messages.error(request, f"Your plan allows customization of {unique_total_allowed} "
+                               + f"supplements, currently you customized {unique_user_count} supplements."
+                               + add_supplements_text)
+                return redirect('pls:index')
+
         if request.user.can('pls.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
