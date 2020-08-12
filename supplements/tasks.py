@@ -1,11 +1,10 @@
 import json
 
-from app.celery_base import celery_app, CaptureFailure
-
+from app.celery_base import CaptureFailure, celery_app
 from lib.exceptions import capture_exception
-
 from shopified_core.utils import hash_text
-from .lib.shipstation import get_address, create_shipstation_order, prepare_shipstation_data
+
+from .lib.shipstation import create_shipstation_order, get_address, prepare_shipstation_data
 from .models import PLSOrder
 from .utils.payment import Util
 

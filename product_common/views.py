@@ -1,3 +1,4 @@
+import arrow
 from decimal import Decimal
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -5,6 +6,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
+from django.utils import timezone
 from django.views import View
 from django.views.generic.list import ListView
 
@@ -327,16 +329,30 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             if amount:
                 queryset = queryset.filter(amount=amount * 100)
 
-            created_at = form.cleaned_data['date']
-            if created_at:
-                queryset = queryset.filter(created_at__date=created_at)
-
             transaction_id = form.cleaned_data['transaction_id']
             if transaction_id:
                 queryset = queryset.filter(
                     Q(stripe_transaction_id=transaction_id)
                     | Q(id=transaction_id)
                 )
+
+            date = self.request.GET.get('date', None)
+            created_at_start, created_at_end = None, None
+            if date:
+                try:
+                    daterange_list = date.split('-')
+                    tz = timezone.localtime(timezone.now()).strftime(' %z')
+                    created_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').datetime
+                    if len(daterange_list) > 1 and daterange_list[1]:
+                        created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                        created_at_end = created_at_end.span('day')[1].datetime
+                except:
+                    pass
+                else:
+                    if created_at_start:
+                        queryset = queryset.filter(created_at__gte=created_at_start)
+                    if created_at_end:
+                        queryset = queryset.filter(created_at__lte=created_at_end)
 
         return queryset
 
@@ -348,8 +364,11 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = self.form
-        context['breadcrumbs'] = self.get_breadcrumbs()
+        context.update({
+            'form': self.form,
+            'breadcrumbs': self.get_breadcrumbs(),
+            'date_range': self.request.GET.get('date', None),
+        })
         self.add_paging_context(context)
         return context
 
@@ -397,16 +416,33 @@ class PayoutView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             if amount:
                 queryset = queryset.filter(amount=amount * 100)
 
-            created_at = form.cleaned_data['date']
-            if created_at:
-                queryset = queryset.filter(created_at__date=created_at)
+            date = self.request.GET.get('date', None)
+            created_at_start, created_at_end = None, None
+            if date:
+                try:
+                    daterange_list = date.split('-')
+                    tz = timezone.localtime(timezone.now()).strftime(' %z')
+                    created_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').datetime
+                    if len(daterange_list) > 1 and daterange_list[1]:
+                        created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                        created_at_end = created_at_end.span('day')[1].datetime
+                except:
+                    pass
+                else:
+                    if created_at_start:
+                        queryset = queryset.filter(created_at__gte=created_at_start)
+                    if created_at_end:
+                        queryset = queryset.filter(created_at__lte=created_at_end)
 
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = self.form
-        context['breadcrumbs'] = self.get_breadcrumbs()
+        context.update({
+            'form': self.form,
+            'breadcrumbs': self.get_breadcrumbs(),
+            'date_range': self.request.GET.get('date', None),
+        })
         self.add_paging_context(context)
         return context
 
@@ -455,10 +491,6 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                     label__sku=label_sku
                 )
 
-            created_at = form.cleaned_data['date']
-            if created_at:
-                queryset = queryset.filter(created_at__date=created_at)
-
             line_status = form.cleaned_data['line_status']
             if line_status:
                 if line_status == 'printed':
@@ -495,6 +527,24 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 for id, number in cancelled_order_ids.items():
                     queryset = queryset.exclude(pls_order_id=id, pls_order__order_number=number)
 
+            date = self.request.GET.get('date', None)
+            created_at_start, created_at_end = None, None
+            if date:
+                try:
+                    daterange_list = date.split('-')
+                    tz = timezone.localtime(timezone.now()).strftime(' %z')
+                    created_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').datetime
+                    if len(daterange_list) > 1 and daterange_list[1]:
+                        created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                        created_at_end = created_at_end.span('day')[1].datetime
+                except:
+                    pass
+                else:
+                    if created_at_start:
+                        queryset = queryset.filter(created_at__gte=created_at_start)
+                    if created_at_end:
+                        queryset = queryset.filter(created_at__lte=created_at_end)
+
         return queryset
 
     def get_breadcrumbs(self):
@@ -529,6 +579,7 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
             'form': self.form,
             'breadcrumbs': self.get_breadcrumbs(),
             'total_line_items': total_line_items,
+            'date_range': self.request.GET.get('date', None),
         })
         self.add_paging_context(context)
         return context

@@ -22,16 +22,13 @@
 </div>
 
 <div class="col-sm-3">
-  <div class="form-group {% if form.sku.errors %}has-error{% endif %}">
-    <label class="control-label">Label Updated Date:</label>
-    <div class='input-group'>
-      <div class="input-group-addon">
-        <i class='fa fa-calendar'></i>
-      </div>
-      {{ form.date|add_class:"form-control" }}
+  <div class="form-group">
+    <label class="control-label">Label Updated Date Range:</label>
+    <div id="date" class="form-control">
+      <i class="fa fa-calendar m-r-xs"></i>
+      <span>All Time</span>
+      <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
     </div>
-    {% for error in form.date.errors %}
-    <p class="help-block">{{ error }}</p>
-    {% endfor %}
+    <input type="hidden" type="text" name="date" value="{{ date_range|default:'' }}" />
   </div>
 </div>

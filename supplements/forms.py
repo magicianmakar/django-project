@@ -1,7 +1,7 @@
 from django import forms
 from django.core.validators import FileExtensionValidator
 
-from .models import LabelSize, Payout, PLSOrder, PLSupplement, UserSupplement, UserSupplementLabel, RefundPayments
+from .models import LabelSize, Payout, PLSOrder, PLSupplement, RefundPayments, UserSupplement, UserSupplementLabel
 
 
 class UserSupplementForm(forms.ModelForm):
@@ -140,14 +140,12 @@ class OrderFilterForm(forms.Form):
     email = forms.CharField(required=False)
     refnum = forms.CharField(required=False, label='Payout ID')
     amount = forms.DecimalField(required=False)
-    date = forms.DateField(required=False)
     transaction_id = forms.CharField(required=False)
 
 
 class MyOrderFilterForm(forms.Form):
     order_number = forms.CharField(required=False)
     transaction_id = forms.CharField(required=False)
-    date = forms.DateField(required=False)
 
 
 class PayoutFilterForm(OrderFilterForm):
@@ -200,7 +198,6 @@ class LabelFilterForm(forms.Form):
                                        widget=forms.SelectMultiple(
                                            attrs={'id': 'id_label_sku_filter', 'data-placeholder': 'Select label status'}))
     sku = forms.CharField(required=False)
-    date = forms.DateField(required=False)
 
 
 class AllLabelFilterForm(forms.Form):

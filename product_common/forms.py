@@ -34,7 +34,6 @@ class OrderFilterForm(forms.Form):
     status = forms.ChoiceField(required=False, choices=STATUSES)
     email = forms.CharField(required=False)
     amount = forms.DecimalField(required=False)
-    date = forms.DateField(required=False)
 
 
 class PayoutFilterForm(OrderFilterForm):

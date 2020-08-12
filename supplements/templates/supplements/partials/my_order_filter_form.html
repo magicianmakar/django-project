@@ -13,22 +13,21 @@
 
     <div class="col-sm-4">
       <div class="form-group">
-        {{ form.transaction_id.errors }}
-        <label class="control-label">Payment ID:</label>
-        {{ form.transaction_id|add_class:"form-control" }}
+        <label class="control-label">Date Range:</label>
+        <div id="date" class="form-control">
+          <i class="fa fa-calendar m-r-xs"></i>
+          <span>All Time</span>
+          <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+        </div>
+        <input type="hidden" type="text" name="date" value="{{ date_range|default:'' }}" />
       </div>
     </div>
 
     <div class="col-sm-4">
       <div class="form-group">
-        {{ form.date.errors }}
-        <label class="control-label">Date:</label>
-        <div class='input-group'>
-          <div class="input-group-addon">
-            <i class='fa fa-calendar'></i>
-          </div>
-          {{ form.date|add_class:"form-control" }}
-        </div>
+        {{ form.transaction_id.errors }}
+        <label class="control-label">Payment ID:</label>
+        {{ form.transaction_id|add_class:"form-control" }}
       </div>
     </div>
 

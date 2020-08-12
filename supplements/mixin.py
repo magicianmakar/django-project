@@ -1,9 +1,8 @@
-import simplejson as json
-
 from django.db.models import F, Sum
 from django.shortcuts import reverse
 from django.utils.html import format_html
 
+import simplejson as json
 from bs4 import BeautifulSoup
 
 from supplements.lib.authorizenet import charge_customer_profile, get_customer_payment_profile, refund_customer_profile

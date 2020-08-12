@@ -8,7 +8,7 @@ from django.shortcuts import reverse
 from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyOrderTrackFactory, ShopifyStoreFactory, UserFactory
 from lib.test import BaseTestCase
 from shopify_orders.models import ShopifyOrderLog
-from supplements.models import AuthorizeNetCustomer, UserSupplementImage, UserSupplementLabel, Payout
+from supplements.models import AuthorizeNetCustomer, Payout, UserSupplementImage, UserSupplementLabel
 
 from .factories import (
     LabelSizeFactory,

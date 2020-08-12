@@ -132,6 +132,7 @@
 {% block extra_pls_css %}
 {% compress css %}
 <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+<link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <style type="text/css">
     .select2.select2-container.select2-container--default {
         width: 100% !important;
@@ -149,8 +150,10 @@
 {% block extrajs %}
 <script type="text/javascript" src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
-<script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
+<script type="text/javascript" src="{% static 'js/daterangepicker.js' %}"></script>
 <script type='application/javascript'>
-  $("#id_date").datepicker();
+  setupDateRangePicker('#date', 'input[name="date"]');
 </script>
 {% endblock %}

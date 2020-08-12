@@ -10,11 +10,11 @@ from .models import (
     PLSOrder,
     PLSOrderLine,
     PLSupplement,
+    RefundPayments,
     ShippingGroup,
     UserSupplement,
     UserSupplementImage,
-    UserSupplementLabel,
-    RefundPayments,
+    UserSupplementLabel
 )
 
 

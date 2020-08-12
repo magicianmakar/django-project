@@ -60,6 +60,18 @@
 
     <div class="col-sm-4">
       <div class="form-group">
+        <label class="control-label">Date Range:</label>
+        <div id="date" class="form-control">
+          <i class="fa fa-calendar m-r-xs"></i>
+          <span>All Time</span>
+          <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+        </div>
+        <input type="hidden" type="text" name="date" value="{{ date_range|default:'' }}" />
+      </div>
+    </div>
+
+    <div class="col-sm-4">
+      <div class="form-group">
         {{ form.batch_number.errors }}
         <label class="control-label">Batch Number:</label>
         {{ form.batch_number|add_class:"form-control" }}
@@ -71,19 +83,6 @@
         {{ form.shipstation_status.errors }}
         <label class="control-label">Fulfillment Status:</label>
         {{ form.shipstation_status|add_class:"form-control" }}
-      </div>
-    </div>
-
-    <div class="col-sm-4">
-      <div class="form-group">
-        {{ form.date.errors }}
-        <label class="control-label">Date:</label>
-        <div class='input-group'>
-          <div class="input-group-addon">
-            <i class='fa fa-calendar'></i>
-          </div>
-          {{ form.date|add_class:"form-control" }}
-        </div>
       </div>
     </div>
 

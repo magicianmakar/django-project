@@ -1,5 +1,6 @@
 import json
 from unittest.mock import MagicMock, patch
+
 from django.db.models import F, Sum
 
 from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyProductFactory, ShopifyStoreFactory, UserFactory
@@ -12,12 +13,12 @@ from supplements.models import PLSOrderLine as OrderLine
 from supplements.models import ShippingGroup
 
 from .factories import (
-    PLSupplementFactory,
-    UserSupplementFactory,
-    UserSupplementLabelFactory,
-    PLSOrderLineFactory,
     PLSOrderFactory,
+    PLSOrderLineFactory,
+    PLSupplementFactory,
     ShippingGroupFactory,
+    UserSupplementFactory,
+    UserSupplementLabelFactory
 )
 
 

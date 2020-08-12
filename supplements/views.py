@@ -21,6 +21,7 @@ from django.views import View
 from django.views.generic import TemplateView
 from django.views.generic.list import ListView
 
+import arrow
 import bleach
 import requests
 import simplejson as json
@@ -67,11 +68,11 @@ from .forms import (
     PLSupplementEditForm,
     PLSupplementFilterForm,
     PLSupplementForm,
-    UploadJSONForm,
-    UserSupplementForm,
-    UserSupplementFilterForm,
-    ReportsQueryForm,
     RefundPaymentsForm,
+    ReportsQueryForm,
+    UploadJSONForm,
+    UserSupplementFilterForm,
+    UserSupplementForm
 )
 from .utils import aws_s3_context, create_rows, payment, report, send_email_against_comment
 
@@ -867,9 +868,23 @@ class MyLabels(LoginRequiredMixin, PagingMixin):
             if sku:
                 queryset = queryset.filter(labels__sku=sku)
 
-            created_at = form.cleaned_data['date']
-            if created_at:
-                queryset = queryset.filter(current_label__updated_at__date=created_at)
+            date = self.request.GET.get('date', None)
+            updated_at_start, updated_at_end = None, None
+            if date:
+                try:
+                    daterange_list = date.split('-')
+                    tz = timezone.localtime(timezone.now()).strftime(' %z')
+                    updated_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').datetime
+                    if len(daterange_list) > 1 and daterange_list[1]:
+                        updated_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                        updated_at_end = updated_at_end.span('day')[1].datetime
+                except:
+                    pass
+                else:
+                    if updated_at_start:
+                        queryset = queryset.filter(current_label__updated_at__gte=updated_at_start)
+                    if updated_at_end:
+                        queryset = queryset.filter(current_label__updated_at__lte=updated_at_end)
 
         return queryset
 
@@ -888,6 +903,7 @@ class MyLabels(LoginRequiredMixin, PagingMixin):
             'supplements_count': supplements_count,
             'user_supplements': context['object_list'],
             'form': self.form,
+            'date_range': self.request.GET.get('date', None),
         })
         return context
 
@@ -1092,9 +1108,12 @@ class Order(common_views.OrderView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = self.form
-        context['refund_form'] = self.refund_form
-        context['breadcrumbs'] = self.get_breadcrumbs()
+        context.update({
+            'form': self.form,
+            'refund_form': self.refund_form,
+            'breadcrumbs': self.get_breadcrumbs(),
+            'date_range': self.request.GET.get('date', None),
+        })
         self.add_paging_context(context)
         return context
 
@@ -1230,9 +1249,23 @@ class MyOrders(common_views.OrderView):
                     | Q(id=transaction_id)
                 )
 
-            created_at = form.cleaned_data['date']
-            if created_at:
-                queryset = queryset.filter(created_at__date=created_at)
+            date = self.request.GET.get('date', None)
+            created_at_start, created_at_end = None, None
+            if date:
+                try:
+                    daterange_list = date.split('-')
+                    tz = timezone.localtime(timezone.now()).strftime(' %z')
+                    created_at_start = arrow.get(daterange_list[0] + tz, r'MM/DD/YYYY Z').datetime
+                    if len(daterange_list) > 1 and daterange_list[1]:
+                        created_at_end = arrow.get(daterange_list[1] + tz, r'MM/DD/YYYY Z')
+                        created_at_end = created_at_end.span('day')[1].datetime
+                except:
+                    pass
+                else:
+                    if created_at_start:
+                        queryset = queryset.filter(created_at__gte=created_at_start)
+                    if created_at_end:
+                        queryset = queryset.filter(created_at__lte=created_at_end)
 
         return queryset
 

@@ -9,13 +9,12 @@ from bigcommerce_core.models import BigCommerceStore
 from commercehq_core.models import CommerceHQStore
 from groovekart_core.models import GrooveKartStore
 from leadgalaxy.models import ShopifyStore
-from woocommerce_core.models import WooStore
-
 from lib.exceptions import capture_exception
 from shopified_core.shipping_helper import country_from_code
-from shopified_core.utils import safe_float, get_store_api
+from shopified_core.utils import get_store_api, safe_float
 from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
 from supplements.utils import supplement_customer_address
+from woocommerce_core.models import WooStore
 
 
 def complete_payment(transaction_id, pls_order_id):

@@ -1,8 +1,8 @@
+from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, UserFactory
 from lib.test import BaseTestCase
-from ..utils import user_can_download_label
 
-from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, AppPermissionFactory
-from .factories import PLSupplementFactory, UserSupplementLabelFactory, UserSupplementFactory
+from ..utils import user_can_download_label
+from .factories import PLSupplementFactory, UserSupplementFactory, UserSupplementLabelFactory
 
 
 class TestUserCanDownloadLabel(BaseTestCase):
