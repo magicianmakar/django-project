@@ -375,3 +375,20 @@ class SupplementsApi(ApiResponseMixin, View):
             })
         else:
             raise permissions.PermissionDenied()
+
+    def get_order_lines(self, request, user, data):
+        order_id = safe_int(data.get('order_id'))
+        try:
+            order = PLSOrder.objects.get(id=order_id)
+        except PLSOrder.DoesNotExist:
+            return self.api_error('Order not found', status=404)
+
+        line_items = [dict(
+            id=i.id,
+            sku=i.label.sku,
+            quantity=i.quantity,
+            supplement=i.label.user_supplement.to_dict(),
+            line_total="${:.2f}".format((i.amount * i.quantity) / 100.)
+        ) for i in order.order_items.all()]
+
+        return self.api_success({'items': line_items})

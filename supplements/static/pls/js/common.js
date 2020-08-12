@@ -183,8 +183,32 @@ $(document).ready(function(){
 
     $('.make-refund').click(function (e) {
         var orderId = $(this).data('order-id');
+        $.ajax({
+            url: api_url('order-lines', 'supplements'),
+            type: 'GET',
+            data: {order_id: orderId},
+            success: function(data) {
+                var form = document.getElementById('refund_form');
+                form.order_id.value = orderId;
+                var addLinesTemplate = Handlebars.compile($("#id-add-line-items-template").html());
+                var html = addLinesTemplate(data);
+                $('#modal-orders-refund tbody').empty().append(html);
+                $('#modal-orders-refund').modal('show');
+            }
+        });
+    });
+
+    $('#add-refund').click(function (e) {
         var form = document.getElementById('refund_form');
-        form.order_id.value = orderId;
+        if (form.checkValidity()) {
+            var itemIds = [];
+            $(".line-checkbox").each(function (i, item) {
+                if ($(item).prop('checked')) {
+                    itemIds.push($(item).data("item-id"));
+                }
+            });
+            form.line_item_ids.value = itemIds;
+        }
     });
 
     $('.mark-supplement').click(function (e) {

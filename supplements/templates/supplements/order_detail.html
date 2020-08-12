@@ -61,6 +61,13 @@
       <td class="product-cell">{{ item.sku }}</td>
       <td class="product-cell">{{ item.quantity }} &times; ${{ item.supplement.cost_price }}</td>
       <td class="product-cell">{{ item.line_total }}</td>
+      <td class="product-cell">
+        {% if item.refunded %}
+        <span class="label label-warning">Refunded</span>
+        {% else %}
+        <span class="label label-primary">Paid</span>
+        {% endif %}
+      </td>
     {% endfor %}
   </tbody>
 </table>
@@ -93,15 +100,15 @@
 {% if order.refund %}
 <div class="row m-t">
   <div class="col-md-2 col-md-offset-9 text-right">
-    <span class="h5"><b>Refund</b>:
+    <span class="h5"><b>Refund (Amount - Restocking Fee)</b>:
       <i class="fa fa-fw fa-question-circle"
-        qtip-tooltip="Amount to be refunded: <b>{{ order.refund_without_fee_string }}</b>"
+        qtip-tooltip="Restocking Fee: <b>{{ order.refund_fee_string }}</b>"
         qtip-my="bottom right"
         qtip-at="top right"
       ></i></span>
   </div>
   <div class="col-md-1 text-right">
-    {{ order.refund_amount_string }}
+    - {{ order.refund_amount_string }}
   </div>
 </div>
 {% endif %}
@@ -111,7 +118,7 @@
     <span class="h4"><b>Total Cost</b>:</span>
   </div>
   <div class="col-md-1 text-right">
-    <span class="h4">{{ order.amount_string }}</span>
+    <span class="h4">{{ order.amount_without_refund_string }}</span>
   </div>
 </div>
 

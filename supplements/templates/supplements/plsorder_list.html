@@ -28,7 +28,7 @@
     <th>Customer</th>
     <th>Total Amount</th>
     <th>Shipping Cost</th>
-    <th>Refund</th>
+    <th>Refund <br> (Amount - Restocking Fee)</th>
     <th>Date</th>
     <th>Status</th>
     <th id="edit-column">Payout</th>
@@ -51,7 +51,7 @@
         {{ pls_order.refund_amount_string }}
         {% if pls_order.refund %}
         <i class="fa fa-fw fa-question-circle"
-          qtip-tooltip="Amount to be refunded: <b>{{ pls_order.refund_without_fee_string }}</b>"
+          qtip-tooltip="Restocking Fee: <b>{{ pls_order.refund_fee_string }}</b><br>Description: {{ pls_order.refund.description }}"
           qtip-my="bottom right"
           qtip-at="top right"
         ></i>
@@ -74,8 +74,8 @@
       </td>
       <td>
         {% if not pls_order.refund %}
-        <a href="#modal-orders-refund" data-toggle="modal" class="btn btn-default btn-outline btn-xs make-refund"
-          data-order-id="{{ pls_order.id }}" {% if refund_form.errors %} style="color:#ed5565;"{% endif %}>Refund</a>
+        <button class="btn btn-default btn-outline btn-xs make-refund" data-order-id="{{ pls_order.id }}"
+          {% if refund_form.errors %} style="color:#ed5565;"{% endif %}>Refund</button>
         {% endif %}
       </td>
     {% empty %}
@@ -99,9 +99,11 @@
 {% endblock %}
 
 {% block extrajs %}
-<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
-<script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
+
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/daterangepicker.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
 <script type='application/javascript'>

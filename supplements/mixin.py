@@ -248,10 +248,22 @@ class PLSOrderMixin:
         return "${:.2f}".format(result['total'] / 100.)
 
     @property
+    def amount_without_refund(self):
+        amount = self.amount / 100.
+        if self.refund:
+            amount -= float(self.refund_amount)
+
+        return amount
+
+    @property
+    def amount_without_refund_string(self):
+        return '${:.2f}'.format(self.amount_without_refund)
+
+    @property
     def refund_amount(self):
         refund = 0
         if self.refund:
-            refund = self.refund.amount
+            refund = self.refund.amount - self.refund.fee
 
         return refund
 
@@ -260,16 +272,16 @@ class PLSOrderMixin:
         return '${:.2f}'.format(self.refund_amount)
 
     @property
-    def refund_without_fee(self):
-        refund = 0
+    def refund_fee(self):
+        fee = 0
         if self.refund:
-            refund = self.refund.amount - self.refund.fee
+            fee = self.refund.fee
 
-        return refund
+        return fee
 
     @property
-    def refund_without_fee_string(self):
-        return '${:.2f}'.format(self.refund_without_fee)
+    def refund_fee_string(self):
+        return '${:.2f}'.format(self.refund_fee)
 
 
 class PLSOrderLineMixin:
@@ -320,13 +332,6 @@ class PLSOrderLineMixin:
             return get_string("primary", "Fulfilled")
         else:
             return get_string("warning", "Unfulfilled")
-
-    @property
-    def is_refunded(self):
-        if self.pls_order.refund:
-            return True
-
-        return False
 
 
 class PayoutMixin:

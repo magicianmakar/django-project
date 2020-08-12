@@ -22,7 +22,6 @@
     <th>Amount Paid</th>
     <th>Sale Price</th>
     <th>Profit</th>
-    <th>Refund</th>
     <th>Date</th>
     <th>Status</th>
     <th>Details</th>
@@ -35,18 +34,14 @@
       <td>{{ pls_order.amount_string }}</td>
       <td>{{ pls_order.sale_price_string }}</td>
       <td>{{ pls_order.user_profit_string }}</td>
+      <td>{{ pls_order.created_at|date:"m.d.Y h:iA" }}</td>
       <td>
-        {{ pls_order.refund_amount_string }}
         {% if pls_order.refund %}
-        <i class="fa fa-fw fa-question-circle"
-          qtip-tooltip="Amount to be refunded: <b>{{ pls_order.refund_without_fee_string }}</b>"
-          qtip-my="bottom right"
-          qtip-at="top right"
-        ></i>
+        <span class="label label-warning">Refunded</span>
+        {% else %}
+        {{ pls_order.status_string }}
         {% endif %}
       </td>
-      <td>{{ pls_order.created_at|date:"m.d.Y h:iA" }}</td>
-      <td>{{ pls_order.status_string }}</td>
       <td><a class="btn btn-default btn-outline btn-xs" href="{% url 'pls:my_order_detail' order_id=pls_order.id %}" >View</a></td>
     {% empty %}
       <td colspan="7">No orders yet.</td>

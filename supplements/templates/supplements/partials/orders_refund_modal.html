@@ -13,6 +13,7 @@
             <div class="row">
               <div class="col-md-12">
                 <input type="hidden" name="order_id" value="">
+                <input type="hidden" name="line_item_ids" value="">
                 <div class="form-group {{ refund_form.amount.errors|yesno:'has-error,' }}">
                   <label class="col-sm-3 col-xs-12 control-label">Amount:</label>
                   <div class="col-sm-9 col-xs-12">
@@ -49,23 +50,54 @@
                   </div>
                 </div>
 
-                <div class="form-group {{ refund_form.item_shipped.errors|yesno:'has-error,' }}">
-                  <label class="col-sm-3 col-xs-12 control-label" for="id_item_shipped">Item Shipped:</label>
+                <div class="form-group {{ refund_form.order_shipped.errors|yesno:'has-error,' }}">
+                  <label class="col-sm-3 col-xs-12 control-label" for="id_order_shipped">Order Shipped:</label>
                   <div class="col-sm-9 col-xs-12" style="padding-top: 6px;">
-                    {{ refund_form.item_shipped }}
-                    {% for error in refund_form.item_shipped.errors %}
+                    {{ refund_form.order_shipped }}
+                    {% for error in refund_form.order_shipped.errors %}
                     <p class="help-block">{{ error }}</p>
                     {% endfor %}
                   </div>
                 </div>
 
+                <hr />
+                <h3>Select item(s) to be refunded</h3>
+                <table class='table dataTables'>
+                  <thead>
+                    <th><input id="select-all-lines" type="checkbox" title="Select all" /></th>
+                    <th>Title</th>
+                    <th>SKU</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th>Total Amount</th>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <input type="submit" class="btn btn-primary" value="Add Refund" />
+          <input type="submit" class="btn btn-primary" id="add-refund" value="Add Refund" />
         </div>
       </form>
     </div>
   </div>
 </div>
+
+
+{% verbatim %}
+<script id="id-add-line-items-template" type="text/x-handlebars-template">
+  {{#each items}}
+  <tr>
+    <td><input type="checkbox" class="line-checkbox" data-item-id="{{ this.id }}"/>
+    <td>{{ this.supplement.title }}</td>
+    <td>{{ this.sku }}</td>
+    <td>${{ this.supplement.cost_price }}</td>
+    <td>{{ this.quantity }}</td>
+    <td>{{ this.line_total }}</td>
+  </tr>
+  {{/each}}
+</script>
+{% endverbatim %}

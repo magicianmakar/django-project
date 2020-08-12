@@ -305,7 +305,7 @@ class RefundPaymentsForm(forms.ModelForm):
             'amount',
             'description',
             'fee',
-            'item_shipped',
+            'order_shipped',
         ]
 
     def clean(self):

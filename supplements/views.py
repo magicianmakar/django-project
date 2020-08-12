@@ -1124,10 +1124,16 @@ class Order(common_views.OrderView):
             with transaction.atomic():
                 refund = refund_form.save()
                 order_id = request.POST.get('order_id', '')
+                line_item_ids = request.POST.get('line_item_ids', '')
+
                 if order_id:
                     order = get_object_or_404(PLSOrder, id=order_id)
                     order.refund = refund
                     order.save()
+
+                    if line_item_ids:
+                        line_item_ids = line_item_ids.split(',')
+                        order.order_items.filter(id__in=line_item_ids).update(is_refunded=True)
 
                     transaction_id = None
                     if order.stripe_transaction_id:
@@ -1166,7 +1172,8 @@ class OrderDetailMixin(LoginRequiredMixin, View):
             sku=i.label.sku,
             quantity=i.quantity,
             supplement=i.label.user_supplement.to_dict(),
-            line_total="${:.2f}".format((i.amount * i.quantity) / 100.)
+            line_total="${:.2f}".format((i.amount * i.quantity) / 100.),
+            refunded=i.is_refunded,
         ) for i in order.order_items.all()]
 
         util = payment.Util()

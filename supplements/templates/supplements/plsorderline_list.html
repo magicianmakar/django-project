@@ -55,6 +55,7 @@
     <th>Date</th>
     <th>Status</th>
     <th>Label</th>
+    <th>Paid</th>
   </thead>
   <tbody>
     {% for line_item in object_list %}
@@ -90,8 +91,13 @@
       <td>
         {% if line_item.is_refunded %}
         <span class="label label-warning">Refunded</span>
+        <i class="fa fa-fw fa-question-circle"
+          qtip-tooltip="Refund Description: {{ line_item.pls_order.refund.description }}"
+          qtip-my="bottom right"
+          qtip-at="top right"
+        ></i>
         {% else %}
-        <span class="label label-primary">Settled</span>
+        <span class="label label-primary">Paid</span>
         {% endif %}
       </td>
     {% empty %}

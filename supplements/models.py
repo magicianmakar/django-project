@@ -231,6 +231,7 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
                                   on_delete=models.CASCADE,
                                   related_name='order_items',
                                   null=True)
+    is_refunded = models.BooleanField(default=False)
 
 
 class Payout(PayoutMixin, model_base.AbstractPayout):
@@ -740,7 +741,7 @@ class RefundPayments(models.Model):
     description = models.TextField()
     fee = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_id = models.CharField(max_length=255, null=True)
-    item_shipped = models.BooleanField(default=True)
+    order_shipped = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
