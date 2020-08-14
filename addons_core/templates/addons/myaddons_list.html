@@ -7,12 +7,12 @@
 
 {% block main-container %}
 <div class="row">
-    <div class="col-md-10 col-md-offset-1" style="margin-top:15px;margin-bottom:30px">
+    <div class="col-md-10 col-md-offset-1 m-t m-b-lg">
             <h1 class="text-bold">
                <strong> My Addons</strong>
             </h1>
             {% if my_addons_count %}
-                <p>Found {{ my_addons_count }} addons</p>
+                <p>Found {{ my_addons_count }}</p>
             {% endif %}
     </div>
 </div>
@@ -36,11 +36,9 @@
                         <h3 class="m-b-none m-t-md"><a style="color:#000" href="{%  url 'addons.details_view' slug=item.slug %}"><u>{{ item.title }}</u></a></h5>
                         <p class="addon-h5 m-b-height">{{ item.short_description | safe }}</p>
                         <span class="addon-h4">Last Billed at:<strong>
-                            {% if item.addonusage_set.all.last.billed_at %}
-                            {{ item.addonusage_set.all.last.billed_at }}
-                            {% else %} N/A {% endif %}
+                            {{ item.addonusage_set.all.last.billed_at|default:'N/A' }}
                             </strong>
-                        </span>                         
+                        </span>
                     </div>
                 </div>
             </div>

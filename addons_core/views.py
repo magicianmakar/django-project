@@ -97,7 +97,13 @@ class MyAddonsListView(BaseTemplateView):
 
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
-        ctx['my_addons_count'] = len(ctx['user_addon_ids'])
+        ctx['breadcrumbs'] = ['My Addons']
+
+        len_addons = len(ctx['user_addon_ids'])
+        if len_addons == 1:
+            ctx['my_addons_count'] = '1 Addon'
+        else:
+            ctx['my_addons_count'] = f'{len_addons} Addons'
 
         return ctx
 

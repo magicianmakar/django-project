@@ -9,7 +9,7 @@
 <!--- Hero Section starts here-->
 <div class="row bg-cover">
     <div class="container">
-            <div class="col-md-6 m-t-sm">
+            <div class="col-md-6 m-t-lg">
                 <h1 class="m-b-none"><strong>{{ object.title }}</strong></h1>
                 <p class="m-t-xs heading--3">{{ object.short_description }}</p>
                 <p class="m-b"><span class="addon-price">${{ object.monthly_price }}</span>/mo</span></p>
@@ -27,11 +27,22 @@
             </div>
             {% if object.youtube_url %}
             <div class="col-md-6 m-t-lg">
-                <iframe id="addon-videos" width="428"
+                <iframe class="addon-videos" width="428"
                         height="241"
                         src="{{ object.youtube_url }}"
                         frameborder="0"
                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+            </div>
+            {% endif %}
+            {% if object.vimeo_url %}
+            <div class="col-md-6 {% if object.youtube_url %}col-md-offset-6{% endif %} m-t-lg">
+                <iframe class="addon-videos" width="428"
+                        height="241"
+                        src="{{ object.vimeo_url }}"
+                        frameborder="0"
+                        allow="autoplay; fullscreen"
                         allowfullscreen>
                 </iframe>
             </div>

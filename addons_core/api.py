@@ -39,6 +39,7 @@ class AddonsApi(ApiResponseMixin):
             addon.title = data['addon-title']
             addon.short_description = data['addon-short']
             addon.description = data['addon-description']
+            addon.faq = data['addon-faq']
             addon.monthly_price = safe_float(data['addon-price'])
             addon.trial_period_days = safe_int(data['addon-trial-days'])
             addon.hidden = data['addon-status'] == 'draft'
@@ -70,6 +71,20 @@ class AddonsApi(ApiResponseMixin):
                     capture_exception(level='warning')
 
             addon.youtube_url = f'https://www.youtube.com/embed/{youtube_id}' if youtube_id else ''
+
+            vimeo_id = None
+            if data['addon-vimeo']:
+                vimeo_id = re.findall('player.vimeo.com/video/[^?#]+', data['addon-vimeo'])
+                if vimeo_id:
+                    vimeo_id = vimeo_id.pop().split('/').pop()
+
+            if not vimeo_id:
+                try:
+                    vimeo_id = urlparse(data['addon-vimeo']).path.strip('/')
+                except:
+                    capture_exception(level='warning')
+
+            addon.vimeo_url = f'https://player.vimeo.com/video/{vimeo_id}' if vimeo_id else ''
 
             benfits = []
             for i in range(0, 3):

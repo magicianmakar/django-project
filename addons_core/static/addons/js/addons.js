@@ -83,6 +83,7 @@ $('#addon-edit-save').click(function (e) {
     formData.append('addon-icon', $('#addon-icon')[0].files[0]);
     formData.append('addon-banner', $('#addon-banner')[0].files[0]);
     formData.append('addon-youtube', $('#addon-youtube').val());
+    formData.append('addon-vimeo', $('#addon-vimeo').val());
     formData.append('addon-categories', $('#addon-categories').val());
     formData.append('addon-price', $('#addon-price').val());
     formData.append('addon-trial-days', $('#addon-trial-days').val());

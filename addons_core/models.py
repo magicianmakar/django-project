@@ -41,9 +41,10 @@ class Addon(models.Model):
 
     categories = models.ManyToManyField(Category, blank=True, related_name="addons")
 
-    icon_url = models.TextField(blank=True, null=True)
-    banner_url = models.TextField(blank=True, null=True)
-    youtube_url = models.TextField(blank=True, null=True)
+    icon_url = models.URLField(blank=True, null=True)
+    banner_url = models.URLField(blank=True, null=True)
+    youtube_url = models.URLField(blank=True, null=True)
+    vimeo_url = models.URLField(blank=True, null=True)
 
     monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True, verbose_name='Monthly Price(in USD)')
     trial_period_days = models.IntegerField(default=0)
