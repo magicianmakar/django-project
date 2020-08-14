@@ -1042,6 +1042,13 @@ class OrdersTrackList(ListView):
 
         return super(OrdersTrackList, self).dispatch(request, *args, **kwargs)
 
+    def get_paginate_by(self, queryset):
+        custom_limit = safe_int(self.request.user.get_config('_woo_order_track_limit'), None)
+        if custom_limit:
+            return custom_limit if custom_limit > 10 else 10
+
+        return self.paginate_by
+
     def get_queryset(self):
         if not self.request.user.can('orders.use'):
             return render(self.request, 'upgrade.html')
