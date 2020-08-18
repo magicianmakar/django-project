@@ -1,6 +1,6 @@
 import csv
 import math
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from io import BytesIO
 
@@ -1510,6 +1510,7 @@ class GenerateLabel(LoginRequiredMixin, View):
     def get(self, request, line_id):
         use_latest = request.GET.get('use_latest', False)
         line_item = get_object_or_404(PLSOrderLine, id=line_id)
+        line_item.mark_printed()
         base_label_pdf = get_order_number_label(line_item, use_latest)
 
         output = BytesIO()
