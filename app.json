@@ -5,6 +5,8 @@
       "postdeploy": "scripts/prepare_staging.sh"
     },
     "env": {
+        "SECRET_KEY": "abcedef123456789",
+
         "DATA_STORE_DATABASE_URL": "postgres://fhekqvhigmfksy:dfaf946c135cff7f32e7296d8cd1560492268c1e890120befc5f8cfa129a786b@ec2-54-235-159-101.compute-1.amazonaws.com:5432/d1rf3bkqfkvtp6",
 
         "USE_WHITENOISE": "1",
