@@ -865,12 +865,16 @@ def webhook(request, provider, option):
 
     elif provider == 'clickfunnels' and option == 'checklogin':
         try:
-            email = request.GET['email']
-            try:
-                user = User.objects.get(email=email)
-                data = {'user': {'email': user.email, "is_stripe": user.profile.plan.is_stripe(), "is_subuser": user.is_subuser}}
-            except User.DoesNotExist:
+            email = request.GET.get('email')
+            if email:
+                try:
+                    user = User.objects.get(email__iexact=email)
+                    data = {'user': {'email': user.email, "is_stripe": user.profile.plan.is_stripe(), "is_subuser": user.is_subuser}}
+                except User.DoesNotExist:
+                    data = {'user': False}
+            else:
                 data = {'user': False}
+
             if 'callback' in request.GET:
                 # a jsonp response!
                 data = '%s(%s);' % (request.GET['callback'], json.dumps(data))
