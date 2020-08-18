@@ -1,6 +1,7 @@
 from django import forms
 from django.core.validators import FileExtensionValidator
 
+import re
 from .models import LabelSize, Payout, PLSOrder, PLSupplement, RefundPayments, UserSupplement, UserSupplementLabel
 
 
@@ -185,9 +186,16 @@ class LineFilterForm(OrderFilterForm):
     def __init__(self, *args, **kwargs):
         super(LineFilterForm, self).__init__(*args, **kwargs)
         try:
-            self.fields['product_sku'].choices = [(p.shipstation_sku, p.shipstation_sku) for p in PLSupplement.objects.all()]
+            self.fields['product_sku'].choices = [(p.shipstation_sku, f"{p.shipstation_sku} {p.title}") for p in PLSupplement.objects.all()]
         except:
             self.fields['product_sku'].choices = []
+
+        if self.fields['product_sku'].choices:
+            self.fields['product_sku'].choices.sort(key=self.sort_key)
+
+    def sort_key(self, values):
+        return [int(element) if element.isdigit() else element
+                for element in re.split("([0-9]+)", values[0])]
 
 
 class LabelFilterForm(forms.Form):
@@ -223,9 +231,17 @@ class AllLabelFilterForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         try:
-            self.fields['product_sku'].choices = [(p.shipstation_sku, p.shipstation_sku) for p in PLSupplement.objects.all()]
+            self.fields['product_sku'].choices = [(p.shipstation_sku, f"{p.shipstation_sku} {p.title}")
+                                                  for p in PLSupplement.objects.all()]
         except:
             self.fields['product_sku'].choices = []
+
+        if self.fields['product_sku'].choices:
+            self.fields['product_sku'].choices.sort(key=self.sort_key)
+
+    def sort_key(self, values):
+        return [int(element) if element.isdigit() else element
+                for element in re.split("([0-9]+)", values[0])]
 
 
 class BillingForm(forms.Form):
