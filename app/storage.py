@@ -25,5 +25,5 @@ class CachedS3BotoStorage(S3BotoStorage):
 # want to have seperate locations for Static and Media files.
 class CachedMediaS3BotoStorage(S3BotoStorage):
     def __init__(self, *args, **kwargs):
-        super(CachedS3BotoStorage, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.location = settings.MEDIAFILES_LOCATION
