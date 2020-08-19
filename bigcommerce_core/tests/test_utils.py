@@ -19,7 +19,7 @@ class BigCommerceListQueryTest(BaseTestCase):
         self.response = Mock()
         self.response.raise_for_status = Mock(return_value=None)
         self.response.headers = {'X-WP-Total': 0}
-        self.response.json = Mock(return_value=[])
+        self.response.json = Mock(return_value={'data': []})
         self.store = BigCommerceStoreFactory()
 
     def test_must_call_api_once(self):
