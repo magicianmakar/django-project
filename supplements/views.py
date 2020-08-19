@@ -1790,8 +1790,10 @@ class Reports(LoginRequiredMixin, TemplateView):
 
     def check_range_interval(self, obj, start, end):
         # change date object to datetime aware object for comparison
-        start = timezone.make_aware(start, timezone.get_current_timezone())
-        end = timezone.make_aware(end, timezone.get_current_timezone())
+        if not start.tzinfo:
+            start = timezone.make_aware(start, timezone.get_current_timezone())
+        if not end.tzinfo:
+            end = timezone.make_aware(end, timezone.get_current_timezone())
 
         if obj.created_at > start and obj.created_at < end:
             return obj
