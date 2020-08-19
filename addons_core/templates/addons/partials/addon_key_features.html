@@ -1,15 +1,15 @@
 <div class="row p-t-xl">
     <div class="container">
-        {% for obj in object.get_key_benfits %}
+        {% for obj in object.get_key_benefits %}
             <div class="col-md-4 col-xs-12">
                 {% if obj.banner %}
                 <img class="img-resposive" src="{{ obj.banner }}" width="100%" />
                 {% endif %}
-                <div style="text-align: center;">
+                <div class="text-center">
                     <p class="m-t-sm heading--3"><strong>{{ obj.title }}</strong></p>
                     <p class="heading--3">{{ obj.description}}</p>
                 </div>
             </div>
-        {% endfor %}        
+        {% endfor %}
     </div>
 </div>

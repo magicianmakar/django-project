@@ -51,7 +51,7 @@ class Addon(models.Model):
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
-    key_benfits = models.TextField(blank=True, default='')
+    key_benefits = models.TextField(blank=True, default='')
 
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
 
@@ -67,9 +67,9 @@ class Addon(models.Model):
 
         super().save(*args, **kwargs)
 
-    def get_key_benfits(self):
+    def get_key_benefits(self):
         try:
-            return json.loads(self.key_benfits)
+            return json.loads(self.key_benefits)
         except:
             return [
                 {'id': 0, 'title': '', 'description': '', 'banner': ''},
@@ -77,8 +77,8 @@ class Addon(models.Model):
                 {'id': 2, 'title': '', 'description': '', 'banner': ''},
             ]
 
-    def set_key_benfits(self, kb):
-        self.key_benfits = json.dumps(kb)
+    def set_key_benefits(self, kb):
+        self.key_benefits = json.dumps(kb)
 
 
 class AddonUsage(models.Model):

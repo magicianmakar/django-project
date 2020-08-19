@@ -86,16 +86,23 @@ class AddonsApi(ApiResponseMixin):
 
             addon.vimeo_url = f'https://player.vimeo.com/video/{vimeo_id}' if vimeo_id else ''
 
-            benfits = []
+            existing_benefits = addon.get_key_benefits()
+            benefits = []
             for i in range(0, 3):
-                benfits.append({
+                banner = request.FILES.get(f'addon-key-banner-{i}', None)
+                if banner:
+                    banner_url = upload_image_to_aws(banner, f'key_benefit_banner_{i}', user.id)
+                else:
+                    banner_url = existing_benefits[i]['banner']
+
+                benefits.append({
                     'id': i,
                     'title': data[f'addon-key-title-{i}'],
                     'description': data[f'addon-key-description-{i}'],
-                    'banner': data[f'addon-key-banner-{i}'],
+                    'banner': banner_url,
                 })
 
-            addon.set_key_benfits(benfits)
+            addon.set_key_benefits(benefits)
             addon.save()
 
             return self.api_success()
