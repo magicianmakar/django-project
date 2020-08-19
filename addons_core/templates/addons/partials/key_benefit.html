@@ -3,7 +3,7 @@
 {#        <label for="product-title" style="margin-top:9px">Title</label>#}
 {#    </div>#}
     <div class="form-group col-md-12">
-        <input class="form-control" id="addon-key-title-{{ benifit_num }}" value="{{ benifit.title|default:'' }}" placeholder="Title"/>
+        <input class="form-control" id="addon-key-title-{{ benefit_num }}" value="{{ benefit.title|default:'' }}" placeholder="Title"/>
     </div>
 </div>
 
@@ -13,7 +13,7 @@
 {#    </div>#}
 
     <div class="form-group col-md-12">
-        <textarea class="form-control" id="addon-key-description-{{ benifit_num }}" placeholder="Description">{{ benifit.description|default:'' }}</textarea>
+        <textarea class="form-control" id="addon-key-description-{{ benefit_num }}" placeholder="Description">{{ benefit.description|default:'' }}</textarea>
     </div>
 </div>
 
@@ -22,7 +22,13 @@
 {#        <label for="product-title" style="margin-top:9px">Banner</label>#}
 {#    </div>#}
 
+    {% if benefit.banner %}
+    <div class="m-b-xs m-l">
+      Click to see
+      <i><a href="{{ benefit.banner }}" target="_blank">current Key Benefit Banner.</a></i>
+    </div>
+    {% endif %}
     <div class="form-group col-md-12">
-        <input class="form-control" id="addon-key-banner-{{ benifit_num }}" value="{{ benifit.banner|default:'' }}" placeholder="Banner"/>
+        <input type="file" class="form-control" id="addon-key-banner-{{ benefit_num }}" placeholder="Banner" accept="image/gif, image/jpeg, image/jpg, image/png" />
     </div>
 </div>

@@ -960,9 +960,11 @@ class BigCommerceListQuery(object):
         return self._response
 
     def items(self):
-        if isinstance(self.response.json(), dict):
-            return self.response.json()['data']
-        return self.response.json()
+        # Orders endpoint can return an empty response
+        if self.response.status_code == 204:
+            return []
+
+        return self.response.json()['data']
 
     def count(self):
         rep = self._store.request.get(

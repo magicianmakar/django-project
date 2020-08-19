@@ -92,7 +92,7 @@ $('#addon-edit-save').click(function (e) {
     [0, 1, 2].forEach(function (i) {
         formData.append('addon-key-title-' + i, $('#addon-key-title-' + i).val());
         formData.append('addon-key-description-' + i, $('#addon-key-description-' + i).val());
-        formData.append('addon-key-banner-' + i, $('#addon-key-banner-' + i).val());
+        formData.append('addon-key-banner-' + i, $('#addon-key-banner-' + i)[0].files[0]);
     });
 
     fetch(api_url('edit', 'addons'), {

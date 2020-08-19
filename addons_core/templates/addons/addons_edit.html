@@ -41,13 +41,13 @@
 
     <div class="row m-t-xl">
         <div class="form-group col-md-8 col-md-offset-2">
-            <label for="product-title">Key Benfits</label>
+            <label for="product-title">Key Benefits</label>
         </div>
 
     <div class="row">
-        {% for benifit in object.get_key_benfits %}
+        {% for benefit in object.get_key_benefits %}
             <div class="form-group {% if forloop.first %}col-md-3 col-md-offset-2{% else %}col-md-3{% endif %}">
-                {% include 'addons/partials/key_benifit.html' with benifit=benifit benifit_num=forloop.counter0 only %}
+                {% include 'addons/partials/key_benefit.html' with benefit=benefit benefit_num=forloop.counter0 only %}
             </div>
         {% endfor %}
     </div>
