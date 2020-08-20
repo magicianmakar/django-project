@@ -87,9 +87,9 @@ from .models import (
 )
 
 from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
-
 from .templatetags.template_helper import shopify_image_thumb, money_format
 from stripe_subscription import utils as stripe_utils
+from fulfilment_fee.utils import process_sale_transaction_fee
 
 
 class ShopifyStoreApi(ApiBase):
@@ -1950,6 +1950,9 @@ class ShopifyStoreApi(ApiBase):
 
         # Send e-mail notifications for cancelled orders
         cancelled_order_alert.send_email()
+
+        # process fulfilment fee
+        process_sale_transaction_fee(order)
 
         return self.api_success()
 

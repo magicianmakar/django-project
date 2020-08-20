@@ -38,6 +38,7 @@ from .models import (
 )
 from . import tasks
 from . import utils
+from fulfilment_fee.utils import process_sale_transaction_fee
 
 
 class GrooveKartApi(ApiBase):
@@ -747,6 +748,9 @@ class GrooveKartApi(ApiBase):
         order.data = json.dumps(order_data)
 
         order.save()
+
+        # process fulfilment fee
+        process_sale_transaction_fee(order)
 
         return self.api_success()
 

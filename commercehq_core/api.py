@@ -38,6 +38,7 @@ from .models import (
     CommerceHQOrderTrack,
     CommerceHQBoard
 )
+from fulfilment_fee.utils import process_sale_transaction_fee
 
 
 class CHQStoreApi(ApiBase):
@@ -642,6 +643,9 @@ class CHQStoreApi(ApiBase):
 
         # Send e-mail notifications for cancelled orders
         cancelled_order_alert.send_email()
+
+        # process fulfilment fee
+        process_sale_transaction_fee(order)
 
         return self.api_success()
 

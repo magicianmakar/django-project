@@ -27,6 +27,7 @@ from shopified_core.utils import (
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
+from fulfilment_fee.models import SalesFeeConfig
 
 SHOPIFY_API_VERSION = "2020-04"
 
@@ -2037,6 +2038,8 @@ class GroupPlan(models.Model):
     payment_interval = models.CharField(max_length=25, choices=PLAN_PAYMENT_TYPE, default='')
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     locked = models.BooleanField(default=False, verbose_name='Disable Direct Subscription')
+    sales_fee_config = models.ForeignKey(SalesFeeConfig, null=True, default=None, on_delete=models.SET_DEFAULT,
+                                         verbose_name="Sales fee config (requires `sales_fee.use` permission)")
 
     def __str__(self):
         return f'Plan: {self.title}'

@@ -32,6 +32,7 @@ from .api_helper import WooApiHelper
 from .models import WooStore, WooProduct, WooSupplier, WooOrderTrack, WooBoard
 from . import tasks
 from . import utils
+from fulfilment_fee.utils import process_sale_transaction_fee
 
 
 class WooStoreApi(ApiBase):
@@ -756,6 +757,9 @@ class WooStoreApi(ApiBase):
 
         # Send e-mail notifications for cancelled orders
         cancelled_order_alert.send_email()
+
+        # process fulfilment fee
+        process_sale_transaction_fee(order)
 
         return self.api_success()
 

@@ -258,10 +258,10 @@ def add_bigcommerce_store_permissions_to_subuser(sender, instance, pk_set, actio
 
 @receiver(post_save, sender=ShopifyOrderTrack, dispatch_uid='sync_aliexpress_fulfillment_cost')
 def sync_aliexpress_fulfillment_cost(sender, instance, created, **kwargs):
+
     try:
         if instance.user.can('profit_dashboard.use'):
             get_costs_from_track(instance, commit=True)
-
     except User.DoesNotExist:
         pass
 

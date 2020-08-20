@@ -17,6 +17,7 @@ from .stripe_api import stripe
 
 
 PLAN_INTERVAL = (
+    ('week', 'weeky'),
     ('month', 'monthly'),
     ('year', 'yearly'),
 )

@@ -94,6 +94,7 @@ INSTALLED_APPS = (
     'supplements',
     'product_common',
     'dropified_product',
+    'fulfilment_fee'
 )
 
 MIDDLEWARE = (

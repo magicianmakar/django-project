@@ -1467,7 +1467,10 @@ def get_tracking_orders(store, tracker_orders):
 
             if manual_fulfillement and tracked.shopify_status != fulfillment_status:
                 tracked.shopify_status = fulfillment_status
-                ShopifyOrderTrack.objects.filter(id=tracked.id).update(shopify_status=fulfillment_status)
+                # updating order track model to fire 'post_save' signal
+                shopify_order_track = ShopifyOrderTrack.objects.get(id=tracked.id)
+                shopify_order_track.shopify_status = fulfillment_status
+                shopify_order_track.save()
 
         new_tracker_orders.append(tracked)
 
