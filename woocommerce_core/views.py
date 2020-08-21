@@ -855,6 +855,9 @@ class OrdersList(ListView):
         return product_by_source_id
 
     def get_product_data(self, product_ids):
+        if not product_ids:
+            self.product_data = {}
+
         if not hasattr(self, 'product_data'):
             store = self.get_store()
             self.product_data = get_product_data(store, product_ids)
