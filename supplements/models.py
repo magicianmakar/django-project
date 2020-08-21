@@ -584,6 +584,67 @@ class MockupType(models.Model):
                     {'left': 0.098, 'top': -1.759, 'size': 0.804, 'bgLeft': -0.025, 'bgTop': -0.132, 'bgSize': 1.016}
                 ],
             ]
+        elif self.slug == '4oz-jar':
+            presets = [
+                [{'left': 0.344, 'top': -0.668, 'size': 0.393}],
+                [{'left': 0.344, 'top': -0.668, 'size': 0.393, 'layers': {'shadow': False}}],
+                [{'left': -0.021, 'top': -0.83, 'size': 0.436}],
+                [{'left': -0.021, 'top': -0.83, 'size': 0.436, 'layers': {'shadow': False}}],
+                [
+                    {'left': 0.344, 'top': -0.668, 'size': 0.393, 'name': 'Left', 'bgLeft': -0.137, 'bgTop': 0.097, 'bgSize': 0.78},
+                    {'left': 0.344, 'top': -0.668, 'size': 0.393, 'name': 'Right', 'bgLeft': 0.352, 'bgTop': 0.097, 'bgSize': 0.78},
+                    {'left': 0.344, 'top': -0.668, 'size': 0.393, 'name': 'Top', 'bgLeft': 0.03, 'bgTop': 0.037, 'bgSize': 0.9}
+                ],
+                [
+                    {'left': 0.344, 'top': -0.668, 'size': 0.386, 'name': '3 Left', 'bgLeft': -0.088, 'bgTop': 0.27, 'bgSize': 0.5},
+                    {'left': 0.344, 'top': -0.668, 'size': 0.386, 'name': '3 Right', 'bgLeft': 0.58, 'bgTop': 0.27, 'bgSize': 0.5},
+                    {'left': 0.344, 'top': -0.668, 'size': 0.386, 'name': '2 Left', 'bgLeft': 0.005, 'bgTop': 0.23, 'bgSize': 0.574},
+                    {'left': 0.344, 'top': -0.668, 'size': 0.386, 'name': '2 Right', 'bgLeft': 0.375, 'bgTop': 0.23, 'bgSize': 0.574},
+                    {'left': 0.344, 'top': -0.668, 'size': 0.386, 'name': 'Top', 'bgLeft': 0.149, 'bgTop': 0.192, 'bgSize': 0.654}
+                ]
+            ]
+        elif self.slug == '8oz-bottle':
+            presets = [
+                [{'left': -0.361, 'top': -0.486, 'size': 1.398}],
+                [{'left': -0.361, 'top': -0.486, 'size': 1.398, 'layers': {'shadow': False}}],
+                [{'left': 0.014, 'top': -0.588, 'size': 1.534}],
+                [{'left': 0.014, 'top': -0.588, 'size': 1.534, 'layers': {'shadow': False}}],
+                [
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': -0.247, 'bgTop': 0.098, 'bgSize': 0.866},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': 0.355, 'bgTop': 0.1, 'bgSize': 0.866},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': -0.082, 'bgTop': 0.05, 'bgSize': 0.934},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': 0.118, 'bgTop': 0.05, 'bgSize': 0.934}
+                ],
+                [
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': -0.2545, 'bgTop': 0.2125, 'bgSize': 0.6238},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': 0.6125, 'bgTop': 0.23, 'bgSize': 0.6146},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': -0.175, 'bgTop': 0.1875, 'bgSize': 0.6767},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': 0.475, 'bgTop': 0.2025, 'bgSize': 0.6616},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': -0.0895, 'bgTop': 0.16, 'bgSize': 0.7313},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': 0.3175, 'bgTop': 0.1625, 'bgSize': 0.7308},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': 0.0025, 'bgTop': 0.1325, 'bgSize': 0.7892},
+                    {'left': -0.361, 'top': -0.486, 'size': 1.398, 'bgLeft': 0.17, 'bgTop': 0.135, 'bgSize': 0.7892},
+                ],
+            ]
+        elif self.slug == '20oz-black-jar':
+            presets = [
+                [{'left': 0.085, 'top': -1.768, 'size': 0.839}],
+                [{'left': 0.085, 'top': -1.768, 'size': 0.839, 'layers': {'shadow': False}}],
+                [{'left': 0.47, 'top': -1.787, 'size': 0.839}],
+                [{'left': 0.47, 'top': -1.787, 'size': 0.839, 'layers': {'shadow': False}}],
+                [
+                    {'left': 0.085, 'top': -1.768, 'size': 0.839, 'bgLeft': -0.202, 'bgTop': 0.05, 'bgSize': 0.77},
+                    {'left': 0.085, 'top': -1.768, 'size': 0.839, 'bgLeft': 0.415, 'bgTop': 0.042, 'bgSize': 0.773},
+                    {'left': 0.085, 'top': -1.768, 'size': 0.839, 'bgLeft': 0.022, 'bgTop': -0.068, 'bgSize': 0.929}
+                ],
+                [
+                    {'left': 0.085, 'top': -1.768, 'size': 0.839, 'bgLeft': -0.14, 'bgTop': 0.207, 'bgSize': 0.51},
+                    {'left': 0.085, 'top': -1.768, 'size': 0.839, 'bgLeft': 0.62, 'bgTop': 0.207, 'bgSize': 0.51},
+                    {'left': 0.085, 'top': -1.768, 'size': 0.839, 'bgLeft': -0.02, 'bgTop': 0.147, 'bgSize': 0.61},
+                    {'left': 0.085, 'top': -1.768, 'size': 0.839, 'bgLeft': 0.4, 'bgTop': 0.147, 'bgSize': 0.61},
+                    {'left': 0.085, 'top': -1.768, 'size': 0.839, 'bgLeft': 0.15, 'bgTop': 0.097, 'bgSize': 0.7}
+                ],
+            ]
         else:
             presets = [
                 [{'left': -0.3}], [{'left': -0.3, 'layers': {'shadow': False}}],
@@ -712,6 +773,34 @@ class MockupType(models.Model):
                 {'layer': 'container2', 'mode': 'source-over', 'file': 'container.png'},
                 {'layer': 'label', 'mode': 'source-over', 'saveSize': 1000},
                 {'layer': 'refraction2', 'mode': 'screen', 'file': 'refraction.png'},
+                {'layer': 'mask', 'mode': 'destination-in', 'file': 'mask.png'},
+            ]
+        elif self.slug == '4oz-jar':
+            layers = [
+                {'layer': 'jar', 'mode': 'source-over', 'file': 'jar.png', 'background': True},
+                {'layer': 'light', 'mode': 'screen', 'file': 'reflections.png', 'background': True},
+                {'layer': 'jar', 'mode': 'source-over', 'file': 'jar.png'},
+                {'layer': 'label', 'mode': 'multiply', 'saveSize': 1000},
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png'},
+                {'layer': 'light', 'mode': 'screen', 'file': 'reflections.png'},
+                {'layer': 'mask', 'mode': 'destination-in', 'file': 'mask.png'},
+            ]
+        elif self.slug == '8oz-bottle':
+            layers = [
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'jar', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
+                {'layer': 'jar', 'mode': 'source-over', 'file': 'bottle.png'},
+                {'layer': 'label', 'mode': 'multiply', 'saveSize': 1000},
+                {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png'},
+                {'layer': 'mask', 'mode': 'destination-in', 'file': 'mask.png'},
+            ]
+        elif self.slug == '20oz-black-jar':
+            layers = [
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'jar', 'mode': 'source-over', 'file': 'jar.png', 'background': True},
+                {'layer': 'jar', 'mode': 'source-over', 'file': 'jar.png'},
+                {'layer': 'label', 'mode': 'multiply', 'saveSize': 1000},
+                {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png'},
                 {'layer': 'mask', 'mode': 'destination-in', 'file': 'mask.png'},
             ]
         else:
