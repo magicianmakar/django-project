@@ -696,10 +696,13 @@ class MockupType(models.Model):
         elif self.slug == '4oz-pump-bottle':
             layers = [
                 {'layer': 'bottle', 'mode': 'source-over', 'file': 'bottle.png', 'background': True},
-                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
-                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1000},
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'light', 'mode': 'screen', 'file': 'highlight.png', 'background': True},
+                {'layer': 'bottle', 'mode': 'source-over', 'file': 'bottle.png'},
+                {'layer': 'label', 'mode': 'source-over', 'saveSize': 1000},
                 {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png'},
-                {'layer': 'light', 'mode': 'screen', 'file': 'highlight.png'},
+                {'layer': 'light2', 'mode': 'screen', 'file': 'highlight.png'},
+                {'layer': 'mask', 'mode': 'destination-in', 'file': 'mask.png'},
             ]
         elif self.slug in ['44oz-jar-black-lid', '32oz-jar-black-lid', '16oz-jar-black-lid']:
             layers = [
