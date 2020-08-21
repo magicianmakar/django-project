@@ -321,6 +321,9 @@ class LabelMixin:
                                   text=text,
                                   new_status=new_status,
                                   is_private=is_private)
+        # Do not notify about your own comments
+        if comment.label.user_supplement.user == self.request.user:
+            send_email = False
         if send_email and not is_private:
             send_email_against_comment(comment)
         return comment
