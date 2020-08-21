@@ -2,6 +2,7 @@
 
 {% load static %}
 {% load perms_helper %}
+{% load compress %}
 
 {% block nav %}
     <nav class="navbar navbar-default">
@@ -36,7 +37,9 @@
 {{ block.super }}
 <link rel='stylesheet' id='flatsome-googlefonts-css' href='//fonts.googleapis.com/css?family=Poppins%3Aregular%2C700%2Cregular%2C500%7CRoboto%3Aregular%2Cregular&#038;display=swap&#038;ver=3.9' type='text/css' media='all'/>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.css" integrity="sha512-LhZScx/m/WBAAHyiPnM+5hcsmCMjDDOgOqoT9wyIcs/QUPm6YxVNGZjQG5iP8dhWMWQAcUUTE3BkshtrlGbv2Q==" crossorigin="anonymous" />
+{% compress css %}
 <link href="{% static 'addons/css/addons.css' %}" rel="stylesheet">
+{% endcompress %}
 <style>
 body {
     font-family: Poppins !important;

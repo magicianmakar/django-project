@@ -80,5 +80,7 @@
 
 {% block extrajs %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.js" integrity="sha512-aDa+VOyQu6doCaYbMFcBBZ1z5zro7l/aur7DgYpt7KzNS9bjuQeowEX0JyTTeBTcRd0wwN7dfg5OThSKIWYj3A==" crossorigin="anonymous"></script>
+    {% compress js %}
     <script type="text/javascript" src="{% static 'addons/js/addons.js' %}"></script>
+    {% endcompress %}
 {% endblock %}
