@@ -964,7 +964,9 @@ class BigCommerceListQuery(object):
         if self.response.status_code == 204:
             return []
 
-        return self.response.json()['data']
+        if isinstance(self.response.json(), dict):
+            return self.response.json()['data']
+        return self.response.json()
 
     def count(self):
         rep = self._store.request.get(
