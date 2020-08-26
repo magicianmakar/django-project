@@ -17,7 +17,7 @@ class Category(models.Model):
 
     title = models.TextField()
     slug = models.SlugField(unique=True, max_length=512)
-    short_description = models.TextField()
+    short_description = models.TextField(blank=True)
     sort_order = models.PositiveIntegerField(help_text='Sort Order', default=0)
     category_tag = models.TextField(blank=True)
 
@@ -35,8 +35,8 @@ class Addon(models.Model):
     slug = models.SlugField(unique=True, max_length=512)
     addon_hash = models.TextField(unique=True, editable=False)
 
-    short_description = models.TextField()
-    description = models.TextField()
+    short_description = models.TextField(blank=True)
+    description = models.TextField(blank=True)
     faq = models.TextField(blank=True, null=True)
 
     categories = models.ManyToManyField(Category, blank=True, related_name="addons")

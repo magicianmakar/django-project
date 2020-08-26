@@ -2015,7 +2015,7 @@ class GroupPlan(models.Model):
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
 
     support_addons = models.BooleanField(default=False)
-    sales_fee_config = models.ForeignKey('fulfilment_fee.SalesFeeConfig', null=True, on_delete=models.SET_NULL)
+    sales_fee_config = models.ForeignKey('fulfilment_fee.SalesFeeConfig', blank=True, null=True, on_delete=models.SET_NULL)
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
     description = models.CharField(max_length=512, blank=True, default='', verbose_name='Plan name visible to users')
