@@ -1,4 +1,7 @@
 import json
+import base64
+import hmac
+import hashlib
 from unittest.mock import patch, Mock
 
 import arrow
@@ -8,6 +11,7 @@ from lib.test import BaseTestCase
 from django.urls import reverse
 from django.core.exceptions import PermissionDenied
 from django.core.cache import caches
+from django.conf import settings
 
 from shopified_core.utils import order_data_cache
 from leadgalaxy.tests.factories import (
@@ -23,7 +27,54 @@ from .factories import (
     BigCommerceStoreFactory,
     BigCommerceSupplierFactory,
 )
-from ..models import BigCommerceProduct
+from ..models import BigCommerceStore, BigCommerceProduct
+
+
+class StoreInstallTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = UserFactory(username='test')
+        self.password = 'test'
+        self.user.set_password(self.password)
+        self.user.save()
+
+        self.user.profile.plan = GroupPlanFactory()
+        permission = AppPermissionFactory(name='bigcommerce.use')
+        self.user.profile.plan.permissions.add(permission)
+        self.user.profile.save()
+
+        self.store = BigCommerceStoreFactory(user=self.user, is_active=True)
+
+    def test_multiple_accounts_loaded_in_single_store(self):
+        bigcommerce_data = {
+            'user': {'id': 1, 'email': 'test@dropified.com'},
+            'owner': {'id': 1, 'email': 'test@dropified.com'},
+            'context': f'stores/{self.store.api_key}', 'store_hash': self.store.api_key
+        }
+        bc_json = json.dumps(bigcommerce_data).encode()
+        client_secret = settings.BIGCOMMERCE_CLIENT_SECRET.encode()
+        decoded_hmac = hmac.new(client_secret, bc_json, hashlib.sha256).hexdigest()
+        signature = base64.b64encode(decoded_hmac.encode()).decode()
+        encoded_json = base64.b64encode(bc_json).decode()
+        signed_payload = f"{encoded_json}.{signature}"
+
+        subuser = UserFactory(username='test2')
+        subuser.parent_user = self.user
+        subuser.save()
+
+        self.client.force_login(subuser)
+
+        self.assertEqual(BigCommerceStore.objects.count(), 1)
+        self.client.get(reverse('bigcommerce:bigcommerce_load'), {
+            'signed_payload': signed_payload
+        })
+        self.assertEqual(BigCommerceStore.objects.count(), 2)
+
+        user_store = self.user.bigcommercestore_set.first()
+        subuser_store = subuser.bigcommercestore_set.first()
+        self.assertNotEqual(user_store.id, subuser_store.id)
+        self.assertEqual(user_store.api_url, subuser_store.api_url)
+        self.assertEqual(user_store.api_key, subuser_store.api_key)
+        self.assertEqual(user_store.api_token, subuser_store.api_token)
 
 
 class StoreListTestCase(BaseTestCase):

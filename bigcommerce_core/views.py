@@ -152,6 +152,14 @@ def load(request):
     if authorised:
         store_hash = authorised['store_hash']
         try:
+            prev_store = BigCommerceStore.objects.get(api_key=store_hash, is_active=True)
+        except BigCommerceStore.DoesNotExist:
+            messages.error(request, 'There\'s no store installed. Please try to uninstall app and reinstall.')
+            return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
+        except:
+            capture_exception()
+
+        try:
             store = BigCommerceStore.objects.get(user=request.user.models_user, api_key=store_hash, is_active=True)
 
             if not permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
@@ -162,7 +170,17 @@ def load(request):
             return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
         except BigCommerceStore.DoesNotExist:
-            messages.error(request, 'Couldn\'t find this store')
+            store = BigCommerceStore()
+            user = request.user
+            store.user = user.models_user
+            store.title = prev_store.title
+            store.api_url = prev_store.api_url
+            store.api_key = store_hash
+            store.api_token = prev_store.api_token
+
+            permissions.user_can_add(user, store)
+            store.save()
+            messages.success(request, 'Your store was successfully installed.')
             return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
         except:
             capture_exception()
