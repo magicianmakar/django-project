@@ -2,7 +2,7 @@ import json
 import requests
 from functools import cmp_to_key
 from urllib.parse import parse_qs, urlparse
-
+from app.celery_base import celery_app
 from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import ValidationError, PermissionDenied
@@ -19,6 +19,7 @@ from shopified_core.decorators import HasSubuserPermission, restrict_subuser_acc
 from shopified_core.exceptions import ProductExportException
 from shopified_core.utils import (
     safe_int,
+    safe_float,
     remove_link_query,
     get_domain,
     encode_api_token,
@@ -860,3 +861,42 @@ class GrooveKartApi(ApiBase):
             return self.api_success({'query': q, 'suggestions': suggestions}, safe=False)
 
         return self.api_error({'error': 'Target not found'}, status=404)
+
+    def post_products_supplier_sync(self, request, user, data):
+        try:
+            store = GrooveKartStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except GrooveKartStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        products = [safe_int(i) for i in data.get('products').split(',') if safe_int(i)]
+        if not products:
+            return self.api_error('No selected products to sync', status=422)
+
+        user_store_supplier_sync_key = 'user_store_supplier_sync_{}_{}'.format(user.id, store.id)
+        if cache.get(user_store_supplier_sync_key) is not None:
+            return self.api_error('Sync in progress', status=404)
+        sync_price = data.get('sync_price', False)
+        price_markup = safe_float(data['price_markup'])
+        compare_markup = safe_float(data['compare_markup'])
+        sync_inventory = data.get('sync_inventory', False)
+
+        task = tasks.products_supplier_sync.apply_async(
+            args=[store.id, products, sync_price, price_markup, compare_markup, sync_inventory, user_store_supplier_sync_key], expires=180)
+        cache.set(user_store_supplier_sync_key, task.id, timeout=3600)
+        return self.api_success({'task': task.id})
+
+    def post_products_supplier_sync_stop(self, request, user, data):
+        try:
+            store = GrooveKartStore.objects.get(id=data.get('store'))
+            permissions.user_can_edit(user, store)
+        except GrooveKartStore.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        user_store_supplier_sync_key = 'user_store_supplier_sync_{}_{}'.format(user.id, store.id)
+        task_id = cache.get(user_store_supplier_sync_key)
+        if task_id is not None:
+            celery_app.control.revoke(task_id, terminate=True)
+            cache.delete(user_store_supplier_sync_key)
+            return self.api_success()
+        return self.api_error('No Sync in progress', status=404)
