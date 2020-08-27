@@ -7,7 +7,7 @@ from django.core.exceptions import PermissionDenied
 from django.urls import reverse
 from django.utils.text import slugify
 from django.template.defaultfilters import truncatewords
-
+from django.core.cache import cache
 import requests
 from lib.exceptions import capture_exception
 
@@ -27,11 +27,16 @@ from shopified_core.utils import (
     safe_float
 )
 
-from .utils import format_chq_errors, CHQOrderUpdater
+from .utils import format_chq_errors, CHQOrderUpdater, get_chq_product
 from .models import (
     CommerceHQStore,
     CommerceHQProduct,
     CommerceHQSupplier
+)
+
+from product_alerts.utils import (
+    get_supplier_variants,
+    variant_index_from_supplier_sku
 )
 
 
@@ -593,3 +598,128 @@ def order_save_changes(self, data):
         if not self.request.called_directly:
             countdown = retry_countdown('retry_ordered_tags_{}'.format(order_id), self.request.retries)
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
+
+
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)
+def products_supplier_sync(self, store_id, products, sync_price, price_markup, compare_markup, sync_inventory, cache_key):
+    store = CommerceHQStore.objects.get(id=store_id)
+    products = CommerceHQProduct.objects.filter(id__in=products, user=store.user, store=store, source_id__gt=0)
+    total_count = 0
+    for product in products:
+        if product.have_supplier() and product.default_supplier.is_aliexpress:
+            total_count += 1
+
+    push_data = {
+        'task': self.request.id,
+        'count': total_count,
+        'success': 0,
+        'fail': 0,
+    }
+    store.pusher_trigger('products-supplier-sync', push_data)
+
+    for product in products:
+        if not product.have_supplier() or not product.default_supplier.is_aliexpress:
+            continue
+
+        commercehq_id = product.source_id
+        supplier = product.default_supplier
+        push_data['id'] = product.id
+        push_data['title'] = product.title
+        push_data['commercehq'] = product.commercehq_url
+        push_data['supplier_link'] = supplier.product_url
+        push_data['status'] = 'ok'
+        push_data['error'] = None
+
+        try:
+            # Fetch supplier variants
+            supplier_variants = get_supplier_variants(supplier.supplier_type(), supplier.get_source_id())
+
+            supplier_prices = [v['price'] for v in supplier_variants]
+            supplier_min_price = min(supplier_prices)
+            supplier_max_price = max(supplier_prices)
+        except Exception:
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to load supplier data'
+            push_data['fail'] += 1
+            store.pusher_trigger('products-supplier-sync', push_data)
+            continue
+
+        try:
+            # Fetch commercehq variants
+            product_data = get_chq_product(store, commercehq_id)
+        except Exception:
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to load commercehq data'
+            push_data['fail'] += 1
+            store.pusher_trigger('products-supplier-sync', push_data)
+            continue
+
+        try:
+            # Check if there's only one price
+            same_price = (len('variants') == 1
+                          or len(set([v['price'] for v in product_data['variants']])) == 1
+                          or len(supplier_variants) == 1
+                          or supplier_min_price == supplier_max_price)
+            # New Data
+            updated = False
+            mapped_variants = {}
+            unmapped_variants = []
+
+            if sync_price and same_price:
+                # Use one price for all variants
+                for i, variant in enumerate(product_data['variants']):
+                    variant['price'] = round(supplier_max_price * (100 + price_markup) / 100.0, 2)
+                    variant['compare_at_price'] = round(supplier_variants[i]['price'] * (100 + compare_markup) / 100.0, 2)
+                    updated = True
+
+            if (sync_price and not same_price) or sync_inventory:
+                for i, variant in enumerate(supplier_variants):
+                    sku = variant.get('sku')
+                    if not sku:
+                        if len(product_data['variants']) == 1 and len(supplier_variants) == 1:
+                            idx = 0
+                        else:
+                            continue
+                    else:
+                        idx = variant_index_from_supplier_sku(product, sku, product_data['variants'])
+
+                        if idx is None:
+                            if len(product_data['variants']) == 1 and len(supplier_variants) == 1:
+                                idx = 0
+                            else:
+                                continue
+
+                    mapped_variants[str(product_data['variants'][idx]['id'])] = True
+                    # Sync price
+                    if sync_price and not same_price:
+                        variant['price'] = round(supplier_variants[idx]['price'] * (100 + price_markup) / 100.0, 2)
+                        variant['compare_at_price'] = round(supplier_variants[idx]['price'] * (100 + compare_markup) / 100.0, 2)
+                        updated = True
+
+                # check unmapped variants
+                for variant in product_data['variants']:
+                    if not mapped_variants.get(str(variant['id']), False):
+                        unmapped_variants.append(variant['title'])
+
+            if updated:
+                rep = store.request.patch(
+                    url='{}/{}'.format(store.get_api_url('products'), commercehq_id),
+                    json={
+                        'variants': product_data['variants']
+                    }
+                )
+
+                rep.raise_for_status()
+
+            if len(unmapped_variants) > 0:
+                push_data['error'] = 'Warning - Unmapped: {}'.format(','.join(unmapped_variants))
+            push_data['success'] += 1
+        except Exception:
+            capture_exception()
+            push_data['status'] = 'fail'
+            push_data['error'] = 'Failed to update data'
+            push_data['fail'] += 1
+
+        store.pusher_trigger('products-supplier-sync', push_data)
+
+    cache.delete(cache_key)
