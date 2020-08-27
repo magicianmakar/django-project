@@ -45,6 +45,13 @@
                             <a href="#" class="woocommerce-product-import-btn filter-col-item" store="{{store.id}}">
                                 <i class="fa fa-plus"></i> Import From WooCommerce
                             </a>
+
+                            {% if user|can:'manual_suppliers_sync.use' %}
+                            <a href="#" class="product-supplier-sync-btn filter-col-item m-l" store="{{store.id}}">
+                                <i class="fa fa-refresh"></i> Sync Products with Supplier
+                            </a>
+                            {% endif %}
+
                             {% endif %}
                         </div>
 
@@ -168,6 +175,8 @@
 
 {% include "woocommerce/partial/woocommerce_product_selector.html" %}
 
+{% include 'woocommerce/partial/product_supplier_sync_modal.html' with store=store only %}
+
 {% endblock %}
 
 {% block extracss %}
@@ -191,6 +200,11 @@
     display: inline-block;
     width: 191px;
 }
+
+#modal-product-supplier-sync .icheckbox_square-blue {
+    position: static;
+}
+
 </style>
 {% endblock %}
 
@@ -206,11 +220,20 @@
     };
 </script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
-<script>var PUSHER_KEY = "{% app_setting 'PUSHER_KEY' %}";</script>
+<script>
+    var sub_conf = {
+        {% if store %}
+        key: "{% app_setting 'PUSHER_KEY' %}",
+        channel: "{{store.pusher_channel}}",
+        store: {{store.id}},
+        {% endif %}
+    };
+</script>
 {% compress js %}
 <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'woocommerce/js/woocommerce_product_selector.js' %}"></script>
 <script type="text/javascript" src="{% static 'woocommerce/js/products_grid.js' %}"></script>
+<script type="text/javascript" src="{% static 'woocommerce/js/product_supplier_sync.js' %}"></script>
 {% endcompress %}
 
 {% endblock %}

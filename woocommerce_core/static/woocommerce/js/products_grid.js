@@ -241,7 +241,7 @@ $('#woocommerce-send-btn').click(function(e) {
     var storeId = $('#send-select-store').val();
     var publish = $('#send-product-visible').prop('checked');
     var pusherChannel = $('#send-select-store option:selected').data('store-channel');
-    var pusherKey = window.PUSHER_KEY;
+    var pusherKey = window.sub_conf.key;
     var productIds = [];
 
     // Fetches all product ID's of selected products
