@@ -9,6 +9,7 @@ from fuzzyset import FuzzySet
 
 from django.conf import settings
 from django.core.cache import cache
+from django.utils.functional import cached_property
 
 from lib.exceptions import capture_message
 
@@ -324,6 +325,18 @@ def valide_aliexpress_province(country, province, city, auto_correct=False):
 
             if auto_correct:
                 city_match = fuzzy_find_in_list(city_list, city, default=None)
+
+                if not city_match:
+                    city_name = CityName(city)
+                    if city_name.starts_with_the:
+                        # Try searching without the "the"
+                        query = city_name.without_leading_the
+                        city_match = fuzzy_find_in_list(city_list, query, default=None)
+                    if city_name.starting_saint_title:
+                        # Try the abbreviated form or vice versa
+                        query = city_name.with_other_saint_title_version
+                        city_match = fuzzy_find_in_list(city_list, query, default=None)
+
                 if city_match and city and city_match and city_match != city:
                     correction['city'] = city_match
             else:
@@ -419,3 +432,61 @@ def province_from_code(country_code, province_code):
 
 def ebay_country_code(country_name):
     return load_ebay_countries().get(country_name.lower())
+
+
+class CityName:
+    SAINT_VERSIONS = [('Saint', 'St'), ('Sainte', 'Ste'), ('Santa', 'Sta'), ('Santo', 'Sto')]
+
+    def __init__(self, city_name):
+        self._name = city_name
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def starts_with_the(self):
+        return self.name.lower().startswith('the ')
+
+    @property
+    def without_leading_the(self):
+        if self.starts_with_the:
+            the, rest_of_string = self.name.split(' ')
+            return rest_of_string
+        else:
+            return self.name
+
+    @property
+    def with_other_saint_title_version(self):
+        if self.starting_saint_title:
+            other_title = self._get_other_saint_title_version()
+            title, *name_without_title = self.name.split(' ')
+            return f"{other_title} {' '.join(name_without_title)}"
+        else:
+            return self.name
+
+    @cached_property
+    def starting_saint_title(self):
+        saint_titles_1, saint_titles_2 = zip(*CityName.SAINT_VERSIONS)
+        saint_title = self._find_starting_title(self.name, saint_titles_1 + saint_titles_2)
+        return saint_title
+
+    def _find_starting_title(self, city_name, titles):
+        """
+        Returns the title in a city's name if the title is included in a given
+        list of titles. For example, given a list of saint titles
+        ["Saint", "St"], the city of Saint Louis will return
+        Saint, and if written as St. Louis, this function
+        will return St (no dot).
+        """
+        for title in titles:
+            match = re.search(r'^{}\.*\s.+$'.format(title), city_name, re.IGNORECASE)
+            if match:
+                return title
+
+    def _get_other_saint_title_version(self):
+        for full, abbreviated in CityName.SAINT_VERSIONS:
+            if self.starting_saint_title == full:
+                return abbreviated
+            if self.starting_saint_title == abbreviated:
+                return full
