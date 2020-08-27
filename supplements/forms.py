@@ -1,7 +1,8 @@
+import re
+
 from django import forms
 from django.core.validators import FileExtensionValidator
 
-import re
 from .models import LabelSize, Payout, PLSOrder, PLSupplement, RefundPayments, UserSupplement, UserSupplementLabel
 
 
@@ -31,6 +32,7 @@ class UserSupplementForm(forms.ModelForm):
     inventory = forms.IntegerField(required=False)
     msrp = forms.CharField(disabled=True, required=False)
     label_presets = forms.CharField(widget=forms.HiddenInput, required=False)
+    label_size = forms.CharField(widget=forms.HiddenInput, required=False)
 
 
 class UserSupplementFilterForm(forms.Form):
@@ -48,7 +50,7 @@ class CommentForm(forms.Form):
     mockup_slug = forms.CharField(widget=forms.HiddenInput, required=False)
     is_private = forms.BooleanField(required=False)
     label_presets = forms.CharField(widget=forms.HiddenInput, required=False)
-    # Placeholder field only used for validation
+    label_size = forms.CharField(widget=forms.HiddenInput, required=False)
     mockup_urls = forms.CharField(widget=forms.HiddenInput, required=False)
 
     def clean(self):

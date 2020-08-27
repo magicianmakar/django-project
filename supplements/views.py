@@ -662,6 +662,7 @@ class UserSupplementView(Supplement):
         comment_form_data = dict(
             mockup_slug=supplement.pl_supplement.mockup_type.slug,
             label_presets=supplement.get_label_presets_json(),
+            label_size=supplement.pl_supplement.label_size,
         )
 
         data = dict(

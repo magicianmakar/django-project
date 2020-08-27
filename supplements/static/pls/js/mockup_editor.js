@@ -380,6 +380,24 @@ function addLabelImage(pdf) {
     });
 }
 
+function labelSizeMatch(defaultSize, pdf) {
+    var defaultHeight = defaultSize.split('×')[0];
+    var defaultWidth = defaultSize.split('×')[1];
+    return new Promise(function (resolve, reject) {
+        pdfjsLib.getDocument(pdf).promise.then(function(pdf) {
+            pdf.getPage(1).then(function(page) {
+                var pdfWidth = (page._pageInfo.view[2] / 72).toFixed(3); // returned in pt => pt / 72 = 1 in
+                var pdfHeight = (page._pageInfo.view[3] / 72).toFixed(3);
+                if (pdfHeight === defaultHeight && pdfWidth === defaultWidth) {
+                    resolve();
+                } else {
+                    reject();
+                }
+            });
+        });
+    });
+}
+
 $('#label').on('change', function() {
     var reader = new FileReader();
     reader.onload = function() {
@@ -388,7 +406,18 @@ $('#label').on('change', function() {
             return;
         }
 
-        addLabelImage(this.result);
+        var pdf = this.result;
+        var defaultSize = $('#id_label_size').val();
+        labelSizeMatch(defaultSize, pdf).then(function (result) {
+            addLabelImage(pdf);
+        }).catch(function (error){
+            swal(
+                "Label size does not match",
+                "The PDF uploaded does not match the required label size i.e. " + defaultSize,
+                "warning"
+            );
+            return;
+        });
     };
     reader.readAsDataURL(this.files[0]);
 });
