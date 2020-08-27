@@ -6,7 +6,6 @@ from django.db.models import Q
 from lib.exceptions import capture_exception
 
 from phone_automation.models import TwilioPhoneNumber
-from phone_automation.utils import get_twilio_client
 from shopified_core.management import DropifiedBaseCommand
 
 
@@ -63,8 +62,6 @@ class Command(DropifiedBaseCommand):
                     if options['preview_only']:
                         self.write("Preview mode - phone wasn't deleted")
                     else:
-                        client = get_twilio_client()
-                        client.incoming_phone_numbers(user_phone.twilio_sid).delete()
                         user_phone.delete()
                         self.write(f"Phone {user_phone.twilio_sid} was deleted")
             except:
