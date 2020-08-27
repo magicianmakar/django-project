@@ -15,6 +15,7 @@ from .models import Addon, AddonUsage, Category
 
 
 class AddonsApi(ApiResponseMixin):
+
     def post_add(self, request, user, data):
         if request.user.can('addons_edit.use'):
             title = safe_str(data.get('title')).strip()

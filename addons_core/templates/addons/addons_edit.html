@@ -123,6 +123,18 @@
     </div>
 
     <div class="row m-t-xl">
+        <div class="form-group col-md-4 col-md-offset-2">
+            <label for="addon-categories">Addon upsell link (auto-install on 1st login)</label>
+            <div> <a href="{% url 'addons.upsell_install' slug=object.slug %}?redirect={url]">{% url 'addons.upsell_install' slug=object.slug %}?redirect={url]</a></div>
+        </div>
+        <div class="form-group col-md-4">
+            <label for="addon-categories">Addon upsell link for logined users (requires login)</label>
+            <div> <a href="{% url 'addons.upsell_install_logined' slug=object.slug %}?redirect={url]">{% url 'addons.upsell_install_logined' slug=object.slug %}?redirect={url]</a></div>
+        </div>
+    </div>
+
+
+    <div class="row m-t-xl">
         <div class="form-group col-md-1 col-md-offset-2">
             <a id="addon-edit-save" href="#" class="btn btn-success btn-lg btn-block">
                 <i class="fa fa-save "></i> Save

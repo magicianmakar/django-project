@@ -8,4 +8,6 @@ urlpatterns = [
     path('edit/<slug>', addons_core.views.AddonsEditView.as_view(), name='addons.edit_view'),
     path('category/<slug>', addons_core.views.CategoryListView.as_view(), name='addons.category_view'),
     path('my/addons', addons_core.views.MyAddonsListView.as_view(), name='myaddons'),
+    path('upsell-install/<slug:slug>', addons_core.views.UpsellInstall.as_view(), name='addons.upsell_install'),
+    path('upsell-install-logined/<slug:slug>', addons_core.views.UpsellInstallLogined.as_view(), name='addons.upsell_install_logined'),
 ]

@@ -1,0 +1,46 @@
+{% extends "addons/addons_base.html" %}
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+<h2 class="addon-auto-inst">Installing Addon "{{ object.title }}"</h2>
+
+{% endblock %}
+
+{% block extrajs %}
+
+<script>
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+const redirect = urlParams.get('redirect');
+
+
+$( document ).ready(function() {
+   $.ajax(api_url('install', 'addons'),
+                {
+                    type: 'post',
+                    data: {
+                        addon: {{ object.id }}
+                    }
+                }).complete(function(data) {
+                  console.log(data);
+                    $('.addon-auto-inst').html("Done");
+
+                    if (redirect) {
+                        window.location=redirect;
+                    }
+                });
+
+
+});
+
+
+
+
+
+
+</script>
+{% endblock %}

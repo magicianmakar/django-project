@@ -8,8 +8,9 @@ from django.views.generic.detail import BaseDetailView
 from django.views.generic.list import BaseListView
 
 from addons_core.models import Addon, Category
-
+from urllib.parse import quote_plus, unquote_plus
 from shopified_core import permissions
+import simplejson as json
 
 
 class BaseTemplateView(TemplateView):
@@ -133,4 +134,38 @@ class CategoryListView(ListView):
             }
         ]
 
+        return ctx
+
+
+class UpsellInstall(BaseDetailView, TemplateView):
+    model = Addon
+    template_name = 'addons/upsell_install.html'
+
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        try:
+            drop_addons_upsells = json.loads(unquote_plus(request.COOKIES.get('drop-addons-upsells')))
+        except:
+            drop_addons_upsells = {}
+
+        drop_addons_upsells[self.object.slug] = {"slug": self.object.slug, "id": self.object.id}
+        response.set_cookie('drop-addons-upsells', quote_plus(json.dumps(drop_addons_upsells, separators=(',', ':'))))
+        return response
+
+    def get_context_data(self, **kwargs: dict) -> dict:
+        ctx = super().get_context_data(**kwargs)
+        return ctx
+
+
+class UpsellInstallLogined(BaseDetailView, TemplateView):
+    model = Addon
+    template_name = 'addons/upsell_install_logined.html'
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        response = super().dispatch(request, *args, **kwargs)
+        return response
+
+    def get_context_data(self, **kwargs: dict) -> dict:
+        ctx = super().get_context_data(**kwargs)
         return ctx
