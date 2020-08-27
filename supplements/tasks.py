@@ -1,40 +1,27 @@
-import json
+from app.celery_base import celery_app, CaptureFailure
 
-from app.celery_base import CaptureFailure, celery_app
 from lib.exceptions import capture_exception
-from shopified_core.utils import hash_text
 
-from .lib.shipstation import create_shipstation_order, get_address, prepare_shipstation_data
-from .models import PLSOrder
-from .utils.payment import Util
+from shopified_core.utils import get_store_model
+from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
+from .models import UserSupplement, UserSupplementLabel, PLSOrder
 
 
 @celery_app.task(base=CaptureFailure)
-def update_shipstation_address(order_id, order_number, order_line_items, store_id, store_type):
+def update_shipstation_address(pls_order_id, order_line_items, store_id, store_type):
     try:
-        pls_order = PLSOrder.objects.get(order_number=order_number)
-        if not pls_order.is_fulfilled:
-            store = Util().get_store(store_id, store_type)
-            order = store.get_order(order_id)
+        pls_order = PLSOrder.objects.get(id=pls_order_id)
+        store = get_store_model(store_type).objects.get(id=store_id)
+        order = store.get_order(pls_order.store_order_id)
 
-            ship_addr = get_address(order['shipping_address'])
-            hash = hash_text(json.dumps(ship_addr, sort_keys=True))
-            if pls_order.shipping_address_hash != str(hash):
-                for line_item in order_line_items:
-                    product = store.get_product(line_item['product_id'], store)
-                    line_item['sku'] = product.user_supplement.shipstation_sku
-                    line_item['user_supplement'] = product.user_supplement
-                    line_item['label'] = product.user_supplement.current_label
+        for line_item in order_line_items:
+            line_item['user_supplement'] = UserSupplement.objects.get(id=line_item['user_supplement_id'])
+            line_item['label'] = UserSupplementLabel.objects.get(id=line_item['label_id'])
+        data = prepare_shipstation_data(pls_order, order, order_line_items)
+        data.update({
+            'orderKey': pls_order.shipstation_key,
+        })
+        create_shipstation_order(pls_order, data)
 
-                shipstation_data = prepare_shipstation_data(pls_order,
-                                                            order,
-                                                            order_line_items,
-                                                            )
-                shipstation_data.update({
-                    'orderKey': pls_order.shipstation_key,
-                })
-                create_shipstation_order(pls_order, shipstation_data)
-    except PLSOrder.DoesNotExist:
-        pass
     except Exception:
         capture_exception(level='warning')

@@ -18,8 +18,8 @@ def get_auth_header():
     return {'Authorization': f'Basic {encoded}'}
 
 
-def get_address(store_data):
-    return {
+def get_address(store_data, hashed=False):
+    ship_to = {
         'name': store_data['name'],
         'company': store_data.get('company', ''),
         'street1': store_data['address1'],
@@ -30,6 +30,10 @@ def get_address(store_data):
         'country': store_data['country_code'],
         'phone': store_data['phone'],
     }
+    if hashed:
+        ship_to = hash_text(json.dumps(ship_to, sort_keys=True))
+
+    return ship_to
 
 
 def prepare_shipstation_data(pls_order, order, line_items):

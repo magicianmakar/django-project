@@ -23,7 +23,6 @@ from django.http import Http404, JsonResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.cache.utils import make_template_fragment_key
 from bigcommerce.api import BigcommerceApi
-from supplements.models import PLSOrderLine
 
 from profits.mixins import ProfitDashboardMixin
 from shopified_core import permissions
@@ -42,6 +41,9 @@ from shopified_core.utils import (
     order_data_cache,
 )
 from shopified_core.tasks import keen_order_event
+from supplements.lib.shipstation import get_address as get_shipstation_address
+from supplements.models import PLSOrder, PLSOrderLine
+from supplements.tasks import update_shipstation_address
 from product_alerts.models import ProductChange
 from product_alerts.utils import variant_index_from_supplier_sku
 from leadgalaxy.utils import (
@@ -910,6 +912,24 @@ class OrdersList(ListView):
 
         return track_by_item
 
+    def get_unfulfilled_supplement_items(self, order_ids):
+        store = self.get_store()
+        unfulfilled_supplement_items = {}
+        for o in PLSOrder.objects.prefetch_related('order_items',
+                                                   'order_items__label',
+                                                   'order_items__label__user_supplement',
+                                                   ).filter(is_fulfilled=False,
+                                                            store_type='bigcommerce',
+                                                            store_id=store.id,
+                                                            store_order_id__in=order_ids):
+            for i in o.order_items.all():
+                item_key = f'{i.store_order_id}-{i.line_id}'
+                # Store order single items can become multiple items (bundles)
+                if not unfulfilled_supplement_items.get(item_key):
+                    unfulfilled_supplement_items[item_key] = []
+                unfulfilled_supplement_items[item_key].append(i)
+        return unfulfilled_supplement_items
+
     def normalize_orders(self, context):
         orders_cache = {}
         store = self.get_store()
@@ -923,6 +943,7 @@ class OrdersList(ListView):
         product_data = self.get_product_data(product_ids)
         order_ids = self.get_order_ids(orders)
         order_track_by_item = self.get_order_track_by_item(order_ids)
+        unfulfilled_supplement_items = self.get_unfulfilled_supplement_items(order_ids)
 
         for order in orders:
             order['name'] = order.get('id')
@@ -947,6 +968,8 @@ class OrdersList(ListView):
             order['lines_count'] = len(order['items'])
             order['has_shipping_address'] = len(order['shipping_addresses']) > 0
             order['supplier_types'] = set()
+            update_shipstation_items = {}
+            shipstation_address_changed = None
 
             for item in order.get('items'):
                 self.update_placed_orders(order, item)
@@ -1038,6 +1061,35 @@ class OrdersList(ListView):
                             except:
                                 item['weight'] = False
 
+                            pls_items = unfulfilled_supplement_items.get(f"{order['id']}-{item['id']}")
+                            if pls_items:  # Item is not fulfilled yet
+                                if shipstation_address_changed is None:  # Check only once
+                                    get_config = self.request.user.models_user.get_config
+                                    shipstation_address = bigcommerce_customer_address(
+                                        order,
+                                        german_umlauts=get_config('_use_german_umlauts', False),
+                                        shipstation_fix=True
+                                    )
+                                    address_hash = get_shipstation_address(shipstation_address, hashed=True)
+                                    pls_address_hash = pls_items[0].pls_order.shipping_address_hash
+                                    shipstation_address_changed = pls_address_hash != str(address_hash)
+
+                                for pls_item in pls_items:
+                                    pls_order_id = pls_item.pls_order_id
+                                    if not update_shipstation_items.get(pls_order_id):
+                                        update_shipstation_items[pls_order_id] = []
+
+                                    # Order items can be placed in different orders at shipstation
+                                    update_shipstation_items[pls_order_id].append({
+                                        'id': pls_item.line_id,
+                                        'quantity': pls_item.quantity,
+                                        'title': item['title'],
+                                        'sku': pls_item.sku or pls_item.label.user_supplement.shipstation_sku,
+                                        'user_supplement_id': pls_item.label.user_supplement.id,
+                                        'label_id': pls_item.label_id,
+                                        'image_url': item['image'],
+                                    })
+
                         item['order_data']['weight'] = item.get('weight')
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(supplier.supplier_type())
@@ -1053,6 +1105,14 @@ class OrdersList(ListView):
                     order['tracked_lines'] < order['lines_count'] and \
                     order['placed_orders'] < order['lines_count']:
                 order['partially_ordered'] = True
+
+            if shipstation_address_changed:
+                # Order items can be placed separately at shipstation
+                for pls_order_id, line_items in update_shipstation_items.items():
+                    update_shipstation_address.apply_async(
+                        args=[pls_order_id, line_items, self.store.id, 'bigcommerce'],
+                        countdown=5
+                    )
 
         caches['orders'].set_many(orders_cache, timeout=21600)
 

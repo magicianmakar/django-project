@@ -279,7 +279,9 @@ def commercehq_products(request, post_per_page=25, sort=None, board=None, store=
     return res
 
 
-def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False, aliexpress_fix_city=False, return_corrections=False):
+def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False,
+                         aliexpress_fix_city=False, return_corrections=False,
+                         shipstation_fix=False):
     customer_address = {}
     shipping_address = order['shipping_address']
 
@@ -305,6 +307,14 @@ def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False, alie
 
     customer_address['country'] = country_from_code(customer_address['country_code'])
     customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
+    customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name'])
+    customer_address['name'] = ensure_title(customer_address['name'])
+
+    if shipstation_fix:
+        customer_address['phone'] = order['address'].get('phone')
+        if customer_address['address2']:
+            customer_address['address1'] = f"{customer_address['address1']}, {customer_address['address2']}"
+        return customer_address
 
     customer_province = customer_address['province']
     if not customer_address.get('province'):
@@ -364,9 +374,6 @@ def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False, alie
     if customer_address['country_code'] == 'PL':
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
-
-    customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name'])
-    customer_address['name'] = ensure_title(customer_address['name'])
 
     if customer_address.get('company'):
         customer_address['name'] = '{} - {}'.format(customer_address['name'], customer_address['company'])

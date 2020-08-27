@@ -1119,7 +1119,9 @@ def fix_order_variants(store, order, product):
                     product.set_real_variant(line['variant_id'], match['id'])
 
 
-def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, aliexpress_fix_city=False, return_corrections=False):
+def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False,
+                             aliexpress_fix_city=False, return_corrections=False,
+                             shipstation_fix=False):
     if 'shipping_address' not in order \
             and order.get('customer') and order.get('customer').get('default_address'):
         order['shipping_address'] = order['customer'].get('default_address')
@@ -1146,6 +1148,9 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False, 
             customer_address[k] = unidecode(v)
         else:
             customer_address[k] = shipping_address[k]
+
+    if shipstation_fix:
+        return shipping_address
 
     if not customer_address['country']:
         customer_address['country'] = ''

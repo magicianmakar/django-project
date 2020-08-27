@@ -177,7 +177,7 @@ def get_shipping_carrier_name(store, carrier_id):
             return carrier['title']
 
 
-def gkart_customer_address(order, aliexpress_fix=False):
+def gkart_customer_address(order, aliexpress_fix=False, shipstation_fix=False):
     customer_address = {}
 
     shipping_address = order.get('shipping_address', {})
@@ -186,16 +186,21 @@ def gkart_customer_address(order, aliexpress_fix=False):
     customer_address['last_name'] = shipping_address.get('last_name')
     customer_address['name'] = f"{customer_address['first_name']} {customer_address['last_name']}"
     customer_address['address1'] = shipping_address.get('address1', '')
+    customer_address['address2'] = shipping_address.get('address2', '')
     customer_address['city'] = shipping_address.get('city', '')
     customer_address['country_code'] = shipping_address.get('country_code', '')
     customer_address['province_code'] = shipping_address.get('province', '')
     customer_address['zip'] = shipping_address.get('zip', '')
     customer_address['country'] = shipping_address.get('country', '')
     customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
+    customer_address['phone'] = shipping_address.get('phone', '')
 
     for key in list(customer_address.keys()):
         if customer_address[key] is str:
             customer_address[key] = unidecode(customer_address[key])
+
+    if shipstation_fix:
+        return customer_address
 
     customer_province = customer_address['province']
     if not customer_address.get('province'):

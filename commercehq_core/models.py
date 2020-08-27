@@ -113,32 +113,14 @@ class CommerceHQStore(StoreBase):
             line['data']['quantity'] = line['status']['quantity']
         order['line_items'] = [item['data'] for item in order.pop('items')]
 
-        address = order.pop('address')
-        phone = address.pop('phone')
-        for address_type in ('shipping', 'billing'):
-            address[address_type]['name'] = f"{address[address_type]['first_name']} {address[address_type]['last_name']}"
-
-            line = [address[address_type].pop('street')]
-            suite = address[address_type].pop('suite')
-            if suite:
-                line.append(suite)
-
-            address[address_type]['address1'] = ', '.join(line)
-            address[address_type]['province'] = address[address_type].pop('state')
-            address[address_type]['country_code'] = address[address_type]['country']
-            address[address_type]['phone'] = phone
-
-        order['shipping_address'] = address.pop('shipping')
-        order['billing_address'] = address.pop('billing')
-
         from commercehq_core.utils import chq_customer_address
-
         get_config = self.user.models_user.get_config
-        order, customer_address = chq_customer_address(
+        order['shipping_address'] = order['address']['shipping']
+        order['shipping_address'] = chq_customer_address(
             order,
-            german_umlauts=get_config('_use_german_umlauts', False)
+            german_umlauts=get_config('_use_german_umlauts', False),
+            shipstation_fix=True
         )
-        order['customer_address'] = customer_address
 
         order['currency'] = 'usd'
         order['created_at'] = datetime.fromtimestamp(order['order_date']).strftime('%Y-%m-%dT%H:%M:%S')

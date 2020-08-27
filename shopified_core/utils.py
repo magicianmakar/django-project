@@ -1134,3 +1134,21 @@ def get_track_model(store_type=''):
     else:
         from leadgalaxy.models import ShopifyOrderTrack
         return ShopifyOrderTrack
+
+
+def get_store_model(store_type=''):
+    if store_type == 'chq':
+        from commercehq_core.models import CommerceHQStore
+        return CommerceHQStore
+    elif store_type == 'woo':
+        from woocommerce_core.models import WooStore
+        return WooStore
+    elif store_type == 'gkart':
+        from groovekart_core.models import GrooveKartStore
+        return GrooveKartStore
+    elif store_type == 'bigcommerce':
+        from bigcommerce_core.models import BigCommerceStore
+        return BigCommerceStore
+    else:
+        from leadgalaxy.models import ShopifyStore
+        return ShopifyStore

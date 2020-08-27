@@ -688,7 +688,9 @@ def get_bigcommerce_products(store, page=1, limit=50, all_products=False, produc
                 yield product
 
 
-def bigcommerce_customer_address(order, aliexpress_fix=False, german_umlauts=False, aliexpress_fix_city=False, return_corrections=False):
+def bigcommerce_customer_address(order, aliexpress_fix=False, german_umlauts=False,
+                                 aliexpress_fix_city=False, return_corrections=False,
+                                 shipstation_fix=False):
     customer_address = {}
     shipping_address = order['shipping_addresses'][0] if len(order['shipping_addresses']) > 0 else order['billing_address']
 
@@ -707,6 +709,7 @@ def bigcommerce_customer_address(order, aliexpress_fix=False, german_umlauts=Fal
         else:
             customer_address[k] = shipping_address[k]
 
+    customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
     customer_address['address1'] = customer_address.get('street_1')
     customer_address['address2'] = customer_address.get('street_2')
     customer_address['country_code'] = customer_address.get('country_iso2')
@@ -717,6 +720,9 @@ def bigcommerce_customer_address(order, aliexpress_fix=False, german_umlauts=Fal
 
     province = province_from_code(customer_address['country_iso2'], customer_address['province_code'])
     customer_address['province'] = unidecode(province) if type(province) is str else province
+
+    if shipstation_fix:
+        return customer_address
 
     customer_province = customer_address['province']
 
@@ -777,8 +783,6 @@ def bigcommerce_customer_address(order, aliexpress_fix=False, german_umlauts=Fal
     if customer_address['country_code'] == 'PL':
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
-
-    customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
 
     if customer_address.get('company'):
         customer_address['name'] = '{} {} - {}'.format(customer_address['first_name'], customer_address['last_name'], customer_address['company'])

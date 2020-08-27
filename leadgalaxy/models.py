@@ -944,7 +944,17 @@ class ShopifyStore(StoreBase):
 
     def get_order(self, order_id):
         response = requests.get(url=self.api('orders', order_id))
-        return response.json()['order']
+        order = response.json()['order']
+
+        from leadgalaxy.utils import shopify_customer_address
+        get_config = self.user.models_user.get_config
+        order['shipping_address'] = shopify_customer_address(
+            order,
+            german_umlauts=get_config('_use_german_umlauts', False),
+            shipstation_fix=True
+        )
+
+        return order
 
     def get_product(self, product_id, store):
         return ShopifyProduct.objects.all().get(shopify_id=product_id, store=store)

@@ -769,7 +769,9 @@ def get_woo_products(store, page=1, limit=50, all_products=False, product_ids=No
                 yield product
 
 
-def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, aliexpress_fix_city=False, return_corrections=False):
+def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False,
+                         aliexpress_fix_city=False, return_corrections=False,
+                         shipstation_fix=False):
     customer_address = {}
     shipping_address = order['shipping'] if any(order['shipping'].values()) else order['billing']
 
@@ -788,11 +790,19 @@ def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, alie
         else:
             customer_address[k] = shipping_address[k]
 
+    customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
     customer_address['address1'] = customer_address.get('address_1')
+    if customer_address.get('number'):
+        customer_address['address1'] += f", {customer_address.get('number')}"
     customer_address['address2'] = customer_address.get('address_2')
     customer_address['country_code'] = customer_address.get('country')
     customer_address['province_code'] = customer_address.get('state')
     customer_address['zip'] = customer_address.get('postcode')
+
+    if shipstation_fix:
+        customer_address['province'] = customer_address.get('state')
+        customer_address['phone'] = order['billing'].get('phone')
+        return customer_address
 
     customer_address['country'] = country_from_code(customer_address['country_code'], '')
 
@@ -835,8 +845,6 @@ def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, alie
 
     if customer_address['country_code'] == 'BR':
         customer_address = fix_br_address(customer_address)
-        if customer_address.get('number'):
-            customer_address['address1'] = f"{customer_address.get('address_1')}, {customer_address.get('number')}"
 
         cpf = None
         for data in order.get('meta_data', []):
@@ -870,8 +878,6 @@ def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False, alie
     if customer_address['country_code'] == 'PL':
         if customer_address.get('zip'):
             customer_address['zip'] = re.sub(r'[\n\r\t\._ -]', '', customer_address['zip'])
-
-    customer_address['name'] = '{} {}'.format(customer_address['first_name'], customer_address['last_name']).strip()
 
     if customer_address.get('company'):
         customer_address['name'] = '{} {} - {}'.format(customer_address['first_name'], customer_address['last_name'], customer_address['company'])

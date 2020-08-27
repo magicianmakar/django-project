@@ -2,7 +2,6 @@ import json
 import re
 import requests
 from urllib.parse import urlparse
-from unidecode import unidecode
 from django.db import models
 from django.utils.functional import cached_property
 from django.contrib.auth.models import User
@@ -25,10 +24,6 @@ from shopified_core.models import (
     BoardBase,
     OrderTrackBase,
     UserUploadBase
-)
-
-from shopified_core.shipping_helper import (
-    province_from_code,
 )
 
 
@@ -167,17 +162,15 @@ class BigCommerceStore(StoreBase):
             url=self.get_api_url('v2/orders/{}/shipping_addresses'.format(order['id']))
         )
         req_shipment.raise_for_status()
-        shipping_addresses = req_shipment.json()
+        order['shipping_addresses'] = req_shipment.json()
 
-        shipping_address = shipping_addresses[0] if len(shipping_addresses) > 0 else order['billing_address']
-        shipping_address['country_code'] = shipping_address['country_iso2']
-        shipping_address['province_code'] = shipping_address.get('state')
-        shipping_address['address1'] = shipping_address.get('street_1', '')
-        shipping_address['address2'] = shipping_address.get('street_2', '')
-        province = province_from_code(shipping_address['country_iso2'], shipping_address['province_code'])
-        shipping_address['name'] = '{} {}'.format(shipping_address['first_name'], shipping_address['last_name'])
-        shipping_address['province'] = unidecode(province) if type(province) is str else province
-        order['shipping_address'] = shipping_address
+        from bigcommerce_core.utils import bigcommerce_customer_address
+        get_config = self.user.models_user.get_config
+        order['shipping_address'] = bigcommerce_customer_address(
+            order,
+            german_umlauts=get_config('_use_german_umlauts', False),
+            shipstation_fix=True
+        )
 
         return order
 

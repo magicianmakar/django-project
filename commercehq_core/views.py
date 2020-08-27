@@ -3,7 +3,6 @@ import arrow
 import simplejson as json
 import requests
 import jwt
-from copy import deepcopy
 
 from lib.exceptions import capture_exception
 
@@ -26,7 +25,9 @@ from django.views.generic.base import RedirectView
 from django.views.generic.detail import DetailView
 from django.core.cache.utils import make_template_fragment_key
 
-from supplements.models import PLSOrderLine
+from supplements.lib.shipstation import get_address as get_shipstation_address
+from supplements.models import PLSOrder, PLSOrderLine
+from supplements.tasks import update_shipstation_address
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
 from shopified_core.paginators import SimplePaginator
@@ -770,6 +771,7 @@ class OrdersList(ListView):
         orders_ids = []
         products_ids = []
         orders_list = {}
+        unfulfilled_supplement_items = {}
 
         orders = ctx['object_list']
         if orders is None:
@@ -783,6 +785,20 @@ class OrdersList(ListView):
         res = CommerceHQOrderTrack.objects.filter(store=self.store, order_id__in=orders_ids).defer('data')
         for i in res:
             orders_list['{}-{}'.format(i.order_id, i.line_id)] = i
+
+        for o in PLSOrder.objects.prefetch_related('order_items',
+                                                   'order_items__label',
+                                                   'order_items__label__user_supplement',
+                                                   ).filter(is_fulfilled=False,
+                                                            store_type='chq',
+                                                            store_id=self.store.id,
+                                                            store_order_id__in=orders_ids):
+            for i in o.order_items.all():
+                item_key = f'{i.store_order_id}-{i.line_id}'
+                # Store order single items can become multiple items (bundles)
+                if not unfulfilled_supplement_items.get(item_key):
+                    unfulfilled_supplement_items[item_key] = []
+                unfulfilled_supplement_items[item_key].append(i)
 
         ctx['has_print_on_demand'] = False
         for odx, order in enumerate(orders):
@@ -831,11 +847,14 @@ class OrdersList(ListView):
             is_pending_payment = safe_int(order['paid']) == 0
             order['pending_payment'] = is_pending_payment and is_paypal
             order['is_fulfilled'] = order['status'] >= 3
+            update_shipstation_items = {}
+            shipstation_address_changed = None
 
             if not order['address']:
                 order['address'] = {
                     'shipping': {}
                 }
+            order['shipping_address'] = order['address']['shipping']
 
             for fulfilment in order['fulfilments']:
                 for item in fulfilment['items']:
@@ -916,6 +935,35 @@ class OrdersList(ListView):
                             line['weight'] = supplier.user_supplement.get_weight(line['quantity'])
                         except:
                             line['weight'] = False
+
+                        pls_items = unfulfilled_supplement_items.get(f"{order['id']}-{line['id']}")
+                        if pls_items:  # Item is not fulfilled yet
+                            if shipstation_address_changed is None:  # Check only once
+                                shipstation_address = chq_customer_address(
+                                    order,
+                                    german_umlauts=german_umlauts,
+                                    shipstation_fix=True
+                                )
+                                address_hash = get_shipstation_address(shipstation_address, hashed=True)
+                                pls_address_hash = pls_items[0].pls_order.shipping_address_hash
+                                shipstation_address_changed = pls_address_hash != str(address_hash)
+
+                            for pls_item in pls_items:
+                                pls_order_id = pls_item.pls_order_id
+                                if not update_shipstation_items.get(pls_order_id):
+                                    update_shipstation_items[pls_order_id] = []
+
+                                # Order items can be placed in different orders at shipstation
+                                update_shipstation_items[pls_order_id].append({
+                                    'id': pls_item.line_id,
+                                    'quantity': pls_item.quantity,
+                                    'title': line['title'],
+                                    'sku': pls_item.sku or pls_item.label.user_supplement.shipstation_sku,
+                                    'user_supplement_id': pls_item.label.user_supplement.id,
+                                    'label_id': pls_item.label_id,
+                                    'image_url': line['image'],
+                                })
+
                     line['supplier_type'] = supplier.supplier_type()
                     line['shipping_method'] = shipping_method
                     order['connected_lines'] += 1
@@ -986,7 +1034,6 @@ class OrdersList(ListView):
 
                 products_cache[line['product_id']] = product
 
-                order['shipping_address'] = order['address']['shipping']
                 if not auto_orders or not order.get('shipping_address') or order['pending_payment']:
                     order['items'][ldx] = line
                     continue
@@ -1057,11 +1104,13 @@ class OrdersList(ListView):
 
             order['mixed_supplier_types'] = len(order['supplier_types']) > 1
 
-            line_items = deepcopy(order['items'])
-            for item in line_items:
-                item.pop('order_track', None)
-                item.pop('product', None)
-                item.pop('supplier', None)
+            if shipstation_address_changed:
+                # Order items can be placed separately at shipstation
+                for pls_order_id, line_items in update_shipstation_items.items():
+                    update_shipstation_address.apply_async(
+                        args=[pls_order_id, line_items, self.store.id, 'chq'],
+                        countdown=5
+                    )
 
             orders[odx] = order
 

@@ -132,29 +132,19 @@ class WooStore(StoreBase):
 
         pusher.trigger(self.pusher_channel(), event, data)
 
-    def prepare_data(self, key, order):
-        order[key]['name'] = order[key].pop('first_name')
-        if order[key].get('number'):
-            order[key]['address1'] = f"{order[key].pop('address_1')}, {order[key].pop('number')}"
-        else:
-            order[key]['address1'] = order[key].pop('address_1')
-        order[key]['country_code'] = order[key]['country']
-        order[key]['province'] = order[key].pop('state')
-        order[key]['zip'] = order[key].pop('postcode')
-
     def get_order(self, order_id):
         wcapi = self.get_wcapi()
         order = wcapi.get(f'orders/{order_id}').json()
         order['order_number'] = order.pop('number')
-        self.prepare_data('shipping', order)
-        self.prepare_data('billing', order)
-
-        order['shipping']['phone'] = order['billing']['phone']
-        shipping_address = order['shipping_address'] = order.pop('shipping')
-        billing_address = order['billing_address'] = order.pop('billing')
-        order['shipping_address']['address2'] = shipping_address['address_2']
-        order['billing_address']['address2'] = billing_address['address_2']
         order['created_at'] = order.pop('date_created')
+
+        from woocommerce_core.utils import woo_customer_address
+        get_config = self.user.models_user.get_config
+        order['shipping_address'] = woo_customer_address(
+            order,
+            german_umlauts=get_config('_use_german_umlauts', False),
+            shipstation_fix=True
+        )
 
         for item in order['line_items']:
             item['title'] = item.pop('name')

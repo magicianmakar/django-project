@@ -130,6 +130,7 @@ class Util:
                     amount=line_amount,
                     quantity=quantity,
                     wholesale_price=wholesale_price,
+                    sku=line['sku'],  # Product SKU
                 )
 
             # TODO: AUTHNET ROLLBACK

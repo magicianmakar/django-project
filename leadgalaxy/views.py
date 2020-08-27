@@ -5,7 +5,6 @@ import hmac
 import random
 import time
 
-from copy import deepcopy
 from hashlib import sha1
 from urllib.parse import urlencode, quote_plus
 
@@ -79,7 +78,9 @@ from shopified_core.utils import (
     decode_api_token,
 )
 from shopified_core.tasks import keen_order_event, export_user_activity
-from supplements.models import PLSOrderLine
+from supplements.lib.shipstation import get_address as get_shipstation_address
+from supplements.tasks import update_shipstation_address
+from supplements.models import PLSOrder, PLSOrderLine
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
     ShopifyOrder,
@@ -3442,6 +3443,7 @@ class OrdersView(TemplateView):
         self.products_ids = []
         self.orders_track = {}
         self.orders_log = {}
+        self.unfulfilled_supplement_items = {}
         self.changed_variants = {}
         self.images_list = {}
         self.products_list_cache = {}
@@ -4073,6 +4075,20 @@ class OrdersView(TemplateView):
             if p.shopify_id not in self.products_list_cache:
                 self.products_list_cache[p.shopify_id] = p
 
+        for o in PLSOrder.objects.prefetch_related('order_items',
+                                                   'order_items__label',
+                                                   'order_items__label__user_supplement'
+                                                   ).filter(is_fulfilled=False,
+                                                            store_type='shopify',
+                                                            store_id=self.store.id,
+                                                            store_order_id__in=self.orders_ids):
+            for i in o.order_items.all():
+                item_key = f'{i.store_order_id}-{i.line_id}'
+                # Store order single items can become multiple items (bundles)
+                if not self.unfulfilled_supplement_items.get(item_key):
+                    self.unfulfilled_supplement_items[item_key] = []
+                self.unfulfilled_supplement_items[item_key].append(i)
+
     def proccess_orders(self):
         self.get_user_settings()
         self.get_filters()
@@ -4107,6 +4123,8 @@ class OrdersView(TemplateView):
             order['is_fulfilled'] = order.get('fulfillment_status') == 'fulfilled'
             order['pending_payment'] = (order['financial_status'] == 'pending'
                                         and (order['gateway'] == 'paypal' or 'amazon' in order['gateway'].lower()))
+            update_shipstation_items = {}
+            shipstation_address_changed = None
 
             if type(order['refunds']) is list:
                 for refund in order['refunds']:
@@ -4188,6 +4206,34 @@ class OrdersView(TemplateView):
                             line_item['weight'] = supplier.user_supplement.get_weight(line_item['quantity'])
                         except:
                             line_item['weight'] = False
+
+                        pls_items = self.unfulfilled_supplement_items.get(f"{order['id']}-{line_item['id']}")
+                        if pls_items:  # Item is not fulfilled yet
+                            if shipstation_address_changed is None:  # Check only once
+                                shipstation_address = utils.shopify_customer_address(
+                                    order,
+                                    german_umlauts=self.config.german_umlauts,
+                                    shipstation_fix=True
+                                )
+                                address_hash = get_shipstation_address(shipstation_address, hashed=True)
+                                pls_address_hash = pls_items[0].pls_order.shipping_address_hash
+                                shipstation_address_changed = pls_address_hash != str(address_hash)
+
+                            for pls_item in pls_items:
+                                pls_order_id = pls_item.pls_order_id
+                                if not update_shipstation_items.get(pls_order_id):
+                                    update_shipstation_items[pls_order_id] = []
+
+                                # Order items can be placed in different orders at shipstation
+                                update_shipstation_items[pls_order_id].append({
+                                    'id': pls_item.line_id,
+                                    'quantity': pls_item.quantity,
+                                    'title': line_item['variant_title'],
+                                    'sku': pls_item.sku or pls_item.label.user_supplement.shipstation_sku,
+                                    'user_supplement_id': pls_item.label.user_supplement.id,
+                                    'label_id': pls_item.label_id,
+                                    'image_url': line_item['image_src'],
+                                })
 
                     line_item['is_paid'] = is_paid
                     line_item['supplier'] = supplier
@@ -4336,11 +4382,13 @@ class OrdersView(TemplateView):
             order['mixed_supplier_types'] = len(order['supplier_types']) > 1
             self.orders.append(order)
 
-            line_items = deepcopy(order['line_items'])
-            for item in line_items:
-                item.pop('order_track', None)
-                item.pop('product', None)
-                item.pop('supplier', None)
+            if shipstation_address_changed:
+                # Order items can be placed separately at shipstation
+                for pls_order_id, line_items in update_shipstation_items.items():
+                    update_shipstation_address.apply_async(
+                        args=[pls_order_id, line_items, self.store.id, 'shopify'],
+                        countdown=5
+                    )
 
         active_orders = {}
         for i in self.orders_ids:
