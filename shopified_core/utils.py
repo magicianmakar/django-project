@@ -1170,4 +1170,3 @@ def get_store_object(store_id, store_type):
     elif store_type == 'bigcommerce':
         from bigcommerce_core.models import BigCommerceStore
         return BigCommerceStore.objects.get(id=store_id)
-
