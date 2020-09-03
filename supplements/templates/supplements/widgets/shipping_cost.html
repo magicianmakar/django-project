@@ -1,0 +1,42 @@
+{% load i18n static %}
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+
+<div id="shipping-services-field">
+    <input type="hidden" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value }}"{% endif %} {% include "django/forms/widgets/attrs.html" %} />
+
+    <label id="default-ship-cost-label">Default Shipping Cost</label>
+    <input type="number" step=".1" min="0" class="shipping_cost_default">
+
+    <a id="add-shipping-service" href="#" title="{% trans 'Add' %}">
+        <img src="{% static 'admin/img/icon-addlink.svg' %}" alt="{% trans 'Add' %}"/>
+        Add new Shipping Service
+    </a>
+
+    <div id="shipping-services">
+    </div>
+</div>
+
+{% verbatim %}
+<script id="shipping-service-template" type="text/x-handlebars-template">
+    <fieldset class="shipping-service" id="{{ service_id }}">
+        <h2>
+            <input type="text" class="service_name" placeholder="Shipping Service Name" value="{{ service_name }}">
+            <input type="text" class="service_code" placeholder="Shipping Service Code" value="{{ service_code }}">
+            <a class="add-link" href="#">Add new rule</a>
+        </h2>
+    </fieldset>
+</script>
+
+<script id="shipping-rule-template" type="text/x-handlebars-template">
+    <div class="shipping-rule">
+        <a href="#" class="close">
+            <span aria-hidden="true">&times;</span>
+        </a>
+        <label>Weight</label>
+        <input type="number" step=".01" class="weight_from" placeholder="From" value="{{ weight_from }}">
+        <input type="number" step=".01" class="weight_to" placeholder="To" value="{{ weight_to }}">
+        <label>Cost</label>
+        <input type="number" step=".01" class="shipping_cost" value="{{ shipping_cost }}">
+    </div>
+</script>
+{% endverbatim %}

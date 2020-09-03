@@ -1,0 +1,85 @@
+.form-row.field-data > div > label {
+    display: inline-block;
+}
+
+#shipping-services-field {
+    display: block;
+    padding-left: 170px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#shipping-services-field label {
+    float: none;
+}
+
+#shipping-services-field a {
+    padding-left: 15px;
+    display: inline-block;
+    text-decoration: none;
+}
+
+#shipping-services-field a:focus {
+    outline: none;
+}
+
+#shipping-services fieldset {
+    margin-top: 20px;
+    margin-left: -10px;
+}
+
+#shipping-services fieldset h2 {
+    margin-left: 10px;
+}
+
+#shipping-services .add-link {
+    color: #fff;
+    position: relative;
+    padding: 0 0 2px 20px;
+    margin-left: 10px;
+    border-bottom: 1px solid transparent;
+    transition: border .2s;
+}
+
+#shipping-services .add-link:before {
+    content: "+";
+    font-size: 30px;
+    position: absolute;
+    left: -3px;
+    top: -12px;
+}
+
+#shipping-services .add-link:hover {
+    border-bottom-color: #ffffff;
+}
+
+
+.weight_from,
+.weight_to {
+    width: 70px;
+}
+.shipping_cost {
+    width: 160px;
+}
+
+.shipping-rule {
+    display: inline-block;
+    border: 1px solid #79aec8;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+}
+
+.shipping-rule {
+    margin-left: 10px;
+    position: relative;
+}
+
+#shipping-services-field .shipping-rule a.close {
+    position: absolute;
+    display: inline-block;
+    top: 0px;
+    right: 0px;
+    padding: 3px 8px;
+    text-align: center;
+}

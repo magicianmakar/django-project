@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib import admin
 
+from .forms import ShippingGroupAdminForm
 from .models import (
     AuthorizeNetCustomer,
     LabelComment,
@@ -157,6 +158,7 @@ class AuthorizeNetCustomer(admin.ModelAdmin):
 
 @admin.register(ShippingGroup)
 class ShippingGroupAdmin(admin.ModelAdmin):
+    form = ShippingGroupAdminForm
     list_display = (
         'slug',
         'name',

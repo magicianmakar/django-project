@@ -22,7 +22,7 @@ from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel
 from .utils import user_can_download_label
-from .utils.payment import Util, get_shipping_cost
+from .utils.payment import Util, get_shipping_costs
 
 
 class SupplementsApi(ApiResponseMixin, View):
@@ -47,7 +47,7 @@ class SupplementsApi(ApiResponseMixin, View):
             except:
                 province = order['shipping_address']['province']
             order_info = (order['order_number'], order_id, order['shipping_address']['country_code'],
-                          province)
+                          province, data.get('shipping_service'))
             order_line_items = line_items[order_id]
 
             shipping_country = order['shipping_address']['country']
@@ -97,7 +97,7 @@ class SupplementsApi(ApiResponseMixin, View):
                 shipstation_data = prepare_shipstation_data(pls_order,
                                                             order,
                                                             order_line_items,
-                                                            )
+                                                            service_code=data.get('shipping_service'))
                 create_shipstation_order(pls_order, shipstation_data)
 
                 StoreApi = get_store_api(data['store_type'])
@@ -248,17 +248,17 @@ class SupplementsApi(ApiResponseMixin, View):
         # Don't use multiple shipping costs for now
         shipping_info = list(shipping_info.values())[0]
 
-        shipping_price = get_shipping_cost(
+        shippings = get_shipping_costs(
             shipping_info['country_code'],
             shipping_info['province_code'],
             shipping_info['total_weight']
         )
 
-        data = {'shipping_cost': shipping_price}
-        if shipping_price is False:
-            return self.api_error('Error calculating shipping', status=500)
+        if isinstance(shippings, (bool, str)):
+            error_message = not shippings and 'Error calculating shipping' or shippings
+            return self.api_error(error_message, status=500)
         else:
-            return self.api_success(data)
+            return self.api_success({'shippings': shippings})
 
     def post_sync_order(self, request, user, data):
         order = PLSOrder.objects.filter(

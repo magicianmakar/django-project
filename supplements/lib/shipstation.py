@@ -36,7 +36,7 @@ def get_address(store_data, hashed=False):
     return ship_to
 
 
-def prepare_shipstation_data(pls_order, order, line_items):
+def prepare_shipstation_data(pls_order, order, line_items, service_code=None):
     ship_to = get_address(order['shipping_address'])
     try:
         bill_to = get_address(order['billing_address'])
@@ -81,7 +81,7 @@ def prepare_shipstation_data(pls_order, order, line_items):
         'customField1': order['order_number'],
     }
 
-    return {
+    shipping_data = {
         'orderNumber': pls_order.shipstation_order_number,
         'orderDate': pls_order.created_at.strftime('%Y-%m-%dT%H:%M:%S%z'),
         'orderStatus': 'awaiting_shipment',
@@ -91,9 +91,13 @@ def prepare_shipstation_data(pls_order, order, line_items):
         'items': items,
         'advancedOptions': advancedOptions,
     }
+    if service_code:
+        shipping_data['requestedShippingService'] = service_code
+
+    return shipping_data
 
 
-def create_shipstation_order(pls_order, data):
+def create_shipstation_order(pls_order, data, service_code=None):
     headers = {'Content-Type': 'application/json'}
     headers.update(get_auth_header())
     url = f'{settings.SHIPSTATION_API_URL}/orders/createOrder'

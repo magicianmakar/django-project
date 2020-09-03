@@ -333,3 +333,17 @@ class RefundPaymentsForm(forms.ModelForm):
         if amount <= fee:
             msg = 'Amount can not be less than or equal to Restocking Fee.'
             self.add_error('amount', msg)
+
+
+class ShippingCostsWidget(forms.Textarea):
+    template_name = 'supplements/widgets/shipping_cost.html'
+
+    class Media:
+        css = {
+            'all': ('pls/css/widgets/shipping_cost.css',)
+        }
+        js = ('pls/js/widgets/shipping_cost.js',)
+
+
+class ShippingGroupAdminForm(forms.ModelForm):
+    data = forms.CharField(widget=ShippingCostsWidget)

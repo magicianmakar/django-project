@@ -1152,3 +1152,22 @@ def get_store_model(store_type=''):
     else:
         from leadgalaxy.models import ShopifyStore
         return ShopifyStore
+
+
+def get_store_object(store_id, store_type):
+    if store_type == 'shopify':
+        from leadgalaxy.models import ShopifyStore
+        return ShopifyStore.objects.get(id=store_id)
+    elif store_type == 'chq':
+        from commercehq_core.models import CommerceHQStore
+        return CommerceHQStore.objects.get(id=store_id)
+    elif store_type == 'woo':
+        from woocommerce_core.models import WooStore
+        return WooStore.objects.get(id=store_id)
+    elif store_type == 'gkart':
+        from groovekart_core.models import GrooveKartStore
+        return GrooveKartStore.objects.get(id=store_id)
+    elif store_type == 'bigcommerce':
+        from bigcommerce_core.models import BigCommerceStore
+        return BigCommerceStore.objects.get(id=store_id)
+

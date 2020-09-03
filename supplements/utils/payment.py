@@ -5,16 +5,11 @@ from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
-from bigcommerce_core.models import BigCommerceStore
-from commercehq_core.models import CommerceHQStore
-from groovekart_core.models import GrooveKartStore
-from leadgalaxy.models import ShopifyStore
 from lib.exceptions import capture_exception
 from shopified_core.shipping_helper import country_from_code
-from shopified_core.utils import get_store_api, safe_float
+from shopified_core.utils import get_store_api, safe_float, get_store_object
 from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
 from supplements.utils import supplement_customer_address
-from woocommerce_core.models import WooStore
 
 
 def complete_payment(transaction_id, pls_order_id):
@@ -32,7 +27,7 @@ def complete_payment(transaction_id, pls_order_id):
     return pls_order
 
 
-def get_shipping_cost(country_code, province_code, total_weight):
+def get_shipping_costs(country_code, province_code, total_weight):
     try:
         address = supplement_customer_address({'country_code': country_code})
         country_code = address['country_code']
@@ -46,16 +41,39 @@ def get_shipping_cost(country_code, province_code, total_weight):
 
         shipping_data = shipping_group.get_data()
 
-        cost = shipping_data.get('shipping_cost_default')
+        costs = []
+        services = {s['service_id']: s for s in shipping_data.get('services', [])}
         shipping_rates = shipping_data.get('shipping_rates', [])
         for shipping_rate in shipping_rates:
             if total_weight >= shipping_rate['weight_from'] \
                     and total_weight < shipping_rate['weight_to']:
-                cost = shipping_rate['shipping_cost']
-    except:
-        cost = False
+                if shipping_rate.get('service_id'):
+                    shipping_rate['service'] = services.get(shipping_rate.get('service_id'))
+
+                costs.append(shipping_rate)
+
+        if not costs:
+            costs.append({'shipping_cost': shipping_data.get('shipping_cost_default')})
+
+    except ShippingGroup.DoesNotExist:
+        costs = f'We are currently not shipping to {country_code}, contact support to know more'
         capture_exception()
-    return cost
+
+    except:
+        costs = False
+        capture_exception()
+
+    return costs
+
+
+def get_shipping(country_code, province_code, total_weight, shipping_service=None):
+    costs = get_shipping_costs(country_code, province_code, total_weight)
+
+    for cost in costs:
+        if cost.get('service') and cost['service']['service_code'] == shipping_service:
+            return cost
+
+    return costs[0]
 
 
 class Util:
@@ -64,7 +82,7 @@ class Util:
         self.product_cache = {}
 
     def make_payment(self, order_info, lines, user):
-        order_number, order_id, shipping_country_code, shipping_province_code = order_info
+        order_number, order_id, shipping_country_code, shipping_province_code, shipping_service = order_info
         store_id = self.store.id
         store_type = self.store.store_type
 
@@ -80,7 +98,13 @@ class Util:
             wholesale_price += line_wholesale
             total_weight += user_supplement.pl_supplement.weight * quantity
 
-        shipping_price = get_shipping_cost(shipping_country_code, shipping_province_code, total_weight)
+        shipping = get_shipping(
+            shipping_country_code,
+            shipping_province_code,
+            total_weight,
+            shipping_service
+        )
+        shipping_price = shipping['shipping_cost']
         amount = int((safe_float(amount) + shipping_price) * 100)
         wholesale_price = int(wholesale_price * 100)
 
@@ -130,6 +154,7 @@ class Util:
                     amount=line_amount,
                     quantity=quantity,
                     wholesale_price=wholesale_price,
+                    shipping_service=shipping.get('service', {}).get('service_name'),
                     sku=line['sku'],  # Product SKU
                 )
 
@@ -241,16 +266,7 @@ class Util:
         return orders, line_items, effective_order_data_ids, errors
 
     def get_store(self, store_id, store_type):
-        if store_type == 'shopify':
-            return ShopifyStore.objects.get(id=store_id)
-        elif store_type == 'chq':
-            return CommerceHQStore.objects.get(id=store_id)
-        elif store_type == 'gkart':
-            return GrooveKartStore.objects.get(id=store_id)
-        elif store_type == 'woo':
-            return WooStore.objects.get(id=store_id)
-        elif store_type == 'bigcommerce':
-            return BigCommerceStore.objects.get(id=store_id)
+        return get_store_object(store_id, store_type)
 
     def mark_label_printed(self, line_id):
         line_item = get_object_or_404(PLSOrderLine, id=line_id)

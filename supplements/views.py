@@ -38,9 +38,12 @@ from svglib.svglib import svg2rlg
 
 from shopified_core import permissions
 from shopified_core.shipping_helper import get_counrties_list
-from shopified_core.utils import app_link
-from shopified_core.utils import aws_s3_context as images_aws_s3_context
-from shopified_core.utils import safe_int
+from shopified_core.utils import (
+    app_link,
+    safe_int,
+    aws_s3_context as images_aws_s3_context,
+    get_store_object,
+)
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
 from supplements.lib.image import get_order_number_label, get_payment_pdf
 from supplements.models import (
@@ -75,7 +78,7 @@ from .forms import (
     UserSupplementFilterForm,
     UserSupplementForm
 )
-from .utils import aws_s3_context, create_rows, payment, report, send_email_against_comment
+from .utils import aws_s3_context, create_rows, report, send_email_against_comment
 
 register = template.Library()
 
@@ -1205,24 +1208,17 @@ class OrderDetailMixin(LoginRequiredMixin, View):
     def get_context_data(self, **kwargs):
         order = kwargs['order']
 
-        line_items = [dict(
-            id=i.id,
-            sku=i.label.sku,
-            quantity=i.quantity,
-            supplement=i.label.user_supplement.to_dict(),
-            line_total="${:.2f}".format((i.amount * i.quantity) / 100.),
-            refunded=i.is_refunded,
-        ) for i in order.order_items.all()]
+        line_items = order.order_items.all()
+        for line_item in line_items:
+            line_item.supplement = line_item.label.user_supplement.to_dict()
+            line_item.line_total = "${:.2f}".format((line_item.amount * line_item.quantity) / 100.)
 
-        util = payment.Util()
-        store = util.get_store(order.store_id, order.store_type)
-
+        store = get_store_object(order.store_id, order.store_type)
         if not self.request.user.can('pls_admin.use') and not self.request.user.can('pls_staff.use'):
             # Make sure this user have access to this order store
             permissions.user_can_view(self.request.user, store)
 
-        util.store = store
-        shipping_address = util.get_order(order.store_order_id).get('shipping_address')
+        shipping_address = store.get_order(order.store_order_id).get('shipping_address')
 
         return dict(
             order=order,

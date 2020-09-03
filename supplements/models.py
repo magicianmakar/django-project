@@ -221,6 +221,7 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
     is_label_printed = models.BooleanField(default=False)
     sale_price = models.IntegerField()
     wholesale_price = models.IntegerField()
+    shipping_service = models.CharField(max_length=255, blank=True, null=True)
 
     label = models.ForeignKey(UserSupplementLabel,
                               on_delete=models.SET_NULL,

@@ -48,6 +48,7 @@
     <th>Sku</th>
     <th>Price</th>
     <th>Total</th>
+    <th></th>
   </thead>
   <tbody>
     {% for item in line_items %}
@@ -58,11 +59,15 @@
         {% endfor %}
       </td>
       <td class="product-cell">{{ item.supplement.title }}</td>
-      <td class="product-cell">{{ item.sku }}</td>
+      <td class="product-cell">{{ item.label.sku }}</td>
       <td class="product-cell">{{ item.quantity }} &times; ${{ item.supplement.cost_price }}</td>
       <td class="product-cell">{{ item.line_total }}</td>
       <td class="product-cell">
-        {% if item.refunded %}
+        {% if item.shipping_service %}
+        <span class="label label-success">{{ item.shipping_service }}</span>
+        {% endif %}
+
+        {% if item.is_refunded %}
         <span class="label label-warning">Refunded</span>
         {% else %}
         <span class="label label-primary">Paid</span>

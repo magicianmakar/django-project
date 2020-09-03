@@ -32,15 +32,19 @@ function doMakePayment(orderDataIds, storeId, storeType) {
 
     toastr.info(msg);
 
-    var url = api_url('make-payment', 'supplements');
     data = {
         'order_data_ids': orderDataIds,
         'store_id': storeId,
-        'store_type': storeType
+        'store_type': storeType,
     };
 
+    var shippingService = $('[name="shipping_service"]:checked').val();
+    if (shippingService) {
+        data['shipping_service'] = shippingService;
+    }
+
     $.ajax({
-        url: url,
+        url: api_url('make-payment', 'supplements'),
         type: "POST",
         data: JSON.stringify(data),
         dataType: 'json',
@@ -135,9 +139,14 @@ function makePayment(orderDataIds) {
         dataType: 'json',
         contentType: 'application/json',
         success: function (api_data) {
+            var shippingsCount = api_data.shippings.length;
+            for (var i = 0; i < shippingsCount; i++) {
+                api_data.shippings[i].currency_shipping_cost = formatCurrency(api_data.shippings[i].shipping_cost.toFixed(2));
+            }
+
             var data = makeData(orderDataIds);
-            data.total_shipping_cost = formatCurrency(api_data.shipping_cost.toFixed(2));
-            data.total = formatCurrency((data.total + api_data.shipping_cost).toFixed(2));
+            data.currency_total_shipping_cost = api_data.shippings[0].currency_shipping_cost;
+            data.currency_total = formatCurrency((data.total + api_data.shippings[0].shipping_cost).toFixed(2));
 
             var makePaymentTemplate = Handlebars.compile($("#id-make-payment-template").html());
             var html = makePaymentTemplate(data);
@@ -152,6 +161,27 @@ function makePayment(orderDataIds) {
                     return;
                 });
             });
+
+            $('#modal-make-payment .shipping-service').remove();
+            if (shippingsCount > 1) {
+                var servicesTemplate = Handlebars.compile($("#shipping-services-template").html());
+                $('#modal-make-payment table').after(servicesTemplate(api_data));
+                $('#modal-make-payment [name="shipping_service"]').off('change').on('change', function() {
+                    var serviceId = $(this).attr('data-service-id');
+                    for (var i = 0; i < shippingsCount; i++) {
+                        if (serviceId == api_data.shippings[i].service_id) {
+
+                            $('#modal-make-payment .shipping-cost').text(
+                                api_data.shippings[i].currency_shipping_cost
+                            );
+                            $('#modal-make-payment .total-cost').text(
+                                formatCurrency((data.total + api_data.shippings[i].shipping_cost).toFixed(2))
+                            );
+                            break;
+                        }
+                    }
+                });
+            }
         },
         error: function (api_data) {
             toastr.warning(getAjaxError(api_data));

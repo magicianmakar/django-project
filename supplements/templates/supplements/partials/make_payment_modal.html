@@ -43,12 +43,27 @@
   </tr>
   {{/each}}
   <tr>
-    <td colspan='4'><strong>Shipping</strong><span id="pls-shipping-weight-total"> ({{ total_weight }} lb)</span></td>
-    <td>{{ total_shipping_cost }}</td>
+    <td colspan="4"><strong>Shipping</strong><span id="pls-shipping-weight-total"> ({{ total_weight }} lb)</span></td>
+    <td class="shipping-cost">{{ currency_total_shipping_cost }}</td>
   </tr>
   <tr>
-    <td colspan='4'><strong>Total</strong></td>
-    <td>{{ total }}</td>
+    <td colspan="4"><strong>Total</strong></td>
+    <td class="total-cost">{{ currency_total }}</td>
   </tr>
+</script>
+
+<script id="shipping-services-template" type="text/x-handlebars-template">
+  {{#each shippings}}
+  <div class="radio-inline shipping-service">
+    <label>
+      <input type="radio"
+             data-service-id="{{this.service_id}}"
+             name="shipping_service"
+             value="{{this.service.service_code}}"
+             {{#unless @index}}checked{{/unless}}>
+        {{this.service.service_name}} ({{this.currency_shipping_cost}})
+    </label>
+  </div>
+  {{/each}}
 </script>
 {% endverbatim %}
