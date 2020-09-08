@@ -14,6 +14,7 @@ $(window.plupload_Config.saveFormID).on("addmockups", function(e, url) {
 
 $('#single-label-upload').on('change', function() {
     // Update label in mockup editor
+    var files = this.files;
     var reader = new FileReader();
     reader.onload = function() {
         if (!this.result.includes('application/pdf')) {
@@ -21,23 +22,34 @@ $('#single-label-upload').on('change', function() {
             return;
         }
 
-        addLabelImage(this.result);
+        var pdf = this.result;
+        var defaultSize = $('#id_label_size').val();
+        labelSizeMatch(defaultSize, pdf).then(function (result) {
+            addLabelImage(pdf);
+            $('#label').get(0).files = files;
+
+            // Update generated mockups and show progress
+            var progress = $('<div class="progress mockup-save-progress">');
+            $('#mockup-thumbnails').empty().after(progress);
+            $('[name="mockup_urls"]').remove();
+            mockupsUploader.addFile(files[0]);
+            mockupsUploader.start();
+
+            $(window.plupload_Config.saveFormID).on("addlabel", function(e) {
+                e.preventDefault();
+                $(this).off(e);
+                progress.remove();
+            });
+        }).catch(function (error){
+            swal(
+                "Label size does not match",
+                "The PDF uploaded does not match the required label size i.e. " + defaultSize,
+                "warning"
+            );
+            return;
+        });
     };
     reader.readAsDataURL(this.files[0]);
-    $('#label').get(0).files = this.files;
-
-    // Update generated mockups and show progress
-    var progress = $('<div class="progress mockup-save-progress">');
-    $('#mockup-thumbnails').empty().after(progress);
-    $('[name="mockup_urls"]').remove();
-    mockupsUploader.addFile(this.files[0]);
-    mockupsUploader.start();
-
-    $(window.plupload_Config.saveFormID).on("addlabel", function(e) {
-        e.preventDefault();
-        $(this).off(e);
-        progress.remove();
-    });
 });
 
 $("#id_comment").attr("placeholder", "Leave a comment...");
