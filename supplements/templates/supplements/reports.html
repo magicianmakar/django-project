@@ -104,34 +104,39 @@
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="panel-title">
-          <h4><a data-toggle="collapse" href="#collapse{{seller.user.username}}" data-parent="#accr" class="text-muted">{{seller.user.get_full_name}}</a></h4>
+          <div class="row">
+            <div class="col-xs-6">
+              <h4>{{seller.user.get_full_name}}</h4>
+            </div>
+            <div class="col-xs-6">
+              <h4 class="text-right text-muted">Total Supplements: {{seller.total_items}}</h4>
+            </div>
+          </div>
         </div>
       </div>
-      <div id="collapse{{seller.user.username}}" class="panel-collapse collapse in">
-        <div class="panel-body">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Supplement Name</th>
-                <th>SKU</th>
-                <th>Label SKU</th>
-                <th>Items Sold</th>
-                <th>Label Link</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in seller.items_data %}
-              <tr>
-                <td>{{item.item.user_supplement.pl_supplement.title}}</td>
-                <td>{{item.item.user_supplement.pl_supplement.shipstation_sku}}</td>
-                <td>{{item.item.sku}}</td>
-                <td>{{item.q}}</td>
-                <td><a href="{% url 'pls:admin_label_history' supplement_id=item.item.user_supplement.id %}">View</a></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+      <div class="panel-body">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Supplement Name</th>
+              <th>SKU</th>
+              <th>Label SKU</th>
+              <th>Items Sold</th>
+              <th>Label Link</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in seller.items_data %}
+            <tr>
+              <td>{{item.item.user_supplement.pl_supplement.title}}</td>
+              <td>{{item.item.user_supplement.pl_supplement.shipstation_sku}}</td>
+              <td>{{item.item.sku}}</td>
+              <td>{{item.q}}</td>
+              <td><a href="{% url 'pls:admin_label_history' supplement_id=item.item.user_supplement.id %}">View</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
     {% endfor %}

@@ -1805,8 +1805,6 @@ class Reports(LoginRequiredMixin, TemplateView):
         check_s = start_at
         check_e = end_at
 
-        all_orders = PLSOrder.objects.all().prefetch_related('order_items')
-
         if interval == 'day':
             order_count_data = []
             order_cost_data = []
@@ -2554,7 +2552,14 @@ class Reports(LoginRequiredMixin, TemplateView):
         seller_track = []
         seller_data = []
 
-        for order in all_orders:
+        filtered_orders = list(
+            filter(
+                lambda order: self.check_range_interval(order, start_at, end_at),
+                list(all_orders)
+            )
+        )
+
+        for order in filtered_orders:
             d = {}
             d['user'] = order.user
             d['items_track'] = []
@@ -2586,6 +2591,7 @@ class Reports(LoginRequiredMixin, TemplateView):
         seller_data.sort(key=report.sort_seller, reverse=True)
         seller_data = seller_data[:10]
         for seller in seller_data:
+            seller['total_items'] = sum(item['q'] for item in seller['items_data'])
             seller.pop('items_track')
             seller['items_data'].sort(key=report.sort_items, reverse=True)
             seller['items_data'] = seller['items_data'][:5]
@@ -2595,8 +2601,8 @@ class Reports(LoginRequiredMixin, TemplateView):
             'form': form,
             'gross_profit': charts_data.pop('gross_profit'),
             'revenue': charts_data.pop('revenue'),
-            'total_orders': charts_data.pop('total_orders'),
-            'total_items': charts_data.pop('total_items'),
+            'total_orders': int(charts_data.pop('total_orders')),
+            'total_items': int(charts_data.pop('total_items')),
             'total_sale': charts_data.pop('total_sale'),
             'total_profit': charts_data.pop('total_profit'),
             'charts_data': escapejs(mark_safe(json.dumps(charts_data))),
