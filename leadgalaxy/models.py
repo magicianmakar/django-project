@@ -95,7 +95,7 @@ SUBUSER_GEAR_STORE_PERMISSIONS = (
 
 SUBUSER_GKART_STORE_PERMISSIONS = (
     *SUBUSER_STORE_PERMISSIONS_BASE,
-    ('send_to_gear', 'Send products to GearBubble'),
+    ('send_to_gkart', 'Send products to GrooveKart'),
     ('view_profit_dashboard', 'View profit dashboard'),
 )
 
