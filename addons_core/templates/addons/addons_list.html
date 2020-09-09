@@ -6,25 +6,30 @@
 {% load compress %}
 
 {% block main-container %}
-    <div class="row gray-bg" style="min-height: 300px">
-        <div class="col-md-12 hero-banner">
-            <h1>We Created The Foundation.</h1>
-            <h1>What Do You Want to Add On Next?</h1>
-            <h3>Try any of our add-ons for free with our 7-day free trial!</h3>
+<header class="gray-bg header-section">
+    <div class="container">
+        <div class="row" style="min-height: 300px">
+            <div class="col-md-12 hero-banner add-on-color">
+                <p>We Created The Foundation.</p>
+                <p>What Do You Want to Add On Next?</p>
+                <hdiv class="free-trial-msg">Try any of our add-ons for free with our 7-Day Free Trial!</h3>
+            </div>
+        {% include 'addons/partials/search_form.html' %}
         </div>
-       {% include 'addons/partials/search_form.html' %}
     </div>
-
+</header>
+<div class="container">
+    <!-- Search section starts here -->
     {% if search and search_results.count %}
         <div class="row">
-            <div class="col-md-10 col-md-offset-1 col-xs-12 m-b-lg m-t" >
+            <div class="col-md-10 col-xs-12 m-b-lg m-t" >
                 <div class="pull-left">
-                    <h2 class="text-bold m-b-none">Search Results</h2>
+                    <h2 class="heading__category m-b-none add-on-color">Search Results</h2>
                 </div>
             </div>
         </div>
         <div class="row">
-            <div class="col-md-10 col-md-offset-1">
+            <div class="col-md-12 ">
                 <div class="row">
                     {% for result in search_results %}
                         {% if not result.hidden and forloop.counter < 4 %}
@@ -37,45 +42,47 @@
     {% else %}
         {% if search %}
             <div class="row">
-                <div class="col-md-10 col-md-offset-1 col-xs-12 m-b-lg m-t" >
+                <div class="col-md-12 col-md-offset-1 col-xs-12 m-b-lg m-t" >
                     <div class="pull-left">
                         <h2 class="text-bold m-b-none">No Results Found</h2>
                     </div>
                 </div>
             </div>
         {% endif %}
+
+        <!-- Category Main Section starts here-->
+
         {% for category in addon_category %}
             {% if category.addons.all %}
-                <div class="row">
-                    <div class="col-md-10 col-md-offset-1 col-xs-12 m-b-lg m-t">
-                        <div class="pull-left">
-                            <h2 class="text-bold m-b-none">{{ category.title }}</h2>
-                        </div>
-                        <div class="pull-right">
-                            <a class="border-box" href="{%  url 'addons.category_view' slug=category.slug %}">
-                            SEE MORE
-                            </a>
-                        </div>
-                        <div class="clearfix"></div>
+            <div class="category-container">
+                <div class="row add-on-color">
+                    <div class="col-md-6">
+                        <h2 class="heading__category m-b-none add-on-color">{{ category.title }}</h2>
                     </div>
+                    
+                    <div class="col-md-6 pull-right text-right">
+                        <a class="border-box" href="{%  url 'addons.category_view' slug=category.slug %}">
+                        SEE MORE
+                        </a>
+                    </div>
+                    {% if category.short_description %}
+                    <div class="col-md-12 addon-h3">{{ category.short_description }}</div>
+                    {% endif %}
+                    <div class="clearfix"></div>
                 </div>
-                <div class="row">
-                    <div class="col-md-10 col-md-offset-1">
-                        <div class="row">
-                            {% for item in category.addons.all %}
-                                {% if not item.hidden and forloop.counter < 4 %}
-                                    {% include 'addons/partials/addon_card.html' %}
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    </div>
+                <div class="row m-t-xl">
+                    {% for item in category.addons.all %}
+                        {% if not item.hidden and forloop.counter < 4 %}
+                            {% include 'addons/partials/addon_card.html' %}
+                        {% endif %}
+                    {% endfor %}
+                </div>
                 </div>
             {% endif %}
         {% endfor %}
     {% endif %}
-
-
 {% endblock %}
+</div>
 
 
 {% block extrajs %}

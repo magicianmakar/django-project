@@ -6,7 +6,7 @@
 
 {% block nav %}
     <nav class="navbar navbar-default">
-        <div class="container-fluid">
+        <div class="container">
             <div class="navbar-header">
                 <a class="navbar-brand" href="{% url 'addons.list_view' %}">
                     <img style="max-width:125px" src="{% static 'dropified-logo.png' %}" alt="Dropified">
@@ -18,12 +18,14 @@
             {% endif %}
             <form class="navbar-form navbar-right" action="{% url 'addons.list_view' %}">
                 <div class="form-group">
-                    <input name="title" type="text" class="form-control" placeholder="Search" style="border-radius:25px" value="{{ request.GET.title|default:'' }}">
+                    <div class="add-on-color">
+                        <input name="title" type="text" id="nav-addon-search" class="form-control" placeholder="Search Addons" value="{{ request.GET.title|default:'' }}">
+                       <span class="search-icon fa fa-search"></span>
+                    </div>
                 </div>
             </form>
             <ul class="nav navbar-nav navbar-right">
                 <li><a href="{% url 'myaddons' %} ">My Addons</a></li>
-                <li><a href="#">Categories</a></li>
                 <li><a href="http://help.dropified.com/en/articles/4325529-addon-store-faq" target="_blank">FAQs</a></li>
             </ul>
         </div>

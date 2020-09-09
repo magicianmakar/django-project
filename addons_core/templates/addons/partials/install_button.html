@@ -12,7 +12,7 @@
     </button>
     <p class="m-t-xs heading--3"></p>
 {% else %}
-    <button class="btn {% if details %} btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-install"
+    <button class="{% if xs %}btn-xs{% endif %} addon-install add-on-color"
             id="addon-install"
             data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Installing"
             data-title="{{ item.title }}"
@@ -23,5 +23,5 @@
             >
         <i class="fa fa-plus {% if not details %}{% endif %}"></i> Install
     </button>
-    <p class="m-t-xs heading--3">Try it for FREE with our {{object.trial_period_days}}-Day Free Trial</p>
+    <div width="100%" class="addon-free-trial add-on-color">Try it for FREE with our {{object.trial_period_days}}-Day Free Trial</div>
 {% endif %}

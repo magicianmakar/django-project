@@ -6,25 +6,24 @@
 {% load compress %}
 
 {% block main-container %}
-<div class="row">
-    <div class="col-md-10 col-md-offset-1 m-t m-b-lg">
-            <h1 class="text-bold">
-               <strong> My Addons</strong>
-            </h1>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12 m-t m-b-lg add-on-color">
+            <h1 class="heading__category">My Addons</h1>
             {% if my_addons_count %}
-                <p>Found {{ my_addons_count }}</p>
+                <p class="addon-h3">Found {{ my_addons_count }}</p>
             {% endif %}
+        </div>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-10 col-md-offset-1">
-        <div class="row">
-            {% for item in user_addons %}
+<div class="container">
+    <div class="row">
+        {% for item in user_addons %}
             <div class="col-lg-4">
-                <div class="addon-card ibox">
+                <div class="ibox">
                     <a href="{%  url 'addons.details_view' slug=item.slug %}">
-                        <img class="img-responsive" width="100%"
+                        <img class="img-responsive addon-image" width="100%"
                                 {% if item.banner_url %}
                                 src="{{ item.banner_url }}"
                                 {% else %}
@@ -32,13 +31,17 @@
                                 {% endif %}
                                 alt="{{ item.title }}">
                     </a>
-                    <div class="card-body">
-                        <h3 class="m-b-none m-t-md"><a style="color:#000" href="{%  url 'addons.details_view' slug=item.slug %}"><u>{{ item.title }}</u></a></h5>
-                        <p class="addon-h5 m-b-height">{{ item.short_description | safe }}</p>
-                        <span class="addon-h4">Last Billed at:<strong>
-                            {{ item.addonusage_set.all.last.billed_at|default:'N/A' }}
-                            </strong>
-                        </span>
+                    <div class="card-body add-on-color">
+                        <div class="row">
+                            <div class="col-md-12 text-left">
+                                <h3 class="m-b-none m-t-lg addon-h3">{{ item.title }}</h5>
+                                <p class="addon-h4 m-b-heigh m-t-xs">{{ item.short_description | safe }}</p>
+                                <p class="addon-h4">Last Billed at:<strong>
+                                    {{ item.addonusage_set.all.last.billed_at|default:'N/A' }}
+                                    </strong>
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -105,4 +105,31 @@ $('#addon-edit-save').click(function (e) {
     });
 });
 
+if ($(window).width() <=1024 ) {
+    var e = $('iframe.addon-videos');
+    w = parseInt(e.parent().width());
+
+    // Width to Height Ratio of Responsive Youtube videos is usually 1.77
+    h = Math.ceil(w/1.77);
+    e.width(w);
+    e.height(h);
+}
+
+// Display Navbar search box with 500 mili sec delay
+$('.search-icon').on('click', function(e) {
+    e.preventDefault();
+
+    if ($(this).hasClass('fa-search')) {
+        $('#nav-addon-search').show(500);
+      }
+    else {
+        $('#nav-addon-search').hide(500);
+    }
+
+    $(this).toggleClass('fa-search');
+    $(this).toggleClass('fa-times');
+    $(this).toggleClass('search-icon');
+    $(this).toggleClass('close-icon');
+});
+
 $('#addon-categories').chosen();

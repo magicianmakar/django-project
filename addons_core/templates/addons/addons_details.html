@@ -7,13 +7,14 @@
 {% block main-container %}
 
 <!--- Hero Section starts here-->
-<div class="row bg-cover">
+<header class="bg-cover">
     <div class="container">
-            <div class="col-md-6 m-t-lg">
-                <h1 class="m-b-none"><strong>{{ object.title }}</strong></h1>
-                <p class="m-t-xs heading--3">{{ object.short_description }}</p>
-                <p class="m-b"><span class="addon-price">${{ object.monthly_price }}</span>/mo</span></p>
-                <div class="m-t">
+        <div class="row">
+            <div class="col-md-6 left-container">
+                <h1 class="m-b-none add-on-title add-on-color">{{ object.title }}</h1>
+                <p class="m-t-xs addon-desc add-on-color">{{ object.short_description }}</p>
+                <p class="add-on-color price-container"><span class="addon-price">${{ object.monthly_price }}</span><span class="addon-unit">/mo</span></p>
+                <div>
                     {% include "addons/partials/install_button.html" with item=object details=True %}
                     {% if user|can:'addons_edit.use' %}
                         <div class="addon-edit">
@@ -26,9 +27,9 @@
                 </div>
             </div>
             {% if object.youtube_url %}
-            <div class="col-md-6 m-t-lg">
-                <iframe class="addon-videos" width="428"
-                        height="241"
+            <div class="col-md-6 m-t-lg right-container">
+                <iframe class="addon-videos" width="555"
+                        height="312"
                         src="{{ object.youtube_url }}"
                         frameborder="0"
                         allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
@@ -37,9 +38,9 @@
             </div>
             {% endif %}
             {% if object.vimeo_url %}
-            <div class="col-md-6 {% if object.youtube_url %}col-md-offset-6{% endif %} m-t-lg">
-                <iframe class="addon-videos" width="428"
-                        height="241"
+            <div class="col-md-6 right-container {% if object.youtube_url %}col-md-offset-6{% endif %}">
+                <iframe class="addon-videos" width="462"
+                        height="260"
                         src="{{ object.vimeo_url }}"
                         frameborder="0"
                         allow="autoplay; fullscreen"
@@ -47,8 +48,9 @@
                 </iframe>
             </div>
             {% endif %}
+        </div>
     </div>
-</div>
+</header>
 
 <!-- Key Features Section starts here --->
 {% include "addons/partials/addon_key_features.html" with item=object %}

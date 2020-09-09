@@ -1,9 +1,9 @@
 {% load perms_helper %}
 
 <div class="col-lg-4">
-    <div class="addon-card ibox">
+    <div class="ibox">
         <a href="{%  url 'addons.details_view' slug=item.slug %}">
-            <img class="img-responsive" width="100%"
+            <img class="img-responsive addon-image" width="100%"
                  {% if item.banner_url %}
                     src="{{ item.banner_url }}"
                  {% else %}
@@ -11,29 +11,42 @@
                  {% endif %}
                  alt="{{ item.title }}">
         </a>
-        <div class="card-body">
-          <div class="row">
-            <div class="col-md-6">
-                <h3 class="m-b-none m-t-md addon-title-color addon-h4">{{ item.title }}</h5>
-                <p class="addon-h5 m-b-height">{{ item.short_description | safe }}</p>
-            </div>
-            {% if user|can:'addons_edit.use' %}
-            <div class="col-md-6 text-right m-t-lg">
-                <a href="{% url 'addons.edit_view' item.slug %}" class="btn btn-sm btn-outline btn-default"> Edit <i class="fa fa-edit"></i> </a>
-            </div>
+        <!-- Uncomment when discount code is added
+            {% if item.discounted_price %}
+            <span class="sale-badge">SALE</span>
             {% endif %}
-          </div>
-          <div class="text-right m-t-md">
+        -->
+        {% if user|can:'addons_edit.use' %}
+        <div class="col-md-12 staff-edit-btn">
+            <a href="{% url 'addons.edit_view' item.slug %}" class="btn btn-sm btn-outline btn-default">Admin Edit <i class="fa fa-edit"></i> </a>
+        </div>
+    {% endif %}
+        <div class="card-body add-on-color">
             <div class="row">
-                <div class="col-xs-6 text-left">
-                    <span class="addon-h4">${{ item.monthly_price }}</span>/mo
+                <div class="col-md-12 text-left">
+                    <h3 class="m-b-none m-t-lg addon-h3">{{ item.title }}</h5>
+                    <p class="addon-h4 m-b-heigh m-t-xs">{{ item.short_description | safe }}</p>
                 </div>
-                    <div class="col-xs-6 addon-h5">
-                        <span class="trial-days">Add-on Now</span>
-                        <p class="m-t-xs">{{ item.trial_period_days}} day free trial</p>
-                    </div>
+            </div>
+          
+            <div class="row m-t-md">
+                <div class="col-xs-6 text-left">
+                    <span class="addon-price">${{ item.monthly_price }}</span><span class="addon-unit">/mo</span>
+                </div>
+                <div class="col-xs-6 text-right">
+                    <a href="{%  url 'addons.details_view' slug=item.slug %}">
+                        <span class="trial-days addon-h4">Add-on Now</span>
+                    </a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6 text-left compare-at-color">
+                   <!-- Uncomment When discount code is added <span class="addon-price">${{ item.monthly_price }}</span><span class="addon-unit">/mo</span>-->
+                </div>
+                <div class="col-md-6 text-right">
+                    <p class="m-t-xs addon-h4">{{ item.trial_period_days}}-Day Free Trial</p>
                 </div>
             </div>
         </div>
-    </div>
+</div>
 </div>
