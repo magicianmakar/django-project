@@ -340,7 +340,7 @@ def product_export(store_id, product_id, user_id, publish=None):
                     'default': idx == 0,
                     'title': title,
                     'price': safe_float(data_variants_info.get('price'), product_price),
-                    'compare_price': safe_float(data_variants_info.get('price'), product_compare_at),
+                    'compare_price': safe_float(data_variants_info.get('compare_at'), product_compare_at),
                     'shipping_weight': weight,
                     'variant': variants,
                     'images': []
