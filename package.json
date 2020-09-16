@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "bower": "1.8.4",
+    "bower": "^1.8.8",
     "yuglify": "0.1.4"
   },
   "devDependencies": {
@@ -13,7 +13,7 @@
   "scripts": {
     "postinstall": "bower install",
     "jshint": "scripts/jshint.sh",
-    "server": "python manage.py runserver",
+    "server": "python3 manage.py runserver",
     "celery": "celery -A app.celery_base worker -Q celery,priority_high -O fair -l INFO"
   },
   "cacheDirectories": [
