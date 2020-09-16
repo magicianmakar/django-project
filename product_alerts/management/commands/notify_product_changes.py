@@ -8,7 +8,7 @@ from django.core.cache import cache
 from lib.exceptions import capture_exception
 
 from shopified_core.management import DropifiedBaseCommand
-from shopified_core.utils import send_email_from_template, using_replica
+from shopified_core.utils import safe_int, send_email_from_template, using_replica
 from product_alerts.models import ProductChange
 from product_alerts.managers import ProductChangeManager
 
@@ -20,26 +20,35 @@ class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--replica', dest='replica', action='store_true', help='Use Replica database if available')
+        parser.add_argument('--user', type=str, default=None, help='Send notification for selected user')
 
     def get_users(self):
         """ Return users that will be notified
 
         Find users where time is (arround) 9:00 AM using the user's selected TimeZone in Profile page
         """
-        users = []
+        users_list = []
         tz_list = []
         for tz in pytz.all_timezones_set:
             if arrow.now().to(tz).hour == 9:
                 tz_list.append(tz)
 
-                users.extend(User.objects.filter(profile__timezone=tz, profile__subuser_parent=None))
+                users_list.extend(User.objects.filter(profile__timezone=tz, profile__subuser_parent=None))
 
-        self.write('Notfiy {} Users in {} Timezones'.format(len(users), len(tz_list)))
+        self.write('Notfiy {} Users in {} Timezones'.format(len(users_list), len(tz_list)))
 
-        return users
+        return users_list
 
     def start_command(self, *args, **options):
-        users = self.get_users()
+        if options['user']:
+            users = []
+            for i in options['user'].split(','):
+                if safe_int(i):
+                    users.append(User.objects.get(id=safe_int(i)))
+                else:
+                    users.append(User.objects.get(email__iexact=i))
+        else:
+            users = self.get_users()
 
         if not len(users):
             self.write('No user found to notify')
@@ -130,7 +139,8 @@ class Command(DropifiedBaseCommand):
                 '[Dropified] AliExpress Product Alert',
                 recipient_list,
                 data,
-                from_email='Dropified <no-reply@dropified.com>'
+                from_email='Dropified <no-reply@dropified.com>',
+                is_async=True
             )
 
     def get_config(self, name, product, user, default='notify'):
