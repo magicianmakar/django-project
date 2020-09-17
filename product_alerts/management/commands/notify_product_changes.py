@@ -145,8 +145,7 @@ class Command(DropifiedBaseCommand):
                 '[Dropified] AliExpress Product Alert',
                 recipient_list,
                 data,
-                from_email='Dropified <no-reply@dropified.com>',
-                is_async=True
+                from_email='Dropified <no-reply@dropified.com>'
             )
 
     def get_config(self, name, product, user, default='notify'):
