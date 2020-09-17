@@ -40,6 +40,8 @@ class Command(DropifiedBaseCommand):
         return users_list
 
     def start_command(self, *args, **options):
+        self.notified_users = 0
+
         if options['user']:
             users = []
             for i in options['user'].split(','):
@@ -69,7 +71,7 @@ class Command(DropifiedBaseCommand):
             if not changes:
                 continue
 
-            notified_key = 'change_alert_{}'.format(user.id)
+            notified_key = f'change_alert_2_{user.id}'
             if cache.get(notified_key):
                 ignored_users.add(user)
                 continue
@@ -89,6 +91,8 @@ class Command(DropifiedBaseCommand):
             except:
                 capture_exception()
 
+        self.write(f'Notified Users {self.notified_users}')
+
         if len(ignored_users):
             self.write('Notfiy {} ignored users'.format(len(ignored_users)))
 
@@ -105,7 +109,7 @@ class Command(DropifiedBaseCommand):
             manager = ProductChangeManager.initialize(change)
             changes_map = manager.changes_map()
             for name, changes in changes_map.items():
-                if user_changes_map.get(name):
+                if changes:
                     user_changes_map[name].extend(changes)
 
         cc_list = []
@@ -133,6 +137,8 @@ class Command(DropifiedBaseCommand):
             recipient_list = [user.email]
             if cc_list:
                 recipient_list = recipient_list + cc_list
+
+            self.notified_users += 1
 
             send_email_from_template(
                 'product_change_notify.html',
