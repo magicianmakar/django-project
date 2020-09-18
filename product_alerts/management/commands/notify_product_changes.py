@@ -33,7 +33,9 @@ class Command(DropifiedBaseCommand):
             if arrow.now().to(tz).hour == 9:
                 tz_list.append(tz)
 
-                users_list.extend(User.objects.filter(profile__timezone=tz, profile__subuser_parent=None))
+                for user in User.objects.filter(profile__timezone=tz, profile__subuser_parent=None, profile__plan__free_plan=False):
+                    if user.can('price_changes.use'):
+                        users_list.append(user)
 
         self.write('Notfiy {} Users in {} Timezones'.format(len(users_list), len(tz_list)))
 
@@ -58,12 +60,12 @@ class Command(DropifiedBaseCommand):
 
         ignored_users = set()
         for user in users:
-            prodduct_changes = using_replica(ProductChange, options['replica']).filter(user=user, notified_at=None, seen=False)
+            prodduct_changes = using_replica(ProductChange, options['replica']).filter(user=user, seen=False)
 
-            last_notified_key = 'last_alert_id_{}'.format(user.id)
-            last_notified_id = cache.get(last_notified_key, 30860000)
-
-            prodduct_changes = prodduct_changes.filter(id__gt=last_notified_id)
+            last_notified_key = f'last_alert_id_{user.id}'
+            last_notified_id = cache.get(last_notified_key)
+            if last_notified_id:
+                prodduct_changes = prodduct_changes.filter(id__gt=last_notified_id)
 
             changes_list = list(prodduct_changes.order_by('-created_at')[:100])
             changes = changes_list[:20]
