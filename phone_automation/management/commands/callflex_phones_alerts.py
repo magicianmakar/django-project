@@ -27,8 +27,6 @@ class Command(DropifiedBaseCommand):
         for exp_days_item in exp_days_array:
             exp_date = timezone.now() + timedelta(days=-(90 + 14 - exp_days_item))
 
-            self.write(f"Fetching all till {exp_date} ")
-
             user_phones = TwilioPhoneNumber.objects
             if options['user_id']:
                 user_phones = user_phones.filter(user_id=options['user_id'])
@@ -36,15 +34,11 @@ class Command(DropifiedBaseCommand):
             for user_phone in user_phones.filter(created_at__lte=exp_date).iterator():
 
                 try:
-                    self.write(f"Processing Twilio Phone Number {user_phone.pk} {user_phone.incoming_number} "
-                               f" (user_id: {user_phone.user_id})")
                     # checking latest call log
-
                     latest_logs_count = user_phone.user.twilio_logs.filter(created_at__gte=exp_date). \
                         filter(twilio_metadata__To=user_phone.incoming_number).count()
 
                     if latest_logs_count <= 0:
-                        self.write(f"No call logs after {exp_date} Send email alert to {user_phone.user.email}")
                         if not last_executed(f'callflex_phone_{user_phone.id}_release_alert', 3600 * 24 * 4):
                             send_email_from_template(
                                 tpl='callflex_phone_alert.html',
@@ -57,8 +51,6 @@ class Command(DropifiedBaseCommand):
                                 }
                             )
                             total_users_notified += 1
-                        else:
-                            self.write(f"No call logs after {exp_date} email already sent before")
 
                 except:
                     capture_exception()

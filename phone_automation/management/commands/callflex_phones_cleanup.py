@@ -50,8 +50,6 @@ class Command(DropifiedBaseCommand):
         for user_phone in user_phones.filter(created_at__lte=exp_date).iterator():
 
             try:
-                self.write(f"Processing Twilio Phone Number {user_phone.pk} {user_phone.incoming_number} "
-                           f" (user_id: {user_phone.user_id})")
                 # checking latest call log
 
                 latest_logs_count = user_phone.user.twilio_logs.filter(created_at__gte=exp_date).\
