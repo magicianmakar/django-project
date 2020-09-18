@@ -88,8 +88,7 @@ class CallflexOveragesBilling:
                     month_passed_phone = utils.get_monthes_passed(overage_phone.created_at)
                 else:
                     month_passed_phone = month_passed
-                overages_phone_number += (phonenumber_usage_tollfree['used'] - phonenumber_usage_tollfree['total']) * \
-                    settings.EXTRA_TOLLFREE_NUMBER_PRICE * (month_passed_phone + 1)
+                    overages_phone_number += settings.EXTRA_TOLLFREE_NUMBER_PRICE * (month_passed_phone + 1)
 
         if phonenumber_usage_local['total'] is not False and phonenumber_usage_local['used'] >= phonenumber_usage_local['total']:
             overage_phones = self.user.twilio_phone_numbers.filter(type="local").all()[safe_int(phonenumber_usage_tollfree['total']):]
@@ -99,8 +98,7 @@ class CallflexOveragesBilling:
                     month_passed_phone = utils.get_monthes_passed(overage_phone.created_at)
                 else:
                     month_passed_phone = month_passed
-                overages_phone_number += (phonenumber_usage_local['used'] - phonenumber_usage_local['total']) * \
-                    settings.EXTRA_LOCAL_NUMBER_PRICE * (month_passed_phone + 1)
+                overages_phone_number += settings.EXTRA_LOCAL_NUMBER_PRICE * (month_passed_phone + 1)
 
         invoice_numbers = self.add_invoice('extra_number', overages_phone_number, True)
         invoices.append(invoice_numbers)
