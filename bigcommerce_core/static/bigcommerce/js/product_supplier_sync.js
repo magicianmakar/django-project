@@ -1,6 +1,10 @@
 /* global $, toastr, swal, displayAjaxError */
 (function(sub_conf) {
     'use strict';
+    if (!sub_conf.channel) {
+        return;
+    }
+
     var pusher = new Pusher(sub_conf.key);
     var channel = pusher.subscribe(sub_conf.channel);
     var product_sync_update_tpl;

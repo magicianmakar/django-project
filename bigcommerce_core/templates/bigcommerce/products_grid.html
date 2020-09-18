@@ -222,8 +222,8 @@
 <script>
     var PUSHER_KEY = "{% app_setting 'PUSHER_KEY' %}";
     var sub_conf = {
-        {% if store %}
         key: PUSHER_KEY,
+        {% if store %}
         channel: "{{store.pusher_channel}}",
         store: {{store.id}},
         {% endif %}

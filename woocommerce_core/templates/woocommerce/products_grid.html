@@ -222,8 +222,8 @@
 <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
 <script>
     var sub_conf = {
-        {% if store %}
         key: "{% app_setting 'PUSHER_KEY' %}",
+        {% if store %}
         channel: "{{store.pusher_channel}}",
         store: {{store.id}},
         {% endif %}
