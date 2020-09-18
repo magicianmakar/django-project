@@ -107,8 +107,6 @@ class TasksTestCase(BaseTestCase):
                 'option2': None,
                 'option3': None,
                 'inventory_item_id': 34005719449651,
-                'inventory_quantity': 7167,
-                'old_inventory_quantity': 7167,
             }]
         )
 
@@ -154,8 +152,6 @@ class TasksTestCase(BaseTestCase):
                 'option2': None,
                 'option3': None,
                 'inventory_item_id': 34005719449651,
-                'inventory_quantity': 7167,
-                'old_inventory_quantity': 7167,
             }]
         )
 
