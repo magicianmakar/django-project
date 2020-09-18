@@ -1369,6 +1369,42 @@ def webhook(request, provider, option):
 
             else:
                 return HttpResponse(':x: Unknown Command: {} {}'.format(request.POST['command'], command))
+        #
+        elif request.POST['command'] == '/plan-coupon':
+            args = request.POST['text'].split(' ')
+            if len(args) != 2:
+                return HttpResponse(':x: usage: /plan-coupon <plan id> <coupon id>')
+
+            plan = args[0]
+            coupon = args[1]
+
+            try:
+                reg_coupon = stripe.Coupon.retrieve(coupon)
+
+                if not reg_coupon.valid:
+                    return HttpResponse(f':x: Coupon {coupon} is not valid')
+
+            except:
+                return HttpResponse(f':x: Coupon {coupon} not found')
+
+            try:
+                plan = GroupPlan.objects.get(id=plan)
+
+                if not plan.is_stripe():
+                    return HttpResponse(f':x: Plan *{plan.title}* is not Stripe plan')
+
+                if plan.locked:
+                    plan.locked = False
+                    plan.save()
+
+            except GroupPlan.DoesNotExist:
+                return HttpResponse(f':x: Plan {plan} not found')
+
+            coupon_sign = base64_encode(Signer().sign(reg_coupon.id))
+
+            url = app_link(f'accounts/register/{plan.slug}-subscribe', cp=coupon_sign)
+
+            return HttpResponse(f'OK => {url}')
 
         elif request.POST['command'] == '/login-as':
             args = request.POST['text'].split(' ')
@@ -5103,10 +5139,13 @@ def register(request, registration=None, subscribe_plan=None):
         try:
             reg_coupon = Signer().unsign(base64_decode(reg_coupon))
             reg_coupon = stripe.Coupon.retrieve(reg_coupon)
-            if reg_coupon.redeem_by <= arrow.utcnow().timestamp:
+            if not reg_coupon.valid:
                 reg_coupon = None
             else:
-                reg_coupon = reg_coupon.metadata.msg
+                try:
+                    reg_coupon = reg_coupon.metadata.msg
+                except:
+                    reg_coupon = f'Using {reg_coupon.id} Coupon'
         except:
             reg_coupon = None
             capture_exception()
