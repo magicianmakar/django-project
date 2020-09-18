@@ -237,8 +237,8 @@
 {% block extrajs %}
 <script type="text/javascript">
     var sub_conf = {
-        {% if store %}
         key: "{% app_setting 'PUSHER_KEY' %}",
+        {% if store %}
         channel: "{{store.pusher_channel}}",
         store: {{store.id}},
         {% endif %}

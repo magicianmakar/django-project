@@ -8,7 +8,7 @@
     var fail = 0;
     var task;
 
-    if (sub_conf && sub_conf.key) {
+    if (sub_conf && sub_conf.key && sub_conf.channel) {
         var pusher = new Pusher(sub_conf.key);
         var channel = pusher.subscribe(sub_conf.channel);
         channel.bind('products-supplier-sync', function(data) {
