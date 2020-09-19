@@ -27,12 +27,8 @@ class Command(DropifiedBaseCommand):
         plan = GroupPlan.objects.get(slug='subuser-plan')
         UserProfile.objects.exclude(subuser_parent=None).exclude(plan=plan).update(plan=plan)
 
-        verbosity = options.get('verbosity', 1)
-
-        self.generate_product_feeds(store_type='shopify', verbosity=verbosity + 1)
-
-        for store_type in ['chq', 'woo', 'gkart', 'bigcommerce']:
-            self.generate_product_feeds(store_type=store_type, verbosity=verbosity)
+        for store_type in ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']:
+            self.generate_product_feeds(store_type=store_type, verbosity=options['verbosity'])
 
     def get_feed_status_model(self, store_type=''):
         if store_type == 'shopify':
@@ -66,9 +62,10 @@ class Command(DropifiedBaseCommand):
         statuses = FeedStatusModel.objects.filter(Q(fb_access_at__gte=an_hour_ago) | Q(google_access_at__gte=an_hour_ago))
 
         if verbosity >= 1:
-            self.stdout.write('Generate {} {} feeds'.format(store_type, len(statuses)))
+            self.stdout.write(f'Generate {store_type} {len(statuses)} feeds')
 
         for status in statuses:
             if verbosity >= 2:
-                self.stdout.write('{} Store Feed: {}'.format(store_type, status.store.shop))
+                self.stdout.write(f'{store_type} Store Feed: {status.store.shop}')
+
             gen_product_feed(status, nocache=True)
