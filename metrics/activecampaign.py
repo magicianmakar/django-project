@@ -350,10 +350,8 @@ class ActiveCampaignAPI:
 
                 data[f'field[%{key}%,0]'] = value
 
-            url = self.get_url('/admin/api.php', old_version=True)
-            r = requests.post(url, data=data)
-            result = r.json()
-            assert result.get('result_code') == 1, f"{contact_data['email']} Contact not updated"
+            requests.post(self.get_url('/admin/api.php', old_version=True), data=data)
+
         else:
             data = {}
             if contact_data.get('firstName'):
