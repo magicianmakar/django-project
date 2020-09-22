@@ -15,6 +15,7 @@ from ..utils import (
     get_tracking_products,
     get_customer_id,
     get_daterange_filters,
+    split_product,
 )
 from .factories import WooStoreFactory, WooProductFactory, WooOrderTrackFactory
 
@@ -244,3 +245,24 @@ class GetDaterangeFiltersTestCase(BaseTestCase):
         after_isoformat, before_isoformat = get_daterange_filters('01/01/2020-12/31/2020')
         self.assertEqual(after_isoformat, arrow.get(after).isoformat())
         self.assertEqual(before_isoformat, arrow.get(before).ceil('day').isoformat())
+
+
+class SplitProductTestCase(BaseTestCase):
+    def test_must_have_all_images_if_none_is_mapped(self):
+        product = WooProductFactory()
+        product_images = ['image-a.png', 'image-b.png']
+        data = {
+            'images': product_images,
+            'variants_images': {
+                hash_url_filename('image-a.png'): 'A',
+                hash_url_filename('image-b.png'): 'B',
+            },
+            'variants': [
+                {'title': 'Letter', 'values': ['a', 'b']},
+                {'title': 'Number', 'values': ['1', '2']},
+            ]
+        }
+        product.update_data(data)
+        product.save()
+        products = split_product(product, 'Number')
+        self.assertEqual(products[0].parsed.get('images'), product_images)

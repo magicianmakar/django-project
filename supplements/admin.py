@@ -132,14 +132,14 @@ class PLSOrderAdmin(admin.ModelAdmin):
     )
     raw_id_fields = ('user',)
     readonly_fields = ('stripe_transaction_id', 'payment_date')
-    actions = ('export_orders',)
+    actions = ('export_order_lines', 'export_orders')
 
     def has_delete_permission(self, request, obj=None):
         return False
 
     def changelist_view(self, request, extra_context=None):
         # Hack for accepting empty _selected_action
-        if request.POST.get('action') == 'export_orders':
+        if request.POST.get('action') == 'export_order_lines' or request.POST.get('action') == 'export_orders':
             if not request.POST.getlist(helpers.ACTION_CHECKBOX_NAME):
                 post = request.POST.copy()
                 post.setlist(helpers.ACTION_CHECKBOX_NAME, [0])
@@ -147,9 +147,9 @@ class PLSOrderAdmin(admin.ModelAdmin):
 
         return super().changelist_view(request, extra_context=extra_context)
 
-    def export_orders(self, request, queryset):
+    def export_order_lines(self, request, queryset):
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="detailed-orders.csv"'
+        response['Content-Disposition'] = 'attachment; filename="detailed-order-lines.csv"'
 
         # We need a clean queryset in order to use all objects
         ids = request.POST.getlist(helpers.ACTION_CHECKBOX_NAME)
@@ -183,7 +183,51 @@ class PLSOrderAdmin(admin.ModelAdmin):
                 ])
 
         return response
-    export_orders.short_description = "Export order details"
+    export_order_lines.short_description = "Export Line Items"
+
+    def export_orders(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="detailed-orders.csv"'
+
+        ids = request.POST.getlist(helpers.ACTION_CHECKBOX_NAME)
+
+        if len(ids) == 1 and ids[0] == 0:
+            cl = self.get_changelist_instance(request)
+            queryset = cl.get_queryset(request)
+
+        writer = csv.writer(response)
+        # order id, quantity x supplement, total cost
+        writer.writerow([
+            'User ID',
+            'Order ID',
+            'Status',
+            'Transaction ID',
+            'Payout Id',
+            'Shipstation Key',
+            'Sale Price',
+            'Wholesale Price',
+            'Shipping Price',
+            'Amount ( In USD )',
+            'Raw Amount',
+        ])
+
+        for order in queryset:
+            writer.writerow([
+                order.user_id,
+                order.order_number,
+                order.status,
+                order.stripe_transaction_id,
+                order.payout_id,
+                order.shipstation_key,
+                f'${(order.sale_price / 100.):.2f}',
+                f'${(order.wholesale_price / 100.):.2f}',
+                f'${(order.shipping_price / 100.):.2f}',
+                f'${((order.amount) / 100.):.2f}',
+                order.amount,
+            ])
+
+        return response
+    export_orders.short_description = "Export Orders"
 
 
 @admin.register(PLSOrderLine)

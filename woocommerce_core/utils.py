@@ -448,6 +448,7 @@ def split_product(product, split_factor, store=None):
 
         hashes = [h for h, variant in list(variant_images.items()) if variant == option]
         new_data['images'] = [i for i in images if hash_url_filename(i) in hashes]
+        new_data['images'] = new_data['images'] if new_data['images'] else copy.copy(images)
 
         new_product.update_data(new_data)
         new_product.save()
