@@ -49,7 +49,6 @@ class Command(DropifiedBaseCommand):
         for user_id in all_users_list:
             user = User.objects.get(pk=user_id)
             try:
-                print(f"Processing User (user_id: {user.id})")
                 overages = billing.CallflexOveragesBilling(user)
                 if user.profile.from_shopify_app_store():
                     # run once a day only
@@ -83,7 +82,6 @@ class Command(DropifiedBaseCommand):
         for unpaid_user_total in unpaid_usage_charges_user:
             if unpaid_user_total['total_amount'] > settings.CALLFLEX_SHOPIFY_USAGE_MAX_PENDING:
 
-                print(f"Pending Usage amoiunt exceed limit of {settings.CALLFLEX_SHOPIFY_USAGE_MAX_PENDING}. Deleting user's phones")
                 user = User.objects.get(pk=unpaid_user_total['user'])
                 phones = user.twilio_phone_numbers.exclude(status='released')
                 phones.safe_delete()
