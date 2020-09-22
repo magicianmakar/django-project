@@ -23,103 +23,106 @@
                 <p>
                 </p>
 
-                <table class="table table-bordered m-t-lg">
-                    <thead>
-                        {% with pos_at='top center' pos_my='bottom center' %}
-                        <tr>
-                            <th style="width:15%">Store</th>
-                            <th>Feed URL</th>
-                            <th style="width:12%">
-                                All Variants
-                                {% include 'partial/help_tooltip.html' with help="Turn this off to remove variants from showing in the product feed." %}
-                            </th>
-                            <th style="width:12%">
-                                Include Variants IDs
-                                {% include 'partial/help_tooltip.html' with help="For each product, use both Variant and Product ID" %}
-                            </th>
-                            <th style="width:15%">
-                                Default Category
-                                {% include 'partial/help_tooltip.html' with help="The Default Category that will be used for google_product_category if Product Type is not set" %}
-                            </th>
-                            <th style="width:15%">
-                                Last Update
-                                {% include 'partial/help_tooltip.html' with help="This shows the date & time when the product feed was last updated." %}
-                            </th>
-                            <th style="width:10%">
-                                FB Access Date
-                                {% include 'partial/help_tooltip.html' with help="This shows the date when the product feed was last accessed by Facebook." %}
-                            </th>
-                            <th style="">Options</th>
-                        </tr>
-                        {% endwith %}
-                    </thead>
-                    <tbody>
-                        {% for item in feeds %}
-                        <tr data-store="{{item.store.id}}" data-feed="{{item.id}}">
-                            <td>{{item.store.title}}</td>
-                            <td>
-                                <div class="m-b-sm">
-                                    <a class="copy-feed-url" style="cursor:pointer"
-                                        data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash store_type='bigcommerce' %}/2">
-                                        <i class="fa fa-files-o itooltip"></i> Facebook Feed
-                                    </a>
-                                </div>
-                                {% if user|can:"google_product_feed.use" %}
-                                <div>
-                                    <a class="copy-feed-url" href="#"
-                                        data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash store_type='bigcommerce' %}/3">
-                                        <i class="fa fa-files-o itooltip"></i> Google Product Feed
-                                    </a>
-                                </div>
-                                {% endif%}
-                            </td>
-                            <td><input type="checkbox" class="js-switch all-variants-switch" {% if item.all_variants %}checked{% endif %} /></td>
-                            <td><input type="checkbox" class="js-switch include-variants-id" {% if item.include_variants_id %}checked{% endif %} /></td>
-                            <td>
-                                <div class="input-group">
-                                    <input name="type" type="text" class="form-control default-product-category" value="{{item.default_product_category|default:''}}" placeholder="" data-store="{{ item.store_id }}">
-                                    <span class="input-group-btn">
-                                        <a
-                                            href="#"
-                                            class="btn btn-white save-feeds"
-                                            title="Save"
-                                            style="display: none;"
-                                            ><i class="fa fa-floppy-o"></i
-                                        ></a>
-                                    </span>
-                                </div>
-                            </td>
-                            <td>
-                                {% if item.status == 2 %}
-                                    Updating...
-                                {% elif item.updated_at %}
-                                    {% date_humanize item.updated_at %}
-                                {% else %}
-                                    Pending
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if item.fb_access_at %}
-                                    {% date_humanize item.fb_access_at %}
-                                {% else %}
-                                    Pending
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if user|can:"google_product_feed.use" %}
-                                <button title="Update this store feed" class="btn btn-outline btn-sm btn-default itooltip google-feed-btn">
-                                    <i class="fa fa-cog"></i> Google Feed
-                                </button>
-                                {% endif %}
+                <div class="x-scroll-wrapper">
+                    <table class="table table-bordered m-t-lg">
+                        <thead>
+                            {% with pos_at='top center' pos_my='bottom center' %}
+                            <tr>
+                                <th style="width:15%">Store</th>
+                                <th>Feed URL</th>
+                                <th style="width:12%">
+                                    All Variants
+                                    {% include 'partial/help_tooltip.html' with help="Turn this off to remove variants from showing in the product feed." %}
+                                </th>
+                                <th style="width:12%">
+                                    Include Variants IDs
+                                    {% include 'partial/help_tooltip.html' with help="For each product, use both Variant and Product ID" %}
+                                </th>
+                                <th style="width:15%">
+                                    Default Category
+                                    {% include 'partial/help_tooltip.html' with help="The Default Category that will be used for google_product_category if Product Type is not set" %}
+                                </th>
+                                <th style="width:15%">
+                                    Last Update
+                                    {% include 'partial/help_tooltip.html' with help="This shows the date & time when the product feed was last updated." %}
+                                </th>
+                                <th style="width:10%">
+                                    FB Access Date
+                                    {% include 'partial/help_tooltip.html' with help="This shows the date when the product feed was last accessed by Facebook." %}
+                                </th>
+                                <th style="">Options</th>
+                            </tr>
+                            {% endwith %}
+                        </thead>
+                        <tbody>
+                            {% for item in feeds %}
+                            <tr data-store="{{item.store.id}}" data-feed="{{item.id}}">
+                                <td>{{item.store.title}}</td>
+                                <td>
+                                    <div class="m-b-sm">
+                                        <a class="copy-feed-url" style="cursor:pointer"
+                                            data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash store_type='bigcommerce' %}/2">
+                                            <i class="fa fa-files-o itooltip"></i> Facebook Feed
+                                        </a>
+                                    </div>
+                                    {% if user|can:"google_product_feed.use" %}
+                                    <div>
+                                        <a class="copy-feed-url" href="#"
+                                            data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash store_type='bigcommerce' %}/3">
+                                            <i class="fa fa-files-o itooltip"></i> Google Product Feed
+                                        </a>
+                                    </div>
+                                    {% endif%}
+                                </td>
+                                <td><input type="checkbox" class="js-switch all-variants-switch" {% if item.all_variants %}checked{% endif %} /></td>
+                                <td><input type="checkbox" class="js-switch include-variants-id" {% if item.include_variants_id %}checked{% endif %} /></td>
+                                <td>
+                                    <div class="input-group">
+                                        <input name="type" type="text" class="form-control default-product-category" value="{{item.default_product_category|default:''}}" placeholder="" data-store="{{ item.store_id }}">
+                                        <span class="input-group-btn">
+                                            <a
+                                                href="#"
+                                                class="btn btn-white save-feeds"
+                                                title="Save"
+                                                style="display: none;"
+                                                ><i class="fa fa-floppy-o"></i
+                                            ></a>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if item.status == 2 %}
+                                        Updating...
+                                    {% elif item.updated_at %}
+                                        {% date_humanize item.updated_at %}
+                                    {% else %}
+                                        Pending
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.fb_access_at %}
+                                        {% date_humanize item.fb_access_at %}
+                                    {% else %}
+                                        Pending
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user|can:"google_product_feed.use" %}
+                                    <button title="Update this store feed" class="btn btn-outline btn-sm btn-default itooltip google-feed-btn">
+                                        <i class="fa fa-cog"></i> Google Feed
+                                    </button>
+                                    {% endif %}
 
-                                <button title="Update this store feed" class="btn btn-outline btn-sm btn-default itooltip update-feed-btn" data-loading-text="<i class='fa fa-refresh fa-spin'></i>">
-                                    <i class="fa fa-refresh"></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                                    <button title="Update this store feed" class="btn btn-outline btn-sm btn-default itooltip update-feed-btn" data-loading-text="<i class='fa fa-refresh fa-spin'></i>">
+                                        <i class="fa fa-refresh"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
                 <div class="row">
                     <div class="col-sm-3 col-sm-offset-9 text-right">
                         <a class="itooltip" title="If you are using the old feed format, it will continue to work but we are now recommending to use the updated format" href="#">Using Old Feeds?</a>
@@ -189,6 +192,13 @@
         }
         table th {
             white-space: nowrap;
+        }
+        .x-scroll-wrapper {
+            overflow-x: auto;
+            margin-bottom: 30px;
+        }
+        .x-scroll-wrapper > * {
+            margin-bottom: 0;
         }
     </style>
 {% endblock %}
