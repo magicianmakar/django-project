@@ -70,16 +70,19 @@ def home_page_view(request):
                     'count': len(stores)
                 })
         else:
-            charges = ShopifyAPI(stores[0])
-            if not charges.recurring_charges(active=True):
-                capture_message(
-                    'Shopify Subscription - Missing Subscription',
-                    level='warning',
-                    tags={
-                        'user': user.models_user.email,
-                        'store': 'none',
-                        'count': len(stores)
-                    })
+            try:
+                charges = ShopifyAPI(stores[0])
+                if not charges.recurring_charges(active=True):
+                    capture_message(
+                        'Shopify Subscription - Missing Subscription',
+                        level='warning',
+                        tags={
+                            'user': user.models_user.email,
+                            'store': 'none',
+                            'count': len(stores)
+                        })
+            except:
+                pass
 
     return render(request, 'home/index.html', {
         'config': config,
