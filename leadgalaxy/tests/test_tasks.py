@@ -75,10 +75,10 @@ class TasksTestCase(BaseTestCase):
             store=self.store, user=self.user, source_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item/32815997098.html"
+                "url": "https://www.aliexpress.com/item/32855791603.html"
             }}''')
 
-        supplier = ProductSupplierFactory(product=product, product_url='https://www.aliexpress.com/item/32815997098.html')
+        supplier = ProductSupplierFactory(product=product, product_url='https://www.aliexpress.com/item/32855791603.html')
 
         product.default_supplier = supplier
         product.variants_map = json.dumps({
@@ -88,8 +88,8 @@ class TasksTestCase(BaseTestCase):
                     'sku': '200007763:201336100'
                 },
                 {
-                    'title': '19 PCS Yellow',
-                    'sku': '14:365462'
+                    'title': 'QUNC-016G',
+                    'sku': '26:3860#QUNC-016G'
                 }
             ]),
         })
@@ -99,11 +99,11 @@ class TasksTestCase(BaseTestCase):
             variants=[{
                 'id': 32146941476915,
                 'product_id': 4566069936179,
-                'title': '19 PCS Yellow',
+                'title': 'QUNC-016G',
                 'price': '42.95',
-                'sku': '14:365462',
+                'sku': '26:3860#QUNC-016G',
                 'inventory_policy': 'deny',
-                'option1': '19 PCS Yellow',
+                'option1': 'QUNC-016G',
                 'option2': None,
                 'option3': None,
                 'inventory_item_id': 34005719449651,
