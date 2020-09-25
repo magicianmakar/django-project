@@ -201,7 +201,8 @@ class StripePlan(models.Model):
                 currency=self.currency,
                 trial_period_days=self.trial_period_days,
                 statement_descriptor=self.statement_descriptor,
-                id=self.stripe_id
+                id=self.stripe_id,
+                metadata={'click_funnels': '1'},
             )
         else:
             p = stripe.Plan.retrieve(self.stripe_id)
