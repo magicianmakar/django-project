@@ -2,6 +2,7 @@
 import csv
 from django.contrib import admin
 from django.contrib.admin import helpers
+from django.db.models import Sum
 from django.http import HttpResponse
 
 from .forms import ShippingGroupAdminForm
@@ -132,17 +133,18 @@ class PLSOrderAdmin(admin.ModelAdmin):
     )
     raw_id_fields = ('user',)
     readonly_fields = ('stripe_transaction_id', 'payment_date')
-    actions = ('export_order_lines', 'export_orders')
+    actions = ('export_order_lines', 'export_orders', 'export_totals_by_user')
 
     def has_delete_permission(self, request, obj=None):
         return False
 
     def changelist_view(self, request, extra_context=None):
         # Hack for accepting empty _selected_action
-        if request.POST.get('action') == 'export_order_lines' or request.POST.get('action') == 'export_orders':
+        if request.POST.get('action') in self.actions:
             if not request.POST.getlist(helpers.ACTION_CHECKBOX_NAME):
                 post = request.POST.copy()
                 post.setlist(helpers.ACTION_CHECKBOX_NAME, [0])
+                post['select_across'] = True
                 request.POST = post
 
         return super().changelist_view(request, extra_context=extra_context)
@@ -151,14 +153,7 @@ class PLSOrderAdmin(admin.ModelAdmin):
         response = HttpResponse(content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="detailed-order-lines.csv"'
 
-        # We need a clean queryset in order to use all objects
-        ids = request.POST.getlist(helpers.ACTION_CHECKBOX_NAME)
-        if len(ids) == 1 and ids[0] == 0:
-            cl = self.get_changelist_instance(request)
-            queryset = cl.get_queryset(request)
-
         writer = csv.writer(response)
-        # order id, quantity x supplement, total cost
         writer.writerow([
             'User ID',
             'Order ID',  # 1
@@ -187,13 +182,7 @@ class PLSOrderAdmin(admin.ModelAdmin):
 
     def export_orders(self, request, queryset):
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="detailed-orders.csv"'
-
-        ids = request.POST.getlist(helpers.ACTION_CHECKBOX_NAME)
-
-        if len(ids) == 1 and ids[0] == 0:
-            cl = self.get_changelist_instance(request)
-            queryset = cl.get_queryset(request)
+        response['Content-Disposition'] = 'attachment; filename="orders.csv"'
 
         writer = csv.writer(response)
         # order id, quantity x supplement, total cost
@@ -228,6 +217,24 @@ class PLSOrderAdmin(admin.ModelAdmin):
 
         return response
     export_orders.short_description = "Export Orders"
+
+    def export_totals_by_user(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="total-orders-by-user.csv"'
+        writer = csv.writer(response)
+        writer.writerow([
+            'User E-mail',
+            'Total Amount',
+        ])
+
+        for result in queryset.values('user__email').annotate(total=Sum('amount')).order_by('user__email'):
+            writer.writerow([
+                result['user__email'],
+                f"${((result['total']) / 100.):.2f}",
+            ])
+
+        return response
+    export_totals_by_user.short_description = "Export Totals by User"
 
 
 @admin.register(PLSOrderLine)
