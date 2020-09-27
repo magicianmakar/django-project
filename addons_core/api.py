@@ -119,6 +119,9 @@ class AddonsApi(ApiResponseMixin):
         if user.profile.addons.filter(id=addon.id).exists():
             return self.api_error("Addon is already installed on your account", 422)
 
+        if user.is_subuser:
+            return self.api_error("Sub users can not install Addons", 403)
+
         AddonUsage.objects.create(
             user=user,
             addon=addon,
@@ -133,6 +136,9 @@ class AddonsApi(ApiResponseMixin):
 
         if not user.profile.addons.filter(id=addon.id).exists():
             return self.api_error("Addon is not installed on your account", 422)
+
+        if user.is_subuser:
+            return self.api_error("Sub users can not install Addons", 403)
 
         AddonUsage.objects.filter(
             user=user,

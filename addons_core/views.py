@@ -21,7 +21,7 @@ class BaseTemplateView(TemplateView):
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
         ctx['addon_category'] = Category.objects.all().filter(is_visible=True)
-        ctx['user_addons'] = self.request.user.profile.addons.all()
+        ctx['user_addons'] = self.request.user.models_user.profile.addons.all()
         ctx['user_addon_ids'] = [i.id for i in ctx['user_addons']]
 
         return ctx
