@@ -1960,7 +1960,15 @@ class AppPermission(models.Model):
     description = models.CharField(max_length=512, blank=True, default='', verbose_name="Permission Description")
 
     def __str__(self):
-        return self.name
+        if self.description:
+            desc = self.description.split('|')[0].strip()
+            perm_type = self.description.split('|').pop().strip() if '|' in self.description else ''
+            if perm_type:
+                return f'{desc} ({perm_type} {self.name})'
+            else:
+                return f'{desc} ({self.name})'
+        else:
+            return self.name
 
 
 class ClippingMagicPlan(models.Model):

@@ -53,7 +53,6 @@ class GroupPlanAdmin(admin.ModelAdmin):
     list_display = ('title', 'slug', 'payment_gateway', 'monthly_price', 'trial_days', 'hidden', 'locked', 'permissions_count')
 
     exclude = ('default_plan',)
-    filter_horizontal = ('permissions',)
     prepopulated_fields = {'slug': ('title',)}
     list_filter = ('free_plan', 'payment_gateway', 'payment_interval', 'monthly_price', 'trial_days', 'hidden', 'locked', 'support_addons')
     readonly_fields = ('register_hash',)
@@ -62,6 +61,12 @@ class GroupPlanAdmin(admin.ModelAdmin):
     def view_on_site(self, obj):
         if obj.payment_gateway == 'stripe':
             return '/accounts/register/{}-subscribe'.format(obj.slug)
+
+    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
+        if db_field.name == 'permissions':
+            kwargs['widget'] = forms.widgets.CheckboxSelectMultiple()
+
+        return super().formfield_for_manytomany(db_field, request=request, **kwargs)
 
 
 @admin.register(GroupPlanChangeLog)
