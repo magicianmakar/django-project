@@ -1,54 +1,19 @@
 import copy
 import json
-import requests
 from decimal import Decimal, ROUND_HALF_UP, ROUND_DOWN
 
+import requests
 from django.conf import settings
 
-from leadgalaxy.api import ShopifyStoreApi
-from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
 from commercehq_core.api import CHQStoreApi
-from commercehq_core.models import CommerceHQStore, CommerceHQProduct, CommerceHQOrderTrack
-from woocommerce_core.api import WooStoreApi
-from woocommerce_core.models import WooStore, WooProduct, WooOrderTrack
+from commercehq_core.models import CommerceHQStore
 from groovekart_core.api import GrooveKartApi
-from groovekart_core.models import GrooveKartStore, GrooveKartProduct, GrooveKartOrderTrack
+from groovekart_core.models import GrooveKartStore
+from leadgalaxy.api import ShopifyStoreApi
 from shopified_core.utils import safe_int
-
+from woocommerce_core.api import WooStoreApi
+from woocommerce_core.models import WooStore
 from .models import Category, ProductPrice
-
-
-def get_store_model(store_type):
-    if store_type == 'chq':
-        return CommerceHQStore
-    elif store_type == 'woo':
-        return WooStore
-    elif store_type == 'gkart':
-        return GrooveKartStore
-    else:
-        return ShopifyStore
-
-
-def get_product_model(store_type):
-    if store_type == 'chq':
-        return CommerceHQProduct
-    elif store_type == 'woo':
-        return WooProduct
-    elif store_type == 'gkart':
-        return GrooveKartProduct
-    else:
-        return ShopifyProduct
-
-
-def get_track_model(store_type):
-    if store_type == 'chq':
-        return CommerceHQOrderTrack
-    elif store_type == 'woo':
-        return WooOrderTrack
-    elif store_type == 'gkart':
-        return GrooveKartOrderTrack
-    else:
-        return ShopifyOrderTrack
 
 
 def get_store_api(store):

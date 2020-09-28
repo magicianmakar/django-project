@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from lib.exceptions import capture_exception
 from shopified_core.shipping_helper import country_from_code
-from shopified_core.utils import get_store_api, safe_float, get_store_object
+from shopified_core.utils import get_store_api, safe_float, get_store_model
 from supplements.models import PLSOrder, PLSOrderLine, ShippingGroup
 from supplements.utils import supplement_customer_address
 
@@ -266,7 +266,7 @@ class Util:
         return orders, line_items, effective_order_data_ids, errors
 
     def get_store(self, store_id, store_type):
-        return get_store_object(store_id, store_type)
+        return get_store_model(store_id, store_type)
 
     def mark_label_printed(self, line_id):
         line_item = get_object_or_404(PLSOrderLine, id=line_id)

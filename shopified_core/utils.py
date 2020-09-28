@@ -1119,16 +1119,16 @@ def get_store_api(store_type=''):
 
 
 def get_track_model(store_type=''):
-    if store_type == 'chq':
+    if store_type in ['chq', 'CommerceHQOrderTrack']:
         from commercehq_core.models import CommerceHQOrderTrack
         return CommerceHQOrderTrack
-    elif store_type == 'woo':
+    elif store_type in ['woo', 'WooOrderTrack']:
         from woocommerce_core.models import WooOrderTrack
         return WooOrderTrack
-    elif store_type == 'gkart':
+    elif store_type in ['gkart', 'GrooveKartOrderTrack']:
         from groovekart_core.models import GrooveKartOrderTrack
         return GrooveKartOrderTrack
-    elif store_type == 'bigcommerce':
+    elif store_type in ['bigcommerce', 'BigCommerceOrderTrack']:
         from bigcommerce_core.models import BigCommerceOrderTrack
         return BigCommerceOrderTrack
     else:
@@ -1137,16 +1137,16 @@ def get_track_model(store_type=''):
 
 
 def get_store_model(store_type=''):
-    if store_type == 'chq':
+    if store_type in ['chq', 'CommerceHQStore']:
         from commercehq_core.models import CommerceHQStore
         return CommerceHQStore
-    elif store_type == 'woo':
+    elif store_type in ['woo', 'WooStore']:
         from woocommerce_core.models import WooStore
         return WooStore
-    elif store_type == 'gkart':
+    elif store_type in ['gkart', 'GrooveKartStore']:
         from groovekart_core.models import GrooveKartStore
         return GrooveKartStore
-    elif store_type == 'bigcommerce':
+    elif store_type in ['bigcommerce', 'BigCommerceStore']:
         from bigcommerce_core.models import BigCommerceStore
         return BigCommerceStore
     else:
@@ -1154,19 +1154,19 @@ def get_store_model(store_type=''):
         return ShopifyStore
 
 
-def get_store_object(store_id, store_type):
-    if store_type == 'shopify':
-        from leadgalaxy.models import ShopifyStore
-        return ShopifyStore.objects.get(id=store_id)
-    elif store_type == 'chq':
-        from commercehq_core.models import CommerceHQStore
-        return CommerceHQStore.objects.get(id=store_id)
-    elif store_type == 'woo':
-        from woocommerce_core.models import WooStore
-        return WooStore.objects.get(id=store_id)
-    elif store_type == 'gkart':
-        from groovekart_core.models import GrooveKartStore
-        return GrooveKartStore.objects.get(id=store_id)
-    elif store_type == 'bigcommerce':
-        from bigcommerce_core.models import BigCommerceStore
-        return BigCommerceStore.objects.get(id=store_id)
+def get_product_model(store_type):
+    if store_type in ['chq', 'CommerceHQProduct']:
+        from commercehq_core.models import CommerceHQProduct
+        return CommerceHQProduct
+    elif store_type in ['woo', 'WooProduct']:
+        from woocommerce_core.models import WooProduct
+        return WooProduct
+    elif store_type in ['gkart', 'GrooveKartProduct']:
+        from groovekart_core.models import GrooveKartProduct
+        return GrooveKartProduct
+    elif store_type in ['bigcommerce', 'BigCommerceStore']:
+        from bigcommerce_core.models import BigCommerceProduct
+        return BigCommerceProduct
+    else:
+        from leadgalaxy.models import ShopifyProduct
+        return ShopifyProduct

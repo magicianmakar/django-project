@@ -42,7 +42,7 @@ from shopified_core.utils import (
     app_link,
     safe_int,
     aws_s3_context as images_aws_s3_context,
-    get_store_object,
+    get_store_model,
 )
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
 from supplements.lib.image import get_order_number_label, get_payment_pdf
@@ -1213,7 +1213,7 @@ class OrderDetailMixin(LoginRequiredMixin, View):
             line_item.supplement = line_item.label.user_supplement.to_dict()
             line_item.line_total = "${:.2f}".format((line_item.amount * line_item.quantity) / 100.)
 
-        store = get_store_object(order.store_id, order.store_type)
+        store = get_store_model(order.store_id, order.store_type)
         if not self.request.user.can('pls_admin.use') and not self.request.user.can('pls_staff.use'):
             # Make sure this user have access to this order store
             permissions.user_can_view(self.request.user, store)

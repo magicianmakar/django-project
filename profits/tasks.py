@@ -6,6 +6,7 @@ from app.celery_base import celery_app, CaptureFailure
 
 from groovekart_core.models import GrooveKartStore
 from bigcommerce_core.models import BigCommerceStore
+from shopified_core.utils import get_store_model
 from woocommerce_core.models import WooStore
 from commercehq_core.models import CommerceHQStore
 
@@ -15,14 +16,7 @@ from . import models
 
 @celery_app.task(bind=True, base=CaptureFailure)
 def fetch_facebook_insights(self, store_id, store_type, facebook_access_ids):
-    if store_type == 'gkart':
-        store = GrooveKartStore.objects.get(pk=store_id)
-    elif store_type == 'bigcommerce':
-        store = BigCommerceStore.objects.get(pk=store_id)
-    elif store_type == 'woo':
-        store = WooStore.objects.get(pk=store_id)
-    elif store_type == 'chq':
-        store = CommerceHQStore.objects.get(pk=store_id)
+    store = get_store_model(store_type).objects.get(pk=store_id)
 
     try:
         for access in models.FacebookAccess.objects.filter(id__in=facebook_access_ids):

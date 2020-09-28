@@ -2,6 +2,9 @@ from django.contrib.auth.models import User
 from django.db import models
 import simplejson as json
 
+from lib.exceptions import capture_exception
+from shopified_core.utils import get_track_model
+
 
 class SalesFeeConfig(models.Model):
     title = models.CharField(max_length=512, blank=True, default='', verbose_name="Title")
@@ -27,22 +30,11 @@ class SaleTransactionFee(models.Model):
 
     def get_source(self):
         try:
-            if self.source_model == 'CommerceHQOrderTrack':
-                from commercehq_core.models import CommerceHQOrderTrack
-                source = CommerceHQOrderTrack.objects.get(id=self.source_id)
-            elif self.source_model == 'WooOrderTrack':
-                from woocommerce_core.models import WooOrderTrack
-                source = WooOrderTrack.objects.get(id=self.source_id)
-            elif self.source_model == 'GrooveKartOrderTrack':
-                from groovekart_core.models import GrooveKartOrderTrack
-                source = GrooveKartOrderTrack.objects.get(id=self.source_id)
-            elif self.source_model == 'BigCommerceOrderTrack':
-                from bigcommerce_core.models import BigCommerceOrderTrack
-                source = BigCommerceOrderTrack.objects.get(id=self.source_id)
-            else:
-                from leadgalaxy.models import ShopifyOrderTrack
-                source = ShopifyOrderTrack.objects.get(id=self.source_id)
+            model = get_track_model(self.source_model)
+            source = model.objects.get(id=self.source_id)
         except:
+            capture_exception()
+
             source = False
         return source
 

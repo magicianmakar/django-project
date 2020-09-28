@@ -1,7 +1,7 @@
 from lib.exceptions import capture_exception
 
 from app.celery_base import celery_app, CaptureFailure
-from shopified_core.utils import hash_url_filename
+from shopified_core.utils import hash_url_filename, get_store_model
 
 from . import utils
 
@@ -13,7 +13,7 @@ def generate_mockup(self, store_type, store_id, sku, variant_id, uploaded_images
 
     store = None
     try:
-        store_model = utils.get_store_model(store_type)
+        store_model = get_store_model(store_type)
         store = store_model.objects.get(pk=store_id)
 
         layer_app = utils.LayerApp()

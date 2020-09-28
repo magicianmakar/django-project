@@ -11,6 +11,7 @@ from lib.exceptions import capture_exception
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
+from shopified_core.utils import get_store_model, get_track_model, get_product_model
 
 from . import tasks
 from . import utils
@@ -28,9 +29,9 @@ class PrintsApi(ApiResponseMixin, View):
         except:
             data = {}
         self.store_type = request.GET.get('store_type') or request.POST.get('store_type') or data.get('store_type')
-        self.store_model = utils.get_store_model(self.store_type)
-        self.product_model = utils.get_product_model(self.store_type)
-        self.track_model = utils.get_track_model(self.store_type)
+        self.store_model = get_store_model(self.store_type)
+        self.product_model = get_product_model(self.store_type)
+        self.track_model = get_track_model(self.store_type)
 
         return super(PrintsApi, self).dispatch(request, *args, **kwargs)
 
