@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+import simplejson as json
 
 
 class SalesFeeConfig(models.Model):
@@ -19,6 +20,35 @@ class SaleTransactionFee(models.Model):
     processed = models.BooleanField(default=False, verbose_name='Added to invoice or not')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Created date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    currency_conversion_data = models.TextField(null=True, blank=True)
 
     class Meta:
         unique_together = [['source_model', 'source_id']]
+
+    def get_source(self):
+        try:
+            if self.source_model == 'CommerceHQOrderTrack':
+                from commercehq_core.models import CommerceHQOrderTrack
+                source = CommerceHQOrderTrack.objects.get(id=self.source_id)
+            elif self.source_model == 'WooOrderTrack':
+                from woocommerce_core.models import WooOrderTrack
+                source = WooOrderTrack.objects.get(id=self.source_id)
+            elif self.source_model == 'GrooveKartOrderTrack':
+                from groovekart_core.models import GrooveKartOrderTrack
+                source = GrooveKartOrderTrack.objects.get(id=self.source_id)
+            elif self.source_model == 'BigCommerceOrderTrack':
+                from bigcommerce_core.models import BigCommerceOrderTrack
+                source = BigCommerceOrderTrack.objects.get(id=self.source_id)
+            else:
+                from leadgalaxy.models import ShopifyOrderTrack
+                source = ShopifyOrderTrack.objects.get(id=self.source_id)
+        except:
+            source = False
+        return source
+
+    @property
+    def get_currency_conversion_data(self):
+        try:
+            return json.loads(self.currency_conversion_data)
+        except:
+            return False

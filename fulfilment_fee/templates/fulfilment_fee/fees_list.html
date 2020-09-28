@@ -1,0 +1,74 @@
+{% if fees %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Order</th>
+                <th>Amount</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody id="salesfees-table-body">
+        {% for fee in fees %}
+            {% if fee.fee_value %}
+                <tr>
+                    <td  style="white-space: nowrap;width: 15%">
+                        {{ fee.created_at|date:'M. d, Y' }}
+
+                    </td>
+                    <td style="white-space: nowrap; width: 55%">
+                        <span class="m-l">
+                            {%  if fee.get_source %}
+                                {% if fee.source_model == 'ShopifyOrderTrack' %}
+                                    <a href="{% url 'orders_track' %}?store={{ fee.get_source.store_id }}#{{ fee.get_source.id }}">
+                                        Shopify Order
+                                        <span class="badge badge-primary">#{{fee.get_source.order_id }}</span>
+                                    </a>
+                                {% elif fee.source_model == 'WooOrderTrack'  %}
+                                    <a href="{% url 'woo:orders_track' %}?store={{ fee.get_source.store_id }}#{{ fee.get_source.id }}">
+                                        WooCommerce Order
+                                        <span class="badge badge-primary">#{{fee.get_source.order_id }}</span>
+                                    </a>
+                                {% elif fee.source_model == 'CommerceHQOrderTrack'  %}
+                                    <a href="{% url 'chq:orders_track' %}?store={{ fee.get_source.store_id }}#{{ fee.get_source.id }}">
+                                        CommerceHQO Order
+                                        <span class="badge badge-primary">#{{fee.get_source.order_id }}</span>
+                                    </a>
+                                {% elif fee.source_model == 'BigCommerceOrderTrack'  %}
+                                    <a href="{% url 'bigcommerce:orders_track' %}?store={{ fee.get_source.store_id }}#{{ fee.get_source.id }}">
+                                        BigCommerce Order
+                                        <span class="badge badge-primary">#{{fee.get_source.order_id }}</span>
+                                    </a>
+                                {% elif fee.source_model == 'GrooveKartOrderTrack'  %}
+                                    <a href="{% url 'gkart:orders_track' %}?store={{ fee.get_source.store_id }}#{{ fee.get_source.id }}">
+                                        GrooveKart Order
+                                        <span class="badge badge-primary">#{{fee.get_source.order_id }}</span>
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+
+                        </span>
+                    </td>
+                    <td style="white-space: nowrap; width: 10%">
+                        ${{ fee.fee_value }}
+                        {% if fee.get_currency_conversion_data %}
+                            <br><small> Order cost : {{ fee.get_currency_conversion_data.original_amount}} {{ fee.get_currency_conversion_data.original_currency }}</small>
+                        {% endif %}
+                    </td>
+                    <td style="white-space: nowrap; width: 10%" class="text-left">
+                        {% if fee.processed %}
+                            <i class="text-success fa fa-fw fa-check"></i> Paid
+                        {% else %}
+                            <i class="text-danger fa fa-fw fa-close"></i> Pending
+                        {% endif %}
+                    </td>
+
+                </tr>
+            {% endif %}
+        {% endfor %}
+        <tbody>
+    </table>
+    <p class="text-center">
+        <a id="more-salesfees"></a>
+    </p>
+{% endif %}

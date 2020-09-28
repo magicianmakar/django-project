@@ -1,13 +1,13 @@
 from leadgalaxy.utils import safe_float
 from fulfilment_fee.models import SaleTransactionFee
-from lib.exceptions import capture_exception
 from profit_dashboard.utils import get_costs_from_track
 from django.core.cache import cache
 import requests
 import re
+import simplejson as json
 
 
-def generate_sale_transaction_fee(source_type, source, amount):
+def generate_sale_transaction_fee(source_type, source, amount, currency_data):
     try:
         fee_percent = safe_float(source.user.profile.plan.sales_fee_config.fee_percent)
 
@@ -16,10 +16,11 @@ def generate_sale_transaction_fee(source_type, source, amount):
             source_model=source_type,
             source_id=source.id,
             fee_value=amount * fee_percent / 100,
+            currency_conversion_data=json.dumps(currency_data)
         )
+
         return sale_transaction_fee
     except:
-        capture_exception()
         return None
 
 
@@ -40,7 +41,12 @@ def process_sale_transaction_fee(instance):
                 and costs and getattr(instance, instance_status_column[instance_type]) == 'fulfilled':
             # getting sales fee config
             normalized_cost = normalize_currency(costs['total_cost'], costs['currency'])
-            generate_sale_transaction_fee(instance_type, instance, normalized_cost)
+
+            currency_data = {
+                'original_amount': costs['total_cost'],
+                'original_currency': costs['currency']}
+
+            generate_sale_transaction_fee(instance_type, instance, normalized_cost, currency_data)
     except:
         pass
 

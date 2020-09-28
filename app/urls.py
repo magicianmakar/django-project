@@ -35,6 +35,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^tapfiliate/', include('tapfiliate.urls')),
     url(r'^addons/', include('addons_core.urls')),
+    url(r'^fulfilment-fee/', include('fulfilment_fee.urls')),
 ]
 
 if settings.DEBUG:
