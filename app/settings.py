@@ -204,8 +204,7 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE2 = 'none'
 SESSION_COOKIE_SAMESITE_FORCE_ALL = True
 
-# Ignore psycopg2-binary and urllib3 warnings
-warnings.filterwarnings('ignore', module='psycopg2')
+# Ignore urllib3 warnings
 warnings.filterwarnings('ignore', module='urllib3', message='Unverified HTTPS request')
 
 # Cache
