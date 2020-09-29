@@ -10,9 +10,9 @@ beautifulsoup4==4.8.0
 bigcommerce==0.20.0
 billiard==3.6.3.0
 bleach==2.1.3
-boto3==1.9.199
+boto3==1.15.8
 boto==2.49.0
-botocore==1.12.199
+botocore==1.18.8
 cachetools==3.0.0
 celery==4.4.7
 certifi==2019.9.11
@@ -112,7 +112,7 @@ requests-oauthlib==1.3.0
 requests==2.24.0
 rjsmin==1.1.0
 rsa==3.4.2
-s3transfer==0.2.1
+s3transfer==0.3.3
 service-identity==17.0.0
 ShopifyAPI==3.1.0
 simplejson==3.17.2
