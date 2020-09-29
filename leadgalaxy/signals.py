@@ -110,13 +110,14 @@ def userprofile_creation(sender, instance, created, **kwargs):
     if not created and instance.have_stripe_billing():
         try:
             customer = instance.stripe_customer
-            email = json.loads(customer.data).get('email')
+            if customer.data:
+                email = json.loads(customer.data).get('email')
 
-            if email != instance.email:
-                cus = stripe.Customer.retrieve(customer.customer_id)
-                cus.email = instance.email
+                if email != instance.email:
+                    cus = stripe.Customer.retrieve(customer.customer_id)
+                    cus.email = instance.email
 
-                customer.stripe_save(cus)
+                    customer.stripe_save(cus)
         except:
             capture_exception()
 
