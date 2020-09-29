@@ -266,7 +266,7 @@ class Util:
         return orders, line_items, effective_order_data_ids, errors
 
     def get_store(self, store_id, store_type):
-        return get_store_model(store_id, store_type)
+        return get_store_model(store_type).objects.get(id=store_id)
 
     def mark_label_printed(self, line_id):
         line_item = get_object_or_404(PLSOrderLine, id=line_id)
