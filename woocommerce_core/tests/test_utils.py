@@ -15,6 +15,7 @@ from ..utils import (
     get_tracking_products,
     get_customer_id,
     get_daterange_filters,
+    replace_problematic_images,
     split_product,
 )
 from .factories import WooStoreFactory, WooProductFactory, WooOrderTrackFactory
@@ -245,6 +246,29 @@ class GetDaterangeFiltersTestCase(BaseTestCase):
         after_isoformat, before_isoformat = get_daterange_filters('01/01/2020-12/31/2020')
         self.assertEqual(after_isoformat, arrow.get(after).isoformat())
         self.assertEqual(before_isoformat, arrow.get(before).ceil('day').isoformat())
+
+
+class ReplaceProblematicImagesTestCase(BaseTestCase):
+    def test_must_replace_images_from_staticbg(self):
+        data = {'images': ['http://www.staticbg.com/image.png']}
+        data_string = json.dumps(data)
+        new_data_string = replace_problematic_images(data_string)
+        new_data = json.loads(new_data_string)
+        src = 'https://shopified-helper-app.herokuapp.com/api/ali/get-image/image.jpg?url=aHR0cDovL3d3dy5zdGF0aWNiZy5jb20vaW1hZ2UucG5n'
+        self.assertEqual(new_data['images'][0], src)
+
+    def test_must_update_variants_images_map(self):
+        problematic_image = 'http://www.staticbg.com/image.png'
+
+        data = {
+            'images': [problematic_image],
+            'variants_images': {hash_url_filename(problematic_image): 'Large'}}
+
+        data_string = json.dumps(data)
+        new_data_string = replace_problematic_images(data_string)
+        new_data = json.loads(new_data_string)
+        src = 'https://shopified-helper-app.herokuapp.com/api/ali/get-image/image.jpg?url=aHR0cDovL3d3dy5zdGF0aWNiZy5jb20vaW1hZ2UucG5n'
+        self.assertEqual(new_data['variants_images'][hash_url_filename(src)], 'Large')
 
 
 class SplitProductTestCase(BaseTestCase):

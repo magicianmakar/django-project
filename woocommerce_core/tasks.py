@@ -36,7 +36,8 @@ from .utils import (
     create_variants_api_data,
     get_latest_order_note,
     get_product_data,
-    WooOrderUpdater
+    WooOrderUpdater,
+    replace_problematic_images
 )
 
 from product_alerts.utils import (
@@ -130,6 +131,7 @@ def product_save(req_data, user_id):
             }
 
         try:
+            data = replace_problematic_images(data)
             product = WooProduct(store=store, user=user.models_user)
             product.update_data(data)
             user_supplement_id = json.loads(data).get('user_supplement_id')

@@ -1039,6 +1039,23 @@ def get_customer_id(store, customer):
     return results[0]['id'] if results else None
 
 
+def replace_problematic_images(data_string):
+    product_data = json.loads(data_string)
+    srcs = product_data.get('images', [])
+    variant_images = product_data.get('variants_images', {})
+
+    for index, src in enumerate(srcs):
+        if 'staticbg.com' in src:
+            helped = f"https://shopified-helper-app.herokuapp.com/api/ali/get-image/image.jpg?url={b64encode(src.encode('utf-8')).decode('utf-8')}"
+            srcs[index] = helped
+            hashed_src = hash_url_filename(src)
+            if hashed_src in variant_images:
+                hashed_helped = hash_url_filename(helped)
+                variant_images[hashed_helped] = variant_images.pop(hashed_src)
+
+    return json.dumps(product_data)
+
+
 class WooListQuery(object):
     def __init__(self, store, endpoint, params=None):
         self._store = store
