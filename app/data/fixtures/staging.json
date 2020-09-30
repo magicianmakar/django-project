@@ -5474,6 +5474,20 @@
         "description": "BigCommerce Integration"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 136,
+    "fields": {
+        "name": "unlimited_unique_supplements.use",
+        "description": "Unlimited unique supplements"
+    }
+}, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 137,
+    "fields": {
+        "name": "unlimited_user_supplements.use",
+        "description": "Unlimited user supplements"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {
