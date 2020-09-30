@@ -301,7 +301,11 @@ def extension_hash_text(s):
 
 
 def hash_url_filename(s):
-    url = remove_link_query(s)
+    if 'shopified-helper-app.herokuapp.com' in s:
+        url = s
+    else:
+        url = remove_link_query(s)
+
     ext = get_fileext_from_url(s, fallback='jpg')
 
     if not re.match(r'(gif|jpe?g|png|ico|bmp)$', ext, re.I):
