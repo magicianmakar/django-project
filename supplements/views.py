@@ -1213,7 +1213,7 @@ class OrderDetailMixin(LoginRequiredMixin, View):
             line_item.supplement = line_item.label.user_supplement.to_dict()
             line_item.line_total = "${:.2f}".format((line_item.amount * line_item.quantity) / 100.)
 
-        store = get_store_model(order.store_id, order.store_type)
+        store = get_store_model(order.store_type).objects.get(id=order.store_id)
         if not self.request.user.can('pls_admin.use') and not self.request.user.can('pls_staff.use'):
             # Make sure this user have access to this order store
             permissions.user_can_view(self.request.user, store)
