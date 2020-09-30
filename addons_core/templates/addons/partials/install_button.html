@@ -1,3 +1,5 @@
+{% load addons %}
+
 {% if item.id in user_addon_ids %}
     <button class="btn {% if details %} btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-uninstall btn-width m-b"
             id="addon-uninstall"
@@ -6,7 +8,7 @@
             data-endpoint='{"name": "Uninstall Addon", "target": "uninstall"}'
             data-addon="{{ item.id }}"
             data-price="{{ item.monthly_price}}"
-            data-trial="{{item.trial_period_days}}"
+            data-trial="{{item|trial_days_left:user}}"
             >
         <i class="fa fa-minus {% if not details %}text-danger{% endif %}"></i> Uninstall
     </button>
@@ -19,9 +21,11 @@
             data-endpoint='{"name": "Install Addon", "target": "install"}'
             data-addon="{{ item.id }}"
             data-price="{{ item.monthly_price}}"
-            data-trial="{{item.trial_period_days}}"
+            data-trial="{{item|trial_days_left:user}}"
             >
         <i class="fa fa-plus {% if not details %}{% endif %}"></i> Install
     </button>
+    {% if object.trial_period_days %}
     <div width="100%" class="addon-free-trial add-on-color">Try it for FREE with our {{object.trial_period_days}}-Day Free Trial</div>
+    {% endif %}
 {% endif %}

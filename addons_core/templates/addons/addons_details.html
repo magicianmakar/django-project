@@ -17,7 +17,7 @@
                 <div>
                     {% include "addons/partials/install_button.html" with item=object details=True %}
                     {% if user|can:'addons_edit.use' %}
-                        <div class="addon-edit">
+                        <div class="addon-edit m-t-lg">
                             <a href={% url 'addons.edit_view' slug=object.slug %}
                                 class="btn btn-outline btn-default btn-lg btn-block">
                                 <i class="fa fa-pencil "></i> Edit
@@ -38,7 +38,7 @@
             </div>
             {% endif %}
             {% if object.vimeo_url %}
-            <div class="col-md-6 right-container {% if object.youtube_url %}col-md-offset-6{% endif %}">
+            <div class="col-md-6 m-t-lg right-container">
                 <iframe class="addon-videos" width="462"
                         height="260"
                         src="{{ object.vimeo_url }}"
