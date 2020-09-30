@@ -14,11 +14,9 @@
                 <a href="{% url 'product_mapping' product.id %}"><i class="fa fa-chain"></i> Variants Mapping</a>
             </li>
 
-            {% if user|can:'suppliers_shipping_mapping.use' %}
             <li>
                 <a href="{% url 'mapping_supplier' product.id %}"><i class="fa fa-sitemap"></i> Advanced Mapping</a>
             </li>
-            {% endif %}
 
             <li class="active">
                 <a data-toggle="tab" href="#tab-1"><i class="fa fa-database"></i> Bundle Mapping</a>
@@ -27,6 +25,9 @@
        <div class="tab-content">
            <div id="tab-1" class="tab-pane active">
                <div class="panel-body">
+                    {% if upsell %}
+                    {% include "common/partial/upsell.html" with message="Add Bundles to your Plan" only %}
+                    {% endif %}
                     <div id="bundle-mapping-entry">
                         <bundle-mapping-table :variants="variants"></bundle-mapping-table>
                     </div>

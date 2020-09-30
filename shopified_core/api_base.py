@@ -565,6 +565,9 @@ class ApiBase(ApiResponseMixin, View):
         return self.api_success(result)
 
     def post_suppliers_mapping(self, request, user, data):
+        if not user.can('suppliers_shipping_mapping.use'):
+            raise PermissionDenied()
+
         product = self.product_model.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
         suppliers_cache = {}

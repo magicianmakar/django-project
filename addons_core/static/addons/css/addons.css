@@ -342,6 +342,9 @@ input#nav-addon-search::placeholder {
     padding-top: 60px;
 }
 
+.p-t-l {
+    padding-top: 30px;
+}
 .p-b-xl {
     padding-bottom: 60px;
 }
@@ -383,7 +386,7 @@ input#nav-addon-search::placeholder {
     font-size: 27px;
 }
 
-.tab-content p{
+.tab-content p, .tab-content ul, .tab-content ol {
     font-size: 23px;
     line-height: 1.6;
 }

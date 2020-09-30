@@ -1,4 +1,4 @@
-{% load perms_helper %}
+{% load perms_helper addons %}
 
 <div class="col-lg-4">
     <div class="ibox">
@@ -28,7 +28,7 @@
                     <p class="addon-h4 m-b-heigh m-t-xs">{{ item.short_description | safe }}</p>
                 </div>
             </div>
-          
+
             <div class="row m-t-md">
                 <div class="col-xs-6 text-left">
                     <span class="addon-price">${{ item.monthly_price }}</span><span class="addon-unit">/mo</span>
@@ -43,9 +43,11 @@
                 <div class="col-md-6 text-left compare-at-color">
                    <!-- Uncomment When discount code is added <span class="addon-price">${{ item.monthly_price }}</span><span class="addon-unit">/mo</span>-->
                 </div>
+                {% if item|trial_days_left:user %}
                 <div class="col-md-6 text-right">
-                    <p class="m-t-xs addon-h4">{{ item.trial_period_days}}-Day Free Trial</p>
+                    <p class="m-t-xs addon-h4">{{ item|trial_days_left:user }}-Day Free Trial</p>
                 </div>
+                {% endif %}
             </div>
         </div>
 </div>

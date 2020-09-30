@@ -330,7 +330,8 @@ def can_add_supplement(user):
 
     can_add = True
     if (total_allowed > -1) and (user_count + 1 > total_allowed):
-        can_add = False
+        if not profile.can('unlimited_user_supplements.use'):
+            can_add = False
 
     return can_add, total_allowed, user_count
 
@@ -359,6 +360,7 @@ def can_use_unique_supplement(user, pl_supplement_id=0):
 
     can_add = True
     if (total_allowed > -1) and (user_count + 1 > total_allowed):
-        can_add = False
+        if not profile.can('unlimited_unique_supplements.use'):
+            can_add = False
 
     return can_add, total_allowed, user_count

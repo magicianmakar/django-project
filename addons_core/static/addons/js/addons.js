@@ -5,8 +5,13 @@ $.fn.bootstrapTooltip = $.fn.tooltip.noConflict();
 $('.addon-install, .addon-uninstall').click(function (e) {
     var btn = $(e.currentTarget);
     var btnid = e.target.id;
+    var trialDays = parseInt(btn.data('trial'));
+    var trialMessage = '';
+    if(trialDays) {
+        trialMessage = ' after ' + trialDays + '-Day Free Trial for this Addon';
+    }
     if(btnid == 'addon-install') {
-        text = 'You will charged $' + btn.data('price') + '/mo after ' + btn.data('trial') + '-Day Free Trial for this Addon. Would you like to continue?';
+        text = 'You will charged $' + btn.data('price') + '/mo' + trialMessage + '. Would you like to continue?';
     }
     else if(btnid == 'addon-uninstall') {
         text = 'Are you sure you want to Uninstall?';

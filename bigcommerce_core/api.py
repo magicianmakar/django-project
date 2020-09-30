@@ -370,6 +370,9 @@ class BigCommerceStoreApi(ApiBase):
         return self.api_success({'reload': not data.get('export')})
 
     def post_bundles_mapping(self, request, user, data):
+        if not user.can('mapping_bundle.use'):
+            return self.api_error('Your current plan doesn\'t have this feature.', status=403)
+
         product = BigCommerceProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)
 
