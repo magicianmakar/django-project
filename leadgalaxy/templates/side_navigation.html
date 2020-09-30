@@ -163,6 +163,11 @@
 
       {% endfor %}
       {% endfor %}
+      {% if user.models_user.profile.plan.support_addons %}
+        <li class="section-no-icon">
+          <a href="{% url 'addons.list_view' %}" target="_blank">Addon Store</a>
+        </li>
+      {% endif %}
     </ul>
   </div>
 </nav>
