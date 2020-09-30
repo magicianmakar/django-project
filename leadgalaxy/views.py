@@ -52,6 +52,11 @@ from phone_automation.utils import get_month_limit, get_month_totals, get_phonen
 from phone_automation import billing_utils as billing
 from last_seen.models import LastSeen
 from shopified_core import permissions
+from shopified_core.mocks import (
+    get_mocked_bundle_variants,
+    get_mocked_supplier_variants,
+    get_mocked_alert_changes,
+)
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopified_core.utils import (
@@ -1920,7 +1925,8 @@ def product_view(request, pid):
         'aws_signature': aws['aws_signature'],
         'page': 'product',
         'breadcrumbs': breadcrumbs,
-        'token': token
+        'token': token,
+        'upsell_alerts': not request.user.can('price_changes.use'),
     })
 
 
@@ -2101,7 +2107,14 @@ def mapping_supplier(request, product_id):
     variants_map = product.get_all_variants_mapping()
     mapping_config = product.get_mapping_config()
 
+    upsell = False
+    if not request.user.can('suppliers_shipping_mapping.use'):
+        upsell = True
+        shipping_map, mapping_config, suppliers_map = get_mocked_supplier_variants(variants_map)
+        shopify_product['variants'] = shopify_product['variants'][:5]
+
     return render(request, 'mapping_supplier.html', {
+        'upsell': upsell,
         'store': product.store,
         'product_id': product_id,
         'product': product,
@@ -2162,7 +2175,13 @@ def mapping_bundle(request, product_id):
 
         bundle_mapping.append(v)
 
+    upsell = False
+    if not request.user.can('mapping_bundle.use'):
+        upsell = True
+        bundle_mapping = get_mocked_bundle_variants(product, bundle_mapping)
+
     return render(request, 'mapping_bundle.html', {
+        'upsell': upsell,
         'store': product.store,
         'product_id': product_id,
         'product': product,
@@ -2261,6 +2280,10 @@ def bulk_edit(request, what):
 def boards_list(request):
     if not request.user.can('view_product_boards.sub'):
         raise PermissionDenied()
+
+    store = utils.get_store_from_request(request)
+    if not store:
+        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'boards_list'}))
 
     search_title = request.GET.get('search') or None
     user_boards_list = request.user.models_user.shopifyboard_set.all()
@@ -4846,8 +4869,19 @@ def locate(request, what):
 
 @login_required
 def product_alerts(request):
+    store = utils.get_store_from_request(request)
+    if not store:
+        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'product_alerts'}))
+
     if not request.user.can('price_changes.use'):
-        return render(request, 'upgrade.html')
+        return render(request, 'product_alerts.html', {
+            'upsell': True,
+            'product_changes': get_mocked_alert_changes(ShopifyProduct.objects),
+            'page': 'product_alerts',
+            'store': store,
+            'breadcrumbs': [{'title': 'Products', 'url': '/product'}, 'Alerts'],
+            'selected_menu': 'products:alerts',
+        })
 
     show_hidden = bool(request.GET.get('hidden'))
 
@@ -4858,10 +4892,6 @@ def product_alerts(request):
 
     post_per_page = settings.ITEMS_PER_PAGE
     page = safe_int(request.GET.get('page'), 1)
-
-    store = utils.get_store_from_request(request)
-    if not store:
-        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'product_alerts'}))
 
     changes = using_replica(ProductChange, request.GET.get('rep')).select_related('shopify_product') \
         .select_related('shopify_product__default_supplier') \

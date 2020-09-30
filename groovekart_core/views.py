@@ -28,6 +28,11 @@ from supplements.models import PLSOrder, PLSOrderLine
 from supplements.tasks import update_shipstation_address
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired, HasSubuserPermission
+from shopified_core.mocks import (
+    get_mocked_bundle_variants,
+    get_mocked_supplier_variants,
+    get_mocked_alert_changes,
+)
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
@@ -79,8 +84,20 @@ from .utils import (
 
 @login_required
 def product_alerts(request):
+    store = get_store_from_request(request)
+    if not store:
+        messages.warning(request, 'Please add at least one store before using the Alerts page.')
+        return HttpResponseRedirect('/gkart/')
+
     if not request.user.can('price_changes.use'):
-        return render(request, 'groovekart/upgrade.html')
+        return render(request, 'groovekart/product_alerts.html', {
+            'upsell': True,
+            'product_changes': get_mocked_alert_changes(GrooveKartProduct.objects),
+            'page': 'product_alerts',
+            'store': store,
+            'breadcrumbs': [{'title': 'Products', 'url': '/gkart/products'}, 'Alerts'],
+            'selected_menu': 'products:alerts',
+        })
 
     show_hidden = bool(request.GET.get('hidden'))
 
@@ -91,11 +108,6 @@ def product_alerts(request):
 
     post_per_page = settings.ITEMS_PER_PAGE
     page = safe_int(request.GET.get('page'), 1)
-
-    store = get_store_from_request(request)
-    if not store:
-        messages.warning(request, 'Please add at least one store before using the Alerts page.')
-        return HttpResponseRedirect('/gkart/')
 
     changes = ProductChange.objects.select_related('gkart_product') \
                                    .select_related('gkart_product__default_supplier') \
@@ -286,6 +298,8 @@ class ProductDetailView(DetailView):
             'id': self.request.user.id,
             'exp': arrow.utcnow().replace(hours=6).timestamp
         }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
+
+        context['upsell_alerts'] = not self.request.user.can('price_changes.use')
 
         return context
 
@@ -1227,6 +1241,14 @@ class MappingSupplierView(DetailView):
 
         self.add_supplier_info(groovekart_product.get('variants', []), suppliers_map)
 
+        if not self.request.user.can('suppliers_shipping_mapping.use'):
+            shipping_map, mapping_config, suppliers_map = get_mocked_supplier_variants(context['variants_map'])
+            context['shipping_map'] = shipping_map
+            context['mapping_config'] = mapping_config
+            context['suppliers_map'] = suppliers_map
+            context['groovekart_product']['variants'] = context['groovekart_product'].get('variants', [])[:5]
+            context['upsell'] = True
+
         return context
 
 
@@ -1268,5 +1290,11 @@ class MappingBundleView(DetailView):
             'product': product,
             'bundle_mapping': bundle_mapping,
         })
+
+        context['upsell'] = False
+        if not self.request.user.can('mapping_bundle.use'):
+            context['upsell'] = True
+            context['bundle_mapping'] = get_mocked_bundle_variants(
+                context['product'], context['bundle_mapping'])
 
         return context

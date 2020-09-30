@@ -9,6 +9,7 @@ from lib.exceptions import capture_message
 
 from shopified_core import permissions
 from shopified_core.utils import last_executed
+from shopified_core.mocks import get_mocked_config_alerts
 from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule, DashboardVideo
 from leadgalaxy.shopify import ShopifyAPI
 from goals.utils import get_dashboard_user_goals
@@ -84,6 +85,11 @@ def home_page_view(request):
             except:
                 pass
 
+    upsell_alerts = False
+    if not user.can('price_changes.use'):
+        upsell_alerts = True
+        config.update(get_mocked_config_alerts())
+
     return render(request, 'home/index.html', {
         'config': config,
         'epacket_shipping': epacket_shipping,
@@ -98,6 +104,7 @@ def home_page_view(request):
         'breadcrumbs': ['Stores'],
         'user_goals': user_goals,
         'platform_videos': platform_videos,
+        'upsell_alerts': upsell_alerts,
     })
 
 

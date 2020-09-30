@@ -10,6 +10,7 @@ from django.shortcuts import render
 
 from lib.exceptions import capture_exception
 
+from shopified_core.mocks import get_mocked_profits
 from shopified_core.utils import safe_int
 from shopified_core.paginators import SimplePaginator
 
@@ -53,16 +54,16 @@ class ProfitDashboardMixin():
         if not self.store_type:
             raise NotImplementedError('Store Type')
 
-        if not request.user.can('profit_dashboard.use'):
-            if not request.user.is_subuser:
-                return render(request, 'profit_dashboard/upsell.html', {'page': 'profit_dashboard'})
-            else:
-                raise PermissionDenied()
-
         store = self.get_store()
         if not store:
             messages.warning(request, 'Please add at least one store before using the Profit Dashboard page')
             return HttpResponseRedirect('/')
+
+        if not request.user.can('profit_dashboard.use'):
+            if not request.user.is_subuser:
+                return render(request, 'profits/index.html', get_mocked_profits(store))
+            else:
+                raise PermissionDenied()
 
         return super().dispatch(request, *args, **kwargs)
 

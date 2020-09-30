@@ -1,0 +1,70 @@
+<div class="upsell-backdrop"></div>
+<div class="upsell">
+    <div class="purchase">
+        <div>
+            <a href="{{ upgrade_url|default:'/user/profile#plan' }}" class="btn btn-primary">Upgrade</a>
+            <span>{{ message }}</span>
+        </div>
+    </div>
+</div>
+
+
+<style type="text/css">
+    .upsell {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 2050;
+        overflow: hidden;
+        outline: 0;
+        text-align: center;
+    }
+
+    .upsell-backdrop {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        background-color: rgba(243, 243, 243, 0.6);
+        z-index: 2040;
+    }
+
+    .upsell .purchase {
+        z-index: 2;
+        font-weight: bold;
+    }
+    .upsell .purchase > div {
+        border-radius: 4px;
+        border: 1px solid rgba(0,0,0,.2);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        background-color: #ffffff;
+        display: inline-block;
+        padding: 10px 20px 10px 15px;
+    }
+
+    .upsell .purchase span {
+        display: inline-block;
+        padding: 2px 0 0px 15px;
+        vertical-align: middle;
+    }
+
+    {% if top %}
+    .upsell .purchase {
+        margin: {{ top }} auto;
+    }
+    {% else %}
+    .upsell .purchase {
+        position: absolute;
+        top: calc(50% - 28px);
+        left: 0;
+        right: 0;
+    }
+    {% endif %}
+
+    .upsell-backdrop {
+        border-radius: {{ radius|default:"0" }};
+    }
+</style>

@@ -27,6 +27,11 @@ from bigcommerce.api import BigcommerceApi
 from profits.mixins import ProfitDashboardMixin
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
+from shopified_core.mocks import (
+    get_mocked_bundle_variants,
+    get_mocked_supplier_variants,
+    get_mocked_alert_changes,
+)
 from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
@@ -198,8 +203,20 @@ def uninstall(request):
 
 @login_required
 def product_alerts(request):
+    store = utils.get_store_from_request(request)
+    if not store:
+        messages.warning(request, 'Please add at least one store before using the Alerts page.')
+        return HttpResponseRedirect('/bigcommerce/')
+
     if not request.user.can('price_changes.use'):
-        return render(request, 'upgrade.html')
+        return render(request, 'bigcommerce/product_alerts.html', {
+            'upsell': True,
+            'product_changes': get_mocked_alert_changes(BigCommerceProduct.objects),
+            'page': 'product_alerts',
+            'store': store,
+            'breadcrumbs': [{'title': 'Products', 'url': '/bigcommerce/products'}, 'Alerts'],
+            'selected_menu': 'products:alerts',
+        })
 
     show_hidden = bool(request.GET.get('hidden'))
 
@@ -210,11 +227,6 @@ def product_alerts(request):
 
     post_per_page = settings.ITEMS_PER_PAGE
     page = safe_int(request.GET.get('page'), 1)
-
-    store = utils.get_store_from_request(request)
-    if not store:
-        messages.warning(request, 'Please add at least one store before using the Alerts page.')
-        return HttpResponseRedirect('/bigcommerce/')
 
     changes = ProductChange.objects.select_related('bigcommerce_product') \
                                    .select_related('bigcommerce_product__default_supplier') \
@@ -481,6 +493,8 @@ class ProductDetailView(DetailView):
             'exp': arrow.utcnow().replace(hours=6).timestamp
         }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
 
+        context['upsell_alerts'] = not self.request.user.can('price_changes.use')
+
         return context
 
 
@@ -590,6 +604,14 @@ class MappingSupplierView(DetailView):
 
         self.add_supplier_info(bigcommerce_product.get('variants', []), suppliers_map)
 
+        if not self.request.user.can('suppliers_shipping_mapping.use'):
+            shipping_map, mapping_config, suppliers_map = get_mocked_supplier_variants(context['variants_map'])
+            context['shipping_map'] = shipping_map
+            context['mapping_config'] = mapping_config
+            context['suppliers_map'] = suppliers_map
+            context['bigcommerce_product']['variants'] = context['bigcommerce_product'].get('variants', [])[:5]
+            context['upsell'] = True
+
         return context
 
 
@@ -633,6 +655,12 @@ class MappingBundleView(DetailView):
             'product': product,
             'bundle_mapping': bundle_mapping,
         })
+
+        context['upsell'] = False
+        if not self.request.user.can('mapping_bundle.use'):
+            context['upsell'] = True
+            context['bundle_mapping'] = get_mocked_bundle_variants(
+                context['product'], context['bundle_mapping'])
 
         return context
 

@@ -14,6 +14,9 @@
   <div class="tab-content">
     <div id="tab-1" class="tab-pane active">
       <div class="panel-body">
+        {% if upsell %}
+          {% include "common/partial/upsell.html" with top="200px" message="Add Profit Dashboard to your Plan" only %}
+        {% endif %}
         {% if api_error %}
             <p class="text-center">Error: {{api_error}}</p>
             <p class="text-center">Please Try again in a few seconds by reloading the page.</p>

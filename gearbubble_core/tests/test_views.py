@@ -471,6 +471,11 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(product.get_variant_mapping(var_id, for_extension=True), json.loads(data[var_id]))
 
     def test_post_suppliers_mapping(self):
+        self.user.profile.plan.permissions.add(
+            AppPermissionFactory(name='suppliers_shipping_mapping.use')
+        )
+        self.user.profile.save()
+
         product = GearBubbleProductFactory(
             store=self.store, user=self.user, source_id=12345678,
             data='''{"store": {

@@ -215,6 +215,9 @@ def create_menu(menu_structure, menu_data, request, namespace):
 
         return user.can(perm)
 
+    # Know which bypass instead of removing these permissions from menu
+    upsell_permission_exceptions = ['price_changes.use', 'profit_dashboard.view',
+                                    'mapping_bundle.use', 'suppliers_shipping_mapping.use']
     menu = []
     for section_key, item_keys in menu_structure:
         section = menu_data[section_key]
@@ -222,7 +225,7 @@ def create_menu(menu_structure, menu_data, request, namespace):
         for item_key in item_keys:
             item = menu_data[item_key]
 
-            permissions = item.get('permissions', [])
+            permissions = [p for p in item.get('permissions', []) if p not in upsell_permission_exceptions]
             if any([not has_perm(p) for p in permissions]):
                 # User doesn't have the permission to access this resource.
                 continue

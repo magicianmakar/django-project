@@ -32,7 +32,6 @@
                     {% endif %}
                     ><i class="fa fa-cogs"></i> Connections</a></li>
                 {% endif %}
-                {% if request.user|can:'price_changes.use' %}
                 <li>
                     <a data-toggle="tab" href="#tab-7"
                        data-auto-click="#alerts"
@@ -43,7 +42,6 @@
                         <i class="fa fa-line-chart"></i> Alerts
                     </a>
                 </li>
-                {% endif %}
                 {% if request.user|can:'youtube_ads.use' %}
                 <li>
                     <a href="{% url 'youtube_ads.views.index' %}?type=all&q={{ product.title }}" target="_blank">
@@ -424,7 +422,10 @@
 
         {% if request.user|can:'price_change_options.use' %}
         <div id="tab-7" class="tab-pane">
-            <div class="panel-body"  style="min-height:300px">
+            <div class="panel-body" style="min-height:300px">
+                {% if upsell_alerts %}
+                {% include "common/partial/upsell.html" with message="Add Alerts to your Plan" only %}
+                {% endif %}
                 <form id="product-config-form" role="form">
                     <input type="hidden" name="product" value="{{product.id}}" />
                     <div class="setting-section">

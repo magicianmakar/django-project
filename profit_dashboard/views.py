@@ -15,6 +15,7 @@ from lib.exceptions import capture_exception
 from leadgalaxy import utils
 from shopified_core.utils import safe_int
 from shopified_core.paginators import SimplePaginator
+from shopified_core.mocks import get_mocked_profits
 from shopify_orders.utils import is_store_synced
 from .utils import (
     get_profits,
@@ -34,14 +35,13 @@ from .tasks import fetch_facebook_insights
 
 @login_required
 def index(request):
+    store = utils.get_store_from_request(request)
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
         if not request.user.is_subuser:
-            return render(request, 'profit_dashboard/upsell.html', {
-                'page': 'profit_dashboard',
-            })
+            return render(request, 'profit_dashboard/index.html', get_mocked_profits(store))
         else:
             raise PermissionDenied()
-    store = utils.get_store_from_request(request)
+
     if not store:
         messages.warning(request, 'Please add at least one store before using the Profits Dashboard')
         return HttpResponseRedirect('/')
@@ -131,13 +131,10 @@ def index(request):
 
 @login_required
 def facebook_insights(request):
+    """Save campaigns to account(if selected) and fetch insights"""
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        if not request.user.is_subuser:
-            return render(request, 'profit_dashboard/upsell.html', {'page': 'profit_dashboard'})
-        else:
-            raise PermissionDenied()
-    """ Save campaigns to account(if selected) and fetch insights
-    """
+        raise PermissionDenied()
+
     if request.method == 'POST':
         facebook_access_id = request.POST.get('facebook_access_id')
         store = utils.get_store_from_request(request)
@@ -178,13 +175,10 @@ def facebook_insights(request):
 
 @login_required
 def facebook_accounts(request):
+    """Save access token and return accounts"""
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        if not request.user.is_subuser:
-            return render(request, 'profit_dashboard/upsell.html', {'page': 'profit_dashboard'})
-        else:
-            raise PermissionDenied()
-    """ Save access token and return accounts
-    """
+        raise PermissionDenied()
+
     store = utils.get_store_from_request(request)
     access_token = request.GET.get('fb_access_token')
     expires_in = safe_int(request.GET.get('fb_expires_in'))
@@ -239,13 +233,10 @@ def facebook_accounts(request):
 
 @login_required
 def facebook_campaign(request):
+    """Save account and return campaigns"""
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        if not request.user.is_subuser:
-            return render(request, 'profit_dashboard/upsell.html', {'page': 'profit_dashboard'})
-        else:
-            raise PermissionDenied()
-    """ Save account and return campaigns
-    """
+        raise PermissionDenied()
+
     store = utils.get_store_from_request(request)
     facebook_access_id = request.GET.get('facebook_access_id')
     try:
@@ -312,10 +303,8 @@ def facebook_campaign(request):
 @login_required
 def save_other_costs(request):
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        if not request.user.is_subuser:
-            return render(request, 'profit_dashboard/upsell.html', {'page': 'profit_dashboard'})
-        else:
-            raise PermissionDenied()
+        raise PermissionDenied()
+
     amount = float(request.POST.get('amount', '0'))
     date = arrow.get(request.POST.get('date'), r'MMDDYYYY').date()
 
@@ -346,10 +335,8 @@ def save_other_costs(request):
 @login_required
 def facebook_remove_account(request):
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        if not request.user.is_subuser:
-            return render(request, 'profit_dashboard/upsell.html', {'page': 'profit_dashboard'})
-        else:
-            raise PermissionDenied()
+        raise PermissionDenied()
+
     if request.method == 'POST':
         store = utils.get_store_from_request(request)
         access = get_object_or_404(FacebookAccess,
@@ -375,10 +362,8 @@ def facebook_remove_account(request):
 @login_required
 def profit_details(request):
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        if not request.user.is_subuser:
-            return render(request, 'profit_dashboard/upsell.html', {'page': 'profit_dashboard'})
-        else:
-            raise PermissionDenied()
+        raise PermissionDenied()
+
     store = utils.get_store_from_request(request)
     if not store:
         return JsonResponse({
@@ -412,10 +397,8 @@ def profit_details(request):
 @login_required
 def facebook_remove(request):
     if not request.user.can('profit_dashboard.use') or not request.user.can('view_profit_dashboard.sub'):
-        if not request.user.is_subuser:
-            return render(request, 'profit_dashboard/upsell.html', {'page': 'profit_dashboard'})
-        else:
-            raise PermissionDenied()
+        raise PermissionDenied()
+
     if request.method == 'POST':
         store = utils.get_store_from_request(request)
         access = get_object_or_404(FacebookAccess,

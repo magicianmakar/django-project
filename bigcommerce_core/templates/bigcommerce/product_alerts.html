@@ -15,6 +15,9 @@
             <div class="tab-content">
                 <div id="tab-1" class="tab-pane active">
                     <div class="panel-body">
+                        {% if upsell %}
+                        {% include "common/partial/upsell.html" with top="200px" message="Add Alerts to your Plan" only %}
+                        {% endif %}
                         <div class="row">
                             <div class="col-md-8 filter-col">
                                 <form id="filter-form" class="form-inline" method="get">

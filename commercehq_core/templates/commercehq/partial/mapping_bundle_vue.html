@@ -33,7 +33,7 @@
                 <img v-if="variant.image" class="variant-image thumb unveil no-img"
                     style="height:50px;margin:0 10px 0 0;" src="//cdn.dropified.com/static/img/blank.gif"
                     onerror="this.style.display='none'"
-                    :data-src="variant.image.path" />
+                    :data-src="variant.image.path || variant.image" />
                 <img v-else
                     style="width: 40px" class="variant-image"
                     src="//cdn.dropified.com/static/img/no-image-sm.png" />
