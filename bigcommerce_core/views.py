@@ -295,7 +295,7 @@ def product_alerts(request):
                         c['bigcommerce_value'] = "Unmanaged"
                 else:
                     c['bigcommerce_value'] = "Not Found"
-            elif len(variants) == 0:
+            elif variants is not None and len(variants) == 0:
                 if p['inventory_tracking'] == 'product':
                     c['bigcommerce_value'] = p['inventory_level']
                 else:
@@ -309,7 +309,7 @@ def product_alerts(request):
                     c['bigcommerce_value'] = variants[index]['sale_price']
                 else:
                     c['bigcommerce_value_label'] = "Not Found"
-            elif len(variants) == 0:
+            elif variants is not None and len(variants) == 0:
                 c['bigcommerce_value'] = p['sale_price']
             else:
                 c['bigcommerce_value_label'] = "Not Found"
