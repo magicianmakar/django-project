@@ -20,7 +20,7 @@ class DecimalEncoder(json.JSONEncoder):
 def get_mocked_profits(store):
     start = arrow.get().replace(days=-30)
     end = arrow.get()
-    days = arrow.Arrow.range('day', start, end)
+    days = list(arrow.Arrow.range('day', start, end))
     profits_data = OrderedDict()
     totals = {'revenue': 0, 'fulfillment_cost': 0, 'ads_spend': 0, 'other_costs': 0,
               'refunds': 0, 'orders_count': 0, 'fulfillments_count': 0}
