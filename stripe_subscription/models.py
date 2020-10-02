@@ -542,7 +542,7 @@ class CustomStripeSubscription(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return "{} {}".format(self.user.username, self.custom_plan.name if self.custom_plan else 'None')
 
     def retrieve(self, commit=True):

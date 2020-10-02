@@ -48,7 +48,14 @@
                         <td>{{ line.currency|upper }} {{ line.amount }}</td>
                     {% else %}
                         <td>{{ line.description }}</td>
-                        <td></td>
+                        <td>
+                            {% if line.period and line.metadata.type == 'addons_usage' %}
+                                {{ line.period.start|date:'M. d, Y' }}
+                                {% if line.period.end %}
+                                    - {{ line.period.end|date:'M. d, Y' }}
+                                {% endif %}
+                            {% endif %}
+                        </td>
                         <td>{{ line.currency|upper }} {{ line.amount }}</td>
                     {% endif %}
                 </tr>

@@ -344,7 +344,7 @@ def get_profit_details(store, store_type, date_range, limit=20, page=1, orders_m
 
 
 def get_profits(store, store_type, start, end, user_timezone):
-    days = arrow.Arrow.range('day', start, end)
+    days = list(arrow.Arrow.range('day', start, end))
     profits_data = OrderedDict()
     for day in reversed(days):
         date_key = day.format('YYYY-MM-DD')

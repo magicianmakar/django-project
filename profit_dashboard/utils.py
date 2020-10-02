@@ -88,7 +88,7 @@ def calculate_profits(profits):
 
 def get_profits(store, start, end, store_timezone=''):
     store_id = store.id
-    days = arrow.Arrow.range('day', start, end)
+    days = list(arrow.Arrow.range('day', start, end))
     profits_data = OrderedDict()
     for day in reversed(days):
         date_key = day.format('YYYY-MM-DD')

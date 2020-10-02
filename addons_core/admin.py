@@ -14,7 +14,6 @@ class AddonUsageAdmin(admin.ModelAdmin):
         'created_at',
         'updated_at',
         'cancelled_at',
-        'billed_at',
     )
     list_filter = ('is_active', 'created_at', 'updated_at', 'cancelled_at')
     date_hierarchy = 'created_at'

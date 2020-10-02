@@ -1,14 +1,13 @@
-from django.db.models import F
+import argparse
 
 import arrow
-import simplejson as json
-from addons_core.models import AddonUsage
+from django.db.models import F, Prefetch
+from django.contrib.auth.models import User
 
 from lib.exceptions import capture_exception
 from shopified_core.management import DropifiedBaseCommand
-from stripe_subscription.models import CustomStripePlan, CustomStripeSubscription
-from stripe_subscription.stripe_api import stripe
-from stripe_subscription.utils import add_invoice
+from addons_core.models import AddonUsage
+from addons_core.utils import get_stripe_subscription, add_stripe_subscription_item, charge_stripe_first_time
 
 
 class Command(DropifiedBaseCommand):
@@ -22,60 +21,68 @@ class Command(DropifiedBaseCommand):
             help='Process only specified user'
         )
 
+        def arrow_date(input_value):
+            today = arrow.get(input_value, 'YYYY-MM-DD')
+            if today.format('YYYY-MM-DD') != input_value:
+                raise argparse.ArgumentTypeError(
+                    f"Wrong date format (YYYY-MM-DD): {today.format('YYYY-MM-DD')} != {input_value}")
+            return today
+        parser.add_argument('today', nargs='?', type=arrow_date, default=arrow.get())
+
     def start_command(self, *args, **options):
+        users = User.objects.exclude(
+            addonusage__billed_to__gte=F('addonusage__cancelled_at'),
+            addonusage__cancelled_at__isnull=False,
+        ).distinct()
+        addon_usages = AddonUsage.objects.exclude(
+            billed_to__gte=F('cancelled_at'),
+            cancelled_at__isnull=False,
+        )
 
-        addon_usages = AddonUsage.objects.exclude(billed_at__gte=F('cancelled_at'), cancelled_at__isnull=False)
+        if options['today'].ceil('month').day == options['today'].day:
+            # Some months have lesser days
+            addon_usages = addon_usages.filter(interval_day__gte=options['today'].day)
+            users = users.filter(addonusage__interval_day__gte=options['today'].day)
+        else:
+            addon_usages = addon_usages.filter(interval_day=options['today'].day)
+            users = users.filter(addonusage__interval_day=options['today'].day)
+
+        # Process only subscribed addons. Search must be equal for "user.addonusages"
+        users = users.prefetch_related(Prefetch('addonusage_set', addon_usages, to_attr='addon_usages'))
         if options['user_id']:
-            addon_usages = addon_usages.filter(user_id=options['user_id'])
-        addon_usages = addon_usages.iterator()
+            users = users.filter(id=options['user_id'])
 
-        for addon_usage in addon_usages:
+        for user in users.all():
+            if user.is_stripe_customer():
+                stripe_subscription = get_stripe_subscription(user)
 
-            try:
-                if addon_usage.user.is_stripe_customer():
-                    # getting Stripe subscription container
+                for addon_usage in user.addon_usages:
+                    first_payment = addon_usage.billed_to is None
+                    try:
+                        start, end, latest_charge = addon_usage.get_latest_charge(today_date=options['today'], save=False)
+                        # Negative charge can be due prorated cancellation after billing day
+                        if latest_charge <= 0:
+                            continue
 
-                    user_stripe_subscription = addon_usage.user.customstripesubscription_set.filter(
-                        custom_plan__type='addons_subscription').first()
+                        if first_payment:
+                            added = charge_stripe_first_time(addon_usage)
+                        else:
+                            added = add_stripe_subscription_item(
+                                stripe_subscription=stripe_subscription,
+                                amount=latest_charge,
+                                addon_usage=addon_usage,
+                                period={
+                                    "end": end.floor('day').timestamp,
+                                    "start": start.floor('day').timestamp,
+                                },
+                            )
 
-                    if user_stripe_subscription:
-                        sub_container = stripe.Subscription.retrieve(user_stripe_subscription.subscription_id)
-                    else:
-                        AddonsPlan = CustomStripePlan.objects.get(type='addons_subscription')
+                        if added:
+                            addon_usage.save()
 
-                        sub_container = stripe.Subscription.create(
-                            customer=addon_usage.user.stripe_customer.customer_id,
-                            plan=AddonsPlan.stripe_id,
-                            metadata={'custom_plan_id': AddonsPlan.stripe_id, 'user_id': addon_usage.user.id,
-                                      'custom': True,
-                                      'custom_plan_type': 'addons_subscription'}
-                        )
-                        sub_id_to_use = sub_container.id
-                        si = stripe.SubscriptionItem.retrieve(sub_container['items']['data'][0]["id"])
+                    except:
+                        capture_exception()
 
-                        custom_stripe_subscription = CustomStripeSubscription()
-                        custom_stripe_subscription.data = json.dumps(sub_container)
-                        custom_stripe_subscription.status = sub_container['status']
-                        custom_stripe_subscription.period_start = arrow.get(
-                            sub_container['current_period_start']).datetime
-                        custom_stripe_subscription.period_end = arrow.get(sub_container['current_period_end']).datetime
-                        custom_stripe_subscription.user = addon_usage.user
-                        custom_stripe_subscription.custom_plan = AddonsPlan
-                        custom_stripe_subscription.subscription_id = sub_id_to_use
-                        custom_stripe_subscription.subscription_item_id = si.id
-
-                        custom_stripe_subscription.save()
-
-                    upcoming_invoice_item = add_invoice(sub_container, 'addons_usage',
-                                                        addon_usage.usage_charge(), False, "Addons Usage Fee")
-
-                    if upcoming_invoice_item:
-                        today = arrow.get()
-                        addon_usage.billed_at = today.format()
-                        addon_usage.save()
-
-                elif addon_usage.user.profile.from_shopify_app_store():
-                    # TODO shopify billing can be here (using usage charge api)
-                    pass
-            except:
-                capture_exception()
+            elif user.profile.from_shopify_app_store():
+                # TODO shopify billing can be here (using usage charge api)
+                pass
