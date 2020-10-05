@@ -291,12 +291,12 @@ def get_costs_from_track(track, commit=False):
 
         cost = data['aliexpress']['order_details']['cost']
         if type(cost.get('total')) in [float, int]:
-            costs['currency'] = cost.get('currency')
+            costs['currency'] = cost.get('currency', '')
             costs['total_cost'] = cost.get('total')
             costs['shipping_cost'] = cost.get('shipping')
             costs['products_cost'] = cost.get('products')
         else:
-            costs['currency'] = cost.get('currency').replace(',', '.')
+            costs['currency'] = cost.get('currency', '').replace(',', '.')
             costs['total_cost'] = cost.get('total').replace(',', '.')
             costs['shipping_cost'] = cost.get('shipping').replace(',', '.')
             costs['products_cost'] = cost.get('products').replace(',', '.')
