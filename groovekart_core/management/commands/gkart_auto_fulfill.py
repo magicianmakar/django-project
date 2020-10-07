@@ -10,6 +10,7 @@ from groovekart_core.models import GrooveKartOrderTrack
 from groovekart_core import utils
 
 from lib.exceptions import capture_exception, capture_message
+from metrics.tasks import add_number_metric
 
 
 class Command(DropifiedBaseCommand):
@@ -73,8 +74,9 @@ class Command(DropifiedBaseCommand):
             except:
                 capture_exception()
 
-        results = 'Fulfilled Orders: {fulfilled} / {need_fulfill}'.format(**counter)
-        self.write(results)
+        self.write('Fulfilled GKart Orders: {fulfilled} / {need_fulfill}'.format(**counter))
+
+        add_number_metric.apply_async(args=['order.auto.fulfilled', 'gkart', counter['fulfilled']], expires=500)
 
     def fulfill_order(self, order_track):
         store = order_track.store

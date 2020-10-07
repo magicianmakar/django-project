@@ -1,16 +1,10 @@
 import datetime
 
-from django.utils import timezone
 from django.db.models import Q
+from django.utils import timezone
 
-from shopified_core.management import DropifiedBaseCommand
-from product_feed.models import (
-    FeedStatus,
-    CommerceHQFeedStatus,
-    WooFeedStatus,
-    GrooveKartFeedStatus,
-    BigCommerceFeedStatus,
-)
+from leadgalaxy.models import UserProfile, GroupPlan
+from metrics.tasks import add_number_metric
 from product_feed.feed import (
     generate_product_feed,
     generate_chq_product_feed,
@@ -18,7 +12,15 @@ from product_feed.feed import (
     generate_gkart_product_feed,
     generate_bigcommerce_product_feed,
 )
-from leadgalaxy.models import UserProfile, GroupPlan
+from product_feed.models import (
+    FeedStatus,
+    CommerceHQFeedStatus,
+    WooFeedStatus,
+    GrooveKartFeedStatus,
+    BigCommerceFeedStatus,
+)
+from shopified_core.management import DropifiedBaseCommand
+from shopified_core.utils import get_store_model
 
 
 class Command(DropifiedBaseCommand):
@@ -29,6 +31,7 @@ class Command(DropifiedBaseCommand):
 
         for store_type in ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']:
             self.generate_product_feeds(store_type=store_type, verbosity=options['verbosity'])
+            self.record_metrics(store_type)
 
     def get_feed_status_model(self, store_type=''):
         if store_type == 'shopify':
@@ -69,3 +72,12 @@ class Command(DropifiedBaseCommand):
                 self.stdout.write(f'{store_type} Store Feed: {status.store.shop}')
 
             gen_product_feed(status, nocache=True)
+
+    def record_metrics(self, store_type):
+        add_number_metric.apply_async(
+            args=['stores.active', store_type, get_store_model(store_type).objects.filter(is_active=True).count()],
+            expires=500)
+
+        add_number_metric.apply_async(
+            args=['stores.inactive', store_type, get_store_model(store_type).objects.filter(is_active=False).count()],
+            expires=500)

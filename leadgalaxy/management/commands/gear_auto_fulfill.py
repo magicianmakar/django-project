@@ -73,8 +73,7 @@ class Command(DropifiedBaseCommand):
             except:
                 capture_exception()
 
-        results = 'Fulfilled Orders: {fulfilled} / {need_fulfill}'.format(**counter)
-        self.write(results)
+        self.write('Fulfilled Gear Orders: {fulfilled} / {need_fulfill}'.format(**counter))
 
     def fulfill_order(self, order_track):
         store = order_track.store

@@ -7,6 +7,7 @@ import requests
 
 from simplejson import JSONDecodeError
 
+from metrics.tasks import add_number_metric
 from shopified_core.utils import http_exception_response, using_replica, last_executed
 from shopified_core.management import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
@@ -108,6 +109,9 @@ class Command(DropifiedBaseCommand):
                 capture_exception()
 
         self.write(f"Fulfilled Orders: {counter['fulfilled']} / {counter['need_fulfill']} - Skipped: {counter['skipped']}")
+
+        add_number_metric.apply_async(args=['order.auto.fulfilled', 'shopify', counter['fulfilled']], expires=500)
+        add_number_metric.apply_async(args=['order.auto.skipped', 'shopify', counter['skipped']], expires=500)
 
     def fulfill_order(self, order):
         store = order.store

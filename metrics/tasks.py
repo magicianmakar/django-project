@@ -1,6 +1,8 @@
-from django.contrib.auth.models import User
+import requests
 
+from django.contrib.auth.models import User
 from django.conf import settings
+
 from app.celery_base import celery_app, CaptureFailure
 from .activecampaign import ActiveCampaignAPI
 
@@ -68,3 +70,27 @@ def activecampaign_update_from_intercom(intercom_contact):
     acapi = ActiveCampaignAPI()
     contact = acapi.get_intercom_data(intercom_contact)
     acapi.update_customer(contact, version='1')
+
+
+@celery_app.task(base=CaptureFailure, ignore_result=True)
+def add_number_metric(name, tag, value):
+    if settings.DROPIFIED_METRICS:
+        data = {
+            'name': name,
+            'value': value,
+            'tag': tag,
+        }
+
+        requests.post(url=f'https://{settings.DROPIFIED_METRICS}/number', data=data)
+
+
+@celery_app.task(base=CaptureFailure, ignore_result=True)
+def add_decimal_metric(name, tag, value):
+    if settings.DROPIFIED_METRICS:
+        data = {
+            'name': name,
+            'value': value,
+            'tag': tag,
+        }
+
+        requests.post(url=f'https://{settings.DROPIFIED_METRICS}/decimal', data=data)

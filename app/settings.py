@@ -436,6 +436,8 @@ SENTRY_PROCESSORS = (
     'app.sentry.SentryDataProcessor',
 )
 
+DROPIFIED_METRICS = os.environ.get('DROPIFIED_METRICS')
+
 # default Aliexpress Affiliate
 DEFAULT_ALIEXPRESS_AFFILIATE = 'admitad'
 
