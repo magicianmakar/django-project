@@ -4,6 +4,7 @@ from .models import (
     StripePlan,
     StripeCustomer,
     StripeSubscription,
+    ExtraSubUser,
     ExtraStore,
     ExtraCHQStore,
     ExtraWooStore,
@@ -43,6 +44,17 @@ class StripeSubscriptionAdmin(admin.ModelAdmin):
     readonly_fields = ('subscription_id',)
     search_fields = ('subscription_id',) + USER_SEARCH_FIELDS
     raw_id_fields = ('user',)
+
+
+@admin.register(ExtraSubUser)
+class ExtraSubUserAdmin(admin.ModelAdmin):
+    list_display = ('user', 'status', 'subusers_count', 'last_invoice', 'period_start', 'period_end')
+    list_filter = ('status',)
+    search_fields = ('last_invoice',) + USER_SEARCH_FIELDS
+    raw_id_fields = ('user',)
+
+    def subusers_count(self, obj):
+        return obj.user.profile.get_sub_users_count()
 
 
 @admin.register(ExtraStore)

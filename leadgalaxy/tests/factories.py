@@ -29,6 +29,7 @@ class UserProfileFactory(factory.DjangoModelFactory):
     stores = factory.fuzzy.FuzzyInteger(999)
     products = factory.fuzzy.FuzzyInteger(999)
     boards = factory.fuzzy.FuzzyInteger(999)
+    sub_users_limit = factory.fuzzy.FuzzyInteger(999)
 
     class Meta:
         model = 'leadgalaxy.UserProfile'
@@ -77,6 +78,7 @@ class GroupPlanFactory(factory.DjangoModelFactory):
     stores = factory.fuzzy.FuzzyInteger(999)
     products = factory.fuzzy.FuzzyInteger(999)
     boards = factory.fuzzy.FuzzyInteger(999)
+    sub_users_limit = factory.fuzzy.FuzzyInteger(999)
     register_hash = factory.fuzzy.FuzzyText(length=50)
     slug = factory.fuzzy.FuzzyText(length=10)
     default_plan = 1

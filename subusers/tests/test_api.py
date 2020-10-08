@@ -21,7 +21,9 @@ class SubusersApiTest(BaseTestCase):
         self.subuser.profile.save()
 
         self.permission = AppPermissionFactory(name='sub_users.use')
+        self.unlimited_perm = AppPermissionFactory(name='unlimited_subusers.use')
         self.user.profile.plan.permissions.add(self.permission)
+        self.user.profile.plan.permissions.add(self.unlimited_perm)
 
         self.client.login(username=self.user.username, password=password)
 

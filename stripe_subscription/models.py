@@ -349,6 +349,27 @@ class StripeSubscription(models.Model):
             and not self.plan.is_free
 
 
+class ExtraSubUser(models.Model):
+    class Meta:
+        verbose_name = 'Extra Sub User'
+        verbose_name_plural = 'Extra Sub Users'
+
+    user = models.ForeignKey(User, related_name='extra_sub_user', on_delete=models.CASCADE)
+
+    status = models.CharField(max_length=64, null=True, blank=True, default='pending')
+    period_start = models.DateTimeField(null=True)
+    period_end = models.DateTimeField(null=True)
+    last_invoice = models.CharField(max_length=64, null=True, blank=True, verbose_name='Last Invoice Item')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    _invoice_name = 'Sub User'
+
+    def __str__(self):
+        return "{}".format(self.user.email)
+
+
 class ExtraStore(models.Model):
     class Meta:
         verbose_name = "Extra Store"

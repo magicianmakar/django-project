@@ -16,6 +16,7 @@ import arrow
 from .models import (
     StripeCustomer,
     StripeSubscription,
+    ExtraSubUser,
     ExtraStore, ExtraCHQStore,
     ExtraWooStore,
     ExtraGearStore,
@@ -199,6 +200,12 @@ def have_extra_stores(user):
     return user.profile.plan.stores != -1 and stores_count > user.profile.plan.stores and not user.profile.plan.is_paused
 
 
+def have_extra_subusers(user):
+    subusers_count = user.profile.get_sub_users_count()
+
+    return user.profile.plan.sub_users_limit != -1 and subusers_count > user.profile.plan.sub_users_limit and not user.profile.plan.is_paused
+
+
 def have_wrong_extra_stores_count(extra):
     user = extra.user
 
@@ -271,10 +278,62 @@ def have_wrong_extra_stores_count(extra):
     return False
 
 
+def have_wrong_extra_subusers_count(extra):
+    user = extra.user
+
+    # Wrong extra subusers found will be ignored
+    cache_key = 'user_extra_subusers_ignored_{}'.format(user.id)
+    extra_subusers_ignored = cache.get(cache_key, [])
+    if extra_subusers_ignored:
+        if extra.id in extra_subusers_ignored:
+            return True
+
+    extra_subusers = get_active_extra_subusers(ExtraSubUser.objects.filter(user=user), current_period=False)
+    current_extra_count = len(extra_subusers)
+
+    subusers_count = user.profile.get_sub_users_count()
+    subusers_limit = user.profile.plan.sub_users_limit
+    correct_extra_count = subusers_count - subusers_limit
+
+    # We have some extra subusers already included in the plan
+    if current_extra_count > correct_extra_count:
+        current_limit_increase = current_extra_count - correct_extra_count
+
+        # Delete current extra subuser
+        if extra.id:
+            count = extra.delete()
+            if count[0] > 0:
+                current_limit_increase -= 1
+
+        for extra_subuser in extra_subusers:
+            # Remove extra subuser if limit is not reached
+            if current_limit_increase > 0:
+                current_limit_increase -= 1
+                extra_subusers_ignored.append(extra_subuser.id)
+                extra_subuser.delete()
+
+        cache.set(cache_key, extra_subusers_ignored, timeout=900)
+        return True
+
+    return False
+
+
 def get_active_extra_stores(extra_queryset, current_period=True):
     active_extra = extra_queryset.filter(status__in=['pending', 'active']) \
                                  .exclude(store__is_active=False) \
                                  .exclude(user__profile__plan__stores=-1)
+
+    if current_period:
+        active_extra = active_extra.filter(
+            Q(period_end__lte=arrow.utcnow().datetime) | Q(period_end=None))
+
+    return active_extra
+
+
+def get_active_extra_subusers(extra_queryset, current_period=True):
+    active_extra = extra_queryset.filter(status__in=['pending', 'active']) \
+                                 .exclude(store__is_active=False) \
+                                 .exclude(user__profile__plan__sub_users_limit=-1)
 
     if current_period:
         active_extra = active_extra.filter(
@@ -313,6 +372,31 @@ def get_subscribed_extra_stores(extra_model):
         yield extra
 
 
+def get_subscribed_extra_subusers(extra_model):
+    for extra in get_active_extra_stores(extra_model.objects.all()):
+        ignore = False
+        if extra.user.profile.plan.is_free \
+                or extra.user.profile.plan.is_paused:
+            extra.status = 'disabled'
+            extra.save()
+            ignore = True
+
+        if extra.user.profile.get_sub_users_count() <= 1:
+            extra.user.extra_sub_user.all().update(status='disabled')
+            ignore = True
+
+        if not have_extra_subusers(extra.user):
+            ignore = True
+
+        if have_wrong_extra_subusers_count(extra):
+            ignore = True
+
+        if ignore:
+            continue
+
+        yield extra
+
+
 def extra_store_invoice(store, extra=None):
     if extra is None:
         extra = store.extra.first()
@@ -326,6 +410,41 @@ def extra_store_invoice(store, extra=None):
         amount=extra_store_cost,
         currency="usd",
         description="Additional {} Store: {}".format(extra._invoice_name, store.title)
+    )
+
+    extra.status = 'active'
+    extra.last_invoice = invoice_item.id
+
+    if extra.period_start and extra.period_end:
+        extra.period_start = extra.period_end
+        extra.period_end = arrow.get(extra.period_end).replace(days=30).datetime
+    else:
+        extra.period_start = arrow.utcnow().datetime
+        extra.period_end = arrow.utcnow().replace(days=30).datetime
+
+    extra.save()
+
+    invoice_item.description = '{} ({} through {})'.format(
+        invoice_item.description,
+        arrow.get(extra.period_start).format('MM/DD'),
+        arrow.get(extra.period_end).format('MM/DD'))
+
+    invoice_item.save()
+
+
+def extra_subuser_invoice(user, extra=None):
+    if extra is None:
+        extra = user.extra_sub_user.first()
+
+    # calculate the cost of extra store from the field.
+    extra_subuser_cost = user.profile.plan.extra_subuser_cost
+    extra_subuser_cost = int(extra_subuser_cost * 100)  # convert to cents
+
+    invoice_item = stripe.InvoiceItem.create(
+        customer=user.stripe_customer.customer_id,
+        amount=extra_subuser_cost,
+        currency="usd",
+        description="Additional {}: {}".format(extra._invoice_name, user.email)
     )
 
     extra.status = 'active'
@@ -372,6 +491,19 @@ def invoice_extra_stores():
 
     for extra in get_subscribed_extra_stores(ExtraBigCommerceStore):
         extra_store_invoice(extra.store, extra=extra)
+        invoiced += 1
+
+    return invoiced
+
+
+def invoice_extra_subusers():
+    """
+    Find Extra Subusers that need to be invoiced
+    """
+    invoiced = 0
+
+    for extra in get_subscribed_extra_subusers(ExtraSubUser):
+        extra_subuser_invoice(extra.user, extra=extra)
         invoiced += 1
 
     return invoiced
