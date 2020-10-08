@@ -1,0 +1,43 @@
+{% extends "admin/change_form.html" %}
+
+{% block field_sets %}
+<fieldset class="module aligned">
+    <div class="form-row">
+        <label>User:</label>
+        <div class="readonly">{{ original.email }}</div>
+    </div>
+
+    <div class="form-row">
+        <label>Is Authorize.net Customer:</label>
+        <div class="readonly">{{ original.authorize_net_customer|yesno:"Yes,No" }}</div>
+    </div>
+
+    <div class="form-row">
+        <label>Total Amount:</label>
+        <div class="readonly">{{ original.total_amount }}</div>
+    </div>
+
+    <div class="form-row">
+        <label>Order IDs:</label>
+        <div class="readonly">
+            {% for order in original.unpaid_orders %}
+                {% if forloop.last %}
+                #{{ order.order_number }}
+                {% else %}
+                #{{ order.order_number }},
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</fieldset>
+{% endblock %}
+
+{% block inline_field_sets %}{% endblock %}
+
+{% block submit_buttons_bottom %}
+<div class="submit-row">
+    <a href="{% url 'admin:supplements_userunpaidorder_changelist' %}" class="closelink">Close</a>
+    <a href="{% url 'admin:charge-customer' original.id %}" class="button deletelink" style="padding: 10px 15px; float: right; margin: 0 0 0 5px;">Charge Customer in Multiple Transactions</a>
+    <a href="{% url 'admin:charge-customer-all' original.id %}" class="button" style="padding: 10px 15px; float: right; margin: 0 0 0 5px;">Charge Customer in Single Transaction</a>
+</div>
+{% endblock %}

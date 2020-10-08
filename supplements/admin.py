@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 import csv
-from django.contrib import admin
+from decimal import Decimal
+
+from django.contrib import admin, messages
 from django.contrib.admin import helpers
 from django.db.models import Sum
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+from django.utils import timezone
 
 from .forms import ShippingGroupAdminForm
 from .models import (
@@ -19,7 +23,8 @@ from .models import (
     ShippingGroup,
     UserSupplement,
     UserSupplementImage,
-    UserSupplementLabel
+    UserSupplementLabel,
+    UserUnpaidOrder,
 )
 
 
@@ -315,3 +320,115 @@ class RefundPaymentsAdmin(admin.ModelAdmin):
         'transaction_id',
         'created_at',
     )
+
+
+@admin.register(UserUnpaidOrder)
+class UserUnpaidOrderAdmin(admin.ModelAdmin):
+    list_display = ('email', 'total_amount',)
+    change_form_template = 'supplements/admin/user_unpaid_order_change_form.html'
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_add_permission(self, request):
+        return False
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        my_urls = [
+            path('charge-customer/<int:user_id>/', self.charge_customer, name="charge-customer"),
+            path('charge-customer-all/<int:user_id>/', self.charge_customer_all, name="charge-customer-all"),
+        ]
+        return my_urls + urls
+
+    def validate_customer(self, request, user):
+        try:
+            user.authorize_net_customer.retrieve()
+        except AuthorizeNetCustomer.DoesNotExist:
+            self.message_user(request, 'Customer without payment profile', level=messages.ERROR)
+            return False
+
+        if not user.authorize_net_customer.payment_id:
+            self.message_user(request, 'Customer without payment profile', level=messages.ERROR)
+            return False
+
+        return True
+
+    def charge_customer(self, request, user_id):
+        user = UserUnpaidOrder.objects.get(pk=user_id)
+        if not self.validate_customer(request, user):
+            return HttpResponseRedirect(reverse('admin:supplements_userunpaidorder_changelist'))
+
+        def get_item_full_name(ids):
+            return f"Orders: {', '.join(ids)}"
+
+        def get_basic_line_item():
+            return dict(id=[], name='', quantity=1, unit_price=Decimal('0'))
+
+        line_items = []
+        line_item = get_basic_line_item()
+        for order in user.unpaid_orders:
+            # Authorize.net line item name limits to 30 characters
+            line_item_name = get_item_full_name(line_item['id'] + [order.order_number])
+            if len(line_item_name) > 30:
+                line_items.append(line_item)
+                line_item = get_basic_line_item()
+
+            line_item['id'].append(order.order_number)
+            line_item['unit_price'] += order.amount
+
+        error = False
+        for line_item in line_items:
+            ids = line_item['id']
+            line_item['id'] = ';'.join(ids)
+            line_item['name'] = get_item_full_name(ids)
+
+            transaction_id = user.authorize_net_customer.charge(
+                line_item['unit_price'],
+                line_item
+            )
+
+            error = error and True or not transaction_id
+            if transaction_id:
+                PLSOrder.objects.filter(id__in=ids).update(
+                    stripe_transaction_id=transaction_id,
+                    payment_date=timezone.now()
+                )
+
+        if not error:
+            self.message_user(request, f'Charged customer {user.email}')
+        else:
+            self.message_user(request, f'Some attempts to charge have failed for {user.email}', level=messages.ERROR)
+
+        return HttpResponseRedirect(reverse('admin:supplements_userunpaidorder_changelist'))
+
+    def charge_customer_all(self, request, user_id):
+        user = UserUnpaidOrder.objects.get(pk=user_id)
+        if not self.validate_customer(request, user):
+            return HttpResponseRedirect(reverse('admin:supplements_userunpaidorder_changelist'))
+
+        order_ids = []
+        line_item = dict(id='', name='Past Orders', quantity=1, unit_price=Decimal('0'))
+        for order in user.unpaid_orders:
+            order_ids.append(order.order_number)
+            line_item['unit_price'] += order.amount
+
+        line_item['id'] = f"{order_ids[0]}-{order_ids[-1]}"
+        transaction_id = user.authorize_net_customer.charge(
+            line_item['unit_price'],
+            line_item
+        )
+
+        if transaction_id:
+            PLSOrder.objects.filter(id__in=order_ids).update(
+                stripe_transaction_id=transaction_id,
+                payment_date=timezone.now()
+            )
+            self.message_user(request, f'Charged customer {user.email}')
+        else:
+            self.message_user(request, f'Error trying to charge customer {user.email}', level=messages.ERROR)
+        return HttpResponseRedirect(reverse('admin:supplements_userunpaidorder_changelist'))

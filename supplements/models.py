@@ -235,6 +235,33 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
     is_refunded = models.BooleanField(default=False)
 
 
+class PLSUnpaidOrderManager(models.Manager):
+    def get_queryset(self):
+        prefetch_unpaid_orders = models.Prefetch(
+            'plsorder_product_payments',
+            to_attr='unpaid_orders',
+            queryset=PLSOrder.objects.filter(models.Q(stripe_transaction_id='')
+                                             | models.Q(stripe_transaction_id=None)),
+        )
+        return super().get_queryset() \
+                      .prefetch_related(prefetch_unpaid_orders) \
+                      .filter(models.Q(plsorder_product_payments__stripe_transaction_id='')
+                              | models.Q(plsorder_product_payments__stripe_transaction_id=None),
+                              plsorder_product_payments__isnull=False) \
+                      .annotate(total=models.Sum('plsorder_product_payments__amount')) \
+                      .order_by('email')
+
+
+class UserUnpaidOrder(User):
+    objects = PLSUnpaidOrderManager()
+
+    class Meta:
+        proxy = True
+
+    def total_amount(self):
+        return f'${((self.total) / 100.):.2f}'
+
+
 class Payout(PayoutMixin, model_base.AbstractPayout):
     shipping_cost = models.IntegerField(null=True, blank=True)
 
