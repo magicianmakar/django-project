@@ -388,7 +388,16 @@ function labelSizeMatch(defaultSize, pdf) {
             pdf.getPage(1).then(function(page) {
                 var pdfWidth = (page._pageInfo.view[2] / 72).toFixed(3); // returned in pt => pt / 72 = 1 in
                 var pdfHeight = (page._pageInfo.view[3] / 72).toFixed(3);
-                if (pdfHeight === defaultHeight && pdfWidth === defaultWidth) {
+
+                /*
+                Label size can have a margin of +0.125 (in inches).
+                PLS approve and can print labels which are label size or label size + 0.125 margin. Sizes in between or any other variations  are not allowed.
+                */
+                var margin = 0.125;
+                var defaultHeightWithMargin = parseFloat(defaultHeight) + margin;
+                var defaultWidthWithMargin = parseFloat(defaultWidth) + margin;
+
+                if ((pdfHeight === defaultHeight && pdfWidth === defaultWidth) || (parseFloat(pdfHeight) === defaultHeightWithMargin && parseFloat(pdfWidth) === defaultWidthWithMargin)) {
                     resolve();
                 } else {
                     reject();
