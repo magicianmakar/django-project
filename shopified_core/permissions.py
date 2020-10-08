@@ -194,6 +194,31 @@ def user_can_delete(user, obj, raise_on_error=True):
     return can
 
 
+def can_add_subuser(user):
+    """ Check if the user plan allow him to add a new sub user """
+
+    profile = user.profile
+
+    user_subusers = int(profile.sub_users)
+    if user_subusers == -2:
+        total_allowed = profile.plan.sub_users_limit
+    else:
+        total_allowed = user_subusers
+
+    user_subusers_count = profile.get_sub_users_count()
+
+    can_add = True
+
+    if (total_allowed > -1) and (user_subusers_count + 1 > total_allowed):
+        if not profile.can('unlimited_subusers.use'):
+            can_add = False
+
+    if not can_add and profile.plan.is_stripe() and profile.plan.extra_subusers:
+        can_add = not profile.plan.is_free
+
+    return can_add, total_allowed, user_subusers_count
+
+
 def can_add_store(user):
     """ Check if the user plan allow him to add a new store """
 

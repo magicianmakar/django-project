@@ -8,6 +8,7 @@ from leadgalaxy.models import PlanRegistration, AccessToken
 from leadgalaxy.utils import get_plan, generate_plan_registration
 from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import send_email_from_template
+from shopified_core.permissions import can_add_subuser
 
 
 class SubusersApi(ApiResponseMixin, View):
@@ -42,6 +43,13 @@ class SubusersApi(ApiResponseMixin, View):
     def post_invite(self, request, user, data):
         if not user.can('sub_users.use'):
             raise PermissionDenied('Sub User Invite')
+
+        can_add, total_allowed, user_subusers_count = can_add_subuser(user)
+        if not can_add:
+            plans_url = request.build_absolute_uri('/user/profile#plan')
+            return self.api_error('Your plan does not support adding another Sub User. '
+                                  'Please <a href={}>Upgrade your current plan</a> or <a href="mailto:support@dropified.com">'
+                                  'contact support</a> to learn how to add more sub users'.format(plans_url), status=501)
 
         subuser_email = data.get('email', '').strip()
 

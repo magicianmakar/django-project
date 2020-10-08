@@ -7,7 +7,7 @@ from leadgalaxy.utils import get_plan
 from product_alerts.models import ProductChange
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import send_email_from_template
-from stripe_subscription.utils import invoice_extra_stores
+from stripe_subscription.utils import invoice_extra_stores, invoice_extra_subusers
 from shopify_subscription.models import ShopifySubscription
 
 
@@ -32,6 +32,10 @@ class Command(DropifiedBaseCommand):
         # Invoice Extra Stores
         self.stdout.write('Inoice Extra Stores', self.style.HTTP_INFO)
         invoice_extra_stores()
+
+        # Invoice Extra Subusers
+        self.stdout.write('Invoice Extra Sub Users', self.style.HTTP_INFO)
+        invoice_extra_subusers()
 
         self.stdout.write('Delete Old Alerts', self.style.HTTP_INFO)
         self.delete_alerts()
