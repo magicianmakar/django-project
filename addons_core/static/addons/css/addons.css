@@ -349,7 +349,7 @@ input#nav-addon-search::placeholder {
     padding-bottom: 60px;
 }
 
-.addon-install {
+button.addon-install {
     width: 320px;
     height: 73px;
     padding: 0px;
@@ -358,6 +358,16 @@ input#nav-addon-search::placeholder {
     font-size: 23px;
     text-align: center;
     vertical-align: middle;
+    margin-top: 38px;
+}
+
+a.addon-install {
+    width: 320px;
+    height: 73px;
+    padding-top: 19px;
+    background-color: #add1a1;
+    border-color: transparent;
+    font-size: 23px;
     margin-top: 38px;
 }
 

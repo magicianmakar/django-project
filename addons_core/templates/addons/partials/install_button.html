@@ -14,17 +14,23 @@
     </button>
     <p class="m-t-xs heading--3"></p>
 {% else %}
-    <button class="{% if xs %}btn-xs{% endif %} addon-install add-on-color"
-            id="addon-install"
-            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Installing"
-            data-title="{{ item.title }}"
-            data-endpoint='{"name": "Install Addon", "target": "install"}'
-            data-addon="{{ item.id }}"
-            data-price="{{ item.monthly_price}}"
-            data-trial="{{item|trial_days_left:user}}"
-            >
-        <i class="fa fa-plus {% if not details %}{% endif %}"></i> Install
-    </button>
+    {% if item.action_url %}
+        <a class="btn btn-outline btn-default addon-install add-on-color" href="{{item.action_url}}" target="_blank">
+            <i class="fa fa-plus"></i> {{item.action_name}}
+        </a>
+    {% else %}
+        <button class="{% if xs %}btn-xs{% endif %} addon-install add-on-color"
+                id="addon-install"
+                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Installing"
+                data-title="{{ item.title }}"
+                data-endpoint='{"name": "Install Addon", "target": "install"}'
+                data-addon="{{ item.id }}"
+                data-price="{{ item.monthly_price}}"
+                data-trial="{{item|trial_days_left:user}}"
+                >
+            <i class="fa fa-plus {% if not details %}{% endif %}"></i> {{item.action_name}}
+        </button>
+    {% endif %}
     {% if object.trial_period_days %}
     <div width="100%" class="addon-free-trial add-on-color">Try it for FREE with our {{object.trial_period_days}}-Day Free Trial</div>
     {% endif %}

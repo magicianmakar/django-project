@@ -34,7 +34,7 @@ $('.addon-install, .addon-uninstall').click(function (e) {
                         addon: btn.data('addon')
                     }
                 }).done(function (data) {
-                window.location.reload();
+                    window.location.reload();
                 }).fail(function (data) {
                     displayAjaxError(endpoint.name, data);
                     btn.bootstrapBtn('reset');

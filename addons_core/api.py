@@ -114,6 +114,9 @@ class AddonsApi(ApiResponseMixin):
     def post_install(self, request, user, data):
         addon = Addon.objects.get(id=data['addon'])
 
+        if addon.action_url:
+            return self.api_success({'redirect_url': addon.action_url})
+
         if not user.profile.plan.support_addons:
             return self.api_error("Your plan doesn't support adding Addons", 422)
 
