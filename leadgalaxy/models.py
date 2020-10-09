@@ -2059,12 +2059,13 @@ class GroupPlan(models.Model):
     boards = models.IntegerField(default=0, verbose_name="Boards Limit")
     unique_supplements = models.IntegerField(default=0, verbose_name="Unique Supplements Limit")
     user_supplements = models.IntegerField(default=0, verbose_name="User Supplements Limit")
-    sub_users_limit = models.IntegerField(default=0, verbose_name='Sub Users Limit')
+    sub_users_limit = models.IntegerField(default=-1, verbose_name='Sub Users Limit')
+
     extra_stores = models.BooleanField(default=True, verbose_name='Support adding extra stores')
     extra_store_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=27.00,
                                            verbose_name='Extra store cost per store(in USD)')
     extra_subusers = models.BooleanField(default=True, verbose_name='Support adding extra sub users')
-    extra_subuser_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=5.00,
+    extra_subuser_cost = models.DecimalField(decimal_places=2, max_digits=9, null=True, default=0.00,
                                              verbose_name='Extra sub user cost per user(in USD)')
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
 
