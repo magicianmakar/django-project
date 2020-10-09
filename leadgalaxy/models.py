@@ -414,7 +414,6 @@ class UserProfile(models.Model):
             self.get_bigcommerce_stores().count(),
         ])
 
-    @cached_property
     def get_sub_users_count(self):
         if not self.is_subuser:
             return User.objects.filter(profile__subuser_parent=self.user).count()

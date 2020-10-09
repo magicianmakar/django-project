@@ -199,7 +199,7 @@ def can_add_subuser(user):
 
     profile = user.profile
 
-    user_subusers = int(profile.sub_users)
+    user_subusers = int(profile.sub_users_limit)
     if user_subusers == -2:
         total_allowed = profile.plan.sub_users_limit
     else:
