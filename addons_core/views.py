@@ -52,7 +52,14 @@ class AddonsDetailsView(BaseDetailView, BaseTemplateView):
     template_name = 'addons/addons_details.html'
 
     def get_context_data(self, **kwargs: dict) -> dict:
+
+        permission_count = 0
+        for p in self.object.permissions.all():
+            if self.request.user.can(p.name):
+                permission_count += 1
         ctx = super().get_context_data(**kwargs)
+        ctx['permission_count'] = permission_count
+
         ctx['breadcrumbs'] = [
             {
                 'title': 'Addons',

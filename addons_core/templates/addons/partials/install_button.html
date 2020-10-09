@@ -1,4 +1,5 @@
 {% load addons %}
+{% load perms_helper %}
 
 {% if item.id in user_addon_ids %}
     <button class="btn {% if details %} btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-uninstall btn-width m-b"
@@ -13,7 +14,12 @@
         <i class="fa fa-minus {% if not details %}text-danger{% endif %}"></i> Uninstall
     </button>
     <p class="m-t-xs heading--3"></p>
-{% else %}
+
+    {% else %}
+
+    {% if permission_count == item.permissions.count %}
+    <div width="100%" class="addon-free-trial text-danger">This Addon is already included in your plan</div>
+    {% else %}
     {% if item.action_url %}
         <a class="btn btn-outline btn-default addon-install add-on-color" href="{{item.action_url}}" target="_blank">
             <i class="fa fa-plus"></i> {{item.action_name}}
@@ -31,7 +37,9 @@
             <i class="fa fa-plus {% if not details %}{% endif %}"></i> {{item.action_name}}
         </button>
     {% endif %}
+
     {% if object.trial_period_days %}
     <div width="100%" class="addon-free-trial add-on-color">Try it for FREE with our {{object.trial_period_days}}-Day Free Trial</div>
+    {% endif %}
     {% endif %}
 {% endif %}
