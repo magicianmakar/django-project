@@ -5488,6 +5488,13 @@
         "description": "Unlimited user supplements"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 138,
+    "fields": {
+        "name": "import_reviews.use",
+        "description": "Import Reviews"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {

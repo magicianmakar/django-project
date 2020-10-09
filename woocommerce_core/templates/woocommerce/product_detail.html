@@ -430,6 +430,7 @@
         </div>
 
         <div id="tab-6" class="tab-pane">
+            {% if request.user|can:'import_reviews.use' %}
             <div class="panel-body" style="min-height:300px">
                 <div class="alert alert-info alert-dismissible" role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -523,6 +524,11 @@
                     </button>
                 </form>
             </div>
+            {% else %}
+            <div class="panel-body">
+                <h3>You do not have permission to Import Reviews.</h3>
+            </div>
+            {%endif %}
         </div>
 
         {% if request.user|can:'price_change_options.use' %}
@@ -1010,8 +1016,13 @@ $(function() {
     <script type="text/javascript" src="{% static 'woocommerce/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'woocommerce/js/woocommerce_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'woocommerce/js/product_detail.js' %}"></script>
-    <script type="text/javascript" src="{% static 'woocommerce/js/reviews.js' %}"></script>
     {% endcompress %}
+
+    {% if request.user|can:'import_reviews.use' %}
+        {% compress js %}
+        <script type="text/javascript" src="{% static 'woocommerce/js/reviews.js' %}"></script>
+        {% endcompress %}
+    {% endif %}
 
     {% if request.user|can:'image_uploader.use' %}
         {% compress js %}

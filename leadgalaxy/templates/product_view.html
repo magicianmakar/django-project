@@ -637,6 +637,7 @@
         </div>
 
         <div id="tab-6" class="tab-pane">
+            {% if request.user|can:'import_reviews.use' %}
             <div class="panel-body" style="min-height:300px">
                 <form id="review-form" method="get">
                     <input type="hidden" id="reviews_product" value={{product.id}} />
@@ -701,6 +702,11 @@
                     </button>
                 </form>
             </div>
+            {% else %}
+            <div class="panel-body">
+               <h3>You do not have permission to Import Reviews.</h3>
+            </div>
+            {% endif %}
         </div>
 
         {% if request.user|can:'price_change_options.use' %}
@@ -1305,8 +1311,13 @@ $(function() {
     <script type="text/javascript" src="{% static 'shopified/js/clippingmagic.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'shopified/js/product_view.js' %}"></script>
-    <script type="text/javascript" src="{% static 'shopified/js/reviews.js' %}"></script>
     {% endcompress %}
+
+    {% if request.user|can:'import_reviews.use' %}
+        {% compress js %}
+        <script type="text/javascript" src="{% static 'shopified/js/reviews.js' %}"></script>
+        {% endcompress %}
+    {% endif %}
 
 {% if request.user|can:'image_uploader.use' %}
     {% compress js %}
