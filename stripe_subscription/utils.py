@@ -373,7 +373,7 @@ def get_subscribed_extra_stores(extra_model):
 
 
 def get_subscribed_extra_subusers(extra_model):
-    for extra in get_active_extra_stores(extra_model.objects.all()):
+    for extra in get_active_extra_subusers(extra_model.objects.all()):
         ignore = False
         if extra.user.profile.plan.is_free \
                 or extra.user.profile.plan.is_paused:
