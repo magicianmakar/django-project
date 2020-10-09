@@ -456,6 +456,9 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
         "provinceCode": '',
         "cityCode": '',
         "tradeCurrency": 'USD',
+        "minPrice": 0.01,
+        "maxPrice": 0.01,
+        "displayMultipleFreight": False,
         "userScene": 'PC_DETAIL_SHIPPING_PANEL',
     }
 
