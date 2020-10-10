@@ -2416,6 +2416,9 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success({'product': product.id})
 
     def get_description_templates(self, request, user, data):
+        if not request.user.can('custom_description.use'):
+            return self.api_success({'description_templates': []})
+
         templates = DescriptionTemplate.objects.filter(user=user.models_user)
         if data.get('id'):
             templates = templates.filter(id=data.get('id'))
@@ -2437,6 +2440,8 @@ class ShopifyStoreApi(ApiBase):
         """
         Add or edit description templates
         """
+        if not request.user.can('custom_description.use'):
+            raise permissions.PermissionDenied()
 
         if not data.get('title', '').strip():
             return self.api_error('Description Title is not set', status=422)
@@ -2465,6 +2470,9 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success({'template': template_dict}, status=200)
 
     def delete_description_templates(self, request, user, data):
+        if not request.user.can('custom_description.use'):
+            raise permissions.PermissionDenied()
+        
         try:
             template = DescriptionTemplate.objects.get(id=data.get('id'))
             permissions.user_can_delete(user, template)

@@ -158,7 +158,7 @@
                         </div>
                     </div>
                 </div>
-
+                {% if user|can:'custom_description.use' %}
                 <div class="row">
                     <div class="col-sm-offset-1 col-sm-11">
                         <div class="form-group">
@@ -170,6 +170,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
                 <div class="col-sm-offset-1"><hr /></div>
 

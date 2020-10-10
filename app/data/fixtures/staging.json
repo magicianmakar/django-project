@@ -5509,6 +5509,13 @@
         "description": "Advanced Markup Rules"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 141,
+    "fields": {
+        "name": "custom_description.use",
+        "description": "Custom Product Description"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {
