@@ -5502,6 +5502,13 @@
         "description": "Import Reviews"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 140,
+    "fields": {
+        "name": "advance_markup.use",
+        "description": "Advanced Markup Rules"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {

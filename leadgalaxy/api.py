@@ -1059,12 +1059,15 @@ class ShopifyStoreApi(ApiBase):
                 if i not in config or config[i] == '%':
                     config[i] = ''
 
-            rules = PriceMarkupRule.objects.filter(user=user.models_user)
             rules_dict = []
-            for i in rules:
-                i_dict = model_to_dict(i, fields='id,name,min_price,max_price,markup_type,markup_value,markup_compare_value')
-                i_dict['markup_type_display'] = i.get_markup_type_display()
-                rules_dict.append(i_dict)
+
+            if user.can('advance_markup.use'):
+                rules = PriceMarkupRule.objects.filter(user=user.models_user)
+
+                for i in rules:
+                    i_dict = model_to_dict(i, fields='id,name,min_price,max_price,markup_type,markup_value,markup_compare_value')
+                    i_dict['markup_type_display'] = i.get_markup_type_display()
+                    rules_dict.append(i_dict)
 
             config['markup_rules'] = rules_dict
 
@@ -2474,6 +2477,10 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success()
 
     def get_markup_rules(self, request, user, data):
+
+        if not user.can('advance_markup.use'):
+            raise PermissionDenied()
+
         rules = PriceMarkupRule.objects.filter(user=user.models_user)
         if data.get('id'):
             rules = rules.filter(id=data.get('id'))
@@ -2493,6 +2500,8 @@ class ShopifyStoreApi(ApiBase):
         """
         Add or edit markup rules
         """
+        if not user.can('advance_markup.use'):
+            raise PermissionDenied()
 
         min_price = 0
         if data.get('min_price', '').strip():
@@ -2541,6 +2550,10 @@ class ShopifyStoreApi(ApiBase):
         return self.get_markup_rules(request, user, {})
 
     def delete_markup_rules(self, request, user, data):
+
+        if not user.can('advance_markup.use'):
+            raise PermissionDenied()
+
         try:
             rule = PriceMarkupRule.objects.get(id=data.get('id'))
             permissions.user_can_delete(user, rule)
