@@ -1,3 +1,5 @@
+{% load perms_helper %}
+{% if request.user|can:'order_audit.use' %}
 <a id="orders-audit" class="btn btn-outline btn-default btn-rounded btn-sm itooltip"
    title="Audit" href="#audit"><i class="fa fa-search"></i> Audit</a>
 
@@ -14,4 +16,4 @@
         </div>
     </div>
 </div>
-
+{% endif %}
