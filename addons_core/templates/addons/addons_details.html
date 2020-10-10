@@ -11,6 +11,16 @@
     <div class="container">
         <div class="row">
             <div class="col-md-6 left-container">
+                {% if object.categories.all %}
+                <div>
+                {% for category in object.categories.all %}
+                {% if category.is_visible %}
+                <a href={% url 'addons.category_view' slug=category.slug %} target="_blank" class="addon-category-list"><span>{{ category.title }}</span></a>
+                {% if not forloop.last %}<span>&nbsp;&#124;&nbsp;</span>{% endif %}
+                {% endif %}
+                {% endfor %}
+                </div>
+                {% endif %}
                 <h1 class="m-b-none add-on-title add-on-color">{{ object.title }}</h1>
                 <p class="m-t-xs addon-desc add-on-color">{{ object.short_description }}</p>
                 <p class="add-on-color price-container"><span class="addon-price">${{ object.monthly_price }}</span><span class="addon-unit">/mo</span></p>

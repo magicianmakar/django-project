@@ -133,6 +133,12 @@ div.pull-right a.border-box:hover {
     font-weight: bold;
 }
 
+.addon-category-list {
+    font-size: 1.0em;
+    letter-spacing: 0.04375em;
+    text-transform: uppercase;
+}
+
 .addon-desc {
     font-size: 27px;
     line-height: 1.33;
