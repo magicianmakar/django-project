@@ -105,6 +105,7 @@ from stripe_subscription.utils import (
 from product_alerts.models import ProductChange
 from product_alerts.utils import variant_index_from_supplier_sku, delete_product_monitor, unmonitor_store
 from profit_dashboard.models import FacebookAccess
+from addons_core.models import AddonUsage
 
 from metrics.activecampaign import ActiveCampaignAPI
 
@@ -2580,9 +2581,21 @@ def acp_users_list(request):
     shopify_charges = []
     shopify_application_charges = []
     account_registration = None
+    logs = []
 
     if len(users) == 1:
         target_user = users[0]
+
+        addon_usages = AddonUsage.objects.filter(user=target_user.id)
+
+        for addon_usage in addon_usages:
+            if addon_usage.created_at:
+                logs.append('{} addon is installed at {}'.format(
+                    addon_usage.addon.title, arrow.get(addon_usage.created_at).format('MM/DD/YYYY HH:mm')))
+
+            if addon_usage.cancelled_at:
+                logs.append('{} addon is uninstalled at {}'.format(
+                    addon_usage.addon.title, arrow.get(addon_usage.cancelled_at).format('MM/DD/YYYY HH:mm')))
 
         account_registration = AccountRegistration.objects.filter(user=target_user).first()
 
@@ -2688,6 +2701,7 @@ def acp_users_list(request):
     return render(request, 'acp/users_list.html', {
         'q': q,
         'users': users,
+        'logs': logs,
         'plans': plans,
         'bundles': bundles,
         'profiles': profiles,

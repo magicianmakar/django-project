@@ -522,6 +522,14 @@
                     </table>
                 {% endif %}
 
+                {% if logs %}
+                    <hr/>
+                    <h2>Addon logs</h2>
+                    {% for log in logs %}
+                        <p class="log">{{ log }}</p>
+                    {% endfor %}
+                {% endif %}
+
             </div>
         </div>
     </div>
