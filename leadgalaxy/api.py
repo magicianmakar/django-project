@@ -2472,7 +2472,7 @@ class ShopifyStoreApi(ApiBase):
     def delete_description_templates(self, request, user, data):
         if not request.user.can('custom_description.use'):
             raise permissions.PermissionDenied()
-        
+
         try:
             template = DescriptionTemplate.objects.get(id=data.get('id'))
             permissions.user_can_delete(user, template)
