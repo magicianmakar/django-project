@@ -332,7 +332,6 @@ def get_active_extra_stores(extra_queryset, current_period=True):
 
 def get_active_extra_subusers(extra_queryset, current_period=True):
     active_extra = extra_queryset.filter(status__in=['pending', 'active']) \
-                                 .exclude(store__is_active=False) \
                                  .exclude(user__profile__plan__sub_users_limit=-1)
 
     if current_period:

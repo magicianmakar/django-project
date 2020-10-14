@@ -33,13 +33,13 @@ class Command(DropifiedBaseCommand):
         self.stdout.write('Inoice Extra Stores', self.style.HTTP_INFO)
         invoice_extra_stores()
 
-        # Invoice Extra Subusers
-        self.stdout.write('Invoice Extra Sub Users', self.style.HTTP_INFO)
-        invoice_extra_subusers()
-
         self.stdout.write('Delete Old Alerts', self.style.HTTP_INFO)
         self.delete_alerts()
         self.cancel_yearly()
+
+        # Invoice Extra Subusers
+        self.stdout.write('Invoice Extra Sub Users', self.style.HTTP_INFO)
+        invoice_extra_subusers()
 
     def profile_changed(self, profile, expired_plan, new_plan):
         send_email_from_template(
