@@ -209,6 +209,8 @@ warnings.filterwarnings('ignore', module='urllib3', message='Unverified HTTPS re
 
 # Cache
 REDISCLOUD_URL = os.environ['REDISCLOUD_URL']
+REDISCLOUD_URL = REDISCLOUD_URL.replace('rediscloud:', 'default:')
+
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
