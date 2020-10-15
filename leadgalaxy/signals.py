@@ -59,7 +59,7 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
 
         if not settings.DEBUG:
             try:
-                activecampaign_update_plan.delay(user.id)
+                activecampaign_update_plan.apply_async([user.id], expires=500)
             except:
                 pass
 
@@ -125,7 +125,7 @@ def userprofile_creation(sender, instance, created, **kwargs):
 def update_store_count_in_activecampaign(user_id):
     if not settings.DEBUG:
         try:
-            activecampaign_update_store_count.delay(user_id)
+            activecampaign_update_store_count.apply_async([user_id], expires=500)
         except:
             pass
 
