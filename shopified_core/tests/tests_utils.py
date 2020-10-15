@@ -11,6 +11,7 @@ from unittest.mock import Mock
 from collections import OrderedDict
 from shopified_core.utils import (
     app_link,
+    add_http_schema,
     url_join,
     random_hash,
     prefix_from_model,
@@ -177,6 +178,14 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(app_link('orders/track'), settings.APP_URL + '/orders/track')
         self.assertEqual(app_link('orders', qurey=1001), settings.APP_URL + '/orders?qurey=1001')
         self.assertEqual(app_link('orders', 'place', SAStep=True, product=123456), settings.APP_URL + '/orders/place?SAStep=true&product=123456')
+
+    def test_add_http_schema(self):
+        link = 'https://app.dropified.com/orders'
+        self.assertEqual(add_http_schema('app.dropified.com/orders'), link)
+        self.assertEqual(add_http_schema('//app.dropified.com/orders'), link)
+        self.assertEqual(add_http_schema('://app.dropified.com/orders'), link)
+        self.assertEqual(add_http_schema('http://app.dropified.com/orders'), link)
+        self.assertEqual(add_http_schema('https://app.dropified.com/orders'), link)
 
     def test_prefix_from_model(self):
         from leadgalaxy.models import ShopifyStore, GroupPlan, ShopifyProduct

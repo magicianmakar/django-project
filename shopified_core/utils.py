@@ -258,8 +258,9 @@ def get_domain(url, full=False):
 
 
 def add_http_schema(url):
-    if not url.startswith('http'):
-        return 'http://{}'.format(url.lstrip(':/'))
+    if url:
+        link = re.sub(r'^(http)?s?:?/*', '', url.strip())
+        return f'https://{link}'
     else:
         return url
 

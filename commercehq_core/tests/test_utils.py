@@ -40,7 +40,7 @@ class GetShippingCarrierTestCase(BaseTestCase):
         }, {
             'id': 2,
             'title': 'AfterShip',
-            'url': 'http://track.aftership.com/',
+            'url': 'https://track.aftership.com/',
             'is_deleted': False
         }]
 
@@ -112,7 +112,7 @@ class AddAftershipToStoreCarriers(BaseTestCase):
         self.aftership = {
             'id': 2,
             'title': 'AfterShip',
-            'url': 'http://track.aftership.com/',
+            'url': 'https://track.aftership.com/',
             'is_deleted': False}
         self.response = Mock()
         self.response.raise_for_status = Mock(return_value=None)
