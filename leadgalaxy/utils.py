@@ -62,6 +62,7 @@ from shopified_core.utils import (
     get_top_most_commons,
     get_first_valid_option,
     ensure_title,
+    add_http_schema,
 )
 from leadgalaxy.models import (
     AccountRegistration,
@@ -1689,14 +1690,16 @@ def order_track_fulfillment(**kwargs):
         elif (kwargs.get('use_usps') is None and not have_custom_domain) and is_shipping_carrier(source_tracking, 'FedEx', any_match=True):
             data['fulfillment']['tracking_company'] = "FedEx"
         else:
-            aftership_domain = 'http://track.aftership.com/{{tracking_number}}'
+            aftership_domain = 'https://track.aftership.com/{{tracking_number}}'
 
             if have_custom_domain:
                 aftership_domain = user_aftership_domain.get(str(store_id), aftership_domain)
                 if '{{tracking_number}}' not in aftership_domain:
-                    aftership_domain = "http://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
+                    aftership_domain = "https://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
                 elif not aftership_domain.startswith('http'):
                     aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
+
+            aftership_domain = add_http_schema(aftership_domain)
 
             data['fulfillment']['tracking_company'] = "Other"
             if tracking_numbers:

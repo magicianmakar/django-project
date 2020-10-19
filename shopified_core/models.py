@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.urls import reverse, Resolver404, resolve
 from django.utils.functional import cached_property
 
-from shopified_core.utils import get_domain
+from shopified_core.utils import get_domain, add_http_schema
 from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
 from .utils import ALIEXPRESS_SOURCE_STATUS, OrderErrors, safe_str, prefix_from_model, base64_encode
 
@@ -344,15 +344,17 @@ class OrderTrackBase(models.Model):
             return status_map.get(self.source_status, '')
 
     def get_tracking_link(self):
-        custom_tracking = 'http://track.aftership.com/{{tracking_number}}'
+        custom_tracking = 'https://track.aftership.com/{{tracking_number}}'
 
         if type(self.user.get_config(self.CUSTOM_TRACKING_KEY)) is dict:
             custom_tracking = self.user.get_config(self.CUSTOM_TRACKING_KEY).get(str(self.store_id), custom_tracking)
 
             if '{{tracking_number}}' not in custom_tracking:
-                custom_tracking = "http://{}.aftership.com/{{{{tracking_number}}}}".format(custom_tracking)
+                custom_tracking = "https://{}.`aftership.com/{{{{tracking_number}}}}".format(custom_tracking)
             elif not custom_tracking.startswith('http'):
                 custom_tracking = 'http://{}'.format(re.sub('^([:/]*)', r'', custom_tracking))
+
+            custom_tracking = add_http_schema(custom_tracking)
 
         if self.source_tracking:
             if ',' in self.source_tracking:

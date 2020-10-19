@@ -791,7 +791,7 @@ def add_aftership_to_store_carriers(store):
 
     data = {
         'title': 'AfterShip',
-        'url': 'http://track.aftership.com/',
+        'url': 'https://track.aftership.com/',
         'is_deleted': False,
     }
 
