@@ -38,7 +38,7 @@ def process_sale_transaction_fee(instance):
 
         if instance.user.can('sales_fee.use') \
                 and (instance.user.is_superuser or not instance.user.can('disabled_sales_fee.use')) \
-                and costs and getattr(instance, instance_status_column[instance_type]) == 'fulfilled':
+                and costs and instance.auto_fulfilled and getattr(instance, instance_status_column[instance_type]) == 'fulfilled':
             # getting sales fee config
             normalized_cost = normalize_currency(costs['total_cost'], costs['currency'])
 
