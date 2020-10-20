@@ -106,8 +106,10 @@ def product_alerts(request):
         product = get_object_or_404(GrooveKartProduct, id=product)
         permissions.user_can_view(request.user, product)
 
-    post_per_page = settings.ITEMS_PER_PAGE
     page = safe_int(request.GET.get('page'), 1)
+    post_per_page = safe_int(request.user.get_config('_gkart_list_alert_limit'), None)
+    if not post_per_page:
+        post_per_page = settings.ITEMS_PER_PAGE
 
     changes = ProductChange.objects.select_related('gkart_product') \
                                    .select_related('gkart_product__default_supplier') \
