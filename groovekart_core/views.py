@@ -188,7 +188,7 @@ def product_alerts(request):
                     c['gkart_value'] = variants[index]['price']
                 else:
                     c['gkart_value_label'] = "Not Found"
-            else:
+            elif p and 'price' in p:
                 c['gkart_value'] = p['price']
 
         product_changes.append(change)
