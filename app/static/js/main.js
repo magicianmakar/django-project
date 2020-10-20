@@ -54,12 +54,20 @@ function renderSupplierInfo(product_url, parent) {
             site = 'de';
         } else if ((/ebay.fr/i).test(product_url)) {
             site = 'fr';
+        } else if ((/ebay.co.uk/i).test(product_url)) {
+            site = 'uk';
+        } else if ((/ebay.ca/i).test(product_url)) {
+            site = 'ca';
         }
-        var ebay_product_id = product_url.match(/[\/_]([0-9]+)/);
-        if(!ebay_product_id || ebay_product_id.length != 2) {
+        var ebay_product_id = product_url.match(/[\/_]([0-9]+)/g);
+        if(!ebay_product_id || !ebay_product_id.length) {
             return;
         } else {
-            ebay_product_id = ebay_product_id[1];
+            if (ebay_product_id.length === 2) {
+                ebay_product_id = ebay_product_id[1];
+            } else {
+                ebay_product_id = ebay_product_id[0];
+            }
         }
 
         $('.product-original-link-loading', parent).show();
