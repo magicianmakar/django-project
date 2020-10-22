@@ -3,6 +3,7 @@
 {% load static %}
 {% load perms_helper %}
 {% load template_helper %}
+{% load addons %}
 {% load compress %}
 
 {% block main-container %}
@@ -31,7 +32,7 @@
             <div class="col-md-12 ">
                 <div class="row">
                     {% for result in search_results %}
-                        {% if not result.hidden and forloop.counter < 4 %}
+                        {% if not result.hidden %}
                             {% include 'addons/partials/addon_card.html' with item=result %}
                         {% endif %}
                     {% endfor %}
@@ -52,7 +53,7 @@
         <!-- Category Main Section starts here-->
 
         {% for category in addon_category %}
-            {% if category.addons.all %}
+            {% if category.visible_addon|length %}
             <div class="category-container">
                 <div class="row add-on-color">
                     <div class="col-md-6">
@@ -70,10 +71,8 @@
                     <div class="clearfix"></div>
                 </div>
                 <div class="row m-t-xl">
-                    {% for item in category.addons.all %}
-                        {% if not item.hidden and forloop.counter < 4 %}
-                            {% include 'addons/partials/addon_card.html' %}
-                        {% endif %}
+                    {% for item in category.visible_addon %}
+                        {% include 'addons/partials/addon_card.html' %}
                     {% endfor %}
                 </div>
                 </div>

@@ -40,6 +40,9 @@
         <span class="label label-warning">Refunded</span>
         {% else %}
         {{ pls_order.status_string }}
+        {% if pls_order.status == pls_order.SHIPPED and not pls_order.stripe_transaction_id %}
+        <span class="label label-danger">Not Paid</span>
+        {% endif %}
         {% endif %}
       </td>
       <td><a class="btn btn-default btn-outline btn-xs" href="{% url 'pls:my_order_detail' order_id=pls_order.id %}" >View</a></td>

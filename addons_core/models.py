@@ -30,6 +30,10 @@ class Category(models.Model):
     def __str__(self):
         return f'Category: {self.title}'
 
+    @cached_property
+    def visible_addon(self):
+        return self.addons.filter(hidden=False)[:3]
+
 
 class Addon(models.Model):
     title = models.TextField()

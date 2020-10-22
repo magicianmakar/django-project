@@ -19,6 +19,7 @@ from .forms import (
     SubuserGKartPermissionsForm,
     SubuserBigCommercePermissionsForm,
 )
+from shopified_core.permissions import can_add_subuser
 
 
 @login_required
@@ -47,8 +48,18 @@ def subusers(request):
 
         invitation.append(i)
 
+    extra_user_cost = request.user.profile.plan.extra_subuser_cost
+
+    can_add, total_allowed, user_subusers_count = can_add_subuser(request.user)
+
+    extra_subusers = can_add and request.user.profile.plan.is_stripe() and \
+        user_subusers_count >= total_allowed and \
+        total_allowed != -1
+
     return render(request, 'subusers/manage.html', {
         'sub_users': sub_users,
+        'extra_user_cost': extra_user_cost,
+        'extra_subusers': extra_subusers,
         'invitation': invitation,
         'page': 'subusers',
         'breadcrumbs': ['Account', 'Sub Users'],

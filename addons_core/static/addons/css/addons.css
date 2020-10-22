@@ -424,7 +424,8 @@ a.addon-install {
     }
 }
 
-@media (min-width: 1600px) {
+
+@media (min-width: 1650px) {
     .container {
         width: 1630px !important;
     }

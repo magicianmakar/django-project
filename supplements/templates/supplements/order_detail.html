@@ -69,8 +69,10 @@
 
         {% if item.is_refunded %}
         <span class="label label-warning">Refunded</span>
-        {% else %}
+        {% elif item.pls_order.stripe_transaction_id %}
         <span class="label label-primary">Paid</span>
+        {% else %}
+        <span class="label label-danger">Not Paid</span>
         {% endif %}
       </td>
     {% endfor %}
