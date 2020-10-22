@@ -51,7 +51,7 @@
                     </tbody>
                 </table>
 
-                <button class="btn btn-success invite-subuser">
+                <button class="btn btn-success invite-subuser" data-extra={{ extra_subusers|lower }} data-cost="{{ extra_user_cost }}">
                     <i class="fa fa-user-plus"></i> Add User
                 </button>
             </div>
@@ -312,17 +312,24 @@
 
         $('.invite-subuser').click(function () {
             var btn = $(this);
-
+            var add_extra_user = btn.data('extra');
+            var extra_user_cost = btn.data('cost');
+            var text = 'Add new sub user to your account';
+            if (add_extra_user) {
+                text = "<p>You are about to add an additional user to your plan for <b>$" + extra_user_cost + "/month</b>, Would you like to continue?</p>";
+            }
             swal({
                 title: "Add Sub User",
-                text: "Add new sub user to your account",
+                text: text,
                 type: "input",
+                html: true,
                 showCancelButton: true,
                 closeOnConfirm: false,
                 closeOnCancel: true,
                 animation: "slide-from-top",
                 inputPlaceholder: "Email address",
-                showLoaderOnConfirm: true
+                showLoaderOnConfirm: true,
+                confirmButtonText: "Yes, Add This Sub User",
             }, function(inputValue) {
                 if (inputValue === false) {
                     return;
