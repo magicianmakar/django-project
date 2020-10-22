@@ -964,8 +964,9 @@ def webhook(request, provider, option):
         try:
             assert request_from, 'Slack Support Staff Check'
         except:
-            capture_exception()
-            return HttpResponse(':octagonal_sign: _Dropified Support Staff Only (ID: {})_'.format(request.POST['user_id']))
+            if not settings.DEBUG:
+                capture_exception()
+                return HttpResponse(':octagonal_sign: _Dropified Support Staff Only (ID: {})_'.format(request.POST['user_id']))
 
         if request.POST['command'] == '/store-transfer':
             try:
@@ -1442,6 +1443,28 @@ def webhook(request, provider, option):
                 data=json.dumps({'token': token}))
 
             return HttpResponse(f'Login as {user.email} using:\n{link}')
+
+        elif request.POST['command'] == '/user-flags':
+            args = [i.strip() for i in request.POST['text'].split(' ') if i.strip()]
+            if not args:
+                return HttpResponse('Available Flags:\n' + '\n'.join(['- woocommerce-alerts: Enable fix for WooCommerce Alerts page not loading']))
+
+            flag, email = args
+
+            try:
+                user_id = safe_int(email, None)
+                if user_id is not None:
+                    user = User.objects.get(id=user_id)
+                else:
+                    user = User.objects.get(email__iexact=email)
+            except:
+                return HttpResponse(f':x: User not found {email} (or duplicate accounts)')
+
+            if flag == 'woocommerce-alerts':
+                user.set_config('_woo_alerts_variants_fix', True)
+                return HttpResponse(f':ok: Flag *{flag}* enabled for {user.email}')
+            else:
+                return HttpResponse(f':x: Flag not found *{flag}*')
 
         else:
             return HttpResponse(':x: Unknown Command: {}'.format(request.POST['command']))
