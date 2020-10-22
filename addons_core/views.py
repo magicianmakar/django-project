@@ -40,8 +40,6 @@ class AddonsListView(BaseListView, BaseTemplateView):
             ctx['search_results'] = ctx['object_list'].filter(
                 Q(title__icontains=title)
                 | Q(slug__icontains=title)
-                | Q(categories__title__icontains=title)
-                | Q(categories__slug__icontains=title)
             )
 
         return ctx
