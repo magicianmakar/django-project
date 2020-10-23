@@ -4,45 +4,6 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
-def move_price_to_billing(apps, schema_editor):
-    Addon = apps.get_model('addons_core', 'Addon')
-    AddonBilling = apps.get_model('addons_core', 'AddonBilling')
-    AddonPrice = apps.get_model('addons_core', 'AddonPrice')
-
-    for addon in Addon.objects.all():
-        billing = AddonBilling.objects.create(
-            addon=addon,
-            trial_period_days=addon.trial_period_days,
-            interval=2,
-            interval_count=1
-        )
-        AddonPrice.objects.create(
-            billing=billing,
-            price=addon.monthly_price,
-            iterations=0,
-            stripe_price_id='1'
-        )
-
-    AddonPrice.objects.all().update(stripe_price_id='')
-
-
-def move_price_to_addon(apps, schema_editor):
-    Addon = apps.get_model('addons_core', 'Addon')
-    AddonPrice = apps.get_model('addons_core', 'AddonPrice')
-
-    has_stripe_id = hasattr(Addon, 'stripe_product_id')
-    for price in AddonPrice.objects.all():
-        addon = price.billing.addon
-        addon.trial_period_days = price.billing.trial_period_days
-        addon.monthly_price = price.price
-        if has_stripe_id:
-            addon.stripe_product_id = '1'
-        addon.save()
-
-    if has_stripe_id:
-        Addon.objects.all().update(stripe_product_id='')
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -146,14 +107,5 @@ class Migration(migrations.Migration):
             model_name='addonusage',
             name='price_after_cancel',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='addons_core.AddonPrice'),
-        ),
-        migrations.RunPython(move_price_to_billing, move_price_to_addon),
-        migrations.RemoveField(
-            model_name='addon',
-            name='monthly_price',
-        ),
-        migrations.RemoveField(
-            model_name='addon',
-            name='trial_period_days',
         ),
     ]

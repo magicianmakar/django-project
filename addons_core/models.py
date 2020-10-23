@@ -59,6 +59,9 @@ class Addon(models.Model):
     action_name = models.CharField(max_length=128, default='Install')
     action_url = models.URLField(blank=True, null=True)
 
+    monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True, verbose_name='Monthly Price(in USD)')
+    trial_period_days = models.IntegerField(default=0)
+
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     key_benefits = models.TextField(blank=True, default='')
