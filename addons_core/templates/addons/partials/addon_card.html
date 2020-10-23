@@ -1,4 +1,4 @@
-{% load perms_helper addons %}
+{% load perms_helper %}
 {% load addons_helper %}
 
 <div class="col-lg-4">
@@ -46,18 +46,16 @@
                     </a>
                 </div>
             </div>
-            {% if billing.trial_days_left %}
             <div class="row">
                 <div class="col-md-6 text-left compare-at-color">
                    <!-- Uncomment When discount code is added <span class="addon-price">${{ item.monthly_price }}</span><span class="addon-unit">/mo</span>-->
                 </div>
-                {% if item|trial_days_left:user %}
+                {% if billing.trial_days_left %}
                 <div class="col-md-6 text-right">
                     <p class="m-t-xs addon-h4">{{ billing.trial_days_left }}-Day Free Trial</p>
                 </div>
                 {% endif %}
             </div>
-            {% endif %}
             {% endwith %}
         </div>
     </div>

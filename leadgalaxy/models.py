@@ -1,6 +1,5 @@
 from django.db import models
 from django.db.models import Q
-from django.db.models.functions import Coalesce, Now
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.functional import cached_property
@@ -704,29 +703,6 @@ class UserProfile(models.Model):
     @property
     def is_black(self):
         return self.can('pls.use')
-
-    @cached_property
-    def addons_mapping(self):
-        from addons_core.models import Addon
-
-        addons = Addon.objects.filter(addonusage__user=self.user.models_user).annotate(
-            total_usage=models.Sum(
-                Coalesce(models.F('addonusage__cancelled_at'), Now()) - models.F('addonusage__created_at'),
-                output_field=models.DurationField()
-            ),
-            active_usages=models.Count('addonusage', filter=models.Q(addonusage__cancelled_at__isnull=False)),
-        )
-
-        addons_mapping = {}
-        for addon in addons:
-            trial_days_left = addon.trial_period_days - addon.total_usage.days
-            addon.trial_days_left = trial_days_left if trial_days_left > 0 else 0
-
-            addon.is_active = addon.active_usages > 0
-
-            addons_mapping[addon.id] = addon
-
-        return addons_mapping
 
 
 class AddressBase(models.Model):

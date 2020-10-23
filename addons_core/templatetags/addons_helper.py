@@ -26,6 +26,9 @@ def for_user(addon_billings, user):
     # Template only supports 1 price at the moment
     addon_billings = [addon_billings.first()]
     for addon_billing in addon_billings:
+        if not addon_billing:
+            continue
+
         subscription = addon_billing.subscriptions.first()
         if subscription is None:
             addon_billing.user_price = addon_billing.prices.first()
