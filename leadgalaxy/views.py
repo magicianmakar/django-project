@@ -1490,7 +1490,9 @@ def webhook(request, provider, option):
             pls_orders_amount = 0.0
             pls_orders_id = []
 
-            pls_orders = PLSOrder.objects.filter(user=user).filter(Q(stripe_transaction_id='') | Q(stripe_transaction_id=None))
+            pls_orders = PLSOrder.objects.filter(user=user).filter(Q(stripe_transaction_id='') | Q(stripe_transaction_id=None)) \
+                                         .order_by('id')
+
             for i in pls_orders:
                 pls_orders_amount = pls_orders_amount + (i.amount * 0.01)
                 pls_orders_count += 1
