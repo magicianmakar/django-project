@@ -39,7 +39,8 @@ class AddonsListView(BaseListView, BaseTemplateView):
             ctx['search'] = True
             ctx['search_results'] = ctx['object_list'].filter(
                 Q(title__icontains=title)
-                | Q(slug__icontains=title)
+                | Q(slug__icontains=title),
+                hidden=False
             )
 
         return ctx
