@@ -762,8 +762,10 @@ def add_ordered_note(self, store_id, order_id, note):
 def generate_feed(self, feed_id, nocache=False, by_fb=False):
     try:
         feed = FeedStatus.objects.get(id=feed_id)
-        # Generate Facebook feed
-        generate_product_feed(feed, nocache=nocache)
+
+        if feed.store.user.can('product_feeds.use'):
+            # Generate Facebook feed
+            generate_product_feed(feed, nocache=nocache)
 
         if feed.store.user.can('google_product_feed.use'):
             # Generate Google feed if the user set it's settings
@@ -796,7 +798,9 @@ def generate_chq_feed(self, feed_id, nocache=False, by_fb=False):
 def generate_woo_feed(self, feed_id, nocache=False, by_fb=False):
     try:
         feed = WooFeedStatus.objects.get(id=feed_id)
-        generate_woo_product_feed(feed, nocache=nocache)
+
+        if feed.store.user.can('product_feeds.use'):
+            generate_woo_product_feed(feed, nocache=nocache)
 
         if feed.store.user.can('google_product_feed.use'):
             # Generate Google feed if the user set it's settings
@@ -829,8 +833,10 @@ def generate_gear_feed(self, feed_id, nocache=False, by_fb=False):
 def generate_gkart_feed(self, feed_id, nocache=False, by_fb=False):
     try:
         feed = GrooveKartFeedStatus.objects.get(id=feed_id)
-        # Generate Facebook feed
-        generate_gkart_product_feed(feed, nocache=nocache)
+
+        if feed.store.user.can('product_feeds.use'):
+            # Generate Facebook feed
+            generate_gkart_product_feed(feed, nocache=nocache)
 
         if feed.store.user.can('google_product_feed.use'):
             # Generate Google feed if the user set it's settings
@@ -849,7 +855,9 @@ def generate_gkart_feed(self, feed_id, nocache=False, by_fb=False):
 def generate_bigcommerce_feed(self, feed_id, nocache=False, by_fb=False):
     try:
         feed = BigCommerceFeedStatus.objects.get(id=feed_id)
-        generate_bigcommerce_product_feed(feed, nocache=nocache)
+
+        if feed.store.user.can('product_feeds.use'):
+            generate_bigcommerce_product_feed(feed, nocache=nocache)
 
         if feed.store.user.can('google_product_feed.use'):
             # Generate Google feed if the user set it's settings
