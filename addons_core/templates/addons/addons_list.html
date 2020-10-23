@@ -34,9 +34,14 @@
                     {% for result in search_results %}
                         {% if not result.hidden %}
                             {% include 'addons/partials/addon_card.html' with item=result %}
+                            {% if forloop.counter|divisibleby:"3" %}
+                            </div>
+                            <div class="row m-t-xl">
+                            {% endif %}
                         {% endif %}
                     {% endfor %}
                 </div>
+            </div>
             </div>
         </div>
     {% else %}

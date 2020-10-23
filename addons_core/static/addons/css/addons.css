@@ -19,6 +19,39 @@
     padding: 15px 15px;
 }
 
+.navbar-default {
+    margin-bottom: 0;
+    padding-top: 20px;
+}
+
+.navbar-default .navbar-header  > .navbar-brand {
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-btn {
+    background-color: #1190ee;
+    border-color: rgba(0,0,0,0.05);
+    color: #fff;
+    position: relative;
+    display: inline-block;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-weight: bolder;
+    text-align: center;
+    text-decoration: none;
+    border: 1px solid transparent;
+    vertical-align: middle;
+    border-radius: 0;
+    text-shadow: none;
+    max-width: 100%;
+    transition: transform .3s, box-shadow .3s, background-color .3s, color .3s, opacity .3s;
+    border-radius: 35px;
+    text-rendering: optimizeLegibility;
+    box-sizing: border-box;
+}
+
 .navbar-default .nav > li > a:hover, .navbar-default .nav > li > a:focus {
     background-color: transparent;
     color: #232323;
@@ -198,7 +231,7 @@ p.add-on-color.price-container {
 
 
 .col-md-6.m-t-lg.right-container {
-    margin-top: 60px;
+    margin-top: 80px;
 }
 ul.tab-heading li a {
     font-size: 23px;
@@ -415,8 +448,9 @@ a.addon-install {
 @media (min-width: 320px) and (max-width: 1024px) {
     .addon-videos {
         float: none;
-        width: 292px;
-        height: 165px;
+        max-width: 584px;
+        width: 100%;
+        max-height: 330px;
         border-radius: 10px;
     }
     .right-container {
@@ -430,3 +464,18 @@ a.addon-install {
         width: 1630px !important;
     }
 }
+
+@media only screen and (max-width: 480px) {
+    .navbar-header {
+        width: 100%;
+    }
+
+    .navbar-default > .container > .navbar-btn:first-of-type {
+        margin-left: 0;
+    }
+}
+
+.description-faq .row {
+    max-width: 1140px;
+}
+  

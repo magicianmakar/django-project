@@ -19,7 +19,7 @@
         -->
         {% if user|can:'addons_edit.use' %}
         <div class="col-md-12 staff-edit-btn">
-            <a href="{% url 'addons.edit_view' item.slug %}" class="btn btn-sm btn-outline btn-default">Admin Edit <i class="fa fa-edit"></i> </a>
+            <a href="{% url 'addons.edit_view' item.slug %}" class="btn btn-sm btn-outline btn-default"><i class="fa fa-edit"></i> </a>
         </div>
     {% endif %}
         <div class="card-body add-on-color">
@@ -60,5 +60,5 @@
             {% endif %}
             {% endwith %}
         </div>
-</div>
+    </div>
 </div>

@@ -16,6 +16,10 @@
     <p class="m-t-xs heading--3"></p>
 
     {% else %}
+
+    {% if permission_count == item.permissions.count %}
+    <div width="100%" class="addon-free-trial text-success">This Addon is already included in your plan</div>
+    {% else %}
     {% if item.action_url %}
         <a class="btn btn-outline btn-default addon-install add-on-color" href="{{item.action_url}}" target="_blank">
          {{item.action_name}}
