@@ -1,4 +1,5 @@
 import arrow
+import datetime
 import factory
 import factory.fuzzy
 from django.contrib.auth.models import User
@@ -45,17 +46,31 @@ class UserFactory(factory.DjangoModelFactory):
 
 
 class AddonFactory(factory.DjangoModelFactory):
-    monthly_price = factory.fuzzy.FuzzyDecimal(0.5, 42.7)
     slug = factory.fuzzy.FuzzyText()
 
     class Meta:
         model = 'addons_core.Addon'
 
 
+class AddonPriceFactory(factory.DjangoModelFactory):
+    price = factory.fuzzy.FuzzyDecimal(0.1)
+
+    class Meta:
+        model = 'addons_core.AddonPrice'
+
+
+class AddonBillingFactory(factory.DjangoModelFactory):
+    addon = factory.SubFactory('addons_core.tests.factories.AddonFactory')
+    prices = factory.RelatedFactory(AddonPriceFactory, factory_related_name='billing')
+    interval = 2
+
+    class Meta:
+        model = 'addons_core.AddonBilling'
+
+
 class AddonUsageFactory(factory.DjangoModelFactory):
     user = factory.SubFactory('addons_core.tests.factories.UserFactory')
-    addon = factory.SubFactory('addons_core.tests.factories.AddonFactory')
-    billing_day = factory.fuzzy.FuzzyInteger(1, 31)
+    billing = factory.SubFactory('addons_core.tests.factories.AddonBillingFactory')
 
     class Meta:
         model = 'addons_core.AddonUsage'
@@ -63,6 +78,67 @@ class AddonUsageFactory(factory.DjangoModelFactory):
     @factory.post_generation
     def add_addon_to_user(self, create, extracted, **kwargs):
         if create:
-            self.addon.userprofile_set.add(self.user.profile)
+            self.billing.addon.userprofile_set.add(self.user.profile)
             self.user.profile.plan.support_addons = True
             self.user.profile.plan.save()
+
+
+class SimpleStripeObject(dict):
+    def __getattr__(self, k):
+        if k[0] == "_":
+            raise AttributeError(k)
+
+        try:
+            return self[k]
+        except KeyError as err:
+            raise AttributeError(*err.args)
+
+
+class StripeProductFactory(factory.Factory):
+    id = factory.fuzzy.FuzzyText(length=14, prefix='Addon_')
+    name = factory.fuzzy.FuzzyText()
+    description = ''
+    active = True
+    images = []
+    metadata = {'type': 'addon'}
+
+    class Meta:
+        model = SimpleStripeObject
+        abstract = False
+
+
+class StripePriceFactory(factory.Factory):
+    id = factory.fuzzy.FuzzyText(length=19, prefix='AddonPrice_')
+    unit_amount = factory.fuzzy.FuzzyDecimal(low=100)  # unit in cents
+    recurring = SimpleStripeObject({
+        'interval': 'month',
+        'interval_count': 1,
+        'trial_period_days': 0,
+    })
+    metadata = SimpleStripeObject({'type': 'addon'})
+    active = True
+
+    class Meta:
+        model = SimpleStripeObject
+        abstract = False
+
+
+class StripeSubscriptionItemFactory(factory.Factory):
+    id = factory.fuzzy.FuzzyText(length=8)
+    price = StripePriceFactory()
+
+    class Meta:
+        model = SimpleStripeObject
+        abstract = False
+
+
+class StripeSubscriptionFactory(factory.Factory):
+    id = factory.fuzzy.FuzzyText(length=8)
+    items = {'data': [StripeSubscriptionItemFactory()]}
+    billing_cycle_anchor = factory.fuzzy.FuzzyDate(datetime.date(2020, 1, 1))
+    current_period_start = factory.fuzzy.FuzzyDate(datetime.date(2020, 1, 1))
+    current_period_end = factory.fuzzy.FuzzyDate(datetime.date(2020, 1, 1))
+
+    class Meta:
+        model = SimpleStripeObject
+        abstract = False

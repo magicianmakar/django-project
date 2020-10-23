@@ -3,6 +3,7 @@
 {% load perms_helper %}
 {% load template_helper %}
 {% load compress %}
+{% load addons_helper %}
 
 {% block main-container %}
 
@@ -23,16 +24,67 @@
                 {% endif %}
                 <h1 class="m-b-none add-on-title add-on-color">{{ object.title }}</h1>
                 <p class="m-t-xs addon-desc add-on-color">{{ object.short_description }}</p>
-                <p class="add-on-color price-container"><span class="addon-price">${{ object.monthly_price }}</span><span class="addon-unit">/mo</span></p>
+                {% for billing in object.billings|for_user:user %}
+                <p id="addon-billing"
+                   class="add-on-color price-container"
+                   data-billing="{{ billing.id }}"
+                   data-trial-days="{{ billing.trial_days_left }}"
+                   data-billing-title="{{ billing.user_price.get_price_title }}">
+                    {% if billing.user_price.price_descriptor %}
+                    <span class="addon-price">{{ billing.user_price.price_descriptor }}</span>
+                    {% else %}
+                    <span class="addon-price">{{ billing.user_price.price_prefix }}</span>
+                    <span class="addon-unit">{{ billing.user_price.price_sufix }}</span>
+                    {% endif %}
+                </p>
+                {% endfor %}
                 <div>
-                    {% include "addons/partials/install_button.html" with item=object details=True %}
+                    {% if object.id in user_addon_ids %}
+                    <button class="btn {% if details %} btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-uninstall btn-width m-b"
+                            id="addon-uninstall"
+                            data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Uninstalling"
+                            data-title="{{ object.title }}"
+                            data-endpoint='{"name": "Uninstall Addon", "target": "uninstall"}'
+                            data-addon="{{ object.id }}"
+                            data-price="{{ object.monthly_price}}"
+                            data-trial="{{object.trial_period_days}}"
+                            >
+                        <i class="fa fa-minus {% if not details %}text-danger{% endif %}"></i> Uninstall
+                    </button>
+                    <p class="m-t-xs heading--3"></p>
+
+                    {% else %}
+                        {% if object.action_url %}
+                        <a class="btn
+                                  btn-outline
+                                  btn-default
+                                  addon-install
+                                  add-on-color"
+                           href="{{ object.action_url }}"
+                           target="_blank">
+                            {{ object.action_name }}
+                        </a>
+                        {% elif permission_count == object.permissions.count %}
+                        <div class="addon-free-trial text-danger">This Addon is already included in your plan</div>
+                        {% else %}
+                        <button class="{% if xs %}btn-xs{% endif %} addon-install add-on-color"
+                                id="addon-install"
+                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Installing"
+                                data-title="{{ object.title }}"
+                                data-endpoint='{"name": "Install Addon", "target": "install"}'>
+                            <i class="fa fa-plus {% if not details %}{% endif %}"></i> {{ object.action_name }}
+                        </button>
+                        <div width="100%" id="free-trial" class="hidden addon-free-trial add-on-color">Try it for FREE with our <span></span>-Day Free Trial</div>
+                        {% endif %}
+                    {% endif %}
+
                     {% if user|can:'addons_edit.use' %}
-                        <div class="addon-edit m-t-lg">
-                            <a href={% url 'addons.edit_view' slug=object.slug %}
-                                class="btn btn-outline btn-default btn-lg btn-block">
-                                <i class="fa fa-pencil "></i> Edit
-                            </a>
-                        </div>
+                    <div class="addon-edit m-t-lg">
+                        <a href="{% url 'addons.edit_view' slug=object.slug %}"
+                           class="btn btn-outline btn-default btn-lg btn-block">
+                            <i class="fa fa-pencil"></i> Edit
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>

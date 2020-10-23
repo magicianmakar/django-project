@@ -493,6 +493,12 @@ class ProductMappingView(DetailView):
         context['product_suppliers'] = self.get_product_suppliers(product)
         context['current_supplier'] = current_supplier = self.get_current_supplier(product)
         context['variants_map'] = self.get_variants_map(woocommerce_product, product, current_supplier)
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('woo:products_list')},
+            {'title': product.store.title, 'url': f"{reverse('woo:products_list')}?store={product.store.id}"},
+            {'title': product.title, 'url': reverse('woo:product_detail', args=[product.id])},
+            'Variants Mapping',
+        ]
 
         return context
 

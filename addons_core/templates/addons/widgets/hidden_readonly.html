@@ -1,0 +1,9 @@
+{% if widget.value and not can_edit %}
+<input type="hidden" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value }}"{% endif %} />
+<p>{{ widget.value|default:"" }}</p>
+{% elif not widget.value and not can_create %}
+<input type="hidden" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value }}"{% endif %} />
+<p>{{ widget.value|default:"" }}</p>
+{% else %}
+<input type="{{ widget.type }}" name="{{ widget.name }}"{% if widget.value != None %} value="{{ widget.value }}"{% endif %}{% include "django/forms/widgets/attrs.html" %}>
+{% endif %}

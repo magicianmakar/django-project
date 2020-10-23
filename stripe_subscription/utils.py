@@ -25,6 +25,14 @@ from .models import (
 )
 from .stripe_api import stripe
 
+from addons_core.models import Addon, AddonPrice
+from addons_core.utils import (
+    has_only_addons,
+    sync_stripe_addon,
+    sync_stripe_billing,
+    create_usage_from_stripe,
+    cancel_stripe_addons,
+)
 from lib.exceptions import capture_exception, capture_message
 from shopified_core.utils import safe_str
 from leadgalaxy.models import GroupPlan, UserProfile
@@ -596,7 +604,6 @@ def process_webhook_event(request, event_id):
         return HttpResponse('ok')
     elif event.type == 'customer.subscription.created':
         sub = event.data.object
-        sub_plan = get_main_subscription_item_plan(sub)
 
         # check for all custom subscriptions in lines data
         for item in sub['items']['data']:
@@ -616,6 +623,7 @@ def process_webhook_event(request, event_id):
             pass
 
         created = False
+        sub_plan = get_main_subscription_item_plan(sub)
 
         try:
             customer = StripeCustomer.objects.get(customer_id=sub.customer)
@@ -685,18 +693,22 @@ def process_webhook_event(request, event_id):
             stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
             stripe_sub.refresh(sub=sub)
         except StripeSubscription.DoesNotExist:
-            try:
-                sub = stripe.Subscription.retrieve(sub.id)
-                plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id'))
-                                             | Q(stripe_plan__stripe_id=sub_plan.id))
+            if not has_only_addons(sub):
+                try:
+                    sub = stripe.Subscription.retrieve(sub.id)
+                    plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id'))
+                                                 | Q(stripe_plan__stripe_id=sub_plan.id))
 
-                if plan.is_stripe():
-                    customer.user.profile.change_plan(plan)
+                    if plan.is_stripe():
+                        customer.user.profile.change_plan(plan)
 
-                update_subscription(customer.user, plan, sub)
+                    update_subscription(customer.user, plan, sub)
 
-            except stripe.error.InvalidRequestError:
-                pass
+                except stripe.error.InvalidRequestError:
+                    pass
+
+        for subscription_item in sub['items']:
+            create_usage_from_stripe(subscription_item=subscription_item)
 
         if created:
             return HttpResponse('New User Registered')
@@ -758,6 +770,10 @@ def process_webhook_event(request, event_id):
                 return HttpResponse('Custom Subscription Deleted')
         except:
             pass
+
+        cancel_stripe_addons(sub)
+        if has_only_addons(sub):
+            return HttpResponse('Addon Subscription Deleted')
 
         try:
             customer = StripeCustomer.objects.get(customer_id=sub.customer)
@@ -895,6 +911,18 @@ def process_webhook_event(request, event_id):
 
         return HttpResponse(response_message)
 
+    elif event.type in ['product.created', 'product.updated']:
+        addon = sync_stripe_addon(product=event.data.object)
+        if not addon:
+            return HttpResponse('Addon not created/updated')
+    elif event.type in ['price.created', 'price.updated']:
+        addon_price = sync_stripe_billing(price=event.data.object)
+        if not addon_price:
+            return HttpResponse('Price not created/updated')
+    elif event.type == 'price.deleted':
+        AddonPrice.objects.filter(stripe_price_id=event.data.object.id).update(is_active=False)
+    elif event.type == 'product.deleted':
+        Addon.objects.filter(stripe_product_id=event.data.object.id).update(is_active=False)
     else:
         return HttpResponse('Ignore Event')
 

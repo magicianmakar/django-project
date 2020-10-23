@@ -1,17 +1,20 @@
 $.fn.bootstrapBtn = $.fn.button.noConflict();
 $.fn.bootstrapTooltip = $.fn.tooltip.noConflict();
 
-
 $('.addon-install, .addon-uninstall').click(function (e) {
     var btn = $(e.currentTarget);
     var btnid = e.target.id;
-    var trialDays = parseInt(btn.data('trial'));
-    var trialMessage = '';
-    if(trialDays) {
-        trialMessage = ' after ' + trialDays + '-Day Free Trial for this Addon';
-    }
+
+    var billingElem = $('#addon-billing');
     if(btnid == 'addon-install') {
-        text = 'You will charged $' + btn.data('price') + '/mo' + trialMessage + '. Would you like to continue?';
+        text = 'You will be charged ' + billingElem.data('billing-title');
+
+        var trialDays = billingElem.data('trial-days');
+        if (trialDays) {
+            text += ' after ' + trialDays + '-Day Free Trial for this Addon.';
+        }
+
+        text += ' Would you like to continue?';
     }
     else if(btnid == 'addon-uninstall') {
         text = 'Are you sure you want to Uninstall?';
@@ -23,25 +26,39 @@ $('.addon-install, .addon-uninstall').click(function (e) {
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
         confirmButtonText: 'Continue',
-      }).then( function(result) {
+    }).then(function(result) {
         if(result.value) {
             btn.bootstrapBtn('loading');
             var endpoint = btn.data('endpoint');
-            $.ajax(api_url(endpoint.target, 'addons'),
-                {
-                    type: 'post',
-                    data: {
-                        addon: btn.data('addon')
-                    }
-                }).done(function (data) {
-                    window.location.reload();
-                }).fail(function (data) {
-                    displayAjaxError(endpoint.name, data);
-                    btn.bootstrapBtn('reset');
-                });
-            }
-        });
+            $.ajax({
+                url: api_url(endpoint.target, 'addons'),
+                type: 'POST',
+                data: {
+                    billing: $('#addon-billing').data('billing'),
+                    addon: btn.data('addon')
+                }
+            }).done(function (data) {
+                window.location.reload();
+            }).fail(function (data) {
+                displayAjaxError(endpoint.name, data);
+                btn.bootstrapBtn('reset');
+            });
+        }
     });
+});
+
+function setTrialDays(trialDays) {
+    if (!$('#free-trial').length) {
+        return;
+    }
+
+    if (trialDays) {
+        $('#free-trial').removeClass('hidden').find('span').text(trialDays);
+    } else {
+        $('#free-trial').addClass('hidden');
+    }
+}
+setTrialDays($('#addon-billing').data('trial-days'));
 
 $('#add-addon-btn').click(function (e) {
     e.preventDefault();

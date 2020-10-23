@@ -1,14 +1,17 @@
 import json
-from decimal import ROUND_HALF_UP, Decimal
 
+import arrow
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
 
-import arrow
-
 from leadgalaxy.models import AppPermission
+
+INTERVAL_CHOICES = ((0, 'Day'), (1, 'Week'), (2, 'Month'), (3, 'Year'))
+INTERVAL_ARROW = {0: 'day', 1: 'week', 2: 'month', 3: 'year'}
+INTERVAL_STRIPE_MAP = {'day': 0, 'week': 1, 'month': 2, 'year': 3,
+                       0: 'day', 1: 'week', 2: 'month', 3: 'year'}
 
 
 class Category(models.Model):
@@ -36,6 +39,8 @@ class Category(models.Model):
 
 
 class Addon(models.Model):
+    variant_from = models.ForeignKey('self', null=True, blank=True, related_name='variants', on_delete=models.SET_NULL)
+
     title = models.TextField()
     slug = models.SlugField(unique=True, max_length=512)
     addon_hash = models.TextField(unique=True, editable=False)
@@ -54,20 +59,19 @@ class Addon(models.Model):
     action_name = models.CharField(max_length=128, default='Install')
     action_url = models.URLField(blank=True, null=True)
 
-    monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True, verbose_name='Monthly Price(in USD)')
-    trial_period_days = models.IntegerField(default=0)
-
     permissions = models.ManyToManyField(AppPermission, blank=True)
 
     key_benefits = models.TextField(blank=True, default='')
 
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
+    is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    stripe_product_id = models.CharField(max_length=255, blank=True, default='')
 
     def __str__(self):
-        return f'Addon: {self.title}'
+        return self.title
 
     def save(self, *args, **kwargs):
         if not self.addon_hash:
@@ -89,112 +93,155 @@ class Addon(models.Model):
         self.key_benefits = json.dumps(kb)
 
 
+class AddonBilling(models.Model):
+    class Meta:
+        ordering = ('sort_order', 'id')
+
+    addon = models.ForeignKey(Addon, related_name='billings', on_delete=models.CASCADE)
+    is_active = models.BooleanField(default=True)
+    group = models.CharField(max_length=10, default='', blank=True, editable=False)
+    sort_order = models.PositiveIntegerField(default=0)
+    # loop = models.BooleanField(default=False)
+
+    trial_period_days = models.IntegerField(default=0)
+    expire_at = models.DateTimeField(null=True, blank=True)
+
+    interval = models.IntegerField(choices=((None, ''),) + INTERVAL_CHOICES, null=True, default=None)
+    interval_count = models.IntegerField(default=1, verbose_name="frequency")
+
+    def __str__(self):
+        return self.billing_title
+
+    @cached_property
+    def billing_title(self):
+        return f"{self.addon.title} {self.interval_count}x {self.get_interval_display()}"
+
+
+class AddonPrice(models.Model):
+    class Meta:
+        ordering = ('sort_order', 'id')
+
+    billing = models.ForeignKey(AddonBilling, related_name='prices', on_delete=models.CASCADE)
+
+    price = models.DecimalField(decimal_places=2, max_digits=9)
+    price_descriptor = models.CharField(max_length=255, blank=True, default='')
+    iterations = models.IntegerField(default=0)  # 0 means infinite
+    sort_order = models.PositiveIntegerField(default=0)
+
+    stripe_price_id = models.CharField(max_length=255, blank=True, default='')
+
+    def __str__(self):
+        return self.get_price_title()
+
+    def get_price_title(self):
+        return self.price_descriptor or self.price_prefix + self.price_sufix
+
+    @property
+    def price_prefix(self):
+        price_title = f'${self.price}'
+        if self.iterations > 0:
+            price_title = f'{self.iterations}x {price_title}'
+
+        return price_title
+
+    @cached_property
+    def price_sufix(self):
+        interval_count = self.billing.interval_count
+        if interval_count > 1:
+            price_title = f'every {interval_count} {self.billing.get_interval_display()}s'
+        else:
+            price_title = {0: '/day', 1: '/week', 2: '/mo', 3: '/year'}[self.billing.interval]
+
+        return price_title
+
+
 class AddonUsage(models.Model):
     class Meta:
         ordering = '-created_at',
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    addon = models.ForeignKey(Addon, on_delete=models.CASCADE)
+    billing = models.ForeignKey(AddonBilling,
+                                related_name='subscriptions',
+                                on_delete=models.SET_NULL,
+                                null=True)
 
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     cancelled_at = models.DateTimeField(null=True, blank=True)
-    billed_to = models.DateTimeField(null=True, blank=True)
-    billing_day = models.IntegerField(default=1)
-    interval_day = models.IntegerField(default=0)
+    price_after_cancel = models.ForeignKey(AddonPrice, null=True, blank=True, on_delete=models.SET_NULL)
+    start_at = models.DateField(null=True)
+    next_billing = models.DateField(null=True)
+
+    stripe_subscription_id = models.CharField(max_length=255, blank=True, default='')
+    stripe_subscription_item_id = models.CharField(max_length=255, blank=True, default='')
 
     def __str__(self):
         return f'Addon Subscription: {self.id}'
 
-    @property
-    def billing_cycle_ends(self):
-        return self.get_next_day(arrow.get(), self.billing_day)
-
     @cached_property
-    def previous_addon_usages(self):
-        return self.addon.addonusage_set.exclude(id=self.id).filter(
+    def previous_subscriptions(self):
+        return self.billing.subscriptions.exclude(id=self.id).filter(
             user=self.user,
             cancelled_at__isnull=False,
         ).annotate(
             usage_delta=models.Sum(models.F('cancelled_at') - models.F('created_at'))
         )
 
-    def get_trial_days_left(self, today_date=None):
-        if self.addon.trial_period_days == 0:
+    @cached_property
+    def next_price(self):
+        if self.cancelled_at:
+            return None
+
+        arrow_interval = INTERVAL_ARROW[self.billing.interval]
+        iterations = 0
+        if self.next_billing:
+            iterations = len(list(arrow.Arrow.range(
+                arrow_interval,
+                arrow.get(self.start_at),
+                arrow.get(self.next_billing)
+            )))
+
+        for subscription in self.previous_subscriptions:
+            iterations += len(list(arrow.Arrow.range(
+                arrow_interval,
+                arrow.get(subscription.created_at).floor('day'),
+                arrow.get(subscription.cancelled_at).ceil('day')
+            )))
+
+        prices = self.billing.prices.all()
+        for price in prices:
+            if price.iterations == 0:
+                return price
+
+            iterations -= price.iterations
+            if iterations <= 0:
+                return price
+
+    def get_start_date(self):
+        return arrow.get(self.created_at).shift(
+            days=self.get_trial_days_left(self.created_at)).datetime
+
+    def get_next_billing_date(self):
+        if self.start_at is None:
+            self.start_at = self.get_start_date()
+            return self.start_at
+
+        current_billing_date = self.next_billing or self.start_at
+        shift_interval = f"{INTERVAL_ARROW[self.billing.interval]}s"
+        return arrow.get(current_billing_date).shift(**{shift_interval: self.billing.interval_count}).datetime
+
+    def get_trial_days_left(self, from_date=None):
+        if self.billing.trial_period_days == 0:
             return 0
 
-        trial_usage_days = sum([u.usage_delta for u in self.previous_addon_usages])
-        trial_usage_days = trial_usage_days.days if trial_usage_days else 0
+        trial_usage_days = sum([u.usage_delta.days for u in self.previous_subscriptions])
+        trial_usage_days = trial_usage_days if trial_usage_days else 0
 
-        previous_days_left = self.addon.trial_period_days - trial_usage_days
+        previous_days_left = self.billing.trial_period_days - trial_usage_days
         previous_days_left = previous_days_left if previous_days_left > 0 else 0
 
-        today_date = arrow.get() if not today_date else today_date
-        days_left = arrow.get(self.created_at).shift(days=previous_days_left) - today_date
+        from_date = arrow.get() if not from_date else from_date
+        days_left = arrow.get(self.created_at).shift(days=previous_days_left) - from_date
         return days_left.days if days_left.days > 0 else 0
-
-    def get_next_day(self, d, day):
-        from .utils import get_next_day
-        return get_next_day(d, day)
-
-    def get_latest_charge(self, today_date=None, save=True):
-        """Calculates current charge for addon based on billing period
-        """
-        today_date = arrow.get() if not today_date else today_date
-        today_date = today_date.ceil('day')
-        charged_for = Decimal('0.00')
-
-        billing_start = self.billed_to if self.billed_to else self.created_at
-        billing_start = arrow.get(billing_start).shift(days=self.get_trial_days_left(billing_start))
-        billing_start = self.get_next_day(billing_start, self.interval_day).floor('day')
-
-        # Charge only when today is within billing period
-        if billing_start > today_date:
-            billing_start = self.billed_to if self.billed_to else self.created_at
-            return billing_start, today_date.floor('day'), Decimal('0.00')
-
-        billing_end = self.get_next_day(today_date, self.interval_day).floor('day')
-        if billing_end < today_date:  # Today within period
-            billing_end = self.get_next_day(
-                arrow.get(billing_end).shift(months=1), self.interval_day)
-
-        charged_for += len(list(arrow.Arrow.range('month', billing_start, billing_end.shift(days=-1))))
-        # Discount will define a different charge for first month
-        if not self.billed_to and not self.previous_addon_usages:
-            # charged_for += (self.addon.discounted_price / self.addon.monthly_price) - 1
-            pass
-
-        if self.cancelled_at:
-            cancelled_at = arrow.get(self.cancelled_at)
-            cancelled_period_end = self.get_next_day(cancelled_at, self.interval_day)
-
-            # Cancel can be prorated or ilegible for refund
-            last_billing = self.get_next_day(billing_start.shift(months=-1), self.billing_day)
-            cancelled_last_period = cancelled_at.is_between(last_billing, billing_start)
-            cancelled_at_period = cancelled_at.is_between(billing_start, billing_end)
-            if cancelled_last_period or cancelled_at_period:
-                cancelled_period_start = cancelled_period_end.shift(months=-1)
-                total_days = (cancelled_period_end - cancelled_period_start).days
-                left_days = (cancelled_period_end - cancelled_at).days
-
-                # There is a small breach in security for cancelling on the same
-                # day as the addon is subscribed
-                # At those occurences we'll charge for a single day after 4 hours of usage
-                if arrow.get(self.created_at).shift(hours=4) < self.cancelled_at \
-                        and self.get_trial_days_left(self.cancelled_at) == 0:
-                    left_days -= 1
-                charged_for -= Decimal(left_days) / Decimal(total_days)
-
-            # Refunds can happen a few months later, reduce those months from charge
-            if cancelled_period_end < billing_end:
-                charged_for -= len(list(arrow.Arrow.range('month', billing_start, billing_end.shift(days=-1))))
-
-        self.billed_to = billing_end.floor('day').datetime
-        # Refunds will happen manually, save last billing date outside
-        if save and charged_for > 0:
-            self.save()
-
-        charge_due = (self.addon.monthly_price * charged_for).quantize(Decimal('.01'), ROUND_HALF_UP)
-        return billing_start, billing_end, charge_due

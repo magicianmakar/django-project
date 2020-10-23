@@ -1,4 +1,5 @@
 {% load perms_helper addons %}
+{% load addons_helper %}
 
 <div class="col-lg-4">
     <div class="ibox">
@@ -25,13 +26,19 @@
             <div class="row">
                 <div class="col-md-12 text-left">
                     <h3 class="m-b-none m-t-lg addon-h3">{{ item.title }}</h5>
-                    <p class="addon-h4 m-b-heigh m-t-xs">{{ item.short_description | safe }}</p>
+                    <p class="addon-h4 m-b-heigh m-t-xs">{{ item.short_description|safe }}</p>
                 </div>
             </div>
 
+            {% with billing=item.billings|for_user:user|first %}
             <div class="row m-t-md">
                 <div class="col-xs-6 text-left">
-                    <span class="addon-price">${{ item.monthly_price }}</span><span class="addon-unit">/mo</span>
+                    {% if billing.user_price.price_descriptor %}
+                    <span class="addon-price">{{ billing.user_price.price_descriptor }}</span>
+                    {% else %}
+                    <span class="addon-price">{{ billing.user_price.price_prefix }}</span>
+                    <span class="addon-unit">{{ billing.user_price.price_sufix }}</span>
+                    {% endif %}
                 </div>
                 <div class="col-xs-6 text-right">
                     <a href="{%  url 'addons.details_view' slug=item.slug %}">
@@ -39,16 +46,19 @@
                     </a>
                 </div>
             </div>
+            {% if billing.trial_days_left %}
             <div class="row">
                 <div class="col-md-6 text-left compare-at-color">
                    <!-- Uncomment When discount code is added <span class="addon-price">${{ item.monthly_price }}</span><span class="addon-unit">/mo</span>-->
                 </div>
                 {% if item|trial_days_left:user %}
                 <div class="col-md-6 text-right">
-                    <p class="m-t-xs addon-h4">{{ item|trial_days_left:user }}-Day Free Trial</p>
+                    <p class="m-t-xs addon-h4">{{ billing.trial_days_left }}-Day Free Trial</p>
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
+            {% endwith %}
         </div>
 </div>
 </div>

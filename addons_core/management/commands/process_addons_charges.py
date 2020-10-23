@@ -1,13 +1,13 @@
 import argparse
 
 import arrow
-from django.db.models import F, Prefetch
+from django.db.models import Prefetch
 from django.contrib.auth.models import User
 
 from lib.exceptions import capture_exception
 from shopified_core.management import DropifiedBaseCommand
 from addons_core.models import AddonUsage
-from addons_core.utils import get_stripe_subscription, add_stripe_subscription_item, charge_stripe_first_time
+from addons_core.utils import create_stripe_subscription, update_stripe_subscription
 
 
 class Command(DropifiedBaseCommand):
@@ -30,55 +30,36 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('today', nargs='?', type=arrow_date, default=arrow.get())
 
     def start_command(self, *args, **options):
-        users = User.objects.exclude(
-            addonusage__billed_to__gte=F('addonusage__cancelled_at'),
-            addonusage__cancelled_at__isnull=False,
+        today = options['today'].date()
+        prev_day = options['today'].shift(days=-1).date()
+
+        # Addons that change prices between months in stripe will make that change
+        # before upcomming invoice is create
+        users = User.objects.filter(
+            addonusage__next_billing__range=(prev_day, today),
+            addonusage__cancelled_at__isnull=True,
         ).distinct()
-        addon_usages = AddonUsage.objects.exclude(
-            billed_to__gte=F('cancelled_at'),
-            cancelled_at__isnull=False,
+        addon_usages = AddonUsage.objects.filter(
+            next_billing__range=(prev_day, today),
+            cancelled_at__isnull=True,
         )
 
-        if options['today'].ceil('month').day == options['today'].day:
-            # Some months have lesser days
-            addon_usages = addon_usages.filter(interval_day__gte=options['today'].day)
-            users = users.filter(addonusage__interval_day__gte=options['today'].day)
-        else:
-            addon_usages = addon_usages.filter(interval_day=options['today'].day)
-            users = users.filter(addonusage__interval_day=options['today'].day)
-
-        # Process only subscribed addons. Search must be equal for "user.addonusages"
-        users = users.prefetch_related(Prefetch('addonusage_set', addon_usages, to_attr='addon_usages'))
+        users = users.prefetch_related(Prefetch('addonusage_set', addon_usages, to_attr='addon_subscriptions'))
         if options['user_id']:
             users = users.filter(id=options['user_id'])
 
         for user in users.all():
             if user.is_stripe_customer():
-                stripe_subscription = get_stripe_subscription(user)
-
-                for addon_usage in user.addon_usages:
-                    first_payment = addon_usage.billed_to is None
+                for addon_usage in user.addon_subscriptions:
                     try:
-                        start, end, latest_charge = addon_usage.get_latest_charge(today_date=options['today'], save=False)
-                        # Negative charge can be due prorated cancellation after billing day
-                        if latest_charge <= 0:
-                            continue
+                        if not addon_usage.stripe_subscription_item_id:
+                            subscription_item = create_stripe_subscription(addon_usage)
 
-                        if first_payment:
-                            added = charge_stripe_first_time(addon_usage)
                         else:
-                            added = add_stripe_subscription_item(
-                                stripe_subscription=stripe_subscription,
-                                amount=latest_charge,
-                                addon_usage=addon_usage,
-                                period={
-                                    "end": end.floor('day').timestamp,
-                                    "start": start.floor('day').timestamp,
-                                },
-                            )
+                            subscription_item = update_stripe_subscription(addon_usage)
 
-                        if added:
-                            addon_usage.save()
+                        if subscription_item is None:
+                            raise Exception(f'<AddonUsage: {addon_usage.id}> without subscription')
 
                     except:
                         capture_exception()

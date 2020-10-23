@@ -2,23 +2,23 @@ import re
 from urllib.parse import parse_qs, urlparse
 
 from django.template.defaultfilters import slugify
-from django.utils import timezone
+from django.db.models import Q
 
 from product_common.lib.views import upload_image_to_aws
 
 from lib.exceptions import capture_exception
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import safe_float, safe_int, safe_str
+from shopified_core.utils import safe_str
 
-from .models import Addon, AddonUsage, Category
-from .utils import cancel_addon_subscription
+from .models import Category, Addon, AddonBilling, AddonUsage
+from .utils import cancel_addon_usages
 
 
 class AddonsApi(ApiResponseMixin):
 
     def post_add(self, request, user, data):
-        if request.user.can('addons_edit.use'):
+        if not request.user.can('addons_edit.use'):
             raise permissions.PermissionDenied()
 
         title = safe_str(data.get('title')).strip()
@@ -36,7 +36,7 @@ class AddonsApi(ApiResponseMixin):
         })
 
     def post_edit(self, request, user, data):
-        if request.user.can('addons_edit.use'):
+        if not request.user.can('addons_edit.use'):
             raise permissions.PermissionDenied()
 
         addon = Addon.objects.get(id=data['addon-id'])
@@ -44,8 +44,6 @@ class AddonsApi(ApiResponseMixin):
         addon.short_description = data['addon-short']
         addon.description = data['addon-description']
         addon.faq = data['addon-faq']
-        addon.monthly_price = safe_float(data['addon-price'])
-        addon.trial_period_days = safe_int(data['addon-trial-days'])
         addon.hidden = data['addon-status'] == 'draft'
 
         categories_ids = data['addon-categories'].split(',')
@@ -112,26 +110,39 @@ class AddonsApi(ApiResponseMixin):
         return self.api_success()
 
     def post_install(self, request, user, data):
-        addon = Addon.objects.get(id=data['addon'])
+        billing = AddonBilling.objects.select_related('addon').get(id=data['billing'])
 
-        if addon.action_url:
-            return self.api_success({'redirect_url': addon.action_url})
+        if billing.addon.action_url:
+            return self.api_success({'redirect_url': billing.addon.action_url})
 
         if not user.profile.plan.support_addons:
             return self.api_error("Your plan doesn't support adding Addons", 422)
 
-        if user.profile.addons.filter(id=addon.id).exists():
+        if user.profile.addons.filter(id=billing.addon.id).exists():
             return self.api_error("Addon is already installed on your account", 422)
 
         if user.is_subuser:
             return self.api_error("Sub users can not install Addons", 403)
 
-        AddonUsage.objects.create(
-            user=user,
-            addon=addon,
+        if billing.addon.variant_from or billing.addon.variants.exists():
+            variations_id = billing.addon.variant_from_id or billing.addon.id
+
+            variations = Addon.objects.filter(
+                Q(variant_from=variations_id) | Q(id=variations_id)
+            )
+            cancel_addon_usages(AddonUsage.objects.filter(
+                user=user,
+                billing__addon__in=variations,
+                cancelled_at__isnull=True,
+            ))
+
+        AddonUsage.objects.get_or_create(
+            user=user.models_user,
+            billing=billing,
+            cancelled_at__isnull=True
         )
 
-        user.profile.addons.add(addon)
+        user.profile.addons.add(billing.addon)
 
         return self.api_success()
 
@@ -144,16 +155,10 @@ class AddonsApi(ApiResponseMixin):
         if user.is_subuser:
             return self.api_error("Sub users can not install Addons", 403)
 
-        AddonUsage.objects.filter(
+        cancel_addon_usages(AddonUsage.objects.filter(
             user=user,
-            addon=addon,
-            is_active=True,
-        ).update(
-            is_active=False,
-            cancelled_at=timezone.now()
-        )
-
-        if cancel_addon_subscription(user):
-            user.profile.addons.remove(addon)
+            billing__addon=addon,
+            cancelled_at__isnull=True,
+        ))
 
         return self.api_success()

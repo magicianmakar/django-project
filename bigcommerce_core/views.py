@@ -543,6 +543,12 @@ class ProductMappingView(DetailView):
         context['product_suppliers'] = self.get_product_suppliers(product)
         context['current_supplier'] = current_supplier = self.get_current_supplier(product)
         context['variants_map'] = self.get_variants_map(bigcommerce_product, product, current_supplier)
+        context['breadcrumbs'] = [
+            {'title': 'Products', 'url': reverse('bigcommerce:products_list')},
+            {'title': product.store.title, 'url': f"{reverse('bigcommerce:products_list')}?store={product.store.id}"},
+            {'title': product.title, 'url': reverse('bigcommerce:product_detail', kwargs=[product.id])},
+            'Variants Mapping',
+        ]
 
         return context
 
