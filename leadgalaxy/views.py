@@ -1466,6 +1466,30 @@ def webhook(request, provider, option):
             else:
                 return HttpResponse(f':x: Flag not found *{flag}*')
 
+        elif request.POST['command'] == '/record-transaction':
+            args = [i.strip() for i in request.POST['text'].split(' ') if i.strip()]
+            if not args or len(args) != 2:
+                return HttpResponse(':x: Usage: /record-transaction <email> <transaction id>')
+
+            email, transaction_id = args
+
+            try:
+                user_id = safe_int(email, None)
+                if user_id is not None:
+                    user = User.objects.get(id=user_id)
+                else:
+                    user = User.objects.get(email__iexact=email)
+            except:
+                return HttpResponse(f':x: User not found {email} (or duplicate accounts) {request_from.email}')
+
+            pls_orders = PLSOrder.objects.filter(user=user).filter(Q(stripe_transaction_id='') | Q(stripe_transaction_id=None))
+            pls_orders_count = pls_orders.count()
+            pls_orders_amount = sum([i.amount for i in pls_orders]) * 0.01
+
+            pls_orders.update(stripe_transaction_id=transaction_id)
+
+            return HttpResponse(f':ok: User {user.email} transactions updated for {pls_orders_count} Orders, Total ${pls_orders_amount}')
+
         else:
             return HttpResponse(':x: Unknown Command: {}'.format(request.POST['command']))
 
