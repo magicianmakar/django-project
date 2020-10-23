@@ -899,7 +899,7 @@ def get_bigcommerce_store_feed(store):
 def generate_product_feed(feed_status, nocache=False, revision=None):
     store = feed_status.store
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         return False
 
     feed_start = time.time()
@@ -949,7 +949,7 @@ def generate_product_feed(feed_status, nocache=False, revision=None):
 def generate_chq_product_feed(feed_status, nocache=False):
     store = feed_status.store
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         return False
 
     feed_start = time.time()
@@ -996,7 +996,7 @@ def generate_chq_product_feed(feed_status, nocache=False):
 def generate_woo_product_feed(feed_status, nocache=False, revision=None):
     store = feed_status.store
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         return False
 
     feed_start = time.time()
@@ -1046,7 +1046,7 @@ def generate_woo_product_feed(feed_status, nocache=False, revision=None):
 def generate_gear_product_feed(feed_status, nocache=False):
     store = feed_status.store
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         return False
 
     feed_start = time.time()
@@ -1092,7 +1092,7 @@ def generate_gear_product_feed(feed_status, nocache=False):
 def generate_gkart_product_feed(feed_status, nocache=False, revision=None):
     store = feed_status.store
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         return False
 
     feed_start = time.time()
@@ -1142,7 +1142,7 @@ def generate_gkart_product_feed(feed_status, nocache=False, revision=None):
 def generate_bigcommerce_product_feed(feed_status, nocache=False, revision=None):
     store = feed_status.store
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         return False
 
     feed_start = time.time()

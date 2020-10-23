@@ -131,7 +131,7 @@ def get_menu_item_data():
         'marketing-feeds': {
             'title': 'Marketing Feeds',
             'url_name': 'product_feeds',
-            'permissions': ['product_feeds.use'],
+            'permissions': ['product_feeds.use', 'google_product_feed.use'],
             'match': re.compile(r'(/\w+)?/marketing/feeds'),
         },
         'tubehunt': {

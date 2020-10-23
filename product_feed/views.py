@@ -88,7 +88,7 @@ def get_product_feed(request, *args, **kwargs):
 
 
 def shopify_product_feeds(request):
-    if not request.user.can('product_feeds.use'):
+    if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
         return render(request, 'upgrade.html')
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
@@ -176,7 +176,7 @@ def get_shopify_product_feed(request, store_id, revision=None):
     except (Exception, AssertionError, ShopifyStore.DoesNotExist):
         raise Http404('Feed not found')
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         raise Http404('Product Feeds')
 
     nocache = request.GET.get('nocache') == '1'
@@ -200,7 +200,7 @@ def get_shopify_product_feed(request, store_id, revision=None):
 
 
 def chq_product_feeds(request):
-    if not request.user.can('product_feeds.use'):
+    if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
         return render(request, 'commercehq/upgrade.html')
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
@@ -286,7 +286,7 @@ def get_chq_product_feed(request, store_id, revision=None):
     except (Exception, AssertionError, CommerceHQStore.DoesNotExist):
         raise Http404('Feed not found')
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         raise Http404('Product Feeds')
 
     nocache = request.GET.get('nocache') == '1'
@@ -309,7 +309,7 @@ def get_chq_product_feed(request, store_id, revision=None):
 
 
 def woo_product_feeds(request):
-    if not request.user.can('product_feeds.use'):
+    if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
         return render(request, 'woocommerce/upgrade.html')
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
@@ -395,7 +395,7 @@ def get_woo_product_feed(request, store_id, revision=None):
     except (Exception, AssertionError, WooStore.DoesNotExist):
         raise Http404('Feed not found')
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         raise Http404('Product Feeds')
 
     nocache = request.GET.get('nocache') == '1'
@@ -418,7 +418,7 @@ def get_woo_product_feed(request, store_id, revision=None):
 
 
 def gear_product_feeds(request):
-    if not request.user.can('product_feeds.use'):
+    if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
         return render(request, 'gearbubble/upgrade.html')
 
     if request.method == 'POST':
@@ -480,7 +480,7 @@ def get_gear_product_feed(request, store_id, revision=None):
     except (Exception, AssertionError, GearBubbleStore.DoesNotExist):
         raise Http404('Feed not found')
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         raise Http404('Product Feeds')
 
     nocache = request.GET.get('nocache') == '1'
@@ -503,7 +503,7 @@ def get_gear_product_feed(request, store_id, revision=None):
 
 
 def gkart_product_feeds(request):
-    if not request.user.can('product_feeds.use'):
+    if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
         return render(request, 'groovekart/upgrade.html')
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
@@ -589,7 +589,7 @@ def get_gkart_product_feed(request, store_id, revision=None):
     except (Exception, AssertionError, GrooveKartStore.DoesNotExist):
         raise Http404('Feed not found')
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         raise Http404('Product Feeds')
 
     nocache = request.GET.get('nocache') == '1'
@@ -612,7 +612,7 @@ def get_gkart_product_feed(request, store_id, revision=None):
 
 
 def bigcommerce_product_feeds(request):
-    if not request.user.can('product_feeds.use'):
+    if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
         return render(request, 'bigcommerce/upgrade.html')
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
@@ -698,7 +698,7 @@ def get_bigcommerce_product_feed(request, store_id, revision=None):
     except (Exception, AssertionError, BigCommerceStore.DoesNotExist):
         raise Http404('Feed not found')
 
-    if not store.user.can('product_feeds.use'):
+    if not store.user.can('product_feeds.use') and not store.user.can('google_product_feed.use'):
         raise Http404('Product Feeds')
 
     nocache = request.GET.get('nocache') == '1'
