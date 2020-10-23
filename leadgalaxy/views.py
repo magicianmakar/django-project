@@ -1493,6 +1493,7 @@ def webhook(request, provider, option):
             pls_orders = PLSOrder.objects.filter(user=user).filter(Q(stripe_transaction_id='') | Q(stripe_transaction_id=None))
             for i in pls_orders:
                 pls_orders_amount = pls_orders_amount + (i.amount * 0.01)
+                pls_orders_count += 1
                 pls_orders_id.append(i.id)
 
                 if pls_orders_amount >= amount:
