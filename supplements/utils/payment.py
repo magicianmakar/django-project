@@ -17,13 +17,13 @@ def complete_payment(transaction_id, pls_order_id):
     This function is suppposed to run in a queue.
     """
     pls_order = PLSOrder.objects.get(id=pls_order_id)
-    # TODO: AUTHNET ROLLBACK uncomment below
-    # assert transaction_id, 'Payment processing failed'
-    if transaction_id:
-        pls_order.status = pls_order.PAID
-        pls_order.payment_date = timezone.now()
-        pls_order.stripe_transaction_id = transaction_id
-        pls_order.save()
+    if not transaction_id:
+        raise Exception('Payment processing failed')
+
+    pls_order.status = pls_order.PAID
+    pls_order.payment_date = timezone.now()
+    pls_order.stripe_transaction_id = transaction_id
+    pls_order.save()
     return pls_order
 
 
@@ -158,19 +158,17 @@ class Util:
                     sku=line['sku'],  # Product SKU
                 )
 
-            # TODO: AUTHNET ROLLBACK
-            transaction_id = None
-            # auth_net_line = dict(
-            #     id=pls_order.id,
-            #     name=f'Process Order # {pls_order.id}',
-            #     quantity=1,
-            #     unit_price=amount,
-            # )
+            auth_net_line = dict(
+                id=pls_order.id,
+                name=f'Process Order # {pls_order.id}',
+                quantity=1,
+                unit_price=amount,
+            )
 
-            # transaction_id = user.authorize_net_customer.charge(
-            #     amount,
-            #     auth_net_line,
-            # )
+            transaction_id = user.authorize_net_customer.charge(
+                amount,
+                auth_net_line,
+            )
 
             # TODO: Add to queue.
             pls_order = complete_payment(transaction_id, pls_order.id)
