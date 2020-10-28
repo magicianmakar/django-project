@@ -8,7 +8,7 @@
 {% block main-container %}
     <div class="row m-b-xl">
         <div class="col-md-8 col-md-offset-2 text-center">
-            <h1 class="text-bold">Edit <a href="{% url 'addons.details_view' slug=object.slug %}">{{ object.title }}</a> Addon</h1>
+            <h1 class="text-bold">Edit <a href="{% url 'addons.details_view' pk=object.id slug=object.slug %}">{{ object.title }}</a> Addon</h1>
         </div>
     </div>
 
@@ -125,11 +125,11 @@
     <div class="row m-t-xl">
         <div class="form-group col-md-4 col-md-offset-2">
             <label for="addon-categories">Addon upsell link (auto-install on 1st login)</label>
-            <div> <a href="{% url 'addons.upsell_install' slug=object.slug %}?redirect={url]">{% url 'addons.upsell_install' slug=object.slug %}?redirect={url]</a></div>
+            <div> <a href="{% url 'addons.upsell_install' pk=object.id slug=object.slug %}?redirect={url]">{% url 'addons.upsell_install' pk=object.id slug=object.slug %}?redirect={url]</a></div>
         </div>
         <div class="form-group col-md-4">
             <label for="addon-categories">Addon upsell link for logined users (requires login)</label>
-            <div> <a href="{% url 'addons.upsell_install_logined' slug=object.slug %}?redirect={url]">{% url 'addons.upsell_install_logined' slug=object.slug %}?redirect={url]</a></div>
+            <div> <a href="{% url 'addons.upsell_install_loggedin' pk=object.id slug=object.slug %}?redirect={url]">{% url 'addons.upsell_install_loggedin' pk=object.id slug=object.slug %}?redirect={url]</a></div>
         </div>
     </div>
 

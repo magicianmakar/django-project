@@ -80,7 +80,7 @@
 
                     {% if user|can:'addons_edit.use' %}
                     <div class="addon-edit m-t-lg">
-                        <a href="{% url 'addons.edit_view' slug=object.slug %}"
+                        <a href="{% url 'addons.edit_view' pk=object.id %}"
                            class="btn btn-outline btn-default btn-lg btn-block">
                             <i class="fa fa-pencil"></i> Edit
                         </a>

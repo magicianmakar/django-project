@@ -1,8 +1,10 @@
+{% load addons_helper %}
+
 <div class="upsell-backdrop"></div>
 <div class="upsell">
     <div class="purchase">
         <div>
-            <a href="{{ upgrade_url|default:'/user/profile#plan' }}" class="btn btn-primary">Upgrade</a>
+            <a href="{{ addon_id|addon_permalink }}" class="btn btn-primary">Upgrade</a>
             <span>{{ message }}</span>
         </div>
     </div>

@@ -1,4 +1,5 @@
 from django.contrib import admin, messages
+from django.utils.html import format_html
 
 from adminsortable2.admin import SortableAdminMixin
 from adminsortable2.admin import SortableInlineAdminMixin
@@ -20,7 +21,6 @@ class PreventBillingDeleteMixin:
                 not obj or '/delete' not in request.path):
             return True
 
-        print('has_delete_permission', obj, '--', request.POST.get('action'))
         obj_ids = request.POST.getlist('_selected_action') or [obj.id]
         not_allowed_objects = self.model.objects.filter(
             id__in=obj_ids, **self.delete_extra_search
@@ -72,6 +72,7 @@ class AddonAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
     delete_extra_search = {'billings__subscriptions__isnull': False}
     delete_not_allowed_name = 'title'
 
+    change_form_template = 'addons/admin/addon_change_form.html'
     list_display = (
         'title',
         'slug',
@@ -79,6 +80,7 @@ class AddonAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
         'hidden',
         'created_at',
         'updated_at',
+        'link_actions',
     )
     prepopulated_fields = {'slug': ('title',)}
     list_filter = ('hidden', 'created_at', 'updated_at')
@@ -91,6 +93,43 @@ class AddonAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
         if obj:
             return self.readonly_fields
         return self.readonly_fields + ('stripe_product_id',)
+
+    def link_actions(self, obj):
+        permalink = f"""
+            <a href="#" onclick="this.children[0].style.display='';
+                                 this.children[0].select();
+                                 document.execCommand('copy');
+                                 this.children[0].style.display='none'">
+                Copy Permalink
+                <input type="text" style="display: none;"
+                       value="{obj.permalink}">
+            </a>
+        """
+
+        upsell_anonymous = f"""
+            <a href="#" onclick="this.children[0].style.display='';
+                                 this.children[0].select();
+                                 document.execCommand('copy');
+                                 this.children[0].style.display='none'">
+                Copy Upsell Sign Up
+                <input type="text" style="display: none;"
+                       value="{obj.upsell_anonymous}">
+            </a>
+        """
+
+        upsell_user = f"""
+            <a href="#" onclick="this.children[0].style.display='';
+                                 this.children[0].select();
+                                 document.execCommand('copy');
+                                 this.children[0].style.display='none'">
+                Copy Upsell Logged In
+                <input type="text" style="display: none;"
+                       value="{obj.upsell_user}">
+            </a>
+        """
+        return format_html(' - '.join([permalink, upsell_anonymous, upsell_user]))
+    link_actions.allow_tags = True
+    link_actions.short_description = 'Actions'
 
 
 class TrialsFilter(admin.SimpleListFilter):

@@ -5,8 +5,10 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
+from django.shortcuts import reverse
 
 from leadgalaxy.models import AppPermission
+from shopified_core.utils import app_link
 
 INTERVAL_CHOICES = ((0, 'Day'), (1, 'Week'), (2, 'Month'), (3, 'Year'))
 INTERVAL_ARROW = {0: 'day', 1: 'week', 2: 'month', 3: 'year'}
@@ -75,6 +77,21 @@ class Addon(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def permalink(self):
+        return app_link(reverse('addons.details_view',
+                                kwargs={'pk': self.id, 'slug': self.slug}))
+
+    @property
+    def upsell_anonymous(self):
+        return app_link(reverse('addons.upsell_install',
+                                kwargs={'pk': self.id, 'slug': self.slug}))
+
+    @property
+    def upsell_user(self):
+        return app_link(reverse('addons.upsell_install_loggedin',
+                                kwargs={'pk': self.id, 'slug': self.slug}))
 
     def save(self, *args, **kwargs):
         if not self.addon_hash:

@@ -1,6 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, TemplateView
@@ -50,8 +50,23 @@ class AddonsDetailsView(BaseDetailView, BaseTemplateView):
     model = Addon
     template_name = 'addons/addons_details.html'
 
-    def get_context_data(self, **kwargs: dict) -> dict:
+    def dispatch(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        if self.object.slug != kwargs.get('slug'):
+            return redirect('addons.details_view',
+                            permanent=True,
+                            pk=self.object.id,
+                            slug=self.object.slug)
 
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_object(self, queryset=None):
+        try:
+            return self.object
+        except AttributeError:
+            return super().get_object(queryset)
+
+    def get_context_data(self, **kwargs: dict) -> dict:
         permission_count = 0
         for p in self.object.permissions.all():
             if self.request.user.can(p.name):
@@ -163,15 +178,7 @@ class UpsellInstall(BaseDetailView, TemplateView):
         return ctx
 
 
-class UpsellInstallLogined(BaseDetailView, TemplateView):
+@method_decorator(login_required, name='dispatch')
+class UpsellInstallLoggedIn(BaseDetailView, TemplateView):
     model = Addon
-    template_name = 'addons/upsell_install_logined.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        response = super().dispatch(request, *args, **kwargs)
-        return response
-
-    def get_context_data(self, **kwargs: dict) -> dict:
-        ctx = super().get_context_data(**kwargs)
-        return ctx
+    template_name = 'addons/upsell_install_loggedin.html'

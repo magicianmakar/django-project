@@ -1,8 +1,9 @@
 from django import template
 from django.db.models import Prefetch, Sum, F, DurationField
 from django.db.models.functions import Coalesce, Now
+from django.urls import reverse
 
-from addons_core.models import AddonUsage
+from addons_core.models import Addon, AddonUsage
 
 register = template.Library()
 
@@ -42,3 +43,11 @@ def for_user(addon_billings, user):
             addon_billing.trial_days_left = trial_days_left if trial_days_left > 0 else 0
 
     return addon_billings
+
+
+@register.filter(takes_context=True)
+def addon_permalink(addon_id):
+    try:
+        return Addon.objects.get(id=addon_id).permalink
+    except:
+        return f"{reverse('user_profile')}#plan"

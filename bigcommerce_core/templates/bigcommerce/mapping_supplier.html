@@ -26,7 +26,7 @@
            <div id="tab-1" class="tab-pane active">
                <div class="panel-body">
                 {% if upsell %}
-                {% include "common/partial/upsell.html" with message="Add Advanced Mapping to your Plan" only %}
+                {% include "common/partial/upsell.html" with addon_id=7 message="Add Advanced Mapping to your Plan" only %}
                 {% endif %}
                 <form id="mapping-form">
                     <table class="table table-borderd table-compact">
@@ -318,4 +318,3 @@
 {% endcompress %}
 
 {% endblock %}
-

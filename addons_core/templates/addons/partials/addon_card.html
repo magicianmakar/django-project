@@ -3,7 +3,7 @@
 
 <div class="col-lg-4">
     <div class="ibox">
-        <a href="{%  url 'addons.details_view' slug=item.slug %}">
+        <a href="{%  url 'addons.details_view' pk=item.id slug=item.slug %}">
             <img class="img-responsive addon-image" width="100%"
                  {% if item.banner_url %}
                     src="{{ item.banner_url }}"
@@ -19,7 +19,7 @@
         -->
         {% if user|can:'addons_edit.use' %}
         <div class="col-md-12 staff-edit-btn">
-            <a href="{% url 'addons.edit_view' item.slug %}" class="btn btn-sm btn-outline btn-default"><i class="fa fa-edit"></i> </a>
+            <a href="{% url 'addons.edit_view' pk=item.id %}" class="btn btn-sm btn-outline btn-default"><i class="fa fa-edit"></i> </a>
         </div>
     {% endif %}
         <div class="card-body add-on-color">
@@ -41,7 +41,7 @@
                     {% endif %}
                 </div>
                 <div class="col-xs-6 text-right">
-                    <a href="{%  url 'addons.details_view' slug=item.slug %}">
+                    <a href="{%  url 'addons.details_view' pk=item.id slug=item.slug %}">
                         <span class="trial-days addon-h4">Add-on Now</span>
                     </a>
                 </div>

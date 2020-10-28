@@ -514,7 +514,7 @@
             {% else %}
             <div class="panel-body">
                 <h3>You do not have permission to Import Reviews.</h3>
-            </div>            
+            </div>
             {% endif %}
         </div>
 
@@ -522,7 +522,7 @@
         <div id="tab-7" class="tab-pane">
             <div class="panel-body" style="min-height:300px">
                 {% if upsell_alerts %}
-                {% include "common/partial/upsell.html" with message="Add Alerts to your Plan" only %}
+                {% include "common/partial/upsell.html" with addon_id=20 message="Add Alerts to your Plan" only %}
                 {% endif %}
                 <form id="product-config-form" role="form">
                     <input type="hidden" name="product" value="{{product.id}}" />

@@ -3,6 +3,7 @@ from urllib.parse import parse_qs, urlparse
 
 from django.template.defaultfilters import slugify
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 
 from product_common.lib.views import upload_image_to_aws
 
@@ -110,7 +111,13 @@ class AddonsApi(ApiResponseMixin):
         return self.api_success()
 
     def post_install(self, request, user, data):
-        billing = AddonBilling.objects.select_related('addon').get(id=data['billing'])
+        # TODO: remove this when we allow multiple billing options for addons
+        if 'billing' not in data:
+            billing = get_object_or_404(Addon, id=data['addon']).billings.first()
+            if billing is None:
+                raise permissions.PermissionDenied()
+        else:
+            billing = AddonBilling.objects.select_related('addon').get(id=data['billing'])
 
         if billing.addon.action_url:
             return self.api_success({'redirect_url': billing.addon.action_url})

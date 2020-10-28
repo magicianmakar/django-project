@@ -22,7 +22,7 @@
         {% for item in user_addons %}
             <div class="col-lg-4">
                 <div class="ibox">
-                    <a href="{%  url 'addons.details_view' slug=item.slug %}">
+                    <a href="{%  url 'addons.details_view' pk=item.id slug=item.slug %}">
                         <img class="img-responsive addon-image" width="100%"
                                 {% if item.banner_url %}
                                 src="{{ item.banner_url }}"

@@ -1,0 +1,48 @@
+{% extends "admin/change_form.html" %}
+{% load i18n template_helper %}
+
+{% block submit_buttons_bottom %}
+{{ original }}
+    <div class="submit-row">
+        <a href="#"
+           name="_copypermalink"
+           class="button closelink"
+           onclick="this.children[0].style.display='';
+                    this.children[0].select();
+                    document.execCommand('copy');
+                    this.children[0].style.display='none';
+                    return false;">
+           {% trans 'Copy Permalink' %}
+            <input type="text" style="display: none;"
+                   value="{{ original.permalink }}">
+        </a>
+
+        <a href="#"
+           name="_copypermalink"
+           class="button closelink"
+           onclick="this.children[0].style.display='';
+                    this.children[0].select();
+                    document.execCommand('copy');
+                    this.children[0].style.display='none';
+                    return false;">
+           {% trans 'Copy Upsell Sign Up' %}
+            <input type="text" style="display: none;"
+                   value="{{ original.upsell_anonymous }}">
+        </a>
+
+        <a href="#"
+           name="_copypermalink"
+           class="button closelink"
+           onclick="this.children[0].style.display='';
+                    this.children[0].select();
+                    document.execCommand('copy');
+                    this.children[0].style.display='none';
+                    return false;">
+           {% trans 'Copy Upsell Logged In' %}
+            <input type="text" style="display: none;"
+                   value="{{ original.upsell_user }}">
+        </a>
+    </div>
+
+    {{ block.super }}
+{% endblock %}

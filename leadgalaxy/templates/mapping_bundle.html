@@ -26,7 +26,7 @@
            <div id="tab-1" class="tab-pane active">
                <div class="panel-body">
                     {% if upsell %}
-                    {% include "common/partial/upsell.html" with message="Add Bundles to your Plan" only %}
+                    {% include "common/partial/upsell.html" with addon_id=6 message="Add Bundles to your Plan" only %}
                     {% endif %}
                     <div id="bundle-mapping-entry">
                         <bundle-mapping-table :variants="variants"></bundle-mapping-table>
@@ -79,4 +79,3 @@
 {% endcompress %}
 
 {% endblock %}
-
