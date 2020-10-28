@@ -37,7 +37,6 @@
 {% block submit_buttons_bottom %}
 <div class="submit-row">
     <a href="{% url 'admin:supplements_userunpaidorder_changelist' %}" class="closelink">Close</a>
-    <a href="{% url 'admin:charge-customer' original.id %}" class="button deletelink" style="padding: 10px 15px; float: right; margin: 0 0 0 5px;">Charge Customer in Multiple Transactions</a>
     <a href="{% url 'admin:charge-customer-all' original.id %}" class="button" style="padding: 10px 15px; float: right; margin: 0 0 0 5px;">Charge Customer in Single Transaction</a>
 </div>
 {% endblock %}

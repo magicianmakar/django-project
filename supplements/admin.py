@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import csv
 from decimal import Decimal
 
@@ -340,7 +339,6 @@ class UserUnpaidOrderAdmin(admin.ModelAdmin):
         from django.urls import path
         urls = super().get_urls()
         my_urls = [
-            path('charge-customer/<int:user_id>/', self.charge_customer, name="charge-customer"),
             path('charge-customer-all/<int:user_id>/', self.charge_customer_all, name="charge-customer-all"),
         ]
         return my_urls + urls
@@ -358,66 +356,20 @@ class UserUnpaidOrderAdmin(admin.ModelAdmin):
 
         return True
 
-    def charge_customer(self, request, user_id):
-        user = UserUnpaidOrder.objects.get(pk=user_id)
-        if not self.validate_customer(request, user):
-            return HttpResponseRedirect(reverse('admin:supplements_userunpaidorder_changelist'))
-
-        def get_item_full_name(ids):
-            return f"Orders: {', '.join(ids)}"
-
-        def get_basic_line_item():
-            return dict(id=[], name='', quantity=1, unit_price=Decimal('0'))
-
-        line_items = []
-        line_item = get_basic_line_item()
-        for order in user.unpaid_orders:
-            # Authorize.net line item name limits to 30 characters
-            line_item_name = get_item_full_name(line_item['id'] + [order.order_number])
-            if len(line_item_name) > 30:
-                line_items.append(line_item)
-                line_item = get_basic_line_item()
-
-            line_item['id'].append(order.order_number)
-            line_item['unit_price'] += order.amount
-
-        error = False
-        for line_item in line_items:
-            ids = line_item['id']
-            line_item['id'] = ';'.join(ids)
-            line_item['name'] = get_item_full_name(ids)
-
-            transaction_id = user.authorize_net_customer.charge(
-                line_item['unit_price'],
-                line_item
-            )
-
-            error = error and True or not transaction_id
-            if transaction_id:
-                PLSOrder.objects.filter(id__in=ids).update(
-                    stripe_transaction_id=transaction_id,
-                    payment_date=timezone.now()
-                )
-
-        if not error:
-            self.message_user(request, f'Charged customer {user.email}')
-        else:
-            self.message_user(request, f'Some attempts to charge have failed for {user.email}', level=messages.ERROR)
-
-        return HttpResponseRedirect(reverse('admin:supplements_userunpaidorder_changelist'))
-
     def charge_customer_all(self, request, user_id):
         user = UserUnpaidOrder.objects.get(pk=user_id)
         if not self.validate_customer(request, user):
             return HttpResponseRedirect(reverse('admin:supplements_userunpaidorder_changelist'))
 
+        order_numbers = []
         order_ids = []
         line_item = dict(id='', name='Past Orders', quantity=1, unit_price=Decimal('0'))
         for order in user.unpaid_orders:
-            order_ids.append(order.order_number)
+            order_numbers.append(order.order_number)
+            order_ids.append(order.id)
             line_item['unit_price'] += order.amount
 
-        line_item['id'] = f"{order_ids[0]}-{order_ids[-1]}"
+        line_item['id'] = f"{order_numbers[0]}-{order_numbers[-1]}"
         transaction_id = user.authorize_net_customer.charge(
             line_item['unit_price'],
             line_item
@@ -428,7 +380,7 @@ class UserUnpaidOrderAdmin(admin.ModelAdmin):
                 stripe_transaction_id=transaction_id,
                 payment_date=timezone.now()
             )
-            self.message_user(request, f'Charged customer {user.email}')
+            self.message_user(request, f"Charged customer {user.email} for Order IDs: {order_ids}")
         else:
             self.message_user(request, f'Error trying to charge customer {user.email}', level=messages.ERROR)
         return HttpResponseRedirect(reverse('admin:supplements_userunpaidorder_changelist'))
