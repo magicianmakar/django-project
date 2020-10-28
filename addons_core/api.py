@@ -119,11 +119,14 @@ class AddonsApi(ApiResponseMixin):
         else:
             billing = AddonBilling.objects.select_related('addon').get(id=data['billing'])
 
-        if billing.addon.action_url:
-            return self.api_success({'redirect_url': billing.addon.action_url})
-
         if not user.profile.plan.support_addons:
             return self.api_error("Your plan doesn't support adding Addons", 422)
+
+        if not user.is_stripe_customer() and not user.profile.from_shopify_app_store():
+            return self.api_error("Your plan doesn't support adding Addons yet", 403)
+
+        if billing.addon.action_url:
+            return self.api_success({'redirect_url': billing.addon.action_url})
 
         if user.profile.addons.filter(id=billing.addon.id).exists():
             return self.api_error("Addon is already installed on your account", 422)

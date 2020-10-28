@@ -64,7 +64,7 @@ def sync_stripe_addon(*, addon=None, product=None):
     """
     if addon:
         data = {
-            'name': addon.title,
+            'name': f"{addon.title} Addon",
             'active': addon.is_active,
             'images': [addon.icon_url] if addon.icon_url else [],
             'type': 'service',
@@ -257,31 +257,43 @@ def create_stripe_subscription(addon_usage):
         if not has_same_interval:
             continue
 
-        subscription_item = stripe.SubscriptionItem.create(
-            subscription=subscription.id,
-            price=addon_usage.next_price.stripe_price_id,
-            quantity=1,
-            proration_behavior='always_invoice',
-            proration_date=subscription.current_period_start,
-            metadata={'addon_usage_id': addon_usage.id},
-        )
-        addon_usage.stripe_subscription_id = subscription.id
-        addon_usage.stripe_subscription_item_id = subscription_item.id
+        try:
+            subscription_item = stripe.SubscriptionItem.create(
+                subscription=subscription.id,
+                price=addon_usage.next_price.stripe_price_id,
+                quantity=1,
+                proration_behavior='always_invoice',
+                proration_date=subscription.current_period_start,
+                metadata={'addon_usage_id': addon_usage.id},
+            )
+
+            addon_usage.stripe_subscription_id = subscription.id
+            addon_usage.stripe_subscription_item_id = subscription_item.id
+        except:
+            continue
+
         break
 
     if subscription_item is None:
-        subscription = stripe.Subscription.create(
-            customer=addon_usage.user.stripe_customer.customer_id,
-            items=[{
-                'price': addon_usage.next_price.stripe_price_id,
-                'quantity': 1,
-                'metadata': {'addon_usage_id': addon_usage.id},
-            }],
-        )
-        subscription_item = subscription['items']['data'][0]
+        try:
+            subscription = stripe.Subscription.create(
+                customer=addon_usage.user.stripe_customer.customer_id,
+                items=[{
+                    'price': addon_usage.next_price.stripe_price_id,
+                    'quantity': 1,
+                    'metadata': {'addon_usage_id': addon_usage.id},
+                }],
+            )
+        except:
+            capture_exception()
+            cancel_addon_usages([addon_usage])
+            return None
 
-        addon_usage.stripe_subscription_id = subscription.id
-        addon_usage.stripe_subscription_item_id = subscription_item.id
+        finally:
+            subscription_item = subscription['items']['data'][0]
+
+            addon_usage.stripe_subscription_id = subscription.id
+            addon_usage.stripe_subscription_item_id = subscription_item.id
 
     addon_usage.next_billing = addon_usage.get_next_billing_date()
     addon_usage.save()

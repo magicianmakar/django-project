@@ -1,4 +1,5 @@
 from django.contrib import admin, messages
+from django.urls import reverse
 from django.utils.html import format_html
 
 from adminsortable2.admin import SortableAdminMixin
@@ -66,6 +67,16 @@ class AddonBillingInline(SortableInlineAdminMixin, admin.TabularInline):
     model = AddonBilling
     extra = 1
 
+    def links(self, instance):
+        if not instance.id:
+            return ''
+
+        url = reverse('admin:addons_core_addonbilling_change', args=(instance.id,))
+        # … or if you want to include other fields:
+        return format_html(u'<a href="{}">See Prices</a>', url)
+
+    readonly_fields = ('links',)
+
 
 @admin.register(Addon)
 class AddonAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
@@ -85,7 +96,7 @@ class AddonAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
     list_filter = ('hidden', 'created_at', 'updated_at')
     search_fields = ('slug',)
-    filter_horizontal = ('categories',)
+    filter_horizontal = ('categories', 'permissions')
     date_hierarchy = 'created_at'
     inlines = (AddonBillingInline,)
 
