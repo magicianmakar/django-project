@@ -89,7 +89,7 @@ def product_alerts(request):
         return HttpResponseRedirect('/woo/')
 
     if not request.user.can('price_changes.use'):
-        return render(request, 'woocommerce/product_alerts.html ', {
+        return render(request, 'woocommerce/product_alerts.html', {
             'upsell': True,
             'product_changes': get_mocked_alert_changes(WooProduct.objects),
             'page': 'product_alerts',
