@@ -13,7 +13,7 @@ from reportlab.pdfgen import canvas
 from reportlab.platypus import Image as report_img
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table
 
-from stripe_subscription.invoices.pdf import STYLES, draw_footer
+from stripe_subscription.invoices.pdf import STYLES, styleN, draw_footer
 
 
 def get_elements(type):
@@ -380,7 +380,7 @@ def get_payment_pdf(order):
     line_data = [['Title', 'SKU', 'Price', 'Total']]
     for i in order.order_items.all():
         line_data.append([
-            i.label.user_supplement.title,
+            Paragraph(i.label.user_supplement.title, styleN),
             i.label.sku,
             f'{i.quantity} x ${i.label.user_supplement.cost_price}',
             "${:.2f}".format((i.amount * i.quantity) / 100.),
