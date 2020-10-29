@@ -1503,6 +1503,17 @@ def webhook(request, provider, option):
 
             PLSOrder.objects.filter(id__in=pls_orders_id).update(stripe_transaction_id=transaction_id)
 
+            AdminEvent.objects.create(
+                user=request_from,
+                event_type='record_transaction',
+                target_user=user,
+                data=json.dumps({
+                    'transaction_id': transaction_id,
+                    'amount': amount,
+                    'pls_orders_amount': pls_orders_amount,
+                    'pls_orders_count': pls_orders_count
+                }))
+
             return HttpResponse(f':ok: User {user.email} transactions updated for {pls_orders_count} Orders, Total ${pls_orders_amount}')
 
         else:
