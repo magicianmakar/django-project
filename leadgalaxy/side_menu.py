@@ -227,7 +227,7 @@ def create_menu(menu_structure, menu_data, request, namespace):
 
             if type(item.get('permissions')) is not bool:
                 permissions = [p for p in item.get('permissions', []) if p not in upsell_permission_exceptions]
-                if not any([has_perm(p) for p in permissions]):
+                if any([not has_perm(p) for p in permissions]):
                     # User doesn't have the permission to access this resource.
                     continue
             else:
