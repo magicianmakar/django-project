@@ -145,7 +145,7 @@ def get_menu_item_data(request):
         'addons': {
             'title': 'Addon Store',
             'url_name': 'addons.list_view',
-            'permissions': request.user.models_user.profile.plan.support_addons,
+            'permissions': request.user.is_authenticated and request.user.models_user.profile.plan.support_addons,
             'match': re.compile(r'(/\w+)?/addon'),
             'is_ns_aware': False,
         },
@@ -165,7 +165,7 @@ def get_menu_item_data(request):
             'title': 'Tools',
             'url_name': 'article-content-page',
             'url_kwargs': {"slug_article": "tools-business-tools"},
-            'permissions': not request.user.models_user.profile.plan.support_addons,
+            'permissions': request.user.is_authenticated and not request.user.models_user.profile.plan.support_addons,
             'match': re.compile(r'(/\w+)?/pages/content/tools-business-tools'),
         },
         'academy': {
