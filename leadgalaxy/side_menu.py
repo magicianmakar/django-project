@@ -27,6 +27,7 @@ def get_menu_structure(namespace):
 
     header = [
         ('get-started', ['get-started']),
+        ('settings', ['settings']),
     ]
 
     footer = [
