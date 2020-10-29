@@ -21,14 +21,12 @@ def get_menu_structure(namespace):
             'subusers',
             'callflex',
             'tubehunt',
-            'addons',
             'tools',
         ]),
     ]
 
     header = [
         ('get-started', ['get-started']),
-        ('settings', ['settings']),
     ]
 
     footer = [
@@ -142,13 +140,6 @@ def get_menu_item_data(request):
             'match': re.compile(r'(/\w+)?/tubehunt'),
             'is_ns_aware': False,
         },
-        'addons': {
-            'title': 'Addon Store',
-            'url_name': 'addons.list_view',
-            'permissions': request.user.is_authenticated and request.user.models_user.profile.plan.support_addons,
-            'match': re.compile(r'(/\w+)?/addon'),
-            'is_ns_aware': False,
-        },
         'us-product-database': {
             'title': 'US Products',
             'url_name': 'products_collections',
@@ -236,7 +227,7 @@ def create_menu(menu_structure, menu_data, request, namespace):
 
             if type(item.get('permissions')) is not bool:
                 permissions = [p for p in item.get('permissions', []) if p not in upsell_permission_exceptions]
-                if any([not has_perm(p) for p in permissions]):
+                if not any([has_perm(p) for p in permissions]):
                     # User doesn't have the permission to access this resource.
                     continue
             else:

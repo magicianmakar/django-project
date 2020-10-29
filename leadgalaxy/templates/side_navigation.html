@@ -8,7 +8,7 @@
         <div class="logo">
             <a href="{% url 'index' %}">
                 {% if user|can:'pls.use' %}
-                  {% if 'private-label' in user.profile.plan.title %}
+                  {% if 'private-label' in user.profile.plan.slug %}
                     <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white3.new.png"/>
                   {% else %}
                     <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white.png"/>
@@ -66,6 +66,17 @@
         <li class="item"><a href="/pages/">Pages</a></li>
         {% endif %}
 
+      {% endif %}
+
+      {% if user.models_user.profile.plan.support_addons %}
+      <li class="section">
+          <a class="section-header" href="{% url 'addons.list_view' %}">
+            <div>
+              <img src="https://cdn.dropified.com/static/img/black/addons_21px_outlined.svg"/>
+            </div>
+            <span class="item-title" style="cursor:pointer">Addon Store</span>
+          </a>
+      </li>
       {% endif %}
 
       {% for section in sidemenu.header %}
