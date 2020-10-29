@@ -21,6 +21,7 @@ def get_menu_structure(namespace):
             'subusers',
             'callflex',
             'tubehunt',
+            'addons',
             'tools',
         ]),
     ]
@@ -43,7 +44,7 @@ def get_menu_structure(namespace):
     return {'body': body, 'header': header, 'footer': footer, 'named': named}
 
 
-def get_menu_item_data():
+def get_menu_item_data(request):
     """
     Entry structure:
         'title': 'Place Orders',
@@ -141,6 +142,13 @@ def get_menu_item_data():
             'match': re.compile(r'(/\w+)?/tubehunt'),
             'is_ns_aware': False,
         },
+        'addons': {
+            'title': 'Addon Store',
+            'url_name': 'addons.list_view',
+            'permissions': request.user.models_user.profile.plan.support_addons,
+            'match': re.compile(r'(/\w+)?/addon'),
+            'is_ns_aware': False,
+        },
         'us-product-database': {
             'title': 'US Products',
             'url_name': 'products_collections',
@@ -157,6 +165,7 @@ def get_menu_item_data():
             'title': 'Tools',
             'url_name': 'article-content-page',
             'url_kwargs': {"slug_article": "tools-business-tools"},
+            'permissions': not request.user.models_user.profile.plan.support_addons,
             'match': re.compile(r'(/\w+)?/pages/content/tools-business-tools'),
         },
         'academy': {
@@ -225,10 +234,14 @@ def create_menu(menu_structure, menu_data, request, namespace):
         for item_key in item_keys:
             item = menu_data[item_key]
 
-            permissions = [p for p in item.get('permissions', []) if p not in upsell_permission_exceptions]
-            if any([not has_perm(p) for p in permissions]):
-                # User doesn't have the permission to access this resource.
-                continue
+            if type(item.get('permissions')) is not bool:
+                permissions = [p for p in item.get('permissions', []) if p not in upsell_permission_exceptions]
+                if any([not has_perm(p) for p in permissions]):
+                    # User doesn't have the permission to access this resource.
+                    continue
+            else:
+                if not item['permissions']:
+                    continue
 
             if item.get('platforms'):
                 search_ns = namespace if namespace else 'shopify'
@@ -309,18 +322,16 @@ def get_static(path):
     return f"{settings.STATIC_URL}{path}"
 
 
-def get_active_item(request_path):
-    for item in get_menu_item_data().values():
+def get_active_item(request):
+    for item in get_menu_item_data(request).values():
         check_active = item.get('match')
-        if check_active and check_active.match(request_path):
+        if check_active and check_active.match(request.path):
             return item
 
 
 def get_namespace(request):
-    request_path = request.path
-
-    item = get_active_item(request_path)
-    url_obj = resolve(request_path)
+    item = get_active_item(request)
+    url_obj = resolve(request.path)
 
     namespace = url_obj.namespace
     url_name = url_obj.url_name

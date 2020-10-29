@@ -140,7 +140,7 @@ def add_side_menu(request):
     except:
         namespace = ''
 
-    menu_data = get_menu_item_data()
+    menu_data = get_menu_item_data(request)
     menu_structure = get_menu_structure(namespace)
 
     header = create_menu(menu_structure['header'], menu_data, request, namespace)

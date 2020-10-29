@@ -8,9 +8,13 @@
         <div class="logo">
             <a href="{% url 'index' %}">
                 {% if user|can:'pls.use' %}
-                <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white.png"/>
+                  {% if 'private-label' in user.profile.plan.title %}
+                    <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white3.new.png"/>
+                  {% else %}
+                    <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white.png"/>
+                  {% endif %}
                 {% else %}
-                <img src="{% static 'dropified-logo-white-s.png' %}"/>
+                  <img src="{% static 'dropified-logo-white-s.png' %}"/>
                 {% endif %}
             </a>
         </div>
@@ -96,10 +100,13 @@
     {# Dropified Black #}
     {% if user|can:'pls.use' %}
     <ul style="padding:0;margin: 0 0 0 24px">
-        <li>
-            <a href="https://app.dropified.com/pages/black">
-                <img class="img-responsive" src="https://cdn.dropified.com/static/img/black/dropified_black_text_white3.png"/>
-            </a>
+        <li class="section">
+          <span class="section-header">
+            <div>
+              <img src="https://cdn.dropified.com/static/img/black/pallet-solid.svg"/>
+            </div>
+            <span class="item-title">Private Label</span>
+          </span>
         </li>
     </ul>
 
@@ -132,7 +139,7 @@
     {% else %}
       <ul style="padding:0;margin: 10px 0 0 24px">
           <li>
-              <a href="https://www.dropified.com/black/" target="_blank">
+              <a href="https://www.dropified.com/supplements-on-demand/" target="_blank">
                   <img class="img-responsive" src="https://cdn.dropified.com/static/black-plan-waitlist.png"/>
               </a>
           </li>
@@ -163,11 +170,6 @@
 
       {% endfor %}
       {% endfor %}
-      {% if user.models_user.profile.plan.support_addons %}
-        <li class="section-no-icon">
-          <a href="{% url 'addons.list_view' %}" target="_blank">Addon Store</a>
-        </li>
-      {% endif %}
     </ul>
   </div>
 </nav>
