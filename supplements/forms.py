@@ -250,7 +250,7 @@ class BillingForm(forms.Form):
     name = forms.CharField()
     cc_number = forms.CharField(max_length=16)
     cc_expiry = forms.CharField()
-    cc_cvv = forms.CharField(max_length=3)
+    cc_cvv = forms.CharField(max_length=4)
     address_line1 = forms.CharField()
     address_line2 = forms.CharField(required=False)
     address_city = forms.CharField()
