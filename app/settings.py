@@ -54,6 +54,8 @@ INSTALLED_APPS = (
     'test_without_migrations',
     'polymorphic',
     'adminsortable2',
+    'ckeditor',
+    'ckeditor_uploader',
 
     'last_seen',
     'infinite_pagination',
@@ -559,3 +561,18 @@ TRELLO_TOKEN = os.environ.get('TRELLO_TOKEN')
 ACTIVECAMPAIGN_URL = os.environ.get('ACTIVECAMPAIGN_URL')
 ACTIVECAMPAIGN_KEY = os.environ.get('ACTIVECAMPAIGN_KEY')
 AC_INTERCOM_SECRET = os.environ.get('AC_INTERCOM_SECRET')
+
+CKEDITOR_UPLOAD_PATH = "uploads/"
+CKEDITOR_CONFIGS = {
+    'addons_ckeditor': {
+        'toolbar_Custom': [
+            {'items': ['Format', 'Font', 'FontSize', '-', 'Bold', 'Italic',
+                       'Underline', 'TextColor', 'BGColor', '-', 'Image', 'Link',
+                       'Unlink', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight',
+                       'JustifyBlock', '-', 'NumberedList', 'BulletedList', '-',
+                       'Outdent', 'Indent']},
+        ],
+        'toolbar': 'Custom',
+        'tabSpaces': 4,
+    }
+}

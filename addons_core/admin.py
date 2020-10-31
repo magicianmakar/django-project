@@ -5,8 +5,25 @@ from django.utils.html import format_html
 from adminsortable2.admin import SortableAdminMixin
 from adminsortable2.admin import SortableInlineAdminMixin
 
-from .forms import AddonPriceAdminForm
+from .forms import AddonForm, AddonPriceAdminForm
 from .models import Category, Addon, AddonBilling, AddonPrice, AddonUsage
+
+
+class FormWithRequestMixin:
+    def get_form(self, request, obj=None, **kwargs):
+        ModelForm = super().get_form(request, obj, **kwargs)
+
+        class ModelFormWithRequest(ModelForm):
+            def __init__(self, *args, **kwargs):
+                self.request = kwargs.pop('request', None)
+                super().__init__(*args, **kwargs)
+
+        class CustomModelForm(ModelFormWithRequest):
+            def __new__(cls, *args, **kwargs):
+                kwargs['request'] = request
+                return ModelFormWithRequest(*args, **kwargs)
+
+        return CustomModelForm
 
 
 class PreventBillingDeleteMixin:
@@ -79,10 +96,11 @@ class AddonBillingInline(SortableInlineAdminMixin, admin.TabularInline):
 
 
 @admin.register(Addon)
-class AddonAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
+class AddonAdmin(PreventBillingDeleteMixin, FormWithRequestMixin, admin.ModelAdmin):
     delete_extra_search = {'billings__subscriptions__isnull': False}
     delete_not_allowed_name = 'title'
 
+    form = AddonForm
     change_form_template = 'addons/admin/addon_change_form.html'
     list_display = (
         'title',
