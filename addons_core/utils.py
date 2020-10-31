@@ -74,6 +74,7 @@ def sync_stripe_addon(*, addon=None, product=None):
             data['description'] = addon.description
 
         if addon.stripe_product_id:
+            del data['type']
             product = stripe.Product.modify(addon.stripe_product_id, **data)
         else:
             data['id'] = get_stripe_id('Addon')
