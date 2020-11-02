@@ -15,6 +15,21 @@ from stripe_subscription.stripe_api import stripe
 from .models import INTERVAL_STRIPE_MAP, Addon, AddonBilling, AddonPrice, AddonUsage
 
 
+class DictAsObject(dict):
+    def __repr__(self):
+        keys = list(self.keys())
+        return self[keys[0]] if len(keys) else ''
+
+    def __getattr__(self, k):
+        if k[0] == "_":
+            raise AttributeError(k)
+
+        try:
+            return self[k]
+        except KeyError as err:
+            raise AttributeError(*err.args)
+
+
 def has_only_addons(stripe_subscription):
     for item in stripe_subscription['items']['data']:
         if item['price'] and item['price']['metadata'].get('type') != 'addon':
@@ -74,6 +89,7 @@ def sync_stripe_addon(*, addon=None, product=None):
             data['description'] = addon.description
 
         if addon.stripe_product_id:
+            del data['type']
             product = stripe.Product.modify(addon.stripe_product_id, **data)
         else:
             data['id'] = get_stripe_id('Addon')

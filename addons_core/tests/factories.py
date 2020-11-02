@@ -5,6 +5,7 @@ import factory.fuzzy
 from django.contrib.auth.models import User
 
 from stripe_subscription.models import StripeCustomer, StripeSubscription
+from addons_core.utils import DictAsObject
 
 
 class StripeSubscriptionFactory(factory.DjangoModelFactory):
@@ -83,17 +84,6 @@ class AddonUsageFactory(factory.DjangoModelFactory):
             self.user.profile.plan.save()
 
 
-class SimpleStripeObject(dict):
-    def __getattr__(self, k):
-        if k[0] == "_":
-            raise AttributeError(k)
-
-        try:
-            return self[k]
-        except KeyError as err:
-            raise AttributeError(*err.args)
-
-
 class StripeProductFactory(factory.Factory):
     id = factory.fuzzy.FuzzyText(length=14, prefix='Addon_')
     name = factory.fuzzy.FuzzyText()
@@ -103,23 +93,23 @@ class StripeProductFactory(factory.Factory):
     metadata = {'type': 'addon'}
 
     class Meta:
-        model = SimpleStripeObject
+        model = DictAsObject
         abstract = False
 
 
 class StripePriceFactory(factory.Factory):
     id = factory.fuzzy.FuzzyText(length=19, prefix='AddonPrice_')
     unit_amount = factory.fuzzy.FuzzyDecimal(low=100)  # unit in cents
-    recurring = SimpleStripeObject({
+    recurring = DictAsObject({
         'interval': 'month',
         'interval_count': 1,
         'trial_period_days': 0,
     })
-    metadata = SimpleStripeObject({'type': 'addon'})
+    metadata = DictAsObject({'type': 'addon'})
     active = True
 
     class Meta:
-        model = SimpleStripeObject
+        model = DictAsObject
         abstract = False
 
 
@@ -128,7 +118,7 @@ class StripeSubscriptionItemFactory(factory.Factory):
     price = StripePriceFactory()
 
     class Meta:
-        model = SimpleStripeObject
+        model = DictAsObject
         abstract = False
 
 
@@ -140,5 +130,5 @@ class StripeSubscriptionFactory(factory.Factory):
     current_period_end = factory.fuzzy.FuzzyDate(datetime.date(2020, 1, 1))
 
     class Meta:
-        model = SimpleStripeObject
+        model = DictAsObject
         abstract = False

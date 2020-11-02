@@ -36,6 +36,7 @@ urlpatterns = [
     url(r'^tapfiliate/', include('tapfiliate.urls')),
     url(r'^addons/', include('addons_core.urls')),
     url(r'^fulfilment-fee/', include('fulfilment_fee.urls')),
+    url('ckeditor/', include('ckeditor_uploader.urls')),
 ]
 
 if settings.DEBUG:
