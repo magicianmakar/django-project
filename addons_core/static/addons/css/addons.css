@@ -170,8 +170,12 @@ div.pull-right a.border-box:hover {
     font-size: 1.0em;
     letter-spacing: 0.04375em;
     text-transform: uppercase;
+    color: #232323;
 }
 
+.addon-category-list:hover {
+    color: #94c67f;
+}
 .addon-desc {
     font-size: 27px;
     line-height: 1.33;
@@ -192,7 +196,7 @@ div.pull-right a.border-box:hover {
 }
 
 .addon-unit {
-    font-size: 23px;
+    font-size: 20px;
     line-height: 36px;
 }
 
@@ -477,5 +481,6 @@ a.addon-install {
 
 .description-faq .row {
     max-width: 1140px;
+    margin: 0 auto;
 }
   
