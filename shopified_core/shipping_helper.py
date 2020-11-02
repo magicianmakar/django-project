@@ -451,8 +451,7 @@ class CityName:
     @property
     def without_leading_the(self):
         if self.starts_with_the:
-            the, rest_of_string = self.name.split(' ')
-            return rest_of_string
+            return self.name[4:]
         else:
             return self.name
 
