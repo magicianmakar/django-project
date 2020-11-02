@@ -5516,6 +5516,27 @@
         "description": "Custom Product Description"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 142,
+    "fields": {
+        "name": "view_product_boards.use",
+        "description": "View Product Boards"
+    }
+}, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 143,
+    "fields": {
+        "name": "us_products.use",
+        "description": "US Products"
+    }
+}, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 144,
+    "fields": {
+        "name": "import_list.use",
+        "description": "View a list of supported websites"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {

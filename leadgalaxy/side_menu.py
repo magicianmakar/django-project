@@ -95,12 +95,13 @@ def get_menu_item_data(request):
             'title': 'Import Products',
             'url_name': 'article-content-page',
             'url_kwargs': {"slug_article": "source-import-products"},
+            'permissions': ["import_list.use"],
             'match': re.compile(r'(/\w+)?/pages/content/source-import-products'),
         },
         'boards': {
             'title': 'Boards',
             'url_name': 'boards_list',
-            'permissions': ['view_product_boards.sub'],
+            'permissions': ['view_product_boards.use', 'view_product_boards.sub'],
             'match': re.compile(r'(/\w+)?/boards/list'),
         },
         'alerts': {
@@ -144,6 +145,7 @@ def get_menu_item_data(request):
         'us-product-database': {
             'title': 'US Products',
             'url_name': 'products_collections',
+            'permissions': ['us_products.use'],
             'url_kwargs': {'collection': 'us'},
             'match': re.compile(r'/products/collections/\w+'),
         },

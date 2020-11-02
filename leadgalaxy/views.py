@@ -5135,6 +5135,9 @@ def bundles_bonus(request, bundle_id):
 
 @login_required
 def products_collections(request, collection):
+    if not request.user.can('us_products.use'):
+        raise PermissionDenied()
+
     aliexpress_categories = json.load(open(settings.ALIEXPRESS_CATEGORIES_PATH))
 
     return render(request, 'products_collections.html', {

@@ -68,6 +68,16 @@
 
       {% endif %}
 
+      {% for section in sidemenu.header %}
+      {% for item in section.items %}
+
+      <li class="section-no-icon {{ item.classes }}">
+        <a href="{{ item.url }}">{{ item.title | safe }}</a>
+      </li>
+
+      {% endfor %}
+      {% endfor %}
+
       {% if user.models_user.profile.plan.support_addons %}
       <li class="section">
           <a class="section-header" href="{% url 'addons.list_view' %}">
@@ -78,16 +88,6 @@
           </a>
       </li>
       {% endif %}
-
-      {% for section in sidemenu.header %}
-      {% for item in section.items %}
-
-      <li class="section-no-icon {{ item.classes }}">
-        <a href="{{ item.url }}">{{ item.title | safe }}</a>
-      </li>
-
-      {% endfor %}
-      {% endfor %}
 
       {# body #}
       {% for section in sidemenu.body %}
