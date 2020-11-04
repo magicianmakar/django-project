@@ -767,7 +767,7 @@ class UtilsTestCase(BaseTestCase):
         data = aliexpress_shipping_info(4000869234210, "US")
         self.assertTrue(data)
         self.assertIn('freight', data)
-        self.assertEqual(len(data['freight']), 4)
+        self.assertEqual(len(data['freight']), 3)
 
         for k in ['price', 'companyDisplayName', 'company', 'time', 'isTracked']:
             self.assertIn(k, data['freight'][0])
