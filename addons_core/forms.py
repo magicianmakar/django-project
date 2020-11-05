@@ -41,7 +41,9 @@ class HiddenReadonlyField(forms.CharField):
         return super().has_changed(initial, data)
 
 
-class URLFileInput(forms.ClearableFileInput):
+class URLFileInputWidget(forms.ClearableFileInput):
+    template_name = 'addons/widgets/url_file_input.html'
+
     def is_initial(self, value):
         return bool(value)
 
@@ -50,10 +52,10 @@ class URLFileInput(forms.ClearableFileInput):
 
 
 class AddonForm(forms.ModelForm):
-    description = forms.CharField(widget=CKEditorUploadingWidget(config_name='addons_ckeditor'))
-    faq = forms.CharField(widget=CKEditorUploadingWidget(config_name='addons_ckeditor'))
-    icon_url = forms.FileField(widget=URLFileInput())
-    banner_url = forms.FileField(widget=URLFileInput())
+    description = forms.CharField(required=False, widget=CKEditorUploadingWidget(config_name='addons_ckeditor'))
+    faq = forms.CharField(required=False, widget=CKEditorUploadingWidget(config_name='addons_ckeditor'))
+    icon_url = forms.FileField(required=False, widget=URLFileInputWidget())
+    banner_url = forms.FileField(required=False, widget=URLFileInputWidget())
 
     request = None
 
@@ -64,9 +66,13 @@ class AddonForm(forms.ModelForm):
         return icon
 
     def clean_banner_url(self):
+        if self.request.POST.get('banner_url_url_clear'):
+            return ''
         return self._upload_icon('banner_url', 'addon_banners')
 
     def clean_icon_url(self):
+        if self.request.POST.get('icon_url_url_clear'):
+            return ''
         return self._upload_icon('icon_url', 'addon_icons')
 
     def clean_youtube_url(self):
