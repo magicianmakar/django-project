@@ -107,7 +107,7 @@ def get_menu_item_data(request):
         'alerts': {
             'title': 'Alerts',
             'url_name': 'product_alerts',
-            'permissions': ['price_changes.use'],
+            'permissions': ['price_changes.use', 'price_change_options.use'],
             'match': re.compile(r'(/\w+)?/products/update'),
             'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']
         },
