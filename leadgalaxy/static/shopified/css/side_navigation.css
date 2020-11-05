@@ -70,6 +70,7 @@
 }
 
 .sidebar .item:hover,
+.sidebar span.item-link:hover,
 .sidebar .section-no-icon:hover,
 .sidebar .active,
 .sidebar .active span.item-title {
