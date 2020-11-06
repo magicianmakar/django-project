@@ -5,19 +5,33 @@ from tqdm import tqdm
 
 import json
 
+
+def get_response(url):
+    tries = 5
+    while tries:
+        tries -= 1
+
+        try:
+            if tries != 4:
+                print('Try:', tries)
+            r = get(url, timeout=10)
+            return json.loads(r.text.strip()[5:-1])
+        except:
+            pass
+
+
 countries = ['AU', 'CL', 'ES', 'NL', 'UA', 'UK', 'NZ', 'US', 'CA', 'RU', 'ID', 'TH', 'PL', 'FR', 'IT', 'TR', 'BR', 'KR', 'SA']
 
-data = {}
+saved_data = json.loads(open('app/data/shipping/aliexpress_countries.json').read())
 for i in countries:
     print('> Country:', i)
-    r = get('https://ilogisticsaddress.aliexpress.com/ajaxGetGlobalAddress.htm?country=%s' % i)
-    provinces = json.loads(r.text.strip()[5:-1])
-    data[i] = {}
+    provinces = get_response('https://ilogisticsaddress.aliexpress.com/ajaxGetGlobalAddress.htm?country=%s' % i)
+    saved_data[i] = {}
 
     print('>> Provinces:', len(provinces['address']))
     obar = tqdm(total=len(provinces['address']))
     for p in provinces['address']:
-        data[i][p['n']] = []
+        saved_data[i][p['n']] = []
         province = {
             'name': p['n'],
             'id': p['id'],
@@ -28,15 +42,13 @@ for i in countries:
         obar.update(1)
 
         if p['needChildren']:
-            r = get('https://ilogisticsaddress.aliexpress.com/ajaxGetGlobalAddress.htm?country=%s&province=%s' % (i, p['id']))
-            cities = json.loads(r.text.strip()[5:-1])
+            cities = get_response('https://ilogisticsaddress.aliexpress.com/ajaxGetGlobalAddress.htm?country=%s&province=%s' % (i, p['id']))
             for c in cities['address']:
-                data[i][p['n']].append(c['n'])
+                saved_data[i][p['n']].append(c['n'])
+
+    out = open('app/data/shipping/aliexpress_countries.json', 'w')
+    out.write(json.dumps(saved_data, sort_keys=True, indent=2, separators=(',', ': ')))
 
     obar.close()
     print()
     print()
-
-data = json.dumps(data, sort_keys=True, indent=2, separators=(',', ': '))
-out = open('app/data/shipping/aliexpress_countries.json', 'w')
-out.write(data)
