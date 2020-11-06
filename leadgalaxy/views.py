@@ -52,13 +52,15 @@ from phone_automation.utils import get_month_limit, get_month_totals, get_phonen
 from phone_automation import billing_utils as billing
 from last_seen.models import LastSeen
 from shopified_core import permissions
+from shopified_core.exceptions import ApiProcessException
+from shopified_core.tasks import keen_order_event, export_user_activity
+from shopified_core.paginators import SimplePaginator, FakePaginator
+from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopified_core.mocks import (
     get_mocked_bundle_variants,
     get_mocked_supplier_variants,
     get_mocked_alert_changes,
 )
-from shopified_core.paginators import SimplePaginator, FakePaginator
-from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     safe_int,
@@ -82,7 +84,6 @@ from shopified_core.utils import (
     products_filter,
     decode_api_token,
 )
-from shopified_core.tasks import keen_order_event, export_user_activity
 from supplements.lib.shipstation import get_address as get_shipstation_address
 from supplements.tasks import update_shipstation_address
 from supplements.models import PLSOrder, PLSOrderLine
@@ -3639,7 +3640,12 @@ class OrdersView(TemplateView):
         self.get_pagination()
         self.check_extension_version()
 
-        self.proccess_orders()
+        try:
+            self.proccess_orders()
+
+        except ApiProcessException as e:
+            context['api_error'] = ':'.join(e.args)
+
         self.get_breadcrumbs()
 
         context.update(self.ctx)
@@ -3783,12 +3789,44 @@ class OrdersView(TemplateView):
         return self.sync
 
     def get_orders(self):
-        if not self.sync.store_sync_enabled:
-            self.get_orders_from_api()
-        elif self.sync.es_search_enabled:
-            self.get_orders_from_es()
-        else:
-            self.get_orders_from_db()
+        api_error = None
+
+        try:
+            if not self.sync.store_sync_enabled:
+                self.get_orders_from_api()
+            elif self.sync.es_search_enabled:
+                self.get_orders_from_es()
+            else:
+                self.get_orders_from_db()
+
+        except json.JSONDecodeError:
+            api_error = 'Unexpected response content'
+            capture_exception()
+
+        except requests.exceptions.ConnectTimeout:
+            api_error = 'Connection Timeout'
+            capture_exception()
+
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 429:
+                api_error = 'API Rate Limit'
+            elif e.response.status_code == 404:
+                api_error = 'Store Not Found'
+            elif e.response.status_code == 402:
+                api_error = 'Your Shopify Store is not on a paid plan'
+            elif e.response.status_code == 503:
+                api_error = 'Your Shopify store is temporarily unavailable, please try again later'
+            else:
+                api_error = 'Shopify API Error {}'.format(e.response.status_code)
+
+            capture_exception()
+
+        except:
+            api_error = 'Unknown Error'
+            capture_exception()
+
+        if api_error:
+            raise ApiProcessException(api_error)
 
     def get_orders_from_api(self):
         if ',' in self.filters.fulfillment:

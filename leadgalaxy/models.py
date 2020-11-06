@@ -1145,24 +1145,27 @@ class ShopifyStore(StoreBase):
         return primary_location
 
     def get_locations(self, fulfillments_only=False, active_only=True):
-        locations_key = 'stoe_locations_{}'.format(self.id)
-        locations = cache.get(locations_key)
-        if locations is None:
+        try:
+            locations_key = 'stoe_locations_{}'.format(self.id)
+            locations = cache.get(locations_key)
+            if locations is None:
 
-            rep = requests.get(self.api('locations'))
-            rep.raise_for_status()
+                rep = requests.get(self.api('locations'))
+                rep.raise_for_status()
 
-            locations = rep.json()['locations']
+                locations = rep.json()['locations']
 
-            cache.set(locations_key, locations, timeout=3600)
+                cache.set(locations_key, locations, timeout=3600)
 
-        if fulfillments_only:
-            locations = [i for i in locations if i['legacy']]
+            if fulfillments_only:
+                locations = [i for i in locations if i['legacy']]
 
-        if active_only:
-            locations = [i for i in locations if i['active']]
+            if active_only:
+                locations = [i for i in locations if i['active']]
 
-        return locations
+            return locations
+        except:
+            return []
 
     def get_location(self, name=None, location_id=None):
         locations = self.get_locations(fulfillments_only=True)
