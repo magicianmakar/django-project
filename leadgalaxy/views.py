@@ -3286,22 +3286,22 @@ def user_profile(request):
     stripe_plans = GroupPlan.objects.exclude(Q(stripe_plan=None) | Q(hidden=True)) \
                                     .exclude(payment_interval='yearly') \
                                     .annotate(num_permissions=Count('permissions')) \
-                                    .order_by('num_permissions')
+                                    .order_by('monthly_price', 'num_permissions')
 
     stripe_plans_yearly = GroupPlan.objects.exclude(Q(stripe_plan=None) | Q(hidden=True)) \
                                    .filter(payment_interval='yearly') \
                                    .annotate(num_permissions=Count('permissions')) \
-                                   .order_by('num_permissions')
+                                   .order_by('monthly_price', 'num_permissions')
 
     shopify_plans = GroupPlan.objects.filter(payment_gateway='shopify', hidden=False) \
                                      .exclude(payment_interval='yearly') \
                                      .annotate(num_permissions=Count('permissions')) \
-                                     .order_by('num_permissions')
+                                     .order_by('monthly_price', 'num_permissions')
 
     shopify_plans_yearly = GroupPlan.objects.filter(payment_gateway='shopify', hidden=False) \
                                             .filter(payment_interval='yearly') \
                                             .annotate(num_permissions=Count('permissions')) \
-                                            .order_by('num_permissions')
+                                            .order_by('monthly_price', 'num_permissions')
 
     stripe_paused_plan = GroupPlan.objects.filter(slug='paused-plan').first()
     shopify_paused_plan = GroupPlan.objects.filter(slug='paused-plan-shopify').first()
