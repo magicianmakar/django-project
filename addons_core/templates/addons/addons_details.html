@@ -16,7 +16,7 @@
                 <div>
                 {% for category in object.categories.all %}
                 {% if category.is_visible %}
-                <a href={% url 'addons.category_view' slug=category.slug %} target="_blank" class="addon-category-list"><span>{{ category.title }}</span></a>
+                <a href={% url 'addons.category_view' slug=category.slug %} class="addon-category-list"><span>{{ category.title }}</span></a>
                 {% if not forloop.last %}<span>&nbsp;&#124;&nbsp;</span>{% endif %}
                 {% endif %}
                 {% endfor %}
