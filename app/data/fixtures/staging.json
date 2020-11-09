@@ -5537,6 +5537,20 @@
         "description": "View a list of supported websites"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 145,
+    "fields": {
+        "name": "aliexpress_settings.use",
+        "description": "Use aliexpress in settings"
+    }
+}, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 146,
+    "fields": {
+        "name": "product_import_settings.use",
+        "description": "Use product imports in settings"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {

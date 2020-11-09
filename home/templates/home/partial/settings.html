@@ -5,6 +5,7 @@
         <form id="config-form" class="form-horizontal" role="form">
             <input type="hidden" name="from" value="webapp">
 
+            {% if user|can:'product_import_settings.use' %}
             <div class="panel panel-default">
                 <div class="panel-heading">
                     Products Import
@@ -250,6 +251,7 @@
 
                 </div>
             </div>
+            {% endif%}
 
             {% if user|can:'auto_order.view' %}
             {% with can_use=user|can:'auto_order.use' %}
@@ -423,7 +425,7 @@
             {% endwith %}
             {% endif %}
 
-
+            {% if user|can:'aliexpress_settings.use' %}
             <div class="panel panel-default">
                 <div class="panel-heading">
                     Aliexpress
@@ -533,6 +535,7 @@
 
                 </div>
             </div>
+            {% endif %}
 
             {% if user|can:'price_change_options.use' %}
             <div class="panel panel-default">
