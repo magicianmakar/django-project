@@ -254,6 +254,12 @@ class OrdersShippedWebHookView(View, BaseMixin):
             source_type='supplements'
         )
         for track in tracks:
+            try:
+                track_data = json.loads(track)
+                track_currency = track_data['aliexpress']['order_details']['cost']['currency']
+            except:
+                # no currency or old order
+                track_currency = "USD"
             data = {
                 'store': track.store_id,
                 'order': track.id,
@@ -263,6 +269,7 @@ class OrdersShippedWebHookView(View, BaseMixin):
                     'products': str(products_price.quantize(Decimal('0.01'))),
                     'shipping': str(shipping_price.quantize(Decimal('0.01'))),
                     'total': str(total_price.quantize(Decimal('0.01'))),
+                    'currency': track_currency,
                 }}),
                 'source_id': source_id,
             }
