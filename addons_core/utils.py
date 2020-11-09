@@ -126,7 +126,7 @@ def sync_stripe_addon(*, addon=None, product=None):
         while prices['has_more']:
             prices = stripe.Price.list(product=product.id, starting_after=price)
             for price in prices['data']:
-                sync_stripe_billing(price=price, product=product)
+                sync_stripe_billing(price=price)
 
         return addon
 

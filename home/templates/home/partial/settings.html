@@ -5,6 +5,7 @@
         <form id="config-form" class="form-horizontal" role="form">
             <input type="hidden" name="from" value="webapp">
 
+            {% if user|can:'product_import_settings.use' %}
             <div class="panel panel-default">
                 <div class="panel-heading">
                     Products Import
@@ -116,18 +117,18 @@
                     </div>
                 </div>
 
-                {% if user|can:'advance_markup.use' %}
                 <div class="row">
                     <div class="col-sm-offset-1 col-sm-5">
                         <div class="form-group">
                             <label class="control-label">
                                 <a class="edit-markup-rules-btn m-l" href="#">Advanced Markup Rules...</a>
-                                {% include 'partial/help_tooltip.html' with help="Create several markup rules which are applied to items based on their price." qtipstyle="color:#BBB" %}
+                                {% if user|can:'advance_markup.use' %}
+                                    {% include 'partial/help_tooltip.html' with help="Create several markup rules which are applied to items based on their price." qtipstyle="color:#BBB" %}
+                                {% endif %}
                             </label>
                         </div>
                     </div>
                 </div>
-                {% endif %}
 
                 <div class="col-sm-offset-1"><hr /></div>
 
@@ -250,6 +251,7 @@
 
                 </div>
             </div>
+            {% endif%}
 
             {% if user|can:'auto_order.view' %}
             {% with can_use=user|can:'auto_order.use' %}
@@ -423,7 +425,7 @@
             {% endwith %}
             {% endif %}
 
-
+            {% if user|can:'aliexpress_settings.use' %}
             <div class="panel panel-default">
                 <div class="panel-heading">
                     Aliexpress
@@ -533,6 +535,7 @@
 
                 </div>
             </div>
+            {% endif %}
 
             {% if user|can:'price_change_options.use' %}
             <div class="panel panel-default">

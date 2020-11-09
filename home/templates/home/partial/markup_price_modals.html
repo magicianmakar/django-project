@@ -1,3 +1,4 @@
+{% load perms_helper %}
 
 <div id="markup-rule-modal" class="modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -78,6 +79,9 @@
             </div>
 
             <div class="modal-body">
+                {% if not user|can:'advance_markup.use' %}
+                {% include "common/partial/upsell.html" with message="Add Advanced Markup to your Plan" only %}
+                {% endif %}
                 <div class="row">
                     <div class="col-sm-12">
                         <table class="table table-ligthborder" id="markup-rule-table">
@@ -91,6 +95,7 @@
                                     <th style="width: 150px;"></th>
                                 </tr>
                             </thead>
+                            {% if user|can:'advance_markup.use' %}
                             <tbody>
                                 <tr data-rule-id="" class="hidden clone rule-row">
                                     <td class="rule-min_price" style="width:100px"></td>
@@ -129,6 +134,20 @@
                                 </tr>
                                 {% endfor %}
                             </tbody>
+                            {% else %}
+                                <tr class="rule-row"><td style="width:100px">0.00</td><td>20.00</td><td>Increase by percentage</td><td>30.00</td><td>35.00</td>
+                                    <td class="text-right">
+                                        <a href="#" style="padding: 8px;"><i class="fa fa-edit"></i></a>
+                                        <a href="#" style="padding: 8px;"><i class="fa fa-remove"></i></a>
+                                    </td>
+                                </tr>
+                                <tr class="rule-row"><td style="width:100px">20.01</td><td>80.00</td><td>Increase by percentage</td><td>40.00</td><td>45.00</td>
+                                    <td class="text-right">
+                                        <a href="#" style="padding: 8px;"><i class="fa fa-edit"></i></a>
+                                        <a href="#" style="padding: 8px;"><i class="fa fa-remove"></i></a>
+                                    </td>
+                                </tr>
+                            {% endif %}
                         </table>
 
                         <a data-toggle="modal" data-target="#markup-rule-modal" class="btn btn-success btn-sm" style="margin: 0;">
