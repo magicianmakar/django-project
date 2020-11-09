@@ -117,18 +117,18 @@
                     </div>
                 </div>
 
-                {% if user|can:'advance_markup.use' %}
                 <div class="row">
                     <div class="col-sm-offset-1 col-sm-5">
                         <div class="form-group">
                             <label class="control-label">
                                 <a class="edit-markup-rules-btn m-l" href="#">Advanced Markup Rules...</a>
-                                {% include 'partial/help_tooltip.html' with help="Create several markup rules which are applied to items based on their price." qtipstyle="color:#BBB" %}
+                                {% if user|can:'advance_markup.use' %}
+                                    {% include 'partial/help_tooltip.html' with help="Create several markup rules which are applied to items based on their price." qtipstyle="color:#BBB" %}
+                                {% endif %}
                             </label>
                         </div>
                     </div>
                 </div>
-                {% endif %}
 
                 <div class="col-sm-offset-1"><hr /></div>
 
