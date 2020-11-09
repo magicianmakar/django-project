@@ -506,8 +506,8 @@ YOUTUBE_CLIENT_SECRET = os.environ.get('YOUTUBE_CLIENT_SECRET')
 YOUTUBE_CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
 
 # CallFlex
-PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE = os.environ.get('PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE', '12000')  # in seconds.  1 hr per month for user
-PHONE_AUTOMATION_MONTH_LIMIT_LOCAL = os.environ.get('PHONE_AUTOMATION_MONTH_LIMIT_LOCAL', '12000')  # in seconds.  1 hr per month for user
+PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE = 6000  # in seconds
+PHONE_AUTOMATION_MONTH_LIMIT_LOCAL = 6000  # in seconds
 PHONE_AUTOMATION_WARNING_LIMIT = 0.75  # percent. when reached - send warning email
 TWILIO_SID = os.environ.get('TWILIO_SID')
 TWILIO_TOKEN = os.environ.get('TWILIO_TOKEN')
