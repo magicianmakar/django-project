@@ -27,7 +27,7 @@ class Command(DropifiedBaseCommand):
         for exp_days_item in exp_days_array:
             exp_date = timezone.now() + timedelta(days=-(90 + 14 - exp_days_item))
 
-            user_phones = TwilioPhoneNumber.objects
+            user_phones = TwilioPhoneNumber.objects.exclude(status='released')
             if options['user_id']:
                 user_phones = user_phones.filter(user_id=options['user_id'])
 

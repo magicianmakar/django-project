@@ -512,8 +512,8 @@
                 </form>
             </div>
             {% else %}
-            <div class="panel-body">
-                <h3>You do not have permission to Import Reviews.</h3>
+            <div class="panel-body" style="min-height:300px">
+                {% include "common/partial/upsell.html" with addon_id=11 message="Add Reviews to your Plan" only %}
             </div>
             {% endif %}
         </div>
