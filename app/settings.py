@@ -506,23 +506,19 @@ YOUTUBE_CLIENT_SECRET = os.environ.get('YOUTUBE_CLIENT_SECRET')
 YOUTUBE_CLIENT_ID = os.environ.get('YOUTUBE_CLIENT_ID')
 
 # CallFlex
-PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE = 6000  # in seconds
-PHONE_AUTOMATION_MONTH_LIMIT_LOCAL = 6000  # in seconds
-PHONE_AUTOMATION_WARNING_LIMIT = 0.75  # percent. when reached - send warning email
 TWILIO_SID = os.environ.get('TWILIO_SID')
 TWILIO_TOKEN = os.environ.get('TWILIO_TOKEN')
-if DEBUG:
-    AWS_AUDIO_TRANSCODE_PIPELINE_ID = os.environ.get('AWS_AUDIO_TRANSCODE_PIPELINE_ID', '1545231733178-6djxwp')
-else:
-    AWS_AUDIO_TRANSCODE_PIPELINE_ID = os.environ.get('AWS_AUDIO_TRANSCODE_PIPELINE_ID', '1545230355460-asr0hb')
-EXTRA_TOLLFREE_NUMBER_PRICE = 5  # USD
-EXTRA_LOCAL_NUMBER_PRICE = 3  # USD
-EXTRA_TOLLFREE_MINUTE_PRICE = 0.2  # USD per minute
-EXTRA_LOCAL_MINUTE_PRICE = 0.1  # USD per minute
-CALLFLEX_OVERAGES_MAX_NUMBERS = 10  # user can never go over this limit  of phone number when adding as overages
-CALLFLEX_OVERAGES_MAX_MINUTES = 1000  # user can never go over this limit of minutes when adding as overages
-
-CALLFLEX_SHOPIFY_USAGE_MAX_PENDING = 10  # after reaching this pending limit (in USD) it deletes all user's twilio phones
+AWS_AUDIO_TRANSCODE_PIPELINE_ID = os.environ.get('AWS_AUDIO_TRANSCODE_PIPELINE_ID', '1545231733178-6djxwp' if DEBUG else '1545230355460-asr0hb')
+PHONE_AUTOMATION_MONTH_LIMIT_TOLLFREE = 6000    # in seconds
+PHONE_AUTOMATION_MONTH_LIMIT_LOCAL = 6000       # in seconds
+PHONE_AUTOMATION_WARNING_LIMIT = 0.75           # percent when reached send warning email
+EXTRA_TOLLFREE_NUMBER_PRICE = 5                 # USD
+EXTRA_LOCAL_NUMBER_PRICE = 3                    # USD
+EXTRA_TOLLFREE_MINUTE_PRICE = 0.2               # USD per minute
+EXTRA_LOCAL_MINUTE_PRICE = 0.1                  # USD per minute
+CALLFLEX_OVERAGES_MAX_NUMBERS = 10              # user can never go over this limit  of phone number when adding as overages
+CALLFLEX_OVERAGES_MAX_MINUTES = 1000            # user can never go over this limit of minutes when adding as overages
+CALLFLEX_SHOPIFY_USAGE_MAX_PENDING = 10         # after reaching this pending limit (in USD) it deletes all user's twilio phones
 
 # Baremetrics (Customer Tags)
 BAREMETRICS_API_KEY = os.environ.get('BAREMETRICS_API_KEY')
