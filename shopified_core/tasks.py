@@ -125,18 +125,30 @@ def export_user_activity(self, user_id, requester_id):
     from leadgalaxy.utils import generate_user_activity
     from shopified_core.utils import send_email_from_template
 
-    try:
-        user = User.objects.get(id=int(user_id))
-    except ValueError:
-        user = User.objects.get(email__iexact=user_id)
+    if user_id != 'sync':
+        try:
+            user = User.objects.get(id=int(user_id))
+        except ValueError:
+            user = User.objects.get(email__iexact=user_id)
+    else:
+        user = user_id
 
     url = generate_user_activity(user)
 
     requester = User.objects.get(id=requester_id)
-    send_email_from_template(
-        tpl=f'Activity for {user.email} has been exported:\n{url}',
-        subject='[Dropified] User Activity Export',
-        recipient=requester.email,
-        data={},
-        nl2br=True
-    )
+    if url == 'sync':
+        send_email_from_template(
+            tpl='Activity database has been updated',
+            subject='[Dropified] User Activity Sync',
+            recipient=requester.email,
+            data={},
+            nl2br=True
+        )
+    else:
+        send_email_from_template(
+            tpl=f'Activity for {user.email} has been exported:\n{url}',
+            subject='[Dropified] User Activity Export',
+            recipient=requester.email,
+            data={},
+            nl2br=True
+        )

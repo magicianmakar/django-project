@@ -2282,6 +2282,10 @@ def fetchall_athena(query_string, output=None):
             'OutputLocation': 's3://aws-athena-query-results-533310886335-us-east-1'
         }
     )['QueryExecutionId']
+
+    if 'MSCK REPAIR' in query_string:
+        return 'sync'
+
     query_status = None
     while query_status == 'QUEUED' or query_status == 'RUNNING' or query_status is None:
         query_status = client.get_query_execution(QueryExecutionId=query_id)['QueryExecution']['Status']['State']
@@ -2321,6 +2325,9 @@ def fetchall_athena(query_string, output=None):
 
 
 def build_query(user, output=None):
+    if user == 'sync':
+        return 'MSCK REPAIR TABLE app_logs;'
+
     query = 'SELECT * FROM "shopifiedapplogs"."app_logs" WHERE ('
     query += '\n  OR '.join([f"strpos(message,'{ip}') > 0 " for ip in json.loads(user.profile.ips)])
     query += f''') AND '{user.date_joined:%Y-%m-%d}' <= dt
@@ -2342,6 +2349,8 @@ def generate_user_activity(user, output=None):
 
     query = build_query(user, output=output)
     results = fetchall_athena(query, output=output)
+    if results == 'sync':
+        return results
 
     lines = ['\t'.join(["IP", "Time", "HTTP Method", "Path", "Status Code", "Response Bytes"])]
     for i in results:
