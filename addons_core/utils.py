@@ -100,7 +100,7 @@ def sync_stripe_addon(*, addon=None, product=None):
 
     elif product and product.metadata.get('type') == 'addon':
         data = {
-            'title': product.name,
+            'title': product.name.replace(' Addon', ''),
             'description': product.description or '',
             'is_active': product.active,
             'stripe_product_id': product.id,
