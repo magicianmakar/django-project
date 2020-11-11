@@ -4,6 +4,7 @@ from django.db.models.functions import Coalesce, Now
 from django.urls import reverse
 
 from addons_core.models import Addon, AddonUsage
+from lib.exceptions import capture_exception
 
 register = template.Library()
 
@@ -25,7 +26,12 @@ def for_user(addon_billings, user):
     ).filter(is_active=True)
 
     # Template only supports 1 price at the moment
-    addon_billings = [addon_billings.first()]
+    try:
+        addon_billings = [addon_billings.first()]
+    except:
+        capture_exception()
+        addon_billings = []
+
     for addon_billing in addon_billings:
         if not addon_billing:
             continue
