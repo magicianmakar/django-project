@@ -83,10 +83,12 @@
 
             $('#modal-install-form').modal('show');
         } else {
-            if ($(this).data('extra')) {
+            if ($('.add-store-btn').data('extra')) {
+
+                var extra_store_cost = $('.add-store-btn').data('store-cost');
                 swal({
                     title: "Additional Store",
-                    text: "You are about to add an additional store to your plan for <b>$27/month</b>, Would you like to continue?",
+                    text: "You are about to add an additional store to your plan for <b>$" + extra_store_cost + "/month</b>, Would you like to continue?",
                     type: "info",
                     html: true,
                     showCancelButton: true,
@@ -144,30 +146,8 @@
             install_url = 'https://' + shop + '/manage/marketplace/apps/' + bigcommerce_app_id;
         }
 
-        if($('.add-store-btn').data('extra')) {
-            swal({
-                title: "Additional Store",
-                text: "You are about to add an additional store to your plan for <b>$27/month</b>, Would you like to continue?",
-                type: "info",
-                html: true,
-                showCancelButton: true,
-                closeOnCancel: true,
-                closeOnConfirm: false,
-                animation: false,
-                showLoaderOnConfirm: true,
-                confirmButtonText: "Yes, Add This Store",
-                cancelButtonText: "Cancel"
-            }, function(isConfirmed) {
-                if (!isConfirmed) {
-                    return;
-                }
-
-                window.location.href = install_url;
-            });
-        } else {
             $(this).bootstrapBtn('loading');
             window.location.href = install_url;
-        }
     });
 
     $('#add-store').click(function(e) {
