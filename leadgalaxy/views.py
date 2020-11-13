@@ -1047,21 +1047,25 @@ def webhook(request, provider, option):
             if not user_id:
                 return HttpResponse(':x: You must specify a user email or ID')
 
-            user = None
-            try:
-                user = User.objects.get(id=int(user_id))
-            except ValueError:
-                pass
-
-            if not user:
+            if user_id != 'sync':
+                user = None
                 try:
-                    user = User.objects.get(email__iexact=user_id)
-                except:
-                    return HttpResponse(f':x: User not found: {user_id}')
+                    user = User.objects.get(id=int(user_id))
+                except ValueError:
+                    pass
 
-            export_user_activity.delay(user.id, request_from.id)
+                if not user:
+                    try:
+                        user = User.objects.get(email__iexact=user_id)
+                    except:
+                        return HttpResponse(f':x: User not found: {user_id}')
 
-            return HttpResponse(f'Exporting activty for *{user.email}*')
+                export_user_activity.delay(user.id, request_from.id)
+
+                return HttpResponse(f':hourglass: Exporting activty for *{user.email}*')
+            else:
+                export_user_activity.delay(user_id, request_from.id)
+                return HttpResponse(':hourglass: Starting user activity syncing')
 
         elif request.POST['command'] == '/captcha-credit':
             is_review_bonus = False
