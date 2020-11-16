@@ -3472,7 +3472,7 @@ def save_image_s3(request):
         product_id = request.POST.get('product')
         img_url = request.POST.get('url')
         old_url = request.POST.get('old_url')
-        fp = io.BytesIO(requests.get(img_url).content)
+        fp = io.BytesIO(requests.get(img_url, auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)).content)
         img_url = '%s.png' % img_url
 
     else:
