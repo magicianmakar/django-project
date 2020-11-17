@@ -432,11 +432,15 @@ class ShopifyStoreApi(ApiBase):
             return self.api_error('Looks like your credits have run out', status=402)
 
         if action == 'edit':
+            post_data = {}
+            if settings.DEBUG:
+                post_data['test'] = "true"
             res = requests.post(
                 api_url,
                 files={
                     'image': urlopen(add_http_schema(data.get('image_url')))
                 },
+                data=post_data,
                 auth=(settings.CLIPPINGMAGIC_API_ID, settings.CLIPPINGMAGIC_API_SECRET)
             ).json()
 

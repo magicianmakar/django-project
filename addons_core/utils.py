@@ -375,6 +375,7 @@ def create_usage_from_stripe(subscription_item):
             'stripe_subscription_item_id': subscription_item.id,
         }
     )[0]
+    stripe_customer.user.profile.addons.add(price.billing.addon)
 
     return addon_usage
 
