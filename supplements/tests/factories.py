@@ -89,3 +89,25 @@ class ShippingGroupFactory(factory.DjangoModelFactory):
 
     class Meta:
         model = 'supplements.ShippingGroup'
+
+
+class BasketItemFactory(factory.DjangoModelFactory):
+    id = factory.fuzzy.FuzzyInteger(9999)
+    quantity = 1
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+
+    class Meta:
+        model = 'supplements.BasketItem'
+
+
+class BasketOrderTrackFactory(factory.DjangoModelFactory):
+    id = factory.fuzzy.FuzzyInteger(9999)
+    store = factory.fuzzy.FuzzyInteger(999)
+    product_id = factory.fuzzy.FuzzyInteger(999)
+    order_id = factory.fuzzy.FuzzyInteger(999)
+    line_id = factory.fuzzy.FuzzyInteger(1000)
+    basket_order_status = 'D_PENDING_SHIPMENT'
+    user = factory.SubFactory('leadgalaxy.tests.factories.UserFactory')
+
+    class Meta:
+        model = 'my_basket.BasketOrderTrack'

@@ -41,6 +41,7 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     app_link,
     safe_int,
+    safe_float,
     aws_s3_context as images_aws_s3_context,
     get_store_model,
 )
@@ -79,6 +80,7 @@ from .forms import (
     UserSupplementForm
 )
 from .utils import aws_s3_context, create_rows, report, send_email_against_comment
+from .utils.basket import BasketStoreObj
 
 register = template.Library()
 
@@ -1214,9 +1216,13 @@ class OrderDetailMixin(LoginRequiredMixin, View):
             line_item.line_total = "${:.2f}".format((line_item.amount * line_item.quantity) / 100.)
 
         store = get_store_model(order.store_type).objects.get(id=order.store_id)
+
         if not self.request.user.can('pls_admin.use') and not self.request.user.can('pls_staff.use'):
             # Make sure this user have access to this order store
-            permissions.user_can_view(self.request.user, store)
+            if isinstance(store, BasketStoreObj):
+                permissions.user_can_view(self.request.user, self.order)
+            else:
+                permissions.user_can_view(self.request.user, store)
 
         shipping_address = store.get_order(order.store_order_id).get('shipping_address')
 
@@ -2609,3 +2615,62 @@ class Reports(LoginRequiredMixin, TemplateView):
             'seller_data': seller_data
         })
         return context
+
+
+class Basket(LoginRequiredMixin, TemplateView):
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        # Permission check
+        if request.user.can('supplements_basket.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get(self, request):
+        breadcrumbs = [
+            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': 'My Basket', 'url': reverse('pls:my_basket')},
+        ]
+
+        basket_items = request.user.basket_items.all()
+
+        context = {
+            'breadcrumbs': breadcrumbs,
+            'basket_items': basket_items,
+        }
+
+        return render(request, "supplements/userbasket.html", context)
+
+
+class BasketCheckout(LoginRequiredMixin, TemplateView):
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        # Permission check
+        if request.user.can('supplements_basket.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get(self, request):
+        breadcrumbs = [
+            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': 'Checkout', 'url': reverse('pls:checkout')},
+        ]
+
+        basket_items = request.user.basket_items.all()
+        checkout_total = 0
+        for basket_item in basket_items:
+            checkout_total += safe_float(basket_item.total_price())
+        user = request.user
+
+        context = {
+            'breadcrumbs': breadcrumbs,
+            'basket_items': basket_items,
+            'countries': get_counrties_list(),
+            'user': user,
+            'checkout_total': '%.02f' % checkout_total
+        }
+
+        return render(request, "supplements/basket_ckeckout.html", context)

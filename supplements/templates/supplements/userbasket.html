@@ -1,0 +1,68 @@
+{% extends "supplements/tab_view_base.html" %}
+
+{% load static %}
+{% load compress %}
+
+{% block tab_content %}
+
+
+
+<h1>Basket Items</h1>
+<table class='table table-striped' >
+  <thead>
+    <th>Product</th>
+    <th>Quantity</th>
+    <th>Total Price</th>
+    <th>Date Added</th>
+    <th>Actions</th>
+  </thead>
+  <tbody>
+
+    {% for basket_item in basket_items %}
+    <tr class=" basket-row basket-id-{{ basket_item.id }}">
+      <td>
+          <a class="basket-item-img" href="{{ basket_item.user_supplement.get_url }}">
+             <img src="{{ basket_item.user_supplement.thumbnail }}">
+          </a>
+
+          <a href="{{ basket_item.user_supplement.get_url }}" class="product-name">{{ basket_item.user_supplement.title }}</a>
+          <div class="small m-t-xs">{{ basket_item.user_supplement.description_short }}</div>
+      </td>
+      <td style="width:100px;">
+          <input type="number" class="form-control basket-item-quantity" name="basket-item-quantity" data-basket-id={{ basket_item.id }} value="{{ basket_item.quantity }}">
+          </td>
+      <td>$ <span class="basket-item-total-price">{{ basket_item.total_price }}</span></td>
+      <td>{{ basket_item.created_at|date:"m.d.Y h:iA" }}</td>
+      <td><a class="btn btn-danger btn-outline btn-xs basket-item-remove" data-basket-item-id={{ basket_item.id }} >Remove</a></td>
+    {% empty %}
+      <td colspan="7">Your Basket is Empty.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+  {% if basket_items.count %}
+      <div class="row basket-total-bottom">
+          <div class="col-md-6 text-right">
+            <h2>Total:
+                $<span class="basket-total"></span>
+            </h2>
+          </div>
+        <div class="col-md-6 text-right">
+                <a class="btn" href="{% url 'pls:my_supplements' %}">Continue Shopping</a>
+                <a class="btn btn-success" href="{% url 'pls:checkout' %}">Checkout</a>
+          </div>
+
+      </div>
+
+  {%  endif %}
+
+{% endblock %}
+
+{% block extrajs %}
+{% compress js %}
+<script type="text/javascript" src="{% static 'product_common/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/basket.js' %}"></script>
+{% endcompress %}
+{% endblock %}

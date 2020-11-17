@@ -5,6 +5,7 @@ from django.core.cache import cache
 import requests
 import re
 import simplejson as json
+from lib.exceptions import capture_exception
 
 
 def generate_sale_transaction_fee(source_type, source, amount, currency_data):
@@ -34,11 +35,14 @@ def process_sale_transaction_fee(instance):
             'GrooveKartOrderTrack': 'groovekart_status',
             'WooOrderTrack': 'woocommerce_status',
             'CommerceHQOrderTrack': 'commercehq_status',
+            'BasketOrderTrack': 'basket_order_status'
         }
 
         if instance.user.can('sales_fee.use') \
                 and (instance.user.is_superuser or not instance.user.can('disabled_sales_fee.use')) \
-                and costs and instance.auto_fulfilled and getattr(instance, instance_status_column[instance_type]) == 'fulfilled':
+                and costs and (instance.auto_fulfilled or instance.source_type == 'supplements') \
+                and getattr(instance, instance_status_column[instance_type]) == 'fulfilled':
+
             # getting sales fee config
             normalized_cost = normalize_currency(costs['total_cost'], costs['currency'])
 
@@ -48,6 +52,7 @@ def process_sale_transaction_fee(instance):
 
             generate_sale_transaction_fee(instance_type, instance, normalized_cost, currency_data)
     except:
+        capture_exception()
         pass
 
 
@@ -65,7 +70,7 @@ def convert_to_usd(amount, currency):
     rates = cache.get_or_set('currency-rates', get_rates(), 3600)
     try:
         if rates['rates'][currency]:
-            amount = amount * rates['rates'][currency]
+            amount = safe_float(amount) * safe_float(rates['rates'][currency])
     except KeyError:
         pass
     return amount

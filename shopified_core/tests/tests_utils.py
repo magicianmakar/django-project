@@ -36,6 +36,7 @@ from shopified_core.shipping_helper import (
     aliexpress_country_code_map,
     CityName,
     valide_aliexpress_province,
+    province_code_from_name,
 )
 
 
@@ -488,6 +489,12 @@ class ShippingHelperFunctionsTestCase(BaseTestCase):
         self.assertEqual(aliexpress_country_code_map('GB'), 'UK')
         self.assertEqual(aliexpress_country_code_map('ME'), 'MNE')
         self.assertEqual(aliexpress_country_code_map('US'), 'US')
+
+    def test_get_province_code_from_name(self):
+        country_code = "US"
+        province = "California"
+
+        self.assertEqual(province_code_from_name(country_code, province), 'CA')
 
 
 class FranceAddressFixTestCase(BaseTestCase):

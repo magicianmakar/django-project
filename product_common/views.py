@@ -268,9 +268,18 @@ class OrdersShippedWebHookView(View, BaseMixin):
             source_type='supplements'
         )
         for track in tracks:
+            try:
+                track_data = json.loads(track)
+                track_currency = track_data['aliexpress']['order_details']['cost']['currency']
+            except:
+                # no currency or old order
+                track_currency = "USD"
+
             basic_data = source_data.get(track.source_id)
             if not basic_data:
                 continue
+
+            basic_data['order_details']['currency'] = track_currency
 
             data = {
                 **basic_data,
