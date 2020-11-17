@@ -223,55 +223,59 @@ class OrdersShippedWebHookView(View, BaseMixin):
             return
 
         store_type = order.store_type
-        tracking_number = shipment['trackingNumber']
-        source_id = order.get_dropified_source_id()
         StoreApi = get_store_api(store_type)
         OrderTrack = get_track_model(store_type)
 
+        tracking_number = shipment['trackingNumber']
         get_line = self.order_line_model.objects.get
 
+        source_data = {}
         with transaction.atomic():
-            order.batch_number = shipment['batchNumber']
-            if tracking_number:
-                order.is_fulfilled = True
-                order.status = Order.SHIPPED
-            order.save()
-
+            order_ids = set()
             for item in shipment.get('shipmentItems', []):
                 try:
                     line = get_line(shipstation_key=item['lineItemKey'])
                     line.tracking_number = tracking_number
                     line.save()
+                    order_ids.add(line.pls_order_id)
                 except self.order_line_model.DoesNotExist:
                     continue
 
-        total_price = Decimal(order.amount) / Decimal(100)
-        shipping_price = Decimal(order.shipping_price) / Decimal(100)
-        products_price = total_price - shipping_price
+            for order in self.order_model.objects.filter(id__in=order_ids):
+                total_price = Decimal(order.amount) / Decimal(100)
+                shipping_price = Decimal(order.shipping_price) / Decimal(100)
+                products_price = total_price - shipping_price
+                source_data[order.get_dropified_source_id()] = {
+                    'status': 'D_SHIPPED' if tracking_number else 'D_PENDING_SHIPMENT',
+                    'tracking_number': tracking_number,
+                    'order_details': json.dumps({'cost': {
+                        'products': str(products_price.quantize(Decimal('0.01'))),
+                        'shipping': str(shipping_price.quantize(Decimal('0.01'))),
+                        'total': str(total_price.quantize(Decimal('0.01'))),
+                        'currency': 'USD',
+                    }}),
+                    'source_id': order.get_dropified_source_id(),
+                }
+
+                order.batch_number = shipment['batchNumber']
+                if tracking_number:
+                    order.is_fulfilled = True
+                    order.status = Order.SHIPPED
+                order.save()
 
         tracks = OrderTrack.objects.filter(
-            source_id=source_id,
+            source_id__in=source_data.keys(),
             source_type='supplements'
         )
         for track in tracks:
-            try:
-                track_data = json.loads(track)
-                track_currency = track_data['aliexpress']['order_details']['cost']['currency']
-            except:
-                # no currency or old order
-                track_currency = "USD"
+            basic_data = source_data.get(track.source_id)
+            if not basic_data:
+                continue
+
             data = {
+                **basic_data,
                 'store': track.store_id,
                 'order': track.id,
-                'status': 'D_SHIPPED' if tracking_number else 'D_PENDING_SHIPMENT',
-                'tracking_number': tracking_number,
-                'order_details': json.dumps({'cost': {
-                    'products': str(products_price.quantize(Decimal('0.01'))),
-                    'shipping': str(shipping_price.quantize(Decimal('0.01'))),
-                    'total': str(total_price.quantize(Decimal('0.01'))),
-                    'currency': track_currency,
-                }}),
-                'source_id': source_id,
             }
 
             api_result = StoreApi.post_order_fulfill_update(self.request, order.user, data)

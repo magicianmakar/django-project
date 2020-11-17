@@ -294,6 +294,7 @@ class SupplementsApi(ApiResponseMixin, View):
                     'total': str(total_price.quantize(Decimal('0.01'))),
                     'products': str(products_price.quantize(Decimal('0.01'))),
                     'shipping': str(shipping_price.quantize(Decimal('0.01'))),
+                    'currency': 'USD',
                 }},
                 'source_id': order.get_dropified_source_id(),
             }
