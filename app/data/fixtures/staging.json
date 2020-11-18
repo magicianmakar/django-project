@@ -5551,6 +5551,13 @@
         "description": "Use product imports in settings"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 147,
+    "fields": {
+        "name": "supplements_basket.use",
+        "description": "Supplements Basket Ordering"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {

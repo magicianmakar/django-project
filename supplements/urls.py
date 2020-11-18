@@ -101,4 +101,12 @@ urlpatterns = [
         supplements.views.GeneratePaymentPDF.as_view(),
         name='generate_payment_pdf'),
 
+    url(r'^basket$',
+        supplements.views.Basket.as_view(),
+        name='my_basket'),
+
+    url(r'^basket/checkout$',
+        supplements.views.BasketCheckout.as_view(),
+        name='checkout'),
+
 ]

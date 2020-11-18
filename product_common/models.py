@@ -60,6 +60,7 @@ class AbstractOrderInfo(models.Model):
     GEAR = 'gear'
     GKART = 'gkart'
     BIGCOMMERCE = 'bigcommerce'
+    MYBASKET = 'mybasket'
 
     STORE_TYPES = [
         (SHOPIFY, 'Shopify'),
@@ -67,7 +68,8 @@ class AbstractOrderInfo(models.Model):
         (WOO, 'WooCommerce'),
         (GEAR, 'GearBubble'),
         (GKART, 'GrooveKart'),
-        (BIGCOMMERCE, 'BigCommerce')
+        (BIGCOMMERCE, 'BigCommerce'),
+        (MYBASKET, 'MyBasket')
     ]
 
     store_type = models.CharField(max_length=15,

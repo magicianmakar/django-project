@@ -7,7 +7,7 @@ from django.db import models
 import simplejson as json
 from PIL import Image
 from product_common import models as model_base
-
+from shopified_core.utils import safe_float
 from .mixin import (
     AuthorizeNetCustomerMixin,
     LabelCommentMixin,
@@ -18,7 +18,6 @@ from .mixin import (
     UserSupplementLabelMixin,
     UserSupplementMixin
 )
-
 SUPPLEMENTS_SUPPLIER = 'Supplements on Demand'
 
 
@@ -865,3 +864,53 @@ class RefundPayments(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class BasketItem(models.Model):
+    class Meta:
+        ordering = ['-pk']
+
+    quantity = models.IntegerField()
+    user = models.ForeignKey(User,
+                             on_delete=models.CASCADE,
+                             related_name='basket_items')
+
+    user_supplement = models.ForeignKey(UserSupplement,
+                                        on_delete=models.CASCADE,
+                                        related_name='basket_items')
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def total_price(self):
+
+        return '%.02f' % (safe_float(self.user_supplement.pl_supplement.cost_price) * safe_float(self.quantity))
+
+
+class BasketOrder(models.Model):
+    class Meta:
+        ordering = ['-pk']
+
+    user = models.ForeignKey(User,
+                             on_delete=models.CASCADE,
+                             related_name='basket_orders')
+    status = models.CharField(max_length=8, blank=True, default='')
+    order_data = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def get_order(self):
+        order_data = self.get_order_data()
+        order_data['order_number'] = self.id
+        return order_data
+
+    def get_order_data(self):
+        return json.loads(self.order_data)
+
+    def set_order_data(self, data):
+        self.order_data = json.dumps(data)
+        self.save()
+
+    def set_paid(self, paid_flag):
+        if paid_flag:
+            self.status = 'paid'
+        else:
+            self.status = ''

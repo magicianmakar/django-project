@@ -91,7 +91,7 @@ class OrderMixin:
     def get_dropified_source_id(self):
         if self.stripe_transaction_id:
             return self.stripe_transaction_id
-        return self.id
+        return str(self.id)
 
     @classmethod
     def get_store_type(cls, store):

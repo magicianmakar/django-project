@@ -1,0 +1,251 @@
+{% extends "supplements/tab_view_base.html" %}
+
+{% load static %}
+{% load compress %}
+{% load template_helper %}
+{% load perms_helper %}
+{% block tab_content %}
+
+
+
+<h1>Checkout</h1>
+
+
+<div class="container-fluid">
+    <form id="checkout-form" class="form-horizontal">
+        <div class="row">
+            <div class="col-md-6 row">
+                <h2>Billing Details:</h2>
+
+                            <div class="form-group"><label class="col-sm-2 control-label">Name</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_first_name" value="{{ user.first_name }}" class="form-control" placeholder="First Name" required>
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_last_name" value="{{ user.last_name }}" class="form-control" placeholder="Last Name" required>
+                                </div>
+                            </div>
+
+                            <div class="form-group"><label class="col-sm-2 control-label">Country</label>
+                                <div class="col-sm-8">
+                                    <select id="billing_country" name="billing_country" class="select-country" current="{{user.profile.timezone}}" style="width:350px;">
+                                        <option value=""></option>
+                                        {% for item in countries %}
+                                        <option value="{{item.0}}"
+                                            {% if user.profile.country == item.0 %}selected="selected"{% endif %}
+                                            >{{item.1}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group"><label class="col-sm-2 control-label">Company Name</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_company_name" value="{{ user.profile.company.name }}" class="form-control" placeholder="Name">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_phone" value="{{ company.phone }}" class="form-control" placeholder="Phone">
+                                </div>
+                            </div>
+                            <div class="form-group"><label class="col-sm-2 control-label">Address</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_address_line1" value="{{ user.profile.company.address_line1 }}" class="form-control" placeholder="Address line 1">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_address_line2" value="{{ user.profile.company.address_line2 }}" class="form-control" placeholder="Address line 2">
+                                </div>
+                            </div>
+                            <div class="form-group"><label class="col-sm-2 control-label"></label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_city" value="{{ user.profile.company.city }}" class="form-control" placeholder="City">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_state" value="{{ user.profile.company.state }}" class="form-control" placeholder="State or Province">
+                                </div>
+                            </div>
+                            <div class="form-group"><label class="col-sm-2 control-label"></label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_zip_code" value="{{ user.profile.company.zip_code }}" class="form-control" placeholder="Zip or Postal">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="billing_phone" value="{{ company.phone }}" class="form-control" placeholder="">
+                                </div>
+                            </div>
+
+
+                            <div class="form-group"><label class="col-sm-2 control-label">Email</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="billing_email" value="{{ user.email }}" class="form-control" placeholder="">
+                                </div>
+
+                            </div>
+
+            </div>
+
+            <div class="col-md-6">
+                <h2>Shipping Details:</h2>
+                             <div class="form-group"><label class="col-sm-2 control-label">Name</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="shipping_first_name" value="{{ user.first_name }}" class="form-control" placeholder="First Name">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="shipping_last_name" value="{{ user.last_name }}" class="form-control" placeholder="Last Name">
+                                </div>
+                            </div>
+
+                            <div class="form-group"><label class="col-sm-2 control-label">Country</label>
+                                <div class="col-sm-8">
+                                    <select id="shipping_country" name="shipping_country" class="select-country" current="{{user.profile.timezone}}" style="width:350px;">
+                                        <option value=""></option>
+                                        {% for item in countries %}
+                                        <option value="{{item.0}}"
+                                            {% if user.profile.country == item.0 %}selected="selected"{% endif %}
+                                            >{{item.1}}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group"><label class="col-sm-2 control-label">Company Name</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="shipping_company_name" value="{{ user.profile.company.name }}" class="form-control" placeholder="Name">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="shipping_phone" value="{{ company.phone }}" class="form-control" placeholder="Phone">
+                                </div>
+                            </div>
+                            <div class="form-group"><label class="col-sm-2 control-label">Address</label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="shipping_address_line1" value="{{ user.profile.company.address_line1 }}" class="form-control" placeholder="Address line 1">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="shipping_address_line2" value="{{ user.profile.company.address_line2 }}" class="form-control" placeholder="Address line 2">
+                                </div>
+                            </div>
+                            <div class="form-group"><label class="col-sm-2 control-label"></label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="shipping_city" value="{{ user.profile.company.city }}" class="form-control" placeholder="City">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input id="shipping_state" type="text" name="shipping_state" value="{{ user.profile.company.state }}" class="form-control" placeholder="State or Province">
+                                </div>
+                            </div>
+                            <div class="form-group"><label class="col-sm-2 control-label"></label>
+                                <div class="col-sm-4">
+                                    <input type="text" name="shipping_zip_code" value="{{ user.profile.company.zip_code }}" class="form-control" placeholder="Zip or Postal">
+                                </div>
+                                <div class="col-sm-4">
+                                    <input type="text" name="shipping_phone" value="{{ company.phone }}" class="form-control" placeholder="">
+                                </div>
+                            </div>
+
+
+                            <div class="form-group"><label class="col-sm-2 control-label">Email</label>
+                                <div class="col-sm-8">
+                                    <input type="text" name="shipping_email" value="{{ user.email }}" class="form-control" placeholder="">
+                                </div>
+
+                            </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <h2>Your Order:</h2>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-1">
+            Products:
+        </div>
+        <div class="col-md-2">
+
+            {% for basket_item in basket_items %}
+                    <div>
+                          {{ basket_item.quantity }}X
+
+                          <a href="{{ basket_item.user_supplement.get_url }}" class="product-name-inline">{{ basket_item.user_supplement.title }}</a>
+
+                          ( ${{ basket_item.total_price }} )
+                    </div>
+            {% empty %}
+              Your Basket is Empty.
+            {% endfor %}
+        </div>
+
+
+        <div class="col-md-1">
+            Total:
+        </div>
+        <div class="col-md-2">
+            $<span class="checkout-total">{{ checkout_total }}</span>
+        </div>
+
+        <div class="col-md-6 text-right">
+            <input type="submit" value="Continue" class="btn btn-info basket-checkout" />
+        </div>
+
+    </div>
+
+</div>
+
+
+<div id="basket-modal-make-payment" class="modal" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Order Details</h4>
+      </div>
+      <div class="modal-body">
+        <table class='table dataTables'>
+          <thead>
+            <th>Title</th>
+            <th>Unit Price</th>
+            <th>Quantity</th>
+            <th>Total Amount</th>
+          </thead>
+          <tbody>
+            {% for basket_item in basket_items %}
+                <tr class="supplement-item-payment">
+                    <td>{{ basket_item.user_supplement.title }}</td>
+                    <td>${{ basket_item.user_supplement.pl_supplement.cost_price }}</td>
+                    <td>{{ basket_item.quantity }}</td>
+                    <td>${{ basket_item.total_price }}</td>
+                </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="3"><strong>Shipping</strong><span id="pls-shipping-weight-total"></span></td>
+                <td class="shipping-cost"></td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Total</strong></td>
+                <td class="total-cost"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button id="basket-make-payment-confirm" class="btn btn-primary"
+          data-default-text="Make Payment"
+          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Make Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block extrajs %}
+{% compress js %}
+<script type="text/javascript" src="{% static 'product_common/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/basket_checkout.js' %}"></script>
+{% endcompress %}
+{% endblock %}

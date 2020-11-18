@@ -446,3 +446,12 @@
 .form-group .chosen-container {
   width: 100% !important; /* overlap plugin css code */
 }
+
+.basket-item-img {
+  float:left;
+}
+
+.basket-item-img img {
+  max-width:100px;
+  max-width:100px;
+}

@@ -17,7 +17,8 @@ from .factories import (
     PLSOrderLineFactory,
     PLSupplementFactory,
     UserSupplementFactory,
-    UserSupplementLabelFactory
+    UserSupplementLabelFactory,
+    BasketItemFactory
 )
 
 
@@ -33,6 +34,7 @@ class PLSBaseTestCase(BaseTestCase):
         self.user.profile.plan.user_supplements = -1
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls_admin.use', description='PLS Admin'))
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls.use', description='PLS'))
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='supplements_basket.use', description='PLS Basket'))
         self.user.profile.plan.save()
         self.user.profile.save()
 
@@ -1111,3 +1113,47 @@ class GeneratePaymentPDFTestCase(PLSBaseTestCase):
 
             self.assertEqual(response.status_code, 200)
             self.assertIn('application/pdf', str(response.items()))
+
+
+class BasketTestCase(PLSBaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        basket_item = BasketItemFactory(
+            user=self.user,
+            user_supplement=self.user_supplement,
+        )
+        self.basket_item = basket_item
+
+    def get_url(self):
+        return reverse('pls:my_basket')
+
+    def test_login(self):
+        self.do_test_login()
+
+    def test_get(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)
+
+
+class BasketCheckoutTestCase(PLSBaseTestCase):
+    def setUp(self):
+        super().setUp()
+
+        basket_item = BasketItemFactory(
+            user=self.user,
+            user_supplement=self.user_supplement,
+        )
+        self.basket_item = basket_item
+
+    def get_url(self):
+        return reverse('pls:checkout')
+
+    def test_login(self):
+        self.do_test_login()
+
+    def test_get(self):
+        self.client.force_login(self.user)
+        response = self.client.get(self.get_url())
+        self.assertEqual(response.status_code, 200)

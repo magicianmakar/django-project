@@ -430,6 +430,28 @@ def province_from_code(country_code, province_code):
     return province if province else province_code
 
 
+def province_code_from_name(country_code, province):
+    global countries_code
+
+    country_code = country_code.lower()
+    if country_code not in provinces_code:
+        path = os.path.join(settings.BASE_DIR, 'app/data/shipping/provinces/{}.json'.format(country_code))
+        if os.path.isfile(path):
+            with open(path) as f:
+                provinces_code[country_code] = json.loads(f.read())
+
+    try:
+        province_match = fuzzy_find_in_list(list(provinces_code.get(country_code).values()), province, default=province)
+        for province_item in provinces_code.get(country_code):
+            province_name = provinces_code.get(country_code, {}).get(province_item)
+            if province_match == province_name:
+                return province_item
+    except:
+        province = False
+
+    return province
+
+
 def ebay_country_code(country_name):
     return load_ebay_countries().get(country_name.lower())
 

@@ -1,45 +1,47 @@
 #!/bin/bash
 
+EXIT_CODE="0"
+
 grep -E 'def [a-z].+\(.+=(\[\]|\{\})' --exclude-dir='venv*' --include '*.py' --recursive .
 if [ "$?" == "0" ]; then
     echo
     echo "[-] Using mutable default arguments"
-    exit -1
+    EXIT_CODE="-1"
 fi
 
 grep datetime.strptime --exclude-dir='venv*' --include="*.py" --recursive .
 if [ "$?" == "0" ]; then
     echo
     echo "[-] Do not use 'datetime.strptime', use arrow or django.utils.timezone for timezone aware datetime:"
-    exit -1
+    EXIT_CODE="-1"
 fi
 
 grep 'kwarg=' --exclude-dir='venv*' --include="*.py" --recursive .
 if [ "$?" == "0" ]; then
     echo
     echo "[-] kwarg= seem to be a typo, do you mean kwargs?"
-    exit -1
+    EXIT_CODE="-1"
 fi
 
 grep django.contrib.postgres --exclude-dir='venv*' --include="*.py" --exclude-dir="phone_automation" --recursive .
 if [ "$?" == "0" ]; then
     echo
     echo "[-] Do not use 'django.contrib.postgres' unless necessary"
-    exit -1
+    EXIT_CODE="-1"
 fi
 
 grep pdb --exclude-dir='venv*' --include="*.py" --recursive .
 if [ "$?" == "0" ]; then
     echo
     echo "[-] pdb detected, forgotten debugging line?"
-    exit -1
+    EXIT_CODE="-1"
 fi
 
 grep -E "{% static ['\"]/[^'\"]+['\"] %}" --exclude-dir='venv*' --include="*.html" --recursive .
 if [ "$?" == "0" ]; then
     echo
     echo "[-] static tag argument should not start with a slash"
-    exit -1
+    EXIT_CODE="-1"
 fi
 
 OUTFILE="$(mktemp)"
@@ -50,7 +52,7 @@ if [ ! "$?" == "0" ]; then
     echo
     echo "[-] Your models have changes that are not yet reflected in a migration:"
     cat $OUTFILE
-    exit -2
+    EXIT_CODE="-1"
 fi
 
 DJANGO_ADMIN_ERROR=""
@@ -120,7 +122,7 @@ for i in */models.py; do
 done
 
 if [ -n "$DJANGO_ADMIN_ERROR" ]; then
-    exit -2
+    EXIT_CODE="-1"
 fi
 
 if [ -n "$CIRCLE_BRANCH" ]; then
@@ -136,5 +138,7 @@ if [ ! "$?" == "0" ]; then
     echo
     echo "[-] .env file changed, make sure changes are required, then update .env MD5 hash in scripts/common_issues.sh"
     cat $OUTFILE
-    exit -2
+    EXIT_CODE="-1"
 fi
+
+exit $EXIT_CODE

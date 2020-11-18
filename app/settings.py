@@ -96,6 +96,7 @@ INSTALLED_APPS = (
     'supplements',
     'product_common',
     'dropified_product',
+    'my_basket',
     'fulfilment_fee'
 )
 
@@ -186,6 +187,7 @@ DROPIFIED_API = {
     'prints': 'prints.api.PrintsApi',
     'product_common': 'product_common.api.ProductCommonApi',
     'addons': 'addons_core.api.AddonsApi',
+    'mybasket': 'supplements.api.BasketApi',
 }
 
 # Database

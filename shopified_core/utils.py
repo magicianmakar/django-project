@@ -1136,6 +1136,9 @@ def get_track_model(store_type=''):
     elif store_type in ['bigcommerce', 'BigCommerceOrderTrack']:
         from bigcommerce_core.models import BigCommerceOrderTrack
         return BigCommerceOrderTrack
+    elif store_type in ['mybasket', 'BasketOrderTrack']:
+        from my_basket.models import BasketOrderTrack
+        return BasketOrderTrack
     else:
         from leadgalaxy.models import ShopifyOrderTrack
         return ShopifyOrderTrack
@@ -1154,6 +1157,9 @@ def get_store_model(store_type=''):
     elif store_type in ['bigcommerce', 'BigCommerceStore']:
         from bigcommerce_core.models import BigCommerceStore
         return BigCommerceStore
+    elif store_type in ['mybasket']:
+        from supplements.utils.basket import BasketStore
+        return BasketStore
     else:
         from leadgalaxy.models import ShopifyStore
         return ShopifyStore
