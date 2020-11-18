@@ -156,7 +156,7 @@ def product_export(store_id, product_id, user_id, publish=None):
         permissions.user_can_view(user, store)
         permissions.user_can_edit(user, product)
         product_data = product.parsed
-        tags = product_data.get('tags').split(',')
+        tags = utils.safe_str(product_data.get('tags')).split(',')
         variants_images = product_data.get('variants_images') or {}
         images = product_data.get('images', [])
         variants = product_data.get('variants', [])
