@@ -25,7 +25,6 @@ from django.contrib.auth.password_validation import validate_password
 from django.conf import settings
 from django.core.cache import cache, caches
 from django.core.cache.utils import make_template_fragment_key
-from django.core.mail import send_mail
 from django.urls import reverse
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.signing import Signer
@@ -145,84 +144,7 @@ from .shopify import ShopifyAPI
 
 
 def webhook(request, provider, option):
-    if provider == 'paylio' and request.method == 'POST':
-        if option not in ['vip-elite', 'elite', 'pro', 'basic']:
-            return JsonResponse({'error': 'Unknown Plan'}, status=404)
-
-        plan_map = {
-            'vip-elite': '64543a8eb189bae7f9abc580cfc00f76',
-            'elite': '3eccff4f178db4b85ff7245373102aec',
-            'pro': '55cb8a0ddbc9dacab8d99ac7ecaae00b',
-            'basic': '2877056b74f4683ee0cf9724b128e27b',
-            'free': '606bd8eb8cb148c28c4c022a43f0432d'
-        }
-
-        plan = GroupPlan.objects.get(register_hash=plan_map[option])
-
-        if 'payer_email' not in request.POST:
-            return HttpResponse('ok')
-
-        try:
-            status = request.POST['status']
-            if status not in ['new', 'canceled', 'refunded']:
-                raise Exception('Unknown Order status: {}'.format(status))
-
-            data = {
-                'email': request.POST['payer_email'],
-                'status': status,
-                'lastname': request.POST['payer_lastname'],
-                'firstname': request.POST['payer_firstname'],
-                'payer_id': request.POST['payer_id'],
-            }
-        except Exception:
-            capture_exception()
-
-            raise Http404('Error during proccess')
-
-        if status == 'new':
-            reg = utils.generate_plan_registration(plan, data)
-            data['reg_hash'] = reg.register_hash
-            data['plan_title'] = plan.title
-
-            send_email_from_template(
-                tpl='webhook_register.html',
-                subject='Your Dropified Access',
-                recipient=data['email'],
-                data=data,
-            )
-
-            send_mail(subject='Dropified: New Registration',
-                      recipient_list=['chase@dropified.com'],
-                      from_email=settings.DEFAULT_FROM_EMAIL,
-                      message='A new registration link was generated and send to a new user.\n\nMore information:\n{}'.format(
-                          utils.format_data(data)))
-
-            return HttpResponse('ok')
-        elif status in ['canceled', 'refunded']:
-            try:
-                user = User.objects.get(email__iexact=data['email'])
-
-                free_plan = GroupPlan.objects.get(register_hash=plan_map['free'])
-                user.profile.plan = free_plan
-                user.profile.save()
-
-                data['previous_plan'] = plan.title
-                data['new_plan'] = free_plan.title
-
-                send_mail(subject='Dropified: Cancel/Refund',
-                          recipient_list=['chase@dropified.com'],
-                          from_email=settings.DEFAULT_FROM_EMAIL,
-                          message='A Dropified User has canceled his/her subscription.\n\nMore information:\n{}'.format(
-                              utils.format_data(data)))
-
-                return HttpResponse('ok')
-
-            except Exception:
-                capture_exception()
-
-                raise Http404('Error during proccess')
-
-    elif provider == 'jvzoo':
+    if provider == 'jvzoo':
         try:
             if ':' not in option and option not in ['vip-elite', 'elite', 'pro', 'basic']:
                 return JsonResponse({'error': 'Unknown Plan'}, status=404)
@@ -3266,25 +3188,8 @@ def upload_file_sign(request):
 @login_required
 @ensure_csrf_cookie
 def user_profile(request):
-    profile = request.user.profile
+    bundles = request.user.profile.bundles.filter(hidden_from_user=False)
 
-    bundles = profile.bundles.all().values_list('register_hash', flat=True)
-    extra_bundles = []
-
-    if profile.plan.register_hash == '5427f85640fb78728ec7fd863db20e4c':  # JVZoo Pro Plan
-        if 'b961a2a0f7101efa5c79b8ac80b75c47' not in bundles:  # JVZoo Elite Bundle
-            extra_bundles.append({
-                'title': 'Add Elite Bundle',
-                'url': 'http://www.dropified.com/elite',
-            })
-
-        if '2fba7df0791f67b61581cfe37e0d7b7d' not in bundles:  # JVZoo Unlimited
-            extra_bundles.append({
-                'title': 'Add Unlimited Bundle',
-                'url': 'http://www.dropified.com/unlimited',
-            })
-
-    bundles = profile.bundles.filter(hidden_from_user=False)
     stripe_plans = GroupPlan.objects.exclude(Q(stripe_plan=None) | Q(hidden=True)) \
                                     .exclude(payment_interval='yearly') \
                                     .annotate(num_permissions=Count('permissions')) \
@@ -3392,7 +3297,6 @@ def user_profile(request):
     return render(request, 'user/profile.html', {
         'countries': get_counrties_list(),
         'now': timezone.now(),
-        'extra_bundles': extra_bundles,
         'bundles': bundles,
         'stripe_plans': stripe_plans,
         'stripe_plans_yearly': stripe_plans_yearly,
