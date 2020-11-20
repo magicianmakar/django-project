@@ -727,24 +727,6 @@ def update_product_connection(self, store_id, shopify_id):
     order_utils.update_line_export(store, shopify_id)
 
 
-@celery_app.task(base=CaptureFailure, ignore_result=True)
-def smartmemeber_webhook_call(subdomain, data):
-    try:
-        data['cprodtitle'] = 'Shopified App Success Club OTO3'
-        data['cproditem'] = '205288'
-
-        rep = requests.post(
-            url='https://api.smartmember.com/transaction?type=jvzoo&subdomain={}'.format(subdomain),
-            data=data
-        )
-
-        raw_rep = rep.text  # variable will be accessible in Sentry
-        assert len(raw_rep) and 'email' in rep.json()
-
-    except:
-        capture_exception()
-
-
 @celery_app.task(base=CaptureFailure, bind=True)
 def add_ordered_note(self, store_id, order_id, note):
     try:

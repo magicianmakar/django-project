@@ -250,10 +250,6 @@ def webhook(request, provider, option):
 
                 data.update(params)
 
-                smartmemeber = request.GET.get('sm')
-                if smartmemeber:
-                    tasks.smartmemeber_webhook_call.delay(subdomain=smartmemeber, data=params)
-
                 payment = PlanPayment(fullname=data['fullname'],
                                       email=data['email'],
                                       provider='JVZoo',
@@ -440,10 +436,6 @@ def webhook(request, provider, option):
                     data=data)
 
             data.update(params)
-
-            smartmemeber = request.GET.get('sm')
-            if smartmemeber:
-                tasks.smartmemeber_webhook_call.delay(subdomain=smartmemeber, data=params)
 
             payment = PlanPayment(fullname=data['fullname'],
                                   email=data['email'],
