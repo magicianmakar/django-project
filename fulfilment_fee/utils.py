@@ -12,10 +12,11 @@ def generate_sale_transaction_fee(source_type, source, amount, currency_data):
     try:
         fee_percent = safe_float(source.user.profile.plan.sales_fee_config.fee_percent)
 
+        # generating full fee when any of order items is fulfilled
         sale_transaction_fee = SaleTransactionFee.objects.update_or_create(
             user=source.user,
             source_model=source_type,
-            source_id=source.id,
+            source_id=source.source_id,
             fee_value=amount * fee_percent / 100,
             currency_conversion_data=json.dumps(currency_data)
         )
