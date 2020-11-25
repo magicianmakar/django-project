@@ -522,16 +522,29 @@
                     </table>
                 {% endif %}
 
-                {% if logs %}
-                    <hr/>
-                    <h2>Addon logs</h2>
-                    {% for log in logs %}
-                        <p class="log">{{ log }}</p>
-                    {% endfor %}
-                {% endif %}
-
             </div>
         </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        {% if logs %}
+            <div class="ibox float-e-margins addon-logs">
+                <div class="ibox-title">
+                    <h2>Addon logs</h2>
+                    <div class="ibox-tools">
+                        <a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
+                    </div>
+                </div>
+                <div id="addon-logs-content" class="ibox-content" style="display: none;">
+                    {% for log in logs %}
+                        <p class="log">{{ log.text }}</p>
+                    {% endfor %}
+                    <a id="more-show">Show more</a>
+                </div>
+            </div>
+        {% endif %}
     </div>
 </div>
 
@@ -603,6 +616,12 @@
 
     .user-data td {
         vertical-align: middle !important;
+    }
+
+    .addon-logs .ibox-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     </style>
 {% endblock %}
@@ -795,6 +814,25 @@
                     }
                 });
             }
+
+            var applyShowMore = function () {
+                var numRowsToShow = 10;
+                var moreText = 'Show more';
+                var lessText = 'Show less';
+                var moreLink = $('#more-show').addClass('hidden');
+                var rows = $('#addon-logs-content p');
+
+                if (rows.length > numRowsToShow) {
+                    var toggableRows = $(rows).slice(numRowsToShow).hide();
+                    moreLink.html(moreText).removeClass('hidden').on('click', function(e) {
+                        var newText = $(this).html() === moreText ? lessText: moreText;
+                        $(this).html(newText);
+                        toggableRows.toggle();
+                    });
+                }
+            };
+
+            applyShowMore();
 
             {% if users_count > 1 %}
             $('.dataTables').dataTable({

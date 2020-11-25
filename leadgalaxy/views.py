@@ -2579,12 +2579,26 @@ def acp_users_list(request):
         target_user = users[0]
         for addon_usage in AddonUsage.objects.filter(user=target_user.id):
             if addon_usage.created_at:
-                logs.append('{} addon is installed at {}'.format(
-                    addon_usage.billing.addon.title, arrow.get(addon_usage.created_at).format('MM/DD/YYYY HH:mm')))
+                logs.append({
+                    'key': arrow.get(addon_usage.created_at),
+                    'text': '{} addon is installed at {}'
+                    .format(addon_usage.billing.addon.title, arrow.get(addon_usage.created_at).format('MM/DD/YYYY HH:mm'))
+                })
 
             if addon_usage.cancelled_at:
-                logs.append('{} addon is uninstalled at {}'.format(
-                    addon_usage.billing.addon.title, arrow.get(addon_usage.cancelled_at).format('MM/DD/YYYY HH:mm')))
+                logs.append({
+                    'key': arrow.get(addon_usage.cancelled_at),
+                    'text': '{} addon is uninstalled at {}'
+                    .format(addon_usage.billing.addon.title, arrow.get(addon_usage.cancelled_at).format('MM/DD/YYYY HH:mm'))
+                })
+
+        def extract_time(json):
+            try:
+                return json['key']
+            except KeyError:
+                return 0
+
+        logs.sort(key=extract_time, reverse=True)
 
         account_registration = AccountRegistration.objects.filter(user=target_user).first()
 
