@@ -278,14 +278,10 @@ class OrdersShippedWebHookView(View, BaseMixin):
             basic_data = source_data.get(track.source_id)
             if not basic_data:
                 continue
-
-            if type(basic_data['order_details']) is str:
-                try:
-                    basic_data['order_details'] = json.loads(basic_data['order_details'])
-                except:
-                    pass
-
-            basic_data['order_details']['currency'] = track_currency
+            # update currnecy from store order data
+            order_details = json.loads(basic_data.get('order_details'))
+            order_details['cost']['currency'] = track_currency
+            basic_data['order_details'] = json.dumps(order_details)
 
             data = {
                 **basic_data,
