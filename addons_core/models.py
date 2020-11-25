@@ -136,6 +136,10 @@ class AddonBilling(models.Model):
     def billing_title(self):
         return f"{self.addon.title} {self.interval_count}x {self.get_interval_display()}"
 
+    @cached_property
+    def max_cost(self):
+        return self.prices.order_by('-price').first().price
+
 
 class AddonPrice(models.Model):
     class Meta:

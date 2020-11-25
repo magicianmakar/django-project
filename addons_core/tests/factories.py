@@ -132,3 +132,14 @@ class StripeSubscriptionFactory(factory.Factory):
     class Meta:
         model = DictAsObject
         abstract = False
+
+
+class RecurringApplicationChargeFactory(factory.Factory):
+    price = factory.fuzzy.FuzzyDecimal(0.1)
+    capped_amount = factory.LazyAttribute(lambda c: c.price)
+    balance_remaining = 0
+    update_capped_amount_url = True
+
+    class Meta:
+        model = DictAsObject
+        abstract = False

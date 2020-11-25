@@ -3,12 +3,14 @@ from unittest.mock import Mock, patch
 from arrow import get as arrow_get  # Bypass patched mock
 
 from lib.test import BaseTestCase
+from leadgalaxy.tests.factories import ShopifyStoreFactory
 from addons_core.utils import (
     sync_stripe_addon,
     sync_stripe_billing,
     create_stripe_subscription,
     update_stripe_subscription,
     create_usage_from_stripe,
+    has_shopify_limit_exceeded,
 )
 from addons_core.models import Addon, AddonPrice
 from .factories import (
@@ -17,6 +19,7 @@ from .factories import (
     StripePriceFactory,
     StripeSubscriptionFactory,
     StripeSubscriptionItemFactory,
+    RecurringApplicationChargeFactory,
 )
 
 
@@ -39,6 +42,7 @@ class AddonTestCase(BaseTestCase):
             self.price = self.billing.prices.first()
             self.addon = self.billing.addon
             self.customer_id = self.addon_usage.user.stripe_customer.customer_id
+            ShopifyStoreFactory(user=self.addon_usage.user)
 
     def test_sending_addon_to_stripe(self):
         with patch('stripe.Product.create', return_value=Mock(id='Addon_123')) as stripe_mock:
@@ -165,3 +169,30 @@ class AddonTestCase(BaseTestCase):
                    return_value=StripeSubscriptionFactory(customer=self.customer_id)):
             addon_usage = create_usage_from_stripe(item)
             self.assertNotEqual(addon_usage, None)
+
+    def test_shopify_must_exceed_limit(self):
+        charge = RecurringApplicationChargeFactory()
+        charge.customize = Mock(return_value=True)
+
+        exceeded = has_shopify_limit_exceeded(self.addon_usage.user, self.billing, charge)
+        charge.customize.assert_called_once()
+        self.assertTrue(exceeded)
+
+    def test_shopify_must_not_exceed_limit(self):
+        charge = RecurringApplicationChargeFactory()
+        charge.customize = Mock(return_value=True)
+        charge.capped_amount += self.price.price
+
+        exceeded = has_shopify_limit_exceeded(self.addon_usage.user, self.billing, charge)
+        charge.customize.assert_not_called()
+        self.assertFalse(exceeded)
+
+    def test_must_not_have_shopify_recurring_charge(self):
+        target = 'shopify.resources.recurring_application_charge.RecurringApplicationCharge.find'
+        charge = RecurringApplicationChargeFactory()
+        charge.status = 'declined'
+        with patch(target, return_value=[charge]), \
+                self.assertRaises(Exception) as context:
+            has_shopify_limit_exceeded(self.addon_usage.user)
+
+        self.assertIn('Not Found', str(context.exception))

@@ -3,12 +3,12 @@ from decimal import Decimal
 
 import arrow
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum, Max
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 from shopified_core.utils import safe_int
 from stripe_subscription.models import StripeCustomer
 from stripe_subscription.stripe_api import stripe
@@ -451,3 +451,56 @@ def cancel_stripe_addons(subscription, item_ids=None):
         addon_usage.stripe_subscription_item_id = ''
 
     return cancel_addon_usages(addon_usages)
+
+
+def has_shopify_limit_exceeded(user, addon_billing=None, charge=None):
+    """Get first active subscription and check the capped limit against
+    all subscribed addon prices for current period
+    """
+    if charge is None:
+        # Shopify allows only one store per subscription
+        store = user.profile.get_shopify_stores().first()
+        charges = store.shopify.RecurringApplicationCharge.find()
+        for charge in charges:
+            if charge.status == 'active':
+                break
+        else:
+            raise Exception('Subscription Not Found')
+
+    # Some shopify subscriptions have a base amount
+    total_cost = Decimal(charge.price)
+
+    # Sum cancelled addons for this month as well
+    one_month_ago = arrow.get().shift(months=-1).floor('day').datetime
+    addon_usages = AddonUsage.objects.filter(
+        Q(cancelled_at__isnull=True) | (
+            Q(cancelled_at__isnull=False)
+            & Q(cancelled_at__gte=one_month_ago)
+        ),
+        user=user
+    ).annotate(max_price=Max('billing__prices__price'))
+
+    if addon_billing is not None:
+        addon_usages = addon_usages.exclude(billing_id=addon_billing.id)
+        total_cost += addon_billing.max_cost
+
+    total_cost += addon_usages.aggregate(c=Sum('max_price'))['c'] or Decimal('0.0')
+    if Decimal(charge.capped_amount) < total_cost:
+        # When all addons are paid, sum just recently subscribed addon
+        if charge.balance_remaining == 0 and addon_billing is not None:
+            total_cost = charge.capped_amount + addon_billing.max_cost
+
+        # Shopify bugs the subscription if we update below capped_amount
+        if total_cost < Decimal(charge.capped_amount):
+            capture_message('Shopify capped amount is lesser than updated amount', extra={
+                'total_cost': total_cost,
+                'capped_amount': charge.capped_amount,
+                'user_id': user.id,
+                'addon_billing': addon_billing.id if addon_billing else '-'
+            })
+            return False
+
+        charge.customize(capped_amount=total_cost)
+        return charge.update_capped_amount_url
+
+    return False
