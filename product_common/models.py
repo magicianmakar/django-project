@@ -101,7 +101,7 @@ class AbstractOrder(AbstractOrderInfo, OrderMixin):
     ]
 
     order_number = models.CharField(max_length=50)
-    stripe_transaction_id = models.CharField(max_length=50)
+    stripe_transaction_id = models.CharField(max_length=50, blank=True)
     shipstation_key = models.CharField(max_length=500, blank=True, default='')
 
     amount = models.IntegerField()

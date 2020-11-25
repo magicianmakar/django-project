@@ -138,7 +138,7 @@ class PLSOrderAdmin(admin.ModelAdmin):
         'wholesale_price',
     )
     raw_id_fields = ('user',)
-    readonly_fields = ('stripe_transaction_id', 'payment_date')
+    readonly_fields = ('payment_date',)
     actions = ('export_order_lines', 'export_orders', 'export_totals_by_user')
 
     def has_delete_permission(self, request, obj=None):
