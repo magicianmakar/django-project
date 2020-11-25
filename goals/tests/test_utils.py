@@ -75,8 +75,8 @@ class GetDashboardUserGoalsTestCase(BaseTestCase):
         GoalStepRelationship.objects.create(goal=goal3, step=StepFactory(), step_number=2)
         GoalStepRelationship.objects.create(goal=goal3, step=StepFactory(), step_number=1)
 
-    def test_must_only_query_three_times(self):
-        with self.assertNumQueries(3):
+    def test_must_only_query_six_times(self):
+        with self.assertNumQueries(6):
             for user_goal in get_dashboard_user_goals(self.user):
                 user_goal.user.id
                 user_goal.goal.id

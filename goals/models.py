@@ -29,7 +29,8 @@ class UserGoalRelationship(models.Model):
         Returns the count of the steps completed by the user that also belongs
         to this goal.
         """
-        return len(set(self.user.completed_steps.all()) & set(self.goal.steps.all()))
+        step_ids = [s.id for s in self.goal.steps.all()]
+        return self.user.completed_steps.filter(id__in=step_ids).count()
 
 
 class GoalStepRelationship(models.Model):

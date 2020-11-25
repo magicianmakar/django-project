@@ -2071,6 +2071,7 @@ class GroupPlan(models.Model):
     payment_interval = models.CharField(max_length=25, choices=PLAN_PAYMENT_TYPE, default='')
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     locked = models.BooleanField(default=False, verbose_name='Disable Direct Subscription')
+    goals = models.ManyToManyField('goals.Goal', related_name='plans', blank=True)
 
     def __str__(self):
         return f'Plan: {self.title}'

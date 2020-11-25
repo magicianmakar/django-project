@@ -9,6 +9,11 @@ from ..models import Goal, UserGoalRelationship, GoalStepRelationship
 
 
 class GoalTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        for goal in Goal.objects.all():
+            goal.plans.add(self.user.profile.plan)
+
     def test_can_order_steps_by_step_number(self):
         goal = GoalFactory()
         step2 = StepFactory(slug='step 2')
@@ -21,38 +26,40 @@ class GoalTestCase(BaseTestCase):
         self.assertEqual([step1, step2], list(steps))
 
     def test_goals_are_added_to_new_users(self):
-        GoalFactory()
-        user = UserFactory()
+        goal = GoalFactory()
+        goal.plans.add(self.user.profile.plan)
         goals = list(Goal.objects.all())
-        user_goals = list(user.goal_set.all())
+        user_goals = list(self.user.goal_set.all())
         self.assertEqual(goals, user_goals)
 
 
 class UserGoalRelationshipTestCase(BaseTestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        for goal in Goal.objects.all():
+            goal.plans.add(self.user.profile.plan)
+
     def test_returns_number_of_steps_completed_by_user(self):
-        user = UserFactory()
         goal = GoalFactory()
-        user_goal = UserGoalRelationship.objects.create(user=user, goal=goal)
+        user_goal = UserGoalRelationship.objects.create(user=self.user, goal=goal)
         step = StepFactory()
         GoalStepRelationship.objects.create(goal=goal, step=step, step_number=1)
         GoalStepRelationship.objects.create(goal=goal, step=StepFactory(), step_number=2)
-        user.completed_steps.add(step)
-        user.completed_steps.add(StepFactory())
+        self.user.completed_steps.add(step)
+        self.user.completed_steps.add(StepFactory())
         self.assertEqual(user_goal.total_steps_completed, 1)
 
     @patch('goals.models.UserGoalRelationship.objects.create')
     def test_goals_are_not_added_post_user_save(self, create):
-        user = UserFactory()
-        user.username = 'newusername'
-        user.save()
-        self.assertEqual(create.call_count, Goal.objects.count())
+        self.user.username = 'newusername'
+        self.user.save()
+        self.assertEqual(create.call_count, 0)
 
     def test_goal_must_be_unique_per_user(self):
-        user = UserFactory()
         goal = GoalFactory()
-        UserGoalRelationship.objects.create(user=user, goal=goal)
+        UserGoalRelationship.objects.create(user=self.user, goal=goal)
         with self.assertRaises(IntegrityError):
-            UserGoalRelationship.objects.create(user=user, goal=goal)
+            UserGoalRelationship.objects.create(user=self.user, goal=goal)
 
 
 class GoalStepRelationshipTestCase(BaseTestCase):

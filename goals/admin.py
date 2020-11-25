@@ -29,6 +29,7 @@ class GoalStepRelationshipAdmin(admin.ModelAdmin):
 @admin.register(Goal)
 class GoalAdmin(admin.ModelAdmin):
     list_display = ('id', 'goal_number', 'title', 'description', 'tip')
+    search_fields = ('id', 'title', 'description')
     inlines = GoalStepRelationshipInline, UserGoalRelationshipInline
 
 

@@ -63,7 +63,7 @@ class GroupPlanAdmin(admin.ModelAdmin):
             return '/accounts/register/{}-subscribe'.format(obj.slug)
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-        if db_field.name == 'permissions':
+        if db_field.name in ['permissions', 'goals']:
             kwargs['widget'] = forms.widgets.CheckboxSelectMultiple()
 
         return super().formfield_for_manytomany(db_field, request=request, **kwargs)

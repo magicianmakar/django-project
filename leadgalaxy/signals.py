@@ -63,6 +63,10 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
             except:
                 pass
 
+    UserGoalRelationship.objects.filter(user=user).delete()
+    for goal in Goal.objects.filter(plans=current_plan):
+        UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
+
 
 @receiver(post_save, sender=UserProfile)
 def invalidate_acp_users(sender, instance, created, **kwargs):
@@ -274,13 +278,6 @@ def delete_aliexpress_fulfillment_cost(sender, instance, **kwargs):
         order_id=instance.order_id,
         source_id=instance.source_id
     ).delete()
-
-
-@receiver(post_save, sender=User)
-def add_goals_to_new_user(sender, instance, created, **kwargs):
-    if created:
-        for goal in Goal.objects.all():
-            UserGoalRelationship.objects.create(user=instance, goal=goal)
 
 
 @receiver(post_save, sender=ShopifyProduct)
