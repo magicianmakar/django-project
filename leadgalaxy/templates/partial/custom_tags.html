@@ -29,6 +29,7 @@
             window.intercomSettings = {
                 app_id: "{{INTERCOM_APP_ID}}",
                 user_id: {{ user.id }},
+                custom_launcher_selector: '.launch-intercom-btn',
                 {% if INTERCOM_USER_HASH %}user_hash: '{{INTERCOM_USER_HASH}}',{% endif %}
                 name: dataLayer[0].name,
                 email: currentUser.email,
