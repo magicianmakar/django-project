@@ -8,7 +8,8 @@ from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 
-from lib.exceptions import capture_exception, capture_message
+from leadgalaxy.models import GroupPlan
+from lib.exceptions import capture_exception
 from shopified_core.utils import safe_int
 from stripe_subscription.models import StripeCustomer
 from stripe_subscription.stripe_api import stripe
@@ -41,6 +42,36 @@ def has_only_addons(stripe_subscription):
     return True
 
 
+def has_main_plan(customer_id):
+    for subscription in get_customer_subscriptions(customer_id):
+        if not has_only_addons(subscription):
+            return True
+
+    return False
+
+
+def add_addon_plan(subscription):
+    plan = GroupPlan.objects.filter(slug='addons-plan').first()
+    if plan is None:
+        return subscription
+
+    item_data = {
+        'price': plan.stripe_plan.stripe_id,
+        'quantity': 1,
+        'metadata': {'plan_id': plan.id}
+    }
+
+    first_item = subscription['items']['data'][0]['price']
+    if first_item['recurring']['interval'] == 'month' \
+            and first_item['recurring']['interval_count'] == 1:
+        return stripe.Subscription.modify(subscription.id, items=[item_data])
+    else:
+        return stripe.Subscription.create(
+            customer=subscription.customer,
+            items=[item_data],
+        )
+
+
 def is_custom_subscription(subscription):
     return any([bool(i['plan']['metadata'].get('custom'))
                for i in subscription['items']['data']
@@ -54,6 +85,59 @@ def get_customer_subscriptions(customer_id):
         subscriptions = stripe.Subscription.list(customer=customer_id, starting_after=subscription)
         for subscription in subscriptions:
             yield subscription
+
+
+def merge_stripe_subscriptions(stripe_subscription):
+    if not stripe_subscription['metadata'].get('netsuite_CF_funnel_id'):
+        return stripe_subscription
+
+    period_start = arrow.get(stripe_subscription.current_period_start).date()
+    billing_data = stripe_subscription['items']['data'][0]['price']['recurring']
+    click_funnels_id = stripe_subscription['metadata'].get('netsuite_CF_funnel_id')
+
+    # Attach subscription to its equal in period and funnel id
+    for new_subscription in get_customer_subscriptions(stripe_subscription.customer):
+        if new_subscription.id == stripe_subscription.id:
+            continue
+
+        new_click_funnels_id = new_subscription['metadata'].get('netsuite_CF_funnel_id')
+        if not new_click_funnels_id or new_click_funnels_id != click_funnels_id:
+            continue
+
+        new_period_start = arrow.get(new_subscription.current_period_start).date()
+        if period_start != new_period_start:
+            continue
+
+        new_billing_data = new_subscription['items']['data'][0]['price']['recurring']
+        if new_billing_data.interval_count != billing_data.interval_count \
+                or new_billing_data.interval != billing_data.interval:
+            continue
+
+        try:
+            for item in stripe_subscription['items']['data']:
+                new_item = stripe.SubscriptionItem.create(
+                    subscription=new_subscription.id,
+                    price=item['price']['id'],
+                    quantity=1,
+                    proration_behavior='none',
+                    metadata={'moved_from': stripe_subscription.id}
+                )
+                AddonUsage.objects.filter(
+                    stripe_subscription_id=stripe_subscription.id,
+                    stripe_subscription_item_id=item.id
+                ).update(
+                    stripe_subscription_id=new_subscription.id,
+                    stripe_subscription_item_id=new_item.id
+                )
+
+            stripe.Subscription.delete(stripe_subscription.id)
+            return new_subscription
+        except:
+            continue
+
+        break
+
+    return stripe_subscription
 
 
 def get_item_from_subscription(subscription, item_id):
@@ -258,7 +342,7 @@ def create_stripe_subscription(addon_usage):
     # Add addon in existing subscriptions with the same billing cycle
     customer_id = addon_usage.user.stripe_customer.customer_id
     for subscription in get_customer_subscriptions(customer_id):
-        # Add item to custom subscription breaks stripe webhooks matching
+        # Add item to a custom subscription breaks stripe webhooks matching
         # customer.subscription.(created|updated|deleted)
         if is_custom_subscription(subscription):
             continue
@@ -354,17 +438,19 @@ def update_stripe_subscription(addon_usage):
     return subscription_item
 
 
-def create_usage_from_stripe(subscription_item):
+def create_usage_from_stripe(subscription, subscription_item):
+    if subscription.metadata.get('moved_to'):
+        return None
+
     price = AddonPrice.objects.filter(stripe_price_id=subscription_item.price.id).first()
     if price is None:
         return None
 
-    subscription = stripe.Subscription.retrieve(subscription_item.subscription)
     stripe_customer = StripeCustomer.objects.filter(customer_id=subscription.customer).first()
     if stripe_customer is None:
         return None
 
-    addon_usage = AddonUsage.objects.get_or_create(
+    addon_usage = AddonUsage.objects.update_or_create(
         user=stripe_customer.user,
         billing=price.billing,
         cancelled_at=None,

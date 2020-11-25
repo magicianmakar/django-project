@@ -165,10 +165,9 @@ class AddonTestCase(BaseTestCase):
             subscription='123'
         )
 
-        with patch('stripe.Subscription.retrieve',
-                   return_value=StripeSubscriptionFactory(customer=self.customer_id)):
-            addon_usage = create_usage_from_stripe(item)
-            self.assertNotEqual(addon_usage, None)
+        stripe_subscription = StripeSubscriptionFactory(customer=self.customer_id)
+        addon_usage = create_usage_from_stripe(stripe_subscription, item)
+        self.assertNotEqual(addon_usage, None)
 
     def test_shopify_must_exceed_limit(self):
         charge = RecurringApplicationChargeFactory()

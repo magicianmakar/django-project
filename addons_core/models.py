@@ -228,9 +228,13 @@ class AddonUsage(models.Model):
             )))
 
         for subscription in self.previous_subscriptions:
+            # Disregard unpaid periods like trials
+            if subscription.cancelled_at < subscription.start_at:
+                continue
+
             iterations += len(list(arrow.Arrow.range(
                 arrow_interval,
-                arrow.get(subscription.created_at).floor('day'),
+                arrow.get(subscription.start_at).floor('day'),
                 arrow.get(subscription.cancelled_at).ceil('day')
             )))
 

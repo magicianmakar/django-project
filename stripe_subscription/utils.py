@@ -27,11 +27,14 @@ from .stripe_api import stripe
 
 from addons_core.models import Addon, AddonPrice
 from addons_core.utils import (
+    add_addon_plan,
+    cancel_stripe_addons,
+    create_usage_from_stripe,
+    has_main_plan,
     has_only_addons,
+    merge_stripe_subscriptions,
     sync_stripe_addon,
     sync_stripe_billing,
-    create_usage_from_stripe,
-    cancel_stripe_addons,
 )
 from lib.exceptions import capture_exception, capture_message
 from shopified_core.utils import safe_str
@@ -50,6 +53,9 @@ class SubscriptionException(Exception):
 def get_main_subscription_item(sub):
     for item in sub['items']['data']:
         try:
+            if item['price']['metadata'].get('addon_usage_id'):
+                continue
+
             custom_flag = item['plan']['metadata']['custom']
             if custom_flag:
                 continue
@@ -605,6 +611,21 @@ def process_webhook_event(request, event_id):
     elif event.type == 'customer.subscription.created':
         sub = event.data.object
 
+        # User Addon are not counted as plan so make sure we add a parent plan
+        only_addons_subscription = has_only_addons(sub)
+        if only_addons_subscription:
+            sub = merge_stripe_subscriptions(sub)
+
+            try:
+                customer = StripeCustomer.objects.get(customer_id=sub.customer)
+
+                if not has_main_plan(customer.customer_id):  # Search stripe subscriptions
+                    sub = add_addon_plan(sub)
+
+            except StripeCustomer.DoesNotExist:
+                # First subscription from CF doesn't have customer yet
+                sub = add_addon_plan(sub)
+
         # check for all custom subscriptions in lines data
         for item in sub['items']['data']:
             try:
@@ -693,7 +714,7 @@ def process_webhook_event(request, event_id):
             stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
             stripe_sub.refresh(sub=sub)
         except StripeSubscription.DoesNotExist:
-            if not has_only_addons(sub):
+            if not only_addons_subscription:
                 try:
                     sub = stripe.Subscription.retrieve(sub.id)
                     plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id'))
@@ -708,8 +729,12 @@ def process_webhook_event(request, event_id):
                     pass
 
         for subscription_item in sub['items']:
-            create_usage_from_stripe(subscription_item=subscription_item)
+            create_usage_from_stripe(
+                subscription=sub,
+                subscription_item=subscription_item,
+            )
 
+        stripe.Subscription.modify(sub.id, metadata={'user_id': customer.user.id})
         if created:
             return HttpResponse('New User Registered')
         else:
@@ -717,6 +742,12 @@ def process_webhook_event(request, event_id):
 
     elif event.type == 'customer.subscription.updated':
         sub = event.data.object
+
+        for subscription_item in sub['items']:
+            create_usage_from_stripe(
+                subscription=sub,
+                subscription_item=subscription_item,
+            )
 
         # check for all custom subscriptions in lines data
         for item in sub['items']['data']:
