@@ -114,8 +114,8 @@ def update_product_api_data(api_data, data, store):
     api_data['status'] = 'publish' if data['published'] else 'draft'
     api_data['price'] = str(data['price'])
     if data['compare_at_price']:
-        api_data['regular_price'] = str(data['compare_at_price'])
-        api_data['sale_price'] = str(data['price'])
+        api_data['regular_price'] = str(data['price'])
+        api_data['sale_price'] = str(data['compare_at_price'])
     else:
         api_data['regular_price'] = str(data['price'])
         api_data['sale_price'] = ''
@@ -232,16 +232,16 @@ def create_variants_api_data(data, image_id_by_hash, attributes=None):
         api_data['description'] = ' | '.join(descriptions)
 
         if data.get('compare_at_price'):
-            api_data['regular_price'] = str(data['compare_at_price'])
-            api_data['sale_price'] = str(data['price'])
+            api_data['regular_price'] = str(data['price'])
+            api_data['sale_price'] = str(data['compare_at_price'])
         else:
             api_data['regular_price'] = str(data['price'])
 
         variant_name = ' / '.join(options)
         variant = variants_info.get(variant_name, {})
         if variant.get('compare_at'):
-            api_data['regular_price'] = str(variant['compare_at'])
-            api_data['sale_price'] = str(variant['price'])
+            api_data['regular_price'] = str(variant['price'])
+            api_data['sale_price'] = str(variant['compare_at'])
         elif variant.get('price'):
             api_data['regular_price'] = str(variant['price'])
 
@@ -305,8 +305,8 @@ def update_variants_api_data(data):
         variant = {'id': item['id'], 'sku': item['sku']}
 
         if item.get('compare_at_price'):
-            variant['sale_price'] = str(item['price'])
-            variant['regular_price'] = str(item['compare_at_price'])
+            variant['sale_price'] = str(item['compare_at_price'])
+            variant['regular_price'] = str(item['price'])
         else:
             variant['regular_price'] = str(item['price'])
 
