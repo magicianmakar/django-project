@@ -483,4 +483,55 @@ a.addon-install {
     max-width: 1140px;
     margin: 0 auto;
 }
-  
+
+#addon-choose-plan {
+    margin: 25px auto;
+    max-width: 1230px;
+}
+
+#addon-choose-plan > div {
+    margin: 0 auto;
+    float: none;
+    padding-right: 0;
+    padding-left: 0;
+}
+
+#addon-choose-plan h2 {
+    font-size: 46px;
+    color: #333333;
+    margin-bottom: 12px;
+}
+
+#addon-choose-plan .thin-font {
+    font-size: 19px;
+    font-weight: 300 !important;
+    margin-bottom: 1.3em;
+    color: #333333;
+}
+
+#addon-choose-plan a {
+    background-color: #1190EE;
+    border-radius: 35px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 14px 28px 0px,
+                rgba(0, 0, 0, 0.1) 0px 10px 10px 0px;
+    display: inline-block;
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 57px;
+    margin: 20px 24px 24px 0px;
+    min-height: 60px;
+    padding: 0px 29px;
+    color: #ffffff;
+}
+
+#addon-choose-plan a span:after {
+    content: "";
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    display: inline-block;
+    padding: 4px;
+    margin: 0 0 3px 11px;
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+}

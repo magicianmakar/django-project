@@ -11,6 +11,12 @@ register = template.Library()
 
 @register.filter(takes_context=True)
 def for_user(addon_billings, user):
+    if not user.is_authenticated:
+        addon_billing = addon_billings.first()
+        addon_billing.user_price = addon_billing.prices.first()
+        addon_billing.trial_days_left = addon_billing.trial_period_days
+        return [addon_billing]
+
     subscriptions = AddonUsage.objects.filter(
         price_after_cancel__isnull=False,
         user=user

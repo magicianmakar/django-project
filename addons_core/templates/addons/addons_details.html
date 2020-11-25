@@ -4,6 +4,7 @@
 {% load template_helper %}
 {% load compress %}
 {% load addons_helper %}
+{% load widget_tweaks %}
 
 {% block main-container %}
 
@@ -66,6 +67,16 @@
                         </a>
                         {% elif permission_count == object.permissions.count %}
                         <div class="addon-free-trial" style="color: #94c77f">This Addon is already included in your plan</div>
+                        {% elif not user.is_authenticated %}
+                        <button class="btn-xs
+                                  addon-install
+                                  add-on-color"
+                            data-toggle="modal"
+                            data-target="#register"
+                            href="#"
+                            target="_blank">
+                            {{ object.action_name }}
+                        </button>
                         {% else %}
                         <button class="{% if xs %}btn-xs{% endif %} addon-install add-on-color"
                                 id="addon-install"
@@ -120,6 +131,49 @@
 <!-- Tab section starts here-->
 {% include "addons/partials/addon_tabs.html" with item=object %}
 
+{% include 'addons/partials/bottom_banner.html' %}
+
+<div class="modal fade" id="register" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog middle-box" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="text-center">
+                    <div>
+                        <div>
+                            <h1 class="logo-name" style="font-size: 16px">
+                                <img src="{% static 'dropified-logo.png' %}" style="width:220px">
+                            </h1>
+                        </div>
+
+                        <h3 class="welcome-title">Welcome to Dropified!</h3>
+                        <p class="welcome-text">It’s time to start automating your drop shipping business and experience how great drop shipping can be.</p>
+                        <h5 class="welcome-subtitle font-alt color-green">Login to see it in action!</h5>
+                        <form method="POST" class="m-t" role="form" action="{% url 'login' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{% url 'addons.details_view' pk=object.id slug=object.slug %}" />
+
+                            <div class="form-group">
+                                {% render_field login_form.username class+="form-control new input-lg" placeholder="Email" type="email" required="" %}
+                            </div>
+                            <div class="form-group">
+                                {% render_field login_form.password class+="form-control new input-lg" placeholder="Password" required="" %}
+                            </div>
+                            <div style="text-align:center;">
+                                <button type="submit" class="big-btn btn btn-primary m-b">Login</button>
+                            </div>
+
+                            <a href="/accounts/password/reset/" class="forgot-password">Forgot password?</a>
+                            <p class="text-muted text-center no-account">Don't have an account yet?</p>
+                            <a class="big-btn btn btn-info" href="{% url 'register' %}">Create an account</a>
+                        </form>
+                        <div class="m-t copyright"><img src="{% static 'dropified-logo.png' %}" style="width:110px"> &copy; {% now "Y" %}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 
@@ -128,4 +182,59 @@
     {% compress js %}
     <script type="text/javascript" src="{% static 'addons/js/addons.js' %}"></script>
     {% endcompress %}
+{% endblock %}
+
+{% block extracss %}
+{{ block.super }}
+<style type="text/css">
+.middle-box {
+  padding-top: 0;
+  margin: 30px auto;
+  background-color: #fff;
+  border-radius: 8px;
+}
+.middle-box .logo-name {
+  text-align: center;
+  margin-top: 0;
+}
+.middle-box .welcome-title {
+  color: #93c47d;
+  font-weight: normal;
+  font-size: 20px;
+  margin: 11px 0 8px 0;
+}
+.middle-box .welcome-subtitle {
+  font-size: 18px;
+  margin: 12px 0 20px 0;
+}
+.middle-box .forgot-password {
+  color: #7dabc4;
+  font-style: italic;
+  font-size: 16px;
+  margin-bottom: 11px;
+  display: inline-block;
+}
+.middle-box .forgot-password:hover {
+  color: #5b8aa3;
+}
+.middle-box .no-account {
+  color: #575758;
+  font-style: italic;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+.middle-box form .form-group input.form-control {
+  max-width: 300px;
+  margin: 0 auto;
+}
+.middle-box .copyright {
+  margin-top: 18px;
+  color: #808080;
+}
+.middle-box .copyright img {
+  margin-right: 5px;
+  position: relative;
+  bottom: 2px;
+}
+</style>
 {% endblock %}

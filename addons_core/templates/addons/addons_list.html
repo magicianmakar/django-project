@@ -41,7 +41,6 @@
                     {% endfor %}
                 </div>
             </div>
-            </div>
         </div>
     {% else %}
         {% if search %}
@@ -79,12 +78,14 @@
                         {% include 'addons/partials/addon_card.html' %}
                     {% endfor %}
                 </div>
-                </div>
+            </div>
             {% endif %}
         {% endfor %}
     {% endif %}
-{% endblock %}
+
+    {% include 'addons/partials/bottom_banner.html' %}
 </div>
+{% endblock %}
 
 
 {% block extrajs %}

@@ -12,7 +12,13 @@
                     <img style="max-width:125px" src="{% static 'dropified-logo-d.png' %}" alt="Dropified">
                 </a>
             </div>
-            <a class="btn btn-success btn-rounded navbar-btn navbar-right m-l" href="https://app.dropified.com/">My Account</a>
+            <a class="btn btn-success btn-rounded navbar-btn navbar-right m-l" href="https://app.dropified.com/">
+                {% if user.is_authenticated %}
+                My Account
+                {% else %}
+                Login
+                {% endif %}
+            </a>
             {% if user|can:'addons_edit.use' %}
             <a id="add-addon-btn" class="btn btn-success btn-rounded navbar-btn navbar-right" href="#"><i class="fa fa-plus"></i> Add Addon</a>
             {% endif %}

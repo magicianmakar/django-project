@@ -1,8 +1,10 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 from django.views.generic import ListView, TemplateView
 from django.views.generic.detail import BaseDetailView
 from django.views.generic.list import BaseListView
@@ -14,14 +16,13 @@ import simplejson as json
 
 
 class BaseTemplateView(TemplateView):
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
-
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
         ctx['addon_category'] = Category.objects.all().filter(is_visible=True)
-        ctx['user_addons'] = self.request.user.models_user.profile.addons.all()
+        if self.request.user.is_authenticated:
+            ctx['user_addons'] = self.request.user.models_user.profile.addons.all()
+        else:
+            ctx['user_addons'] = []
         ctx['user_addon_ids'] = [i.id for i in ctx['user_addons']]
 
         return ctx
@@ -50,6 +51,7 @@ class AddonsDetailsView(BaseDetailView, BaseTemplateView):
     model = Addon
     template_name = 'addons/addons_details.html'
 
+    @method_decorator(csrf_protect)  # Generate correct CSRF token
     def dispatch(self, request, *args, **kwargs):
         self.object = self.get_object()
         if self.object.slug != kwargs.get('slug'):
@@ -68,12 +70,14 @@ class AddonsDetailsView(BaseDetailView, BaseTemplateView):
 
     def get_context_data(self, **kwargs: dict) -> dict:
         permission_count = 0
-        for p in self.object.permissions.all():
-            if self.request.user.can(p.name):
-                permission_count += 1
+        if self.request.user.is_authenticated:
+            for p in self.object.permissions.all():
+                if self.request.user.can(p.name):
+                    permission_count += 1
+
         ctx = super().get_context_data(**kwargs)
         ctx['permission_count'] = permission_count
-
+        ctx['login_form'] = AuthenticationForm()
         ctx['breadcrumbs'] = [
             {
                 'title': 'Addons',
