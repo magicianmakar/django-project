@@ -21,9 +21,15 @@ def for_user(addon_billings, user):
         price_after_cancel__isnull=False,
         user=user
     ).select_related('price_after_cancel')
+    cancel_subscriptions = AddonUsage.objects.filter(
+        user=user,
+        is_active=True,
+        cancelled_at__isnull=False
+    )
     addon_billings = addon_billings.prefetch_related(
         'prices',
-        Prefetch('subscriptions', queryset=subscriptions)
+        Prefetch('subscriptions', queryset=subscriptions),
+        Prefetch('subscriptions', queryset=cancel_subscriptions, to_attr='cancel_subscriptions'),
     ).annotate(
         total_usage=Sum(
             Coalesce(F('subscriptions__cancelled_at'), Now()) - F('subscriptions__created_at'),
@@ -53,6 +59,10 @@ def for_user(addon_billings, user):
         else:
             trial_days_left = addon_billing.trial_period_days - addon_billing.total_usage.days
             addon_billing.trial_days_left = trial_days_left if trial_days_left > 0 else 0
+
+        addon_billing.cancel_at_period_end = False
+        if len(addon_billing.cancel_subscriptions) > 0:
+            addon_billing.cancel_at_period_end = addon_billing.cancel_subscriptions[0]
 
     return addon_billings
 

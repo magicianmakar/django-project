@@ -1,13 +1,17 @@
 import argparse
 
 import arrow
-from django.db.models import Prefetch
+from django.db.models import Q, Prefetch
 from django.contrib.auth.models import User
 
 from lib.exceptions import capture_exception
 from shopified_core.management import DropifiedBaseCommand
 from addons_core.models import AddonUsage
-from addons_core.utils import create_stripe_subscription, update_stripe_subscription
+from addons_core.utils import (
+    create_stripe_subscription,
+    update_stripe_subscription,
+    remove_cancelled_addons,
+)
 
 
 class Command(DropifiedBaseCommand):
@@ -31,20 +35,27 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         today = options['today'].date()
+        today_begin = options['today'].floor('day').datetime
+        today_end = options['today'].ceil('day').datetime
         prev_day = options['today'].shift(days=-1).date()
 
         # Addons that change prices between months in stripe will make that change
         # before upcomming invoice is create
         users = User.objects.filter(
-            addonusage__next_billing__range=(prev_day, today),
-            addonusage__cancelled_at__isnull=True,
+            Q(addonusage__cancel_at__range=(today_begin, today_end))
+            | (Q(addonusage__cancelled_at__isnull=True)
+               & Q(addonusage__next_billing__range=(prev_day, today)))
         ).distinct()
         addon_usages = AddonUsage.objects.filter(
             next_billing__range=(prev_day, today),
             cancelled_at__isnull=True,
         )
+        cancelled_usages = AddonUsage.objects.filter(cancelled_at__range=(today_begin, today_end))
 
-        users = users.prefetch_related(Prefetch('addonusage_set', addon_usages, to_attr='addon_subscriptions'))
+        users = users.prefetch_related(
+            Prefetch('addonusage_set', addon_usages, to_attr='addon_subscriptions'),
+            Prefetch('addonusage_set', cancelled_usages, to_attr='cancelled_subscriptions'),
+        )
         if options['user_id']:
             users = users.filter(id=options['user_id'])
 
@@ -61,9 +72,13 @@ class Command(DropifiedBaseCommand):
                         if subscription_item is None:
                             raise Exception(f'<AddonUsage: {addon_usage.id}> without subscription')
 
+                        addon_usage.next_billing = addon_usage.get_next_billing_date()
+                        addon_usage.save()
                     except:
                         capture_exception()
 
             elif user.profile.from_shopify_app_store():
                 # TODO shopify billing can be here (using usage charge api)
                 pass
+
+            remove_cancelled_addons(user.cancelled_subscriptions)

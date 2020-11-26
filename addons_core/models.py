@@ -194,6 +194,7 @@ class AddonUsage(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancel_at = models.DateField(null=True, blank=True)
     price_after_cancel = models.ForeignKey(AddonPrice, null=True, blank=True, on_delete=models.SET_NULL)
     start_at = models.DateField(null=True)
     next_billing = models.DateField(null=True)
@@ -252,13 +253,25 @@ class AddonUsage(models.Model):
             days=self.get_trial_days_left(self.created_at)).datetime
 
     def get_next_billing_date(self):
+        """Get billing date for next cycle, always after today's date
+        """
         if self.start_at is None:
             self.start_at = self.get_start_date()
             return self.start_at
 
+        today = arrow.get().floor('day')
         current_billing_date = self.next_billing or self.start_at
+        if current_billing_date > today.date():
+            return current_billing_date
+
         shift_interval = f"{INTERVAL_ARROW[self.billing.interval]}s"
-        return arrow.get(current_billing_date).shift(**{shift_interval: self.billing.interval_count}).datetime
+        shift_date_amount = {shift_interval: self.billing.interval_count}
+        next_billing = arrow.get(current_billing_date).shift(**shift_date_amount).datetime
+
+        while next_billing <= today:
+            next_billing = arrow.get(next_billing).shift(**shift_date_amount).datetime
+
+        return next_billing
 
     def get_trial_days_left(self, from_date=None):
         try:

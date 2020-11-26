@@ -402,6 +402,7 @@ button.addon-install {
     text-align: center;
     vertical-align: middle;
     margin-top: 38px;
+    border-radius: 10px;
 }
 
 a.addon-install {
@@ -412,11 +413,23 @@ a.addon-install {
     border-color: transparent;
     font-size: 23px;
     margin-top: 38px;
+    border-radius: 10px;
+}
+
+#addon-reinstall {
+    transition: color .2s;
+    color: #2f2f2f;
+}
+
+#addon-reinstall:hover,
+#addon-reinstall.disabled {
+    color: #000;
 }
 
 .addon-uninstall {
     background-color: red;
-    color: #ffffff;
+    transition: color .2s;
+    color: #f0f0f0;
     width: 320px;
     height: 73px;
     padding: 0px;
@@ -425,6 +438,11 @@ a.addon-install {
     text-align: center;
     vertical-align: middle;
     margin-top: 38px;
+}
+
+.addon-uninstall:hover,
+.addon-uninstall.disabled {
+    color: #fff;
 }
 
 .tab-content h1{
@@ -534,4 +552,9 @@ a.addon-install {
     margin: 0 0 3px 11px;
     transform: rotate(-45deg);
     -webkit-transform: rotate(-45deg);
+}
+
+#active-until {
+    color: #4f4f4f;
+    font-size: 17px;
 }

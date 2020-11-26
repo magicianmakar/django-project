@@ -1,12 +1,35 @@
 $.fn.bootstrapBtn = $.fn.button.noConflict();
 $.fn.bootstrapTooltip = $.fn.tooltip.noConflict();
 
+function changeAddonSubscription(btn) {
+    var endpoint = btn.data('endpoint');
+    btn.bootstrapBtn('loading');
+
+    $.ajax({
+        url: api_url(endpoint.target, 'addons'),
+        type: 'POST',
+        data: {
+            billing: $('#addon-billing').data('billing'),
+            addon: btn.data('addon')
+        }
+    }).done(function (data) {
+        window.location.reload();
+    }).fail(function (data) {
+        displayAjaxError(endpoint.name, data);
+        btn.bootstrapBtn('reset');
+    });
+}
+
+$('#active-until a').on('click', function(e) {
+    changeAddonSubscription($('#addon-reinstall'));
+});
+
 $('.addon-install, .addon-uninstall').click(function (e) {
     var btn = $(e.currentTarget);
-    var btnid = e.target.id;
+    var btnID = e.target.id;
 
     var billingElem = $('#addon-billing');
-    if(btnid == 'addon-install') {
+    if (btnID == 'addon-install') {
         text = 'You will be charged ' + billingElem.data('billing-title');
 
         var trialDays = billingElem.data('trial-days');
@@ -15,9 +38,11 @@ $('.addon-install, .addon-uninstall').click(function (e) {
         }
 
         text += ' Would you like to continue?';
-    }
-    else if(btnid == 'addon-uninstall') {
+    } else if (btnID == 'addon-uninstall') {
         text = 'Are you sure you want to Uninstall?';
+    } else if (btnID == 'addon-reinstall') {
+        changeAddonSubscription(btn);
+        return;
     }
     Swal.fire({
         title: btn.data("title"),
@@ -28,21 +53,7 @@ $('.addon-install, .addon-uninstall').click(function (e) {
         confirmButtonText: 'Continue',
     }).then(function(result) {
         if(result.value) {
-            btn.bootstrapBtn('loading');
-            var endpoint = btn.data('endpoint');
-            $.ajax({
-                url: api_url(endpoint.target, 'addons'),
-                type: 'POST',
-                data: {
-                    billing: $('#addon-billing').data('billing'),
-                    addon: btn.data('addon')
-                }
-            }).done(function (data) {
-                window.location.reload();
-            }).fail(function (data) {
-                displayAjaxError(endpoint.name, data);
-                btn.bootstrapBtn('reset');
-            });
+            changeAddonSubscription(btn);
         }
     });
 });

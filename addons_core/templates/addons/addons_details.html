@@ -25,7 +25,7 @@
                 {% endif %}
                 <h1 class="m-b-none add-on-title add-on-color">{{ object.title }}</h1>
                 <p class="m-t-xs addon-desc add-on-color">{{ object.short_description }}</p>
-                {% for billing in object.billings|for_user:user %}
+                {% with billing=object.billings|for_user:user|first %}
                 <p id="addon-billing"
                    class="add-on-color price-container"
                    data-billing="{{ billing.id }}"
@@ -38,10 +38,10 @@
                     <span class="addon-unit">{{ billing.user_price.price_sufix }}</span>
                     {% endif %}
                 </p>
-                {% endfor %}
+
                 <div>
-                    {% if object.id in user_addon_ids %}
-                    <button class="btn {% if details %} btn-lg btn-block {% else %}btn-white btn-rounded{% endif %} {% if xs %}btn-xs{% endif %} addon-uninstall btn-width m-b"
+                    {% if object.id in user_addon_ids and not billing.cancel_at_period_end %}
+                    <button class="btn btn-white btn-rounded addon-uninstall btn-width m-b"
                             id="addon-uninstall"
                             data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Uninstalling"
                             data-title="{{ object.title }}"
@@ -50,7 +50,7 @@
                             data-price="{{ object.monthly_price}}"
                             data-trial="{{object.trial_period_days}}"
                             >
-                        <i class="fa fa-minus {% if not details %}text-danger{% endif %}"></i> Uninstall
+                        <i class="fa fa-minus"></i> Uninstall
                     </button>
                     <p class="m-t-xs heading--3"></p>
 
@@ -65,7 +65,7 @@
                            target="_blank">
                             {{ object.action_name }}
                         </a>
-                        {% elif permission_count == object.permissions.count %}
+                        {% elif permission_count == object.permissions.count and not billing.cancel_at_period_end %}
                         <div class="addon-free-trial" style="color: #94c77f">This Addon is already included in your plan</div>
                         {% elif not user.is_authenticated %}
                         <button class="btn-xs
@@ -78,14 +78,31 @@
                             {{ object.action_name }}
                         </button>
                         {% else %}
-                        <button class="{% if xs %}btn-xs{% endif %} addon-install add-on-color"
+                        <button class="addon-install add-on-color"
+                                {% if billing.cancel_at_period_end %}
+                                id="addon-reinstall"
+                                data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Re-Activating"
+                                {% else %}
                                 id="addon-install"
                                 data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Installing"
+                                {% endif %}
                                 data-title="{{ object.title }}"
                                 data-endpoint='{"name": "Install Addon", "target": "install"}'>
-                            <i class="fa fa-plus {% if not details %}{% endif %}"></i> {{ object.action_name }}
+                            <i class="fa fa-plus"></i>
+                            {% if billing.cancel_at_period_end %}
+                            Re-activate
+                            {% else %}
+                            {{ object.action_name }}
+                            {% endif %}
                         </button>
                         <div width="100%" id="free-trial" class="hidden addon-free-trial add-on-color">Try it for FREE with our <span></span>-Day Free Trial</div>
+                        {% if billing.cancel_at_period_end %}
+                        <div class="m-t-md">
+                          <p id="active-until">
+                              Active until {{ billing.cancel_at_period_end.next_billing }}. <a href="#">Undo Cancellation</a>
+                          </p>
+                        </div>
+                        {% endif %}
                         {% endif %}
                     {% endif %}
 
@@ -98,6 +115,7 @@
                     </div>
                     {% endif %}
                 </div>
+                {% endwith %}
             </div>
             {% if object.youtube_url %}
             <div class="col-md-6 m-t-lg right-container">

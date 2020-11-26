@@ -387,11 +387,11 @@ def create_stripe_subscription(addon_usage):
         except:
             capture_exception()
             cancel_addon_usages([addon_usage])
+            remove_cancelled_addons([addon_usage])
             return None
 
         finally:
             subscription_item = subscription['items']['data'][0]
-
             addon_usage.stripe_subscription_id = subscription.id
             addon_usage.stripe_subscription_item_id = subscription_item.id
 
@@ -466,18 +466,30 @@ def create_usage_from_stripe(subscription, subscription_item):
     return addon_usage
 
 
+def remove_cancelled_addons(cancelled_usages):
+    if len(cancelled_usages) == 0:
+        return False
+
+    user = cancelled_usages[0].user
+    remaining_addon_ids = user.addonusage_set.exclude(
+        Q(id__in=cancelled_usages.values_list('id', flat=True))
+        | Q(cancelled_at__isnull=False)
+    ).values_list('billing__addon_id', flat=True)
+
+    # Some addons might be installed on other subscriptions
+    user_addon_ids = user.profile.addons.values_list('id', flat=True)
+    removed_addon_ids = [addon_id for addon_id in user_addon_ids if addon_id not in remaining_addon_ids]
+    user.profile.addons.through.objects.filter(
+        addon_id__in=removed_addon_ids,
+        userprofile=user.profile,
+    ).delete()
+    cancelled_usages.update(is_active=False)
+
+
 @transaction.atomic
 def cancel_addon_usages(addon_usages):
     if len(addon_usages) == 0:
         return False
-
-    user = addon_usages[0].user
-    user_addon_ids = user.profile.addons.values_list('id', flat=True)
-    remaining_addon_ids = user.addonusage_set.exclude(
-        Q(id__in=[a.id for a in addon_usages]) | Q(cancelled_at__isnull=False)
-    ).values_list('billing__addon_id', flat=True)
-    # Some addons might be installed on other subscriptions
-    removed_addon_ids = [addon_id for addon_id in user_addon_ids if addon_id not in remaining_addon_ids]
 
     cancelled_ids = []
     subscriptions = {}
@@ -507,19 +519,15 @@ def cancel_addon_usages(addon_usages):
 
             cancelled_ids.append(addon_usage.id)
         except:
-            removed_addon_ids.remove(addon_usage.billing.addon_id)
             capture_exception()
 
-    user.profile.addons.through.objects.filter(
-        addon_id__in=removed_addon_ids,
-        userprofile=user.profile,
-    ).delete()
-
-    AddonUsage.objects.filter(id__in=cancelled_ids).update(
-        is_active=False,
-        cancelled_at=timezone.now(),
-        stripe_subscription_item_id=''
-    )
+    for usage in AddonUsage.objects.filter(id__in=cancelled_ids):
+        usage.price_after_cancel = usage.next_price
+        usage.cancelled_at = timezone.now()
+        usage.cancel_at = usage.get_next_billing_date()
+        usage.is_active = True
+        usage.stripe_subscription_item_id = ''
+        usage.save()
 
     return True
 

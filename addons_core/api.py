@@ -1,6 +1,7 @@
 import re
 from urllib.parse import parse_qs, urlparse
 
+import arrow
 from django.template.defaultfilters import slugify
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
@@ -128,7 +129,15 @@ class AddonsApi(ApiResponseMixin):
         if billing.addon.action_url:
             return self.api_success({'redirect_url': billing.addon.action_url})
 
-        if user.profile.addons.filter(id=billing.addon.id).exists():
+        active_until_period_end = AddonUsage.objects.filter(
+            user=user.models_user,
+            billing=billing,
+            is_active=True,
+            cancelled_at__isnull=False,
+            cancel_at__gt=arrow.get().date(),
+        )
+        if user.profile.addons.filter(id=billing.addon.id).exists() \
+                and len(active_until_period_end) == 0:
             return self.api_error("Addon is already installed on your account", 422)
 
         if user.is_subuser:
@@ -146,13 +155,21 @@ class AddonsApi(ApiResponseMixin):
                 cancelled_at__isnull=True,
             ))
 
-        AddonUsage.objects.get_or_create(
-            user=user.models_user,
-            billing=billing,
-            cancelled_at__isnull=True
-        )
+        if len(active_until_period_end) > 0:
+            addon_usage = active_until_period_end[0]
+            addon_usage.cancelled_at = None
+            addon_usage.cancel_at = None
+            addon_usage.next_billing = addon_usage.get_next_billing_date()
+            addon_usage.save()
 
-        user.profile.addons.add(billing.addon)
+        else:
+            AddonUsage.objects.get_or_create(
+                user=user.models_user,
+                billing=billing,
+                cancelled_at__isnull=True
+            )
+
+            user.profile.addons.add(billing.addon)
 
         return self.api_success()
 

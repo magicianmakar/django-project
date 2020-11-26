@@ -14,6 +14,7 @@ from leadgalaxy.models import ClippingMagic, ClippingMagicPlan, CaptchaCredit, C
 
 from analytic_events.models import PlanSelectionEvent, BillingInformationEntryEvent
 
+from addons_core.utils import cancel_addon_usages
 from .models import StripeSubscription
 from .stripe_api import stripe
 from .utils import (
@@ -428,6 +429,7 @@ def subscription_cancel(request):
 
     if when == 'period_end':
         sub.delete(at_period_end=True)
+        cancel_addon_usages(user.addonusage_set.filter(cancelled_at__isnull=True))
         return JsonResponse({'status': 'ok'})
     else:
         return JsonResponse({'error': 'Unknown "when" parameter'}, status=500)
