@@ -2066,12 +2066,12 @@ class GroupPlan(models.Model):
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
+    goals = models.ManyToManyField('goals.Goal', related_name='plans', blank=True)
 
     payment_gateway = models.CharField(max_length=25, choices=PLAN_PAYMENT_GATEWAY, default=PLAN_PAYMENT_GATEWAY[0][0])
     payment_interval = models.CharField(max_length=25, choices=PLAN_PAYMENT_TYPE, default='')
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     locked = models.BooleanField(default=False, verbose_name='Disable Direct Subscription')
-    goals = models.ManyToManyField('goals.Goal', related_name='plans', blank=True)
 
     def __str__(self):
         return f'Plan: {self.title}'

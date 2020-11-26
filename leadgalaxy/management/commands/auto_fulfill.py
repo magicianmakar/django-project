@@ -83,7 +83,6 @@ class Command(DropifiedBaseCommand):
                 if last_executed(f'order-auto-fulfill2-{order.id}', 21600):
                     if not last_executed(f'order-auto-fulfill-sync-{order.id}', 21600):
                         utils.get_tracking_orders(order.store, [order])
-                        capture_message('Skipping Order with issue', tags={'track': order.id, 'store': order.store.shop})
 
                     self.progress_write(f'Skipping Order #{order.id} for {order.store.shop}')
                     counter['skipped'] += 1

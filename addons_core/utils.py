@@ -9,7 +9,7 @@ from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 
 from leadgalaxy.models import GroupPlan
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 from shopified_core.utils import safe_int
 from stripe_subscription.models import StripeCustomer
 from stripe_subscription.stripe_api import stripe
