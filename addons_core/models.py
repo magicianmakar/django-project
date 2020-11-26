@@ -261,7 +261,12 @@ class AddonUsage(models.Model):
         return arrow.get(current_billing_date).shift(**{shift_interval: self.billing.interval_count}).datetime
 
     def get_trial_days_left(self, from_date=None):
-        if self.billing.trial_period_days == 0:
+        try:
+            plan_trial_days = self.user.profile.trial_days_left
+        except:
+            plan_trial_days = 0
+
+        if plan_trial_days == 0 and self.billing.trial_period_days == 0:
             return 0
 
         trial_usage_days = sum([u.usage_delta.days for u in self.previous_subscriptions])
@@ -272,4 +277,6 @@ class AddonUsage(models.Model):
 
         from_date = arrow.get() if not from_date else from_date
         days_left = arrow.get(self.created_at).shift(days=previous_days_left) - from_date
-        return days_left.days if days_left.days > 0 else 0
+
+        addon_trial_days = days_left.days if days_left.days > 0 else 0
+        return addon_trial_days if addon_trial_days > plan_trial_days else plan_trial_days
