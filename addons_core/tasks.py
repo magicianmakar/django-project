@@ -1,8 +1,14 @@
 import arrow
-from app.celery_base import celery_app, CaptureFailure
+from django.contrib.auth.models import User
 
+from app.celery_base import celery_app, CaptureFailure
 from .models import Addon, AddonPrice, AddonUsage
-from .utils import sync_stripe_addon, sync_stripe_billing, create_stripe_subscription
+from .utils import (
+    sync_stripe_addon,
+    sync_stripe_billing,
+    create_stripe_subscription,
+    cancel_addon_usages,
+)
 
 
 @celery_app.task(base=CaptureFailure)
@@ -27,3 +33,9 @@ def create_subscription_in_stripe(addon_usage_id):
     subscription_item = create_stripe_subscription(addon_usage)
     if not subscription_item and addon_usage.start_at == arrow.get().date():
         raise Exception(f'Subscription not created for <AddonUsage: {addon_usage.id}')
+
+
+@celery_app.task(base=CaptureFailure)
+def cancel_all_addons(user_id):
+    user = User.objects.get(id=user_id)
+    cancel_addon_usages(list(user.addonusage_set.filter(cancelled_at__isnull=True)))

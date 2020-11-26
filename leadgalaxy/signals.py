@@ -32,6 +32,7 @@ from leadgalaxy.models import (
     SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
 )
 
+from addons_core.tasks import cancel_all_addons
 from metrics.tasks import activecampaign_update_plan, activecampaign_update_store_count
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
@@ -56,6 +57,9 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         change_log.plan = current_plan
         change_log.changed_at = arrow.utcnow().datetime
         change_log.save()
+
+        if not current_plan.support_addons:
+            cancel_all_addons.apply_async([user.id], countdown=5)
 
         if not settings.DEBUG:
             try:
