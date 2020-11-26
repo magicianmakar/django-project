@@ -2,11 +2,9 @@ import json
 from decimal import Decimal
 from io import BytesIO
 
-import requests
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Q
-from django.http import HttpResponse
 from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
@@ -406,17 +404,6 @@ class SupplementsApi(ApiResponseMixin, View):
         ) for i in order.order_items.all()]
 
         return self.api_success({'items': line_items})
-
-    def post_pdf_to_image(self, request, user, data):
-        from pdf2image import convert_from_bytes
-
-        pdf_url = request.POST.get('pdf')
-        image_bytes = requests.get(pdf_url).content
-        image = convert_from_bytes(image_bytes)[0]
-
-        response = HttpResponse(content_type="image/jpeg")
-        image.save(response, "JPEG")
-        return response
 
     def post_add_basket(self, request, user, data):
         product_id = data['product-id']

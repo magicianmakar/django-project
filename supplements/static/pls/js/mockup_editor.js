@@ -358,7 +358,8 @@ var MockupEditor = (function() {
     };
 }());
 
-function fallbackAddLabelImage(pdfURL) {
+function addLabelImage(pdf) {
+    $('#modal-mockup-images .modal-content').addClass('loading');
     pdfjsLib.getDocument(pdf).promise.then(function(pdf) {
         pdf.getPage(1).then(function(page) {
             var viewport = page.getViewport({scale: MockupEditor.labelScale});
@@ -379,35 +380,10 @@ function fallbackAddLabelImage(pdfURL) {
     });
 }
 
-function addLabelImage(pdfURL) {
-    $('#modal-mockup-images .modal-content').addClass('loading');
-
-    var formData = new FormData();
-    formData.append('pdf', pdfURL);
-    fetch(api_url('pdf-to-image', 'supplements'), {
-        method: 'post',
-        body: formData
-    }).then(function (response) {
-        response.blob().then(function(blob) {
-            MockupEditor.setLabel(URL.createObjectURL(blob));
-            $('#save-mockups').prop('disabled', false);
-        });
-    }).catch(function (error) {
-        fallbackAddLabelImage(pdfURL);
-    });
-
-    return true;
-}
-
 function labelSizeMatch(defaultSize, pdf) {
     var defaultHeight = defaultSize.split('×')[0];
     var defaultWidth = defaultSize.split('×')[1];
     return new Promise(function (resolve, reject) {
-        if (MockupEditor.useControls) {
-            resolve();
-            return;
-        }
-
         pdfjsLib.getDocument(pdf).promise.then(function(pdf) {
             pdf.getPage(1).then(function(page) {
                 var pdfWidth = (page._pageInfo.view[2] / 72).toFixed(3); // returned in pt => pt / 72 = 1 in
@@ -442,15 +418,7 @@ $('#label').on('change', function() {
         var pdf = this.result;
         var defaultSize = $('#id_label_size').val();
         labelSizeMatch(defaultSize, pdf).then(function (result) {
-            var pdfUploadComplete = function(e, url) {
-                addLabelImage(url);
-                $(window.plupload_Config.saveFormID).off("addlabel", pdfUploadComplete);
-            };
-            $(window.plupload_Config.saveFormID).on("addlabel", pdfUploadComplete);
-
-            $('#modal-mockup-images .modal-content').addClass('loading');
-            mockupsUploader.addFile($('#label')[0].files[0]);
-            mockupsUploader.start();
+            addLabelImage(pdf);
         }).catch(function (error){
             swal(
                 "Label size does not match",
@@ -513,6 +481,10 @@ $('#save-mockups').on('click', function(e) {
     selectedMockups.each(function() {
         mockupsUploader.addFile(MockupEditor.dataURLtoFile(this.src, $(this).attr('id') + 'img.png'));
     });
+    var labelInput = $('#modal-mockup-images [type="file"]').get(0);
+    if (labelInput.files.length) {
+        mockupsUploader.addFile(labelInput.files[0]);
+    }
 
     if (selectedMockups.length === 0) {
         swal('Select one mockup to save with your label');
@@ -597,12 +569,6 @@ var mockupsUploader = new plupload.Uploader({
             }
         },
         UploadComplete: function(up, files) {
-            // We upload label first
-            if (files.length > 0 && files[0].name.indexOf('pdf') > -1) {
-                mockupsUploader.splice();
-                return true;
-            }
-
             $('.mockup-save-progress').removeClass('show').empty();
             $('#modal-mockup-images .modal-content').removeClass('loading');
             $('#save-mockups').prop('disabled', false);
