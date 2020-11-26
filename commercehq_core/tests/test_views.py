@@ -100,6 +100,7 @@ class StoreCreateTestCase(BaseTestCase):
         self.client.login(username=self.user.username, password=self.password)
 
     @tag('slow')
+    @tag('excessive')
     @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
     def test_must_create_new_store(self):
         self.login()
@@ -107,6 +108,7 @@ class StoreCreateTestCase(BaseTestCase):
         self.assertEqual(r.reason_phrase, 'OK')
 
     @tag('slow')
+    @tag('excessive')
     @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
     def test_must_add_store_to_user(self):
         self.login()
@@ -1421,6 +1423,7 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         product_update.assert_called_with(args=[product.id, product_data], countdown=0, expires=60)
 
+    @tag('excessive')
     @patch('shopified_core.permissions.can_add_store', Mock(return_value=(True, 2, 0)))
     def test_post_store_add(self):
         data = {

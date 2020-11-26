@@ -283,6 +283,7 @@ class OrdersTestCase(BaseTestCase):
             api_key=CHQ_API_KEY, api_password=CHQ_API_PASSWORD)
 
     @tag('slow')
+    @tag('excessive')
     def test_order_notes(self):
         try:
             order_id = 1016
@@ -300,6 +301,7 @@ class OrdersTestCase(BaseTestCase):
             self.assertEqual(http_excption_status_code(e), 500)
 
     @tag('slow')
+    @tag('excessive')
     def test_order_updater_note(self):
         try:
             store = self.store

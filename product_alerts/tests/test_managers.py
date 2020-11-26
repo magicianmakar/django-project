@@ -44,6 +44,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(result['published'], False)
 
     @tag('slow')
+    @tag('excessive')
     def test_chq_product_disappears(self):
         self.user.profile.config = json.dumps({"alert_product_disappears": "unpublish"})
         self.user.profile.save()
@@ -115,6 +116,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(idx, 0)
 
     @tag('slow')
+    @tag('excessive')
     def test_get_chq_variant(self):
         product_change = ProductChange.objects.get(pk=4)
         manager = ProductChangeManager.initialize(product_change)
@@ -358,6 +360,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(updated_quantity, quantity)
 
     @tag('slow')
+    @tag('excessive')
     @patch.object(manage_product_change, 'apply_async', side_effect=manage_product_change_callback)
     def test_webhook_chq_price_change(self, manage):
         self.user.profile.config = json.dumps({"alert_price_change": "update"})
