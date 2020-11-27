@@ -144,6 +144,7 @@ class UserProfile(models.Model):
     config = models.TextField(default='', blank=True)
     sync_delay_notify = models.IntegerField(default=0, null=True, db_index=True, verbose_name='Notify if no tracking number is found (days)')
     shopify_app_store = models.BooleanField(default=False, verbose_name='User Register from Shopify App Store')
+    private_label = models.NullBooleanField(default=False, verbose_name='Using Private Label App')
 
     plan_expire_at = models.DateTimeField(blank=True, null=True, verbose_name="Plan Expire Date")
     plan_after_expire = models.ForeignKey('GroupPlan', blank=True, null=True, related_name="expire_plan",
@@ -851,6 +852,8 @@ class ShopifyStore(StoreBase):
     auto_fulfill = models.CharField(max_length=50, null=True, blank=True, db_index=True)
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    private_label = models.NullBooleanField(default=False, verbose_name='Using Private Label App')
 
     uninstall_reason = models.TextField(null=True, blank=True)
 

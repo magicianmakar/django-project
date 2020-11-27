@@ -3206,12 +3206,16 @@ def user_profile(request):
                                    .annotate(num_permissions=Count('permissions')) \
                                    .order_by('monthly_price', 'num_permissions')
 
-    shopify_plans = GroupPlan.objects.filter(payment_gateway='shopify', hidden=False) \
+    find_shopify = dict(payment_gateway='shopify', hidden=False)
+    if request.user.models_user.profile.private_label:
+        find_shopify['slug__contains'] = 'private'
+
+    shopify_plans = GroupPlan.objects.filter(**find_shopify) \
                                      .exclude(payment_interval='yearly') \
                                      .annotate(num_permissions=Count('permissions')) \
                                      .order_by('monthly_price', 'num_permissions')
 
-    shopify_plans_yearly = GroupPlan.objects.filter(payment_gateway='shopify', hidden=False) \
+    shopify_plans_yearly = GroupPlan.objects.filter(**find_shopify) \
                                             .filter(payment_interval='yearly') \
                                             .annotate(num_permissions=Count('permissions')) \
                                             .order_by('monthly_price', 'num_permissions')
