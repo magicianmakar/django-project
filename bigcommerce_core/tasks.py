@@ -391,10 +391,10 @@ def sync_bigcommerce_product_quantities(self, product_id):
                 idx = variant_index_from_supplier_sku(product, sku, product_data['variants'])
                 if idx is not None:
                     variant_id = product_data['variants'][idx]['id']
-                if variant_id > 0:
+                if variant_id > 0 and product_data['base_variant_id'] != variant_id:
                     product_data['variants'][idx]['inventory_level'] = variant['availabe_qty']
                     product_data['inventory_tracking'] = 'variant'
-                elif len(product_data.get('variants', [])) == 0 or variant_id < 0:
+                elif len(product_data.get('variants', [])) == 0 or variant_id < 0 or product_data['base_variant_id'] == variant_id:
                     product_data['inventory_level'] = variant['availabe_qty']
                     product_data['inventory_tracking'] = 'product'
 
