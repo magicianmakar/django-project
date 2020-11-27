@@ -1,3 +1,4 @@
+import arrow
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
@@ -8,6 +9,7 @@ from .tasks import (
     create_or_update_addon_in_stripe,
     create_or_update_billing_in_stripe,
     create_subscription_in_stripe,
+    create_charge_in_shopify,
 )
 from .utils import cancel_addon_usages
 
@@ -34,12 +36,16 @@ def sync_billing_in_stripe(sender, instance, created, **kwargs):
 @receiver(post_save, sender=AddonUsage)
 def set_addon_subscription(sender, instance, created, **kwargs):
     if created and not instance.stripe_subscription_item_id:
-        if not instance.user.is_stripe_customer():
-            return True
-
         instance.start_at = instance.get_start_date()
         instance.next_billing = instance.start_at
         AddonUsage.objects.filter(id=instance.id).update(
             start_at=instance.start_at, next_billing=instance.next_billing)
 
-        create_subscription_in_stripe.apply_async(args=[instance.id], countdown=5)
+        if instance.start_at != arrow.get().date():
+            return True
+
+        if instance.user.profile.from_shopify_app_store():
+            create_charge_in_shopify.apply_async(args=[instance.id], countdown=5)
+
+        elif instance.user.is_stripe_customer():
+            create_subscription_in_stripe.apply_async(args=[instance.id], countdown=5)

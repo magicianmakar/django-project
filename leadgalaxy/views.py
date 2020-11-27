@@ -2577,7 +2577,7 @@ def acp_users_list(request):
 
     if len(users) == 1:
         target_user = users[0]
-        for addon_usage in AddonUsage.objects.filter(user=target_user.id):
+        for addon_usage in AddonUsage.objects.select_related('billing__addon').filter(user=target_user.id):
             if addon_usage.created_at:
                 logs.append({
                     'key': arrow.get(addon_usage.created_at),

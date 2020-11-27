@@ -3,14 +3,19 @@ import argparse
 import arrow
 from django.db.models import Q, Prefetch
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 from lib.exceptions import capture_exception
 from shopified_core.management import DropifiedBaseCommand
+from shopified_core.utils import app_link, send_email_from_template
 from addons_core.models import AddonUsage
 from addons_core.utils import (
     create_stripe_subscription,
     update_stripe_subscription,
     remove_cancelled_addons,
+    has_shopify_limit_exceeded,
+    create_shopify_charge,
+    cancel_addon_usages,
 )
 
 
@@ -35,27 +40,36 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         today = options['today'].date()
-        today_begin = options['today'].floor('day').datetime
-        today_end = options['today'].ceil('day').datetime
+        today_range = (options['today'].floor('day').datetime,
+                       options['today'].ceil('day').datetime)
         prev_day = options['today'].shift(days=-1).date()
+        next_day = options['today'].shift(days=1).date()
+        seven_days_ago = options['today'].shift(days=-7).date()
 
-        # Addons that change prices between months in stripe will make that change
-        # before upcomming invoice is create
+        # Addons that change prices between months in stripe need to make that
+        # change before upcomming invoice is create
         users = User.objects.filter(
-            Q(addonusage__cancel_at__range=(today_begin, today_end))
-            | (Q(addonusage__cancelled_at__isnull=True)
-               & Q(addonusage__next_billing__range=(prev_day, today)))
+            Q(addonusage__cancel_at__range=today_range)
+            | (Q(addonusage__next_billing__range=(seven_days_ago, next_day))
+               & Q(addonusage__cancelled_at__isnull=True))
         ).distinct()
-        addon_usages = AddonUsage.objects.filter(
-            next_billing__range=(prev_day, today),
+        usages = AddonUsage.objects.filter(
+            next_billing__range=(today, next_day),
             cancelled_at__isnull=True,
         )
-        cancelled_usages = AddonUsage.objects.filter(cancelled_at__range=(today_begin, today_end))
-
+        overdue_usages = AddonUsage.objects.filter(
+            next_billing__range=(seven_days_ago, prev_day),
+            cancelled_at__isnull=True,
+        )
+        cancelled_usages = AddonUsage.objects.filter(
+            cancel_at__range=today_range
+        )
         users = users.prefetch_related(
-            Prefetch('addonusage_set', addon_usages, to_attr='addon_subscriptions'),
+            Prefetch('addonusage_set', usages, to_attr='addon_subscriptions'),
+            Prefetch('addonusage_set', overdue_usages, to_attr='overdue_subscriptions'),
             Prefetch('addonusage_set', cancelled_usages, to_attr='cancelled_subscriptions'),
         )
+
         if options['user_id']:
             users = users.filter(id=options['user_id'])
 
@@ -78,7 +92,44 @@ class Command(DropifiedBaseCommand):
                         capture_exception()
 
             elif user.profile.from_shopify_app_store():
-                # TODO shopify billing can be here (using usage charge api)
-                pass
+                limit_exceeded = has_shopify_limit_exceeded(user)
+                if limit_exceeded:
+                    # Cancel addons overdue for 7 days
+                    addon_usages = []
+                    for addon_usage in user.overdue_subscriptions:
+                        if addon_usage.next_billing > seven_days_ago:
+                            continue
+
+                        addon_usages.append(addon_usage)
+
+                    cancel_addon_usages(addon_usages, now=True)
+                    send_email_from_template(
+                        tpl='shopify_capped_limit_warning.html',
+                        subject='Dropified Subscription - action required',
+                        recipient=user.email,
+                        data={
+                            'profile_link': app_link(reverse('user_profile')),
+                            'new_limit_confirmation_link': limit_exceeded,
+                            'addon_usages': addon_usages
+                        }
+                    )
+                    continue
+
+                for addon_usage in user.addon_subscriptions:
+                    # Add charges at the right time for shopify
+                    if addon_usage.next_billing != today:
+                        continue
+
+                    try:
+                        create_shopify_charge(addon_usage)
+                    except:
+                        capture_exception()
+
+                # Attempt to create charge for overdue charges
+                for addon_usage in user.overdue_subscriptions:
+                    try:
+                        create_shopify_charge(addon_usage)
+                    except:
+                        capture_exception()
 
             remove_cancelled_addons(user.cancelled_subscriptions)

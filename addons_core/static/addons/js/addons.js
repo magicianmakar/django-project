@@ -13,7 +13,23 @@ function changeAddonSubscription(btn) {
             addon: btn.data('addon')
         }
     }).done(function (data) {
-        window.location.reload();
+        if (data.limit_exceeded_link) {
+            Swal.fire({
+                title: 'Shopify Limit Exceeded',
+                text: 'To install this Addon please click Continue to authorize an increase in the amount that Dropified can charge your Shopify account',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Continue',
+            }).then(function(result) {
+                if (result.value) {
+                    window.open(data.limit_exceeded_link);
+                }
+                window.location.reload();
+            });
+        } else {
+            window.location.reload();
+        }
     }).fail(function (data) {
         displayAjaxError(endpoint.name, data);
         btn.bootstrapBtn('reset');

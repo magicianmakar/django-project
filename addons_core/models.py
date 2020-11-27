@@ -181,7 +181,7 @@ class AddonPrice(models.Model):
 
 class AddonUsage(models.Model):
     class Meta:
-        ordering = '-created_at',
+        ordering = '-created_at',  # For listing and selecting last one
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     billing = models.ForeignKey(AddonBilling,
@@ -221,11 +221,12 @@ class AddonUsage(models.Model):
 
         arrow_interval = INTERVAL_ARROW[self.billing.interval]
         iterations = 0
+        usage_end_date = self.next_billing or self.cancel_at
         if self.next_billing:
             iterations = len(list(arrow.Arrow.range(
                 arrow_interval,
                 arrow.get(self.start_at),
-                arrow.get(self.next_billing)
+                arrow.get(usage_end_date)
             )))
 
         for subscription in self.previous_subscriptions:

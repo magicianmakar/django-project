@@ -2,11 +2,13 @@ import arrow
 from django.contrib.auth.models import User
 
 from app.celery_base import celery_app, CaptureFailure
+from lib.exceptions import capture_exception
 from .models import Addon, AddonPrice, AddonUsage
 from .utils import (
     sync_stripe_addon,
     sync_stripe_billing,
     create_stripe_subscription,
+    create_shopify_charge,
     cancel_addon_usages,
 )
 
@@ -39,3 +41,14 @@ def create_subscription_in_stripe(addon_usage_id):
 def cancel_all_addons(user_id):
     user = User.objects.get(id=user_id)
     cancel_addon_usages(list(user.addonusage_set.filter(cancelled_at__isnull=True)))
+
+
+@celery_app.task(base=CaptureFailure)
+def create_charge_in_shopify(addon_usage_id):
+    try:
+        addon_usage = AddonUsage.objects.get(id=addon_usage_id)
+        create_shopify_charge(addon_usage)
+    except:
+        capture_exception()
+        cancel_addon_usages([addon_usage], now=True)
+        addon_usage.delete()

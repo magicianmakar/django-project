@@ -14,7 +14,11 @@ from shopified_core.mixins import ApiResponseMixin
 from shopified_core.utils import safe_str
 
 from .models import Category, Addon, AddonBilling, AddonUsage
-from .utils import cancel_addon_usages
+from .utils import (
+    get_shopify_subscription,
+    has_shopify_limit_exceeded,
+    cancel_addon_usages,
+)
 
 
 class AddonsApi(ApiResponseMixin):
@@ -125,6 +129,16 @@ class AddonsApi(ApiResponseMixin):
 
         if not user.is_stripe_customer() and not user.profile.from_shopify_app_store():
             return self.api_error("Your plan doesn't support adding Addons yet", 403)
+
+        elif user.profile.from_shopify_app_store():
+            # Yearly plans use ApplicationCharge rather than RecurringApplicationCharge
+            charge = get_shopify_subscription(user)
+            if not charge:
+                return self.api_error("Shopify yearly plans don't support installing addons", 403)
+
+            limit_exceeded = has_shopify_limit_exceeded(user.models_user, charge=charge)
+            if limit_exceeded:
+                return self.api_success({'limit_exceeded_link': limit_exceeded})
 
         if billing.addon.action_url:
             return self.api_success({'redirect_url': billing.addon.action_url})
