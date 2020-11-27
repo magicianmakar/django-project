@@ -138,10 +138,6 @@ class CategoryListView(ListView):
     model = Addon
     template_name = 'addons/addons_category.html'
 
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
-
     def get_queryset(self):
         qs = super().get_queryset()
         slug = self.kwargs.get('slug')
