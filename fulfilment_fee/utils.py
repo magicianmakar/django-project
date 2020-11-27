@@ -45,10 +45,10 @@ def process_sale_transaction_fee(instance):
                 and getattr(instance, instance_status_column[instance_type]) == 'fulfilled':
 
             # getting sales fee config
-            normalized_cost = normalize_currency(costs['total_cost'], costs['currency'])
+            normalized_cost = normalize_currency(costs['products_cost'], costs['currency'])
 
             currency_data = {
-                'original_amount': costs['total_cost'],
+                'original_amount': costs['products_cost'],
                 'original_currency': costs['currency']}
 
             generate_sale_transaction_fee(instance_type, instance, normalized_cost, currency_data)
