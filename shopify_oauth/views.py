@@ -25,43 +25,11 @@ AUTHORIZATION_URL = 'https://{}/admin/oauth/authorize'
 TOKEN_URL = 'https://{}/admin/oauth/access_token'
 
 
-def is_private_label_app(request):
-    return request.session.get('shopify_api') == 'private-label'
-
-
-def get_shopify_key(request):
-    if is_private_label_app(request):
-        return settings.SHOPIFY_PRIVATE_LABEL_KEY
-    else:
-        return settings.SHOPIFY_API_KEY
-
-
-def get_shopify_secret(request):
-    if is_private_label_app(request):
-        return settings.SHOPIFY_PRIVATE_LABEL_SECRET
-    else:
-        return settings.SHOPIFY_API_SECRET
-
-
-def get_shopify_scope(request):
-    scopes = settings.SHOPIFY_API_SCOPE
-    if is_private_label_app(request):
-        if 'read_all_orders' in scopes:
-            scopes = scopes.split(',')
-            scopes.remove('read_all_orders')
-            return ','.join(scopes)
-
-    return scopes
-
-
-def shopify_session(request, state=None, client_id=None):
-    if client_id is None:
-        client_id = get_shopify_key(request)
-
+def shopify_session(request, state=None):
     return OAuth2Session(
-        client_id=client_id,
+        client_id=settings.SHOPIFY_API_KEY,
         redirect_uri=request.build_absolute_uri(reverse(callback)),
-        scope=get_shopify_scope(request),
+        scope=settings.SHOPIFY_API_SCOPE,
         state=state
     )
 
@@ -82,18 +50,13 @@ def encoded_params_for_signature(params):
     return "&".join(sorted(encoded_pairs(params)))
 
 
-def verify_hmac_signature(request, secret=None):
-    if secret is None:
-        secret = get_shopify_secret(request)
-
+def verify_hmac_signature(request):
     message = encoded_params_for_signature(request.GET)
-    message_hash = hmac.new(secret.encode(), message.encode(), hashlib.sha256).hexdigest()
+    message_hash = hmac.new(settings.SHOPIFY_API_SECRET.encode(), message.encode(), hashlib.sha256).hexdigest()
 
     if message_hash != request.GET.get('hmac'):
         capture_message('HMAC Verification failed', level='warning', request=request)
-
-        if not settings.DEBUG:
-            raise PermissionDenied('HMAC Verification failed')
+        raise PermissionDenied('HMAC Verification failed')
 
 
 def shop_username(shop):
@@ -150,52 +113,10 @@ def subscribe_user_to_default_plan(user):
 
 
 def index(request):
-    request.session['shopify_api'] = 'main'
-
     verify_hmac_signature(request)
 
     try:
-        store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True).exclude(private_label=True)
-    except ShopifyStore.DoesNotExist:
-        return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
-    except ShopifyStore.MultipleObjectsReturned:
-        # TODO: Handle multi stores
-        if request.user.is_authenticated:
-            return HttpResponseRedirect('/')
-        else:
-            return HttpResponseRedirect('/accounts/login/')
-
-    except:
-        capture_exception()
-        return HttpResponseRedirect('/accounts/login/')
-
-    if request.user.is_authenticated:
-        if permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
-            messages.success(request, 'Welcome Back, {}'.format(request.user.first_name))
-            return HttpResponseRedirect('/')
-        else:
-            user_logout(request)
-
-    user = store.user
-    from_shopify_store = user.profile.from_shopify_app_store()
-
-    if not have_subusers(user) or from_shopify_store:
-        user.backend = settings.AUTHENTICATION_BACKENDS[0]
-        user_login(request, user)
-    else:
-        request.session['sudo_user'] = user.id
-        return HttpResponseRedirect(reverse('sudo_login'))
-
-    return HttpResponseRedirect('/')
-
-
-def private_label_index(request):
-    request.session['shopify_api'] = 'private-label'
-
-    verify_hmac_signature(request, secret=settings.SHOPIFY_PRIVATE_LABEL_SECRET)
-
-    try:
-        store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True, private_label=True)
+        store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True)
     except ShopifyStore.DoesNotExist:
         return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
     except ShopifyStore.MultipleObjectsReturned:
@@ -231,7 +152,7 @@ def private_label_index(request):
 
 def install(request, store):
     if not store.endswith('myshopify.com'):
-        store = f'{store}.myshopify.com'
+        store = '{}.myshopify.com'.format(store)
 
     reinstall_store = request.GET.get('reinstall') and \
         permissions.user_can_view(request.user, ShopifyStore.objects.get(id=request.GET.get('reinstall')), superuser_can=False)
@@ -278,7 +199,6 @@ def install(request, store):
 
 def callback(request):
     verify_hmac_signature(request)
-
     if request.session.get('shopify_state', True) != request.GET.get('state', False):
         capture_message(
             'State does not match',
@@ -294,7 +214,7 @@ def callback(request):
 
     token = oauth_session.fetch_token(
         token_url=TOKEN_URL.format(shop),
-        client_secret=get_shopify_secret(request),
+        client_secret=settings.SHOPIFY_API_SECRET,
         code=request.GET['code'])
 
     user = request.user
@@ -326,10 +246,7 @@ def callback(request):
         return HttpResponseRedirect('/')
     else:
         try:
-            if is_private_label_app(request):
-                store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True, private_label=True)
-            else:
-                store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True).exclude(private_label=True)
+            store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True)
 
             # We have one store/user account, try to log him in if he doesn't have sub users
             if user.is_authenticated:
@@ -378,10 +295,6 @@ def callback(request):
             user.set_config('shopify_app_store', True)
 
             profile.shopify_app_store = True
-
-            if is_private_label_app(request):
-                profile.private_label = True
-
             profile.change_plan(get_plan(
                 payment_gateway='shopify',
                 plan_slug='shopify-free-plan'))
@@ -392,11 +305,7 @@ def callback(request):
         user_login(request, user)
 
     try:
-        if is_private_label_app(request):
-            store = ShopifyStore.objects.get(user=user, shop=shop, is_active=True, private_label=True)
-        else:
-            store = ShopifyStore.objects.get(user=user, shop=shop, is_active=True).exclude(private_label=True)
-
+        store = ShopifyStore.objects.get(user=user, shop=shop, is_active=True)
         store.update_token(token, shop=shop)
 
     except ShopifyStore.DoesNotExist:
@@ -425,23 +334,13 @@ def callback(request):
 
             return HttpResponseRedirect('/')
 
-        store = ShopifyStore.objects.filter(user=user, shop=shop, version=2, is_active=False)
-
-        if is_private_label_app(request):
-            store = store.filter(private_label=True)
-        else:
-            store = store.exclude(private_label=True)
-
-        store = store.order_by('uninstalled_at', '-id').first()
-
+        store = ShopifyStore.objects.filter(user=user, shop=shop, version=2, is_active=False) \
+                                    .order_by('uninstalled_at', '-id').first()
         if store:
             store.is_active = True
             store.uninstalled_at = None
         else:
             store = ShopifyStore(user=user, shop=shop)
-
-        if is_private_label_app(request):
-            store.private_label = True
 
         store.update_token(token, shop=shop)
 

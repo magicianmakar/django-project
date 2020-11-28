@@ -158,14 +158,13 @@ class AccessTokenAdmin(admin.ModelAdmin):
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'email', 'plan', 'tz', 'date', 'updated_at')
-    list_filter = ('plan', 'plan__payment_gateway', 'status', 'bundles', 'shopify_app_store', 'sync_delay_notify',
-                   'shopify_app_store', 'private_label')
+    list_filter = ('plan', 'plan__payment_gateway', 'status', 'bundles', 'shopify_app_store', 'sync_delay_notify', 'shopify_app_store')
     search_fields = ('emails', 'country', 'timezone', 'ips') + USER_SEARCH_FIELDS
     raw_id_fields = ('user', 'subuser_parent')
 
     fieldsets = (
         (None, {
-            'fields': ('user', 'status', 'plan', 'bundles', 'country', 'timezone', 'shopify_app_store', 'private_label')
+            'fields': ('user', 'status', 'plan', 'bundles', 'country', 'timezone', 'shopify_app_store')
         }),
 
         ('User Settings', {
