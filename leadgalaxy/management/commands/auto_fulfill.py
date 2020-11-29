@@ -302,6 +302,14 @@ class Command(DropifiedBaseCommand):
 
                         return False
 
+                    elif "fulfilled quantity must be greater than zero" in rep.text.lower():
+                        order.hidden = True
+                        order.save()
+
+                        self.log_fulfill_error(order, 'Cancelled Order item')
+
+                        return False
+
                     elif 'must be stocked at the same location' in rep.text.lower() \
                             or 'none of the items are stocked at the new location' in rep.text.lower() \
                             or 'could not reassign inventory' in rep.text.lower() \
