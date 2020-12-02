@@ -3,12 +3,12 @@ import requests
 import simplejson as json
 
 from django.conf import settings
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
+from django.urls import reverse
 
 from lib.exceptions import capture_exception
 
@@ -43,8 +43,7 @@ def index(request):
             raise PermissionDenied()
 
     if not store:
-        messages.warning(request, 'Please add at least one store before using the Profits Dashboard')
-        return HttpResponseRedirect('/')
+        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'profit_dashboard.views.index'}))
 
     context = {
         'page': 'profit_dashboard',
