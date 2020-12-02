@@ -96,6 +96,26 @@
     {{ order.item_total }}
   </div>
 </div>
+{% if order.taxes > 0 %}
+<div class="row">
+  <div class="col-md-2 col-md-offset-9 text-right">
+    <span class="h5"><b>Taxes</b>:</span>
+  </div>
+  <div class="col-md-1 text-right">
+    ${{ order.taxes }}
+  </div>
+</div>
+{% endif %}
+{% if order.duties > 0 %}
+<div class="row">
+  <div class="col-md-2 col-md-offset-9 text-right">
+    <span class="h5"><b>Duties</b>:</span>
+  </div>
+  <div class="col-md-1 text-right">
+    ${{ order.duties }}
+  </div>
+</div>
+{% endif %}
 <div class="row">
   <div class="col-md-2 col-md-offset-9 text-right">
     <span class="h5"><b>Shipping Cost</b>:</span>

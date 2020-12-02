@@ -18,7 +18,7 @@ function updateStatus(orderIds) {
     }
 }
 
-function doMakePayment(orderDataIds, storeId, storeType) {
+function doMakePayment(orderDataIds, storeId, storeType, calculate_taxes) {
     var lenOrders = $('#modal-make-payment .supplement-item-payment').length;
 
     if (!lenOrders) {
@@ -29,6 +29,10 @@ function doMakePayment(orderDataIds, storeId, storeType) {
     var msg = "Preparing to pay for " + lenOrders + " ";
     msg += makePlural('item', lenOrders);
     msg += ".";
+
+    if(calculate_taxes) {
+        msg = 'Calculating Duties & Taxes';
+    }
 
     toastr.info(msg);
 
@@ -41,6 +45,17 @@ function doMakePayment(orderDataIds, storeId, storeType) {
     var shippingService = $('[name="shipping_service"]:checked').val();
     if (shippingService) {
         data['shipping_service'] = shippingService;
+    }
+
+    var pay_tax = false;
+    if($("#pay_supplement_taxes:checked").val()) {
+        pay_tax = true;
+    }
+    data['pay_tax'] = pay_tax;
+
+    data['calculate_tax'] = false;
+    if(pay_tax && calculate_taxes) {
+        data['calculate_tax'] = true;
     }
 
     $.ajax({
@@ -56,6 +71,30 @@ function doMakePayment(orderDataIds, storeId, storeType) {
                 orderStr = makePlural('item', data.success);
                 msg = data.success + " " + orderStr + " sent for fulfillment.";
                 toastr.success(msg);
+            }
+
+            if(data.return_calculated_taxes) {
+                $('#duty-amount').attr('data-supplement-duties', data.duties);
+                $('#tax-amount').attr('data-supplement-taxes', data.taxes);
+                $('#duty-amount').text(
+                    formatCurrency(parseFloat(data.duties).toFixed(2))
+                );
+                if(data.is_US_shipment) {
+                    toastr.info('Duties & Taxes not applicable for U.S Shipments');
+                }
+                if(data.taxes) {
+                    $('#tax-amount').text(
+                        formatCurrency(parseFloat(data.taxes).toFixed(2))
+                    );
+                }
+                var shippingCost = parseFloat($('#modal-make-payment [name="shipping_service"]:checked').attr('data-shipping-cost'));
+                var productCost = parseFloat($('#total-supplement-cost').attr('data-total-cost'));
+
+                var totalCost = parseFloat(data.taxes) + parseFloat(data.duties) + shippingCost + productCost;
+                $('#modal-make-payment .total-cost').text(
+                    formatCurrency(totalCost.toFixed(2))
+                );
+                return true;
             }
 
             if (data.error == 'rejected') {
@@ -156,7 +195,22 @@ function makePayment(orderDataIds) {
             $('#id-make-payment-confirm').off('click').click(function () {
                 $('#modal-make-payment').modal('hide');
                 userHasBilling().then(function (result) {
-                    doMakePayment(orderDataIds, data.storeId, data.storeType);
+                    var calculateTaxes = false;
+                    doMakePayment(orderDataIds, data.storeId, data.storeType, calculateTaxes);
+                }).catch(function (error){
+                    return;
+                });
+            });
+
+            $('#id-calculate-taxes').off('click').click(function () {
+                userHasBilling().then(function (result) {
+                    var calculateTaxes = true;
+                    if($('#pay_supplement_taxes').prop('checked')) {
+                        doMakePayment(orderDataIds, data.storeId, data.storeType, calculateTaxes);
+                    }
+                    else {
+                        toastr.warning('Please choose to pay for Taxes & Duties');
+                    }
                 }).catch(function (error){
                     return;
                 });
@@ -174,8 +228,10 @@ function makePayment(orderDataIds) {
                             $('#modal-make-payment .shipping-cost').text(
                                 api_data.shippings[i].currency_shipping_cost
                             );
+                            var duty_amount = parseFloat($('#duty-amount').attr('data-supplement-duties'));
+                            var tax_amount = parseFloat($('#tax-amount').attr('data-supplement-taxes'));
                             $('#modal-make-payment .total-cost').text(
-                                formatCurrency((data.total + api_data.shippings[i].shipping_cost).toFixed(2))
+                                formatCurrency((data.total + api_data.shippings[i].shipping_cost + duty_amount + tax_amount).toFixed(2))
                             );
                             break;
                         }

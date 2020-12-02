@@ -42,6 +42,7 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
     msrp = models.CharField(max_length=100, null=True, blank=True, verbose_name='MSRP')
     is_active = models.BooleanField(default=True)
     inventory = models.PositiveIntegerField(default=9999)
+    hs_code = models.CharField(max_length=255, null=True, default='6116.10.00', verbose_name='HS (Harmonized System) code')
 
     def __str__(self):
         return self.title
@@ -203,6 +204,8 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
                                   on_delete=models.SET_NULL,
                                   null=True,
                                   blank=True)
+    taxes = models.FloatField(default=0)
+    duties = models.FloatField(default=0)
 
 
 class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):

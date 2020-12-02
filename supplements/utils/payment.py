@@ -1,9 +1,11 @@
 import json
+import requests
 from collections import defaultdict
 
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.conf import settings
 
 from lib.exceptions import capture_exception
 from shopified_core.shipping_helper import country_from_code
@@ -81,7 +83,7 @@ class Util:
         self.order_cache = {}
         self.product_cache = {}
 
-    def make_payment(self, order_info, lines, user):
+    def make_payment(self, order_info, lines, user, taxes, duties):
         order_number, order_id, shipping_country_code, shipping_province_code, shipping_service = order_info
         store_id = self.store.id
         store_type = self.store.store_type
@@ -105,7 +107,7 @@ class Util:
             shipping_service
         )
         shipping_price = shipping['shipping_cost']
-        amount = int((safe_float(amount) + shipping_price) * 100)
+        amount = int((safe_float(amount) + shipping_price + safe_float(taxes) + safe_float(duties)) * 100)
         wholesale_price = int(wholesale_price * 100)
 
         sale_price = sum([float(i['price']) * int(i['quantity']) for i in lines])
@@ -121,6 +123,8 @@ class Util:
                 sale_price=sale_price,
                 wholesale_price=wholesale_price,
                 shipping_price=int(shipping_price * 100),
+                taxes=taxes,
+                duties=duties,
                 user=user,
             )
 
@@ -275,3 +279,33 @@ class Util:
         line_item = get_object_or_404(PLSOrderLine, id=line_id)
         line_item.mark_not_printed()
         return line_item
+
+    def calculate_taxes(self, zonos_items_list, shipping_data, total_weight, shipping_service):
+        shipping_cost = get_shipping(
+            shipping_data['country_code'],
+            shipping_data['province_code'],
+            total_weight,
+            shipping_service
+        )['shipping_cost']
+        data = {
+            "currency": "USD",
+            "items": zonos_items_list,
+            "ship_from_country": "US",
+            "ship_to": {
+                "city": shipping_data['city'],
+                "country": shipping_data['country_code'],
+                "postal_code": shipping_data['zip'],
+                "state": shipping_data['province_code']
+            },
+            "shipping": {"amount": shipping_cost}
+        }
+
+        headers = {'Content-Type': 'application/json', 'serviceToken': settings.ZONOS_API_KEY, 'zonos-version': settings.ZONOS_API_VERSION}
+        url = settings.ZONOS_API_URL
+        try:
+            response = requests.post(url, data=json.dumps(data), headers=headers)
+            response.raise_for_status()
+            response = response.json()
+            return response
+        except:
+            return None

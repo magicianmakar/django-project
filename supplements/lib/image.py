@@ -387,6 +387,8 @@ def get_payment_pdf(order):
         ])
     line_data.append(['', '', 'Sub Total', order.item_total])
     line_data.append(['', '', 'Shipping Cost', order.shipping_price_string])
+    line_data.append(['', '', 'Taxes', order.tax_price_string])
+    line_data.append(['', '', 'Duties', order.duties_price_string])
     line_data.append(['', '', 'Total / Amount Paid', order.amount_string])
     table = Table(line_data, colWidths=[7 * cm, 5 * cm, 3 * cm])
     table.setStyle([('FONT', (0, 0), (-1, -1), 'Helvetica'),

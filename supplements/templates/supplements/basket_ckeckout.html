@@ -146,8 +146,15 @@
                                 </div>
 
                             </div>
-
-            </div>
+                            <div class="form-group">
+                            <label for="pay_supplement_taxes" class="col-sm-4 col-sm-offset-2">Pay Duties & Taxes</label>
+                            <input type="checkbox" class="" name="pay_supplement_taxes" id="pay_supplement_taxes"
+                            {% with check=user.profile.get_config.pay_supplement_taxes_duties %}
+                            {% if check != False %}checked="checked" {% endif %}
+                            {% endwith %}
+                            >
+                            </div>
+                </div>
         </div>
     </form>
 </div>
@@ -221,7 +228,15 @@
             {% endfor %}
             <tr>
                 <td colspan="3"><strong>Shipping</strong><span id="pls-shipping-weight-total"></span></td>
-                <td class="shipping-cost"></td>
+                <td class="shipping-cost" data-shipping-cost=""></td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Duties</strong></td>
+                <td class="total-duties">-</td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Taxes</strong></td>
+                <td class="total-taxes">-</td>
             </tr>
             <tr>
                 <td colspan="3"><strong>Total</strong></td>
@@ -231,6 +246,13 @@
         </table>
       </div>
       <div class="modal-footer">
+        <button id="basket-calculate-taxes" class="btn btn-primary"
+        data-default-text="Calculate Tax"
+        data-return-tax="True"
+        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">
+        Calculate Tax
+        </button>
+
         <button id="basket-make-payment-confirm" class="btn btn-primary"
           data-default-text="Make Payment"
           data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Make Payment</button>
