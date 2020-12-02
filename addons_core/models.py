@@ -239,7 +239,7 @@ class AddonUsage(models.Model):
 
         for subscription in self.previous_subscriptions:
             # Disregard unpaid periods like trials
-            if subscription.cancelled_at < subscription.start_at:
+            if subscription.cancelled_at.date() < subscription.start_at:
                 continue
 
             iterations += len(list(arrow.Arrow.range(
@@ -259,26 +259,26 @@ class AddonUsage(models.Model):
 
     def get_start_date(self):
         return arrow.get(self.created_at).shift(
-            days=self.get_trial_days_left(self.created_at)).datetime
+            days=self.get_trial_days_left(self.created_at)).date()
 
-    def get_next_billing_date(self):
+    def get_next_billing_date(self, today=None):
         """Get billing date for next cycle, always after today's date
         """
         if self.start_at is None:
             self.start_at = self.get_start_date()
             return self.start_at
 
-        today = arrow.get().floor('day')
+        today = today if today else arrow.get().date()
         current_billing_date = self.next_billing or self.start_at
-        if current_billing_date > today.date():
+        if current_billing_date > today:
             return current_billing_date
 
         shift_interval = f"{INTERVAL_ARROW[self.billing.interval]}s"
         shift_date_amount = {shift_interval: self.billing.interval_count}
-        next_billing = arrow.get(current_billing_date).shift(**shift_date_amount).datetime
+        next_billing = arrow.get(current_billing_date).shift(**shift_date_amount).date()
 
         while next_billing <= today:
-            next_billing = arrow.get(next_billing).shift(**shift_date_amount).datetime
+            next_billing = arrow.get(next_billing).shift(**shift_date_amount).date()
 
         return next_billing
 

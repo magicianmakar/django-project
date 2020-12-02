@@ -321,13 +321,14 @@ def sync_stripe_billing(*, addon_price=None, price=None):
         return addon_price
 
 
-def create_stripe_subscription(addon_usage):
+def create_stripe_subscription(addon_usage, today=None):
     # Prevent duplicated subscriptions
     if addon_usage.stripe_subscription_item_id:
         return None
 
+    today = today if today else arrow.get().date()
     # Prevent subscribing a day before trial ends
-    if arrow.get(addon_usage.start_at).date() > arrow.get().date():
+    if arrow.get(addon_usage.start_at).date() > today:
         return None
 
     if addon_usage.next_price is None:
@@ -388,8 +389,7 @@ def create_stripe_subscription(addon_usage):
             )
         except:
             capture_exception()
-            cancel_addon_usages([addon_usage])
-            remove_cancelled_addons([addon_usage])
+            cancel_addon_usages([addon_usage], now=True, today=today)
             return None
 
         finally:
@@ -403,17 +403,18 @@ def create_stripe_subscription(addon_usage):
     return subscription_item
 
 
-def update_stripe_subscription(addon_usage):
+def update_stripe_subscription(addon_usage, today=None):
     if not addon_usage.stripe_subscription_item_id:
         return None
 
+    today = today if today else arrow.get().date()
     subscription = stripe.Subscription.retrieve(addon_usage.stripe_subscription_id)
     subscription_item = get_item_from_subscription(subscription, addon_usage.stripe_subscription_item_id)
 
     # Prices can have limited iterations in a subscription, replace prices when due
     if subscription_item.price.id != addon_usage.next_price.stripe_price_id:
         if addon_usage.next_price is None:
-            if arrow.get().date() == addon_usage.next_billing:
+            if addon_usage.next_billing == today:
                 cancel_addon_usages([addon_usage])
             else:
                 # Customer can use their addons to its last day but we cancel charges
@@ -430,7 +431,7 @@ def update_stripe_subscription(addon_usage):
         else:
             # Subscription price must be replaced always one day before stripe billing
             # to avoid charging twice for the same Addon
-            if addon_usage.next_billing == arrow.get().date():
+            if addon_usage.next_billing == today:
                 capture_message('Subscription wrongly updated at current billing day', extra={
                     'addon_usage_id': addon_usage.id
                 })
@@ -446,7 +447,7 @@ def update_stripe_subscription(addon_usage):
             stripe.SubscriptionItem.delete(remove_item_id)
 
             addon_usage.stripe_subscription_item_id = subscription_item.id
-            addon_usage.next_billing = addon_usage.get_next_billing_date()
+            addon_usage.next_billing = addon_usage.get_next_billing_date(today=today)
             addon_usage.save()
 
     return subscription_item
@@ -485,8 +486,9 @@ def remove_cancelled_addons(cancelled_usages):
         return False
 
     user = cancelled_usages[0].user
+    cancelled_usage_ids = [usage.id for usage in cancelled_usages]
     remaining_addon_ids = user.addonusage_set.exclude(
-        Q(id__in=cancelled_usages.values_list('id', flat=True))
+        Q(id__in=cancelled_usage_ids)
         | Q(cancelled_at__isnull=False)
     ).values_list('billing__addon_id', flat=True)
 
@@ -497,11 +499,11 @@ def remove_cancelled_addons(cancelled_usages):
         addon_id__in=removed_addon_ids,
         userprofile=user.profile,
     ).delete()
-    cancelled_usages.update(is_active=False)
+    AddonUsage.objects.filter(id__in=cancelled_usage_ids).update(is_active=False)
 
 
 @transaction.atomic
-def cancel_addon_usages(addon_usages, now=False):
+def cancel_addon_usages(addon_usages, now=False, today=None):
     if len(addon_usages) == 0:
         return False
 
@@ -512,12 +514,12 @@ def cancel_addon_usages(addon_usages, now=False):
             cancelled_ids.append(addon_usage.id)
             continue
 
-        # Single API calls can be expensive
-        subscription_id = addon_usage.stripe_subscription_id
-        if subscription_id not in subscriptions:
-            subscriptions[subscription_id] = stripe.Subscription.retrieve(subscription_id)
-
         try:
+            # Single API calls can be expensive
+            subscription_id = addon_usage.stripe_subscription_id
+            if subscription_id not in subscriptions:
+                subscriptions[subscription_id] = stripe.Subscription.retrieve(subscription_id)
+
             subscription = subscriptions.get(subscription_id)
             subscription_item = get_item_from_subscription(
                 subscription, addon_usage.stripe_subscription_item_id)
@@ -526,20 +528,25 @@ def cancel_addon_usages(addon_usages, now=False):
                 stripe.Subscription.delete(subscription.id)
             else:
                 stripe.SubscriptionItem.delete(subscription_item.id, proration_behavior='none')
-                subscriptions[subscription_id]['items']['data'] = filter(
+                subscriptions[subscription_id]['items']['data'] = list(filter(
                     lambda item: item.id != subscription_item.id,
                     subscription['items']['data']
-                )
+                ))
 
             cancelled_ids.append(addon_usage.id)
+
+        except stripe.error.InvalidRequestError:
+            capture_exception(level='warning')
+
         except:
             capture_exception()
 
+    today = today if today else arrow.get().date()
     cancelled_usages = AddonUsage.objects.filter(id__in=cancelled_ids)
     for usage in cancelled_usages:
+        usage.cancel_at = timezone.now().date() if now else usage.get_next_billing_date(today)
         usage.price_after_cancel = usage.next_price
         usage.cancelled_at = timezone.now()
-        usage.cancel_at = timezone.now() if now else usage.get_next_billing_date()
         usage.is_active = True  # Active until billing period ends
         usage.stripe_subscription_item_id = ''
         usage.save()
@@ -610,8 +617,8 @@ def create_shopify_subscription(store, addon_billing):
     return {'confirmation_url': charge.confirmation_url}
 
 
-def create_shopify_charge(addon_usage):
-    today = arrow.get().date()
+def create_shopify_charge(addon_usage, today=None):
+    today = today if today else arrow.get().date()
     if addon_usage.next_price is None:
         if today == addon_usage.next_billing:
             cancel_addon_usages([addon_usage], now=True)
@@ -628,12 +635,12 @@ def create_shopify_charge(addon_usage):
             "price": addon_usage.next_price.price,
         })
 
-        addon_usage.next_billing = addon_usage.get_next_billing_date()
+        addon_usage.next_billing = addon_usage.get_next_billing_date(today=today)
         addon_usage.save()
         return usage_charge
 
 
-def has_shopify_limit_exceeded(user, addon_billing=None, charge=None):
+def has_shopify_limit_exceeded(user, addon_billing=None, charge=None, today=None):
     """Get first active subscription and check the capped limit against
     all subscribed addon prices for current period
     """
@@ -645,11 +652,12 @@ def has_shopify_limit_exceeded(user, addon_billing=None, charge=None):
     total_cost = Decimal(charge.price)
 
     # Sum cancelled addons for this month as well
-    one_month_ago = arrow.get().shift(months=-1).floor('day').datetime
+    today = today if today else arrow.get()
+    one_month_ago = today.shift(months=-1).floor('day').datetime
     addon_usages = AddonUsage.objects.filter(
         Q(cancelled_at__isnull=True) | (
             Q(cancelled_at__isnull=False)
-            & Q(cancelled_at__gte=one_month_ago)
+            & Q(cancelled_at__range=(one_month_ago, today.datetime))
         ),
         user=user
     ).annotate(max_price=Max('billing__prices__price'))
