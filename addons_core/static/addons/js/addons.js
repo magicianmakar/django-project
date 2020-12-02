@@ -13,17 +13,33 @@ function changeAddonSubscription(btn) {
             addon: btn.data('addon')
         }
     }).done(function (data) {
-        if (data.limit_exceeded_link) {
+        if (data.shopify) {
+            var shopifyMessage = 'To install this Addon please click Continue ';
+            var shopifyTitle;
+            var nextUrl;
+            if (data.shopify.limit_exceeded_link) {
+                shopifyMessage += 'to authorize an increase in the amount that Dropified can charge your Shopify account';
+                shopifyTitle = 'Shopify Limit Exceeded';
+                nextUrl = data.shopify.limit_exceeded_link;
+            } else if (data.shopify.confirmation_url) {
+                shopifyMessage += 'to authorize an extra subscription for your addons';
+                shopifyTitle = 'Shopify Extra Subscription Needed';
+                nextUrl = data.shopify.confirmation_url;
+            } else if (data.shopify.installation_url) {
+                shopifyMessage += 'to install Dropified in your Shopify account';
+                shopifyTitle = 'Shopify Installation Missing';
+                nextUrl = data.shopify.installation_url;
+            }
             Swal.fire({
-                title: 'Shopify Limit Exceeded',
-                text: 'To install this Addon please click Continue to authorize an increase in the amount that Dropified can charge your Shopify account',
+                title: shopifyTitle,
+                text: shopifyMessage,
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Continue',
             }).then(function(result) {
                 if (result.value) {
-                    window.open(data.limit_exceeded_link);
+                    window.open(nextUrl);
                 }
                 window.location.reload();
             });

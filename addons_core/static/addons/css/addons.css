@@ -558,3 +558,7 @@ a.addon-install {
     color: #4f4f4f;
     font-size: 17px;
 }
+
+.alert {
+    margin-bottom: 0;
+}

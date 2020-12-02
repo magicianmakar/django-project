@@ -5,13 +5,14 @@ import arrow
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Q, Sum, Max
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.crypto import get_random_string
 from django.utils.text import slugify
 
 from leadgalaxy.models import GroupPlan
 from lib.exceptions import capture_exception, capture_message
-from shopified_core.utils import safe_int
+from shopified_core.utils import safe_int, app_link
 from stripe_subscription.models import StripeCustomer
 from stripe_subscription.stripe_api import stripe
 from .models import INTERVAL_STRIPE_MAP, Addon, AddonBilling, AddonPrice, AddonUsage
@@ -572,7 +573,41 @@ def get_shopify_subscription(user):
         if charge.status == 'active':
             break
     else:
-        return None
+        charge = None
+    return charge
+
+
+def create_shopify_subscription(store, addon_billing):
+    """Creates a RecurringApplicationCharge for annual shopify plans so addons
+    can be added to the subscription
+    """
+    if store.user.profile.plan.payment_gateway != 'shopify' \
+            or store.user.profile.plan.payment_interval != 'yearly':
+        return False
+
+    addon_price = addon_billing.price_for_user(store.user)
+    try:
+        charge = store.shopify.RecurringApplicationCharge.create({
+            "test": settings.DEBUG,
+            "name": 'Dropified Addons',
+            "price": 0,
+            "capped_amount": addon_price.price if addon_price else 0,
+            "trial_days": 0,
+            "terms": "Dropified Addons Subscription",
+            "return_url": app_link(reverse('addons.shopify_subscription', kwargs={
+                'pk': addon_billing.addon.id, 'slug': addon_billing.addon.slug
+            }))
+        })
+
+    except Exception as e:
+        if hasattr(e, 'response') and e.response.code == 401:
+            shop_name = store.shop.split('.')[0]
+            return {'installation_url': app_link('/shopify/install', shop_name, reinstall=store.id)}
+        else:
+            capture_exception()
+            return {'error': 'Shopify API Error'}
+
+    return {'confirmation_url': charge.confirmation_url}
 
 
 def create_shopify_charge(addon_usage):

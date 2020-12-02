@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.db.models import Q
@@ -182,3 +183,19 @@ class UpsellInstall(BaseDetailView, TemplateView):
 class UpsellInstallLoggedIn(BaseDetailView, TemplateView):
     model = Addon
     template_name = 'addons/upsell_install_loggedin.html'
+
+
+@method_decorator(login_required, name='dispatch')
+class ShopifySubscriptionUpdated(BaseDetailView):
+    model = Addon
+
+    def get(self, request, **kwargs):
+        store = request.user.profile.get_shopify_stores().first()
+        charge = store.shopify.RecurringApplicationCharge.find(request.GET['charge_id'])
+
+        if charge.status == 'accepted':
+            charge.activate()
+            messages.success(request, 'Extra Addons Subscription accepted!')
+
+        addon = self.get_object()
+        return redirect('addons.details_view', pk=addon.id, slug=addon.slug)

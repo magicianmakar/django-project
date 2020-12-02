@@ -10,4 +10,5 @@ urlpatterns = [
     path('my/addons', addons_core.views.MyAddonsListView.as_view(), name='myaddons'),
     path('upsell-install/<int:pk>/<slug:slug>', addons_core.views.UpsellInstall.as_view(), name='addons.upsell_install'),
     path('upsell-install-loggedin/<int:pk>/<slug:slug>', addons_core.views.UpsellInstallLoggedIn.as_view(), name='addons.upsell_install_loggedin'),
+    path('shopify/subscribe/<int:pk>/<slug:slug>', addons_core.views.ShopifySubscriptionUpdated.as_view(), name='addons.shopify_subscription'),
 ]

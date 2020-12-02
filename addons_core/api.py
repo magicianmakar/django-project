@@ -17,6 +17,7 @@ from .models import Category, Addon, AddonBilling, AddonUsage
 from .utils import (
     get_shopify_subscription,
     has_shopify_limit_exceeded,
+    create_shopify_subscription,
     cancel_addon_usages,
 )
 
@@ -134,11 +135,18 @@ class AddonsApi(ApiResponseMixin):
             # Yearly plans use ApplicationCharge rather than RecurringApplicationCharge
             charge = get_shopify_subscription(user)
             if not charge:
-                return self.api_error("Shopify yearly plans don't support installing addons", 403)
+                store = user.profile.get_shopify_stores().first()
+                result = create_shopify_subscription(store, billing)
+                if not result:
+                    return self.api_error("Your plan doesn't support installing addons", status=403)
+                elif 'error' not in result:
+                    return self.api_success({'shopify': result})
+                else:
+                    return self.api_error(result, status=403)
 
             limit_exceeded = has_shopify_limit_exceeded(user.models_user, charge=charge)
             if limit_exceeded:
-                return self.api_success({'limit_exceeded_link': limit_exceeded})
+                return self.api_success({'shopify': {'limit_exceeded_link': limit_exceeded}})
 
         if billing.addon.action_url:
             return self.api_success({'redirect_url': billing.addon.action_url})

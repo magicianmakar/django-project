@@ -140,6 +140,14 @@ class AddonBilling(models.Model):
     def max_cost(self):
         return self.prices.order_by('-price').first().price
 
+    def price_for_user(self, user):
+        subscription = self.subscriptions.filter(price_after_cancel__isnull=False, user=user).first()
+
+        if subscription is None:
+            return self.prices.first()
+
+        return subscription.price_after_cancel
+
 
 class AddonPrice(models.Model):
     class Meta:
