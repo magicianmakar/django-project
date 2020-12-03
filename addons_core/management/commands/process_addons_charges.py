@@ -78,21 +78,21 @@ class Command(DropifiedBaseCommand):
                 for addon_usage in user.addon_subscriptions:
                     try:
                         if not addon_usage.stripe_subscription_item_id:
-                            subscription_item = create_stripe_subscription(addon_usage)
+                            subscription_item = create_stripe_subscription(addon_usage, today=today)
 
                         else:
-                            subscription_item = update_stripe_subscription(addon_usage)
+                            subscription_item = update_stripe_subscription(addon_usage, today=today)
 
                         if subscription_item is None:
                             raise Exception(f'<AddonUsage: {addon_usage.id}> without subscription')
 
-                        addon_usage.next_billing = addon_usage.get_next_billing_date()
+                        addon_usage.next_billing = addon_usage.get_next_billing_date(today=today)
                         addon_usage.save()
                     except:
                         capture_exception()
 
             elif user.profile.from_shopify_app_store():
-                limit_exceeded = has_shopify_limit_exceeded(user)
+                limit_exceeded = has_shopify_limit_exceeded(user, today=today)
                 if limit_exceeded:
                     # Cancel addons overdue for 7 days
                     addon_usages = []
@@ -121,14 +121,14 @@ class Command(DropifiedBaseCommand):
                         continue
 
                     try:
-                        create_shopify_charge(addon_usage)
+                        create_shopify_charge(addon_usage, today=today)
                     except:
                         capture_exception()
 
                 # Attempt to create charge for overdue charges
                 for addon_usage in user.overdue_subscriptions:
                     try:
-                        create_shopify_charge(addon_usage)
+                        create_shopify_charge(addon_usage, today=today)
                     except:
                         capture_exception()
 
