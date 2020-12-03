@@ -50,10 +50,6 @@ class SupplementsApi(ApiResponseMixin, View):
         success = error = invalid_country = inventory_error = 0
         success_ids = []
 
-        pay_taxes = data.get('pay_tax')
-        return_calculated_taxes = data.get('calculate_tax')
-        taxes = 0.0
-        duties = 0.0
         info = util.prepare_data(request, data['order_data_ids'])
         orders, line_items, order_data_ids, error = info
 
@@ -70,19 +66,7 @@ class SupplementsApi(ApiResponseMixin, View):
             shipping_country = order['shipping_address']['country']
             shipping_country_province = slugify(order['shipping_address']['country_code'] + "-" + str(order['shipping_address']['province']))
 
-            if order['shipping_address']['country_code'] == 'US':
-                pay_taxes = False
-                if return_calculated_taxes:
-                    return self.api_success({
-                        'taxes': 0,
-                        'duties': 0,
-                        'return_calculated_taxes': return_calculated_taxes,
-                        'is_US_shipment': True
-                    })
-
             quantity_dict = {}
-            zonos_items_list = []
-            total_weight = 0
             for line in order_line_items:
                 target_countries = []
                 user_supplement = line['user_supplement']
@@ -106,17 +90,6 @@ class SupplementsApi(ApiResponseMixin, View):
                 else:
                     quantity_dict[user_supplement] = int(line['quantity'])
 
-                if pay_taxes:
-                    total_weight += user_supplement.pl_supplement.weight * int(line['quantity'])
-                    zonos_items_dict = {
-                        "id": user_supplement.pl_supplement.shipstation_sku,
-                        "amount": float(user_supplement.pl_supplement.wholesale_price),
-                        "description_retail": user_supplement.description,
-                        "hs_code": user_supplement.pl_supplement.hs_code,
-                        "quantity": int(line['quantity'])
-                    }
-                    zonos_items_list.append(zonos_items_dict)
-
             for user_supplement, qty in quantity_dict.items():
                 if user_supplement.pl_supplement.inventory < qty:
                     inventory_error += 1
@@ -124,35 +97,11 @@ class SupplementsApi(ApiResponseMixin, View):
             if invalid_country > 0 or inventory_error > 0:
                 continue
 
-            if pay_taxes:
-                shipping_data = order['shipping_address']
-                final_taxes = util.calculate_taxes(
-                    zonos_items_list,
-                    shipping_data,
-                    total_weight,
-                    data.get('shipping_service')
-                )
-
-                if final_taxes is not None:
-                    taxes = final_taxes['amount_subtotal']['taxes']
-                    duties = final_taxes['amount_subtotal']['duties']
-                else:
-                    pay_taxes = False
-            if return_calculated_taxes and pay_taxes:
-                return self.api_success({
-                    'taxes': taxes,
-                    'duties': duties,
-                    'return_calculated_taxes': return_calculated_taxes,
-                    'msg': ''
-                })
-
             try:
                 pls_order = util.make_payment(
                     order_info,
                     order_line_items,
                     user.models_user,
-                    taxes,
-                    duties
                 )
             except Exception:
                 error += len(order_line_items)
@@ -161,7 +110,6 @@ class SupplementsApi(ApiResponseMixin, View):
                 shipstation_data = prepare_shipstation_data(pls_order,
                                                             order,
                                                             order_line_items,
-                                                            pay_taxes,
                                                             service_code=data.get('shipping_service'))
                 create_shipstation_order(pls_order, shipstation_data)
 
@@ -535,25 +483,6 @@ class SupplementsApi(ApiResponseMixin, View):
         province = data['shipping_state']
         billing_country_code = data['billing_country']
         billing_province = data['billing_state']
-        city = data['shipping_city']
-        zip_code = data['shipping_zip_code']
-        pay_taxes = data.get('pay_supplement_taxes') == 'on'
-        taxes = 0.0
-        duties = 0.0
-        return_tax = False
-
-        if 'return_tax' in data:
-            return_tax = True
-
-        if country_code == 'US':
-            pay_taxes = False
-            if return_tax:
-                return self.api_success({
-                    'taxes': 0,
-                    'duties': 0,
-                    'return_tax': True,
-                    'is_US_Shipment': True
-                })
 
         if user.basket_items.count() <= 0:
             return self.api_error("No items in basket", status=500)
@@ -572,8 +501,6 @@ class SupplementsApi(ApiResponseMixin, View):
         checkout_data['shipping_country_code'] = country_code
 
         order_line_items = []
-        tax_items_list = []
-        total_weight = 0
 
         # check quantity
         basket_items_qty = user.basket_items.values('user_supplement__pl_supplement').annotate(total_qty=Avg('quantity'))
@@ -605,56 +532,18 @@ class SupplementsApi(ApiResponseMixin, View):
 
             order_line_items.append(order_line)
 
-            if pay_taxes:
-                total_weight += basket_item.user_supplement.pl_supplement.weight * int(basket_item.quantity)
-                tax_calculation_payload = {
-                    "id": basket_item.user_supplement.pl_supplement.shipstation_sku,
-                    "amount": float(basket_item.user_supplement.pl_supplement.wholesale_price),
-                    "description_retail": basket_item.user_supplement.description,
-                    "hs_code": basket_item.user_supplement.pl_supplement.hs_code,
-                    "quantity": int(basket_item.quantity)
-                }
-                tax_items_list.append(tax_calculation_payload)
-
         util = Util()
-
-        shipping_data = {}
-        if pay_taxes:
-            shipping_data['country_code'] = country_code
-            shipping_data['province_code'] = province_code
-            shipping_data['city'] = city
-            shipping_data['zip'] = zip_code
-
-            final_taxes = util.calculate_taxes(
-                tax_items_list,
-                shipping_data,
-                total_weight,
-                None
-            )
-
-            if final_taxes is not None:
-                taxes = final_taxes['amount_subtotal']['taxes']
-                duties = final_taxes['amount_subtotal']['duties']
-                tax_duties_data = {'taxes': taxes, 'duties': duties, 'return_tax': True}
-                if return_tax:
-                    return self.api_success(tax_duties_data)
-            else:
-                pay_taxes = False
-
         util.store = BasketStore()
         checkout_data['line_items'] = order_line_items
         basket_order = util.store.create_order(user, checkout_data)
         order_info = (basket_order.id, basket_order.id, country_code,
                       province_code, None)
         order = basket_order.get_order()
-
         try:
             pls_order = util.make_payment(
                 order_info,
                 order_line_items,
                 user.models_user,
-                taxes,
-                duties
             )
         except Exception:
             basket_order.delete()
@@ -667,7 +556,6 @@ class SupplementsApi(ApiResponseMixin, View):
             shipstation_data = prepare_shipstation_data(pls_order,
                                                         order,
                                                         order_line_items,
-                                                        pay_taxes,
                                                         service_code=None)
             create_shipstation_order(pls_order, shipstation_data)
             basket_order.set_paid(True)

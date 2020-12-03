@@ -850,30 +850,6 @@
 
             {% endif %}
 
-            {% if user|can:'pls.use' %}
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    Private Label
-                </div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-sm-offset-1 col-sm-11">
-                            <div class="form-group">
-                                <label for="aliexpress_as_notes" class="col-sm-4 col-xs-8 control-label">
-                                    Pre-pay Duties & Taxes
-                                    <i class="fa fa-fw fa-question-circle" qtip-tooltip="Automatically Pre Pay for Duties & Taxes." style="color:#BBB" data-hasqtip="29"></i>
-                                </label>
-                                <div class="col-sm-6 col-xs-4">
-                                    <input type="checkbox" class="js-switch" id="pay_supplement_taxes_duties"
-                                           name="pay_supplement_taxes_duties" {% if config.pay_supplement_taxes_duties %}checked="checked"{% endif %}>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
-
             <div class="form-group">
                 <div class="col-sm-12">
                     <button data-toggle="modal" class="btn btn-primary btn-lg">

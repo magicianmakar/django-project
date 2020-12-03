@@ -36,7 +36,7 @@ def get_address(store_data, hashed=False):
     return ship_to
 
 
-def prepare_shipstation_data(pls_order, order, line_items, pay_taxes, service_code=None):
+def prepare_shipstation_data(pls_order, order, line_items, service_code=None):
     ship_to = get_address(order['shipping_address'])
     try:
         bill_to = get_address(order['billing_address'])
@@ -80,9 +80,6 @@ def prepare_shipstation_data(pls_order, order, line_items, pay_taxes, service_co
     advancedOptions = {
         'customField1': order['order_number'],
     }
-
-    if pay_taxes:
-        advancedOptions['customField2'] = 'Duties Paid'
 
     shipping_data = {
         'orderNumber': pls_order.shipstation_order_number,

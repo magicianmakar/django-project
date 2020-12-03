@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function() {
         var shippingGroupData = {
             services: [],
             shipping_rates: [],
-            shipping_cost_default: parseFloat(shippingCostElement.value),
+            shipping_cost_default: shippingCostElement.value,
         };
         var services = document.getElementsByClassName('shipping-service');
         for (var i = 0, iLength = services.length; i < iLength; i++) {

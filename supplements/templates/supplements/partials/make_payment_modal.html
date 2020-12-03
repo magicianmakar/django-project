@@ -17,16 +17,8 @@
           <tbody>
           </tbody>
         </table>
-        <div>
-          <br>
-          <label for="pay_supplement_taxes">Pay Duties & Taxes</label>
-          <input type="checkbox" name="pay_supplement_taxes" id="pay_supplement_taxes"
-                 {% if user.profile.get_config.pay_supplement_taxes_duties %}checked="checked"{% endif %}>
-        </div>
       </div>
       <div class="modal-footer">
-        <button id="id-calculate-taxes" class="btn btn-primary"
-          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Calculate Taxes</button>
         <button id="id-make-payment-confirm" class="btn btn-primary"
           data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Make Payment</button>
       </div>
@@ -55,16 +47,8 @@
     <td class="shipping-cost">{{ currency_total_shipping_cost }}</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Taxes</strong></td>
-    <td id="tax-amount" data-supplement-taxes="">-</td>
-  </tr>
-  <tr>
-    <td colspan="4"><strong>Duties</strong></td>
-    <td id="duty-amount" data-supplement-duties="">-</td>
-  </tr>
-  <tr>
     <td colspan="4"><strong>Total</strong></td>
-    <td class="total-cost" id="total-supplement-cost" data-total-cost="{{ total }}">{{ currency_total }}</td>
+    <td class="total-cost">{{ currency_total }}</td>
   </tr>
 </script>
 
@@ -76,7 +60,6 @@
              data-service-id="{{this.service_id}}"
              name="shipping_service"
              value="{{this.service.service_code}}"
-             data-shipping-cost="{{ shipping_cost }}"
              {{#unless @index}}checked{{/unless}}>
         {{this.service.service_name}} ({{this.currency_shipping_cost}})
     </label>

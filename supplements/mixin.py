@@ -243,14 +243,6 @@ class PLSOrderMixin:
         return "${:.2f}".format(self.shipping_price / 100.)
 
     @property
-    def tax_price_string(self):
-        return "${:.2f}".format(self.taxes)
-
-    @property
-    def duties_price_string(self):
-        return "${:.2f}".format(self.duties)
-
-    @property
     def item_total(self):
         result = self.order_items.aggregate(total=Sum(F('amount') * F('quantity')))
         return "${:.2f}".format(result['total'] / 100.)

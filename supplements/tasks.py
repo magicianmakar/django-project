@@ -17,13 +17,7 @@ def update_shipstation_address(pls_order_id, order_line_items, store_id, store_t
         for line_item in order_line_items:
             line_item['user_supplement'] = UserSupplement.objects.get(id=line_item['user_supplement_id'])
             line_item['label'] = UserSupplementLabel.objects.get(id=line_item['label_id'])
-
-        pay_taxes = (pls_order.taxes or pls_order.duties) > 0
-        data = prepare_shipstation_data(
-            pls_order,
-            order,
-            order_line_items,
-            pay_taxes)
+        data = prepare_shipstation_data(pls_order, order, order_line_items)
         data.update({
             'orderKey': pls_order.shipstation_key,
         })

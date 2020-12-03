@@ -574,8 +574,3 @@ CKEDITOR_CONFIGS = {
         'tabSpaces': 4,
     }
 }
-
-# Zonos API details
-ZONOS_API_KEY = '3236141d-6d0c-4fd4-9e1a-44240369e86d'
-ZONOS_API_VERSION = '2019-11-21'
-ZONOS_API_URL = 'https://api.zonos.com/v1/duty_tax'
