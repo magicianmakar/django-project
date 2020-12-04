@@ -312,6 +312,9 @@ SHOPIFY_API_SCOPE = ','.join([
     'write_inventory', 'read_locations', 'read_all_orders'
 ])
 
+SHOPIFY_PRIVATE_LABEL_KEY = os.environ.get('SHOPIFY_PRIVATE_LABEL_KEY')
+SHOPIFY_PRIVATE_LABEL_SECRET = os.environ.get('SHOPIFY_PRIVATE_LABEL_SECRET')
+
 # Intercom API
 INTERCOM_APP_ID = os.environ.get('INTERCOM_APP_ID')
 INTERCOM_SECRET_KEY = os.environ.get('INTERCOM_SECRET_KEY')
