@@ -187,8 +187,8 @@ var MockupEditor = (function() {
         moveMockup: function(mockup, top, left) {
             // TODO: add more exact calculation for percentage positioning
             if (MockupEditor.control === 'label') {
-                mockup.left += left / (window.outerWidth / mockup.size) * MockupEditor.labelScale;
-                mockup.top += top / (window.outerHeight / mockup.size) * MockupEditor.labelScale;
+                mockup.left += left / (MockupEditor.image.width / mockup.size) * MockupEditor.labelScale;
+                mockup.top += top / (MockupEditor.image.height / mockup.size) * MockupEditor.labelScale;
             } else {
                 mockup.bgLeft -= left / MockupEditor.canvasSize;
                 mockup.bgTop -= top / MockupEditor.canvasSize;
@@ -384,6 +384,9 @@ function labelSizeMatch(defaultSize, pdf) {
     var defaultHeight = defaultSize.split('×')[0];
     var defaultWidth = defaultSize.split('×')[1];
     return new Promise(function (resolve, reject) {
+        if (window.location.href.indexOf('debug=1') > -1) {
+            resolve();
+        }
         pdfjsLib.getDocument(pdf).promise.then(function(pdf) {
             pdf.getPage(1).then(function(page) {
                 var pdfWidth = (page._pageInfo.view[2] / 72).toFixed(3); // returned in pt => pt / 72 = 1 in

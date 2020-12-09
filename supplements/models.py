@@ -672,6 +672,25 @@ class MockupType(models.Model):
                     {'left': 0.085, 'top': -1.768, 'size': 0.839, 'bgLeft': 0.15, 'bgTop': 0.097, 'bgSize': 0.7}
                 ],
             ]
+        elif self.slug == 'coffee-bag':
+            presets = [
+                [{'left': -1.123, 'top': -1.003, 'size': 3.21}],
+                [{'left': -1.123, 'top': -1.003, 'size': 3.21, 'layers': {'shadow': False}}],
+                [{'left': -1.123, 'top': -1.003, 'size': 3.21}],
+                [{'left': -1.123, 'top': -1.003, 'size': 3.21, 'layers': {'shadow': False}}],
+                [
+                    {'left': -1.123, 'top': -1.003, 'size': 3.21, 'bgLeft': -0.255, 'bgTop': 0.032, 'bgSize': 0.936},
+                    {'left': -1.123, 'top': -1.003, 'size': 3.21, 'bgLeft': 0.272, 'bgTop': 0.032, 'bgSize': 0.936},
+                    {'left': -1.123, 'top': -1.003, 'size': 3.21, 'bgLeft': -0.061, 'bgTop': -0.038, 'bgSize': 1.083}
+                ],
+                [
+                    {'left': -1.123, 'top': -1.003, 'size': 3.21, 'bgLeft': -0.17, 'bgTop': 0.225, 'bgSize': 0.572},
+                    {'left': -1.123, 'top': -1.003, 'size': 3.21, 'bgLeft': 0.578, 'bgTop': 0.225, 'bgSize': 0.572},
+                    {'left': -1.123, 'top': -1.003, 'size': 3.21, 'bgLeft': -0.068, 'bgTop': 0.157, 'bgSize': 0.693},
+                    {'left': -1.123, 'top': -1.003, 'size': 3.21, 'bgLeft': 0.342, 'bgTop': 0.157, 'bgSize': 0.693},
+                    {'left': -1.123, 'top': -1.003, 'size': 3.21, 'bgLeft': 0.032, 'bgTop': 0.039, 'bgSize': 0.924}
+                ],
+            ]
         else:
             presets = [
                 [{'left': -0.3}], [{'left': -0.3, 'layers': {'shadow': False}}],
@@ -829,6 +848,15 @@ class MockupType(models.Model):
                 {'layer': 'label', 'mode': 'multiply', 'saveSize': 1000},
                 {'layer': 'light', 'mode': 'screen', 'file': 'refractions.png'},
                 {'layer': 'mask', 'mode': 'destination-in', 'file': 'mask.png'},
+            ]
+        elif self.slug == 'coffee-bag':
+            layers = [
+                {'layer': 'bag', 'mode': 'source-over', 'file': 'bag.png', 'background': True},
+                {'layer': 'shadow', 'mode': 'source-over', 'file': 'shadow.png', 'background': True},
+                {'layer': 'light', 'mode': 'multiply', 'file': 'refractions.png', 'background': True},
+                {'layer': 'mask', 'mode': 'source-over', 'file': 'mask.png'},
+                {'layer': 'label', 'mode': 'source-atop', 'saveSize': 1500},
+                {'combined': ['mask'], 'layer': 'light2', 'mode': 'multiply', 'file': 'refractions.png'},
             ]
         else:
             layers = []
