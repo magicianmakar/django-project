@@ -27,6 +27,7 @@ CUSTOM_PLAN_TYPES = (
     ('callflex_extranumber', 'CallFlex Extra Number'),
     ('callflex_extraminutes', 'CallFlex Extra Minutes'),
     ('addons_subscription', 'Addons Plan'),
+    ('transactionfee_subscription', 'Transaction Fees'),
 )
 
 
