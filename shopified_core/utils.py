@@ -891,19 +891,7 @@ def decode_api_token(token):
 
 def bulk_order_format(queue_order, first_line_id):
     items_count = len(queue_order['items'])
-    if items_count == 1:
-        item = queue_order['items'][0]
-
-        del queue_order['cart']
-        del queue_order['items']
-
-        queue_order.update(item)
-
-        queue_order['url'] = re.sub(r'SACart=true&?', r'', queue_order['url'])
-
-        return queue_order
-
-    elif items_count > 1:
+    if items_count:
         line_item = queue_order['items'][0]
         queue_order['order_data'] = re.sub(r'_[^_]+$', '', line_item['order_data']) + '_' + str(first_line_id)
         queue_order['order_name'] = line_item['order_name']
