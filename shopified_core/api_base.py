@@ -23,6 +23,7 @@ from shopified_core.utils import (
     dict_val,
     safe_int,
     safe_float,
+    safe_str,
     order_data_cache,
     order_phone_number,
     orders_update_limit,
@@ -328,7 +329,7 @@ class ApiBase(ApiResponseMixin, View):
                 except:
                     capture_exception()
 
-            if order.get('supplier_type') != 'ebay' and order['shipping_address']['country_code'].lower() == 'fr':
+            if order.get('supplier_type') != 'ebay' and safe_str(order['shipping_address']['country_code']).lower() == 'fr':
                 if order['order']['phone'] and not order['order']['phone'].startswith('0'):
                     order['order']['phone'] = order['order']['phone'].rjust(10, '0')
 
