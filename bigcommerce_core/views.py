@@ -546,7 +546,7 @@ class ProductMappingView(DetailView):
         context['breadcrumbs'] = [
             {'title': 'Products', 'url': reverse('bigcommerce:products_list')},
             {'title': product.store.title, 'url': f"{reverse('bigcommerce:products_list')}?store={product.store.id}"},
-            {'title': product.title, 'url': reverse('bigcommerce:product_detail', kwargs=[product.id])},
+            {'title': product.title, 'url': reverse('bigcommerce:product_detail', args=[product.id])},
             'Variants Mapping',
         ]
 
