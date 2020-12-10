@@ -43,7 +43,7 @@ def index(request):
             raise PermissionDenied()
 
     if not store:
-        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'profit_dashboard.views.index'}))
+        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'profits'}))
 
     context = {
         'page': 'profit_dashboard',

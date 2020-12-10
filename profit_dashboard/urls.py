@@ -3,6 +3,7 @@ from django.conf.urls import url
 import profit_dashboard.views
 
 urlpatterns = [
+    url(r'^$', profit_dashboard.views.index, name='profits'),  # Needed for goto
     url(r'^$', profit_dashboard.views.index, name='profit_dashboard.views.index'),
     url(r'^facebook/insights$', profit_dashboard.views.facebook_insights, name='profit_dashboard.views.facebook_insights'),
     url(r'^facebook/accounts/remove$', profit_dashboard.views.facebook_remove_account, name='profit_dashboard.views.facebook_remove_account'),
