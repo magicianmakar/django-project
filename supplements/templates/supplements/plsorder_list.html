@@ -10,7 +10,7 @@
 {% if error %}
 <div class="alert alert-info alert-dismissable">
   <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-  The transaction against this order has not yet settled. Please wait for this to get settled first.
+  {{ error }}
 </div>
 {% endif %}
 

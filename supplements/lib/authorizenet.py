@@ -195,10 +195,15 @@ def refund_customer_profile(amount, customer_id, payment_id, trans_id):
 
     response = controller.getresponse()
 
+    return get_authnet_response(response)
+
+
+def get_authnet_response(response):
+    transaction_id = None
     errors = []
     if response.messages.resultCode == "Ok":
         if hasattr(response.transactionResponse, 'messages'):
-            return response.transactionResponse.transId
+            transaction_id = response.transactionResponse.transId
         else:
             if hasattr(response.transactionResponse, 'errors'):
                 for error in response.transactionResponse.errors.error:
@@ -213,6 +218,8 @@ def refund_customer_profile(amount, customer_id, payment_id, trans_id):
 
     if errors:
         capture_message('Auth.NET transaction error', extra={'authnet-errors': errors})
+
+    return transaction_id, errors
 
 
 def get_customer_payment_profile(profile_id, payment_id):

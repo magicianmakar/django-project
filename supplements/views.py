@@ -1180,7 +1180,7 @@ class Order(common_views.OrderView):
 
                     transaction_id = None
                     if order.stripe_transaction_id:
-                        transaction_id = request.user.authorize_net_customer.refund(
+                        transaction_id, errors = request.user.authorize_net_customer.refund(
                             refund.amount - refund.fee,
                             order.stripe_transaction_id,
                         )
@@ -1188,9 +1188,9 @@ class Order(common_views.OrderView):
                     if transaction_id:
                         refund.transaction_id = transaction_id
                         refund.save()
-                    else:
+                    elif errors:
                         transaction.set_rollback(True)
-                        error = True
+                        error = errors[0]
 
         self.object_list = self.get_queryset()
         context = self.get_context_data()

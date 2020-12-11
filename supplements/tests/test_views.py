@@ -707,11 +707,32 @@ class OrderListTestCase(PLSBaseTestCase):
 
         self.assertEqual(self.pls_order.refund, None)
         with patch('supplements.mixin.AuthorizeNetCustomerMixin.refund',
-                   return_value=self.transaction_id):
+                   return_value=(self.transaction_id, [])):
             response = self.client.post(self.get_url(), data=data)
             self.assertEqual(response.status_code, 200)
             self.pls_order.refresh_from_db()
             self.assertEqual(self.pls_order.refund.amount, 12)
+
+    def test_post_error(self):
+        self.client.force_login(self.user)
+
+        data = dict(
+            order_id=self.pls_order.id,
+            amount='12',
+            fee='2',
+            description='some description',
+            item_shipped=True,
+        )
+
+        self.assertEqual(self.pls_order.refund, None)
+        error = [b'Transaction must be setteled']
+        with patch('supplements.mixin.AuthorizeNetCustomerMixin.refund',
+                   return_value=(None, error)):
+            response = self.client.post(self.get_url(), data=data)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn(error[0], response.content)
+            self.pls_order.refresh_from_db()
+            self.assertEqual(self.pls_order.refund, None)
 
 
 class PayoutListTestCase(PLSBaseTestCase):
