@@ -477,6 +477,8 @@ def aliexpress_shipping_info(aliexpress_id, country_code):
             timeout=10)
 
         freight_data = r.json()['body']['freightResult']
+    except KeyError:
+        pass
     except:
         capture_exception()
 
