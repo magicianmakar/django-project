@@ -210,6 +210,7 @@ class AddonPriceAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
     search_fields = ('billing__addon__id', 'billing__addon__title', 'price_descriptor')
     list_display = ('billing', 'get_price_title')
     exclude = ('sort_order',)
+    raw_id_fields = ('billing',)
 
     def get_readonly_fields(self, request, obj=None):
         if obj:
@@ -224,6 +225,7 @@ class AddonUsageAdmin(admin.ModelAdmin):
     list_filter = ('billing__addon__title', 'is_active', 'created_at', 'updated_at', 'cancelled_at')
     date_hierarchy = 'created_at'
     readonly_fields = ('stripe_subscription_id', 'stripe_subscription_item_id')
+    raw_id_fields = ('user', 'billing', 'price_after_cancel')
 
     def get_readonly_fields(self, request, obj=None):
         if obj:

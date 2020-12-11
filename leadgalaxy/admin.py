@@ -105,7 +105,7 @@ class ShopifyBoardAdmin(admin.ModelAdmin):
 @admin.register(ShopifyProduct)
 class ShopifyProductAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'store', 'user', 'created_at', 'updated_at')
-    raw_id_fields = ('parent_product', 'store', 'user', 'default_supplier')
+    raw_id_fields = ('parent_product', 'store', 'user', 'default_supplier', 'user_supplement',)
     ordering = ('-updated_at',)
     search_fields = ('data', 'notes', 'monitor_id', 'shopify_id')
 
@@ -165,7 +165,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 
     fieldsets = (
         (None, {
-            'fields': ('user', 'status', 'plan', 'bundles', 'country', 'timezone', 'shopify_app_store', 'private_label')
+            'fields': ('user', 'status', 'plan', 'bundles', 'addons', 'country', 'timezone', 'shopify_app_store', 'private_label')
         }),
 
         ('User Settings', {
@@ -202,7 +202,7 @@ class UserProfileAdmin(admin.ModelAdmin):
         return super(UserProfileAdmin, self).get_form(request, obj=obj, **kwargs)
 
     def formfield_for_manytomany(self, db_field, request=None, **kwargs):
-        if db_field.name == 'bundles':
+        if db_field.name in ['bundles', 'addons']:
             kwargs['widget'] = forms.widgets.CheckboxSelectMultiple()
         elif db_field.name == 'subuser_stores' and self.instance:
             kwargs['widget'] = forms.widgets.CheckboxSelectMultiple()

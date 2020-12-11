@@ -25,7 +25,7 @@ class BigCommerceStoreAdmin(admin.ModelAdmin):
 @admin.register(BigCommerceProduct)
 class BigCommerceProductAdmin(admin.ModelAdmin):
     list_display = ('__str__', 'store', 'user', 'created_at', 'updated_at')
-    raw_id_fields = ('store', 'user')
+    raw_id_fields = ('user_supplement', 'store', 'user', 'default_supplier', 'parent_product',)
     ordering = ('-updated_at',)
     search_fields = ('data', 'source_id')
 
