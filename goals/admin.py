@@ -7,12 +7,6 @@ class GoalStepRelationshipInline(admin.TabularInline):
     verbose_name = "step"
 
 
-class UserGoalRelationshipInline(admin.StackedInline):
-    model = Goal.users.through
-    verbose_name = "user"
-    extra = 1
-
-
 @admin.register(UserGoalRelationship)
 class UserGoalRelationshipAdmin(admin.ModelAdmin):
     list_display = ('id', 'user', 'goal', 'viewed')
@@ -30,7 +24,8 @@ class GoalStepRelationshipAdmin(admin.ModelAdmin):
 class GoalAdmin(admin.ModelAdmin):
     list_display = ('id', 'goal_number', 'title', 'description', 'tip')
     search_fields = ('id', 'title', 'description')
-    inlines = GoalStepRelationshipInline, UserGoalRelationshipInline
+    inlines = (GoalStepRelationshipInline,)
+    exclude = ('users',)
 
 
 @admin.register(Step)
