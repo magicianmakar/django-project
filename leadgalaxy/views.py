@@ -526,10 +526,14 @@ def webhook(request, provider, option):
                 raise Exception('Unvalide token: {} <> {}'.format(
                     token, utils.webhook_token(store.id)))
 
+            product = None
+            shopify_order = None
+            shopify_product = None
+            shop_data = None
+
             if 'products' in topic:
                 # Shopify send a JSON POST request
                 shopify_product = json.loads(request.body)
-                product = None
                 try:
                     product = ShopifyProduct.objects.get(
                         store=store,
@@ -1008,7 +1012,7 @@ def webhook(request, provider, option):
                 captchacredit.save()
 
             except CaptchaCredit.DoesNotExist:
-                captchacredit.objects.create(
+                CaptchaCredit.objects.create(
                     user=user,
                     remaining_credits=credits_count
                 )
@@ -1019,6 +1023,7 @@ def webhook(request, provider, option):
             args = request.POST['text'].split(' ')
             access = FacebookAccess.objects
 
+            shop = None
             if len(args) >= 2:
                 shop = re.findall(r'[^/@\.]+\.myshopify\.com', args[1])
                 if not shop:
@@ -2592,9 +2597,9 @@ def acp_users_list(request):
                     .format(addon_usage.billing.addon.title, arrow.get(addon_usage.cancelled_at).format('MM/DD/YYYY HH:mm'))
                 })
 
-        def extract_time(json):
+        def extract_time(json_obj):
             try:
-                return json['key']
+                return json_obj['key']
             except KeyError:
                 return 0
 
@@ -3247,11 +3252,6 @@ def user_profile(request):
     stripe_customer = request.user.profile.plan.is_stripe() or request.user.profile.plan.is_free
     shopify_apps_customer = request.user.profile.from_shopify_app_store()
 
-    try:
-        affiliate = request.user.lead_dyno_affiliation
-    except:
-        affiliate = None
-
     # CallFlex Subscription context
     callflex = Munch({})
 
@@ -3322,7 +3322,6 @@ def user_profile(request):
         'clippingmagic': clippingmagic,
         'captchacredit_plans': captchacredit_plans,
         'captchacredit': captchacredit,
-        'affiliate': affiliate,
         'example_dates': [arrow.utcnow().replace(days=-2).format('MM/DD/YYYY'), arrow.utcnow().replace(days=-2).humanize()],
         'callflex': callflex.toDict(),
         'page': 'user_profile',
@@ -4997,13 +4996,16 @@ def product_alerts(request):
 
     product_changes = []
     for i in changes:
-        change = {'qelem': i}
-        change['id'] = i.id
-        change['data'] = i.get_data()
-        change['changes'] = i.get_changes_map(category)
-        change['product'] = i.product
-        change['shopify_link'] = i.product.shopify_link()
-        change['original_link'] = i.product.get_original_info().get('url')
+        change = {
+            'qelem': i,
+            'id': i.id,
+            'data': i.get_data(),
+            'changes': i.get_changes_map(category),
+            'product': i.product,
+            'shopify_link': i.product.shopify_link(),
+            'original_link': i.product.get_original_info().get('url')
+        }
+
         variants = product_variants.get(str(i.product.get_shopify_id()), None)
         for c in change['changes']['variants']['quantity']:
             if variants is not None:

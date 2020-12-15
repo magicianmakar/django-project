@@ -1104,8 +1104,8 @@ def fix_order_variants(store, order, product):
     def normalize_name(n):
         return n.lower().replace(' and ', '').replace(' or ', '').replace(' ', '')
 
-    def get_variant(product, variant_id=None, variant_title=None):
-        for v in product['variants']:
+    def get_variant(product_data, variant_id=None, variant_title=None):
+        for v in product_data['variants']:
             if variant_id and v['id'] == int(variant_id):
                 return v
             elif variant_title and normalize_name(v['title']) == normalize_name(variant_title):
