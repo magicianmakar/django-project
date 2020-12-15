@@ -56,3 +56,9 @@
 </div>
 
 {% endblock %}
+
+{% block extrajs %}
+    {% compress js %}
+    <script type="text/javascript" src="{% static 'addons/js/addons.js' %}"></script>
+    {% endcompress %}
+{% endblock %}
