@@ -56,6 +56,7 @@ class Command(DropifiedBaseCommand):
                 'gkart_count': len(profile.get_gkart_stores()),
                 'gear_count': len(profile.get_gear_stores()),
                 'bigcommerce_count': len(profile.get_bigcommerce_stores()),
+                'addons': ','.join(profile.get_installed_addon_titles())
             }
         }
 

@@ -54,6 +54,16 @@ def activecampaign_update_store_count(user_id):
 
 
 @celery_app.task(base=CaptureFailure, ignore_result=True)
+def update_activecampaign_addons(user_id):
+    user = User.objects.get(id=user_id)
+    addons = '||'.join(user.profile.addons.values_list('title', flat=True))
+    active_campaign = ActiveCampaignAPI()
+    contact = active_campaign.get_or_create_contact(user.email)
+    addon_custom_field_id = active_campaign.custom_fields['ADDONS']['id']
+    active_campaign.update_contact_field(contact['id'], addon_custom_field_id, addons)
+
+
+@celery_app.task(base=CaptureFailure, ignore_result=True)
 def activecampaign_update_email(from_email, to_email):
     if not settings.ACTIVECAMPAIGN_KEY:
         return

@@ -404,6 +404,9 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_installed_addon_titles(self):
+        return list(self.addons.values_list('title', flat=True))
+
     def get_stores_count(self):
         return sum([
             self.get_shopify_stores().count(),

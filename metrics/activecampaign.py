@@ -24,7 +24,8 @@ CACHED_CUSTOM_FIELDS = {
     'SUB_USER': {'id': '5', 'title': 'Sub User'},
     'DROPIFIED_ID': {'id': '12', 'title': 'Dropified ID'},
     'EXTERNAL_ID': {'id': '13', 'title': 'External ID'},
-    'SEND_EMAILS': {'id': '17', 'title': 'Send E-mails'}
+    'SEND_EMAILS': {'id': '17', 'title': 'Send E-mails'},
+    'ADDONS': {'id': '22', 'title': 'Addons'}
 }
 
 
@@ -69,7 +70,8 @@ class ActiveCampaignAPI:
     _field_tags = ['PLAN', 'PLATFORM', 'STATUS', 'SUB_USER', 'STORES_COUNT',
                    'SHOPIFY_COUNT', 'WOOCOMMERCE_COUNT', 'COMMERCEHQ_COUNT',
                    'GROOVEKART_COUNT', 'BIGCOMMERCE_COUNT', 'DROPIFIED_ID',
-                   'EXTERNAL_ID', 'TRIAL_ENDS', 'SIGNEDUP_AT', 'SEND_EMAILS']
+                   'EXTERNAL_ID', 'TRIAL_ENDS', 'SIGNEDUP_AT', 'SEND_EMAILS',
+                   'ADDONS']
 
     def __init__(self):
         self.base = f"{settings.ACTIVECAMPAIGN_URL}"
