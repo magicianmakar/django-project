@@ -54,7 +54,7 @@ class UpdateCompletedStepsTestCase(BaseTestCase):
         board = ShopifyBoardFactory(user=user)
         board.products.add(product)
         update_completed_steps(user)
-        self.assertTrue(user.completed_steps.filter(slug=step_slugs.ADD_PRODUCT_TO_BOARD).exists())
+        self.assertFalse(user.completed_steps.filter(slug=step_slugs.ADD_PRODUCT_TO_BOARD).exists())
 
 
 class GetDashboardUserGoalsTestCase(BaseTestCase):

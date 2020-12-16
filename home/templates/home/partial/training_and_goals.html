@@ -89,11 +89,13 @@
                                         {{ step.description }}
                                     </div>
                                     <div class="m-t step-link">
-                                        {% if step.show_me_how_url %}
+                                      {% if step.show_me_how_url %}
                                         <a href="{{ step.show_me_how_url }}" target="_blank">
                                             Show me how
                                         </a>
-                                        {% endif %}
+                                      {% else %}
+                                        <span>&nbsp;</span>
+                                      {% endif %}
                                     </div>
                                     <div class="m-t step-actions">
                                         {% include "home/partial/step_action.html" with action=step %}
