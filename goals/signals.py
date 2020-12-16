@@ -5,7 +5,7 @@ from goals.models import Goal, UserGoalRelationship
 
 
 @receiver(m2m_changed, sender=Goal.plans.through)
-def add_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
+def add_goal_store_permissions_to_subuser(sender, instance, pk_set, action, **kwargs):
     if action in ['post_add', 'pre_add']:
         users = User.objects.filter(profile__plan=instance)
         for goal in Goal.objects.filter(id__in=pk_set):
