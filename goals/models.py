@@ -12,7 +12,11 @@ class Goal(models.Model):
     tip = models.CharField(max_length=512, blank=True, default='')
 
     def __str__(self):
-        return self.title
+        # Needed to show in GroupPlan admin form
+        title = ''
+        if self.title:
+            title = f" - {self.title}"
+        return f"{self.goal_number}{title}"
 
 
 class UserGoalRelationship(models.Model):
@@ -40,7 +44,7 @@ class GoalStepRelationship(models.Model):
 
     class Meta:
         verbose_name = 'goal step'
-        unique_together = 'goal', 'step_number'
+        ordering = ['step_number']
 
 
 class ActionMixin:

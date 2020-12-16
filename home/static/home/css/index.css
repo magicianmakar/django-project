@@ -26,7 +26,19 @@ h4.days-remaining {
 .dropified-green {
     color: rgb(147, 196, 125);
 }
-
+.step-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #676a6c;
+  display: block;
+  margin: 2px 0 5px 0;
+}
+.goal-steps:hover .step-title {
+    color: rgb(147, 196, 125);
+}
+.step-actions {
+    min-height: 35.45px;
+}
 .disabled-gray {
     color: #999c9e;
 }
@@ -35,7 +47,11 @@ h4.days-remaining {
     color: #eee;
 }
 
-a.step-link {
+.step-link {
+    height: 18px;
+}
+
+.step-link a {
     color: #007bff;
 }
 

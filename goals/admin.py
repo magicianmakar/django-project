@@ -1,10 +1,15 @@
 from django.contrib import admin
+from adminsortable2.admin import SortableInlineAdminMixin
+
+from addons_core.admin import FormWithRequestMixin
+from .forms import StepForm
 from .models import Goal, UserGoalRelationship, GoalStepRelationship, Step, StepExtraAction
 
 
-class GoalStepRelationshipInline(admin.TabularInline):
+class GoalStepRelationshipInline(SortableInlineAdminMixin, admin.TabularInline):
     model = Goal.steps.through
     verbose_name = "step"
+    extra = 1
 
 
 @admin.register(UserGoalRelationship)
@@ -29,7 +34,7 @@ class GoalAdmin(admin.ModelAdmin):
 
 
 @admin.register(Step)
-class StepAdmin(admin.ModelAdmin):
+class StepAdmin(FormWithRequestMixin, admin.ModelAdmin):
     list_display = (
         'id',
         'title',
@@ -41,6 +46,9 @@ class StepAdmin(admin.ModelAdmin):
         'icon_src',
     )
     search_fields = ('slug',)
+    exclude = ('users',)
+    prepopulated_fields = {"slug": ("title",)}
+    form = StepForm
 
 
 @admin.register(StepExtraAction)

@@ -1,4 +1,8 @@
+{% if action.action_title or action.icon_src %}
 <a href="{{ action.action_url }}" class="btn btn-default btn-outline btn-rounded dropified-green" {% if action.is_external %}target="_blank"{% endif %}>
+  {% if action.icon_src %}
   <img src="{{ action.icon_src }}" class="step-icon" alt="step-icon" />
+  {% endif %}
   <span class="step-label">{{ action.action_title }}</span>
 </a>
+{% endif %}

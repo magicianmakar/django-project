@@ -9,7 +9,7 @@
                 <div class="col-md-6">
                     <h3>
                         <strong>
-                            Goal {{ forloop.counter }}: {{ user_goal.goal.title }}
+                            Goal {{ forloop.counter }}{% if user_goal.goal.title %}: {{ user_goal.goal.title }}{% endif %}
                         </strong>
                     </h3>
                 </div>
@@ -49,12 +49,16 @@
         <div class="ibox-content">
             <div class="row">
                 <div class="col-md-12">
+                    {% if user_goal.goal.description %}
                     <p>
                         {{ user_goal.goal.description }}
                     </p>
+                    {% endif %}
+                    {% if user_goal.goal.tip %}
                     <p class="dropified-green">
                         Tip: {{ user_goal.goal.tip }}
                     </p>
+                    {% endif %}
                 </div>
             </div>
             <br />
@@ -63,7 +67,7 @@
                     <div class="col-md-4">
                         <div class="ibox">
                             <div class="ibox-content product-box">
-                                <div class="product-desc">
+                                <div class="product-desc goal-steps">
                                     <div class="row">
                                         <div class="col-md-6">
                                             <p class="text-muted">
@@ -78,18 +82,20 @@
                                             </i>
                                         </div>
                                     </div>
-                                    <a href="#" class="product-name">
+                                    <h3 class="step-title">
                                         {{ step.title }}
-                                    </a>
+                                    </h3>
                                     <div class="m-t-xs step-description">
                                         {{ step.description }}
                                     </div>
-                                    <div class="m-t">
-                                        <a href="{{ step.show_me_how_url }}" class="step-link" target="_blank">
+                                    <div class="m-t step-link">
+                                        {% if step.show_me_how_url %}
+                                        <a href="{{ step.show_me_how_url }}" target="_blank">
                                             Show me how
                                         </a>
+                                        {% endif %}
                                     </div>
-                                    <div class="m-t">
+                                    <div class="m-t step-actions">
                                         {% include "home/partial/step_action.html" with action=step %}
                                         {% for extra_action in step.extra_actions.all %}
                                           {% include "home/partial/step_action.html" with action=extra_action %}
@@ -99,6 +105,7 @@
                             </div>
                         </div>
                     </div>
+                {% if forloop.counter|divisibleby:3 %}</div><div class="row">{% endif %}
                 {% endfor %}
             </div>
         </div>
