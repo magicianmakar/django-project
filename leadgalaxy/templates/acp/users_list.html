@@ -307,7 +307,15 @@
                         <tbody>
                             {% for i in subscribtions %}
                             <tr>
-                                <td>{{ i.plan.name }}</td>
+                                <td>
+                                    {% if i.plan.name %}
+                                        {{ i.plan.name }}
+                                    {% else %}
+                                        {% for item in i.items.data %}
+                                            {{ item.plan.name }}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </td>
                                 <td>
                                     {{ i.status }}
                                     {% if i.cancel_at_period_end %}
