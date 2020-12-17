@@ -8,10 +8,13 @@ from lib.test import BaseTestCase
 from ..utils import update_completed_steps, get_dashboard_user_goals
 from ..models import Step, Goal, UserGoalRelationship, GoalStepRelationship
 from .. import step_slugs
-from .factories import GoalFactory, StepFactory
+from .factories import GoalFactory, StepFactory, GoalWithStepsFactory
 
 
 class UpdateCompletedStepsTestCase(BaseTestCase):
+    def setUp(self):
+        GoalWithStepsFactory()
+
     def test_must_not_have_completed_steps(self):
         user = UserFactory()
         update_completed_steps(user)
@@ -54,7 +57,7 @@ class UpdateCompletedStepsTestCase(BaseTestCase):
         board = ShopifyBoardFactory(user=user)
         board.products.add(product)
         update_completed_steps(user)
-        self.assertFalse(user.completed_steps.filter(slug=step_slugs.ADD_PRODUCT_TO_BOARD).exists())
+        self.assertTrue(user.completed_steps.filter(slug=step_slugs.ADD_PRODUCT_TO_BOARD).exists())
 
 
 class GetDashboardUserGoalsTestCase(BaseTestCase):
@@ -65,18 +68,18 @@ class GetDashboardUserGoalsTestCase(BaseTestCase):
         goal1 = GoalFactory()
         goal2 = GoalFactory()
         goal3 = GoalFactory()
-        UserGoalRelationship.objects.create(user=user, goal=goal1)
-        UserGoalRelationship.objects.create(user=user, goal=goal2)
-        UserGoalRelationship.objects.create(user=user, goal=goal3)
-        GoalStepRelationship.objects.create(goal=goal1, step=StepFactory(), step_number=2)
-        GoalStepRelationship.objects.create(goal=goal1, step=StepFactory(), step_number=1)
-        GoalStepRelationship.objects.create(goal=goal2, step=StepFactory(), step_number=2)
-        GoalStepRelationship.objects.create(goal=goal2, step=StepFactory(), step_number=1)
-        GoalStepRelationship.objects.create(goal=goal3, step=StepFactory(), step_number=2)
-        GoalStepRelationship.objects.create(goal=goal3, step=StepFactory(), step_number=1)
+        UserGoalRelationship.objects.get_or_create(user=user, goal=goal1)
+        UserGoalRelationship.objects.get_or_create(user=user, goal=goal2)
+        UserGoalRelationship.objects.get_or_create(user=user, goal=goal3)
+        GoalStepRelationship.objects.get_or_create(goal=goal1, step=StepFactory(), step_number=2)
+        GoalStepRelationship.objects.get_or_create(goal=goal1, step=StepFactory(), step_number=1)
+        GoalStepRelationship.objects.get_or_create(goal=goal2, step=StepFactory(), step_number=2)
+        GoalStepRelationship.objects.get_or_create(goal=goal2, step=StepFactory(), step_number=1)
+        GoalStepRelationship.objects.get_or_create(goal=goal3, step=StepFactory(), step_number=2)
+        GoalStepRelationship.objects.get_or_create(goal=goal3, step=StepFactory(), step_number=1)
 
     def test_must_only_query_six_times(self):
-        with self.assertNumQueries(6):
+        with self.assertNumQueries(4):
             for user_goal in get_dashboard_user_goals(self.user):
                 user_goal.user.id
                 user_goal.goal.id

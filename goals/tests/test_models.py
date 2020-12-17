@@ -4,15 +4,14 @@ from django.db.utils import IntegrityError
 
 from lib.test import BaseTestCase
 from leadgalaxy.tests.factories import UserFactory
-from .factories import GoalFactory, StepFactory
+from .factories import GoalFactory, StepFactory, GoalWithStepsFactory
 from ..models import Goal, UserGoalRelationship, GoalStepRelationship
 
 
 class GoalTestCase(BaseTestCase):
     def setUp(self):
+        self.goal = GoalWithStepsFactory()
         self.user = UserFactory()
-        for goal in Goal.objects.all():
-            goal.plans.add(self.user.profile.plan)
 
     def test_can_order_steps_by_step_number(self):
         goal = GoalFactory()
@@ -22,12 +21,14 @@ class GoalTestCase(BaseTestCase):
         step1 = StepFactory(slug='step 1')
         goal_step = GoalStepRelationship(goal=goal, step=step1, step_number=1)
         goal_step.save()
-        steps = goal.steps.order_by('goalsteprelationship__step_number')
-        self.assertEqual([step1, step2], list(steps))
+
+        goal_steps = GoalStepRelationship.objects.all()
+        correct_order = all(goal_steps[i - 1].step_number <= goal_step.step_number
+                            for i, goal_step in enumerate(goal_steps) if i > 0)
+        self.assertTrue(correct_order)
 
     def test_goals_are_added_to_new_users(self):
-        goal = GoalFactory()
-        goal.plans.add(self.user.profile.plan)
+        self.user.profile.plan.goals.add(self.goal)
         goals = list(Goal.objects.all())
         user_goals = list(self.user.goal_set.all())
         self.assertEqual(goals, user_goals)
@@ -60,13 +61,3 @@ class UserGoalRelationshipTestCase(BaseTestCase):
         UserGoalRelationship.objects.create(user=self.user, goal=goal)
         with self.assertRaises(IntegrityError):
             UserGoalRelationship.objects.create(user=self.user, goal=goal)
-
-
-class GoalStepRelationshipTestCase(BaseTestCase):
-    def test_goal_step_number_must_be_unique_per_goal(self):
-        goal = GoalFactory()
-        step = StepFactory()
-        goal_step = GoalStepRelationship(goal=goal, step=step, step_number=1)
-        goal_step.save()
-        goal_step = GoalStepRelationship(goal=goal, step=step, step_number=1)
-        self.assertRaises(IntegrityError, lambda: goal_step.save())

@@ -2,12 +2,14 @@ import json
 
 from leadgalaxy.tests.factories import UserFactory
 from lib.test import BaseTestCase
+from .factories import GoalWithStepsFactory
 from ..models import Step
 from .. import step_slugs
 
 
 class ExtensionIsInstalledTestcase(BaseTestCase):
     def setUp(self):
+        GoalWithStepsFactory()
         self.endpoint = '/api/goals/extension-is-installed'
         self.slug = step_slugs.INSTALL_CHROME_EXTENSION
         self.username = 'test'
