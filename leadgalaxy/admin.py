@@ -420,7 +420,14 @@ class SubuserBigCommercePermissionAdmin(admin.ModelAdmin):
 @admin.register(DashboardVideo)
 class DashboardVideoAdmin(SortableAdminMixin, admin.ModelAdmin):
     list_display = ('url', 'title', 'store_type')
+    list_filter = ('store_type',)
     search_fields = ('url', 'title', 'store_type')
+
+    def formfield_for_manytomany(self, db_field, request=None, **kwargs):
+        if db_field.name == 'plans':
+            kwargs['widget'] = forms.widgets.CheckboxSelectMultiple()
+
+        return super().formfield_for_manytomany(db_field, request=request, **kwargs)
 
 
 @admin.register(SubuserGKartPermission)
