@@ -1249,37 +1249,43 @@ class ShopifyProduct(ProductBase):
         return f'<ShopifyProduct: {self.id}>'
 
     def get_original_data(self):
-        if self.original_data_key:
-            data_store = using_store_db(DataStore).get(key=self.original_data_key)
-            return data_store.data
-        return getattr(self, 'original_data', '{}')
+        try:
+            if self.original_data_key:
+                data_store = using_store_db(DataStore).get(key=self.original_data_key)
+                return data_store.data
+            return getattr(self, 'original_data', '{}')
+        except:
+            pass
 
     def set_original_data(self, value, clear_original=False, commit=True):
-        if self.original_data_key:
-            data_store = using_store_db(DataStore).get(key=self.original_data_key)
-            data_store.data = value
-            data_store.save()
-        else:
-            while True:
-                data_key = hashlib.md5(get_random_string(32).encode()).hexdigest()
+        try:
+            if self.original_data_key:
+                data_store = using_store_db(DataStore).get(key=self.original_data_key)
+                data_store.data = value
+                data_store.save()
+            else:
+                while True:
+                    data_key = hashlib.md5(get_random_string(32).encode()).hexdigest()
 
-                try:
-                    using_store_db(DataStore).get(key=data_key)
-                    continue  # Retry an other key
+                    try:
+                        using_store_db(DataStore).get(key=data_key)
+                        continue  # Retry an other key
 
-                except DataStore.DoesNotExist:
-                    # the key is unique
-                    using_store_db(DataStore).create(key=data_key, data=value)
+                    except DataStore.DoesNotExist:
+                        # the key is unique
+                        using_store_db(DataStore).create(key=data_key, data=value)
 
-                    self.original_data_key = data_key
+                        self.original_data_key = data_key
 
-                    if clear_original:
-                        self.original_data = ''
+                        if clear_original:
+                            self.original_data = ''
 
-                    if commit:
-                        self.save()
+                        if commit:
+                            self.save()
 
-                    break
+                        break
+        except:
+            pass
 
     def save(self, *args, **kwargs):
         data = json.loads(self.data)
