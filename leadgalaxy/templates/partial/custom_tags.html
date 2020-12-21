@@ -38,7 +38,7 @@
                 extension_version: dataLayer[0].extension_version,
 
                 {% cache 3600 user_addons user.id %}
-                addons: '{{ user.profile.get_installed_addon_titles|join:"," }}'
+                addons: '{{ user.profile.get_installed_addon_titles|join:"," }}',
                 {% endcache %}
 
                 {% cache 1800 all_stores_count user.id %}
