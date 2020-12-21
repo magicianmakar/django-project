@@ -44,7 +44,7 @@ def home_page_view(request):
     markup_rules = PriceMarkupRule.objects.filter(user=user.models_user)
 
     user_goals = get_dashboard_user_goals(request.user)
-    videos = DashboardVideo.objects.filter(is_active=True)
+    videos = DashboardVideo.objects.filter(is_active=True, plans=user.models_user.profile.plan)
     platform_videos = {t[0]: [] for t in DashboardVideo.STORE_TYPES}
     for video in videos:
         platform_videos[video.store_type].append(video)

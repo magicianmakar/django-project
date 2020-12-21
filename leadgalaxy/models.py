@@ -2388,6 +2388,7 @@ class DashboardVideo(models.Model):
     title = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    plans = models.ManyToManyField('GroupPlan', blank=True)
     store_type = models.CharField(max_length=50, default='shopify', choices=STORE_TYPES)
     display_order = models.PositiveIntegerField(default=0)
 
