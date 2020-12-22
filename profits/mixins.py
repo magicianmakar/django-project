@@ -36,17 +36,17 @@ class ProfitDashboardMixin():
                 store_object_id=self.store.id
             )
 
-            if created or sync.last_sync < arrow.get().replace(days=-1).datetime:  # Sync daily
+            if created or sync.last_sync < arrow.get().shift(days=-1).datetime:  # Sync daily
                 if self.store_type == 'gkart':
                     tasks.sync_gkart_store_profits.delay(sync.id, self.store.id)
                 elif self.store_type == 'bigcommerce':
                     tasks.sync_bigcommerce_store_profits.delay(sync.id, self.store.id)
                 elif self.store_type == 'woo':
                     tasks.sync_woocommerce_store_profits.delay(sync.id, self.store.id)
-                elif self.store_type == 'chq':
+
+            if created or sync.last_sync < arrow.get().shift(hours=-1).datetime:  # Sync hourly
+                if self.store_type == 'chq':
                     tasks.sync_commercehq_store_profits.delay(sync.id, self.store.id)
-                else:
-                    raise NotImplementedError('Profits Sync')
 
         return self.store
 

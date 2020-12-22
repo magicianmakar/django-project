@@ -72,6 +72,8 @@ def sync_gkart_store_profits(self, sync_id, store_id):
         if len(result['orders']) < limit:
             break
         page += 1
+
+    sync.last_sync = arrow.get().shift(minutes=-30).datetime
     sync.save()  # Update last_sync
 
 
@@ -110,6 +112,8 @@ def sync_bigcommerce_store_profits(self, sync_id, store_id):
                     'items': json.dumps([f'{i.get("quantity", 1)} x {i.get("name")}' for i in line_items]),
                 }
             )
+
+    sync.last_sync = arrow.get().shift(minutes=-30).datetime
     sync.save()  # Update last sync
 
 
@@ -149,6 +153,8 @@ def sync_woocommerce_store_profits(self, sync_id, store_id):
         if len(orders) < limit:
             break
         page += 1
+
+    sync.last_sync = arrow.get().shift(minutes=-30).datetime
     sync.save()  # Update last sync
 
 
@@ -156,23 +162,32 @@ def sync_woocommerce_store_profits(self, sync_id, store_id):
 def sync_commercehq_store_profits(self, sync_id, store_id):
     sync = models.ProfitSync.objects.get(pk=sync_id)
     store = CommerceHQStore.objects.get(pk=store_id)
+    current_sync = arrow.get().datetime
 
-    chq_api_url = store.get_api_url('orders')
-    r = store.request.get(chq_api_url)
-    r.raise_for_status()
-
-    orders = r.json()
-
-    for order in orders.get('items', []):
-        models.ProfitOrder.objects.update_or_create(
-            sync=sync,
-            order_id=order.get('id'),
-            defaults={
-                'date': arrow.get(order['order_date']).datetime,
-                'order_name': order.get('display_number'),
-                'amount': order.get('total'),
-                'items': json.dumps([f'{i["status"].get("quantity", 1)} x {i["data"].get("title")}' for i in order.get('items', [])]),
+    page = 0
+    result = {'_links': {'next': True}}
+    while result['_links'].get('next'):
+        page += 1
+        r = store.request.post(f"{store.get_api_url('/orders/search')}?page={page}", json={
+            'order_date': {
+                'start': sync.last_sync.timestamp(),
+                'end': current_sync.timestamp()
             }
-        )
+        })
+        r.raise_for_status()
 
+        result = r.json()
+        for order in result.get('items', []):
+            models.ProfitOrder.objects.update_or_create(
+                sync=sync,
+                order_id=order.get('id'),
+                defaults={
+                    'date': arrow.get(order['order_date']).datetime,
+                    'order_name': order.get('display_number'),
+                    'amount': order.get('total'),
+                    'items': json.dumps([f'{i["status"].get("quantity", 1)} x {i["data"].get("title")}' for i in order.get('items', [])]),
+                }
+            )
+
+    sync.last_sync = current_sync
     sync.save()  # Update last sync

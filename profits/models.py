@@ -286,7 +286,7 @@ class ProfitSync(models.Model):
     store_object_id = models.PositiveIntegerField()
     store = GenericForeignKey('store_content_type', 'store_object_id')
 
-    last_sync = models.DateTimeField(auto_now=True)
+    last_sync = models.DateTimeField()
 
 
 class ProfitOrder(models.Model):

@@ -951,6 +951,10 @@ var Utils = {
                 $('.top-controls').addClass('hidden');
                 $(showControls).removeClass('hidden');
                 window.location.hash = $(this).attr('href').replace('#', '');
+
+                if ($(this).attr('href') !== '#tab-details') {
+                    ProfitDashboard.singleDate = null;
+                }
             });
         },
         onChartToggleDataClick: function() {
@@ -1131,7 +1135,11 @@ var Utils = {
         reloadProfitDetails: function(page, singleDate) {
             var data = {'page': page};
 
+            if (!singleDate) {
+                singleDate = ProfitDashboard.singleDate;
+            }
             if (singleDate) {
+                ProfitDashboard.singleDate = singleDate;
                 var start = moment(singleDate.replace(/(\d{2}).?(\d{2}).?(\d{4})$/, '$3-$1-$2'));
                 data['date_range'] = start.format('MM/DD/YYYY') + '-' + start.add(1, 'days').format('MM/DD/YYYY');
             } else {
@@ -1498,4 +1506,3 @@ $(function () {
 });
 
 FacebookProfitDashboard.init();
-

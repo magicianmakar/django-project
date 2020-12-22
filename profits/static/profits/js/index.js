@@ -954,6 +954,10 @@ var Utils = {
                 $('.top-controls').addClass('hidden');
                 $(showControls).removeClass('hidden');
                 window.location.hash = $(this).attr('href').replace('#', '');
+
+                if ($(this).attr('href') !== '#tab-details') {
+                    ProfitDashboard.singleDate = null;
+                }
             });
         },
         onChartToggleDataClick: function() {
@@ -1521,4 +1525,3 @@ $(function () {
 });
 
 FacebookProfitDashboard.init();
-
