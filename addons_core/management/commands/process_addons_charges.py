@@ -83,7 +83,7 @@ class Command(DropifiedBaseCommand):
                         else:
                             subscription_item = update_stripe_subscription(addon_usage, today=today)
 
-                        if subscription_item is None:
+                        if subscription_item is None and addon_usage.next_billing == today:
                             raise Exception(f'<AddonUsage: {addon_usage.id}> without subscription')
 
                         addon_usage.next_billing = addon_usage.get_next_billing_date(today=today)
