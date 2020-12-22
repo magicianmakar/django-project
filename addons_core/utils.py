@@ -652,7 +652,7 @@ def has_shopify_limit_exceeded(user, addon_billing=None, charge=None, today=None
     total_cost = Decimal(charge.price)
 
     # Sum cancelled addons for this month as well
-    today = today if today else arrow.get()
+    today = arrow.get(today) if today else arrow.get()
     one_month_ago = today.shift(months=-1).floor('day').datetime
     addon_usages = AddonUsage.objects.filter(
         Q(cancelled_at__isnull=True) | (
