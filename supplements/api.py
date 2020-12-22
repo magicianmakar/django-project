@@ -556,7 +556,7 @@ class SupplementsApi(ApiResponseMixin, View):
             shipstation_data = prepare_shipstation_data(pls_order,
                                                         order,
                                                         order_line_items,
-                                                        service_code=None)
+                                                        service_code=data.get('shipping_service'))
             create_shipstation_order(pls_order, shipstation_data)
             basket_order.set_paid(True)
             basket_order.save()

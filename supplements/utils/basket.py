@@ -83,7 +83,7 @@ class BasketStore:
             'phone': order_data['billing_phone'],
         }
         order_metadata['shipping_address'] = {
-            'name': '{} {}'.format(order_data['billing_first_name'], order_data['billing_last_name']),
+            'name': '{} {}'.format(order_data['shipping_first_name'], order_data['shipping_last_name']),
             'first_name': order_data['shipping_first_name'],
             'last_name': order_data['shipping_last_name'],
             'company': order_data['shipping_company_name'],

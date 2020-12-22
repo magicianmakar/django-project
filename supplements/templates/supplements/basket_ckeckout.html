@@ -116,7 +116,7 @@
                             </div>
                             <div class="form-group"><label class="col-sm-2 control-label">Address</label>
                                 <div class="col-sm-4">
-                                    <input type="text" name="shipping_address_line1" value="{{ user.profile.company.address_line1 }}" class="form-control" placeholder="Address line 1">
+                                    <input type="text" name="shipping_address_line1" required value="{{ user.profile.company.address_line1 }}" class="form-control" placeholder="Address line 1">
                                 </div>
                                 <div class="col-sm-4">
                                     <input type="text" name="shipping_address_line2" value="{{ user.profile.company.address_line2 }}" class="form-control" placeholder="Address line 2">
@@ -127,12 +127,12 @@
                                     <input type="text" name="shipping_city" value="{{ user.profile.company.city }}" class="form-control" placeholder="City">
                                 </div>
                                 <div class="col-sm-4">
-                                    <input id="shipping_state" type="text" name="shipping_state" value="{{ user.profile.company.state }}" class="form-control" placeholder="State or Province">
+                                    <input id="shipping_state" type="text" required name="shipping_state" value="{{ user.profile.company.state }}" class="form-control" placeholder="State or Province">
                                 </div>
                             </div>
                             <div class="form-group"><label class="col-sm-2 control-label"></label>
                                 <div class="col-sm-4">
-                                    <input type="text" name="shipping_zip_code" value="{{ user.profile.company.zip_code }}" class="form-control" placeholder="Zip or Postal">
+                                    <input type="text" name="shipping_zip_code" required value="{{ user.profile.company.zip_code }}" class="form-control" placeholder="Zip or Postal">
                                 </div>
                                 <div class="col-sm-4">
                                     <input type="text" name="shipping_phone" value="{{ company.phone }}" class="form-control" placeholder="">
@@ -229,6 +229,9 @@
             </tr>
           </tbody>
         </table>
+        <div class="shipping-service-selection">
+
+        </div>
       </div>
       <div class="modal-footer">
         <button id="basket-make-payment-confirm" class="btn btn-primary"
@@ -239,12 +242,29 @@
   </div>
 </div>
 
+{% verbatim %}
+<script id="shipping-services-template" type="text/x-handlebars-template">
+  {{#each shippings}}
+  <div class="radio-inline shipping-service">
+    <label>
+      <input type="radio"
+             data-service-id="{{this.service_id}}"
+             name="shipping_service"
+             value="{{this.service.service_code}}"
+             {{#unless @index}}checked{{/unless}}>
+        {{this.service.service_name}} ({{this.currency_shipping_cost}})
+    </label>
+  </div>
+  {{/each}}
+</script>
+{% endverbatim %}
 
 {% endblock %}
 
 {% block extrajs %}
 {% compress js %}
 <script type="text/javascript" src="{% static 'product_common/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/basket_checkout.js' %}"></script>
 {% endcompress %}
