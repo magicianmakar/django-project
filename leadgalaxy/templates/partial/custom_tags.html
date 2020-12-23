@@ -288,7 +288,9 @@
 
 </script>
 
+{% if '/addons' not in request.path %}
 <script src="//app.getbeamer.com/js/beamer-embed.js"></script>
+{% endif %}
 
 <script src="https://script.tapfiliate.com/tapfiliate.js" type="text/javascript" async></script>
 <script type="text/javascript">
