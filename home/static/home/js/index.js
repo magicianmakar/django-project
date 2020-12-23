@@ -14,6 +14,18 @@
         });
     });
 
+    $('.clickable').hover(function () {
+        if ($(this).hasClass('clickable')) {
+            $(this).removeClass('fa-circle');
+            $(this).addClass('fa-check-circle');
+        }
+    }, function () {
+        if ($(this).hasClass('clickable')) {
+            $(this).removeClass('fa-check-circle');
+            $(this).addClass('fa-circle');
+      }
+    });
+
     $('.goal-step').click(function () {
         var stepSlug = $(this).data('step-slug');
         var goalId = $(this).data('goal-id');
@@ -21,11 +33,13 @@
             url: '/api/goals/step-is-completed',
             type: 'POST',
             data: {
+                goal_id: goalId,
                 step_slug: stepSlug,
             },
             success: function(data) {
                 $(this).removeClass('fa-circle clickable');
                 $(this).addClass('dropified-green fa-check-circle');
+                $(this).attr({'title': ""});
 
                 var stepCircle = '.' + stepSlug + '-circle';
                 $(stepCircle).removeClass('fa-circle disabled-gray');

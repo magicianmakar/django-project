@@ -77,8 +77,9 @@
                                         <div class="col-md-6 text-right">
                                           <i data-step-slug="{{ step.slug }}"
                                              data-goal-id="{{ user_goal.goal.id }}"
-                                             class="goal-step fa-lg fa
-                                             {% if step in user_goal.user.completed_steps.all %}dropified-green fa-check-circle{% else %}fa-circle clickable{% endif %}">
+                                             class="goal-step step-hover fa-lg fa
+                                             {% if step in user_goal.user.completed_steps.all %}dropified-green fa-check-circle{% else %}fa-circle clickable{% endif %}"
+                                             title="{% if step not in user_goal.user.completed_steps.all %}Mark as Done{% endif %}">
                                             </i>
                                         </div>
                                     </div>
