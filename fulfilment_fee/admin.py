@@ -1,5 +1,4 @@
 import csv
-
 from django.contrib import admin
 from django.http import HttpResponse
 from django.utils import timezone
@@ -39,7 +38,7 @@ class SalesFeeConfigAdmin(admin.ModelAdmin):
 @admin.register(SaleTransactionFee)
 class SaleTransactionFeeAdmin(admin.ModelAdmin):
     list_display = ('source_model', 'source_id', 'fee_value', 'user', 'created_at')
-    list_filter = ('source_model', 'source_id', 'user', 'created_at')
+    list_filter = ('source_model',)
     raw_id_fields = ('user',)
     search_fields = ('user__email', 'source_id', 'created_at')
     actions = (ExportCsvMixin.export_as_csv,)
