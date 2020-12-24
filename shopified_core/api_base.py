@@ -311,7 +311,7 @@ class ApiBase(ApiResponseMixin, View):
                 order['shipping_address']['country_code'] = aliexpress_country_code_map(order['shipping_address']['country_code'])
 
             order['ordered'] = False
-            order['fast_checkout'] = True
+            order['fast_checkout'] = user.get_config('_fast_order_checkout', True)  # Use Cart for all orders
             order['solve'] = user.models_user.get_config('aliexpress_solve_captcha', True)
 
             phone = order['order']['phone']
