@@ -381,8 +381,8 @@ function addLabelImage(pdf) {
 }
 
 function labelSizeMatch(defaultSize, pdf) {
-    var defaultWidth = defaultSize.split('×')[0];
-    var defaultHeight = defaultSize.split('×')[1];
+    var defaultWidth = defaultSize.split('x')[0];
+    var defaultHeight = defaultSize.split('x')[1];
     return new Promise(function (resolve, reject) {
         if (window.location.href.indexOf('debug=1') > -1) {
             resolve();
