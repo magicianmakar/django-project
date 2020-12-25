@@ -217,7 +217,11 @@ class Util:
             orders[order_id] = order
 
             address = order['shipping_address']
-            address['country'] = country_from_code(address['country_code'], address['country'])
+            country = country_from_code(address['country_code'], address['country'])
+            try:
+                address['country'] = country.split(',')
+            except Exception:
+                address['country'] = country
 
             for line_item in order['line_items']:
                 if str(line_item['id']) != str(line_id):
