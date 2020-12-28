@@ -8,7 +8,7 @@ from django.utils.functional import cached_property
 from django.shortcuts import reverse
 
 from leadgalaxy.models import AppPermission
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, safe_int
 
 INTERVAL_CHOICES = ((0, 'Day'), (1, 'Week'), (2, 'Month'), (3, 'Year'))
 INTERVAL_ARROW = {0: 'day', 1: 'week', 2: 'month', 3: 'year'}
@@ -284,7 +284,7 @@ class AddonUsage(models.Model):
 
     def get_trial_days_left(self, from_date=None):
         try:
-            plan_trial_days = self.user.profile.trial_days_left
+            plan_trial_days = safe_int(self.user.profile.trial_days_left)
         except:
             plan_trial_days = 0
 

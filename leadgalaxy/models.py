@@ -643,7 +643,7 @@ class UserProfile(models.Model):
                 subscription = self.get_current_shopify_subscription()
                 trial_days_left = subscription.trial_days_left if subscription else 0
 
-            if self.plan.payment_gateway == 'stripe':
+            elif self.plan.payment_gateway == 'stripe':
                 trial_days_left = self.user.stripe_customer.trial_days_left
 
             cache.set(cache_key, trial_days_left, 60)
