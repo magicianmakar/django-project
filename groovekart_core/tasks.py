@@ -20,6 +20,7 @@ from app.celery_base import celery_app, CaptureFailure, retry_countdown
 
 from shopified_core import permissions
 from shopified_core import utils
+from shopified_core.utils import safe_str
 
 from .models import GrooveKartStore, GrooveKartProduct, GrooveKartSupplier
 from .utils import (
@@ -115,9 +116,9 @@ def product_save(req_data, user_id):
             supplier = GrooveKartSupplier.objects.create(
                 store=store,
                 product=product,
-                product_url=original_url,
-                supplier_name=store_info.get('name'),
-                supplier_url=store_info.get('url'),
+                product_url=safe_str(original_url)[:512],
+                supplier_name=store_info.get('name') if store_info else '',
+                supplier_url=store_info.get('url') if store_info else '',
                 is_default=True
             )
 

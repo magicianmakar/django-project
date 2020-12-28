@@ -35,6 +35,7 @@ from shopified_core.utils import (
     http_excption_status_code,
     delete_model_from_db,
     normalize_product_title,
+    safe_str,
     ALIEXPRESS_REJECTED_STATUS
 )
 
@@ -343,7 +344,7 @@ def export_product(req_data, target, user_id):
                         product.default_supplier = ProductSupplier.objects.create(
                             store=store,
                             product=product,
-                            product_url=original_url[:512],
+                            product_url=safe_str(original_url)[:512],
                             supplier_name=supplier.get('name') if supplier else '',
                             supplier_url=supplier.get('url') if supplier else '',
                             variants_map=variants_mapping,
@@ -450,9 +451,9 @@ def export_product(req_data, target, user_id):
                     supplier = ProductSupplier.objects.create(
                         store=store,
                         product=product,
-                        product_url=original_url[:512],
-                        supplier_name=supplier_info.get('name'),
-                        supplier_url=supplier_info.get('url'),
+                        product_url=safe_str(original_url)[:512],
+                        supplier_name=supplier_info.get('name') if supplier_info else '',
+                        supplier_url=supplier_info.get('url') if supplier_info else '',
                         is_default=True
                     )
 

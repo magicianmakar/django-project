@@ -20,6 +20,7 @@ from shopified_core.utils import (
     http_exception_response,
     http_excption_status_code,
     get_fileext_from_url,
+    safe_str
 )
 from shopified_core import permissions
 
@@ -137,9 +138,9 @@ def product_save(req_data, user_id):
             supplier = BigCommerceSupplier.objects.create(
                 store=store,
                 product=product,
-                product_url=original_url[:512],
-                supplier_name=store_info.get('name'),
-                supplier_url=store_info.get('url'),
+                product_url=safe_str(original_url)[:512],
+                supplier_name=store_info.get('name') if store_info else '',
+                supplier_url=store_info.get('url') if store_info else '',
                 is_default=True
             )
 

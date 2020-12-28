@@ -24,7 +24,8 @@ from shopified_core.utils import (
     http_exception_response,
     http_excption_status_code,
     normalize_product_title,
-    safe_float
+    safe_float,
+    safe_str
 )
 
 from .utils import format_chq_errors, CHQOrderUpdater, get_chq_product
@@ -134,9 +135,9 @@ def product_save(req_data, user_id):
             supplier = CommerceHQSupplier.objects.create(
                 store=store,
                 product=product,
-                product_url=original_url[:512],
-                supplier_name=store_info.get('name'),
-                supplier_url=store_info.get('url'),
+                product_url=safe_str(original_url)[:512],
+                supplier_name=store_info.get('name') if store_info else '',
+                supplier_url=store_info.get('url') if store_info else '',
                 is_default=True
             )
 
