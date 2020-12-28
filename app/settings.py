@@ -83,6 +83,7 @@ INSTALLED_APPS = (
     'goals',
     'metrics',
     'addons_core',
+    'acp_core',
 
     'commercehq_core',
     'woocommerce_core',

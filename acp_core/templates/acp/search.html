@@ -44,7 +44,7 @@
                         <tr>
                             <td>
                                 {% if not user.is_superuser or users_count > 1 %}
-                                    <a href="{% url 'acp_users_list' %}?user={{item.id}}">{{item.username}}</a></td>
+                                    <a href="{% url 'acp_search_view' %}?user={{item.id}}">{{item.username}}</a></td>
                                 {% else %}
                                     <a href="/admin/auth/user/{{item.id}}" target="_blank">{{item.username}}</a></td>
                                 {% endif %}
@@ -55,7 +55,7 @@
 
                                 {% if item.is_subuser %}
                                 <br><b>{{item.profile.subuser_parent.profile.plan.title}}</b><br>
-                                Parent: <a href="{% url 'acp_users_list' %}?q={{item.profile.subuser_parent.email}}"
+                                Parent: <a href="{% url 'acp_search_view' %}?q={{item.profile.subuser_parent.email}}"
                                            target="_blank">
                                         {{item.profile.subuser_parent.username}}</a>
                                 {% endif %}
@@ -293,7 +293,7 @@
                     </table>
                 {% endif %}
 
-                {% if subscribtions %}
+                {% if subscriptions %}
                     <hr/>
                     <h2>Subscriptions</h2>
                     <table class="table  dataTables">
@@ -305,7 +305,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for i in subscribtions %}
+                            {% for i in subscriptions %}
                             <tr>
                                 <td>
                                     {% if i.plan.name %}

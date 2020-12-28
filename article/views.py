@@ -1,14 +1,13 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, Http404
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.db.models import Q
-from django.core.exceptions import PermissionDenied
-
-from article.models import Article, ArticleTag
-from article.forms import ArticleForm
-
 import simplejson as json
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.db.models import Q
+from django.http import Http404
+from django.shortcuts import render, redirect, get_object_or_404
+
+from article.forms import ArticleForm
+from article.models import Article, ArticleTag
 
 
 def index(request, tag=None):
@@ -16,12 +15,12 @@ def index(request, tag=None):
         tags = ArticleTag.objects.filter(Q(title__iexact=tag) | Q(title__iexact=tag.replace('-', ' ')))
         articles = Article.objects.filter(Q(tags__in=tags)).order_by('-created_at')
     else:
-        if not request.user.is_superuser:
+        if not request.user.is_staff:
             raise PermissionDenied()
 
         articles = Article.objects.filter(show_header=True).order_by('-created_at')
 
-    if not request.user.is_superuser:
+    if not request.user.is_staff:
         articles = articles.filter(stat=0)
 
     return render(request, 'article/index.html', {
@@ -42,7 +41,7 @@ def view(request, id_article=None, slug_article=None):
     if article.stat != 0 and (not request.user.is_superuser and not request.user.is_staff):
         raise Http404('Not published')
 
-    if not request.user.is_superuser:
+    if not request.user.is_staff:
         # Update this way so we don't change updated_at
         Article.objects.filter(id=article.id).update(views=article.views + 1)
 
@@ -65,7 +64,7 @@ def content(request, slug_article=None):
         if request.user.is_superuser or request.user.is_staff:
             article.save()
 
-    if not request.user.is_superuser:
+    if not request.user.is_staff:
         # Update this way so we don't change updated_at
         Article.objects.filter(id=article.id).update(views=article.views + 1)
 
@@ -105,7 +104,7 @@ def submit(request):
 def edit(request, article_id):
     article = Article.objects.get(pk=article_id)
 
-    if not request.user.is_superuser and not (request.user.is_staff and not article.show_header):
+    if not request.user.is_superuser:
         raise PermissionDenied()
 
     if request.method == 'POST':
@@ -175,8 +174,3 @@ def _save_submittion(request, form, article=None):
         return article
     else:
         return False
-
-
-def json_response(data):
-    return HttpResponse(json.dumps(data, sort_keys=True, indent=2),
-                        content_type='application/json; charset=UTF-8')

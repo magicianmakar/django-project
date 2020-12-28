@@ -42,30 +42,17 @@
       {# header #}
 
       {% if request.user.is_superuser or request.user.is_staff %}
-        <li class="section">
-            <a class="section-header" href="{% if request.user.is_superuser %}/admin{% else %}#{% endif %}">
-              <span class="fa fa-cog m-t-xs icon"></span>
-              <span class="item-title" style="cursor:pointer">Admin</span>
+        <li style="display:flex;margin-left:10px;">
+            <a href="{% url 'acp_index_view' %}" style="flex-grow:2">
+              <span class="item-title">Admin</span>
+            </a>
+            <a href="#" style="flex-grow:1;text-align:center" class="find-user-cp"
+              data-url="{% url 'acp_search_view' %}?"
+              data-title="Users Search"
+              data-desc="Email, username or store domain">
+              <i class="fa fa-search"></i>
             </a>
         </li>
-        <li class="item">
-            <a href="#" onclick="javascript:setTimeout(
-                    function(){
-                        var q=prompt('Query Dropified Users');
-                        if(q.length) {
-                            window.location.href='{% url 'acp_users_list' %}?q=' + encodeURIComponent(q.trim());
-                        }
-                    }, 10);
-                    return false;">Users</a>
-        </li>
-
-        <li class="item"><a href="{% url 'acp_groups' %}">Plans</a></li>
-        <li class="item"><a href="{% url 'dropified_black_users' %}">DB Users</a></li>
-        {% if request.user.is_superuser %}
-        <li class="item"><a href="{% url 'acp_cards' %}">Cards</a></li>
-        <li class="item"><a href="/pages/">Pages</a></li>
-        {% endif %}
-
       {% endif %}
 
       {% for section in sidemenu.header %}

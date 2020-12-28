@@ -13,7 +13,7 @@
     <div class="ibox-content profile-content">
       {% if pls_admin or pls_staff %}
       This product belongs to {{ label.user_supplement.user.get_full_name }}
-      <a href="{% url 'acp_users_list' %}?user={{ label.user_supplement.user.id }}"> {{ label.user_supplement.user.email }} </a>
+      <a href="{% url 'acp_search_view' %}?user={{ label.user_supplement.user.id }}"> {{ label.user_supplement.user.email }} </a>
       {% endif %}
       <div class="m-t">
         <h4><strong>Product Name: {{ label.user_supplement.title }}</strong></h4>

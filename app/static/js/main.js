@@ -1164,6 +1164,28 @@ $('.scrolling-tabs').scrollingTabs({
     cssClassRightArrow: 'fa fa-chevron-right',
 });
 
+$('.find-user-cp').click(function(e) {
+    e.preventDefault();
+
+    swal({
+        title: $(e.currentTarget).data('title'),
+        type: "input",
+        showCancelButton: true,
+        closeOnConfirm: false,
+        animation: "slide-from-top",
+        inputPlaceholder: $(e.currentTarget).data('desc'),
+        showLoaderOnConfirm: true
+    }, function(inputValue) {
+        if (inputValue === false) return false;
+        inputValue = inputValue.trim();
+        if (inputValue === "") {
+            return false;
+        }
+
+        window.location.href = $(e.currentTarget).data('url') + $.param({q: inputValue});
+    });
+});
+
 $(function() {
     setTimeout(function() {
         var version = $('.extension-version').data('extension-version');

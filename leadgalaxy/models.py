@@ -2131,7 +2131,7 @@ class GroupPlan(models.Model):
         return stores
 
     def have_feature(self, perm_name):
-        permission = AppPermission.objects.filter(name_iexact=perm_name)
+        permission = AppPermission.objects.filter(name__iexact=perm_name)
         return permission and permission.groupplan_set.filter(id=permission.id).exists()
 
     def is_stripe(self):
