@@ -81,8 +81,12 @@ class SupplementsApi(ApiResponseMixin, View):
                 target_countries.extend(shipping_countries)
                 target_countries = set(target_countries)
 
-                if target_countries and shipping_country not in set(target_countries) \
-                        and shipping_country_province not in set(target_countries):
+                if isinstance(shipping_country, list):
+                    for country in shipping_country:
+                        if country not in target_countries:
+                            invalid_country += 1
+                elif target_countries and shipping_country not in target_countries \
+                        and shipping_country_province not in target_countries:
                     invalid_country += 1
 
                 if user_supplement in quantity_dict:

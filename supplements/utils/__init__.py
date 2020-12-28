@@ -64,7 +64,8 @@ def user_can_download_label(user, label):
 def supplement_customer_address(address):
     mapped_countries = {
         'UK': 'GB',
-        'United States': 'US'
+        'United States': 'US',
+        'TW': 'Taiwan',
     }
 
     if address.get('country_code'):

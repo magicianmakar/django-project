@@ -279,13 +279,13 @@ class AuthorizeNetCustomer(models.Model, AuthorizeNetCustomerMixin):
     customer_id = models.CharField(
         max_length=255,
         null=True,
-        verbose_name='Authorize.net Customer ID',
+        verbose_name='Profile ID',
     )
 
     payment_id = models.CharField(
         max_length=255,
         null=True,
-        verbose_name='Authorize.net Customer Payment ID',
+        verbose_name='Payment Profile ID',
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
