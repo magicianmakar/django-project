@@ -468,7 +468,10 @@ def callback(request):
 
         store.save()
 
-        attach_webhooks(store)
+        try:
+            attach_webhooks(store)
+        except:
+            capture_exception(level='warning')
 
         if from_shopify_store:
             messages.success(request, 'Please select a plan to activate your free trial!')
