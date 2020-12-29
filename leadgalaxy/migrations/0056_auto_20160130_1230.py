@@ -5,7 +5,7 @@ from django.db import migrations, models
 import json
 
 
-def safe_int(val, default=0):
+def __safe_int(val, default=0):
     try:
         return int(val)
     except:
@@ -17,7 +17,7 @@ def order_source_id(apps, schema_editor):
 
     for order in ShopifyOrder.objects.all():
         if not order.source_id:
-            order.source_id = safe_int(json.loads(order.data)['aliexpress']['order']['id'])
+            order.source_id = __safe_int(json.loads(order.data)['aliexpress']['order']['id'])
             order.save()
 
 
