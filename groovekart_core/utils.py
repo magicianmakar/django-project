@@ -105,6 +105,9 @@ def get_or_create_category_by_title(store, category_title):
     if store.is_lite:
         return 1
 
+    if safe_int(category_title, None) is not None:
+        return safe_int(category_title)
+
     category_title_lower = category_title.lower()
 
     def search(categories, category_title_lower):
