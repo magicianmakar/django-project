@@ -241,7 +241,7 @@ def product_export(store_id, product_id, user_id, publish=None):
         try:
             product.source_id = groovekart_product['id_product']
         except KeyError:
-            capture_exception(extra={'api_data': api_data})
+            capture_exception(extra={'api_data': api_data, 'response': r.text})
 
             error = utils.dict_val(groovekart_product, ['error', 'Error'])
             if isinstance(error, dict):
