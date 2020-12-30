@@ -83,8 +83,7 @@ class Command(DropifiedBaseCommand):
             if unpaid_user_total['total_amount'] > settings.CALLFLEX_SHOPIFY_USAGE_MAX_PENDING:
 
                 user = User.objects.get(pk=unpaid_user_total['user'])
-                phones = user.twilio_phone_numbers.exclude(status='released')
-                phones.safe_delete()
+                user.twilio_phone_numbers.exclude(status='released').delete()
 
         # removing very old usage charge logs
         exp_date = timezone.now() + timedelta(days=-90)
