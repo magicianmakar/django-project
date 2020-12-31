@@ -1,7 +1,7 @@
 import copy
 import requests
 import simplejson as json
-from json import JSONDecodeError
+from simplejson.errors import JSONDecodeError
 
 from lib.exceptions import capture_exception, capture_message
 
