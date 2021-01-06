@@ -21,6 +21,11 @@ class PLSupplementFactory(factory.DjangoModelFactory):
         model = 'supplements.PLSupplement'
 
 
+class ProductSupplierFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = 'product_common.ProductSupplier'
+
+
 class UserSupplementFactory(factory.DjangoModelFactory):
     title = factory.fuzzy.FuzzyText()
     description = factory.fuzzy.FuzzyText()

@@ -200,15 +200,22 @@ $(document).ready(function(){
 
     $('#add-refund').click(function (e) {
         var form = document.getElementById('refund_form');
+        var amount = 0;
+        var data = {};
+        var fee = $("#id_fee").val();
+        var shipping = $("#id_shipping").val();
         if (form.checkValidity()) {
-            var itemIds = [];
-            $(".line-checkbox").each(function (i, item) {
-                if ($(item).prop('checked')) {
-                    itemIds.push($(item).data("item-id"));
+            $(".refund-amount").each(function (i, item) {
+                if ($(item).val()) {
+                    data[($(item).data("line-id"))] = $(item).val();
+                    amount += parseInt($(item).val());
                 }
             });
-            form.line_item_ids.value = itemIds;
         }
+        form.fee.value = fee ? fee : 0;
+        form.shipping.value = shipping ? shipping : 0;
+        form.amount.value = amount;
+        form.line_items_data.value = JSON.stringify(data);
     });
 
     $('.mark-supplement').click(function (e) {
@@ -224,6 +231,52 @@ $(document).ready(function(){
             contentType: 'application/json',
             success: function (response) {
                 toastr.success("The supplement has been successfully marked unread.", "Success!");
+            }
+        });
+    });
+
+    $(".check-supplier input[type='checkbox']").click(function (e) {
+        var input = $(this).parents('.check-supplier').find('input[type="text"]');
+        if ($(this).prop('checked')) {
+            $(input).attr('placeholder', 'Add reference number');
+            $(input).prop('disabled', false);
+        } else {
+            $(input).attr('placeholder', '');
+            $(input).prop('disabled', true);
+            $(input).val('');
+        }
+    });
+
+    $("#create-payouts").click(function (e) {
+        e.preventDefault();
+        var data = {};
+        $(".check-supplier input[type='checkbox']").each(function (i, item) {
+            var id = $(item).attr('id');
+            var input = $(item).parents('.check-supplier').find('input[type="text"]');
+            if ($(item).prop('checked')) {
+                data[$(item).attr('id')] = $(input).val();
+            }
+        });
+        if (Object.keys(data).length == 0) {
+            toastr.info("Please select at least one supplier to add payouts.");
+            return;
+        }
+        for (var id in data) {
+            if (!data[id]) {
+                toastr.info('Please make sure to enter reference number for each selected supplier.');
+                return;
+            }
+        }
+
+        $.ajax({
+            url: api_url('create-payouts', 'supplements'),
+            type: "POST",
+            data: JSON.stringify(data),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (response) {
+                toastr.success("Payout was created successfully.", "Success!");
+                window.location.reload();
             }
         });
     });

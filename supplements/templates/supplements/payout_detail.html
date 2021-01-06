@@ -1,0 +1,144 @@
+{% extends "supplements/tab_view_admin.html" %}
+{% load static compress widget_tweaks perms_helper %}
+
+{% block tab_content %}
+
+<div class="row">
+  <div class="col-md-4">
+    <h2>Payout #{{ payout.reference_number }}</h2>
+  </div>
+  <div class="col-md-2 col-md-offset-5">
+    <div class="form-group">
+      <label class="control-label">&nbsp;</label>
+      <a class='btn btn-primary form-control'
+        href="{% url 'pls:payout_list' %}?ref_id={{ payout.id}}&ref_num={{ payout.reference_number}}&export=true">Download CSV</a>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-2">
+    <h3>{{ payout.supplier.title }}</h3>
+  </div>
+  <div class="col-md-4 m-t-xs">
+    {{ payout.created_at|date:"m.d.Y h:iA" }}
+  </div>
+</div>
+
+<div class="row m-t">
+  <div class="col-md-2">
+    <h4>{% if payout.supplier.is_shipping_supplier %}
+      Shipping
+      {% else %}
+      Product
+      {% endif %} Revenue</h4>
+  </div>
+  <div class="col-md-4">
+    {% if payout.supplier.is_shipping_supplier %}
+    {{ payout.shipping_price_string }}
+    {% else %}
+    {{ payout.cost_price_withuot_shipping_string }}
+    {% endif %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-2">
+    {% if payout.supplier.is_shipping_supplier %}
+    <h4 id="edit-column">Shipping
+    {% else %}
+    <h4>Product
+    {% endif %} Cost</h4>
+  </div>
+  <div class="col-md-4">
+    {% if payout.supplier.is_shipping_supplier %}
+      {% if payout.shipping_cost %}
+      {{ payout.shipping_cost_string }}
+      {% else %}
+      <div class="shipping-cost-wrapper editable-column-wrapper" data-payout-id="{{ payout.id }}">
+        <input
+          class="shipping-cost editable-column"
+          type="text" />
+      </div>
+      {% endif %}
+    {% else %}
+    {{ payout.wholesale_price_string }}
+    {% endif %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-2">
+    <h4>Refunds</h4>
+  </div>
+  <div class="col-md-4">
+    {% if payout.supplier.is_shipping_supplier %}
+    {{ payout.shipping_refund_string }}
+    {% else %}
+    {{ payout.refund_amount_string }}
+    {% endif %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-2">
+    <h4>Net
+      {% if payout.supplier.is_shipping_supplier %}
+      Adjustment
+      {% else %}
+      Profit
+      {% endif %}</h4>
+  </div>
+  <div class="col-md-4">
+    {% if payout.supplier.is_shipping_supplier %}
+    {{ payout.total_shipping_string }}
+    {% else %}
+    {{ payout.profit_string }}
+    {% endif %}
+  </div>
+</div>
+
+<hr />
+
+<div class="row">
+  <div class="col-md-2">
+    <h4>Dropified Commission ({{ payout.supplier.get_dropified_commission }}%)</h4>
+  </div>
+  <div class="col-md-4">
+    {{ payout.dropified_profit_split_string }}
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-2">
+    <h4>TLG Commission ({{ payout.supplier.get_tlg_commission }}%)</h4>
+  </div>
+  <div class="col-md-4">
+    {{ payout.tlg_profit_split_string }}
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-2">
+    <h4>{{ payout.supplier.title }} Commission ({{ payout.supplier.profit_percentage }}%)</h4>
+  </div>
+  <div class="col-md-4">
+    {{ payout.supplier_profit_split_string }}
+  </div>
+</div>
+
+<div class="row m-t">
+  <div class="col-md-2">
+    <h4>{{ payout.supplier.title }} Payout</h4>
+  </div>
+  <div class="col-md-4">
+    <h4>{{ payout.supplier_payout_string }}</h4>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
+{% endblock %}

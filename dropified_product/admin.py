@@ -36,12 +36,11 @@ class OrderAdmin(admin.ModelAdmin):
         'amount',
         'status',
         'user',
-        'payout',
         'created_at',
         'payment_date',
     )
     list_filter = ('created_at', 'payment_date')
-    raw_id_fields = ('user', 'payout')
+    raw_id_fields = ('user',)
     date_hierarchy = 'created_at'
 
 

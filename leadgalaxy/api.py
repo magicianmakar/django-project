@@ -86,7 +86,7 @@ from .models import (
     UserUpload,
 )
 
-from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
+from supplements.models import UserSupplement
 from .templatetags.template_helper import shopify_image_thumb, money_format
 from stripe_subscription import utils as stripe_utils
 from fulfilment_fee.utils import process_sale_transaction_fee
@@ -2401,7 +2401,7 @@ class ShopifyStoreApi(ApiBase):
             is_default=True
         )
         if user_supplement:
-            supplier.supplier_name = SUPPLEMENTS_SUPPLIER
+            supplier.supplier_name = user_supplement.pl_supplement.supplier.title
             supplier.notes = user_supplement.title
             supplier.save()
 

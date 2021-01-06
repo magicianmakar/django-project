@@ -1,0 +1,40 @@
+{% load widget_tweaks %}
+
+<div id="modal-create-payout" class="modal" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+        <form class="form-horizontal" id="create_payout_form" role="form" action="" method="POST">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          <h4 class="modal-title">
+            Create Payout(s)
+          </h4>
+        </div>
+        <div class="modal-body">
+          {% csrf_token %}
+            <div class="row">
+              <div class="col-md-12">
+                <input type="hidden" name="order_id" value="">
+                <input type="hidden" name="line_item_ids" value="">
+                {% for supplier in supplier_list %}
+                <div class="form-group check-supplier">
+                  <div class="col-sm-4">
+                    <input type="checkbox" id="{{ supplier.id }}" value="">
+                    <label class="m-l-xs" for="{{ supplier.id }}">{{ supplier.title }}</label>
+                  </div>
+                  <div class="col-sm-7">
+                    <input type="text" class="form-control" value="" disabled />
+                  </div>
+                </div>
+                {% endfor %}
+
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" class="btn btn-primary" id="create-payouts" value="Create Payout" />
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

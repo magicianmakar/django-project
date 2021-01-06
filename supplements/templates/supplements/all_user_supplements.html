@@ -32,7 +32,7 @@
 
       <div class="col-sm-3">
         <div class="form-group {% if all_label_form.product_sku.errors %}has-error{% endif %}">
-          <label class="control-label">Supplement SKU:</label>
+          <label class="control-label">Product SKU:</label>
           {{ all_label_form.product_sku|add_class:"form-control" }}
           {% for error in all_label_form.product_sku.errors %}
           <p class="help-block">{{ error }}</p>
@@ -42,7 +42,7 @@
 
       <div class="col-sm-3">
         <div class="form-group {% if all_label_form.title.errors %}has-error{% endif %}">
-          <label class="control-label">Supplement Title:</label>
+          <label class="control-label">Product Title:</label>
           {{ all_label_form.title|add_class:"form-control" }}
           {% for error in all_label_form.title.errors %}
           <p class="help-block">{{ error }}</p>
@@ -61,6 +61,18 @@
       </div>
     </div>
 
+    <div class="row">
+      <div class="col-sm-3">
+        <div class="form-group {% if all_label_form.sort.errors %}has-error{% endif %}">
+          <label class="control-label">Supplier:</label>
+          {{ all_label_form.supplier|add_class:"form-control" }}
+          {% for error in all_label_form.supplier.errors %}
+          <p class="help-block">{{ error }}</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
     <input type="submit" class="btn btn-primary" value="Filter & Sort" />
     <input type="button" class="btn btn-default pls-reset-btn" value="Clear" />
   </form>
@@ -68,7 +80,7 @@
 
 <hr />
 
-<h1>User Supplements</h1>
+<h1>User Products</h1>
 <div class='m-t'>
   <strong>Found {{ supplements_count }}</strong>
 </div>
@@ -76,8 +88,8 @@
 <table class='table table-striped m-t'>
   <thead>
     <th>Status</th>
-    <th>Supplement SKU</th>
-    <th>Supplement</th>
+    <th>Product SKU</th>
+    <th>Product</th>
     <th>Label SKU</th>
     <th>User</th>
     <th>Label Updated Date</th>
@@ -119,7 +131,7 @@
         <a href="{{ supplement.current_label.url }}" target="_blank" class="btn btn-default btn-outline btn-xs">Download</a>
       </td>
     {% empty %}
-      <td colspan="8">No user supplements found.</td>
+      <td colspan="8">No user products found.</td>
     </tr>
     {% endfor %}
   </tbody>

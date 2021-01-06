@@ -59,7 +59,7 @@ class SupplierBase(models.Model):
         try:
             return (
                 (self.is_dropified and 'supplement' in self.product_url)
-                or safe_str(self.supplier_name).lower() == SUPPLEMENTS_SUPPLIER.lower()
+                or safe_str(self.supplier_name) in SUPPLEMENTS_SUPPLIER
             )
         except:
             return False

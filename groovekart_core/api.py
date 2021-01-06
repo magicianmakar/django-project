@@ -26,7 +26,7 @@ from shopified_core.utils import (
     clean_tracking_number
 )
 
-from supplements.models import SUPPLEMENTS_SUPPLIER, UserSupplement
+from supplements.models import UserSupplement
 
 from .api_helper import GrooveKartApiHelper
 from .models import (
@@ -627,7 +627,7 @@ class GrooveKartApi(ApiBase):
             )
 
             if user_supplement:
-                supplier.supplier_name = SUPPLEMENTS_SUPPLIER
+                supplier.supplier_name = user_supplement.pl_supplement.supplier.title
                 supplier.notes = user_supplement.title
                 supplier.save()
 

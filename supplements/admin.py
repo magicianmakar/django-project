@@ -268,6 +268,7 @@ class PLSOrderLineAdmin(admin.ModelAdmin):
 class PayoutAdmin(admin.ModelAdmin):
     list_display = (
         'reference_number',
+        'supplier',
         'created_at',
         'status',
     )

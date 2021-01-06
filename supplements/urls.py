@@ -65,6 +65,10 @@ urlpatterns = [
         supplements.views.PayoutView.as_view(),
         name='payout_list'),
 
+    url(r'^payout/(?P<payout_id>[0-9]+)$$',
+        supplements.views.PayoutDetail.as_view(),
+        name='payout_detail'),
+
     url(r'^order/item/list$',
         supplements.views.OrderItemListView.as_view(),
         name='orderitem_list'),

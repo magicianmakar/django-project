@@ -20,15 +20,15 @@
   <ul class="nav nav-tabs scrolling-tabs">
   {% if request.user|can:'pls.use' %}
     {% if request.path ==  pls_index %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">Supplements</a></li>
+    <li class="active"><a data-toggle="tab" href="#tab-1">Catalog</a></li>
     {% else %}
-    <li><a href="{{ pls_index }}">Supplements</a></li>
+    <li><a href="{{ pls_index }}">Catalog</a></li>
     {% endif %}
 
     {% if request.path ==  pls_my_supplements %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">My Supplements</a></li>
+    <li class="active"><a data-toggle="tab" href="#tab-1">My Products</a></li>
     {% else %}
-    <li><a href="{% url 'pls:my_supplements' %}">My Supplements</a></li>
+    <li><a href="{% url 'pls:my_supplements' %}">My Products</a></li>
     {% endif %}
 
     {% if request.path ==  pls_my_orders %}

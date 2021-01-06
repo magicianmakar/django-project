@@ -18,7 +18,14 @@ from .mixin import (
     UserSupplementLabelMixin,
     UserSupplementMixin
 )
-SUPPLEMENTS_SUPPLIER = 'Supplements on Demand'
+
+SUPPLEMENTS_SUPPLIER = [
+    'Supplements on Demand',
+    'Dropified',
+    'TLG',
+    'PLS',
+    'HurryHub',
+]
 
 
 class PLSupplement(PLSupplementMixin, model_base.Product):
@@ -190,12 +197,6 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
     wholesale_price = models.IntegerField()
     shipping_price = models.IntegerField(default=0)
     batch_number = models.CharField(max_length=30, null=True, blank=True)
-
-    payout = models.ForeignKey('Payout',
-                               related_name='payout_items',
-                               on_delete=models.SET_NULL,
-                               null=True,
-                               blank=True)
     shipping_address_hash = models.CharField(max_length=250, null=True, blank=True)
 
     refund = models.OneToOneField('RefundPayments',
@@ -231,7 +232,20 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
                                   on_delete=models.CASCADE,
                                   related_name='order_items',
                                   null=True)
-    is_refunded = models.BooleanField(default=False)
+    line_payout = models.ForeignKey('Payout',
+                                    related_name='payout_lines',
+                                    on_delete=models.SET_NULL,
+                                    null=True,
+                                    blank=True)
+    shipping_payout = models.ForeignKey('Payout',
+                                        related_name='ship_payout_lines',
+                                        on_delete=models.SET_NULL,
+                                        null=True,
+                                        blank=True)
+    refund_amount = models.DecimalField(max_digits=10,
+                                        decimal_places=2,
+                                        blank=True,
+                                        null=True)
 
 
 class PLSUnpaidOrderManager(models.Manager):
@@ -263,6 +277,10 @@ class UserUnpaidOrder(User):
 
 class Payout(PayoutMixin, model_base.AbstractPayout):
     shipping_cost = models.IntegerField(null=True, blank=True)
+    supplier = models.ForeignKey(model_base.ProductSupplier,
+                                 on_delete=models.SET_NULL,
+                                 null=True,
+                                 related_name='supplier_payouts')
 
 
 class AuthorizeNetCustomer(models.Model, AuthorizeNetCustomerMixin):
@@ -885,6 +903,7 @@ class MockupType(models.Model):
 
 class RefundPayments(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    shipping = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     fee = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_id = models.CharField(max_length=255, null=True)
