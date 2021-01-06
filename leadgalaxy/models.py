@@ -2076,6 +2076,7 @@ class GroupPlan(models.Model):
     retail_price_info = models.CharField(max_length=512, blank=True, null=True, verbose_name='Retail Price info in Plans Page')
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
+    show_in_plod_app = models.IntegerField(default=0, choices=YES_NO_CHOICES, verbose_name='Show in PLoD App Listing')
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
     goals = models.ManyToManyField('goals.Goal', related_name='plans', blank=True)

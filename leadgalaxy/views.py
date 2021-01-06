@@ -2790,7 +2790,7 @@ def user_profile(request):
 
     find_shopify = dict(payment_gateway='shopify', hidden=False)
     if request.user.models_user.profile.private_label:
-        find_shopify['slug__contains'] = 'private'
+        find_shopify['show_in_plod_app'] = 1
 
     shopify_plans = GroupPlan.objects.filter(**find_shopify) \
                                      .exclude(payment_interval='yearly') \
