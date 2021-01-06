@@ -283,6 +283,22 @@ class PLSOrderMixin:
     def refund_fee_string(self):
         return '${:.2f}'.format(self.refund_fee)
 
+    @property
+    def shipping_refund(self):
+        shipping = 0
+        if self.refund:
+            shipping = self.refund.shipping
+
+        return shipping
+
+    @property
+    def shipping_refund_string(self):
+        return '${:.2f}'.format(self.shipping_refund)
+
+    @property
+    def total_refund_amount_string(self):
+        return '${:.2f}'.format(self.refund_amount + self.shipping_refund)
+
 
 class PLSOrderLineMixin:
 
@@ -323,6 +339,13 @@ class PLSOrderLineMixin:
         self.save()
 
     @property
+    def is_refunded(self):
+        if self.refund_amount:
+            return True
+
+        return False
+
+    @property
     def fulfillment_status_string(self):
         def get_string(color, value):
             label = f"<span class='badge badge-{color}'>{value}</span>"
@@ -337,7 +360,7 @@ class PLSOrderLineMixin:
 class PayoutMixin:
     @property
     def cost_price(self):
-        return sum(self.payout_items.values_list('amount', flat=True))
+        return sum(self.payout_lines.values_list('pls_order__amount', flat=True))
 
     @property
     def cost_price_string(self):
@@ -345,11 +368,11 @@ class PayoutMixin:
 
     @property
     def cost_price_withuot_shipping_string(self):
-        return self.to_currency(self.cost_price - self.shipping_price)
+        return self.to_currency(self.cost_price - self.order_shipping_price)
 
     @property
     def wholesale_price(self):
-        return sum(self.payout_items.values_list('wholesale_price', flat=True))
+        return sum(self.payout_lines.values_list('pls_order__wholesale_price', flat=True))
 
     @property
     def wholesale_price_string(self):
@@ -357,15 +380,19 @@ class PayoutMixin:
 
     @property
     def sale_price(self):
-        return sum(self.payout_items.values_list('sale_price', flat=True))
+        return sum(self.payout_lines.values_list('pls_order__sale_price', flat=True))
 
     @property
     def sale_price_string(self):
         return self.to_currency(self.sale_price)
 
     @property
+    def order_shipping_price(self):
+        return sum(self.payout_lines.values_list('pls_order__shipping_price', flat=True))
+
+    @property
     def shipping_price(self):
-        return sum(self.payout_items.values_list('shipping_price', flat=True))
+        return sum(self.ship_payout_lines.values_list('pls_order__shipping_price', flat=True))
 
     @property
     def shipping_price_string(self):
@@ -373,56 +400,110 @@ class PayoutMixin:
 
     @property
     def total_shipping(self):
-        shipping = self.shipping_price
+        shipping = self.shipping_price - (int(self.shipping_refund) * 100)
         if self.shipping_cost:
             shipping -= self.shipping_cost
 
         return shipping
 
     @property
+    def total_shipping_string(self):
+        return self.to_currency(self.total_shipping)
+
+    @property
     def profit_split(self):
-        price = self.cost_price - self.wholesale_price
+        price = self.cost_price - self.wholesale_price - self.order_shipping_price
+        price = price - (int(self.refund_amount) * 100)
         if self.shipping_cost:
             price -= self.shipping_cost
 
         return price
 
     @property
-    def profit_split_string(self):
-        return self.to_currency((self.profit_split * .25) + (self.total_shipping * .25))
+    def dropified_profit_split_string(self):
+        commission = float(self.supplier.get_dropified_commission()) / 100.
+        if self.supplier.is_shipping_supplier:
+            split = self.total_shipping * commission
+        else:
+            split = (self.profit_split * commission) + (self.total_shipping * commission)
+
+        return self.to_currency(split)
+
+    @property
+    def tlg_profit_split_string(self):
+        commission = float(self.supplier.get_tlg_commission()) / 100.
+        if self.supplier.is_shipping_supplier:
+            split = self.total_shipping * commission
+        else:
+            split = (self.profit_split * commission) + (self.total_shipping * commission)
+
+        return self.to_currency(split)
+
+    @property
+    def supplier_profit_split_string(self):
+        commission = float(self.supplier.profit_percentage) / 100.
+        if self.supplier.is_shipping_supplier:
+            split = self.total_shipping * commission
+        else:
+            split = (self.profit_split * commission) + (self.total_shipping * commission)
+
+        return self.to_currency(split)
 
     @property
     def profit_string(self):
         return self.to_currency(self.profit_split)
 
     @property
-    def pls_payout(self):
-        price = (self.profit_split * .50) + self.wholesale_price
+    def supplier_payout(self):
+        commission = float(self.supplier.profit_percentage) / 100.
+        price = (self.profit_split * commission) + self.wholesale_price
         if self.shipping_cost:
             price += self.shipping_cost
 
         return price
 
     @property
-    def pls_payout_string(self):
-        return self.to_currency(self.pls_payout + (self.total_shipping * .5))
+    def supplier_payout_string(self):
+        commission = float(self.supplier.profit_percentage) / 100.
+        if self.supplier.is_shipping_supplier:
+            payout = (self.total_shipping * commission)
+            if self.shipping_cost:
+                payout += self.shipping_cost
+        else:
+            payout = self.supplier_payout + (self.total_shipping * commission)
+
+        return self.to_currency(payout)
 
     @property
     def shipping_cost_string(self):
         if self.shipping_cost:
             return self.to_currency(self.shipping_cost)
 
+        return '$0.00'
+
     @property
     def refund_amount(self):
         refund = 0
-        for order in self.payout_items.all():
-            refund += order.refund_amount
+        for line in self.payout_lines.all():
+            refund += line.pls_order.refund_amount
 
         return refund
 
     @property
     def refund_amount_string(self):
         return '${:.2f}'.format(self.refund_amount)
+
+    @property
+    def shipping_refund(self):
+        refund = 0
+        for line in self.ship_payout_lines.all():
+            refund += line.pls_order.shipping_refund
+
+        return refund
+
+    @property
+    def shipping_refund_string(self):
+        return '${:.2f}'.format(self.shipping_refund)
 
     def to_currency(self, value):
         return "${:.2f}".format(value / 100)

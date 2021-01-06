@@ -14,7 +14,7 @@
     <div class="col-sm-4">
       <div class="form-group">
         {{ form.status.errors }}
-        <label class="control-label">Order Status:</label>
+        <label class="control-label">Status:</label>
         {{ form.status|add_class:"form-control" }}
       </div>
     </div>
@@ -64,6 +64,17 @@
         {{ form.transaction_id.errors }}
         <label class="control-label">Payment ID:</label>
         {{ form.transaction_id|add_class:"form-control" }}
+      </div>
+    </div>
+
+  </div>
+  <div class="row">
+
+    <div class="col-sm-3">
+      <div class="form-group">
+        {{ form.supplier.errors }}
+        <label class="control-label">Supplier:</label>
+        {{ form.supplier|add_class:"form-control" }}
       </div>
     </div>
 

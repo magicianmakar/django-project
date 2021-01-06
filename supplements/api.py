@@ -15,6 +15,7 @@ from pdfrw import PdfWriter
 
 from leadgalaxy.utils import aws_s3_upload
 from lib.exceptions import capture_exception, capture_message
+from product_common.models import ProductSupplier
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
 
@@ -231,7 +232,10 @@ class SupplementsApi(ApiResponseMixin, View):
         except Payout.DoesNotExist:
             return self.api_error('Payout not found', status=404)
 
-        payout.shipping_cost = int(shipping_cost) * 100
+        try:
+            payout.shipping_cost = int(shipping_cost) * 100
+        except ValueError:
+            payout.shipping_cost = None
         payout.save()
 
         return self.api_success()
@@ -408,6 +412,31 @@ class SupplementsApi(ApiResponseMixin, View):
         ) for i in order.order_items.all()]
 
         return self.api_success({'items': line_items})
+
+    def post_create_payouts(self, request, user, data):
+        if not request.user.can('pls_admin.use'):
+            raise permissions.PermissionDenied()
+
+        supplier_ids = data.keys()
+        for id in supplier_ids:
+            supplier = ProductSupplier.objects.get(id=id)
+            if supplier.is_shipping_supplier:
+                line_items = PLSOrderLine.objects.filter(pls_order__is_fulfilled=True,
+                                                         shipping_payout__isnull=True)
+                if line_items.count():
+                    payout = Payout.objects.create(reference_number=data[id],
+                                                   supplier=supplier)
+                    line_items.update(shipping_payout=payout)
+            else:
+                line_items = PLSOrderLine.objects.filter(pls_order__is_fulfilled=True,
+                                                         label__user_supplement__pl_supplement__supplier=supplier,
+                                                         line_payout__isnull=True)
+                if line_items.count():
+                    payout = Payout.objects.create(reference_number=data[id],
+                                                   supplier=supplier)
+                    line_items.update(line_payout=payout)
+
+        return self.api_success()
 
     def post_add_basket(self, request, user, data):
         product_id = data['product-id']

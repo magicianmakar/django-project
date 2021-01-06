@@ -18,7 +18,7 @@
   <div class="row">
     <div class="col-lg-3">
       <div class="profit-box">
-        <span>Revenue<span class="itooltip" title="Total Dropified Sales for Supplements including Shipping"><i class="fa fa-question-circle"></i></span></span>
+        <span>Revenue<span class="itooltip" title="Total Dropified Sales for Products including Shipping"><i class="fa fa-question-circle"></i></span></span>
         <h1>${{ revenue }}</h1>
       </div>
     </div>
@@ -91,7 +91,7 @@
 <hr>
 
 <div class="container-fluid">
-  <h3 class="pls-header">Number of Supplements Sold by SKU</h3>
+  <h3 class="pls-header">Number of Products Sold by SKU</h3>
   <table id="sku-table" class="table"></table>
 </div>
 
@@ -118,7 +118,7 @@
         <table class="table">
           <thead>
             <tr>
-              <th>Supplement Name</th>
+              <th>Product Name</th>
               <th>SKU</th>
               <th>Label SKU</th>
               <th>Items Sold</th>
@@ -345,7 +345,7 @@
   }
   var orderCostChart = new Chart(orderCostChartEl, orderCostChartConfig);
 
-  // Supplements Sale Chart
+  // Products Sale Chart
 
   var pls_sale_data = chartsData.pls_sale_data;
   var plsSaleChartEl = $('#pls-sale-chart');
@@ -358,7 +358,7 @@
       responsive: true,
       title: {
         display: true,
-        text: 'Supplements Sales Chart'
+        text: 'Products Sales Chart'
       },
       tooltips: {
         mode: 'index',
@@ -376,7 +376,7 @@
           display: true,
           scaleLabel: {
               display: true,
-              labelString: 'No of Supplements sold'
+              labelString: 'No of Products sold'
           }
         }]
       }
@@ -408,26 +408,26 @@
   }
   var plsSaleChart = new Chart(plsSaleChartEl, plsSaleChartConfig);
 
-  // Supplements Sale Chart by SKU
+  // Products Sale Chart by SKU
 
   var pls_sku_sale_data = chartsData.pls_sku_data;
 
   var skuTableEl = $('#sku-table');
   if (typeof(pls_sku_sale_data.data[0]) == "number") {
-    skuTableEl.append('<thead><th>SKU</th><th>Supplement Name</th><th>No of Supplements Sold</th><th>Supplement Link</th></thead>');
+    skuTableEl.append('<thead><th>SKU</th><th>Product Name</th><th>No of Products Sold</th><th>Product Link</th></thead>');
     var body = '';
     $(pls_sku_sale_data.data).each(function(i, obj) {
       body = body + '<tr><td>'+pls_sku_sale_data.label_data[i]+'</td><td>'+pls_sku_sale_data.title_data[i]+'</td><td>'+obj+'</td><td><a href="'+pls_sku_sale_data.link_data[i]+'">View</a></td></tr>';
     });
     skuTableEl.append('<tbody>'+body+'</tbody>');
   } else {
-    var head = '<th>SKU</th><th>Supplement Name</th>';
+    var head = '<th>SKU</th><th>Product Name</th>';
     var body = ''
     var row = [];
     $(pls_sku_sale_data.data).each(function(j, l_obj) {
       head = head + '<th>'+ pls_sku_sale_data.dataset_label[j] +'</th>'
       if (pls_sku_sale_data.data.length == j + 1) {
-        head = head + '<th>Supplement Link</th>'
+        head = head + '<th>Product Link</th>'
       }
       $(l_obj).each(function(i, obj) {
         if (j === 0){
@@ -460,7 +460,7 @@
       responsive: true,
       title: {
         display: true,
-        text: 'Supplements Sales Chart by SKU'
+        text: 'Products Sales Chart by SKU'
       },
       tooltips: {
         mode: 'index',
@@ -478,7 +478,7 @@
           display: true,
           scaleLabel: {
               display: true,
-              labelString: 'No of Supplements sold'
+              labelString: 'No of Products sold'
           }
         }]
       }

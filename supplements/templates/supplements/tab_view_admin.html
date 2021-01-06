@@ -19,9 +19,9 @@
   <ul class="nav nav-tabs scrolling-tabs">
   {% if pls_staff or pls_admin %}
     {% if request.path ==  pls_all_user_supplements %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">User Supplements</a></li>
+    <li class="active"><a data-toggle="tab" href="#tab-1">User Products</a></li>
     {% else %}
-    <li><a href="{% url 'pls:all_user_supplements' %}">User Supplements</a></li>
+    <li><a href="{% url 'pls:all_user_supplements' %}">User Prodcuts</a></li>
     {% endif %}
 
     {% if request.path == pls_orderitems %}
@@ -39,9 +39,9 @@
 
   {% if pls_admin %}
     {% if request.path == pls_product %}
-    <li class="active"><a data-toggle="tab" href="#tab-1">Add New Supplement</a></li>
+    <li class="active"><a data-toggle="tab" href="#tab-1">Add New Product</a></li>
     {% else %}
-    <li><a href="{% url 'pls:product' %}">Add New Supplement</a></li>
+    <li><a href="{% url 'pls:product' %}">Add New Product</a></li>
     {% endif %}
 
     {% if request.path == pls_orders %}

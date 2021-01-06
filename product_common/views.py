@@ -347,6 +347,13 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             if email:
                 queryset = queryset.filter(user__email=email)
 
+            reference_number = form.cleaned_data['refnum']
+            if reference_number:
+                queryset = queryset.filter(
+                    Q(order_items__line_payout__reference_number=reference_number)
+                    | Q(order_items__shipping_payout__reference_number=reference_number)
+                )
+
             amount = form.cleaned_data['amount']
             if amount:
                 queryset = queryset.filter(amount=amount * 100)
@@ -356,6 +363,12 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
                 queryset = queryset.filter(
                     Q(stripe_transaction_id=transaction_id)
                     | Q(id=transaction_id)
+                )
+
+            supplier = form.cleaned_data['supplier']
+            if supplier:
+                queryset = queryset.filter(
+                    order_items__label__user_supplement__pl_supplement__supplier_id=supplier
                 )
 
             date = self.request.GET.get('date', None)
@@ -415,7 +428,7 @@ class PayoutView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             order_number = form.cleaned_data['order_number']
             if order_number:
                 queryset = queryset.filter(
-                    payout_items__order_number=order_number
+                    payout_lines__pls_order__order_number=order_number
                 ).distinct()
 
             status = form.cleaned_data['status']
@@ -425,7 +438,7 @@ class PayoutView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             email = form.cleaned_data['email']
             if email:
                 queryset = queryset.filter(
-                    payout_items__user__email=email,
+                    payout_lines__pls_order__user__email=email,
                 ).distinct()
 
             reference_number = form.cleaned_data['refnum']
@@ -437,6 +450,10 @@ class PayoutView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             amount = form.cleaned_data['amount']
             if amount:
                 queryset = queryset.filter(amount=amount * 100)
+
+            supplier = form.cleaned_data['supplier']
+            if supplier:
+                queryset = queryset.filter(supplier_id=supplier)
 
             date = self.request.GET.get('date', None)
             created_at_start, created_at_end = None, None
@@ -548,6 +565,12 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 cancelled_order_ids = self.get_cancelled_order_ids()
                 for id, number in cancelled_order_ids.items():
                     queryset = queryset.exclude(pls_order_id=id, pls_order__order_number=number)
+
+            supplier = form.cleaned_data['supplier']
+            if supplier:
+                queryset = queryset.filter(
+                    label__user_supplement__pl_supplement__supplier_id=supplier
+                )
 
             date = self.request.GET.get('date', None)
             created_at_start, created_at_end = None, None

@@ -16,6 +16,7 @@ from .factories import (
     PLSOrderFactory,
     PLSOrderLineFactory,
     PLSupplementFactory,
+    ProductSupplierFactory,
     UserSupplementFactory,
     UserSupplementLabelFactory,
     BasketItemFactory
@@ -49,6 +50,12 @@ class PLSBaseTestCase(BaseTestCase):
             name='2.0 x 7.0 Bottle',
         )
 
+        self.supplier = ProductSupplierFactory.create(
+            title='Test Supplier',
+            slug='test_supplier',
+            profit_percentage='10',
+        )
+
         self.supplement = PLSupplementFactory.create(
             title='Fish Oil',
             description='Fish oil is great',
@@ -59,6 +66,7 @@ class PLSBaseTestCase(BaseTestCase):
             wholesale_price='5.99',
             weight="1.00",
             mockup_type=self.mockup_type,
+            supplier=self.supplier,
         )
 
         self.user_supplement = UserSupplementFactory.create(
@@ -488,7 +496,7 @@ class AllUserSupplementsTestCase(PLSBaseTestCase):
 
     def test_get(self):
         content = self.do_test_get()
-        self.assertIn("Found 1 user supplement", content)
+        self.assertIn("Found 1 user product", content)
 
 
 class LabelDetailTestCase(PLSBaseTestCase):
@@ -611,6 +619,7 @@ class ProductTestCase(PLSBaseTestCase):
             approvedlabel=open('app/static/example-label.pdf', 'rb'),
             product_information='New Information',
             authenticity_certificate=open('app/static/example-label.pdf', 'rb'),
+            supplier=self.supplier.id,
         )
         with patch('product_common.lib.views.aws_s3_upload',
                    return_value='http://example.com/test'):
@@ -657,6 +666,7 @@ class ProductEditTestCase(PLSBaseTestCase):
             mockup_type=self.mockup_type.id,
             product_information='Changed Information',
             approvedlabel=open('app/static/example-label.pdf', 'rb'),
+            supplier=self.supplier.id,
         )
         with patch('product_common.lib.views.aws_s3_upload',
                    return_value='http://example.com/test'):
@@ -701,6 +711,7 @@ class OrderListTestCase(PLSBaseTestCase):
             order_id=self.pls_order.id,
             amount='12',
             fee='2',
+            shipping='10',
             description='some description',
             item_shipped=True,
         )
@@ -720,6 +731,7 @@ class OrderListTestCase(PLSBaseTestCase):
             order_id=self.pls_order.id,
             amount='12',
             fee='2',
+            shipping='10',
             description='some description',
             item_shipped=True,
         )
@@ -745,21 +757,22 @@ class PayoutListTestCase(PLSBaseTestCase):
         store_id = self.store.id
 
         self.payout = Payout.objects.create(reference_number=5241,
-                                            shipping_cost=10)
+                                            shipping_cost=10,
+                                            supplier=self.supplier)
 
         self.pls_order = PLSOrderFactory(shipstation_key='key',
                                          store_type='shopify',
                                          store_id=store_id,
                                          store_order_id='12345',
                                          stripe_transaction_id=1111,
-                                         user_id=self.store.user_id,
-                                         payout=self.payout)
+                                         user_id=self.store.user_id)
         self.pls_order_line = PLSOrderLineFactory(shipstation_key='line-key',
                                                   store_id=store_id,
                                                   store_order_id='12345',
                                                   line_id='1122',
                                                   pls_order=self.pls_order,
-                                                  label=self.user_supplement.current_label)
+                                                  label=self.user_supplement.current_label,
+                                                  line_payout=self.payout)
 
     def get_url(self):
         return reverse('pls:payout_list')
@@ -779,35 +792,6 @@ class PayoutListTestCase(PLSBaseTestCase):
         response = self.client.get(f'{self.get_url()}?{params}')
         self.assertEqual(response.status_code, 200)
         self.assertIn('text/csv', str(response.items()))
-
-    def test_post(self):
-        self.client.force_login(self.user)
-        PLSOrderFactory(shipstation_key='key',
-                        store_type='shopify',
-                        store_id=self.store.id,
-                        store_order_id='12345',
-                        stripe_transaction_id=1111,
-                        user_id=self.store.user_id,
-                        is_fulfilled=True)
-
-        data = dict(
-            reference_number=321,
-        )
-        self.assertEqual(Payout.objects.count(), 1)
-        response = self.client.post(self.get_url(), data=data)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(Payout.objects.count(), 2)
-
-    def test_post_error(self):
-        self.client.force_login(self.user)
-
-        data = dict(
-            reference_number=321,
-        )
-        self.assertEqual(Payout.objects.count(), 1)
-        response = self.client.post(self.get_url(), data=data)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(Payout.objects.count(), 1)
 
 
 class UserSupplementViewTestCase(PLSBaseTestCase):

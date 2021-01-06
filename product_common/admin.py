@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib import admin
 
-from .models import Order, OrderLine, Payout, Product, ProductImage
+from .models import Order, OrderLine, Payout, Product, ProductImage, ProductSupplier
 
 
 @admin.register(Product)
@@ -15,6 +15,17 @@ class ProductAdmin(admin.ModelAdmin):
         'shipstation_sku',
         'cost_price',
         'product_type',
+    )
+
+
+@admin.register(ProductSupplier)
+class ProductSupplierAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'title',
+        'profit_percentage',
+        'created_at',
+        'updated_at'
     )
 
 
@@ -37,12 +48,11 @@ class OrderAdmin(admin.ModelAdmin):
         'amount',
         'status',
         'user',
-        'payout',
         'created_at',
         'payment_date',
     )
     list_filter = ('created_at', 'payment_date')
-    raw_id_fields = ('user', 'payout')
+    raw_id_fields = ('user',)
     date_hierarchy = 'created_at'
 
 

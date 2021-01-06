@@ -92,7 +92,7 @@
         {% if line_item.is_refunded %}
         <span class="label label-warning">Refunded</span>
         <i class="fa fa-fw fa-question-circle"
-          qtip-tooltip="Refund Description: {{ line_item.pls_order.refund.description }}"
+          qtip-tooltip="Refund Amount: <b>{{ line_item.refund_amount }}</b><br>Description: {{ line_item.pls_order.refund.description }}"
           qtip-my="bottom right"
           qtip-at="top right"
         ></i>

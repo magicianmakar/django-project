@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import reverse
 from django.utils.html import format_html
 
@@ -61,6 +62,27 @@ class ProductMixin:
     @property
     def is_awaiting_review(self):
         return False
+
+
+class SupplierMixin:
+
+    @classmethod
+    def get_suppliers(self, shipping=True):
+        excluded_suppliers = ['dropified', 'tlg']
+        exclude_filter = Q(slug__in=excluded_suppliers)
+        if shipping:
+            return self.objects.exclude(exclude_filter)
+
+        return self.objects.exclude(exclude_filter
+                                    | Q(is_shipping_supplier=True))
+
+    @classmethod
+    def get_dropified_commission(self):
+        return self.objects.get(slug='dropified').profit_percentage
+
+    @classmethod
+    def get_tlg_commission(self):
+        return self.objects.get(slug='tlg').profit_percentage
 
 
 class OrderMixin:
@@ -138,7 +160,7 @@ class PayoutMixin:
 
     @property
     def amount_string(self):
-        amount = sum(self.payout_items.values_list('amount', flat=True))
+        amount = sum(self.payout_lines.values_list('pls_order__amount', flat=True))
         return "${:.2f}".format(amount / 100.)
 
     @property

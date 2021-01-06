@@ -32,7 +32,7 @@ from pdfrw.pagemerge import RectXObj
 from product_common import views as common_views
 from product_common.lib import views as common_lib_views
 from product_common.lib.views import PagingMixin, upload_image_to_aws, upload_object_to_aws
-from product_common.models import ProductImage
+from product_common.models import ProductImage, ProductSupplier
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 
@@ -48,7 +48,6 @@ from shopified_core.utils import (
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
 from supplements.lib.image import get_order_number_label, get_payment_pdf
 from supplements.models import (
-    SUPPLEMENTS_SUPPLIER,
     AuthorizeNetCustomer,
     Payout,
     PLSOrder,
@@ -69,7 +68,6 @@ from .forms import (
     MyOrderFilterForm,
     OrderFilterForm,
     PayoutFilterForm,
-    PayoutForm,
     PLSupplementEditForm,
     PLSupplementFilterForm,
     PLSupplementForm,
@@ -130,7 +128,7 @@ class Index(common_views.IndexView):
         return reverse('pls:product')
 
     def get_breadcrumbs(self):
-        return [{'title': 'Supplements', 'url': reverse('pls:index')}]
+        return [{'title': 'Products', 'url': reverse('pls:index')}]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -159,8 +157,8 @@ class Product(common_views.ProductAddView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
-            {'title': 'Add New Supplement', 'url': reverse('pls:product')},
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Add New Product', 'url': reverse('pls:product')},
         ]
 
     def process_valid_form(self, form, pl_supplement=None):
@@ -219,8 +217,8 @@ class ProductEdit(Product):
     def get_breadcrumbs(self, supplement_id):
         kwargs = {'supplement_id': supplement_id}
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
-            {'title': 'Edit Supplement', 'url': reverse('pls:product_edit', kwargs=kwargs)},
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Edit Product', 'url': reverse('pls:product_edit', kwargs=kwargs)},
         ]
 
     def get(self, request, supplement_id):
@@ -271,6 +269,7 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
         original_url = reverse('pls:user_supplement', kwargs=kwargs)
         data['original_url'] = self.request.build_absolute_uri(original_url)
         data['user_supplement_id'] = user_supplement.id
+        data['supplier'] = user_supplement.pl_supplement.supplier.title
 
         api_data = {}
         if user_supplement.current_label.is_approved:
@@ -283,7 +282,7 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
             title=data['title'],
             description=data['description'],
             type=data['category'],
-            vendor=SUPPLEMENTS_SUPPLIER,
+            vendor=data['supplier'],
             weight=0,  # TODO: Confirm
             weight_unit="lbs",  # TODO: Confirm
             tags=data['tags'],
@@ -296,7 +295,7 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
             user_supplement_id=data['user_supplement_id'],
             sku=data['shipstation_sku'],
             store=dict(
-                name=SUPPLEMENTS_SUPPLIER,
+                name=data['supplier'],
                 url='',
             ),
         ), use_decimal=True)
@@ -385,19 +384,19 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             can_add, total_allowed, user_count = permissions.can_add_supplement(request.user)
             if not can_add:
                 messages.error(request, f"Your plan allow up to {total_allowed} "
-                               + f"supplements, currently you have {user_count} supplements.")
+                               + f"products, currently you have {user_count} products.")
                 return redirect('pls:index')
             else:
                 total_allowed = total_allowed if total_allowed > -1 else 'unlimited'
                 only_unique_filter = f"{reverse('supplements:index')}?only_unique=1"
-                add_supplements_text = f'<br>You can still create {total_allowed} supplement ' \
+                add_supplements_text = f'<br>You can still create {total_allowed} product ' \
                                        + f'variations, click <a href="{only_unique_filter}">here</a> to see which.'
 
             unique_permissions = permissions.can_use_unique_supplement(request.user, kwargs.get('supplement_id'))
             unique_can_add, unique_total_allowed, unique_user_count = unique_permissions
             if not unique_can_add:
                 messages.error(request, f"Your plan allows customization of {unique_total_allowed} "
-                               + f"supplements, currently you customized {unique_user_count} supplements."
+                               + f"products, currently you customized {unique_user_count} products."
                                + add_supplements_text)
                 return redirect('pls:index')
 
@@ -410,8 +409,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         url = reverse('pls:supplement',
                       kwargs={'supplement_id': supplement_id})
         breadcrumbs = [
-            {'title': 'Supplements', 'url': reverse('pls:index')},
-            {'title': 'Supplement', 'url': url},
+            {'title': 'Products', 'url': reverse('pls:index')},
+            {'title': 'Product', 'url': url},
         ]
         return breadcrumbs
 
@@ -597,8 +596,8 @@ class UserSupplementView(Supplement):
         url = reverse('pls:user_supplement',
                       kwargs={'supplement_id': supplement_id})
         breadcrumbs = [
-            {'title': 'Supplements', 'url': reverse('pls:index')},
-            {'title': 'My Supplements', 'url': url},
+            {'title': 'Products', 'url': reverse('pls:index')},
+            {'title': 'My Products', 'url': url},
         ]
         return breadcrumbs
 
@@ -727,7 +726,7 @@ class LabelHistory(UserSupplementView):
         url = reverse('pls:user_supplement',
                       kwargs={'supplement_id': supplement.id})
         breadcrumbs = [
-            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': 'Products', 'url': reverse('pls:index')},
             {'title': supplement.title, 'url': url},
             {'title': 'Label History', 'url': self.request.path},
         ]
@@ -861,8 +860,8 @@ class MySupplements(LoginRequiredMixin, View):
 
     def get(self, request):
         breadcrumbs = [
-            {'title': 'Supplements', 'url': reverse('pls:index')},
-            {'title': 'My Supplements', 'url': reverse('pls:my_supplements')},
+            {'title': 'Products', 'url': reverse('pls:index')},
+            {'title': 'My Products', 'url': reverse('pls:my_supplements')},
         ]
         form = UserSupplementFilterForm(self.request.GET)
         queryset = request.user.models_user.pl_supplements.filter(pl_supplement__is_active=True)
@@ -874,9 +873,9 @@ class MySupplements(LoginRequiredMixin, View):
         queryset = queryset.exclude(is_deleted=True)
         len_supplement = len(queryset)
         if len_supplement == 1:
-            len_supplement = "1 supplement."
+            len_supplement = "1 product."
         elif len_supplement > 0:
-            len_supplement = f"{len_supplement} supplements."
+            len_supplement = f"{len_supplement} products."
 
         supplements = [i for i in queryset]
 
@@ -937,9 +936,9 @@ class MyLabels(LoginRequiredMixin, PagingMixin):
 
         len_supplements = context['paginator'].count
         if len_supplements == 1:
-            supplements_count = "1 user supplement"
+            supplements_count = "1 user product"
         else:
-            supplements_count = f"{len_supplements} user supplements"
+            supplements_count = f"{len_supplements} user products."
 
         context.update({
             'breadcrumbs': self.get_breadcrumbs(),
@@ -981,8 +980,8 @@ class AllUserSupplements(MyLabels, ListView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
-            {'title': 'User Supplements', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'User Products', 'url': reverse('pls:all_user_supplements')},
         ]
 
     def get_queryset(self):
@@ -1022,6 +1021,10 @@ class AllUserSupplements(MyLabels, ListView):
                 elif comments_status == 'unread':
                     queryset = queryset.exclude(id__in=seen_ids)
 
+            supplier = form.cleaned_data['supplier']
+            if supplier:
+                queryset = queryset.filter(pl_supplement__supplier_id=supplier)
+
         return queryset
 
     def get_context_data(self, **kwargs):
@@ -1053,7 +1056,7 @@ class Label(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         )
 
         return [
-            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': 'Products', 'url': reverse('pls:index')},
             {'title': user_supplement.title, 'url': user_supplement_url},
             {'title': 'Label', 'url': self.request.path},
         ]
@@ -1132,22 +1135,9 @@ class Order(common_views.OrderView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Payments', 'url': reverse('pls:order_list')},
         ]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-
-        form = self.form
-        if form.is_valid():
-            reference_number = form.cleaned_data['refnum']
-            if reference_number:
-                queryset = queryset.filter(
-                    payout__reference_number=reference_number
-                )
-
-        return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1167,16 +1157,18 @@ class Order(common_views.OrderView):
             with transaction.atomic():
                 refund = refund_form.save()
                 order_id = request.POST.get('order_id', '')
-                line_item_ids = request.POST.get('line_item_ids', '')
+                items_data = request.POST.get('line_items_data', '')
 
                 if order_id:
                     order = get_object_or_404(PLSOrder, id=order_id)
                     order.refund = refund
                     order.save()
 
-                    if line_item_ids:
-                        line_item_ids = line_item_ids.split(',')
-                        order.order_items.filter(id__in=line_item_ids).update(is_refunded=True)
+                    if items_data:
+                        for id, amount in json.loads(items_data).items():
+                            line = order.order_items.get(id=id)
+                            line.refund_amount = amount
+                            line.save()
 
                     transaction_id = None
                     if order.stripe_transaction_id:
@@ -1202,7 +1194,7 @@ class Order(common_views.OrderView):
 class OrderDetailMixin(LoginRequiredMixin, View):
     def get_breadcrumbs(self, order):
         return [
-            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': 'Products', 'url': reverse('pls:index')},
             {'title': 'My Payments', 'url': reverse('pls:my_orders')},
             {'title': order.order_number, 'url': reverse('pls:order_detail', kwargs={'order_id': order.id})}
         ]
@@ -1275,7 +1267,7 @@ class MyOrders(common_views.OrderView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': 'Products', 'url': reverse('pls:index')},
             {'title': 'My Payments', 'url': reverse('pls:my_orders')},
         ]
 
@@ -1377,8 +1369,7 @@ class PayoutView(common_views.PayoutView):
     ordering = '-created_at'
     filter_form = PayoutFilterForm
     namespace = 'pls'
-    add_form = PayoutForm
-    order_class = PLSOrder
+    order_line_class = PLSOrderLine
     template_name = 'supplements/payout_list.html'
 
     @method_decorator(login_required)
@@ -1390,14 +1381,17 @@ class PayoutView(common_views.PayoutView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Payouts', 'url': reverse('pls:payout_list')},
         ]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        add_form = getattr(self, 'add_form', False)
-        context['add_form'] = add_form or add_form()
+        context['supplier_list'] = [dict(
+            id=s.id,
+            title=s.title
+        ) for s in ProductSupplier.get_suppliers()]
+
         return context
 
     def get(self, *args, **kwargs):
@@ -1428,31 +1422,34 @@ class PayoutView(common_views.PayoutView):
             'Shipping Revenue',
         ])
 
-        order_obj = self.order_class.objects.filter(payout_id=ref_id)
-        if order_obj.exists():
-            for pls_order in order_obj:
-                payout_num = pls_order.payout
-                order_num = pls_order.order_number
-                shipping_revenue = pls_order.shipping_price_string
-                order_items = pls_order.order_items.all()
-                for pls_item in order_items:
-                    user_supplement = pls_item.label.user_supplement
-                    db_sku = user_supplement.pl_supplement.shipstation_sku
-                    label_sku = pls_item.label.sku
-                    quantity = pls_item.quantity
-                    wholesale_cost = user_supplement.pl_supplement.wholesale_price
-                    wholesale_cost = "${:.2f}".format(wholesale_cost)
+        payout = self.model.objects.get(id=ref_id)
+        if payout.supplier.is_shipping_supplier:
+            order_lines = self.order_line_class.objects.filter(shipping_payout_id=ref_id)
+        else:
+            order_lines = self.order_line_class.objects.filter(line_payout_id=ref_id)
 
-                    data = [
-                        payout_num,
-                        order_num,
-                        db_sku,
-                        label_sku,
-                        quantity,
-                        wholesale_cost,
-                        shipping_revenue
-                    ]
-                    writer.writerow(data)
+        if order_lines.count():
+            for order_line in order_lines:
+                payout_num = order_line.line_payout
+                order_num = order_line.pls_order.order_number
+                shipping_revenue = order_line.pls_order.shipping_price_string
+                user_supplement = order_line.label.user_supplement
+                db_sku = user_supplement.pl_supplement.shipstation_sku
+                label_sku = order_line.label.sku
+                quantity = order_line.quantity
+                wholesale_cost = user_supplement.pl_supplement.wholesale_price
+                wholesale_cost = "${:.2f}".format(wholesale_cost)
+
+                data = [
+                    payout_num,
+                    order_num,
+                    db_sku,
+                    label_sku,
+                    quantity,
+                    wholesale_cost,
+                    shipping_revenue
+                ]
+                writer.writerow(data)
         else:
             data = [
                 'N/A',
@@ -1466,28 +1463,34 @@ class PayoutView(common_views.PayoutView):
             writer.writerow(data)
         return response
 
-    def post(self, request):
-        self.add_form = form = self.add_form(request.POST)
-        if form.is_valid():
-            ref_number = form.cleaned_data['reference_number']
-            with transaction.atomic():
-                orders = self.order_class.objects.filter(
-                    is_fulfilled=True,
-                    payout__isnull=True,
-                )
-                if orders.count():
-                    payout = self.model.objects.create(reference_number=ref_number)
-                    orders.update(payout=payout)
-                else:
-                    context = self.get(request).context_data
-                    context['add_form'] = form
-                    context['no_orders'] = True
 
-                    return render(request, self.template_name, context)
+class PayoutDetail(LoginRequiredMixin, TemplateView):
+    template_name = 'supplements/payout_detail.html'
 
-            return redirect(request.path)
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
 
-        return self.get(request)
+    def get_breadcrumbs(self):
+        return [
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Payouts', 'url': reverse('pls:payout_list')},
+            self.payout.reference_number,
+        ]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        self.payout = get_object_or_404(Payout, id=kwargs['payout_id'])
+
+        context.update({
+            'breadcrumbs': self.get_breadcrumbs(),
+            'payout': self.payout,
+        })
+
+        return context
 
 
 class OrderItemListView(common_views.OrderItemListView):
@@ -1507,7 +1510,7 @@ class OrderItemListView(common_views.OrderItemListView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Order Items', 'url': '%s?cancelled=on' % reverse('pls:orderitem_list')},
         ]
 
@@ -1562,7 +1565,7 @@ class Billing(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': 'Products', 'url': reverse('pls:index')},
             'Billing',
         ]
 
@@ -1669,7 +1672,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Import / Export', 'url': reverse('pls:upload_json')},
         ]
 
@@ -1784,7 +1787,7 @@ class Reports(LoginRequiredMixin, TemplateView):
 
     def get_breadcrumbs(self):
         return [
-            {'title': 'Supplements Admin', 'url': reverse('pls:all_user_supplements')},
+            {'title': 'Products Admin', 'url': reverse('pls:all_user_supplements')},
             {'title': 'Reports', 'url': reverse('pls:reports')},
         ]
 

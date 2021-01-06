@@ -48,7 +48,7 @@
       <td>{{ pls_order.amount_string }}</td>
       <td>{{ pls_order.shipping_price_string }}</td>
       <td>
-        {{ pls_order.refund_amount_string }}
+        {{ pls_order.total_refund_amount_string }}
         {% if pls_order.refund %}
         <i class="fa fa-fw fa-question-circle"
           qtip-tooltip="Restocking Fee: <b>{{ pls_order.refund_fee_string }}</b><br>Description: {{ pls_order.refund.description }}"

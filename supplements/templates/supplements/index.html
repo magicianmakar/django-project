@@ -19,12 +19,12 @@
   {% endif %}
 
   {% empty %}
-    <div>No supplements yet.</div>
+    <div>No products yet.</div>
   {% endfor %}
 </div>
 
 {% include "product_common/partials/paging.html" %}
-{% include "supplements/partials/limit_reached_modal.html" with title="Supplement" %}
+{% include "supplements/partials/limit_reached_modal.html" with title="Product" %}
 {% endblock %}
 
 {% block extrajs %}

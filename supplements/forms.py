@@ -3,6 +3,7 @@ import re
 from django import forms
 from django.core.validators import FileExtensionValidator
 
+from product_common.models import ProductSupplier
 from .models import LabelSize, Payout, PLSOrder, PLSupplement, RefundPayments, UserSupplement, UserSupplementLabel
 
 
@@ -80,6 +81,7 @@ class PLSupplementForm(forms.ModelForm):
                   'mockup_type',
                   'is_active',
                   'inventory',
+                  'supplier',
                   ]
 
         widgets = {
@@ -95,6 +97,7 @@ class PLSupplementForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['shipping_countries'].required = False
+        self.fields['supplier'].choices = [('', '---------')] + list(ProductSupplier.get_suppliers(shipping=False).values_list('id', 'title'))
 
     def clean_template(self):
         template = self.cleaned_data['template']
@@ -144,6 +147,7 @@ class OrderFilterForm(forms.Form):
     refnum = forms.CharField(required=False, label='Payout ID')
     amount = forms.DecimalField(required=False)
     transaction_id = forms.CharField(required=False)
+    supplier = forms.ModelChoiceField(required=False, queryset=ProductSupplier.get_suppliers())
 
 
 class MyOrderFilterForm(forms.Form):
@@ -152,7 +156,7 @@ class MyOrderFilterForm(forms.Form):
 
 
 class PayoutFilterForm(OrderFilterForm):
-    STATUSES = [('', '-')] + Payout.STATUSES
+    STATUSES = [('', '---------')] + Payout.STATUSES
 
     status = forms.ChoiceField(required=False, choices=STATUSES)
 
@@ -183,6 +187,7 @@ class LineFilterForm(OrderFilterForm):
     label_sku = forms.CharField(required=False)
     batch_number = forms.CharField(required=False)
     shipstation_status = forms.ChoiceField(required=False, choices=SHIPSTATION_STATUSES)
+    supplier = forms.ModelChoiceField(required=False, queryset=ProductSupplier.get_suppliers())
     cancelled = forms.BooleanField(required=False)
 
     def __init__(self, *args, **kwargs):
@@ -229,6 +234,7 @@ class AllLabelFilterForm(forms.Form):
     title = forms.CharField(required=False)
     sort = forms.ChoiceField(required=False, choices=SORT_STATUSES)
     comments_status = forms.ChoiceField(required=False, choices=SUPPLEMENT_STATUSES)
+    supplier = forms.ModelChoiceField(required=False, queryset=ProductSupplier.get_suppliers())
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -323,16 +329,19 @@ class RefundPaymentsForm(forms.ModelForm):
             'amount',
             'description',
             'fee',
-            'order_shipped',
+            'shipping',
         ]
+        widgets = {
+            'amount': forms.HiddenInput(),
+            'order_shipped': forms.HiddenInput(),
+        }
 
-    def clean(self):
-        super().clean()
-        amount = self.cleaned_data.get('amount')
-        fee = self.cleaned_data.get('fee')
-        if amount <= fee:
-            msg = 'Amount can not be less than or equal to Restocking Fee.'
-            self.add_error('amount', msg)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['amount'].required = False
+        self.fields['description'].required = False
+        self.fields['fee'].required = False
+        self.fields['shipping'].required = False
 
 
 class ShippingCostsWidget(forms.Textarea):

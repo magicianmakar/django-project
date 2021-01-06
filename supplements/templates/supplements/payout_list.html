@@ -7,95 +7,49 @@
 
 {% block tab_content %}
 
-{% if no_orders %}
-<div class="alert alert-info alert-dismissable">
-  <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-  There were no orders to add in this payout.
-  Hence, no empty payout is ceated.
-</div>
-{% endif %}
-
 <div>
   {% include "supplements/partials/filter_form.html" %}
 </div>
 
-{% if request.user|can:'pls_admin.use' %}
 <hr />
 
-<h2>Add New Payout</h2>
-<form method="POST" role='form'>
-  {% csrf_token %}
-  <div class="row">
-    <div class="col-sm-4">
-      <div class="form-group {{ add_form.reference_number.errors|yesno:'has-error,' }}">
-        <label class="control-label">Reference Number:</label>
-        {{ add_form.reference_number|add_class:"form-control" }}
-        {% for error in add_form.reference_number.errors %}
-        <p class="help-block">{{ error }}</p>
-        {% endfor %}
-      </div>
-    </div>
-    <div class="col-sm-2">
-      <div class="form-group">
-        <label class="control-label">&nbsp;</label>
-        <button class='btn btn-primary form-control'>Add Payout</button>
-      </div>
+<div class="row">
+  <div class="col-sm-4">
+    <h2>Payouts</h2>
+  </div>
+  {% if request.user|can:'pls_admin.use' %}
+  <div class="col-sm-2 col-sm-offset-5">
+    <div class="form-group">
+      <label class="control-label">&nbsp;</label>
+      <button class='btn btn-primary form-control'
+        data-toggle="modal" data-target="#modal-create-payout">Create Payout</button>
     </div>
   </div>
-</form>
-{% endif %}
-
-<hr />
-
-<h2>Payouts</h2>
+  {% endif %}
+</div>
 
 <table class='table table-striped' >
   <thead>
-    <th>Payout Reference ID</th>
-    <th>Total Revenue</th>
-    <th>Product (Revenue)</th>
-    <th>Shipping (Revenue)</th>
-    <th>Wholesale Cost</th>
-    <th id="edit-column">Shipping Cost</th>
-    <th>Profit</th>
-    <th>Dropified Payout</th>
-    <th>TLG Payout</th>
-    <th>PLS Payout</th>
-    <th>Refund <br> (Amount - Restocking Fee)</th>
     <th>Date</th>
+    <th>Payout Reference ID</th>
+    <th>Supplier</th>
     <th>Status</th>
     <th>Action</th>
-    <th>Download</th>
   </thead>
   <tbody>
     {% for payout in object_list %}
     <tr>
+      <td>{{ payout.created_at|date:"m.d.Y h:iA" }}</td>
       <td>
+        {% if request.user|can:'pls_admin.use' %}
         <a title="Edit" href="{% url 'admin:supplements_payout_change' payout.id %}">
           {{ payout.reference_number }}
         </a>
-      </td>
-      <td>{{ payout.cost_price_string }}</td>
-      <td>{{ payout.cost_price_withuot_shipping_string }}</td>
-      <td>{{ payout.shipping_price_string }}</td>
-      <td>{{ payout.wholesale_price_string }}</td>
-      <td>
-        {% if payout.shipping_cost %}
-        {{ payout.shipping_cost_string }}
         {% else %}
-        <div class="shipping-cost-wrapper editable-column-wrapper" data-payout-id="{{ payout.id }}">
-          <input
-            class="shipping-cost editable-column"
-            type="text" />
-        </span>
+        {{ payout.reference_number }}
         {% endif %}
       </td>
-      <td>{{ payout.profit_string }}</td>
-      <td>{{ payout.profit_split_string }}</td>
-      <td>{{ payout.profit_split_string }}</td>
-      <td>{{ payout.pls_payout_string }}</td>
-      <td>{{ payout.refund_amount_string }}</td>
-      <td>{{ payout.created_at|date:"m.d.Y h:iA" }}</td>
+      <td>{{ payout.supplier.title }}</td>
       <td>{{ payout.status_string }}</td>
       <td>
         <a href="{% url 'pls:order_list' %}?refnum={{ payout.reference_number}}">
@@ -103,8 +57,8 @@
         </a>
       </td>
       <td>
-        <a href="{% url 'pls:payout_list' %}?ref_id={{ payout.id}}&ref_num={{ payout.reference_number}}&export=true" target="_blank">
-          <i class="fa fa-download"></i>
+        <a href="{% url 'pls:payout_detail' payout.id %}" class="btn btn-default btn-outline btn-xs">
+          View
         </a>
       </td>
     {% empty %}
@@ -115,6 +69,7 @@
 </table>
 
 {% include "supplements/partials/paging.html" %}
+{% include "supplements/partials/create_payout_modal.html" %}
 
 {% endblock %}
 
@@ -130,6 +85,7 @@
 <script type="text/javascript" src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/daterangepicker.js' %}"></script>
+<script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
 <script type='application/javascript'>
   setupDateRangePicker('#date', 'input[name="date"]');
