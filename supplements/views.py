@@ -1500,6 +1500,7 @@ class OrderItemListView(common_views.OrderItemListView):
     filter_form = LineFilterForm
     namespace = 'pls'
     cancelled_orders_cache = {}
+    template_name = 'supplements/plsorderline_list.html'
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
