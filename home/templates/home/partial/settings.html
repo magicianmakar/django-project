@@ -184,7 +184,7 @@
                             </label>
                             <div class="col-sm-6 col-xs-4">
                                 <input type="checkbox" class="js-switch" id="make_visisble"
-                                       name="make_visisble" {% if config.make_visisble %}checked="checked"{% endif %}>
+                                       name="make_visisble" {% if config.make_visisble or config.make_visisble is None %}checked="checked"{% endif %}>
                             </div>
                         </div>
                     </div>

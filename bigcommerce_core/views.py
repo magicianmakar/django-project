@@ -494,6 +494,7 @@ class ProductDetailView(DetailView):
         }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
 
         context['upsell_alerts'] = not self.request.user.can('price_changes.use')
+        context['config'] = self.request.user.get_config()
 
         return context
 

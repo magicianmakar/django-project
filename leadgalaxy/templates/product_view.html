@@ -310,7 +310,7 @@
 
             <div class="form-group col-xs-12">
                 <label for="product-visible">
-                    <input type="checkbox" id="product-visible" {% if product.product.published %} checked="checked"{% endif %}>
+                    <input type="checkbox" id="product-visible" {% if config.make_visisble is None or config.make_visisble %} checked="checked"{% endif %}>
                     Make Product Visible
                 </label>
             </div>

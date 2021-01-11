@@ -151,6 +151,8 @@ class ProductDetailView(DetailView):
             'exp': arrow.utcnow().replace(hours=6).timestamp
         }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
 
+        context['config'] = self.request.user.get_config()
+
         return context
 
 

@@ -1922,6 +1922,7 @@ def product_view(request, pid):
         'breadcrumbs': breadcrumbs,
         'token': token,
         'upsell_alerts': not request.user.can('price_changes.use'),
+        'config': request.user.get_config(),
     })
 
 
