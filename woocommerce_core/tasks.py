@@ -21,10 +21,9 @@ from shopified_core.utils import (
     http_exception_response,
     http_excption_status_code,
     get_fileext_from_url,
-    post_churnzero_product_import,
-    post_churnzero_product_export,
     safe_str
 )
+from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export
 from .models import WooStore, WooProduct, WooSupplier
 from .utils import (
     format_woo_errors,

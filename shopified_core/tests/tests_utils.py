@@ -29,10 +29,8 @@ from shopified_core.utils import (
     get_next_page_from_request,
     normalize_product_title,
     clean_tracking_number,
-    post_churnzero_product_import,
-    post_churnzero_product_export,
-    post_churnzero_addon_update,
 )
+from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export, post_churnzero_addon_update
 
 from shopified_core.utils import base64_encode
 from shopified_core.shipping_helper import (

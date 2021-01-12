@@ -52,9 +52,8 @@ from leadgalaxy.shopify import ShopifyAPI
 
 from shopified_core.utils import (
     update_product_data_images,
-    post_churnzero_product_export,
-    post_churnzero_product_import,
 )
+from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export
 
 from shopify_orders import utils as order_utils
 

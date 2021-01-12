@@ -63,8 +63,8 @@ from shopified_core.utils import (
     get_first_valid_option,
     ensure_title,
     add_http_schema,
-    post_churnzero_actions,
 )
+from churnzero_core.utils import post_churnzero_actions
 from leadgalaxy.models import (
     AccountRegistration,
     GroupPlan,

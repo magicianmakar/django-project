@@ -1,6 +1,5 @@
 import os
 import re
-import requests
 import base64
 import hashlib
 import time
@@ -8,11 +7,9 @@ import hmac
 import mimetypes
 import ctypes
 import simplejson as json
-import copy
 from functools import wraps
 from copy import deepcopy
 from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
-from lib.exceptions import capture_exception
 
 from django.conf import settings
 from django.core import serializers
@@ -1172,66 +1169,3 @@ def get_product_model(store_type):
     else:
         from leadgalaxy.models import ShopifyProduct
         return ShopifyProduct
-
-
-def post_churnzero_product_import(user, description, source):
-    return post_churnzero_actions(actions=[{
-        'appKey': settings.CHURNZERO_APP_KEY,
-        'accountExternalId': user.models_user.username,
-        'contactExternalId': user.username,
-        'accountExternalIdHash': user.profile.churnzero_account_id_hash,
-        'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
-        'action': 'trackEvent',
-        'eventName': 'Import Product',
-        'description': description,
-        'cf_Source': source,
-    }])
-
-
-def post_churnzero_product_export(user, description):
-    return post_churnzero_actions(actions=[{
-        'appKey': settings.CHURNZERO_APP_KEY,
-        'accountExternalId': user.models_user.username,
-        'contactExternalId': user.username,
-        'accountExternalIdHash': user.profile.churnzero_account_id_hash,
-        'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
-        'action': 'trackEvent',
-        'eventName': 'Send Product to Store',
-        'description': description,
-    }])
-
-
-def post_churnzero_addon_update(user, addons, action):
-    params = {
-        'appKey': settings.CHURNZERO_APP_KEY,
-        'accountExternalId': user.models_user.username,
-        'contactExternalId': user.username,
-        'accountExternalIdHash': user.profile.churnzero_account_id_hash,
-        'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
-        'action': 'trackEvent',
-    }
-    actions = []
-    if action == 'added':
-        for addon in addons:
-            action = copy.copy(params)
-            action['eventName'] = 'Installed Addon'
-            action['description'] = f"{addon.title} ({addon.addon_hash})"
-            actions.append(action)
-    if action == 'removed':
-        for addon in addons:
-            action = copy.copy(params)
-            action['eventName'] = 'Uninstalled Addon'
-            action['description'] = f"{addon.title} ({addon.addon_hash})"
-            actions.append(action)
-
-    return post_churnzero_actions(actions=actions)
-
-
-def post_churnzero_actions(actions):
-    try:
-        res = requests.post("https://analytics.churnzero.net/i", json=actions)
-        res.raise_for_status()
-    except Exception:
-        capture_exception(level='warning', extra={'response': res.text})
-    else:
-        return res

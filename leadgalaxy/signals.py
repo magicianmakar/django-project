@@ -40,7 +40,8 @@ from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
 from stripe_subscription.stripe_api import stripe
 from shopified_core.tasks import keen_send_event
-from shopified_core.utils import get_domain, post_churnzero_addon_update
+from shopified_core.utils import get_domain
+from churnzero_core.utils import post_churnzero_addon_update
 from goals.models import Goal, UserGoalRelationship
 from leadgalaxy.utils import set_churnzero_account
 from analytic_events.models import LoginEvent, StoreCreatedEvent
