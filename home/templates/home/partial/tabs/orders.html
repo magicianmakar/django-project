@@ -36,7 +36,7 @@
         {% else %}
             <li><a href="{% url 'gear:orders_list' %}?store={{item.id}}">{{item.title}}</a></li>
         {% endif %}
-    
+
     {% elif item|model_name == 'groovekartstore' %}
         {% if store == item %}
             <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
@@ -46,3 +46,4 @@
     {% endif %}
 {% endfor %}
 </ul>
+<script>ChurnZero.push(['setModule', 'Orders']);</script>

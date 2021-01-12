@@ -44,7 +44,9 @@ from shopified_core.utils import (
     safe_float,
     aws_s3_context as images_aws_s3_context,
     get_store_model,
+    post_churnzero_product_import,
 )
+from analytic_events.models import SupplementLabelForApprovalEvent
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
 from supplements.lib.image import get_order_number_label, get_payment_pdf
 from supplements.models import (
@@ -546,6 +548,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                     or upload_url and is_draft_label:  # Restart review process
                 new_user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
                 new_user_supplement.current_label.save()
+                SupplementLabelForApprovalEvent.objects.create(user=request.user,
+                                                               product_name=new_user_supplement.title)
 
             kwargs = {'supplement_id': new_user_supplement.id}
             redirect_url = self.get_redirect_url(**kwargs)
@@ -768,6 +772,8 @@ class LabelHistory(UserSupplementView):
                     self.save_label(request.user, upload_url, user_supplement)
                     user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
                     user_supplement.current_label.save()
+                    SupplementLabelForApprovalEvent.objects.create(user=request.user,
+                                                                   product_name=user_supplement.title)
 
                 # Old images should be removed when new label is uploaded
                 mockup_urls = request.POST.getlist('mockup_urls')
@@ -1718,6 +1724,9 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
                         immutable=country['immutable'],
                     )
                     pl_supplement.shipping_countries.add(group)
+
+                if request.user.models_user.profile.has_churnzero_account:
+                    post_churnzero_product_import(request.user, entry['title'], 'Supplement Import')
 
             return redirect(reverse('pls:index'))
         return self.get(request)

@@ -22,7 +22,9 @@ from shopified_core.shipping_helper import (
 )
 from shopified_core.utils import ensure_title, hash_url_filename, get_domain, remove_link_query, random_hash
 
-from leadgalaxy.tests.factories import UserFactory, ShopifyProductFactory, ShopifyBoardFactory
+from leadgalaxy.tests.factories import UserFactory, ShopifyProductFactory, ShopifyBoardFactory, GroupPlanFactory
+from addons_core.tests.factories import AddonFactory
+from stripe_subscription.tests.factories import StripePlanFactory, StripeCustomerFactory
 
 import factory
 import requests
@@ -1382,3 +1384,58 @@ class TestUploadFileToS3(BaseTestCase):
                 mimetype='image/jpeg',
                 bucket_name=settings.S3_UPLOADS_BUCKET
             )
+
+
+class SetChurnZeroAccountTestCase(BaseTestCase):
+    @patch('stripe_subscription.models.stripe')
+    @patch('shopified_core.utils.requests.post')
+    def test_must_submit_with_correct_parameters(self, post_request, stripe):
+        models_user = UserFactory(username='modelsuser')
+        user = UserFactory()
+        user.profile.subuser_parent = models_user
+        user.profile.save()
+        stripe.Plan = Mock()
+        plan = GroupPlanFactory(payment_gateway='stripe')
+        stripe.Plan.retrieve = Mock(return_value=plan)
+        user.models_user.profile.plan = plan
+        user.models_user.profile.plan.is_stripe = Mock(return_value=True)
+        user.models_user.profile.plan.stripe_plan = StripePlanFactory(stripe_id='abc')
+        user.models_user.stripe_customer = StripeCustomerFactory(customer_id='abc')
+        addon1 = AddonFactory(title='test1')
+        addon2 = AddonFactory(title='test2')
+        user.models_user.profile.addons.add(addon1, addon2)
+
+        utils.set_churnzero_account(user.models_user)
+
+        actions = [{
+            'appKey': settings.CHURNZERO_APP_KEY,
+            'accountExternalId': 'modelsuser',
+            'contactExternalId': 'modelsuser',
+            'accountExternalIdHash': user.models_user.profile.churnzero_account_id_hash,
+            'contactExternalIdHash': user.models_user.profile.churnzero_contact_id_hash,
+            'action': 'setAttribute',
+            'entity': 'account',
+            'attr_Stripe_customer_id': 'abc',
+            'attr_Gateway': 'Stripe',
+            'attr_Installed Addons': 'test1, test2',
+        }]
+
+        post_request.assert_called_with("https://analytics.churnzero.net/i", json=actions)
+
+    @patch('stripe_subscription.models.stripe')
+    @patch('shopified_core.utils.requests.post')
+    def test_must_update_users_has_churnzero_account_property(self, post_request, stripe):
+        post_request.return_value = Mock()
+        user = UserFactory()
+        user.profile.has_churnzero_account = False
+        user.profile.save()
+        stripe.Plan = Mock()
+        plan = GroupPlanFactory(payment_gateway='stripe')
+        stripe.Plan.retrieve = Mock(return_value=plan)
+        user.models_user.profile.plan = plan
+        user.models_user.profile.plan.is_stripe = Mock(return_value=True)
+        user.models_user.profile.plan.stripe_plan = StripePlanFactory(stripe_id='abc')
+        user.models_user.stripe_customer = StripeCustomerFactory(customer_id='abc')
+        utils.set_churnzero_account(user.models_user, create=True)
+        user.models_user.profile.refresh_from_db()
+        self.assertTrue(user.models_user.profile.has_churnzero_account)

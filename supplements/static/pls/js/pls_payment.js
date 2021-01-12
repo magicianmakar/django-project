@@ -19,6 +19,8 @@ function updateStatus(orderIds) {
 }
 
 function doMakePayment(orderDataIds, storeId, storeType) {
+    ChurnZero.push(['trackEvent', 'Auto Order Placed', 'supplement']);
+
     var lenOrders = $('#modal-make-payment .supplement-item-payment').length;
 
     if (!lenOrders) {

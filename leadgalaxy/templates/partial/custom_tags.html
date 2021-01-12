@@ -327,3 +327,30 @@
   }
 
 </script>
+{% if user.is_authenticated %}
+    {% with user=request.user profile=request.user.profile models_user=request.user.models_user models_user_profile=request.user.models_user.profile %}
+    <script>
+        var ChurnZero = ChurnZero || [];
+        (function(a,b,c,d){var cz=a.createElement(b); cz.type=c; cz.async=true; cz.src=d;var s=a.getElementsByTagName(b)[0];s.parentNode.insertBefore(cz, s);})(document, "script",'text/javascript', '//analytics.churnzero.net/churnzero.js');
+        ChurnZero.push(['setAppKey', "{% app_setting 'CHURNZERO_APP_KEY' %}"]);
+        ChurnZero.push([
+            'setContact',
+            "{{ models_user.username }}",
+            "{{ user.username }}",
+            "{{ profile.churnzero_account_id_hash }}",
+            "{{ profile.churnzero_contact_id_hash }}",
+        ]);
+        ChurnZero.push(['setAttribute', 'account', {
+            'Shopify Stores Count': parseInt("{{ models_user_profile.get_shopify_stores.count }}"),
+            'WooCommerce Stores Count': parseInt("{{ models_user_profile.get_woo_stores.count }}"),
+        }]);
+        ChurnZero.push(['setAttribute', 'contact', {
+            FirstName: "{{ user.first_name }}",
+            LastName: "{{ user.last_name }}",
+            Email: "{{ user.email }}",
+            SubUser: "{{ profile.is_subuser }}",
+        }]);
+    </script>
+    {% endwith %}
+{% endif %}
+

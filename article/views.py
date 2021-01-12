@@ -70,6 +70,8 @@ def content(request, slug_article=None):
 
     return render(request, 'article/view.html', {
         'article': article,
+        'tools': True if slug_article == 'tools-business-tools' else False,
+        'import_store_list': True if slug_article == 'source-import-products' else False,
     })
 
 

@@ -63,6 +63,7 @@ from shopified_core.utils import (
     get_first_valid_option,
     ensure_title,
     add_http_schema,
+    post_churnzero_actions,
 )
 from leadgalaxy.models import (
     AccountRegistration,
@@ -2381,6 +2382,28 @@ def generate_user_activity(user, output=None):
     )
 
     return url
+
+
+def set_churnzero_account(models_user, create=False):
+    if models_user.profile.plan.is_stripe():
+        addons_list = models_user.profile.addons.values_list('churnzero_name', flat=True)
+        actions = [{
+            'appKey': settings.CHURNZERO_APP_KEY,
+            'accountExternalId': models_user.username,
+            'contactExternalId': models_user.username,
+            'accountExternalIdHash': models_user.profile.churnzero_account_id_hash,
+            'contactExternalIdHash': models_user.profile.churnzero_contact_id_hash,
+            'action': 'setAttribute',
+            'entity': 'account',
+            # Custom attributes
+            'attr_Stripe_customer_id': models_user.stripe_customer.customer_id,
+            'attr_Gateway': models_user.profile.plan.payment_gateway.title(),
+            'attr_Installed Addons': ', '.join(addons_list),
+        }]
+        # ChurnZero will fill out all the other details
+        if post_churnzero_actions(actions) and create:
+            models_user.profile.has_churnzero_account = True
+            models_user.profile.save()
 
 
 # Helper Classes

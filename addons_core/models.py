@@ -49,6 +49,7 @@ class Addon(models.Model):
 
     short_description = models.TextField(blank=True)
     description = models.TextField(blank=True)
+    churnzero_name = models.TextField(blank=True, default='')
     faq = models.TextField(blank=True, null=True)
 
     categories = models.ManyToManyField(Category, blank=True, related_name="addons")
@@ -96,6 +97,9 @@ class Addon(models.Model):
     def save(self, *args, **kwargs):
         if not self.addon_hash:
             self.addon_hash = get_random_string(32, 'abcdef0123456789')
+
+        if not self.pk:
+            self.churnzero_name = self.title
 
         super().save(*args, **kwargs)
 

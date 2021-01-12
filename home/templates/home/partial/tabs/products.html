@@ -1,6 +1,14 @@
 {% load home_helper %}
 
 <ul class="nav nav-tabs scrolling-tabs">
+    {% if not request.GET.store or request.GET.store == 'n' %}
+        <script>ChurnZero.push(['setModule', 'Non Connected Products']);</script>
+    {% endif %}
+
+    {% if request.GET.store == 'c' %}
+        <script>ChurnZero.push(['setModule', 'Connected Products']);</script>
+    {% endif %}
+
     {% if not request.GET.store %}
         <li class="active"><a data-toggle="tab" href="#tab-1">Non Connected</a></li>
         <li><a href="{{ request.path }}?store=c">Connected</a></li>

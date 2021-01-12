@@ -3,6 +3,8 @@
 (function(user_filter, sub_conf) {
 'use strict';
     function addOrderToQueue(order, warn) {
+        ChurnZero.push(['trackEvent', 'Auto Order Placed', order.supplier_type]);
+
         warn = typeof(warn) !== 'undefined' ? warn : true;
 
         if (!window.extensionSendMessage) {

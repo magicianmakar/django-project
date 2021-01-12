@@ -578,3 +578,6 @@ CKEDITOR_CONFIGS = {
         'tabSpaces': 4,
     }
 }
+
+CHURNZERO_APP_KEY = os.environ.get('CHURNZERO_APP_KEY', '')
+CHURNZERO_SECRET_TOKEN = os.environ.get('CHURNZERO_SECRET_TOKEN', '')

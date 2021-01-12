@@ -257,4 +257,6 @@
             $(window).hashchange();
         }
     });
+
+    ChurnZero.push(['setModule', 'US Products']);
 })();

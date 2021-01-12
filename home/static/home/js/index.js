@@ -236,6 +236,8 @@
 
                     syncConfig();
 
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'Shopify']);
+
                     setTimeout(function() {
                         window.location.reload();
                     }, 1000);
@@ -1289,6 +1291,7 @@
                 method: 'DELETE',
                 success: function() {
                     $('#woo-store-row-' + storeId).hide();
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'WooCommerce']);
                     swal('Deleted!', 'The store has been deleted.', 'success');
                 }
             });

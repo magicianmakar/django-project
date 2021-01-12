@@ -85,6 +85,8 @@
     </div>
 </div>
 
+
+
 {% endblock %}
 
 {% block extracss %}
@@ -92,3 +94,14 @@
     {{ article.style|default:''|safe }}
 </style>
 {% endblock %}
+
+{% block extrajs %}
+    {% if tools %}
+        <script>ChurnZero.push(['setModule', 'Tools page']);</script>
+    {% endif %}
+    {% if import_store_list %}
+        <script>ChurnZero.push(['setModule', 'Import Store list']);</script>
+    {% endif %}
+{% endblock %}
+
+

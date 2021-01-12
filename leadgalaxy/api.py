@@ -45,7 +45,7 @@ from shopified_core.utils import (
     add_http_schema,
     base64_encode,
     clean_tracking_number,
-    CancelledOrderAlert
+    CancelledOrderAlert,
 )
 
 from shopify_orders import utils as shopify_orders_utils

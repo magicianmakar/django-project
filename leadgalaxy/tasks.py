@@ -50,7 +50,11 @@ from leadgalaxy.models import (
 from leadgalaxy import utils
 from leadgalaxy.shopify import ShopifyAPI
 
-from shopified_core.utils import update_product_data_images
+from shopified_core.utils import (
+    update_product_data_images,
+    post_churnzero_product_export,
+    post_churnzero_product_import,
+)
 
 from shopify_orders import utils as order_utils
 
@@ -269,6 +273,8 @@ def export_product(req_data, target, user_id):
                     except Exception:
                         capture_exception()
 
+                    post_churnzero_product_export(user, product_to_map.get('title', ''))
+
                 del api_data
 
             if 'product' not in r.json():
@@ -458,6 +464,10 @@ def export_product(req_data, target, user_id):
                     )
 
                     product.set_default_supplier(supplier, commit=True)
+
+                    post_churnzero_product_import(user, product.title, supplier_info.get('name', ''))
+                else:
+                    post_churnzero_product_import(user, product.title, '')
 
             except PermissionDenied as e:
                 capture_exception()

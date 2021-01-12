@@ -4,7 +4,7 @@ import arrow
 
 from lib.test import BaseTestCase
 from addons_core.models import AddonUsage
-from .factories import AddonUsageFactory
+from .factories import AddonUsageFactory, AddonFactory
 
 
 class AddonModelsTestCase(BaseTestCase):
@@ -41,3 +41,10 @@ class AddonModelsTestCase(BaseTestCase):
     def test_addon_usage_required_sort(self):
         self.assertTrue(AddonUsage.objects.first().id, self.first_addon_usage.id)
         self.assertTrue(AddonUsage.objects.last().id, self.last_addon_usage.id)
+
+
+class AddonTestCase(BaseTestCase):
+    def test_must_have_churnzero_name_same_as_addon_title(self):
+        addon_title = 'addon1'
+        addon = AddonFactory(title=addon_title)
+        self.assertEqual(addon.churnzero_name, addon_title)

@@ -39,6 +39,7 @@ $(document).ready(function() {
             data: {title: boardName},
             success: function(data) {
                 if ('status' in data && data.status == 'ok') {
+                    ChurnZero.push(['trackEvent', 'Create a Board', boardName]);
                     $('#woo-modal-board-add').modal('hide');
                     $title.val('');
 

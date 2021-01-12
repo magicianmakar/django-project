@@ -8,6 +8,7 @@ from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.db.models import Q
 from django.db.models.signals import post_save, m2m_changed, post_delete
+from django.contrib.auth.signals import user_logged_in
 from django.contrib.auth.models import User
 
 from lib.exceptions import capture_exception
@@ -33,13 +34,16 @@ from leadgalaxy.models import (
 )
 
 from addons_core.tasks import cancel_all_addons
+from addons_core.models import Addon
 from metrics.tasks import activecampaign_update_plan, activecampaign_update_store_count
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
 from stripe_subscription.stripe_api import stripe
 from shopified_core.tasks import keen_send_event
-from shopified_core.utils import get_domain
+from shopified_core.utils import get_domain, post_churnzero_addon_update
 from goals.models import Goal, UserGoalRelationship
+from leadgalaxy.utils import set_churnzero_account
+from analytic_events.models import LoginEvent, StoreCreatedEvent
 
 
 @receiver(post_save, sender=UserProfile)
@@ -309,6 +313,29 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
         }
 
         keen_send_event.delay('product_save', keen_data)
+
+
+@receiver(user_logged_in)
+def post_login(sender, user, request, **kwargs):
+    if not user.models_user.profile.has_churnzero_account:
+        set_churnzero_account(user.models_user, create=True)
+    if user.models_user.profile.has_churnzero_account:
+        LoginEvent.objects.create(user=user)
+
+
+@receiver(m2m_changed, sender=UserProfile.addons.through)
+def addons_count_change(sender, instance, pk_set, action, **kwargs):
+    if not instance.is_subuser and (action == "post_add" or action == "post_remove"):
+        set_churnzero_account(instance.user)
+        addons = Addon.objects.filter(pk__in=pk_set)
+        action = 'added' if action == 'post_add' else 'removed'
+        post_churnzero_addon_update(instance.user, addons=addons, action=action)
+
+
+@receiver(post_save, sender=ShopifyStore)
+def store_saved(sender, instance, created, **kwargs):
+    if created:
+        StoreCreatedEvent.objects.create(user=instance.user, platform='Shopify')
 
 
 main_subscription_canceled = Signal(providing_args=["stripe_sub"])

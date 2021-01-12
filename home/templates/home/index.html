@@ -38,6 +38,12 @@
     {% include 'home/partial/product_template_modals.html' %}
     {% include 'home/partial/store_config_modals.html' %}
 
+    {% if not settings_tab %}
+        <script>ChurnZero.push(['setModule', 'Stores Page']);</script>
+    {% else %}
+        <script>ChurnZero.push(['setModule', 'Settings Page']);</script>
+    {%  endif %}
+
 {% endblock %}
 
 {% block extracss %}
