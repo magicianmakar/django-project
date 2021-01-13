@@ -220,11 +220,23 @@
                             <tr>
                                 <td>Addons</td>
                                 <td>
-                                    <ul style="margin: 0;padding: 0 0 0 15px;">
-                                        {% for bundle in item.profile.addons.all %}
-                                        <li>{{bundle.title}}</li>
-                                        {% endfor %}
-                                    </ul>
+                                    {% for bundle in item.profile.addons.all %}
+                                    <div class="row user-addon">
+                                        <div class="col-md-10">
+                                            {{bundle.title}}
+                                        </div>
+
+                                        <div class="col-md-2 text-right">
+                                            <a href="#"
+                                               data-addon-id="{{ bundle.id }}"
+                                               data-title="{{ bundle.title }}"
+                                               data-user-id="{{ item.id }}"
+                                               class="btn-remove-addon text-danger no-wrap">
+                                                <i class="fa fa-times-circle"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
                                 </td>
                             </tr>
                             {% endif %}
@@ -1160,6 +1172,42 @@
                         swal.close();
                     }).fail(function(data) {
                         displayAjaxError('Customer Balance', data);
+                    });
+                });
+            });
+
+            $('.btn-remove-addon').click(function (e) {
+                e.preventDefault();
+
+                var btn = $(e.currentTarget);
+                var addonTitle = btn.data('title');
+                var addonId = btn.data('addon-id');
+                var userId = btn.data('user-id');
+
+                swal({
+                    title: "Remove Addon",
+                    text: "Are you sure you want to remove " + addonTitle + " addon from this user account?",
+                    type: "warning",
+                    showCancelButton: true,
+                    closeOnConfirm: false,
+                    animation: "slide-from-top",
+                    showLoaderOnConfirm: true
+                }, function(inputValue) {
+                    if (inputValue === false || !inputValue) return false;
+
+                    $.ajax({
+                        url: api_url('addon', 'acp'),
+                        type: 'DELETE',
+                        data: {
+                            'addon': addonId,
+                            'user': userId,
+                        },
+                    }).done(function (data) {
+                        toastr.success('Deleted!', 'Remove Addon');
+                        btn.parents('.user-addon').remove();
+                        swal.close();
+                    }).fail(function(data) {
+                        displayAjaxError('Remove Addon', data);
                     });
                 });
             });

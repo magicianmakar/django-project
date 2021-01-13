@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.contrib.auth.models import User
 from django.views.generic import View
+from django.http import QueryDict
 
 import simplejson as json
 
@@ -38,7 +39,18 @@ class ApiResponseMixin(View):
                 if 'application/json' in request.META.get('CONTENT_TYPE', ''):
                     return json.loads(request.body)
 
-        elif request.method in ['GET', 'DELETE']:
+        elif request.method == 'DELETE':
+            if request.GET:
+                return request.GET
+            elif request.POST:
+                return request.POST
+            else:
+                if 'application/json' in request.META.get('CONTENT_TYPE', ''):
+                    return json.loads(request.body)
+                elif 'application/x-www-form-urlencoded' in request.META.get('CONTENT_TYPE', ''):
+                    return QueryDict(request.body)
+
+        elif request.method == 'GET':
             return request.GET
 
     def get_user(self, request, data=None, assert_login=True):

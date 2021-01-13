@@ -189,6 +189,7 @@ DROPIFIED_API = {
     'product_common': 'product_common.api.ProductCommonApi',
     'addons': 'addons_core.api.AddonsApi',
     'mybasket': 'supplements.api.BasketApi',
+    'acp': 'acp_core.api.ACPApi',
 }
 
 # Database
