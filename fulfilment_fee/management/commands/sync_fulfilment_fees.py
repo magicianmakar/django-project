@@ -6,6 +6,7 @@ from groovekart_core.models import GrooveKartOrderTrack
 from woocommerce_core.models import WooOrderTrack
 from commercehq_core.models import CommerceHQOrderTrack
 from my_basket.models import BasketOrderTrack
+from django.contrib.auth.models import User
 
 
 class Command(DropifiedBaseCommand):
@@ -35,17 +36,24 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
 
-        track_types = [ShopifyOrderTrack,
-                       BigCommerceOrderTrack,
-                       GrooveKartOrderTrack,
-                       WooOrderTrack,
-                       CommerceHQOrderTrack,
-                       BasketOrderTrack]
-        for track_type in track_types:
-            tracks = track_type.objects.filter(created_at__gte=options['from'], created_at__lte=options['to'])
-            if options['user_id']:
-                tracks = tracks.filter(user_id=options['user_id'])
-            for track in tracks.iterator():
-                res_fee = process_sale_transaction_fee(track)
-                if res_fee:
-                    print(f'Processed {res_fee}')
+        users = User.objects.filter(profile__plan__permissions__name='sales_fee.use')
+
+        if options['user_id']:
+            users = User.objects.filter(pk=options['user_id'])
+
+        for user in users.iterator():
+            track_types = [ShopifyOrderTrack,
+                           BigCommerceOrderTrack,
+                           GrooveKartOrderTrack,
+                           WooOrderTrack,
+                           CommerceHQOrderTrack,
+                           BasketOrderTrack]
+            for track_type in track_types:
+                tracks = track_type.objects.filter(created_at__gte=options['from'], created_at__lte=options['to'],
+                                                   user_id=user.id)
+                if options['user_id']:
+                    tracks = tracks.filter(user_id=options['user_id'])
+                for track in tracks.iterator():
+                    res_fee = process_sale_transaction_fee(track)
+                    if res_fee:
+                        print(f'Processed {res_fee}')
