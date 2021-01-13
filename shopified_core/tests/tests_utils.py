@@ -6,12 +6,9 @@ from django.contrib.auth.models import User
 from django.test import tag
 
 from lib.test import BaseTestCase
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from collections import OrderedDict
-
-from leadgalaxy.tests.factories import UserFactory
-from addons_core.tests.factories import AddonFactory
 
 from shopified_core.utils import (
     app_link,
@@ -30,7 +27,6 @@ from shopified_core.utils import (
     normalize_product_title,
     clean_tracking_number,
 )
-from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export, post_churnzero_addon_update
 
 from shopified_core.utils import base64_encode
 from shopified_core.shipping_helper import (
@@ -736,118 +732,3 @@ class ValideAliExpressProvinceTestCase(BaseTestCase):
     def test_must_correct_cities_with_st_dot(self):
         valid, correct = valide_aliexpress_province('US', 'Missouri', 'St. Louis', True)
         self.assertEqual(correct['city'], 'Saint louis')
-
-
-class PostChurnZeroProductImportTestCase(BaseTestCase):
-    @patch('shopified_core.utils.requests.post')
-    def test_must_be_called_with_correct_credentials(self, post_request):
-        models_user = UserFactory(username='modelsuser')
-        user = UserFactory(username='user')
-        user.profile.subuser_parent = models_user
-        user.profile.save()
-
-        post_churnzero_product_import(user, 'description', 'source')
-
-        actions = [{
-            'appKey': settings.CHURNZERO_APP_KEY,
-            'accountExternalId': 'modelsuser',
-            'contactExternalId': 'user',
-            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
-            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
-            'action': 'trackEvent',
-            'eventName': 'Import Product',
-            'description': 'description',
-            'cf_Source': 'source',
-        }]
-
-        post_request.assert_called_with("https://analytics.churnzero.net/i", json=actions)
-
-
-class PostChurnZeroProductExportTestCase(BaseTestCase):
-    @patch('shopified_core.utils.requests.post')
-    def test_must_be_called_with_correct_credentials(self, post_request):
-        models_user = UserFactory(username='modelsuser')
-        user = UserFactory(username='user')
-        user.profile.subuser_parent = models_user
-        user.profile.save()
-
-        post_churnzero_product_export(user, 'description')
-
-        actions = [{
-            'appKey': settings.CHURNZERO_APP_KEY,
-            'accountExternalId': 'modelsuser',
-            'contactExternalId': 'user',
-            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
-            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
-            'action': 'trackEvent',
-            'eventName': 'Send Product to Store',
-            'description': 'description',
-        }]
-
-        post_request.assert_called_with("https://analytics.churnzero.net/i", json=actions)
-
-
-class PostChurnZeroAddonUpdateTestCase(BaseTestCase):
-    @patch('shopified_core.utils.requests.post')
-    def test_must_be_called_with_correct_credentials_when_adding(self, post_request):
-        models_user = UserFactory(username='modelsuser')
-        user = UserFactory(username='user')
-        user.profile.subuser_parent = models_user
-        user.profile.save()
-        addons = [AddonFactory(title='a', addon_hash="#!"), AddonFactory(title='b', addon_hash="$%")]
-
-        post_churnzero_addon_update(user, addons=addons, action="added")
-
-        actions = [{
-            'appKey': settings.CHURNZERO_APP_KEY,
-            'accountExternalId': 'modelsuser',
-            'contactExternalId': 'user',
-            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
-            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
-            'action': 'trackEvent',
-            'eventName': 'Installed Addon',
-            'description': 'a (#!)',
-        }, {
-            'appKey': settings.CHURNZERO_APP_KEY,
-            'accountExternalId': 'modelsuser',
-            'contactExternalId': 'user',
-            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
-            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
-            'action': 'trackEvent',
-            'eventName': 'Installed Addon',
-            'description': 'b ($%)',
-        }]
-
-        post_request.assert_called_with("https://analytics.churnzero.net/i", json=actions)
-
-    @patch('shopified_core.utils.requests.post')
-    def test_must_be_called_with_correct_credentials_when_removing(self, post_request):
-        models_user = UserFactory(username='modelsuser')
-        user = UserFactory(username='user')
-        user.profile.subuser_parent = models_user
-        user.profile.save()
-        addons = [AddonFactory(title='a', addon_hash="#!"), AddonFactory(title='b', addon_hash="$%")]
-
-        post_churnzero_addon_update(user, addons=addons, action="removed")
-
-        actions = [{
-            'appKey': settings.CHURNZERO_APP_KEY,
-            'accountExternalId': 'modelsuser',
-            'contactExternalId': 'user',
-            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
-            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
-            'action': 'trackEvent',
-            'eventName': 'Uninstalled Addon',
-            'description': 'a (#!)',
-        }, {
-            'appKey': settings.CHURNZERO_APP_KEY,
-            'accountExternalId': 'modelsuser',
-            'contactExternalId': 'user',
-            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
-            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
-            'action': 'trackEvent',
-            'eventName': 'Uninstalled Addon',
-            'description': 'b ($%)',
-        }]
-
-        post_request.assert_called_with("https://analytics.churnzero.net/i", json=actions)
