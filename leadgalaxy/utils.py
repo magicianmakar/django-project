@@ -2400,8 +2400,11 @@ def set_churnzero_account(models_user, create=False):
             'attr_Gateway': models_user.profile.plan.payment_gateway.title(),
             'attr_Installed Addons': ', '.join(addons_list),
         }]
+
         # ChurnZero will fill out all the other details
-        if post_churnzero_actions(actions) and create:
+        post_churnzero_actions(actions)
+
+        if create:
             models_user.profile.has_churnzero_account = True
             models_user.profile.save()
 
