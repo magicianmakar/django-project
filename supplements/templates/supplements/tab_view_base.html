@@ -15,6 +15,8 @@
 {% url 'pls:orderitem_list' as pls_orderitems %}
 {% url 'pls:billing' as pls_billing %}
 {% url 'pls:upload_json' as pls_upload_json %}
+{% url 'pls:my_basket' as my_basket %}
+{% url 'pls:checkout' as checkout %}
 
 <div id="supplement-container" class="tabs-container">
   <ul class="nav nav-tabs scrolling-tabs">
@@ -46,7 +48,7 @@
     {% endif %}
 
     {% if request.user|can:'supplements_basket.use'  %}
-    {% if request.path == my_basket %}
+    {% if request.path == my_basket or request.path == checkout %}
     <li class="active"><a data-toggle="tab" href="#tab-1">My Basket</a></li>
     {% else %}
     <li><a href="{% url 'pls:my_basket' %}">My Basket</a></li>
