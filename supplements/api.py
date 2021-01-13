@@ -521,7 +521,13 @@ class SupplementsApi(ApiResponseMixin, View):
             return self.api_error("No items in basket", status=500)
 
         billing_province_code = province_code_from_name(billing_country_code, billing_province)
+
+        # fix "False" for shipstation
+        if not billing_province_code:
+            billing_province_code = ""
         province_code = province_code_from_name(country_code, province)
+        if not province_code:
+            province_code = ""
 
         checkout_data = data.copy()
         checkout_data['billing_state_code'] = billing_province_code
