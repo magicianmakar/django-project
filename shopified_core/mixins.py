@@ -49,6 +49,8 @@ class ApiResponseMixin(View):
                     return json.loads(request.body)
                 elif 'application/x-www-form-urlencoded' in request.META.get('CONTENT_TYPE', ''):
                     return QueryDict(request.body)
+                else:
+                    return {}
 
         elif request.method == 'GET':
             return request.GET
