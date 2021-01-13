@@ -561,7 +561,7 @@ class SupplementsApi(ApiResponseMixin, View):
             order_line['user_supplement'] = basket_item.user_supplement
             order_line['label'] = basket_item.user_supplement.current_label
             order_line['title'] = basket_item.user_supplement.title
-            order_line['sku'] = basket_item.user_supplement.current_label.sku
+            order_line['sku'] = basket_item.user_supplement.pl_supplement.shipstation_sku
 
             order_line_items.append(order_line)
 
