@@ -192,9 +192,5 @@ class OfferCouponAdmin(admin.ModelAdmin):
             obj.stripe_coupon_id = coupon.id
         super().save_model(request, obj, form, change)
 
-    def delete_model(self, request, obj):
-        stripe.Coupon.delete(obj.stripe_coupon_id)
-        super().delete_model(request, obj)
-
     def has_change_permission(self, request, obj=None):
         return False
