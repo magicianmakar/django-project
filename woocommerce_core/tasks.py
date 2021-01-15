@@ -128,7 +128,7 @@ def product_save(req_data, user_id):
         can_add, total_allowed, user_count = permissions.can_add_product(user.models_user)
         if not can_add:
             return {
-                'error': 'Your current plan allow up to %d saved products, currently you have %d saved products.'
+                'error': 'Your current plan allows up to %d saved product(s). Currently you have %d saved products.'
                          % (total_allowed, user_count)
             }
 

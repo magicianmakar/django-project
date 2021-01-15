@@ -69,7 +69,7 @@ class ApiBase(ApiResponseMixin, View):
 
         if not can_add:
             return self.api_error(
-                'Your current plan allow up to %d boards, currently you have %d boards.'
+                'Your current plan allows up to %d board(s). Currently you have %d boards.'
                 % (total_allowed, user_count))
 
         board_name = data.get('title', '').strip()

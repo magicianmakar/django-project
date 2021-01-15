@@ -2314,7 +2314,7 @@ class ShopifyStoreApi(ApiBase):
         can_add, total_allowed, user_count = permissions.can_add_product(user.models_user, ignore_daily_limit=True)
         if not can_add:
             return self.api_error(
-                'Your current plan allow up to %d saved products, currently you have %d saved products.'
+                'Your current plan allows up to %d saved product(s). Currently you have %d saved products.'
                 % (total_allowed, user_count), status=401)
 
         shopify_product = safe_int(data.get('product'))
