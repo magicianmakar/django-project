@@ -74,6 +74,37 @@ def add_addon_plan(subscription):
         )
 
 
+def move_addons_subscription(stripe_subscription):
+    items = []
+    for item in stripe_subscription['items']['data']:
+        if item['price']['metadata'].get('type') != 'addon':
+            continue
+
+        items.append({
+            'price': item['price']['id'],
+            'metadata': item['metadata'],
+            'quantity': item['quantity'],
+            'tax_rates': item['tax_rates'],
+        })
+        stripe.SubscriptionItem.delete(item['id'], proration_behavior='none')
+
+    new_subscription = stripe.Subscription.create(
+        customer=stripe_subscription.customer,
+        proration_behavior='none',
+        backdate_start_date=stripe_subscription['current_period_start'],
+        items=items,
+        metadata=stripe_subscription['metadata'],
+    )
+    for new_item in new_subscription['items']['data']:
+        AddonUsage.objects.filter(
+            stripe_subscription_id=stripe_subscription['id'],
+            billing__prices__stripe_price_id=new_item['price']['id']
+        ).update(
+            stripe_subscription_id=new_subscription['id'],
+            stripe_subscription_item_id=new_item['id']
+        )
+
+
 def is_custom_subscription(subscription):
     return any([bool(i['plan']['metadata'].get('custom'))
                for i in subscription['items']['data']
@@ -339,7 +370,7 @@ def create_stripe_subscription(addon_usage, today=None):
         price=addon_usage.next_price.stripe_price_id
     )['data']
     if len(existing_subscriptions) > 0:
-        raise Exception(f'Duplicated user subscription to Addon found in <AddonUsage: {addon_usage.id}>')
+        raise Exception(f'Existing stripe subscription to Addon found for <AddonUsage: {addon_usage.id}>')
 
     subscription_item = None
     # Add addon in existing subscriptions with the same billing cycle
@@ -373,6 +404,7 @@ def create_stripe_subscription(addon_usage, today=None):
             addon_usage.stripe_subscription_id = subscription.id
             addon_usage.stripe_subscription_item_id = subscription_item.id
         except:
+            capture_exception()
             continue
 
         break

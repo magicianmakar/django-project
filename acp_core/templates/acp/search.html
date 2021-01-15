@@ -216,7 +216,6 @@
                                     </ul>
                                 </td>
                             </tr>
-                            {% if item.profile.plan.support_addons %}
                             <tr>
                                 <td>Addons</td>
                                 <td>
@@ -239,7 +238,21 @@
                                     {% endfor %}
                                 </td>
                             </tr>
-                            {% endif %}
+                            <tr>
+                                <td>Offered Coupons</td>
+                                <td>
+                                    <ul style="margin: 0;padding: 0 0 0 15px;">
+                                        {% for offer in item.purchases.all %}
+                                        <li>
+                                            {{ offer.coupon.name }}
+                                            {% if offer.coupon.stripe_coupon_id == stripe_customer.discount.coupon.id %}
+                                            <span class="label label-primary">Active</span>
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                            </tr>
                         </table>
                     </div>
                 </div>

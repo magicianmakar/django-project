@@ -85,6 +85,8 @@ INSTALLED_APPS = (
     'addons_core',
     'acp_core',
     'churnzero_core',
+    'offers',
+
     'commercehq_core',
     'woocommerce_core',
     'gearbubble_core',

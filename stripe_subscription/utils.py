@@ -946,14 +946,29 @@ def process_webhook_event(request, event_id):
         addon = sync_stripe_addon(product=event.data.object)
         if not addon:
             return HttpResponse('Addon not created/updated')
+
     elif event.type in ['price.created', 'price.updated']:
         addon_price = sync_stripe_billing(price=event.data.object)
         if not addon_price:
             return HttpResponse('Price not created/updated')
+
     elif event.type == 'price.deleted':
         AddonPrice.objects.filter(stripe_price_id=event.data.object.id).update(is_active=False)
+
     elif event.type == 'product.deleted':
         Addon.objects.filter(stripe_product_id=event.data.object.id).update(is_active=False)
+
+    elif event.type.startswith('customer.discount.'):
+        discount = event.data.object
+
+        try:
+            customer = StripeCustomer.objects.get(customer_id=discount.customer)
+            customer.refresh()
+        except StripeCustomer.DoesNotExist:
+            return HttpResponse('Customer Not Found')
+
+        return HttpResponse('Customer Refreshed')
+
     else:
         return HttpResponse('Ignore Event')
 

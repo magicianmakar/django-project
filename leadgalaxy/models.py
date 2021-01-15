@@ -2137,6 +2137,12 @@ class GroupPlan(models.Model):
 
         return desc
 
+    def get_total_cost(self):
+        if self.payment_interval == 'yearly' and self.monthly_price:
+            return float(self.monthly_price) * 12.0
+
+        return self.monthly_price or 0
+
     def import_stores(self):
         ''' Return Stores this allow importing products from '''
 

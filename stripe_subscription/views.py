@@ -14,7 +14,7 @@ from leadgalaxy.models import ClippingMagic, ClippingMagicPlan, CaptchaCredit, C
 
 from analytic_events.models import PlanSelectionEvent, BillingInformationEntryEvent
 
-from addons_core.utils import cancel_addon_usages
+from addons_core.utils import cancel_addon_usages, move_addons_subscription
 from .models import StripeSubscription
 from .stripe_api import stripe
 from .utils import (
@@ -155,6 +155,7 @@ def subscription_plan(request):
                 if main_plan_item['plan']['interval'] != plan.stripe_plan.interval and len(sub['items']['data']) > 1:
                     # move existing custom SI to new subscription
                     subscription.move_custom_subscriptions(sub)
+                    move_addons_subscription(sub)
 
                 stripe.SubscriptionItem.modify(
                     main_plan_item['id'],

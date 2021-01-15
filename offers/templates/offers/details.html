@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load compress %}
+{% load addons_helper %}
+{% load template_helper %}
+{% load perms_helper %}
+
+{% block nav %}{% endblock %}
+{% block breadcrumb-area %}{% endblock %}
+{% block main-nav %}{% endblock %}
+{% block page-wrapper-div %}id="page-wrapper" class="white-bg" style="margin: initial"{% endblock %}
+
+{% block submain-container %}
+<div id="offer-page">
+    <div class="background-image"></div>
+    <div class="container">
+        <div class="row">
+            <div id="cart-items">
+
+                {% if offer.plan %}
+                <div class="ibox-content cart-item" data-cost="{{ offer.plan.get_total_cost }}">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td class="desc">
+                                        <h3><a href="{{ billing.addon.permalink }}" target="_blank" class="text-navy">{{ offer.plan.description }}*</a></h3>
+                                    </td>
+                                    <td class="price text-right actions">
+                                        <h4>
+                                            {% spaceless %}
+                                            <span id="plan-price">{{ offer.plan.get_total_cost|stringformat:".2f" }}</span>
+                                            {% if offer.plan.payment_interval == 'yearly' %}
+                                            <span>/year</span>
+                                            {% else %}
+                                            <span>/mo</span>
+                                            {% endif %}
+                                            {% endspaceless %}
+                                        </h4>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <div class="col-md-6" style="padding-left: 0;">
+                                            <p>
+                                                - {% plan_limit offer.plan 'stores' %}
+                                                {% if offer.plan.extra_stores %}
+                                                (<i>${{ offer.plan.extra_store_cost }}/month per additional store</i>)
+                                                {% endif %}
+                                            </p>
+
+                                            <p>-
+                                            {% if offer.plan|plan_have_feature:'orders.use' %}
+                                                {% plan_limit offer.plan 'orders' 'auto_fulfill_limit' %}
+                                            {% else %}
+                                                <i>Auto Fulfill Unavailable</i>
+                                            {% endif %}
+                                            </p>
+
+                                            <p>- {% plan_limit offer.plan 'products' %}</p>
+
+                                            <p>- {% plan_limit offer.plan 'boards' %}</p>
+
+                                            <p>
+                                                - 1-Click import from <b>{{ offer.plan.import_stores|length }} Stores</b>
+                                                <i class="fa fa-fw fa-question-circle"
+                                                    qtip-tooltip="You can import products from:<br><b>{{offer.plan.import_stores|join:', '}}</b>"
+                                                    qtip-my="bottom center"
+                                                    qtip-at="top center"
+                                                    style="font-size:16px;color:#BBB"
+                                                ></i>
+                                            </p>
+                                        </div>
+
+                                        <div class="plan-more-features text-right col-md-6" style="padding-right: 0;">
+                                            <a class="btn btn-default btn-outline" href="http://www.dropified.com/pricing/" target="_blank">
+                                                <i class="fa fa-plus"></i> More Features
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% for billing in offer.billings.all|for_user:user %}
+                <div class="ibox-content cart-item" data-cost="{{ billing.user_price.price }}">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td class="item-icon">
+                                        <div class="cart-product-imitation">
+                                            <img class="img-responsive" src="{{ billing.addon.icon_url }}">
+                                        </div>
+                                    </td>
+                                    <td class="desc">
+                                        <h3><a href="{{ billing.addon.permalink }}" target="_blank" class="text-navy">{{ billing.addon.title }}</a></h3>
+                                        <p>{{ billing.addon.short_description|safe }}</p>
+                                    </td>
+                                    <td class="price text-right actions">
+                                        <h4>{{ billing.user_price.get_price_title }}</h4>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="3">
+                                        <div class="key-benefits">
+                                            {% for obj in billing.addon.key_benefits_dict %}
+                                            <div class="key-benefit">
+                                                <div class="card">
+                                                    <div class="card-front">
+                                                        {% if obj.banner %}
+                                                        <img class="img-resposive" width="100%" src="{{ obj.banner }}" alt="{{ obj.title }}" />
+                                                        {% endif %}
+                                                        <p class="text-center">{{ obj.title }}</p>
+                                                    </div>
+
+                                                    <div class="card-back">
+                                                        {{ obj.description}}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <form id="subscribe" method="POST" action="{% url 'offers:subscribe' seller_id=seller.id pk=offer.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan" value="{{ offer.plan_id }}">
+                <div id="cart-summary">
+                    <div class="ibox-content">
+                        {% if offer.coupon %}
+                        <hr />
+                        <span style="padding-top: 13px; display: inline-block;">Discount**</span>
+                        <h2 id="discount" data-amount="{{ offer.coupon.percent_off }}" class="font-bold pull-right">{{ offer.coupon.percent_off }}%</h2>
+                        {% endif %}
+                        <hr />
+                        <span style="padding-top: 13px; display: inline-block;">Total</span>
+                        <h2 id="total-cost" class="font-bold pull-right">$0.00</h2>
+                        <hr />
+                        <div class="m-t-sm">
+                            {% if offer.plan %}
+                            <span class="text-muted small pull-left">* Your current plan proration may apply</span>
+                            <br />
+                            {% endif %}
+                            {% if offer.coupon %}
+                            <span class="text-muted small pull-left">** Applied to your entire account</span>
+                            <br />
+                            {% endif %}
+                            {% if current_coupon %}
+                            <span class="text-muted small pull-left">** Discount will overwrite your current {{ current_coupon.percent_off }}% discount</span>
+                            <br />
+                            {% endif %}
+                            <button type="submit" data-loading-text="Subscribing..." class="btn btn-primary">Subscribe</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+{{ block.super }}
+<link rel='stylesheet' id='flatsome-googlefonts-css' href='//fonts.googleapis.com/css?family=Poppins%3Aregular%2C700%2Cregular%2C500%7CRoboto%3Aregular%2Cregular&#038;display=swap&#038;ver=3.9' type='text/css' media='all'/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/limonte-sweetalert2/7.33.1/sweetalert2.min.css" integrity="sha512-LhZScx/m/WBAAHyiPnM+5hcsmCMjDDOgOqoT9wyIcs/QUPm6YxVNGZjQG5iP8dhWMWQAcUUTE3BkshtrlGbv2Q==" crossorigin="anonymous" />
+
+<style type="text/css">
+    .wrapper.wrapper-content {
+        padding: 0;
+    }
+
+    .footer {
+        position: fixed;
+        bottom: 0;
+    }
+
+    #offer-page .background-image {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /*background-image: url('/static/img/full-background.jpg');*/
+        /*background-color: #dfe3e8;*/
+        background-repeat: no-repeat;
+        background-size: cover;
+        display: block;
+        background-color: #f5f5f5;
+    }
+
+    #offer-page {
+        padding: 40px 0 100px;
+    }
+
+    #offer-page .table-responsive {
+        border: 0 none;
+    }
+
+    #offer-page .container {
+    }
+
+    #offer-page .table > tbody > tr > td {
+        border-top: 0 none;
+    }
+
+    #cart-items, #cart-summary {
+        box-shadow: 0 0 0 1px rgba(63,63,68,0.05), 0 1px 3px 0 rgba(63,63,68,0.15);
+        border-radius: 6px;
+        padding: 0 15px;
+        float: left;
+        position: relative;
+        width: 100%;
+        background-color: #ffffff;
+    }
+
+    #cart-summary .btn-primary {
+        width: 100%;
+    }
+
+    #offer-page .ibox-content {
+        padding-left: 0;
+        padding-right: 0;
+        background-color: transparent;
+    }
+
+    #offer-page .ibox-content:first-child {
+        border-top: 0 none;
+    }
+
+    #offer-page .ibox-content .item-icon img {
+        max-width: 90px;
+    }
+
+    #offer-page .desc h3 {
+        font-size: 24px;
+    }
+    #offer-page .desc p,
+    #offer-page .price h4 {
+        font-size: 16px;
+    }
+
+    .key-benefits {
+        justify-content: space-evenly;
+        align-content: center;
+        display: flex;
+    }
+
+    .key-benefits .key-benefit {
+        width: 120px;
+        height: 120px;
+        perspective: 1000px;
+    }
+
+    .key-benefit .card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+        transition: transform 0.8s;
+        transform-style: preserve-3d;
+    }
+
+    .key-benefit:hover .card,
+    .key-benefit:active .card {
+        transform: rotateY(180deg);
+    }
+
+    #offer-page .card-front,
+    #offer-page .card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        -webkit-backface-visibility: hidden;
+                backface-visibility: hidden;
+    }
+
+    #offer-page .card-back {
+        transform: rotateY(180deg);
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        white-space: normal;
+    }
+
+    .cart-item .actions a.btn-danger {
+        display: none;
+    }
+
+    #total-cost small {
+        padding-right: 10px;
+        text-decoration: line-through;
+        color: red;
+    }
+
+    @media (min-width: 768px) {
+        /*.container {
+            width: 750px;
+        }*/
+    }
+    @media (min-width: 992px) {
+        /*.container {
+            width: 970px;
+        }*/
+    }
+    @media (min-width: 1200px) {
+        #cart-items {
+            max-width: 640px;
+            margin-left: 215px;
+        }
+
+        #cart-summary {
+            max-width: 305px;
+            /*margin-left: 10px;*/
+            margin-left: 865px;
+            position: fixed;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    var formatter = new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    });
+
+    function calculateTotalCost() {
+        $('.small-cart-item').remove();
+        var totalCost = $('.cart-item').map(function(i, elem) {
+            var cost = parseFloat($(elem).data('cost'))
+            $('#cart-summary hr:first').before($('<p class="text-muted small-cart-item">').append(
+                $(elem).find('.desc h3 a').text(),
+                $('<b class="pull-right">').text(formatter.format(cost))
+            ));
+            return cost;
+        }).get();
+        if (totalCost.length > 0) {
+            totalCost = totalCost.reduce(function(a, b) {
+                return a + b;
+            });
+        }
+
+        $('#total-cost').text('');
+        var discount = $('#discount').data('amount');
+        if (discount) {
+            $('#total-cost').html(
+                $('<small>').text(formatter.format(totalCost))
+            );
+            totalCost *= (100 - discount) / 100;
+        }
+
+        $('#total-cost').append(formatter.format(totalCost));
+    }
+    calculateTotalCost();
+
+    $('#plan-price').text(formatter.format($('#plan-price').text()));
+
+    $('#subscribe').on('submit', function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: $(this).attr('action'),
+            type: $(this).attr('method'),
+            data: $(this).serialize(),
+            beforeSend: function() {
+                $('#subscribe [type="submit"]').button('loading');
+            },
+            success: function(data) {
+                swal({
+                    title: 'Congratulations',
+                    text: 'Your subscription has been upgraded',
+                    type: 'success'
+                }, function(confirm) {
+                    window.location.href = window.app_base_link;
+                });
+            },
+            error: function (data) {
+                displayAjaxError('Error Upgrading', data);
+            },
+            complete: function() {
+                $('#subscribe [type="submit"]').button('reset');
+            },
+        });
+    });
+</script>
+{% endblock %}

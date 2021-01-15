@@ -1,0 +1,126 @@
+{% extends "admin/change_list.html" %}
+
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="{% static 'libs/bower_components/chart.js/dist/Chart.bundle.js' %}"></script>
+{{ customer_graph|json_script:"customer-graph" }}
+{{ amount_graph|json_script:"amount-graph" }}
+{{ graph_labels|json_script:"graph-labels" }}
+<script type="text/javascript">
+django.jQuery('document').ready(function () {
+    var colors = [
+        {backgroundColor: "rgba(125, 171, 196, 0.5)", borderColor: "rgba(125, 171, 196, 0.7)"},
+        {backgroundColor: "rgba(236, 71, 88, 0.5)", borderColor: "rgba(236, 71, 88, 0.7)"},
+        {backgroundColor: "rgba(54, 179, 126, 0.5)", borderColor: "rgba(54, 179, 126, 0.7)"},
+        {backgroundColor: "rgba(248, 172, 89, 0.5)", borderColor: "rgba(248, 172, 89, 0.7)"},
+        {backgroundColor: "rgba(0, 101, 255, 0.5)", borderColor: "rgba(0, 101, 255, 0.7)"},
+        {backgroundColor: "rgba(184, 42, 201, 0.5)", borderColor: "rgba(184, 42, 201, 0.7)"},
+    ];
+
+    django.jQuery('.toggle-graph').on('click', function(e) {
+        e.preventDefault();
+        var chartID = django.jQuery(this).attr('chart-id');
+        django.jQuery(chartID).slideToggle('slow');
+    });
+    django.jQuery('.toggle-graph').trigger('click');
+
+    var customerGraph = {
+        labels: JSON.parse(document.getElementById('graph-labels').textContent),
+        datasets: JSON.parse(document.getElementById('customer-graph').textContent),
+    }
+    var amountGraph = {
+        labels: JSON.parse(document.getElementById('graph-labels').textContent),
+        datasets: JSON.parse(document.getElementById('amount-graph').textContent),
+    }
+    for (var i = 0, iLength = customerGraph.datasets.length; i < iLength; i++) {
+        var color = colors.shift();
+        customerGraph.datasets[i]['backgroundColor'] = color['backgroundColor'];
+        customerGraph.datasets[i]['borderColor'] = color['borderColor'];
+        customerGraph.datasets[i]['fill'] = false;
+        amountGraph.datasets[i]['backgroundColor'] = color['backgroundColor'];
+        amountGraph.datasets[i]['borderColor'] = color['borderColor'];
+        amountGraph.datasets[i]['fill'] = false;
+    }
+
+    function createGraph(chartCtx, graphData, yLabel) {
+        new Chart(chartCtx, {
+            type: 'line',
+            data: graphData,
+            options: {
+                responsive: true,
+                hover: {mode: 'nearest', intersect: true},
+                scales: {
+                    yAxes: [{ticks: {fontColor: "green"}, scaleLabel: {display: true, labelString: yLabel}}],
+                    xAxes: [{ticks: {fontColor: "blue"}, scaleLabel: {display: true, labelString: 'Day'}}],
+                },
+                tooltips: {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        title: function(item, data) {
+                            // Pick first xLabel for now
+                            var title = '';
+
+                            if (item.length > 0) {
+                                if (item[0].xLabel) {
+                                    title = item[0].xLabel;
+                                } else if (data.labels.length > 0 && item[0].index < data.labels.length) {
+                                    title = data.labels[item[0].index];
+                                }
+                            }
+                            return "{{ chart_date }}".replace('{}', title);
+                        },
+                        label: function(tooltipItem, data) {
+                            var label = data.datasets[tooltipItem.datasetIndex].label || '';
+
+                            if (label) {
+                                if (label.indexOf(' - ') > -1) {
+                                    label = label.split(' - ')[0]
+                                }
+                                label += ': ';
+                            }
+                            label += Math.round(tooltipItem.yLabel * 100) / 100;
+                            return label;
+                        },
+                        footer: function(tooltipItems, data) {
+                            var total = 0;
+                            for (var i = 0, iLength = tooltipItems.length; i < iLength; i++) {
+                                total += tooltipItems[i].yLabel
+                            }
+                            return 'Total: ' + total;
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    var offerChartCtx = document.getElementById("offer-chart").getContext("2d");
+    createGraph(offerChartCtx, customerGraph, 'Customers');
+
+    var offerAmountChartCtx = document.getElementById("offer-amount-chart").getContext("2d");
+    createGraph(offerAmountChartCtx, amountGraph, 'Amount');
+});
+</script>
+{% endblock %}
+
+
+{% block result_list %}
+    <a href="#" class="button toggle-graph" chart-id="#offer-chart-wrapper">Show Customer Graph</a>
+    <a href="#" class="button toggle-graph" chart-id="#offer-amount-chart-wrapper">Show Amount Graph</a>
+
+    <div id="offer-chart-wrapper" class="results">
+        <canvas id="offer-chart" height="50"></canvas>
+    </div>
+    <div id="offer-amount-chart-wrapper" class="results">
+        <canvas id="offer-amount-chart" height="50"></canvas>
+    </div>
+
+    {{ block.super }}
+{% endblock %}

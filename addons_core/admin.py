@@ -27,25 +27,34 @@ class FormWithRequestMixin:
 
 
 class PreventBillingDeleteMixin:
-    delete_extra_search = {'billings__subscriptions__isnull': False}
+    delete_allowed_filter = {'billings__subscriptions__isnull': True}
     delete_not_allowed_name = 'title'
 
     def has_delete_permission(self, request, obj=None):
-        if 'can_delete' in request.POST:
-            return request.POST['can_delete']
+        # Only delete selected should work
+        if obj is not None and str(obj.id) in request.path:
+            return False
+        return super().has_delete_permission(request, obj=obj)
 
-        # Method is called for each obj in admin list, this prevents extra queries
-        if not request.POST.get('action') == 'delete_selected' and (
-                not obj or '/delete' not in request.path):
-            return True
+    def delete_queryset(self, request, queryset):
+        queryset = queryset.filter(**self.delete_allowed_filter)
+        return super().delete_queryset(request, queryset)
 
-        obj_ids = request.POST.getlist('_selected_action') or [obj.id]
-        not_allowed_objects = self.model.objects.filter(
-            id__in=obj_ids, **self.delete_extra_search
-        ).values(self.delete_not_allowed_name).distinct()
+    def get_queryset(self, request):
+        if 'delete' in request.path:
+            return super().get_queryset(request).filter(**self.delete_allowed_filter)
+        return super().get_queryset(request)
 
-        post = request.POST.copy()
-        if len(not_allowed_objects):
+    def get_deleted_objects(self, objs, request):
+        objs = self.model.objects.filter(id__in=[obj.id for obj in objs])
+        allowed_objs = objs.filter(**self.delete_allowed_filter).distinct()
+
+        if len(allowed_objs) != len(objs):
+            not_allowed_objects = objs.exclude(
+                id__in=[obj.id for obj in allowed_objs]
+            ).values(
+                self.delete_not_allowed_name
+            )
             not_allowed_objects = ', '.join([
                 obj[self.delete_not_allowed_name] for obj in not_allowed_objects
             ])
@@ -55,14 +64,7 @@ class PreventBillingDeleteMixin:
                 f"Records tying addons to subscriptions cannot be deleted: {not_allowed_objects}"
             )
 
-            # Cache response for object
-            post['can_delete'] = False
-            request.POST = post
-            return False
-
-        post['can_delete'] = True
-        request.POST = post
-        return True
+        return super().get_deleted_objects(allowed_objs, request)
 
 
 @admin.register(Category)
@@ -97,7 +99,7 @@ class AddonBillingInline(SortableInlineAdminMixin, admin.TabularInline):
 
 @admin.register(Addon)
 class AddonAdmin(PreventBillingDeleteMixin, FormWithRequestMixin, admin.ModelAdmin):
-    delete_extra_search = {'billings__subscriptions__isnull': False}
+    delete_allowed_filter = {'billings__subscriptions__isnull': True}
     delete_not_allowed_name = 'title'
 
     form = AddonForm
@@ -186,7 +188,7 @@ class AddonPriceInline(SortableInlineAdminMixin, admin.TabularInline):
 
 @admin.register(AddonBilling)
 class AddonBillingAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
-    delete_extra_search = {'subscriptions__isnull': False}
+    delete_allowed_filter = {'subscriptions__isnull': True}
     delete_not_allowed_name = 'addon__title'
 
     list_display = ('billing_title', 'interval_count', 'get_interval_display', 'is_active', 'trial_period_days', 'expire_at')
@@ -202,7 +204,7 @@ class AddonBillingAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
 
 @admin.register(AddonPrice)
 class AddonPriceAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
-    delete_extra_search = {'billing__subscriptions__isnull': False}
+    delete_allowed_filter = {'billing__subscriptions__isnull': True}
     delete_not_allowed_name = 'billing__addon__title'
     addon_relation = 'billing__addon_id'
 
@@ -224,7 +226,7 @@ class AddonUsageAdmin(admin.ModelAdmin):
 
     list_filter = ('billing__addon__title', 'is_active', 'created_at', 'updated_at', 'cancelled_at')
     date_hierarchy = 'created_at'
-    readonly_fields = ('stripe_subscription_id', 'stripe_subscription_item_id')
+    readonly_fields = ('stripe_subscription_id',)
     raw_id_fields = ('user', 'billing', 'price_after_cancel')
 
     def get_readonly_fields(self, request, obj=None):

@@ -3,19 +3,23 @@ from django.db.models import Prefetch, Sum, F, DurationField
 from django.db.models.functions import Coalesce, Now
 from django.urls import reverse
 
-from addons_core.models import Addon, AddonUsage
-from lib.exceptions import capture_exception
+from addons_core.models import Addon, AddonBilling, AddonUsage
 
 register = template.Library()
 
 
 @register.filter(takes_context=True)
 def for_user(addon_billings, user):
+    try:
+        addon_billings = list(addon_billings)
+    except:
+        addon_billings = [addon_billings]
+
     if not user.is_authenticated:
-        addon_billing = addon_billings.first()
-        addon_billing.user_price = addon_billing.prices.first()
-        addon_billing.trial_days_left = addon_billing.trial_period_days
-        return [addon_billing]
+        for addon_billing in addon_billings:
+            addon_billing.user_price = addon_billing.prices.first()
+            addon_billing.trial_days_left = addon_billing.trial_period_days
+        return addon_billings
 
     subscriptions = AddonUsage.objects.filter(
         price_after_cancel__isnull=False,
@@ -26,7 +30,9 @@ def for_user(addon_billings, user):
         is_active=True,
         cancelled_at__isnull=False
     )
-    addon_billings = addon_billings.prefetch_related(
+    addon_billings = AddonBilling.objects.filter(
+        id__in=[b.id for b in addon_billings]
+    ).prefetch_related(
         'prices',
         Prefetch('subscriptions', queryset=subscriptions),
         Prefetch('subscriptions', queryset=cancel_subscriptions, to_attr='cancel_subscriptions'),
@@ -36,13 +42,6 @@ def for_user(addon_billings, user):
             output_field=DurationField()
         ),
     ).filter(is_active=True)
-
-    # Template only supports 1 price at the moment
-    try:
-        addon_billings = [addon_billings.first()]
-    except:
-        capture_exception()
-        addon_billings = []
 
     for addon_billing in addon_billings:
         if not addon_billing:

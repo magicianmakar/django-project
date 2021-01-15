@@ -1,0 +1,142 @@
+{% load i18n static %}
+<h3>{% blocktrans with filter_title=title %}By {{ filter_title }}{% endblocktrans %}</h3>
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/widgets.css' %}">
+<style type="text/css">
+    .admindatefilter .button, .admindatefilter input[type=submit], .admindatefilter input[type=button], .admindatefilter .submit-row input, .admindatefilter a.button,
+    .admindatefilter .button, .admindatefilter input[type=reset] {
+        background: #79aec8;
+        padding: 4px 5px;
+        border: none;
+        border-radius: 4px;
+        color: #fff;
+        cursor: pointer;
+    }
+    .admindatefilter {
+        padding-left: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eaeaea;
+    }
+    .admindatefilter p {
+        padding-left: 0px;
+        line-height: 0;
+    }
+    .admindatefilter p.datetime {
+        line-height: 0;
+    }
+    .admindatefilter .timezonewarning {
+        display: none;
+    }
+    .admindatefilter .datetimeshortcuts a:first-child {
+        display: none;
+    }
+    .admindatefilter .controls + br {
+        display: none;
+    }
+    .calendarbox {
+        z-index: 1100;
+    }
+    .clockbox {
+        z-index: 1100;
+        margin-left: -8em !important;
+        margin-top: 5em !important;
+    }
+    .admindatefilter .datetimeshortcuts {
+        font-size: 0;
+        float: right;
+        position: absolute;
+        top: 4px;
+        right: 4px;
+    }
+    .admindatefilter .daterange {
+        position: relative;
+        display: inline-block;
+        width: 45%;
+        padding: 0;
+        margin: 4px 0 10px;
+    }
+    .admindatefilter .daterange input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .admindatefilter .daterange a {
+        color: #999;
+        padding-top: 3px;
+        float: right;
+    }
+    .admindatefilter a.button {
+        display: inline-block !important;
+        color: #ffffff !important;
+    }
+    .admindatefilter .daterange + .daterange {
+        margin-left: 6%;
+    }
+    .admindatefilter .daterange + .daterange:before {
+        content: "to";
+        position: absolute;
+        left: -15px;
+        bottom: 13px;
+    }
+    @media (min-width: 768px) {
+        .calendarbox {
+            margin-left: -16em !important;
+            margin-top: 9em !important;
+        }
+    }
+    @media (max-width: 767px) {
+        .calendarbox {
+            overflow: visible;
+        }
+    }
+</style>
+
+{% comment %}
+Force load jsi18n, issues #5
+https://github.com/django/django/blob/stable/1.10.x/django/contrib/admin/templates/admin/change_list.html#L7
+{% endcomment %}
+<script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
+
+<script type="text/javascript">
+function embedScript(url) {
+    return new Promise(function pr(resolve, reject) {
+        var newScript = document.createElement("script");
+        newScript.type = "text/javascript";
+        newScript.src = url;
+        newScript.onload = resolve;
+        document.head.appendChild(newScript);
+    });
+}
+
+django.jQuery('document').ready(function () {
+    if (!('DateTimeShortcuts' in window)) {
+        var promiseList = [];
+        promiseList.push(embedScript("{% static 'admin/js/calendar.js' %}"));
+        promiseList.push(embedScript("{% static 'admin/js/admin/DateTimeShortcuts.js' %}"));
+        Promise.all(promiseList).then(function() {
+            django.jQuery('.datetimeshortcuts').remove();
+            window.DateTimeShortcuts.init();
+        });
+    }
+});
+</script>
+
+<div class="admindatefilter">
+    <form method="GET" action="." id="{{ choices.0.system_name }}-form">
+        <p class="daterange">
+            <input type="text" name="{{ spec.gte.name }}" value="{{ spec.gte.value }}" class="vDateField">
+        </p>
+        <p class="daterange">
+            <input type="text" name="{{ spec.lt.name }}" value="{{ spec.lt.value }}" class="vDateField">
+        </p>
+        <div class="controls">
+            <input type="submit" class="button" value="{% trans 'Search' %}">
+            <a href="{{ choices.0.query_string|iriencode }}" class="button">{% trans 'Reset' %}</a>
+        </div>
+    </form>
+</div>
+
+<ul>
+{% for choice in choices %}
+    <li{% if choice.selected %} class="selected"{% endif %}>
+    <a href="{{ choice.query_string|iriencode }}" title="{{ choice.display }}">{{ choice.display }}</a></li>
+{% endfor %}
+</ul>

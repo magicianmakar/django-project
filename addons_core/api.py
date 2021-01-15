@@ -129,6 +129,9 @@ class AddonsApi(ApiResponseMixin):
         if not user.profile.plan.support_addons:
             return self.api_error("Your plan doesn't support adding Addons", 422)
 
+        if billing.addon.action_url:
+            return self.api_success({'redirect_url': billing.addon.action_url})
+
         if not user.is_stripe_customer() and not user.profile.from_shopify_app_store():
             return self.api_error("Your plan doesn't support adding Addons yet", 403)
 
@@ -148,9 +151,6 @@ class AddonsApi(ApiResponseMixin):
             limit_exceeded = has_shopify_limit_exceeded(user.models_user, charge=charge)
             if limit_exceeded:
                 return self.api_success({'shopify': {'limit_exceeded_link': limit_exceeded}})
-
-        if billing.addon.action_url:
-            return self.api_success({'redirect_url': billing.addon.action_url})
 
         active_until_period_end = AddonUsage.objects.filter(
             user=user.models_user,

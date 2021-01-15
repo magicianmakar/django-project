@@ -116,6 +116,12 @@ class Addon(models.Model):
     def set_key_benefits(self, kb):
         self.key_benefits = json.dumps(kb)
 
+    def key_benefits_dict(self):
+        try:
+            return json.loads(self.key_benefits)
+        except:
+            return []
+
 
 class AddonBilling(models.Model):
     class Meta:
@@ -138,7 +144,11 @@ class AddonBilling(models.Model):
 
     @cached_property
     def billing_title(self):
-        return f"{self.addon.title} {self.interval_count}x {self.get_interval_display()}"
+        cost = 0
+        price = self.prices.first()
+        if price:
+            cost = price.price
+        return f"{self.addon.title} - {self.interval_count}x {self.get_interval_display()} - ${cost}"
 
     @cached_property
     def max_cost(self):

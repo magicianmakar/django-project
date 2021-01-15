@@ -30,7 +30,7 @@
                 </div>
             </div>
 
-            {% with billing=item.billings|for_user:user|first %}
+            {% with billing=item.billings.first|for_user:user|first %}
             <div class="row m-t-md">
                 <div class="col-xs-6 text-left">
                     {% if billing.user_price.price_descriptor %}
