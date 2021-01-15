@@ -52,12 +52,27 @@ class URLFileInputWidget(forms.ClearableFileInput):
 
 
 class AddonForm(forms.ModelForm):
+    STORE_CHOICES = (
+        ('bigcommerce', 'BigCommerce'),
+        ('chq', 'CommerceHQ'),
+        ('gkart', 'GrooveKart'),
+        ('shopify', 'Shopify'),
+        ('woo', 'WooCommerce')
+    )
     description = forms.CharField(required=False, widget=CKEditorUploadingWidget(config_name='addons_ckeditor'))
+    store_types = forms.MultipleChoiceField(choices=STORE_CHOICES, required=False, widget=forms.CheckboxSelectMultiple)
     faq = forms.CharField(required=False, widget=CKEditorUploadingWidget(config_name='addons_ckeditor'))
     icon_url = forms.FileField(required=False, widget=URLFileInputWidget())
     banner_url = forms.FileField(required=False, widget=URLFileInputWidget())
 
     request = None
+
+    def __init__(self, *args, **kwargs):
+        instance = kwargs.get('instance', None)
+        if instance is not None:
+            store_list = [value for value, label in self.STORE_CHOICES if label in instance.store_types.split(',')]
+            instance.store_types = store_list
+        super().__init__(*args, **kwargs)
 
     def _upload_icon(self, field_name, folder_name):
         icon = self.cleaned_data[field_name]
@@ -108,6 +123,11 @@ class AddonForm(forms.ModelForm):
                 capture_exception(level='warning')
 
         return f'https://player.vimeo.com/video/{vimeo_id}' if vimeo_id else ''
+
+    def clean_store_types(self):
+        store_list = [label for value, label in self.fields['store_types'].choices if value in self.cleaned_data['store_types']]
+        supported_store_types = ','.join(store_list)
+        return supported_store_types
 
     class Meta:
         model = Addon

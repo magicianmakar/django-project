@@ -19,6 +19,18 @@
     padding: 15px 15px;
 }
 
+.supported-platforms {
+    background-color: #94c77f;
+    border-color: #94c77f;
+    color: #FFFFFF;
+}
+
+.supported-div {
+    font-size: 1.0em;
+    letter-spacing: 0.04375em;
+    color: #232323;
+}
+
 .navbar-default {
     margin-bottom: 0;
     padding-top: 20px;
@@ -561,4 +573,12 @@ a.addon-install {
 
 .alert {
     margin-bottom: 0;
+}
+
+#swal2-content .supported-platforms {
+    font-size: 8px;
+}
+
+#swal2-content p.addon-support-div {
+    margin: 0;
 }

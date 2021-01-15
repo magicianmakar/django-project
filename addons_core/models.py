@@ -8,7 +8,7 @@ from django.utils.functional import cached_property
 from django.shortcuts import reverse
 
 from leadgalaxy.models import AppPermission
-from shopified_core.utils import app_link, safe_int
+from shopified_core.utils import app_link, safe_int, safe_str
 
 INTERVAL_CHOICES = ((0, 'Day'), (1, 'Week'), (2, 'Month'), (3, 'Year'))
 INTERVAL_ARROW = {0: 'day', 1: 'week', 2: 'month', 3: 'year'}
@@ -71,6 +71,11 @@ class Addon(models.Model):
 
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     is_active = models.BooleanField(default=True)
+    store_types = models.CharField(
+        max_length=200,
+        default='',
+        null=True
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -115,6 +120,10 @@ class Addon(models.Model):
 
     def set_key_benefits(self, kb):
         self.key_benefits = json.dumps(kb)
+
+    @cached_property
+    def store_types_as_list(self):
+        return safe_str(self.store_types).split(',')
 
     def key_benefits_dict(self):
         try:

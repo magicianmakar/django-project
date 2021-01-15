@@ -114,6 +114,16 @@
                         </a>
                     </div>
                     {% endif %}
+                    <div class="m-t-lg add-on-color addon-supported-platforms">
+                        {% if object.store_types %}
+                            <p class="addon-support-div">
+                                This Addon supports the following store types:
+                            </p>
+                            {% for store in object.store_types_as_list %}
+                                <span class="btn supported-platforms btn-xs">{{ store }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
                 </div>
                 {% endwith %}
             </div>

@@ -112,6 +112,7 @@ class AddonAdmin(PreventBillingDeleteMixin, FormWithRequestMixin, admin.ModelAdm
         'created_at',
         'updated_at',
         'link_actions',
+        'store_types',
     )
     prepopulated_fields = {'slug': ('title',)}
     list_filter = ('hidden', 'created_at', 'updated_at')

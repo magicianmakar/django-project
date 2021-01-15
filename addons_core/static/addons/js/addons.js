@@ -59,10 +59,15 @@ $('#active-until a').on('click', function(e) {
 $('.addon-install, .addon-uninstall').click(function (e) {
     var btn = $(e.currentTarget);
     var btnID = e.target.id;
+    var text = '';
 
     var billingElem = $('#addon-billing');
     if (btnID == 'addon-install') {
-        text = 'You will be charged ' + billingElem.data('billing-title');
+        var addonStoreLength = $('.addon-supported-platforms span').length;
+        if (addonStoreLength > 0 && addonStoreLength < 5) {
+            text = '<div class="m-b-sm">' + $('.addon-supported-platforms').html().trim() + '</div>';
+        }
+        text += 'You will be charged ' + billingElem.data('billing-title');
 
         var trialDays = billingElem.data('trial-days');
         if (trialDays) {
@@ -79,6 +84,7 @@ $('.addon-install, .addon-uninstall').click(function (e) {
     Swal.fire({
         title: btn.data("title"),
         text: text,
+        html: text,
         showCancelButton: true,
         confirmButtonColor: '#3085d6',
         cancelButtonColor: '#d33',
