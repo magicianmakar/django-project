@@ -12,7 +12,6 @@ from django.views.generic.list import BaseListView
 
 from addons_core.models import Addon, Category
 from urllib.parse import quote_plus, unquote_plus
-from shopified_core import permissions
 import simplejson as json
 
 
@@ -84,31 +83,6 @@ class AddonsDetailsView(BaseDetailView, BaseTemplateView):
                 'title': 'Addons',
                 'url': reverse('addons.list_view')
             },
-            self.object.title
-        ]
-
-        return ctx
-
-
-class AddonsEditView(BaseDetailView, BaseTemplateView):
-    model = Addon
-    template_name = 'addons/addons_edit.html'
-
-    @method_decorator(login_required)
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.can('addons_edit.use'):
-            return super().dispatch(request, *args, **kwargs)
-        else:
-            raise permissions.PermissionDenied()
-
-    def get_context_data(self, **kwargs: dict) -> dict:
-        ctx = super().get_context_data(**kwargs)
-        ctx['breadcrumbs'] = [
-            {
-                'title': 'Addons',
-                'url': reverse('addons.list_view')
-            },
-            'Edit',
             self.object.title
         ]
 

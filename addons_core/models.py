@@ -306,11 +306,7 @@ class AddonUsage(models.Model):
         return next_billing
 
     def get_trial_days_left(self, from_date=None):
-        try:
-            plan_trial_days = safe_int(self.user.profile.trial_days_left)
-        except:
-            plan_trial_days = 0
-
+        plan_trial_days = safe_int(self.user.profile.trial_days_left)
         if plan_trial_days == 0 and self.billing.trial_period_days == 0:
             return 0
 

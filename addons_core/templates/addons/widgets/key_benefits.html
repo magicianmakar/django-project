@@ -1,0 +1,45 @@
+{% load i18n static %}
+
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+
+<div class="key-benefits-wrapper">
+    <input type="hidden" name="{{ widget.name }}" value="{{ widget.value }}">
+
+    <a id="add-key-benefit" href="#" title="{% trans 'Add' %}">
+        <img src="{% static 'admin/img/icon-addlink.svg' %}" alt="{% trans 'Add' %}"/>
+        Add Key Benefit
+    </a>
+
+    <div id="key-benefits">
+    </div>
+</div>
+
+{% verbatim %}
+<script id="key-benefits-template" type="text/x-handlebars-template">
+    {{#each benefits}}
+    <div class="key-benefit">
+        <a href="#" class="close">
+            <span aria-hidden="true">&times;</span>
+        </a>
+
+        <input type="hidden" name="key_benefits_count" value="1">
+        <input type="text" class="key-benefit-title" name="key_benefits_title_{{ this.index }}" value="{{ this.title }}" placeholder="Title">
+        <textarea class="key-benefit-description" name="key_benefits_description_{{ this.index }}" placeholder="Description">{{ this.description }}</textarea>
+
+        <p class="file-upload">
+            {{#if this.banner}}
+            Current: <a href="{{ this.banner }}">{{ this.banner }}</a>
+
+            <span class="clearable-file-input">
+                <input type="hidden" name="key_benefits_banner_{{ this.index }}">
+                <input type="checkbox" name="key_benefits_clear_{{ this.index }}">
+                <label>Clear</label>
+            </span>
+            <br>
+            {{/if}}
+            Banner: <input type="file" name="key_benefits_upload_{{ this.index }}">
+        </p>
+    </div>
+    {{/each}}
+</script>
+{% endverbatim %}

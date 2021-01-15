@@ -419,15 +419,14 @@ def create_stripe_subscription(addon_usage, today=None):
                     'metadata': {'addon_usage_id': addon_usage.id},
                 }],
             )
+
+            subscription_item = subscription['items']['data'][0]
+            addon_usage.stripe_subscription_id = subscription.id
+            addon_usage.stripe_subscription_item_id = subscription_item.id
         except:
             capture_exception()
             cancel_addon_usages([addon_usage], now=True, today=today)
             return None
-
-        finally:
-            subscription_item = subscription['items']['data'][0]
-            addon_usage.stripe_subscription_id = subscription.id
-            addon_usage.stripe_subscription_item_id = subscription_item.id
 
     addon_usage.next_billing = addon_usage.get_next_billing_date()
     addon_usage.save()
@@ -440,8 +439,14 @@ def update_stripe_subscription(addon_usage, today=None):
         return None
 
     today = today if today else arrow.get().date()
-    subscription = stripe.Subscription.retrieve(addon_usage.stripe_subscription_id)
-    subscription_item = get_item_from_subscription(subscription, addon_usage.stripe_subscription_item_id)
+
+    try:
+        subscription = stripe.Subscription.retrieve(addon_usage.stripe_subscription_id)
+        subscription_item = get_item_from_subscription(subscription, addon_usage.stripe_subscription_item_id)
+    except:
+        # Non-existing subscriptions should remove addons from user's account
+        cancel_addon_usages([addon_usage], now=True)
+        return None
 
     # Prices can have limited iterations in a subscription, replace prices when due
     if subscription_item.price.id != addon_usage.next_price.stripe_price_id:
@@ -568,6 +573,8 @@ def cancel_addon_usages(addon_usages, now=False, today=None):
             cancelled_ids.append(addon_usage.id)
 
         except stripe.error.InvalidRequestError:
+            # Already cancelled in stripe will cancel addon in Dropified
+            cancelled_ids.append(addon_usage.id)
             capture_exception(level='warning')
 
         except:

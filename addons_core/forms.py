@@ -1,4 +1,5 @@
 import re
+import json
 from urllib.parse import parse_qs, urlparse
 
 from ckeditor_uploader.widgets import CKEditorUploadingWidget
@@ -51,6 +52,25 @@ class URLFileInputWidget(forms.ClearableFileInput):
         return super().format_value(DictAsObject({'url': value}))
 
 
+class KeyBenefitsWidget(forms.TextInput):
+    template_name = 'addons/widgets/key_benefits.html'
+
+    class Media:
+        css = {
+            'all': ('addons/css/widgets/key-benefits.css',)
+        }
+        js = ('addons/js/widgets/key-benefits.js',)
+
+    def is_initial(self, value):
+        return bool(value)
+
+    def format_value(self, value):
+        if not value:
+            value = '[{}]'
+
+        return super().format_value(value)
+
+
 class AddonForm(forms.ModelForm):
     STORE_CHOICES = (
         ('bigcommerce', 'BigCommerce'),
@@ -64,7 +84,7 @@ class AddonForm(forms.ModelForm):
     faq = forms.CharField(required=False, widget=CKEditorUploadingWidget(config_name='addons_ckeditor'))
     icon_url = forms.FileField(required=False, widget=URLFileInputWidget())
     banner_url = forms.FileField(required=False, widget=URLFileInputWidget())
-
+    key_benefits = forms.CharField(required=False, widget=KeyBenefitsWidget())
     request = None
 
     def __init__(self, *args, **kwargs):
@@ -123,6 +143,35 @@ class AddonForm(forms.ModelForm):
                 capture_exception(level='warning')
 
         return f'https://player.vimeo.com/video/{vimeo_id}' if vimeo_id else ''
+
+    def clean_key_benefits(self):
+        count = len(self.request.POST.getlist('key_benefits_count'))
+        index = -1
+        benefits = []
+        while count > 0:
+            index += 1
+            if f'key_benefits_title_{index}' not in self.request.POST:
+                continue
+
+            key_benefit = {
+                'title': self.request.POST[f'key_benefits_title_{index}'],
+                'description': self.request.POST[f'key_benefits_description_{index}'],
+                'banner': self.request.POST.get(f'key_benefits_banner_{index}', ''),
+            }
+
+            if self.request.POST.get(f'key_benefits_clear_{index}'):
+                key_benefit['banner'] = ''
+            elif self.request.FILES.get(f'key_benefits_upload_{index}'):
+                key_benefit['banner'] = upload_image_to_aws(
+                    self.request.FILES.get(f'key_benefits_upload_{index}'),
+                    'addon_benefits',
+                    self.request.user.id
+                )
+
+            benefits.append(key_benefit)
+            count -= 1
+
+        return json.dumps(benefits)
 
     def clean_store_types(self):
         store_list = [label for value, label in self.fields['store_types'].choices if value in self.cleaned_data['store_types']]

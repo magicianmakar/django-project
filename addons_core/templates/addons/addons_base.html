@@ -20,7 +20,7 @@
                 {% endif %}
             </a>
             {% if user|can:'addons_edit.use' %}
-            <a id="add-addon-btn" class="btn btn-success btn-rounded navbar-btn navbar-right" href="#"><i class="fa fa-plus"></i> Add Addon</a>
+            <a href="{% url 'admin:addons_core_addon_add' %}" class="btn btn-success btn-rounded navbar-btn navbar-right"><i class="fa fa-plus"></i> Add Addon</a>
             {% endif %}
             <form class="navbar-form navbar-right" action="{% url 'addons.list_view' %}">
                 <div class="form-group">
