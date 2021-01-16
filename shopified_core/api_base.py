@@ -29,10 +29,13 @@ from shopified_core.utils import (
     orders_update_limit,
     serializers_orders_track,
     using_replica,
+    get_store_model,
 )
 from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 
 from shopified_core.decorators import HasSubuserPermission
+
+from stripe_subscription.signals import get_extra_model_from_store
 
 from product_alerts.models import ProductChange
 
@@ -802,3 +805,32 @@ class ApiBase(ApiResponseMixin, View):
         cache.set(limit_key, True, timeout=500)
 
         return self.api_success()
+
+    def post_add_extra_store(self, request, user, data):
+        store_id = data.get('store_id')
+        store_type = data.get('store_type')
+        store_model = get_store_model(store_type)
+        try:
+            store = store_model.objects.get(id=store_id)
+            permissions.user_can_view(user, store)
+        except store_model.DoesNotExist:
+            return self.api_error('Store not found', status=404)
+
+        can_add, total_allowed, user_count = permissions.can_add_store(user)
+        stores_count = user.profile.get_stores_count()
+
+        if user.profile.plan.is_stripe() \
+                and not user.profile.plan.is_paused \
+                and total_allowed > -1 \
+                and total_allowed < stores_count:
+
+            extra_store_model = get_extra_model_from_store(store)
+            extra_store_model.objects.create(
+                user=user,
+                store=store,
+                period_start=timezone.now(),
+            )
+
+            return self.api_success()
+
+        return self.api_error('Store can not be added', status=403)

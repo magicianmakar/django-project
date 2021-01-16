@@ -27,7 +27,10 @@
                         </h3>
 
                         <h3 class="m-b">
-                        Please <a class="" href="/user/profile#plan">upgraded your plan</a> or select which stores to deactivate:</h3>
+                        Please <a class="" href="/user/profile#plan">upgrade your plan</a> or select which stores to deactivate.
+                        {% if additional_stores %}
+                          <br> Your current plan also allows you to accept additional cost for each extra store per month.
+                        {% endif %}
                         </h3>
 
                         <form id="check-plan-limits-form" method="post" action="">
@@ -36,7 +39,7 @@
                                     <tr>
                                         <th>Name</th>
                                         <th class="hidden-xs" style=""></th>
-                                        <th class="hidden-xs" style="width: 13%;">Deactivate</th>
+                                        <th class="hidden-xs" style="width: 13%;">Deactivate{% if additional_stores %}/Accept{% endif %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -48,6 +51,14 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-danger btn-primary pull-left" id="check-plan-limits-update">Deactivate Selected Stores</button>
+                {% if additional_stores %}
+                  <button type="button" class="btn btn-info pull-left"
+                    id="accept-additional-cost"
+                    data-store-cost="{{cost_per_store}}"
+                    data-plan-store-count="{{request.user.profile.plan.stores}}"
+                    data-user-store-count="{{request.user.profile.get_stores_count}}">
+                    Accept Additional Cost/Store</button>
+                {% endif %}
                 <a class="btn btn-primary" href="/user/profile#plan">Upgrade Account Plan</a>
             </div>
         </div>
@@ -90,6 +101,19 @@
         margin: 0 0 0 10px;
         line-height: 40px;
         overflow: hidden;
+    }
+    .modal-footer .btn+.btn {
+        margin-bottom: 0;
+        margin-left: 4.5px;
+    }
+    ##check-plan-limits-stores {
+        border: 1px solid #eee;
+    }
+    #check-plan-limits-stores > tbody > tr > td {
+      vertical-align: middle;
+    }
+    #check-plan-limits-stores td:first-child {
+        width: 40%;
     }
     #check-plan-limits-modal .icheckbox_square-blue {
         position: relative;
@@ -185,9 +209,6 @@
                     });
                 },
             },
-            start: function() {
-                LimitReached.loading.add();
-            },
             removeStore: function(storeId, storeType) {
                 if (storeType == 'shopify') {
                     LimitReached.call.shopify(storeId);
@@ -210,6 +231,17 @@
                         window.location.reload();
                     }, 1000);
                 }
+            },
+            acceptCostPerStore: function(storeId, storeType) {
+                $.ajax({
+                    url: api_url('add-extra-store'),
+                    method: 'POST',
+                    data: {store_id: storeId, store_type: storeType},
+                    beforeSend: LimitReached.ajaxCallbacks.beforeSend,
+                    success: LimitReached.ajaxCallbacks.success,
+                    error: LimitReached.ajaxCallbacks.error,
+                    complete: LimitReached.ajaxCallbacks.complete
+                });
             }
         };
 
@@ -231,9 +263,7 @@
             url: '/api/stores',
             type: 'GET',
             data: {all: true},
-            beforeSend: function() {
-                $('#check-plan-limits-modal-body').addClass('sk-loading');
-            },
+            beforeSend: LimitReached.loading.add(),
             success: function (data) {
                 $('#check-plan-limits-stores tbody tr').remove();
                 for (var key in data) {
@@ -257,9 +287,7 @@
             error: function (data) {
                 displayAjaxError('Stores List', data);
             },
-            complete: function () {
-                $('#check-plan-limits-modal-body').removeClass('sk-loading');
-            }
+            complete: LimitReached.loading.remove(),
         });
 
         $('#check-plan-limits-update').on('click', function(e) {
@@ -271,7 +299,7 @@
                 return;
             }
 
-            LimitReached.start();
+            LimitReached.loading.add();
             selected.each(function() {
                 var storeRow = $(this).parents('.store-limit-reached-row'),
                     storeId = storeRow.attr('data-store-id'),
@@ -279,6 +307,45 @@
 
                 LimitReached.removeStore(storeId, storeType);
             });
+        });
+
+        $('#accept-additional-cost').on('click', function(e) {
+            e.preventDefault();
+            var additionalCost = $(this).data('store-cost'),
+                planStoreCount = $(this).data('plan-store-count'),
+                userStoreCount = $(this).data('user-store-count');
+
+            var selected = $('#check-plan-limits-form input[type="checkbox"]:checked');
+            if (!selected.length) {
+                swal('Additional Cost per Store', 'Select one or more stores first', 'warning');
+                return;
+            }
+            var text = 'You will be charged $' + additionalCost + ' for each additional store per month';
+            if (selected.length > 1) {
+                text = text + ' with a total of $' + (selected.length * additionalCost);
+            }
+
+            swal({
+                  title: 'Additional Cost per Store',
+                  text: text,
+                  showCancelButton: true,
+                  closeOnConfirm: false,
+                  showLoaderOnConfirm: true,
+                  confirmButtonText: "Continue",
+                  cancelButtonText: "Cancel",
+              },
+              function(isConfirmed) {
+                  if (isConfirmed) {
+                      LimitReached.loading.add();
+                      selected.each(function() {
+                          var storeRow = $(this).parents('.store-limit-reached-row'),
+                              storeId = storeRow.attr('data-store-id'),
+                              storeType = storeRow.attr('data-store-type');
+
+                          LimitReached.acceptCostPerStore(storeId, storeType);
+                      });
+                  }
+              });
         });
 
         $('#check-plan-limits-modal').modal({backdrop: 'static', keyboard: false});

@@ -255,8 +255,7 @@
                     if (isConfirmed) {
                         selectPlan(parent.data('plan'));
                     }
-                }
-            );
+                });
         } else {
             selectPlan(parent.data('plan'));
         }
@@ -514,10 +513,6 @@
         $('.plan-more-features').hide();
         $('.plan-feature-list').fadeIn();
     });
-
-
-
-
 
     $('.choose-callflex-plan').click(function(e) {
         var parent = $(this).parents('.callflex-subsciption-plan');
