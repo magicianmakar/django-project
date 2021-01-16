@@ -47,6 +47,8 @@ def extra_bundles(request):
 def store_limits_check(request):
     stores_limit_reached = False
     stores_limit_max = 1
+    additional_stores = False
+    cost_per_store = None
 
     if request.user.is_authenticated and \
             not request.user.profile.is_subuser and \
@@ -54,6 +56,9 @@ def store_limits_check(request):
             not request.path.startswith('/user/profile') and \
             not settings.DEBUG:
 
+        user_plan = request.user.profile.plan
+        additional_stores = user_plan.extra_stores
+        cost_per_store = user_plan.extra_store_cost
         cache_key = 'stores_limit_reached_{}'.format(request.user.id)
         cached_value = cache.get(cache_key)
 
@@ -74,6 +79,8 @@ def store_limits_check(request):
     return {
         'stores_limit_reached': stores_limit_reached,
         'stores_limit_max': stores_limit_max,
+        'additional_stores': additional_stores,
+        'cost_per_store': cost_per_store,
     }
 
 
