@@ -1,8 +1,10 @@
 {% load widget_tweaks %}
 {% load static %}
 {% load compress %}
+{% load template_helper %}
 
-<!DOCTYPE html>
+{% app_setting 'RECAPTCHA_SITE_KEY' as RECAPTCHA_SITE_KEY %}
+
 <html>
 
 <head>
@@ -80,6 +82,13 @@
                     {% render_field form.password class+="form-control new input-lg" placeholder="Password" required="" %}
                     {{ form.password.errors | safe }}
                 </div>
+
+                {% if RECAPTCHA_SITE_KEY %}
+                <div class="form-group" style="margin:30px">
+                    <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
+                </div>
+                {% endif %}
+
                 <div style="text-align:center;">
                     <button type="submit" class="big-btn btn btn-primary m-b">Login</button>
                 </div>
@@ -121,6 +130,9 @@
     <script src="{% static 'js/jquery.min.js' %}"></script>
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
 
+    {% if RECAPTCHA_SITE_KEY %}
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+    {% endif %}
 </body>
 
 </html>

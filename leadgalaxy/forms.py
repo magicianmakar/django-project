@@ -1,9 +1,9 @@
-from django import forms
+import requests
 
+from django import forms
 from django.contrib.auth.models import User
 from django.forms.utils import ErrorList
 
-# for login with email
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.core.validators import validate_email, ValidationError
@@ -216,6 +216,30 @@ class EmailAuthenticationForm(AuthenticationForm):
         except:
             capture_exception()
             raise
+
+        # Begin reCAPTCHA validation
+        if settings.RECAPTCHA_SECRET_KEY:
+            recaptcha_response = self.data.get('g-recaptcha-response')
+            if not recaptcha_response:
+                raise ValidationError(
+                    "Captcha response is not set",
+                    code='captcha_error_empty',
+                    params={'username': self.username_field.verbose_name},
+                )
+
+            data = {
+                'secret': settings.RECAPTCHA_SECRET_KEY,
+                'response': recaptcha_response
+            }
+            r = requests.post('https://www.google.com/recaptcha/api/siteverify', data=data)
+            result = r.json()
+
+            if not result['success']:
+                raise ValidationError(
+                    "Please solve captcha first",
+                    code='captcha_error',
+                    params={'username': self.username_field.verbose_name},
+                )
 
         if login_attempts_exceeded(username):
             unlock_email = unlock_account_email(username)
