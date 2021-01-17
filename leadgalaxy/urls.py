@@ -46,10 +46,14 @@ urlpatterns = [
 
     url(r'^accounts/password/reset/$', django.contrib.auth.views.PasswordResetView.as_view(
         template_name='registration/password_reset.html', html_email_template_name='registration/password_reset_email2.html')),
+
     url(r'^accounts/password_reset/done/$', django.contrib.auth.views.PasswordResetDoneView.as_view(
-        template_name='registration/password_reset_done2.html', extra_context={'site_header': 'Dropified'})),
+        template_name='registration/password_reset_done2.html', extra_context={'site_header': 'Dropified'}),
+        name='password_reset_done'),
+
     url(r'^accounts/password_change/done/$', django.contrib.auth.views.PasswordChangeDoneView.as_view(
         template_name='registration/password_change_done2.html', extra_context={'site_header': 'Dropified'})),
+
     url(r'^accounts/reset/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>[0-9A-Za-z]{1,13}-[0-9A-Za-z]{1,20})/$',
         django.contrib.auth.views.PasswordResetConfirmView.as_view(template_name='registration/password_reset_confirm2.html',
                                                                    extra_context={'site_header': 'Dropified'}), name='password_reset_confirm'),
