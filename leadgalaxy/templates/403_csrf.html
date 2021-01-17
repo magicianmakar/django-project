@@ -1,0 +1,46 @@
+{% load static %}
+{% load url_tools %}
+
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Forbidden</title>
+
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+
+    <link href="{% static 'css/animate.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+</head>
+
+<body class="gray-bg">
+
+
+    <div class="middle-box text-center" style="max-width:440px">
+        <h1>403</h1>
+        <h3 class="font-bold">Forbidden</h3>
+
+        <div class="error-desc">
+            Sorry, please try again by going back to the previous page, then hit the refresh button on your browser.
+        </div>
+        <div class="m-t">
+            {% if request.session.is_hijacked_user %}
+                <a href="/hijack/release-hijack/?next={{ request.get_full_path | urlencode }}" class="btn btn-success">Release User</a>
+            {% endif %}
+            <a href="/" class="btn btn-primary">Home Page</a>
+        </div>
+    </div>
+
+    <!-- Mainly scripts -->
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+</body>
+
+</html>
