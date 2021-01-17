@@ -34,7 +34,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.template.defaultfilters import truncatewords
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.base import TemplateView
@@ -4902,7 +4902,8 @@ def account_password_setup(request, register_id):
 
 
 @xframe_options_exempt
-def login_xframe_options_exempt(request):
+@csrf_protect
+def user_login_view(request):
     return LoginView.as_view(authentication_form=EmailAuthenticationForm)(request)
 
 
