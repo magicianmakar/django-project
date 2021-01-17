@@ -18,7 +18,6 @@ urlpatterns = [
     url(r'^subscription/shopify/', include('shopify_subscription.urls')),
     url(r'^marketing/', include('product_feed.urls')),
     url(r'^pages/', include('article.urls')),
-    url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^hijack/', include('hijack.urls')),
     url(r'^order/exports/', include('order_exports.urls')),
     url(r'^order/imports/', include('order_imports.urls')),

@@ -41,7 +41,7 @@ urlpatterns = [
 
     url(r'^accounts/register/?(?P<registration>[a-z0-9-]+)?$', leadgalaxy.views.register, name='register'),
     url(r'^accounts/sudo/$', leadgalaxy.views.sudo_login, name='sudo_login'),
-    url(r'^accounts/login/$', leadgalaxy.views.login_xframe_options_exempt, name='login'),
+    url(r'^accounts/login/user/$', leadgalaxy.views.login_xframe_options_exempt, name='login'),
     path('accounts/password/setup/<str:register_id>', leadgalaxy.views.account_password_setup, name='account_password_setup'),
 
     url(r'^accounts/password/reset/$', django.contrib.auth.views.PasswordResetView.as_view(

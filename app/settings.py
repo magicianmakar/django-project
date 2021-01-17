@@ -286,6 +286,8 @@ HIJACK_DISPLAY_ADMIN_BUTTON = False
 HIJACK_USE_BOOTSTRAP = True
 HIJACK_ALLOW_GET_REQUESTS = True
 
+LOGIN_URL = 'accounts/login/user/'
+
 if os.environ.get('SMTP_PROVIDER') == 'SES':
     EMAIL_HOST = 'email-smtp.us-east-1.amazonaws.com'
     EMAIL_HOST_USER = os.environ.get('SES_USERNAME')
