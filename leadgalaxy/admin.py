@@ -379,7 +379,10 @@ class UserAddressAdmin(admin.ModelAdmin):
     export_as_csv.short_description = "Export Selected"
 
     def email(self, instance):
-        return instance.profile.first().user.email
+        try:
+            return instance.profile.first().user.email
+        except:
+            return 'N/A'
 
 
 @admin.register(SubuserPermission)
