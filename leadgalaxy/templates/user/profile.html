@@ -110,7 +110,7 @@
 
                                     {% include 'partial/profile_address.html' with title='Company' slug='company' company=user.profile.company countries=countries profile=user.profile only %}
 
-                                    {% if user|can:'pls.use' %}
+                                    {% if user|can:'supplement_samples.use' %}
                                         {% include 'partial/profile_address.html' with title='Samples Shipping Address' slug='user_address' company=user.profile.address countries=countries  profile=user.profile only %}
 
                                         {% if user.samples.count %}

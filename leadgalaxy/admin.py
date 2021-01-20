@@ -351,10 +351,33 @@ class UserBlackSampleTrackingAdmin(admin.ModelAdmin):
     raw_id_fields = ('user',)
 
 
+class SamplesPlanListFilter(admin.SimpleListFilter):
+    title = 'Plan'
+    parameter_name = 'profile__plan'
+
+    def lookups(self, request, model_admin):
+        choices = []
+
+        try:
+            perm = AppPermission.objects.get(name='supplement_samples.use')
+        except:
+            return choices
+
+        for plan in perm.groupplan_set.all():
+            choices.append([plan.id, plan.title])
+
+        return choices
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(user__profile__plan_id=self.value())
+
+
 @admin.register(UserAddress)
 class UserAddressAdmin(admin.ModelAdmin):
     list_display = ('id', 'email', 'name', 'address_line1', 'address_line2', 'city', 'state', 'country', 'zip_code', 'phone', )
     search_fields = ('profile__user__id', 'profile__user__username', 'profile__user__email', 'name')
+    list_filter = [SamplesPlanListFilter]
 
     actions = ["export_as_csv"]
 
