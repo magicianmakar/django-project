@@ -37,7 +37,8 @@
                                 {% endif %}
                             </b>
 
-                            {% if item.can_cancel %}
+
+                            {% if item.can_cancel and not item.plan.is_free %}
                             <button class="btn
                                            btn-danger
                                            btn-outline
@@ -46,10 +47,14 @@
                                            cancel-sub-btn
                                            continue-cancel
                                            itooltip"
-                                    {% if item.plan.is_paused %}
-                                    data-steps="#modal-subscription-cancel-or-support"
+                                    {% if item.plan.is_basic_import or item.plan.is_private_label or item.plan.is_black %}
+                                    data-steps="#modal-cancel-call-schedule,#modal-on-lose-benefit-plan,#modal-on-free-import-plan,#modal-delete-data-plan"
+                                    {% elif item.plan.is_active_free %}
+                                    data-steps="#modal-cancel-call-schedule,#modal-delete-data-plan"
+                                    {% elif item.plan.is_paused %}
+                                    data-steps="#modal-cancel-call-schedule,#modal-on-grandfathered-plan,#modal-on-free-import-plan,#modal-delete-data-plan"
                                     {% else %}
-                                    data-steps="#modal-subscription-cancel-or-support,#modal-subscription-cancel-or-pause"
+                                    data-steps="#modal-cancel-call-schedule,#modal-on-grandfathered-plan,#modal-downgrade-to-import-plan,#modal-on-free-import-plan,#modal-delete-data-plan"
                                     {% endif %}
                                     title="Cancel Your Subscription"
                                     data-subscription="{{item.id}}"
@@ -59,13 +64,6 @@
                                     data-baremetrics="{{ baremetrics_form_enabled }}">
                                 Cancel
                             </button>
-
-                            {% if stripe_paused_plan and not current_plan.is_paused %}
-                                <button class="btn btn-success btn-outline btn-xs itooltip pause-account pull-right m-r-sm"
-                                    title="Pause Your Subscription"
-                                    data-plan="{{stripe_paused_plan.id}}"
-                                    >Pause Account</button>
-                            {% endif %}
                             {% endif %}
 
                             {% if status.cancel_at_period_end %}

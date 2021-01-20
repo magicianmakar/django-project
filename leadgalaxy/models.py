@@ -2173,7 +2173,12 @@ class GroupPlan(models.Model):
 
     @property
     def is_free(self):
-        return self.slug in ['free-stripe-plan', 'free-plan', 'shopify-free-plan'] or self.is_startup
+        return self.slug in ['free-stripe-plan', 'free-plan', 'shopify-free-plan', 'free-import-shopify'] or self.is_startup
+
+    @property
+    def is_active_free(self):
+        # Free plans with access to features paying fee charges
+        return self.slug in ['free-import-shopify', 'free-import-stripe']
 
     @property
     def is_lite(self):
@@ -2191,6 +2196,18 @@ class GroupPlan(models.Model):
     @property
     def large_badge_image(self):
         return self.badge_image.replace('_small.', '.')
+
+    @property
+    def is_basic_import(self):
+        return self.slug in ['import-yearly-shopify', 'import-monthly-shopify', 'import-yearly', 'import-monthly']
+
+    @property
+    def is_private_label(self):
+        return self.slug in ['new-plod-yearly-shopify', 'new-plod-monthly-shopify', 'new-plod-yearly', 'new-plod-monthly']
+
+    @property
+    def is_black(self):
+        return self.slug in ['new-black-yearly-shopify', 'new-black-monthly-shopify', 'new-black-yearly', 'new-black-monthly']
 
 
 class GroupPlanChangeLog(models.Model):

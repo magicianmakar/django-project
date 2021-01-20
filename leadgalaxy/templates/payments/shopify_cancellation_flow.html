@@ -1,4 +1,4 @@
-<div id="modal-cancel-call-schedule" class="modal stripe-cancel-step" aria-hidden="true">
+<div id="modal-shopify-cancel-call-schedule" class="modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -51,7 +51,7 @@
     </div>
 </div>
 
-<div id="modal-on-grandfathered-plan" class="modal stripe-cancel-step" aria-hidden="true">
+<div id="modal-shopify-on-grandfathered-plan" class="modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -86,7 +86,7 @@
 </div>
 
 
-<div id="modal-downgrade-to-import-plan" class="modal stripe-cancel-step" aria-hidden="true">
+<div id="modal-shopify-downgrade-to-import-plan" class="modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -117,7 +117,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary downgrade-to-import-plan" style="filter: brightness(115%);" data-dismiss="modal">
+                <button type="button" class="btn btn-primary update-shopify-plan" data-shopify-plan="99" style="filter: brightness(115%);" data-dismiss="modal">
                     Switch to the Import Plan for $17
                 </Button>
                 <button type="button" data-dismiss="modal" class="btn btn-default continue-cancel pull-left" style="filter: brightness(115%); color: #035b9f;">
@@ -128,7 +128,7 @@
     </div>
 </div>
 
-<div id="modal-on-free-import-plan" class="modal stripe-cancel-step" aria-hidden="true">
+<div id="modal-shopify-on-free-import-plan" class="modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -176,7 +176,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" data-dismiss="modal" class="btn btn-primary downgrade-to-free-import-plan" style="filter: brightness(115%);">
+                <button type="button" data-dismiss="modal" class="btn btn-primary update-shopify-plan" data-shopify-plan="127" style="filter: brightness(115%);">
                     Switch to FREE and Keep my Training
                 </Button>
                 <button type="button" data-dismiss="modal" class="btn btn-default continue-cancel pull-left" style="filter: brightness(115%); color: #035b9f;">
@@ -187,7 +187,7 @@
     </div>
 </div>
 
-<div id="modal-on-lose-benefit-plan" class="modal stripe-cancel-step" aria-hidden="true">
+<div id="modal-shopify-on-lose-benefit-plan" class="modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -222,7 +222,7 @@
 </div>
 
 
-<div id="modal-delete-data-plan" class="modal stripe-cancel-step" aria-hidden="true">
+<div id="modal-shopify-delete-data-plan" class="modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -260,13 +260,13 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" data-dismiss="modal" data-toggle="modal" data-target="#modal-on-free-import-plan" class="btn btn-default pull-left" style="filter: brightness(115%); color: #035b9f;">
+                <button type="button" data-dismiss="modal" data-toggle="modal" data-target="#modal-shopify-on-free-import-plan" class="btn btn-default pull-left" style="filter: brightness(115%); color: #035b9f;">
                     Back
                 </button>
-                <button type="button" data-dismiss="modal" class="btn btn-danger continue-cancel" style="filter: brightness(115%);">
+                <a href="{{ shopify_admin_url }}" class="btn btn-danger continue-cancel" style="filter: brightness(115%);">
                     Cancel and Delete my Products
-                </button>
-                <button type="button" data-dismiss="modal" data-toggle="modal" data-target="#modal-cancel-call-schedule" class="btn btn-default" style="filter: brightness(115%); color: #035b9f;">
+                </a>
+                <button type="button" data-dismiss="modal" data-toggle="modal" data-target="#modal-shopify-cancel-call-schedule" class="btn btn-default" style="filter: brightness(115%); color: #035b9f;">
                     Get Help with your Store
                 </button>
               </div>

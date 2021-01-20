@@ -73,6 +73,35 @@
         }
     }
 
+    function downgradePlan(plan_id) {
+        var $this = this;
+
+        $.ajax({
+            type: 'POST',
+            url: '/api/downgrade-plan',
+            context: {},
+            data: {
+                'plan': plan_id,
+            },
+            success: function(data) {
+                if (data.status == 'ok') {
+                    $('.subscription-item').find('b').text(data.plan.title);
+                    $($this).closest('modal').modal('hide');
+
+                    toastr.success('User plan changed to: <b>' + data.plan.title + '</b>', 'Change Plan');
+                } else {
+                    displayAjaxError('Change Plan', data);
+                }
+            },
+            error: function(data) {
+                displayAjaxError('Change Plan', data);
+            },
+            complete: function() {
+                btn.button('reset');
+            }
+        });
+    }
+
     $(function() {
         if (!config.hasOwnProperty('stripe')) {
             return;
@@ -390,6 +419,28 @@
         }
     });
 
+    $('.cancel-shopify-sub-btn').on('click', function(e) {
+        // Canceling paused plan will use different steps
+        var cancelationSteps = $(this).data('steps') || '';
+        // Step 0 is wrapper for Cancel button
+        var cancelationStep = $(this).parents('.subscription-item');
+        if (cancelationSteps) {
+            cancelationSteps = cancelationSteps.split(',');
+            for (var i = 0, iLength = cancelationSteps.length; i < iLength; i++) {
+                cancelationStep = cancelationSteps[i];
+                var nextStep = cancelationSteps[i + 1];
+                if (nextStep) {
+                    $(cancelationStep).find('.continue-cancel').attr('data-toggle', 'modal').attr('data-target', nextStep);
+                }
+            }
+        }
+
+        // Show modal of first step
+        if (cancelationSteps[0]) {
+            $(cancelationSteps[0]).modal('show');
+        }
+    });
+
     $('.stripe-cancel-step, .subscription-item').on('click', '.direct-cancel', function(e) {
         $(this).button('loading');
         cancelStripeSubscription().done(function(data) {
@@ -402,6 +453,24 @@
         }).fail(function(data) {
             displayAjaxError('Cancel Subscription', data);
         });
+    });
+
+    $('.downgrade-to-import-plan').on('click', function(e) {
+        $(this).button('loading');
+
+        selectPlan(97);
+    });
+
+    $('.downgrade-to-free-plan').on('click', function(e) {
+        $(this).button('loading');
+
+        selectPlan(20);
+    });
+
+    $('.downgrade-to-free-import-plan').on('click', function(e) {
+        $(this).button('loading');
+
+        selectPlan(126);
     });
 
     $('.cancel-sub-btn-callflex').click(function(e) {
@@ -422,11 +491,6 @@
     $('.pause-account').click(function(e) {
         $('#modal-pause-account').data('plan', $(e.target).data('plan'));
         $('#modal-pause-account').modal('show');
-    });
-
-    $('.pause-account-shopify').click(function(e) {
-        $('#modal-pause-account-shopify').data('plan', $(e.target).data('plan'));
-        $('#modal-pause-account-shopify').modal('show');
     });
 
     $(".confirm-pause-btn").click(function(e) {
@@ -456,9 +520,8 @@
         });
     });
 
-
-    $(".confirm-pause-btn-shopify").click(function(e) {
-        var plan = $('#modal-pause-account-shopify').data('plan');
+    $(".update-shopify-plan").click(function(e) {
+        var plan = $(this).data('shopify-plan');
         var btn = $(e.target);
         btn.button('loading');
 

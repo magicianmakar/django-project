@@ -2856,9 +2856,13 @@ def user_profile(request):
     else:
         callflex.current_plan = None
 
+    shopify_admin_url = ''
     if shopify_apps_customer:
         # check existing recurring
         callflex.shopify_subscription = billing.get_shopify_recurring(request.user)
+        shopify_store = request.user.models_user.profile.get_shopify_stores().first()
+        if shopify_store is not None:
+            shopify_admin_url = f'https://{shopify_store.get_shop(full_domain=True)}/admin/apps'
 
     callflex.phonenumber_usage_tollfree = get_phonenumber_usage(request.user, "tollfree")
     callflex.phonenumber_usage_local = get_phonenumber_usage(request.user, "local")
@@ -2902,6 +2906,7 @@ def user_profile(request):
         'captchacredit': captchacredit,
         'example_dates': [arrow.utcnow().replace(days=-2).format('MM/DD/YYYY'), arrow.utcnow().replace(days=-2).humanize()],
         'callflex': callflex.toDict(),
+        'shopify_admin_url': shopify_admin_url,
         'page': 'user_profile',
         'breadcrumbs': ['Profile']
     })

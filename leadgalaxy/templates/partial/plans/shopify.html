@@ -12,11 +12,27 @@
                         {{ current_plan.get_description }}
                         </b>
 
-                        {% if shopify_paused_plan and not current_plan.is_paused %}
-                            <button class="btn btn-success btn-outline btn-xs itooltip pause-account-shopify pull-right m-r-sm"
-                                title="Pause Your Subscription"
-                                data-plan="{{shopify_paused_plan.id}}"
-                                >Pause Account</button>
+                        {% if not user.profile.plan.is_free %}
+                        <button class="btn
+                                       btn-success
+                                       btn-outline
+                                       btn-xs
+                                       itooltip
+                                       pull-right
+                                       m-r-sm
+                                       continue-cancel
+                                       cancel-shopify-sub-btn"
+                            {% if user.profile.plan.is_basic_import or user.profile.plan.is_private_label or user.profile.plan.is_black %}
+                            data-steps="#modal-shopify-cancel-call-schedule,#modal-shopify-on-lose-benefit-plan,#modal-shopify-on-free-import-plan,#modal-shopify-delete-data-plan"
+                            {% elif user.profile.plan.is_active_free %}
+                            data-steps="#modal-shopify-cancel-call-schedule,#modal-shopify-delete-data-plan"
+                            {% elif user.profile.plan.is_paused %}
+                            data-steps="#modal-shopify-cancel-call-schedule,#modal-shopify-on-grandfathered-plan,#modal-shopify-on-free-import-plan,#modal-shopify-delete-data-plan"
+                            {% else %}
+                            data-steps="#modal-shopify-cancel-call-schedule,#modal-shopify-on-grandfathered-plan,#modal-shopify-downgrade-to-import-plan,#modal-shopify-on-free-import-plan,#modal-shopify-delete-data-plan"
+                            {% endif %}
+                            title="Cancel Your Subscription"
+                            >Cancel</button>
                         {% endif %}
 
                     </li>
