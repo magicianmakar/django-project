@@ -369,8 +369,10 @@ class BigCommerceProduct(ProductBase):
         product_data['weight'] = product_data['weight']
         product_data['images'] = [img['url_standard'] for img in product_data.get('images', [])]
         product_data['price'] = product_data['price']
-        product_data['compare_at_price'] = product_data['price']
-        if product_data.get('sale_price') is not None:
+        product_data['compare_at_price'] = ''
+        sale_price = product_data.get('sale_price')
+        if sale_price is not None and sale_price != 0:
+            product_data['compare_at_price'] = product_data['price']
             product_data['price'] = product_data['sale_price']
 
         self.update_data(product_data)

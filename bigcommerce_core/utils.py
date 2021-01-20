@@ -98,11 +98,13 @@ def update_product_api_data(api_data, data):
     api_data['name'] = normalize_product_title(data['title'])
     api_data['type'] = 'physical'
     api_data['is_visible'] = True if data['published'] else False
-    api_data['price'] = safe_float(data['price'])
-    api_data['sale_price'] = safe_float(data['price'])
     api_data['description'] = data.get('description')
-    if data['compare_at_price']:
-        api_data['price'] = safe_float(data['compare_at_price'])
+
+    api_data['price'] = safe_float(data['price'])
+    compare_at_price = safe_float(data['compare_at_price'])
+    if compare_at_price:
+        api_data['sale_price'] = api_data['price']
+        api_data['price'] = compare_at_price
 
     try:
         weight = data.get('weight', 1.0)
@@ -216,6 +218,7 @@ def update_variants_api_data(api_data, data):
             variant['sale_price'] = safe_float(item['price'])
             variant['price'] = safe_float(item['compare_at_price'])
         else:
+            variant['sale_price'] = 0
             variant['price'] = safe_float(item['price'])
 
         variants.append(variant)
