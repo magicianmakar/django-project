@@ -254,7 +254,7 @@ class EmailAuthenticationForm(AuthenticationForm):
             )
 
         try:
-            return User.objects.get(email__iexact=username, profile__shopify_app_store=False).username
+            return User.objects.get(email__iexact=username, profile__shopify_app_store=False, is_active=True).username
 
         except ObjectDoesNotExist:
             raise ValidationError(
@@ -266,7 +266,7 @@ class EmailAuthenticationForm(AuthenticationForm):
         except MultipleObjectsReturned:
             paid_plan_users = []
 
-            for user in User.objects.filter(email__iexact=username, profile__shopify_app_store=False):
+            for user in User.objects.filter(email__iexact=username, profile__shopify_app_store=False, is_active=True):
                 if not user.profile.plan.is_free:
                     paid_plan_users.append(user)
 
