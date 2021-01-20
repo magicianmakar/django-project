@@ -23,6 +23,7 @@
     <th>Sale Price</th>
     <th>Profit</th>
     <th>Date</th>
+    <th>Tracking Numbers</th>
     <th>Status</th>
     <th>Details</th>
   </thead>
@@ -35,6 +36,7 @@
       <td>{{ pls_order.sale_price_string }}</td>
       <td>{{ pls_order.user_profit_string }}</td>
       <td>{{ pls_order.created_at|date:"m.d.Y h:iA" }}</td>
+      <td>{{ pls_order.tracking_numbers_str }}</td>
       <td>
         {% if pls_order.refund %}
         <span class="label label-warning">Refunded</span>

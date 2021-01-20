@@ -46,6 +46,7 @@
     <th>Item</th>
     <th>Title</th>
     <th>Sku</th>
+    <th>Tracking NUmber</th>
     <th>Price</th>
     <th>Total</th>
     <th></th>
@@ -60,6 +61,7 @@
       </td>
       <td class="product-cell">{{ item.supplement.title }}</td>
       <td class="product-cell">{{ item.label.sku }}</td>
+      <td class="product-cell">{{ item.tracking_number }}</td>
       <td class="product-cell">{{ item.quantity }} &times; ${{ item.supplement.cost_price }}</td>
       <td class="product-cell">{{ item.line_total }}</td>
       <td class="product-cell">

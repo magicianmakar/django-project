@@ -205,6 +205,12 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
                                   null=True,
                                   blank=True)
 
+    def tracking_numbers_str(self):
+        tracking_str = ""
+        for pls_item in self.order_items.all():
+            tracking_str += f' {pls_item.tracking_number},'
+        return tracking_str.rstrip(',')
+
 
 class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
     """
