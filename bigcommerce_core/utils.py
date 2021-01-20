@@ -355,7 +355,7 @@ def find_or_create_category(store, category_name='Shop All'):
             'parent_id': '0',
         }
     )
-    if r.ok:
+    if r.ok and r.status_code != 204:
         categories = r.json()['data']
         if len(categories):
             return categories[0]
@@ -542,7 +542,7 @@ def order_id_from_name(store, order_name, default=None):
         }
     )
 
-    if r.ok:
+    if r.ok and r.status_code != 204:
         orders = r.json()
 
         if len(orders):
@@ -908,6 +908,9 @@ def get_order_product_data(store, order):
     r = store.request.get(
         url=store.get_api_url('v2/orders/{}/products'.format(order['id']))
     )
+    if r.status_code == 204:
+        return []
+
     r.raise_for_status()
     return r.json()
 
@@ -916,6 +919,9 @@ def get_order_shipping_addresses(store, order):
     r = store.request.get(
         url=store.get_api_url('v2/orders/{}/shipping_addresses'.format(order['id']))
     )
+    if r.status_code == 204:
+        return []
+
     r.raise_for_status()
     return r.json()
 
@@ -924,6 +930,9 @@ def get_order_shipments(store, order):
     r = store.request.get(
         url=store.get_api_url('v2/orders/{}/shipments'.format(order['id']))
     )
+    if r.status_code == 204:
+        return []
+
     r.raise_for_status()
     return r.json()
 
