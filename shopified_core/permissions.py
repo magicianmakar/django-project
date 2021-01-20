@@ -213,7 +213,8 @@ def can_add_subuser(user):
         if not profile.can('unlimited_subusers.use'):
             can_add = False
 
-    if not can_add and profile.plan.is_stripe() and profile.plan.extra_subusers:
+    shopify_or_stripe = profile.plan.is_stripe() or profile.plan.is_shopify()
+    if not can_add and shopify_or_stripe and profile.plan.extra_subusers:
         can_add = not profile.plan.is_free
 
     return can_add, total_allowed, user_subusers_count
