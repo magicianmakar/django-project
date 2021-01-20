@@ -370,7 +370,7 @@ class SamplesPlanListFilter(admin.SimpleListFilter):
 
     def queryset(self, request, queryset):
         if self.value():
-            return queryset.filter(user__profile__plan_id=self.value())
+            return queryset.filter(profile__plan_id=self.value())
 
 
 @admin.register(UserAddress)
@@ -380,6 +380,17 @@ class UserAddressAdmin(admin.ModelAdmin):
     list_filter = [SamplesPlanListFilter]
 
     actions = ["export_as_csv"]
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+
+        try:
+            perm = AppPermission.objects.get(id='supplement_samples.use')
+            qs = qs.filter(profile__plan_id__in=[i.id for i in perm.groupplan_set.all()])
+        except AppPermission.DoesNotExist:
+            pass
+
+        return qs
 
     def export_as_csv(self, request, queryset):
 
