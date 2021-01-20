@@ -385,7 +385,7 @@ class UserAddressAdmin(admin.ModelAdmin):
         qs = super().get_queryset(request)
 
         try:
-            perm = AppPermission.objects.get(id='supplement_samples.use')
+            perm = AppPermission.objects.get(name='supplement_samples.use')
             qs = qs.filter(profile__plan_id__in=[i.id for i in perm.groupplan_set.all()])
         except AppPermission.DoesNotExist:
             pass
