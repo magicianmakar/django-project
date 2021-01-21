@@ -50,7 +50,8 @@ class Command(DropifiedBaseCommand):
                 pdf_width = '{:.3f}'.format(float(pdf_dimensions[2]) / 72)  # pt / 72 = 1 in
                 pdf_height = '{:.3f}'.format(float(pdf_dimensions[3]) / 72)
 
-                if not pdf_width == default_width and not pdf_height == default_height:
+                if (not pdf_width == default_width and not pdf_height == default_height) \
+                        and (not pdf_height == default_width and not pdf_width == default_height):
                     print(f'\n{pdf_width} != {default_width} \n {pdf_height} != {default_height}')
                     user = User.objects.get(id=1)
                     comment_text = (f'Your label does not match the required label size of {default_height}x{default_width} '

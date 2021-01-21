@@ -40,9 +40,7 @@ class PLSBaseTestCase(BaseTestCase):
         self.user.profile.save()
 
         self.label_size = LabelSizeFactory.create(
-            slug='any-slug-123',
-            height='2.25',
-            width='5.75',
+            size='2.25x5.75'
         )
 
         self.mockup_type = MockupTypeFactory.create(

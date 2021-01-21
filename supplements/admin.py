@@ -298,11 +298,7 @@ class ShippingGroupAdmin(admin.ModelAdmin):
 
 @admin.register(LabelSize)
 class LabelSizeAdmin(admin.ModelAdmin):
-    list_display = (
-        'slug',
-        'height',
-        'width',
-    )
+    list_display = ('size',)
 
 
 @admin.register(MockupType)

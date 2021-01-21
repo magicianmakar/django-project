@@ -13,34 +13,9 @@ var MockupEditor = (function() {
         maxZoom: 150,
         minZoom: 50,
         useControls: window.location.href.indexOf('debug=1') > -1,
+        useWrap: window.location.href.indexOf('wrap=1') > -1,
         control: 'label',  // label or mockup
         controlIndex: null,
-        wrapLabel: function(canvas) {
-            // http://plnkr.co/edit/83xAr99FjswWg0GHjDvJ?p=preview&preview
-            var ctx = canvas.getContext('2d');
-            function start() {
-                var iw = this.width;
-                var ih = this.height;
-
-                var xOffset = 100,
-                    yOffset = 200;
-
-                var a = 400;
-                var b = 400;
-
-                var scaleFactor = iw / (2*a); //how many times original image is greater compared to our rendering area?
-
-                // draw vertical slices
-                for (var X = 0; X < iw; X+=1) {
-                  var y = b/a * Math.sqrt(a*a - (X-a)*(X-a)); // ellipsis equation
-                  ctx.drawImage(this, X * scaleFactor, 0, 6, ih, X + xOffset, y + yOffset, 1, ih - 605 + y/2);
-                }
-            }
-
-            var img = new Image();
-            img.onload = start;
-            img.src = canvas.toDataURL();
-        },
         dataURLtoFile: function(dataurl, filename) {
             var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
                 bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
@@ -267,12 +242,12 @@ var MockupEditor = (function() {
             $('#mockup-editor .canvas-group canvas').remove();
         },
         generate: function(mockups) {
-            var curveCanvas;
             generateMockups = typeof(mockups) !== 'undefined' ? mockups : MockupEditor.mockups;
             generateMockups.forEach(function(mockup) {
                 var context = mockup.canvas.getContext('2d');
                 var bgContext = mockup.bgCanvas.getContext('2d');
                 var currentContext;
+                var wrapLayers = [];
 
                 context.clearRect(0, 0, mockup.canvas.width, mockup.canvas.height);
                 bgContext.clearRect(0, 0, mockup.canvas.width, mockup.canvas.height);
@@ -284,6 +259,7 @@ var MockupEditor = (function() {
                         return;
                     }
 
+                    var image = layer.image;
                     var positionLeft = mockup.canvas.width * mockup.bgLeft;
                     var positionTop = mockup.canvas.height * mockup.bgTop;
                     var positionRight = mockup.canvas.width * mockup.bgSize;
@@ -316,17 +292,42 @@ var MockupEditor = (function() {
 
                     currentContext = layer.background ? bgContext : context;
                     currentContext.globalCompositeOperation = layer.mode;
-                    currentContext.drawImage(
-                        layer.image,
-                        layerLeft, layerTop,  // Start clipping
-                        layerWidth, layerHeight,  // End clipping
-                        positionLeft, positionTop,  // Fixed position
-                        positionRight, positionBottom // Fixed size
-                    );
+
+                    if (layer.layer === 'label' && MockupEditor.useWrap) {
+                        // https://stackoverflow.com/a/42486915/840901
+                        currentContext.globalCompositeOperation = 'source-over';
+                        var iw = image.width * mockup.size * mockup.bgSize;
+                        var ih = image.height * mockup.size * mockup.bgSize;
+
+                        var a = 100; //image width
+                        var b = 10; //round ness
+
+                        var scaleFactor = iw / (4 * a);
+                        // draw vertical slices
+                        for (var X = 0; X < iw; X += 1) {
+                            var y = b / a * Math.sqrt(a * a - (X - a) * (X - a)); // ellipsis equation
+                            if (isNaN(y)) continue;
+                            currentContext.drawImage(
+                                image,
+                                (X * scaleFactor), 0,
+                                iw, ih,
+                                (mockup.canvas.width * mockup.left * -1) + X, (mockup.canvas.height * mockup.top * -1) + y,
+                                1, 174
+                            );
+                        }
+                    } else {
+                        currentContext.drawImage(
+                            image,
+                            layerLeft, layerTop,  // Start clipping
+                            layerWidth, layerHeight,  // End clipping
+                            positionLeft, positionTop,  // Fixed position
+                            positionRight, positionBottom // Fixed size
+                        );
+                    }
                 });
             });
         },
-        save: function(index) {
+        save: function(index, wrap) {
             // Draw on bigger canvas instead of resizing drawn canvases
             var canvas = $('<canvas>');
             canvas.attr('width', MockupEditor.saveCanvasSize);
@@ -381,30 +382,40 @@ function addLabelImage(pdf) {
 }
 
 function labelSizeMatch(defaultSize, pdf) {
-    var defaultWidth = defaultSize.split('x')[0];
-    var defaultHeight = defaultSize.split('x')[1];
+    var defaultWidth = parseFloat(defaultSize.split('x')[0]);
+    var defaultHeight = parseFloat(defaultSize.split('x')[1]);
     return new Promise(function (resolve, reject) {
         if (window.location.href.indexOf('debug=1') > -1) {
             resolve();
         }
         pdfjsLib.getDocument(pdf).promise.then(function(pdf) {
             pdf.getPage(1).then(function(page) {
-                var pdfWidth = (page._pageInfo.view[2] / 72).toFixed(3); // returned in pt => pt / 72 = 1 in
-                var pdfHeight = (page._pageInfo.view[3] / 72).toFixed(3);
+                var pdfWidth = parseFloat((page._pageInfo.view[2] / 72).toFixed(3)); // returned in pt => pt / 72 = 1 in
+                var pdfHeight = parseFloat((page._pageInfo.view[3] / 72).toFixed(3));
 
-                /*
-                Label size can have a margin of +0.125 (in inches).
-                PLS approve and can print labels which are label size or label size + 0.125 margin. Sizes in between or any other variations  are not allowed.
-                */
+                // Labels can have an exact extra margin of 0.125 inches
                 var margin = 0.125;
-                var defaultHeightWithMargin = parseFloat(defaultHeight) + margin;
-                var defaultWidthWithMargin = parseFloat(defaultWidth) + margin;
 
-                if ((pdfHeight === defaultHeight && pdfWidth === defaultWidth) || (parseFloat(pdfHeight) === defaultHeightWithMargin && parseFloat(pdfWidth) === defaultWidthWithMargin)) {
-                    resolve();
-                } else {
-                    reject();
+                // Can either be of vertical or horizontal orientation
+                var sizes = [[defaultWidth, defaultHeight], [defaultHeight, defaultWidth]];
+                for (var i = 0, iLength = sizes.length; i < iLength; i++) {
+                    var sizeX = sizes[i][0];
+                    var sizeY = sizes[i][1];
+
+                    if (pdfHeight === sizeX && pdfWidth === sizeY) {
+                        resolve();
+                        return true;
+                    }
+
+                    sizeX += margin;
+                    sizeY += margin;
+                    if (pdfHeight === sizeX && pdfWidth === sizeY) {
+                        resolve();
+                        return true;
+                    }
                 }
+
+                reject();
             });
         });
     });
@@ -442,6 +453,9 @@ $('#approved-label-mockup').on('click', function(e) {
 var mockupItems = $('#mockup-editor .previews img').on('click', function() {
     var mockupIndex = mockupItems.index(this);
     $('#save-mockup').attr('mockup-index', mockupIndex).removeClass('hidden');
+    if (MockupEditor.wrap) {
+        $('#wrap-mockup').attr('mockup-index', mockupIndex).removeClass('hidden');
+    }
 
     MockupEditor.setDimensions(MockupEditor.labelMockups[mockupIndex]);
     MockupEditor.loadCanvas();
@@ -451,7 +465,13 @@ var mockupItems = $('#mockup-editor .previews img').on('click', function() {
 $('#save-mockup').on('click', function(e) {
     e.preventDefault();
     var mockupIndex = $('#save-mockup').addClass('hidden').attr('mockup-index');
+    $('#wrap-mockup').addClass('hidden');
     MockupEditor.save(parseInt(mockupIndex));
+});
+
+$('#wrap-mockup').on('click', function(e) {
+    e.preventDefault();
+    MockupEditor.save(parseInt(mockupIndex), true);
 });
 
 $('#mockup-editor .btn-index').on('click', '.btn', function(e) {

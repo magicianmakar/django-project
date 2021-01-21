@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supplements', '0077_remove_plsorder_payout'),
+        ('supplements', '0078_labelsize_size'),
     ]
 
     operations = [

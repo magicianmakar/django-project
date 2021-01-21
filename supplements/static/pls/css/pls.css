@@ -346,6 +346,11 @@
   bottom: 5px;
   right: 5px;
 }
+#wrap-mockup {
+  position: absolute;
+  bottom: 5px;
+  right: 115px;
+}
 
 .mockup-img {
   width: 95%;
