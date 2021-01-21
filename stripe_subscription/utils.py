@@ -734,7 +734,12 @@ def process_webhook_event(request, event_id):
                 subscription_item=subscription_item,
             )
 
-        stripe.Subscription.modify(sub.id, metadata={'user_id': customer.user.id})
+        try:
+            if sub.object == 'subscription' and not sub.metadata.get('user_id'):
+                stripe.Subscription.modify(sub.id, metadata={'user_id': customer.user.id})
+        except:
+            capture_exception(level='warning')
+
         if created:
             return HttpResponse('New User Registered')
         else:
