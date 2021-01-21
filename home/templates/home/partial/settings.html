@@ -1,4 +1,4 @@
-{% load perms_helper %}
+{% load perms_helper template_helper %}
 
 <div class="row">
     <div class="col-md-12">
@@ -856,6 +856,7 @@
                     Private Label Ordering
                 </div>
                 <div class="panel-body">
+                    {% if 'ZONOS_API_KEY'|app_setting_filter %}
                     <div class="row">
                         <div class="col-sm-offset-1 col-sm-11">
                             <div class="form-group">
@@ -870,6 +871,7 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
 
                     <div class="row">
                         <div class="col-sm-offset-1 col-sm-11">
