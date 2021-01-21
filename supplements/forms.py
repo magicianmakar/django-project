@@ -175,7 +175,7 @@ class LineFilterForm(OrderFilterForm):
     ]
 
     line_status = forms.ChoiceField(required=False, choices=LINE_STATUSES)
-    label_size = forms.ModelMultipleChoiceField(required=False, queryset=LabelSize.objects.all().order_by('slug'),
+    label_size = forms.ModelMultipleChoiceField(required=False, queryset=LabelSize.objects.all().order_by('size'),
                                                 widget=forms.SelectMultiple(attrs={
                                                     'id': 'id_label_size_filter',
                                                     'data-placeholder': 'Select label sizes'
