@@ -850,6 +850,57 @@
 
             {% endif %}
 
+            {% if user|can:'pls.use' %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Private Label Ordering
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <div class="form-group">
+                                <label for="pl_pay_duties_taxes" class="col-sm-4 col-xs-8 control-label">
+                                    Pre-pay Duties & Taxes
+                                    <i class="fa fa-fw fa-question-circle" qtip-tooltip="Preselect payment for duties and taxes before creating orders" style="color:#BBB" data-hasqtip="29"></i>
+                                </label>
+                                <div class="col-sm-6 col-xs-4">
+                                    <input type="checkbox" class="js-switch" id="pl_pay_taxes"
+                                           name="pl_pay_taxes" {% if config.pl_pay_taxes %}checked="checked"{% endif %}>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <div class="form-group">
+                                <label for="order_phone_number" class="col-sm-4 col-xs-8 control-label">
+                                    Default Shipping Option
+                                    {% include 'partial/help_tooltip.html' with help="Whenever multiple shipping options are available, the preselected option for shipping shown before placing the order" qtipstyle="color:#BBB" %}
+                                </label>
+
+                                <div class="col-sm-6 col-xs-4">
+                                    <label class="control-label">
+                                        <input type="radio" name="pl_default_shipping_option" value="standard" class="icheck"
+                                        {% if config.pl_default_shipping_option == 'standard' or not config.pl_default_shipping_option %}checked="checked"{% endif %}>
+                                        Standard
+                                        {% include 'partial/help_tooltip.html' with help="An economical option for shipping, enable this to have the cheapest option marked as default" qtipstyle="color:#BBB" %}
+                                    </label>
+
+                                    <label class="control-label m-l-lg">
+                                        <input type="radio" name="pl_default_shipping_option" value="expedited" class="icheck"
+                                        {% if config.pl_default_shipping_option == 'expedited' %}checked="checked"{% endif %} >
+                                        Expedited
+                                        {% include 'partial/help_tooltip.html' with help="A faster option for shipping, enable this to have the priciest option marked as default" qtipstyle="color:#BBB" %}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="form-group">
                 <div class="col-sm-12">
                     <button data-toggle="modal" class="btn btn-primary btn-lg">

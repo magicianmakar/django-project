@@ -5,9 +5,9 @@ from io import BytesIO
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Q
+from django.db.transaction import atomic
 from django.urls import reverse
 from django.utils.crypto import get_random_string
-from django.utils.text import slugify
 from django.views.generic import View
 from django.utils import timezone
 
@@ -41,116 +41,111 @@ from fulfilment_fee.utils import process_sale_transaction_fee
 class SupplementsApi(ApiResponseMixin, View):
     http_method_names = ['get', 'post', 'delete']
 
-    def post_make_payment(self, request, user, data):
+    def post_process_orders(self, request, user, data):
         util = Util()
         store = util.get_store(data['store_id'], data['store_type'])
         permissions.user_can_view(user, store)
 
-        util.store = store
+        orders, orders_status, order_costs = util.get_order_data(
+            request.user,
+            data['order_data_ids'],
+            data.get('shippings', {}),
+            data.get('pay_taxes', {})
+        )
 
-        success = error = invalid_country = inventory_error = 0
-        success_ids = []
+        if not orders or data.get('validate'):
+            return self.api_success({
+                'orders_status': list(orders_status.values()),
+                'shippings': order_costs['shipping'],
+                'taxes': order_costs['taxes'],
+            })
 
-        info = util.prepare_data(request, data['order_data_ids'])
-        orders, line_items, order_data_ids, error = info
+        paid_orders = []
+        with atomic():
+            for order_id in orders_status:
+                if orders_status[order_id]['success']:
+                    orders_status[order_id]['status'] = 'Processing payment'
 
-        for order_id, order in orders.items():
+            unpaid_orders = []
+            for order in orders.values():
+                order_shippings = order_costs['shipping'].get(order['id'])
+                if not order_shippings or order_shippings[0].get('error'):
+                    continue
 
-            try:
-                province = order['shipping_address']['province_code']
-            except:
-                province = order['shipping_address']['province']
-            order_info = (order['order_number'], order_id, order['shipping_address']['country_code'],
-                          province, data.get('shipping_service'))
-            order_line_items = line_items[order_id]
-
-            shipping_country = order['shipping_address']['country']
-            shipping_country_province = slugify(order['shipping_address']['country_code'] + "-" + str(order['shipping_address']['province']))
-
-            quantity_dict = {}
-            for line in order_line_items:
-                target_countries = []
-                user_supplement = line['user_supplement']
-                if user_supplement.is_deleted:
-                    data = {
-                        'error': 'rejected',
-                        'msg': 'Your order contains deleted product & has been rejected.',
-                    }
-                    return self.api_success(data)
-
-                shipping_countries = user_supplement.shipping_countries
-                target_countries.extend(shipping_countries)
-                target_countries = set(target_countries)
-
-                if isinstance(shipping_country, list):
-                    for country in shipping_country:
-                        if country not in target_countries:
-                            invalid_country += 1
-                elif target_countries and shipping_country not in target_countries \
-                        and shipping_country_province not in target_countries:
-                    invalid_country += 1
-
-                if user_supplement in quantity_dict:
-                    quantity_dict[user_supplement] += int(line['quantity'])
-                else:
-                    quantity_dict[user_supplement] = int(line['quantity'])
-
-            for user_supplement, qty in quantity_dict.items():
-                if user_supplement.pl_supplement.inventory < qty:
-                    inventory_error += 1
-
-            if invalid_country > 0 or inventory_error > 0:
-                continue
-
-            try:
-                pls_order = util.make_payment(
-                    order_info,
-                    order_line_items,
+                unpaid_order = util.create_unpaid_order(
+                    order,
                     user.models_user,
+                    order_shippings
                 )
-            except Exception:
-                error += len(order_line_items)
-                capture_exception(level='warning')
-            else:
-                shipstation_data = prepare_shipstation_data(pls_order,
-                                                            order,
-                                                            order_line_items,
-                                                            service_code=data.get('shipping_service'))
-                create_shipstation_order(pls_order, shipstation_data)
+                unpaid_orders.append([unpaid_order, order])
 
-                StoreApi = get_store_api(data['store_type'])
-                for item in pls_order.order_items.all():
-                    if item.shipstation_key:
-                        data = {
-                            'store': store.id,
-                            'order_id': item.store_order_id,
-                            'line_id': item.line_id,
-                            'aliexpress_order_id': str(pls_order.get_dropified_source_id()),
-                            'source_type': 'supplements'
-                        }
+            paid_orders = util.create_payment(user.models_user, unpaid_orders)
 
-                        api_result = StoreApi.post_order_fulfill(request, user, data)
-                        if api_result.status_code != 200:
-                            error += 1
-                            capture_message('Unable to track supplement', extra={
-                                'api_result': json.loads(api_result.content.decode("utf-8")),
-                                'api_data': data
-                            }, level='warning')
+        for pls_order, order in paid_orders:
+            shipstation_data = prepare_shipstation_data(pls_order,
+                                                        order,
+                                                        order['items'],
+                                                        service_code=order['shipping_service'])
+            create_shipstation_order(pls_order, shipstation_data)
 
-                success += len(order_line_items)
-                success_ids.extend([
-                    {'id': i, 'status': pls_order.status_string}
-                    for i in order_data_ids[order_id]
-                ])
+            StoreApi = get_store_api(data['store_type'])
+            for item in pls_order.order_items.all():
+                if item.shipstation_key:
+                    placed_order_id = str(pls_order.get_dropified_source_id())
+                    api_data = {
+                        'store': store.id,
+                        'order_id': item.store_order_id,
+                        'line_id': item.line_id,
+                        'aliexpress_order_id': placed_order_id,
+                        'source_type': 'supplements'
+                    }
 
-        data = {
-            'success': success,
-            'error': error,
-            'successIds': success_ids,
-            'invalidCountry': invalid_country,
-            'inventoryError': inventory_error,
-        }
-        return self.api_success(data)
+                    api_result = StoreApi.post_order_fulfill(request, user, api_data)
+                    order_data_id = f'{store.id}_{item.store_order_id}_{item.line_id}'
+                    if api_result.status_code != 200:
+                        orders_status[order_data_id].update({
+                            'success': False,
+                            'status': 'Order placed but unable to automatically track, '
+                                      + 'please contact support. (Dropified Order ID: {placed_order_id})'
+                        })
+                        capture_message('Unable to track supplement', extra={
+                            'api_result': json.loads(api_result.content.decode("utf-8")),
+                            'api_data': api_data
+                        }, level='warning')
+                    else:
+                        orders_status[order_data_id].update({
+                            'success': True,
+                            'placed': True,
+                            'status': 'Order placed'
+                        })
+
+        return self.api_success({
+            'orders_status': list(orders_status.values()),
+            'shippings': order_costs['shipping'],
+            'taxes': order_costs['taxes'],
+        })
+
+    def post_order_taxes(self, request, user, data):
+        util = Util()
+        store = util.get_store(data['store_id'], data['store_type'])
+        permissions.user_can_view(user, store)
+
+        orders, orders_status, order_costs = util.get_order_data(
+            request.user,
+            data['order_data_ids'],
+            data['shippings'],
+            data['pay_taxes']
+        )
+
+        for order_id in orders:
+            order_costs['taxes'][order_id] = util.calculate_taxes(orders[order_id])
+            order_costs['taxes'][order_id]['pay_taxes'] = orders[order_id].get('pay_taxes', False)
+
+        return self.api_success({
+            'orders_status': list(orders_status.values()),
+            'shippings': order_costs['shipping'],
+            'taxes': order_costs['taxes'],
+        })
 
     def post_mark_printed(self, request, user, data):
         util = Util()
@@ -239,47 +234,6 @@ class SupplementsApi(ApiResponseMixin, View):
         payout.save()
 
         return self.api_success()
-
-    def post_calculate_shipping_cost(self, request, user, data):
-        StoreApi = get_store_api(data['store_type'])
-
-        shipping_info = {}
-        for order_data_id in data['order_data_ids']:
-            store_id, order_id, line_id = order_data_id.split('_')
-            api_result = StoreApi.get_order_data(request, request.user, {'order': order_data_id, 'original': '1'})
-            if api_result.status_code == 404:
-                return self.api_error("Please reload the page and try again", status=404)
-
-            order_data = json.loads(api_result.content.decode("utf-8"))
-            if order_data.get('supplier_type') != 'pls':
-                return self.api_error("Selected item is not a supplement", status=404)
-
-            if order_id not in shipping_info:
-                shipping_info[order_id] = {'total_weight': Decimal(0)}
-            shipping_info[order_id]['country_code'] = order_data['shipping_address']['country_code']
-            shipping_info[order_id]['province_code'] = order_data['shipping_address']['province_code']
-
-            if order_data['is_bundle']:
-                for b_product in order_data['products']:
-                    shipping_info[order_id]['total_weight'] += Decimal(b_product.get('weight') or 0)
-            else:
-                # Can be None or False
-                shipping_info[order_id]['total_weight'] += Decimal(order_data.get('weight') or 0)
-
-        # Don't use multiple shipping costs for now
-        shipping_info = list(shipping_info.values())[0]
-
-        shippings = get_shipping_costs(
-            shipping_info['country_code'],
-            shipping_info['province_code'],
-            shipping_info['total_weight']
-        )
-
-        if isinstance(shippings, (bool, str)):
-            error_message = not shippings and 'Error calculating shipping' or shippings
-            return self.api_error(error_message, status=500)
-        else:
-            return self.api_success({'shippings': shippings})
 
     def post_sync_order(self, request, user, data):
         order = PLSOrder.objects.filter(

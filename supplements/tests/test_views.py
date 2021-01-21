@@ -542,12 +542,11 @@ class OrdersShippedWebHookTestCase(BaseTestCase):
         self.store.save()
         store_id = self.store.id
 
-        source_id = 1234
         self.pls_order = PLSOrderFactory(shipstation_key=order_key,
                                          store_type=store_type,
                                          store_id=store_id,
                                          store_order_id=order_id,
-                                         stripe_transaction_id=source_id,
+                                         stripe_transaction_id=1234,
                                          user_id=self.store.user_id)
 
         self.pls_order_line = PLSOrderLineFactory(shipstation_key=line_key,
@@ -556,7 +555,7 @@ class OrdersShippedWebHookTestCase(BaseTestCase):
                                                   line_id=line_id,
                                                   pls_order=self.pls_order)
 
-        ShopifyOrderTrackFactory(source_id=source_id,
+        ShopifyOrderTrackFactory(source_id=self.pls_order.get_dropified_source_id(),
                                  source_type='supplements',
                                  order_id=order_id,
                                  line_id=line_id,

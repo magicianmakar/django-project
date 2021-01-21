@@ -48,6 +48,7 @@ from shopified_core.shipping_helper import (
 )
 
 import leadgalaxy.utils as leadgalaxy_utils
+from supplements.utils import supplement_customer_address
 
 from .models import WooProduct, WooStore, WooBoard
 
@@ -799,13 +800,12 @@ def woo_customer_address(order, aliexpress_fix=False, german_umlauts=False,
     customer_address['country_code'] = customer_address.get('country')
     customer_address['province_code'] = customer_address.get('state')
     customer_address['zip'] = customer_address.get('postcode')
+    customer_address['country'] = country_from_code(customer_address['country_code'], '')
 
     if shipstation_fix:
         customer_address['province'] = customer_address.get('state')
         customer_address['phone'] = order['billing'].get('phone')
-        return customer_address
-
-    customer_address['country'] = country_from_code(customer_address['country_code'], '')
+        return order, supplement_customer_address(customer_address)
 
     province = province_from_code(customer_address['country_code'], customer_address['province_code'])
     customer_address['province'] = unidecode(province) if type(province) is str else province

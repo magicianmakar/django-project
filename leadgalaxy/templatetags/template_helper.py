@@ -26,6 +26,11 @@ def app_setting(name):
     return getattr(settings, name, None)
 
 
+@register.filter
+def app_setting_filter(name):
+    return getattr(settings, name, None)
+
+
 @register.simple_tag
 def app_link(*args, **kwargs):
     return utils_app_link(*args, **kwargs)

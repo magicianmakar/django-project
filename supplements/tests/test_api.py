@@ -110,7 +110,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
             store=self.store,
         )
 
-        self.url = '/api/supplements/make-payment'
+        self.url = '/api/supplements/process-orders'
         self.order_data_ids = [
             f'{store_id}_{order_id}_{line_id}',
         ]
@@ -152,8 +152,16 @@ class MakePaymentTestCase(PLSBaseTestCase):
 
         self.order_data_cache = {
             **self.order_data,
+            'id': self.order_data_ids[0],
             'order_data_id': self.order_data_ids[0],
+            'order_id': self.order_data['id'],
+            'line_id': self.order_data['line_items'][0]['id'],
+            'order_name': self.order_data['name'],
             'source_id': self.user_supplement.id,
+            'supplier_type': 'pls',
+            'weight': 1,
+            'quantity': 1,
+            'total': 19.90,
             'order': {
                 'phone': {
                     'number': '000000',
@@ -200,7 +208,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
                    return_value=self.mock_order_response), \
                 patch('shopified_core.api_base.order_data_cache',
                       return_value=self.order_data_cache), \
-                patch('supplements.mixin.AuthorizeNetCustomerMixin.charge',
+                patch('supplements.mixin.AuthorizeNetCustomerMixin.charge_items',
                       return_value=self.transaction_id), \
                 patch('supplements.lib.shipstation.requests.post',
                       return_value=self.mock_response), \
@@ -272,7 +280,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
             store=self.store,
         )
 
-        self.url = '/api/supplements/make-payment'
+        self.url = '/api/supplements/process-orders'
         self.order_data_ids = [
             f'{store_id}_{order_id}_{self.line_id}',
         ]
@@ -331,19 +339,29 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
         bundle_data = [{
             'title': self.supplement.title,
             'quantity': 2,
+            'weight': 1,
             'source_id': self.user_supplement.id,
             'supplier_type': 'pls',
         }, {
             'title': bundle_supplement.title,
             'quantity': 3,
+            'weight': 1,
             'source_id': bundle_supplement.id,
             'supplier_type': 'pls',
         }]
 
         self.order_data_cache = {
             **self.order_data,
+            'id': self.order_data_ids[0],
             'order_data_id': self.order_data_ids[0],
+            'order_id': self.order_data['id'],
+            'line_id': self.order_data['line_items'][0]['id'],
+            'order_name': self.order_data['name'],
             'source_id': self.user_supplement.id,
+            'supplier_type': 'pls',
+            'weight': 1,
+            'quantity': 1,
+            'total': 19.90,
             'products': bundle_data,
             'is_bundle': len(bundle_data) > 0,
             'order': {
@@ -392,7 +410,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
                    return_value=self.mock_order_response), \
                 patch('shopified_core.api_base.order_data_cache',
                       return_value=self.order_data_cache), \
-                patch('supplements.mixin.AuthorizeNetCustomerMixin.charge',
+                patch('supplements.mixin.AuthorizeNetCustomerMixin.charge_items',
                       return_value=self.transaction_id), \
                 patch('supplements.lib.shipstation.requests.post',
                       return_value=self.mock_response), \

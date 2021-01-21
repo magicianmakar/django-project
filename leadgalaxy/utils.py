@@ -86,7 +86,7 @@ from shopified_core.shipping_helper import (
     fix_br_address
 )
 from shopify_orders.models import ShopifyOrderLine
-
+from supplements.utils import supplement_customer_address
 
 from django.utils.deprecation import MiddlewareMixin
 
@@ -1156,13 +1156,13 @@ def shopify_customer_address(order, aliexpress_fix=False, german_umlauts=False,
         else:
             customer_address[k] = shipping_address[k]
 
-    if shipstation_fix:
-        return shipping_address
-
     if not customer_address['country']:
         customer_address['country'] = ''
 
     customer_address['country'] = country_from_code(customer_address['country_code'], customer_address['country'])
+
+    if shipstation_fix:
+        return order, supplement_customer_address(shipping_address), []
 
     customer_province = customer_address['province']
     if not customer_address['province']:

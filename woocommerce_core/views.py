@@ -25,7 +25,7 @@ from django.core.cache.utils import make_template_fragment_key
 
 from profits.mixins import ProfitDashboardMixin
 from supplements.lib.shipstation import get_address as get_shipstation_address
-from supplements.models import PLSOrder, PLSOrderLine
+from supplements.models import PLSOrder
 from supplements.tasks import update_shipstation_address
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
@@ -814,10 +814,13 @@ class OrdersList(ListView):
             order=order,
             aliexpress_fix=aliexpress_fix_address and supplier and supplier.is_aliexpress,
             aliexpress_fix_city=aliexpress_fix_city,
-            german_umlauts=german_umlauts)
+            german_umlauts=german_umlauts,
+            shipstation_fix=supplier.is_pls if supplier else False)
 
         return {
             'id': '{}_{}_{}'.format(store.id, order['id'], item['id']),
+            'order_name': order['number'],
+            'title': item['title'],
             'quantity': item['quantity'],
             'shipping_address': shipping_address,
             'order_id': order['id'],
@@ -1048,7 +1051,7 @@ class OrdersList(ListView):
                         item['supplier'] = supplier
                         is_pls = item['is_pls'] = supplier.is_pls
                         if is_pls:
-                            item['is_paid'] = PLSOrderLine.is_paid(store, order['id'], item['id'])
+                            item['is_paid'] = False
 
                             # pass orders without PLS products (when one store is used in multiple account)
                             try:
@@ -1065,7 +1068,7 @@ class OrdersList(ListView):
                                         order,
                                         german_umlauts=get_config('_use_german_umlauts', False),
                                         shipstation_fix=True
-                                    )
+                                    )[1]
                                     address_hash = get_shipstation_address(shipstation_address, hashed=True)
                                     pls_address_hash = pls_items[0].pls_order.shipping_address_hash
                                     shipstation_address_changed = pls_address_hash != str(address_hash)

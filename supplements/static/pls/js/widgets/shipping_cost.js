@@ -41,6 +41,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
             serviceElement.appendChild(addShippingRule());
         });
+
+        serviceElement.querySelector('.close').addEventListener('click', function(e) {
+            e.preventDefault();
+            serviceElement.remove();
+        });
         return serviceElement;
     }
 

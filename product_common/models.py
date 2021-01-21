@@ -122,7 +122,7 @@ class AbstractOrder(AbstractOrderInfo, OrderMixin):
     stripe_transaction_id = models.CharField(max_length=50, blank=True)
     shipstation_key = models.CharField(max_length=500, blank=True, default='')
 
-    amount = models.IntegerField()
+    amount = models.IntegerField(verbose_name='Total amount')
     status = models.CharField(max_length=10,
                               choices=STATUSES,
                               default=PENDING)

@@ -1,4 +1,5 @@
 import re
+from decimal import Decimal
 
 from django.conf import settings
 
@@ -167,6 +168,65 @@ def charge_customer_profile(amount, customer_id, payment_id, line):
             for error in response.messages.message:
                 errors.append(f"{error['code'].text}: {error['text'].text}")
 
+    if errors:
+        capture_message('Auth.NET transaction error', extra={'authnet-errors': errors})
+
+
+def get_transaction_errors(response):
+    errors = []
+    # https://developer.authorize.net/api/reference/index.html#payment-transactions-charge-a-customer-profile
+    if hasattr(response, 'transactionResponse') and hasattr(response.transactionResponse, 'errors'):
+        for error in response.transactionResponse.errors.error:
+            errors.append(f"{error.errorCode}: {error.errorText}")
+    else:
+        for error in response.messages.message:
+            errors.append(f"{error['code'].text}: {error['text'].text}")
+    return errors
+
+
+def charge_customer_for_items(transaction, items):
+    total_amount = Decimal('0.0')
+
+    if len(items) > 30:
+        total_amount = sum(item['amount'] * item['quantity'] for item in items)
+    else:
+        line_items = apicontractsv1.ArrayOfLineItem()
+        for item in items:
+            total_amount += item['amount'] * item['quantity']
+
+            assert len(item['name']) < 31
+            line_item = apicontractsv1.lineItemType()
+            line_item.itemId = str(item['id'])
+            line_item.name = item['name']
+            line_item.quantity = item['quantity']
+            line_item.unitPrice = str(item['amount'])
+            line_items.lineItem.append(line_item)
+
+        transaction.lineItems = line_items
+
+    if len(items) > 1:
+        order_description = f"Processing Orders between #{items[0]['id']} - #{items[-1]['id']}"
+    else:
+        order_description = f"Processing Order #{items[0]['id']}"
+    order = apicontractsv1.orderType()
+    order.description = order_description
+    transaction.order = order
+    transaction.amount = str(total_amount)
+
+    request = apicontractsv1.createTransactionRequest()
+    request.merchantAuthentication = get_merchant_auth()
+    request.transactionRequest = transaction
+
+    controller = createTransactionController(request)
+    if settings.AUTH_NET_PROD:
+        controller.setenvironment(constants.PRODUCTION)
+
+    controller.execute()
+    response = controller.getresponse()
+    if response.messages.resultCode == "Ok" and hasattr(response.transactionResponse, 'messages'):
+        return response.transactionResponse.transId
+
+    errors = get_transaction_errors(response)
     if errors:
         capture_message('Auth.NET transaction error', extra={'authnet-errors': errors})
 

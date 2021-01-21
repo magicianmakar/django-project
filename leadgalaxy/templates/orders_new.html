@@ -323,7 +323,7 @@
                         <div class="row m-t hidden-xs">
                             <div class="col-md-4 col-md-offset-8 text-right">
                                 <a class="btn  btn-success btn-rounded btn-sm itooltip"
-                                    title="Bulk Order Processing is disabled because you are not use Advanced Orders page" href="#"
+                                    title="Bulk Order Processing is disabled because you are not using the Advanced Orders page" href="#"
                                     data-placement="left"
                                     >Bulk Order Processing</a>
                             </div>
@@ -792,11 +792,7 @@
                                                                         {% endif %}
                                                                     </span>
                                                                 {% endif %}
-                                                            {% elif item.is_pls %}
-                                                                {% if not item.is_paid %}
-                                                                    {% include 'partial/make_payment_btn.html' %}
-                                                                {% endif %}
-                                                            {% else %}
+                                                            {% elif not item.is_pls %}
                                                                 {% include 'partial/place_order_btn.html' %}
                                                             {% endif %}
                                                         </td>
@@ -864,11 +860,7 @@
                                                     </div>
                                                 </div>
                                                 {% endfor %}
-                                                {% if item.supplier_type == 'pls' %}
-                                                    {% if not item.is_paid %}
-                                                        {% include 'partial/make_payment_btn.html' %}
-                                                    {% endif %}
-                                                {% else %}
+                                                {% if item.supplier_type != 'pls' %}
                                                     {% if not order.pending_payment and not item.refunded %}
                                                         <button class="btn btn-success btn-xs order-bundle"
                                                                 store-type="shopify"
@@ -1007,14 +999,14 @@
 {% endverbatim %}
 
 {% include "partial/shopify_product_selector.html" %}
-{% include "supplements/partials/make_payment_modal.html" %}
-
+{% include "supplements/partials/order_details_modal.html" %}
 {% endblock %}
 
 
 {% block extracss %}
 
 {% compress css %}
+<link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/jquery.steps/demo/css/jquery.steps.css' %}" rel="stylesheet">
@@ -1041,6 +1033,7 @@
         channel: "{{store.pusher_channel}}",
         store: {{store.id}},
         shop: "{{store.shop}}",
+        taxesEnabled: {% if 'ZONOS_API_KEY'|app_setting_filter %}true{% else %}false{% endif %},
     };
 
     var STORE_ID = "{{ store.id }}";
@@ -1056,6 +1049,7 @@
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}" type="text/javascript"></script>
+    <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script src="{% static 'prints/js/track_orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'prints/js/place_orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/bulk_orders.js' %}" type="text/javascript"></script>

@@ -25,7 +25,7 @@ def reverse_func(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supplements', '0077_remove_plsorder_payout'),
+        ('supplements', '0078_auto_20210114_1917'),
     ]
 
     operations = [

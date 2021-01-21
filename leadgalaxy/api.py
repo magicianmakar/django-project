@@ -1241,6 +1241,7 @@ class ShopifyStoreApi(ApiBase):
             'randomize_image_names',
             'price_update_for_increase',
             'compare_at_enabled',
+            'pl_pay_taxes',
         ]
 
         for key in data:

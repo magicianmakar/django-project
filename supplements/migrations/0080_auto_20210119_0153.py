@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('supplements', '0078_labelsize_size'),
+        ('supplements', '0079_labelsize_size'),
     ]
 
     operations = [

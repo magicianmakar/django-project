@@ -83,3 +83,10 @@
     padding: 3px 8px;
     text-align: center;
 }
+
+.shipping-service .close {
+    color: #fff;
+    font-size: 23px;
+    float: right;
+    padding-right: 10px;
+}

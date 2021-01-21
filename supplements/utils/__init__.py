@@ -62,14 +62,13 @@ def user_can_download_label(user, label):
 
 
 def supplement_customer_address(address):
-    mapped_countries = {
-        'UK': 'GB',
-        'United States': 'US',
-        'TW': 'Taiwan',
-    }
-
+    mapped_country_codes = {'United States': 'US', 'UK': 'GB'}
     if address.get('country_code'):
         country_code = address['country_code']
-        address['country_code'] = mapped_countries.get(country_code, country_code)
+        address['country_code'] = mapped_country_codes.get(country_code, country_code)
+
+    mapped_countries = {'TW': 'Taiwan'}
+    if address.get('country_code') and address.get('country'):
+        address['country'] = mapped_countries.get(address['country_code'], address['country'])
 
     return address

@@ -23,12 +23,14 @@ from shopified_core.utils import (
 )
 from shopified_core.shipping_helper import (
     load_uk_provincess,
+    country_from_code,
     province_from_code,
     get_uk_province,
     valide_aliexpress_province,
     support_other_in_province,
 )
 import leadgalaxy.utils as leadgalaxy_utils
+from supplements.utils import supplement_customer_address
 
 from .models import GrooveKartStore, GrooveKartProduct, GrooveKartBoard
 
@@ -194,7 +196,7 @@ def gkart_customer_address(order, aliexpress_fix=False, shipstation_fix=False):
     customer_address['country_code'] = shipping_address.get('country_code', '')
     customer_address['province_code'] = shipping_address.get('province', '')
     customer_address['zip'] = shipping_address.get('zip', '')
-    customer_address['country'] = shipping_address.get('country', '')
+    customer_address['country'] = country_from_code(customer_address['country_code'], '')
     customer_address['province'] = province_from_code(customer_address['country_code'], customer_address['province_code'])
     customer_address['phone'] = shipping_address.get('phone', '')
 
@@ -203,7 +205,7 @@ def gkart_customer_address(order, aliexpress_fix=False, shipstation_fix=False):
             customer_address[key] = unidecode(customer_address[key])
 
     if shipstation_fix:
-        return customer_address
+        return supplement_customer_address(customer_address)
 
     customer_province = customer_address['province']
     if not customer_address.get('province'):

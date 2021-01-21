@@ -238,6 +238,7 @@ ul.shipping-method {
     }
 }
 
+#modal-order-detail table th,
 #modal-make-payment table th {
   text-align: left !important;
 }

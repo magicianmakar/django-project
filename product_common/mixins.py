@@ -111,8 +111,6 @@ class OrderMixin:
         return reverse('admin:product_common_order_change', args=(self.id,))
 
     def get_dropified_source_id(self):
-        if self.stripe_transaction_id:
-            return self.stripe_transaction_id
         return str(self.id)
 
     @classmethod

@@ -633,14 +633,14 @@
 {% include "common/partial/modal_add_order_id.html" with store_title=store.title %}
 
 {% include "groovekart/partial/groovekart_product_selector.html" %}
-{% include "supplements/partials/make_payment_modal.html" %}
-
+{% include "supplements/partials/order_details_modal.html" %}
 {% endblock %}
 
 
 {% block extracss %}
 
 {% compress css %}
+    <link href="{% static 'libs/bower_components/switchery/dist/switchery.min.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/jquery.steps/demo/css/jquery.steps.css' %}" rel="stylesheet">
@@ -722,6 +722,7 @@
     <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'libs/bower_components/select2/dist/js/select2.full.min.js' %}" type="text/javascript"></script>
     <script src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}" type="text/javascript"></script>
+    <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'prints/js/track_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'prints/js/place_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>

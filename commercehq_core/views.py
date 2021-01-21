@@ -26,7 +26,7 @@ from django.views.generic.detail import DetailView
 from django.core.cache.utils import make_template_fragment_key
 
 from supplements.lib.shipstation import get_address as get_shipstation_address
-from supplements.models import PLSOrder, PLSOrderLine
+from supplements.models import PLSOrder
 from supplements.tasks import update_shipstation_address
 from shopified_core import permissions
 from shopified_core.decorators import PlatformPermissionRequired
@@ -958,7 +958,7 @@ class OrdersList(ListView):
                     line['supplier'] = supplier
                     is_pls = line['is_pls'] = supplier.is_pls
                     if is_pls:
-                        line['is_paid'] = PLSOrderLine.is_paid(store, order['id'], line['id'])
+                        line['is_paid'] = False
                         # pass orders without PLS products (when one store is used in multiple account)
                         try:
                             line['weight'] = supplier.user_supplement.get_weight(line['quantity'])
@@ -972,7 +972,7 @@ class OrdersList(ListView):
                                     order,
                                     german_umlauts=german_umlauts,
                                     shipstation_fix=True
-                                )
+                                )[1]
                                 address_hash = get_shipstation_address(shipstation_address, hashed=True)
                                 pls_address_hash = pls_items[0].pls_order.shipping_address_hash
                                 shipstation_address_changed = pls_address_hash != str(address_hash)
@@ -1071,12 +1071,15 @@ class OrdersList(ListView):
                     order=order,
                     aliexpress_fix=aliexpress_fix_address,
                     aliexpress_fix_city=aliexpress_fix_city,
-                    german_umlauts=german_umlauts)
+                    german_umlauts=german_umlauts,
+                    shipstation_fix=supplier.is_pls if supplier else False)
 
                 order['customer_address'] = customer_address
 
                 order_data = {
                     'id': '{}_{}_{}'.format(self.store.id, order['id'], line['id']),
+                    'order_name': order['id'],
+                    'title': line['title'],
                     'quantity': line['quantity'],
                     'weight': line.get('weight'),
                     'shipping_address': customer_address,

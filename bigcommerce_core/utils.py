@@ -41,6 +41,7 @@ from shopified_core.shipping_helper import (
 )
 
 import leadgalaxy.utils as leadgalaxy_utils
+from supplements.utils import supplement_customer_address
 
 from .models import BigCommerceStore, BigCommerceProduct, BigCommerceBoard
 
@@ -725,7 +726,7 @@ def bigcommerce_customer_address(order, aliexpress_fix=False, german_umlauts=Fal
     customer_address['province'] = unidecode(province) if type(province) is str else province
 
     if shipstation_fix:
-        return customer_address
+        return order, supplement_customer_address(customer_address)
 
     customer_province = customer_address['province']
 

@@ -84,7 +84,7 @@ from shopified_core.utils import (
 )
 from supplements.lib.shipstation import get_address as get_shipstation_address
 from supplements.tasks import update_shipstation_address
-from supplements.models import PLSOrder, PLSOrderLine
+from supplements.models import PLSOrder
 from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import (
     ShopifyOrder,
@@ -3877,11 +3877,8 @@ class OrdersView(TemplateView):
                         shipping_method = None
 
                     line_item['product'] = product
-                    is_paid = False
                     is_pls = line_item['is_pls'] = supplier.is_pls
                     if is_pls:
-                        is_paid = PLSOrderLine.is_paid(self.store, order['id'], line_item['id'])
-
                         # pass orders without PLS products (when one store is used in multiple account)
                         try:
                             line_item['weight'] = supplier.user_supplement.get_weight(line_item['quantity'])
@@ -3895,7 +3892,7 @@ class OrdersView(TemplateView):
                                     order,
                                     german_umlauts=self.config.german_umlauts,
                                     shipstation_fix=True
-                                )
+                                )[1]
                                 address_hash = get_shipstation_address(shipstation_address, hashed=True)
                                 pls_address_hash = pls_items[0].pls_order.shipping_address_hash
                                 shipstation_address_changed = pls_address_hash != str(address_hash)
@@ -3916,7 +3913,7 @@ class OrdersView(TemplateView):
                                     'image_url': line_item['image_src'],
                                 })
 
-                    line_item['is_paid'] = is_paid
+                    line_item['is_paid'] = False
                     line_item['supplier'] = supplier
                     line_item['shipping_method'] = shipping_method
                     line_item['supplier_type'] = supplier.supplier_type()
@@ -3993,12 +3990,15 @@ class OrdersView(TemplateView):
                     aliexpress_fix=self.config.aliexpress_fix_address and supplier and supplier.is_aliexpress,
                     aliexpress_fix_city=self.config.aliexpress_fix_city,
                     german_umlauts=self.config.german_umlauts,
-                    return_corrections=True)
+                    return_corrections=True,
+                    shipstation_fix=supplier.is_pls if supplier else False)
 
                 if customer_address and not order['pending_payment']:
                     try:
                         order_data = {
                             'id': '{}_{}_{}'.format(self.store.id, order['id'], line_item['id']),
+                            'order_name': order['name'],
+                            'title': line_item['title'],
                             'quantity': line_item['quantity'],
                             'weight': line_item.get('weight'),
                             'shipping_address': customer_address,

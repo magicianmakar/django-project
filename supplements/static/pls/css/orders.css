@@ -1,0 +1,78 @@
+#modal-order-detail .modal-content .modal-loading {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+}
+
+#modal-order-detail .modal-content.loading .modal-loading {
+    display: block;
+}
+
+#modal-order-detail .modal-content.loading .modal-body:after {
+    content: '';
+    background-color: rgba(255, 255, 255, 0.7);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2000;
+}
+
+.table tbody tr.supplement-item-payment td {
+    vertical-align: middle;
+}
+
+.table tbody tr.supplement-item-payment td.status-text a {
+    border-bottom: 1px solid;
+}
+
+.pull-left.shipping-service {
+    clear: left;
+}
+
+.pull-left.shipping-service input {
+    margin: 3px 6px 0 0;
+    float: left;
+}
+
+#modal-order-detail .totals {
+    padding-top: 10px;
+}
+
+#modal-order-detail .totals span + span {
+    padding-left: 20px;
+}
+
+#modal-order-detail .modal-dialog {
+    overflow-y: initial !important;
+}
+#modal-order-detail .modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+#modal-order-detail .tax .tax-cost {
+    padding-left: 10px;
+    vertical-align: middle;
+}
+
+#modal-order-detail .tax .sk-spinner {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#modal-order-detail .tax .switchery {
+    vertical-align: middle;
+    margin-bottom: 1px;
+}
+
+
+@media (min-width: 992px) {
+    .modal-lg {
+        width: 1000px;
+    }
+}

@@ -587,5 +587,10 @@ CKEDITOR_CONFIGS = {
 CHURNZERO_APP_KEY = os.environ.get('CHURNZERO_APP_KEY', '')
 CHURNZERO_SECRET_TOKEN = os.environ.get('CHURNZERO_SECRET_TOKEN', '')
 
+# Private Label Duties and Taxes
+ZONOS_API_KEY = os.environ.get('ZONOS_API_KEY', '')
+ZONOS_API_VERSION = os.environ.get('ZONOS_API_VERSION', '')
+ZONOS_API_URL = os.environ.get('ZONOS_API_URL', '')
+
 RECAPTCHA_SITE_KEY = os.environ.get('RECAPTCHA_SITE_KEY')
 RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY')

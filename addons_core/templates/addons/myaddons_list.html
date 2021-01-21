@@ -37,7 +37,7 @@
                                 <h3 class="m-b-none m-t-lg addon-h3">{{ item.title }}</h5>
                                 <p class="addon-h4 m-b-heigh m-t-xs">{{ item.short_description | safe }}</p>
                                 <p class="addon-h4">Last Billed at:<strong>
-                                    {{ item.addonusage_set.all.last.billed_at|default:'N/A' }}
+                                    {{ item.addonusage_set.last.billed_at|default:'N/A' }}
                                     </strong>
                                 </p>
                             </div>

@@ -1,11 +1,18 @@
+from authorizenet import apicontractsv1
 from django.db.models import F, Sum
 from django.shortcuts import reverse
+from django.utils.functional import cached_property
 from django.utils.html import format_html
 
 import simplejson as json
 from bs4 import BeautifulSoup
 
-from supplements.lib.authorizenet import charge_customer_profile, get_customer_payment_profile, refund_customer_profile
+from supplements.lib.authorizenet import (
+    charge_customer_profile,
+    get_customer_payment_profile,
+    refund_customer_profile,
+    charge_customer_for_items,
+)
 
 
 class PLSupplementMixin:
@@ -123,6 +130,16 @@ class UserSupplementMixin(PLSupplementMixin):
         for country in shipping_countries.all():
             countries = country.locations.split(',')
             for country_splitted in countries:
+                target.extend([country_splitted.strip()])
+            target.extend([country.slug])
+
+        return target
+
+    @cached_property
+    def shipping_locations(self):
+        target = []
+        for country in self.pl_supplement.shipping_countries.all():
+            for country_splitted in country.locations.split(','):
                 target.extend([country_splitted.strip()])
             target.extend([country.slug])
 
@@ -298,6 +315,10 @@ class PLSOrderMixin:
     @property
     def total_refund_amount_string(self):
         return '${:.2f}'.format(self.refund_amount + self.shipping_refund)
+
+    @property
+    def is_taxes_paid(self):
+        return (self.taxes + self.duties) > 0
 
 
 class PLSOrderLineMixin:
@@ -510,6 +531,16 @@ class PayoutMixin:
 
 
 class AuthorizeNetCustomerMixin:
+    @cached_property
+    def customer_profile(self):
+        customer_profile = apicontractsv1.customerProfilePaymentType()
+        customer_profile.customerProfileId = self.customer_id
+
+        customer_profile.paymentProfile = apicontractsv1.paymentProfile()
+        customer_profile.paymentProfile.paymentProfileId = self.payment_id
+
+        return customer_profile
+
     def charge(self, amount, line):
         return charge_customer_profile(
             amount,
@@ -548,3 +579,15 @@ class AuthorizeNetCustomerMixin:
 
     def has_billing(self):
         return bool(self.payment_id)
+
+    def get_transaction(self, transanction_type='authCaptureTransaction'):
+        transaction = apicontractsv1.transactionRequestType()
+        transaction.transactionType = transanction_type
+        transaction.profile = self.customer_profile
+        return transaction
+
+    def charge_items(self, line_items):
+        return charge_customer_for_items(
+            self.get_transaction(),
+            line_items
+        )

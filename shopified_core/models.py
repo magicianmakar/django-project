@@ -57,7 +57,7 @@ class SupplierBase(models.Model):
     @property
     def is_pls(self):
         try:
-            return (
+            return bool(
                 (self.is_dropified and 'supplement' in self.product_url)
                 or safe_str(self.supplier_name) in SUPPLEMENTS_SUPPLIER
             )

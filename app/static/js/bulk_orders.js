@@ -11,6 +11,21 @@ function bulkAddOrderToQueue(order) {
     });
 }
 
+function addOrdersToPrivateLabel(orders) {
+    var orderDataIDs = [];
+    for (var i = 0, iLength = orders.length; i < iLength; i++) {
+        var bulkItems = orders[i].items;
+        if (bulkItems) {
+            for (var y = 0, yLength = bulkItems.length; y < yLength; y++) {
+                orderDataIDs.push(bulkItems[y].order_data);
+            }
+        } else {
+            orderDataIDs.push(window.bulkOrderQueue.data[i].order_data);
+        }
+    }
+    processOrders(orderDataIDs, false);
+}
+
 window.bulkOrderQueue = null;
 function fetchOrdersToQueue(data) {
     $('.stop-bulk-btn').show();
@@ -74,25 +89,38 @@ $('.bulk-order-btn').click(function (e) {
         return;
     }
 
-    ga('clientTracker.send', 'event', 'Bulk Order', 'Shopify', sub_conf.shop);
-
     $('#bulk-order-modal').data('dropified-print', $(this).data('dropified-print') || false);
+
+    var isPrivateLabel = $(this).data('dropified-supplements') || false;
+    $('#bulk-order-modal').data('dropified-supplements', isPrivateLabel);
+    if (window.bulkOrderQueue && window.bulkOrderQueue.data.length) {
+        if (isPrivateLabel && window.bulkOrderQueue.is_supplement_bulk_order) {
+            addOrdersToPrivateLabel(window.bulkOrderQueue.data);
+            $('#modal-order-detail').modal('show');
+            return true;
+        }
+    }
+
     window.bulkOrderQueue = {
         pages: {},
         data: [],
         stop: false,
         next: null,
-        is_dropified_print: $('#bulk-order-modal').data('dropified-print')
+        is_dropified_print: $('#bulk-order-modal').data('dropified-print'),
+        is_supplement_bulk_order: isPrivateLabel,
     };
+    console.log(window.bulkOrderQueue.is_supplement_bulk_order);
 
     var is_dropified_print = window.bulkOrderQueue.is_dropified_print;
     $('#bulk-order-modal .modal-title .original-title').toggleClass('hidden', is_dropified_print);
     $('#bulk-order-modal .modal-title .dropified-print-title').toggleClass('hidden', !is_dropified_print);
 
+    ga('clientTracker.send', 'event', 'Bulk Order', 'Shopify', sub_conf.shop);
     $('#bulk-order-modal').modal({
         backdrop: 'static',
         keyboard: false
     });
+    $('.bulk-order-step [name="queue_page_from"]').trigger('focus');
 });
 
 $('#bulk-order-modal').on('click', '.stop-bulk-btn', function (e) {
@@ -146,7 +174,7 @@ $("#bulk-order-steps").steps({
             } else {
                 $('#bulk-order-step-error').css('display', 'none');
                 $('#bulk-order-step-error span').text('');
-                window.bulkOrderQueue = {
+                window.bulkOrderQueue = $.extend(true, window.bulkOrderQueue, {
                     pages: {
                         'from': pageFrom,
                         'to': pageTo
@@ -154,8 +182,7 @@ $("#bulk-order-steps").steps({
                     data: [],
                     stop: false,
                     next: null,
-                    is_dropified_print: $('#bulk-order-modal').data('dropified-print')
-                };
+                });
             }
         } else if (currentIndex == 1) {
             var progress = $('#bulk-order-modal .progress .progress-bar');
@@ -190,7 +217,9 @@ $("#bulk-order-steps").steps({
             formData.push({name: 'bulk_queue', value: '1'});
             formData.push({name: 'page_start', value: window.bulkOrderQueue.pages.from});
             formData.push({name: 'page_end', value: window.bulkOrderQueue.pages.to});
-            if (window.bulkOrderQueue.is_dropified_print) {
+            if (window.bulkOrderQueue.is_supplement_bulk_order) {
+                formData.push({name: 'is_supplement_bulk_order', value: '1'});
+            } else if (window.bulkOrderQueue.is_dropified_print) {
                 formData.push({name: 'is_dropified_print', value: '1'});
             }
 
@@ -210,6 +239,8 @@ $("#bulk-order-steps").steps({
     onFinished: function (event, currentIndex) {
         if (window.bulkOrderQueue.is_dropified_print) {
             addOrdersToPrint(window.bulkOrderQueue.data);
+        } else if(window.bulkOrderQueue.is_supplement_bulk_order) {
+            addOrdersToPrivateLabel(window.bulkOrderQueue.data);
         } else {
             $.each(window.bulkOrderQueue.data, function (i, order) {
                 bulkAddOrderToQueue(order);

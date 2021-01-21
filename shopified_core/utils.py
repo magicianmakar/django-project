@@ -928,6 +928,7 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
     next_page_url = None
     enable_supplier_grouping = False
     is_dropified_print = request.GET.get('is_dropified_print') == '1'
+    only_private_label_orders = request.GET.get('is_supplement_bulk_order') == '1'
 
     if store_type in ['shopify', '']:
         orders_place_url = reverse('orders_place')
@@ -992,6 +993,14 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                     # No bundle support yet
                     if line_item.get('is_bundle', False):
                         continue
+
+                elif only_private_label_orders:
+                    if not line_item.get('is_pls'):
+                        continue
+
+                    if line_item.get('is_paid'):
+                        continue
+
                 else:
                     if not line_item['supplier'].support_auto_fulfill():
                         continue
@@ -1008,6 +1017,9 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                     'order_id': str(order['id']),
                     'line_id': str(line_item['id']),
                     'line_title': line_item['title'],
+                    'quantity': line_item['quantity'],
+                    'weight': line_item.get('weight'),
+                    'price': line_item['order_data']['total'],
                     'store_type': store_type,
                     'source_id': str(supplier.get_source_id()),
                     'url': app_link(

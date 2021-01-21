@@ -1,7 +1,16 @@
-{% load template_helper %}
+{% load template_helper perms_helper %}
 
 <div class="row m-t hidden-xs">
     <div class="col-md-4 col-md-offset-8 text-right">
+        {% if request.user|can:'bulk_order.use' %}
+        <a class="btn  btn-success btn-rounded btn-sm itooltip bulk-order-btn"
+            id="bulk-supplements"
+            title="Place Supplements orders in bulk" href="#"
+            pages-count="{{paginator.num_pages}}" orders-count="{{ orders_count }}"
+            data-dropified-supplements="true" data-store-id="{{ store.id }}"
+            >Bulk Supplements Order</a>
+        {% endif %}
+
         {% if show_pod %}
         <a class="btn  btn-success btn-rounded btn-sm itooltip bulk-order-btn"
             title="Place print on demand orders in bulk" href="#"

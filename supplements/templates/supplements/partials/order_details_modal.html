@@ -1,0 +1,117 @@
+{% load static %}
+
+<div id="modal-order-detail" class="modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Details</h4>
+      </div>
+      <div class="modal-body">
+        <div class="modal-loading sk-spinner sk-spinner-double-bounce">
+          <div class="sk-double-bounce1"></div>
+          <div class="sk-double-bounce2"></div>
+        </div>
+        <table class="table table-striped">
+          <thead>
+            <th>Order</th>
+            <th>Item</th>
+            <th width="70px">Quantity</th>
+            <th>Price</th>
+            <th>Subtotal</th>
+            <th width="130px">Shipping</th>
+            <th class="tax-view">Pay Duties & Taxes</th>
+            <th>Total</th>
+            <th>Status</th>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <div class="pull-left totals">
+          <span>Products: <b id="supplement-products-total"></b></span>
+          <span>Shipping: <b id="supplement-shipping-total"></b></span>
+          <span class="tax-view">Taxes: <b id="supplement-taxes-total"></b></span>
+          <span>Total: <b id="supplement-orders-total"></b></span>
+        </div>
+
+        <a href="#" class="btn btn-danger" data-dismiss="modal" aria-label="Close">Close</a>
+        <button class="btn btn-primary place-label-orders"
+          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Pay for Item(s)</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% verbatim %}
+<script id="id-order-detail-template" type="text/x-handlebars-template">
+  {{#each orders}}{{#each this.items}}
+  <tr class="supplement-item-payment" supplement-order-data-id="{{ this.id }}" order-id="{{ this.order_id }}">
+    <td>{{ this.order_name }}</td>
+    <td>{{ this.title }}</td>
+    <td class="text-center">{{ this.quantity }}x</td>
+    <td>{{ this.supplement.price }}</td>
+    <td class="product-cost-{{ this.order_id }}"
+        data-cost="{{ this.supplement.subtotal }}">
+      {{ this.supplement.currency_subtotal }}
+    </td>
+
+    {{#unless @index}}
+    <td rowspan="{{ ../items.length }}">
+      {{#each ../shippings}}
+      <div class="pull-left shipping-service">
+        <label>
+          <input type="radio"
+                 data-service-id="{{ this.service_id }}"
+                 data-cost="{{ this.shipping_cost }}"
+                 name="shipping_service_{{ ../order_id }}"
+                 value="{{ this.service.service_code }}"
+                 {{#unless this.service.service_name}}class="hidden"{{/unless}}
+                 {{#if this.selected}}checked{{/if}}>
+
+          {{#if this.service.service_name}}
+          {{ this.service.service_name }} ({{ this.currency_shipping_cost }})
+          {{else}}
+          {{ this.currency_shipping_cost }}
+          {{/if}}
+        </label>
+      </div>
+      {{/each}}
+    </td>
+    <td rowspan="{{ ../items.length }}" class="tax tax-view">
+      {{#unless ../tax.disabled}}
+      <input type="checkbox"
+             name="pay_taxes_{{ this.order_id }}"
+             class="js-switch"
+             {{#if ../tax.pay_taxes }}checked="checked"{{/if}} />
+      <span class="tax-cost tax-{{ this.order_id }} {{#unless ../tax.pay_taxes }}hidden{{/unless}}"
+            data-cost="{{ ../tax.cost }}">{{ ../tax.currency_cost }}</span>
+      <div class="sk-spinner sk-spinner-wave hidden">
+        <div class="sk-rect1"></div>
+        <div class="sk-rect2"></div>
+        <div class="sk-rect3"></div>
+      </div>
+      {{/unless}}
+    </td>
+    <td rowspan="{{ ../items.length }}"
+        class="order-total"
+        data-order-id="{{ this.order_id }}">
+    </td>
+    {{/unless}}
+
+    <td class="status-text {{#if this.success}}text-success{{else}}text-danger{{/if}}">
+      {{#if this.status_link}}
+      <a target="_blank"
+         class="{{#if this.success}}text-success{{else}}text-danger{{/if}}"
+         href="{{ this.status_link }}">{{ this.status }}</a>
+      {{else}}
+      {{ this.status }}
+      {{/if}}
+    </td>
+  </tr>
+  {{/each}}{{/each}}
+</script>
+{% endverbatim %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'pls/css/orders.css' %}">

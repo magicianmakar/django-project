@@ -35,6 +35,7 @@ from shopified_core.shipping_helper import (
 )
 
 import leadgalaxy.utils as leadgalaxy_utils
+from supplements.utils import supplement_customer_address
 
 
 def get_store_from_request(request):
@@ -314,7 +315,7 @@ def chq_customer_address(order, aliexpress_fix=False, german_umlauts=False,
         customer_address['phone'] = order['address'].get('phone')
         if customer_address['address2']:
             customer_address['address1'] = f"{customer_address['address1']}, {customer_address['address2']}"
-        return customer_address
+        return order, supplement_customer_address(customer_address)
 
     customer_province = customer_address['province']
     if not customer_address.get('province'):
