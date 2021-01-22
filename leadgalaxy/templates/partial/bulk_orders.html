@@ -5,10 +5,10 @@
         {% if request.user|can:'bulk_order.use' %}
         <a class="btn  btn-success btn-rounded btn-sm itooltip bulk-order-btn"
             id="bulk-supplements"
-            title="Place Supplements orders in bulk" href="#"
+            title="Place Private Label orders in bulk" href="#"
             pages-count="{{paginator.num_pages}}" orders-count="{{ orders_count }}"
             data-dropified-supplements="true" data-store-id="{{ store.id }}"
-            >Bulk Supplements Order</a>
+            >Bulk Private Label Order</a>
         {% endif %}
 
         {% if show_pod %}
