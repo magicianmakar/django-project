@@ -11,7 +11,7 @@ from django.views import View
 from django.views.generic.list import ListView
 
 import simplejson as json
-from lib.exceptions import capture_message
+from lib.exceptions import capture_message, capture_exception
 
 from shopified_core.utils import get_store_api, get_track_model
 
@@ -219,12 +219,16 @@ class OrdersShippedWebHookView(View, BaseMixin):
 
         try:
             order = self.order_model.objects.get(shipstation_key=order_key)
+
+            store_type = order.store_type
+            StoreApi = get_store_api(store_type)
+            OrderTrack = get_track_model(store_type)
         except self.order_model.DoesNotExist:
             return
 
-        store_type = order.store_type
-        StoreApi = get_store_api(store_type)
-        OrderTrack = get_track_model(store_type)
+        except:
+            capture_exception()
+            return
 
         tracking_number = shipment['trackingNumber']
         get_line = self.order_line_model.objects.get
