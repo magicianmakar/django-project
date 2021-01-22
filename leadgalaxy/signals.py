@@ -318,8 +318,6 @@ def shopify_send_keen_event_for_product(sender, instance, created, **kwargs):
 
 @receiver(user_logged_in)
 def post_login(sender, user, request, **kwargs):
-    if not user.models_user.profile.has_churnzero_account:
-        set_churnzero_account(user.models_user, create=True)
     if user.models_user.profile.has_churnzero_account:
         LoginEvent.objects.create(user=user)
 

@@ -200,7 +200,7 @@ class UserProfileTestCase(BaseTestCase):
             self.assertEquals(user.profile.trial_days_left, trial_days_left)
 
     @patch('leadgalaxy.signals.post_churnzero_addon_update', Mock())
-    @patch('leadgalaxy.signals.set_churnzero_account')
+    @patch('leadgalaxy.utils.set_churnzero_account')
     def test_must_call_set_churnzero_account_upon_login_if_no_account_yet(self, set_churnzero_account):
         user = UserFactory()
         password = '123456'
@@ -209,6 +209,7 @@ class UserProfileTestCase(BaseTestCase):
         user.models_user.profile.has_churnzero_account = False
         user.models_user.profile.save()
         self.client.login(username=user.username, password=password)
+        self.client.get('/')
         set_churnzero_account.assert_called_with(user.models_user, create=True)
 
     def test_must_create_login_event_on_login_if_has_churnzero_account(self):
@@ -234,7 +235,7 @@ class UserProfileTestCase(BaseTestCase):
         self.assertEqual(LoginEvent.objects.count(), 0)
 
     @patch('leadgalaxy.signals.post_churnzero_addon_update', Mock())
-    @patch('leadgalaxy.signals.set_churnzero_account')
+    @patch('leadgalaxy.utils.set_churnzero_account')
     def test_must_not_call_set_churnzero_account_upon_login_if_has_account(self, set_churnzero_account):
         user = UserFactory()
         password = '123456'
@@ -243,6 +244,7 @@ class UserProfileTestCase(BaseTestCase):
         user.models_user.profile.has_churnzero_account = True
         user.models_user.profile.save()
         self.client.login(username=user.username, password=password)
+        self.client.get('/')
         self.assertFalse(set_churnzero_account.called)
 
     def test_must_have_correct_churnzero_account_id_hash(self):

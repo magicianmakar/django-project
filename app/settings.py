@@ -116,6 +116,7 @@ MIDDLEWARE = (
     'leadgalaxy.utils.UserIpSaverMiddleware',
     'leadgalaxy.utils.TimezoneMiddleware',
     'leadgalaxy.utils.UserEmailEncodeMiddleware',
+    'leadgalaxy.utils.AnalyticsMiddleware',
 )
 
 ROOT_URLCONF = 'app.urls'

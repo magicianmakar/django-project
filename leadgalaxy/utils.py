@@ -2385,7 +2385,7 @@ def generate_user_activity(user, output=None):
 
 
 def set_churnzero_account(models_user, create=False):
-    if models_user.profile.plan.is_stripe():
+    if models_user.profile.plan.is_stripe() and hasattr(models_user, "stripe_customer"):
         addons_list = models_user.profile.addons.values_list('churnzero_name', flat=True)
         actions = [{
             'appKey': settings.CHURNZERO_APP_KEY,
@@ -2481,6 +2481,17 @@ class UserEmailEncodeMiddleware(object):
         params[name] = encode_params(value)
 
         return HttpResponseRedirect('{}?{}'.format(request.path, params.urlencode()))
+
+
+class AnalyticsMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated and not request.user.models_user.profile.has_churnzero_account:
+            set_churnzero_account(request.user.models_user, create=True)
+
+        return self.get_response(request)
 
 
 class CookiesSameSite(MiddlewareMixin):
