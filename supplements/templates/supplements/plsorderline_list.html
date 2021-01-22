@@ -101,6 +101,8 @@
         {% else %}
         <span class="label label-primary">Paid</span>
         {% endif %}
+
+        <a class="btn btn-default btn-xs m-l-xs sync-shipstation" data-button-loading="Syncing" data-order-id="{{ line_item.pls_order.shipstation_order_number }}" href="#">Sync Shipstation</a>
       </td>
     {% empty %}
       <td colspan="10">No orders yet.</td>

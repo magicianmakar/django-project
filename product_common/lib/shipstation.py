@@ -113,8 +113,8 @@ def get_paginated_response(response, url, key):
     headers = {'Content-Type': 'application/json'}
     headers.update(get_auth_header())
 
-    data = response[key]
-    total_pages = response['pages']
+    data = response.get(key, [])
+    total_pages = response.get('pages', 1)
     next_page = 2
     while next_page <= total_pages:
         url = f'{url}&page={next_page}'

@@ -1,8 +1,6 @@
 (function() {
     'use strict';
 
-    $("#id_date").datepicker();
-
     $('#label-warning-modal').on('hide.bs.modal', function() {
         $('#label-warning-modal .download_latest_label').addClass('hidden');
         $('#label-warning-modal .newer_available').addClass('hidden');
@@ -31,6 +29,32 @@
             error: function (data) {
                 displayAjaxError('Download Error', 'Please try again later!');
             },
+        });
+    });
+
+    $('.sync-shipstation').on('click', function(e) {
+        e.preventDefault();
+        var orderID = $(this).data('order-id');
+
+        var shipstationUrl = 'https://ssapi11.shipstation.com/shipments?storeID=171654&includeShipmentItems=False';
+        $.ajax({
+            url: '/supplements/shipstation/webhook/order_shipped',
+            type: 'POST',
+            context: $(this),
+            contentType: 'application/json',
+            data: JSON.stringify({
+                "resource_type": "SHIP_NOTIFY",
+                "resource_url": shipstationUrl + '&orderId=' + orderID
+            }),
+            beforeSend: function() {
+                $(this).button('loading');
+            },
+            error: function (data) {
+                displayAjaxError('Shipstation Sync', data);
+            },
+            complete: function() {
+                $(this).button('reset');
+            }
         });
     });
 
