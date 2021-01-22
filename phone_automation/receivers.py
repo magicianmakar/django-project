@@ -8,6 +8,9 @@ from django.dispatch import receiver
 
 def process_callflex_recurings_delete(sender, **kwargs):
     try:
+        if not sender:
+            return
+
         main_stripe_subscription = sender
         custom_callflex_subscriptions = main_stripe_subscription.user.customstripesubscription_set.filter(
             custom_plan__type='callflex_subscription')
@@ -23,6 +26,9 @@ main_subscription_canceled.connect(process_callflex_recurings_delete)
 
 def process_callflex_recurings_update(sender, **kwargs):
     try:
+        if not sender:
+            return
+
         main_stripe_subscription = sender
         sub = kwargs['stripe_sub']
         active_plans = []
