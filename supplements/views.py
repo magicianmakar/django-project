@@ -1226,7 +1226,7 @@ class OrderDetailMixin(LoginRequiredMixin, View):
 
         return dict(
             order=order,
-            shipping_address=shipping_address[1],
+            shipping_address=shipping_address,
             breadcrumbs=self.get_breadcrumbs(order),
             line_items=line_items
         )
