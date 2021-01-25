@@ -144,7 +144,7 @@ class WooStore(StoreBase):
             order,
             german_umlauts=get_config('_use_german_umlauts', False),
             shipstation_fix=True
-        )
+        )[1]
 
         for item in order['line_items']:
             item['title'] = item.pop('name')

@@ -120,7 +120,7 @@ class CommerceHQStore(StoreBase):
             order,
             german_umlauts=get_config('_use_german_umlauts', False),
             shipstation_fix=True
-        )
+        )[1]
 
         order['currency'] = 'usd'
         order['created_at'] = datetime.fromtimestamp(order['order_date']).strftime('%Y-%m-%dT%H:%M:%S')

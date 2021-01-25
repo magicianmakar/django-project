@@ -172,6 +172,11 @@ class GrooveKartStore(StoreBase):
                 line['variant_id'] = variant_id
             line['title'] = line['name']
 
+        from groovekart_core.utils import gkart_customer_address
+        order['shipping_address'] = gkart_customer_address(
+            order,
+            shipstation_fix=True
+        )
         return order
 
     def get_product(self, product_id, store):

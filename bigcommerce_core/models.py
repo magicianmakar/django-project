@@ -170,7 +170,7 @@ class BigCommerceStore(StoreBase):
             order,
             german_umlauts=get_config('_use_german_umlauts', False),
             shipstation_fix=True
-        )
+        )[1]
 
         return order
 

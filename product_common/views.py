@@ -219,15 +219,7 @@ class OrdersShippedWebHookView(View, BaseMixin):
 
         try:
             order = self.order_model.objects.get(shipstation_key=order_key)
-
-            store_type = order.store_type
-            StoreApi = get_store_api(store_type)
-            OrderTrack = get_track_model(store_type)
         except self.order_model.DoesNotExist:
-            return
-
-        except:
-            capture_exception()
             return
 
         tracking_number = shipment['trackingNumber']
@@ -266,6 +258,14 @@ class OrdersShippedWebHookView(View, BaseMixin):
                     order.is_fulfilled = True
                     order.status = Order.SHIPPED
                 order.save()
+
+        try:
+            store_type = order.store_type
+            StoreApi = get_store_api(store_type)
+            OrderTrack = get_track_model(store_type)
+        except:
+            capture_exception()
+            return
 
         tracks = OrderTrack.objects.filter(
             source_id__in=source_data.keys(),

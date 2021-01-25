@@ -44,7 +44,7 @@
             contentType: 'application/json',
             data: JSON.stringify({
                 "resource_type": "SHIP_NOTIFY",
-                "resource_url": shipstationUrl + '&orderId=' + orderID
+                "resource_url": shipstationUrl + '&orderNumber=' + orderID
             }),
             beforeSend: function() {
                 $(this).button('loading');
