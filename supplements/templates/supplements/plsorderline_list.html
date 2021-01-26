@@ -126,11 +126,14 @@
 {% endblock %}
 
 {% block extrajs %}
+{% compress js %}
 <script type="text/javascript" src="{% static 'pls/js/common.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
 <script type="text/javascript" src="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.js' %}"></script>
 <script type="text/javascript" src="{% static 'js/daterangepicker.js' %}"></script>
 <script type="text/javascript" src="{% static 'pls/js/plsorderline_list.js' %}"></script>
+{% endcompress %}
+
 <script type='application/javascript'>
   setupDateRangePicker('#date', 'input[name="date"]');
 </script>
