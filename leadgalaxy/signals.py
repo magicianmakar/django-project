@@ -63,7 +63,7 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         change_log.changed_at = arrow.utcnow().datetime
         change_log.save()
 
-        if not current_plan.support_addons:
+        if not current_plan.support_addons or current_plan.is_active_free:
             cancel_all_addons.apply_async([user.id], countdown=5)
 
         if not settings.DEBUG:
