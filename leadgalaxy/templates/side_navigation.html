@@ -11,7 +11,7 @@
     <div class="sidebar-collapse">
         <div class="logo">
             <a href="{% url 'index' %}">
-                {% if user|can:'pls.use' %}
+                {% if user|can:'pls.use' or user.profile.private_label %}
                   {% if 'private-label' in user.profile.plan.slug or user.profile.private_label or request.session.shopify_api == 'private-label' %}
                     <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white3.new.png"/>
                   {% else %}
@@ -100,7 +100,7 @@
     </ul>
 
     {# Dropified Black #}
-    {% if user|can:'pls.use' %}
+  {% if user|can:'pls.use' or user.profile.private_label %}
     <ul style="padding:0;margin: 0 0 0 24px">
         <li class="section">
           <span class="section-header">
@@ -138,7 +138,7 @@
     </ul>
     {% endif %}
 
-    {% else %}
+  {% else %}
       <ul style="padding:0;margin: 10px 0 0 24px">
           <li>
               <a href="https://www.dropified.com/private-label-on-demand/" target="_blank">
@@ -146,7 +146,7 @@
               </a>
           </li>
       </ul>
-    {% endif %}
+  {% endif %}
 
     {# footer #}
     <ul class="navfooter {% if user.is_staff %}staff{% endif %}">
