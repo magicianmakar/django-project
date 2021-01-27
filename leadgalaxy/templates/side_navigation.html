@@ -3,12 +3,16 @@
 {% load template_helper %}
 {% load cache %}
 
-<nav id="side-menu" class="navbar-default sidebar navbar-static-side {% if user|can:'pls.use' %}pls{% endif %}" role="navigation">
+<nav id="side-menu" class="navbar-default sidebar navbar-static-side
+  {% if user|can:'pls.use' or user.profile.private_label or request.session.shopify_api == 'private-label' %}
+  pls
+  {% endif %}
+  " role="navigation">
     <div class="sidebar-collapse">
         <div class="logo">
             <a href="{% url 'index' %}">
                 {% if user|can:'pls.use' %}
-                  {% if 'private-label' in user.profile.plan.slug %}
+                  {% if 'private-label' in user.profile.plan.slug or user.profile.private_label or request.session.shopify_api == 'private-label' %}
                     <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white3.new.png"/>
                   {% else %}
                     <img src="https://cdn.dropified.com/static/img/black/dropified_black_text_white.png"/>
