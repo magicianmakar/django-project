@@ -77,6 +77,8 @@ class Addon(models.Model):
         null=True
     )
 
+    stores = models.PositiveIntegerField(default=0, verbose_name='Add store limit')
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     stripe_product_id = models.CharField(max_length=255, blank=True, default='')

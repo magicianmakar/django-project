@@ -1,7 +1,7 @@
 import arrow
 
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Sum
 from django.core.cache import cache
 
 from leadgalaxy.models import ShopifyStore
@@ -232,7 +232,12 @@ def can_add_store(user):
     if user_stores == -2:  # Use GroupPlan.stores limit (default)
         total_allowed = profile.plan.stores  # if equal -1 that mean user can add unlimited store
     else:
-        total_allowed = user_stores
+        total_allowed = user_stores  # Unlimited (-1) Or a positive number of allowed stores defined on this profile (0 or more)
+
+    if total_allowed > -1 and profile.plan.support_addons:
+        # Addons doesn't support unlimited stores
+        addons_store_limit = profile.addons.all().aggregate(Sum('stores'))['stores__sum'] or 0
+        total_allowed += addons_store_limit
 
     user_count = profile.get_stores_count()
 
