@@ -124,10 +124,14 @@ def subscription_activated(request):
     permissions.user_can_view(request.user, sub)
     charge = sub.refresh()
 
-    if charge.status == 'accepted':
-        charge.activate()
+    if charge.status in ['accepted', 'active']:
+        is_charged = False
+
+        if charge.status == 'accepted':
+            charge.activate()
 
         if request.session.get('active_plan'):
+            is_charged = True
             request.user.profile.change_plan(GroupPlan.objects.get(
                 id=request.session.get('active_plan')))
 
@@ -146,11 +150,12 @@ def subscription_activated(request):
 
         request.user.set_config('_can_trial', False)
 
-        SuccessfulPaymentEvent.objects.create(user=request.user, charge=json.dumps({
-            'shopify': True,
-            'charge': charge.to_dict(),
-            'count': 1
-        }))
+        if is_charged:
+            SuccessfulPaymentEvent.objects.create(user=request.user, charge=json.dumps({
+                'shopify': True,
+                'charge': charge.to_dict(),
+                'count': 1
+            }))
 
     else:
         request.user.profile.change_plan(GroupPlan.objects.get(id=request.session['current_plan']))
