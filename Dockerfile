@@ -5,13 +5,13 @@ ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 RUN apt-get update && apt-get install -y \
     curl && \
-    curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+    curl -sL https://deb.nodesource.com/setup_12.x | bash - && \
     apt-get install -y \
     gettext \
     nodejs \
     postgresql-client
 # We should give exact version to make caching work in a predictable manner.
-RUN pip install pip==19.3.1
+RUN pip install pip==21.0
 WORKDIR /opt/dropified
 COPY requirements.txt requirements.txt
 COPY docker/dev_requirements.txt docker/dev_requirements.txt
