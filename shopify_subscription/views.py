@@ -66,7 +66,7 @@ def subscription_plan(request):
                 charge = store.shopify.RecurringApplicationCharge.create({
                     **charge_params,
                     "price": price,
-                    "capped_amount": price,
+                    "capped_amount": price if price > 0 else 0.01,
                     "terms": "Dropified Monthly Subscription",
                 })
             else:

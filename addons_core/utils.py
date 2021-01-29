@@ -637,7 +637,7 @@ def create_shopify_subscription(store, addon_billing):
             "test": settings.DEBUG,
             "name": 'Dropified Addons',
             "price": 0,
-            "capped_amount": addon_price.price if addon_price else 0,
+            "capped_amount": addon_price.price if addon_price else 0.01,
             "trial_days": 0,
             "terms": "Dropified Addons Subscription",
             "return_url": app_link(reverse('addons.shopify_subscription', kwargs={
