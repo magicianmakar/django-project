@@ -25,7 +25,6 @@ from .models import (
 )
 from .stripe_api import stripe
 
-from addons_core.models import Addon, AddonPrice
 from addons_core.utils import (
     add_addon_plan,
     cancel_stripe_addons,
@@ -33,8 +32,6 @@ from addons_core.utils import (
     has_main_plan,
     has_only_addons,
     merge_stripe_subscriptions,
-    sync_stripe_addon,
-    sync_stripe_billing,
 )
 from lib.exceptions import capture_exception, capture_message
 from shopified_core.utils import safe_str
@@ -946,22 +943,6 @@ def process_webhook_event(request, event_id):
             countdown=600)  # Give time for the user to register/login to Dropified before handling this event (wait for conversion)
 
         return HttpResponse(response_message)
-
-    elif event.type in ['product.created', 'product.updated']:
-        addon = sync_stripe_addon(product=event.data.object)
-        if not addon:
-            return HttpResponse('Addon not created/updated')
-
-    elif event.type in ['price.created', 'price.updated']:
-        addon_price = sync_stripe_billing(price=event.data.object)
-        if not addon_price:
-            return HttpResponse('Price not created/updated')
-
-    elif event.type == 'price.deleted':
-        AddonPrice.objects.filter(stripe_price_id=event.data.object.id).update(is_active=False)
-
-    elif event.type == 'product.deleted':
-        Addon.objects.filter(stripe_product_id=event.data.object.id).update(is_active=False)
 
     elif event.type.startswith('customer.discount.'):
         discount = event.data.object

@@ -237,14 +237,6 @@ def sync_stripe_addon(*, addon=None, product=None):
                 data['slug'] = slugify(data['title'])
             return Addon.objects.create(**data)
 
-        # Update prices
-        price = {}
-        prices = {'has_more': True}
-        while prices['has_more']:
-            prices = stripe.Price.list(product=product.id, starting_after=price)
-            for price in prices['data']:
-                sync_stripe_billing(price=price)
-
         return addon
 
 
