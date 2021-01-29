@@ -530,7 +530,7 @@ class SupplementsApi(ApiResponseMixin, View):
         checkout_data['line_items'] = order_line_items
         basket_order = util.store.create_order(user, checkout_data)
         order_info = (basket_order.id, basket_order.id, country_code,
-                      province_code, None)
+                      province_code, data.get('shipping_service'))
         order = basket_order.get_order()
         try:
             pls_order = util.make_payment(
