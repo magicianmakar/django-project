@@ -442,7 +442,17 @@ $('#label').on('change', function() {
             return;
         });
     };
-    reader.readAsDataURL(this.files[0]);
+
+    // Allowed upload size by PLUpload setting is 100mb
+    if (this.files[0].size > 104857600) {
+        swal(
+            "Label file size",
+            "You label file size exceeded the 100MB allowed",
+            "error"
+        );
+    } else {
+        reader.readAsDataURL(this.files[0]);
+    }
 });
 
 $('#approved-label-mockup').on('click', function(e) {
