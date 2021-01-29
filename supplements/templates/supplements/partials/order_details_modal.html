@@ -49,7 +49,10 @@
   {{#each orders}}{{#each this.items}}
   <tr class="supplement-item-payment" supplement-order-data-id="{{ this.id }}" order-id="{{ this.order_id }}">
     <td>{{ this.order_name }}</td>
-    <td>{{ this.title }}</td>
+    <td>
+      <img src="{{ this.supplement.image_url }}" height="40" style="margin-right: 5px;">
+      {{ this.title }}
+    </td>
     <td class="text-center">{{ this.quantity }}x</td>
     <td>{{ this.supplement.price }}</td>
     <td class="product-cost-{{ this.order_id }}"

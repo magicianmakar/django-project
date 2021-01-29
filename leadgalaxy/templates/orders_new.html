@@ -702,7 +702,7 @@
                                                         <td class="product-preview" style="width:64px">
                                                             <input class="line-checkbox hidden-xs" type="checkbox" style="position: absolute; top: 0px; left: 5px; "
                                                                 {% if item.is_pls %}
-                                                                    {% if item.is_paid or not item.supplier.is_label_approved or item.supplier.is_supplement_deleted %}
+                                                                    {% if item.is_paid or item.supplier.is_supplement_deleted %}
                                                                         disabled
                                                                     {% endif %}
                                                                 {% endif %}

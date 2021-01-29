@@ -406,17 +406,19 @@ class Util:
                     })
                     break
 
+                image = user_supplement.images.first()
+                image_url = image.image_url if image else ''
                 orders_status[order_data_id].update({
                     'supplement': {
                         'price': user_supplement.cost_price,
                         'subtotal': user_supplement.cost_price * product_quantity,
+                        'image_url': image_url,
                     }
                 })
 
                 inventory_mapping[pl_supplement_id] -= product_quantity
                 total_weight += Decimal(product['weight'])
                 total_wholesale += user_supplement.pl_supplement.wholesale_price
-                image = user_supplement.images.first()
                 items.append({
                     'order_data_id': order_data_id,
                     'id': order_data['line_id'],
@@ -424,7 +426,7 @@ class Util:
                     'label': user_supplement.current_label,
                     'title': user_supplement.title,
                     'sku': user_supplement.shipstation_sku,
-                    'image_url': image.image_url if image else '',
+                    'image_url': image_url,
                     'quantity': product_quantity,
                     'price': order_data['total'],
                 })

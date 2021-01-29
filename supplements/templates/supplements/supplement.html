@@ -32,6 +32,7 @@
     {% block history_tab %}{% endblock %}
   </ul>
 
+  {% block supplement_form %}
   <div class="tab-content">
     {% if request.path == pls_user_supplement or request.path == pls_supplement %}
     <div class="tab-pane fade in active m-t" id="edit">
@@ -40,57 +41,89 @@
     <div class="tab-pane fade m-t" id="edit">
     {% endif %}
       <form id="user_supplement_form" name="user_supplement_form" method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
-          {% csrf_token %}
-          {{ form.non_field_errors }}
-          {{ form.action }}
-          {{ form.upload_url }}
-          {{ form.mockup_slug }}
-          {{ form.label_presets }}
-          {{ form.label_size }}
-          <div class="row">
-            <div class="col-md-8">
-              {% include "supplements/partials/edit_form.html" %}
-              {% block form_action %}
-              <div class="form-group">
-                <div class="col-sm-offset-2 col-sm-10 col-xs-12">
-                  <input type="submit"
-                         value="Create Product"
-                         data-action="approve"
-                         data-label-url="{{label_url}}"
-                         class="btn btn-primary confirm-create"
-                         data-loading-text="Please wait..."
-                         >
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.action }}
+        {{ form.upload_url }}
+        {{ form.mockup_slug }}
+        {{ form.label_presets }}
+        {{ form.label_size }}
+        <div class="row">
+          <div class="col-md-8">
+            {% include "supplements/partials/edit_form.html" %}
+            {% block form_action %}
+            <div class="form-group">
+              <div class="col-sm-offset-2 col-sm-10 col-xs-12">
+                <input type="submit"
+                       value="Create Product"
+                       data-action="approve"
+                       data-label-url="{{label_url}}"
+                       class="btn btn-primary confirm-create"
+                       data-loading-text="Please wait..."
+                       >
 
-                  <input type="submit"
-                         value="Save for Later"
-                         data-action="save"
-                         class="btn btn-primary confirm-create"
-                         data-loading-text="Please wait..."
-                         >
-                  {% if approved_label_url %}
-                  <input type="submit"
-                         value="Send Sample to Store"
-                         id="sample_label"
-                         data-action="preapproved"
-                         class="btn btn-success"
-                         data-loading-text="Please wait..."
-                         data-label-url="{{ approved_label_url }}"
-                         data-send-to-store="false"
-                         data-post-url="{{request.path}}"
-                         data-redirect-url="{% url 'pls:my_supplements' %}"
-                         >
-                  {% endif %}
+                <input type="submit"
+                       value="Save for Later"
+                       data-action="save"
+                       class="btn btn-primary confirm-create"
+                       data-loading-text="Please wait..."
+                       >
+                {% if approved_label_url %}
+                <input type="submit"
+                       value="Send Sample to Store"
+                       id="sample_label"
+                       data-action="preapproved"
+                       class="btn btn-success"
+                       data-loading-text="Please wait..."
+                       data-label-url="{{ approved_label_url }}"
+                       data-send-to-store="false"
+                       data-post-url="{{request.path}}"
+                       data-redirect-url="{% url 'pls:my_supplements' %}"
+                       >
+                {% endif %}
 
-                  <input type="reset" value="Reset" class="btn btn-default">
+                <input type="reset" value="Reset" class="btn btn-default">
+              </div>
+            </div>
+            {% endblock %}
+          </div>
+          <div class="col-md-4">
+            <div class='image-wrapper'>
+              <div class="product-images">
+                {% for url in image_urls %}
+                <div class="product-image">
+                  <div class="image-imitation">
+                    <img src="{{ url }}"/>
+                  </div>
+                </div>
+                {% endfor %}
+
+                {% if label_url %}
+                <div class="product-image">
+                  <div class="image-imitation">
+                    <embed alt="image" class="img-fluid" src="{{ label_url }}" type='application/pdf' height="500px" width="100%" />
+                  </div>
+                </div>
+                {% endif %}
+              </div>
+
+              <div class="row m-t">
+                <div class="col-md-5 col-md-offset-1 m-t">
+                  <a href="{{ label_template_url }}" target="_blank" class="btn btn-primary">Download Template</a>
+                </div>
+
+                <div class="col-md-5 col-md-offset-1 m-t">
+                  <a href="" data-toggle="modal" data-target="#modal-mockup-images" data-backdrop="static" class="btn btn-success">Customize Label</a>
                 </div>
               </div>
-              {% endblock %}
-            </div>
-            <div class="col-md-4">
-              {% include "supplements/partials/images.html" %}
+
+              <div class='alert label-info-box'>
+                Submitting a new label will restart the review process.
+              </div>
             </div>
           </div>
-        </form>
+        </div>
+      </form>
     </div>
 
     <div class="tab-pane fade m-t" id="info">
@@ -118,9 +151,10 @@
       </div>
       {% endif %}
     </div>
-
-    {% block history_content %}{% endblock %}
   </div>
+
+  {% include "supplements/partials/mockup_images_modal.html" with label_url=label_url approved_label_url=approved_label_url %}
+  {% endblock %}
 </div>
 {% endblock %}
 
@@ -144,7 +178,6 @@
 </div>
 
 {% include "supplements/partials/send_to_store_modal.html" %}
-{% include "supplements/partials/mockup_images_modal.html" with label_url=label_url approved_label_url=approved_label_url %}
 {% endblock %}
 
 {% block extracss %}

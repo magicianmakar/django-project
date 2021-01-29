@@ -525,7 +525,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                 self.copy_images(new_user_supplement)
 
             is_draft_label = new_user_supplement.current_label is not None \
-                and new_user_supplement.current_label.status != UserSupplementLabel.DRAFT
+                and new_user_supplement.current_label.status == UserSupplementLabel.DRAFT
 
             if form.cleaned_data['action'] == 'preapproved':
                 new_user_supplement.current_label.status = UserSupplementLabel.APPROVED

@@ -455,7 +455,7 @@
 
                                                             {% if item.is_pls %}
                                                                 <input class="line-checkbox" type="checkbox" style="position: absolute; top: 0px; left: 5px; "
-                                                                {% if item.is_paid or not item.supplier.is_label_approved or item.supplier.is_supplement_deleted %}
+                                                                {% if item.is_paid or item.supplier.is_supplement_deleted %}
                                                                     disabled
                                                                 {% endif %} >
                                                             {% endif %}

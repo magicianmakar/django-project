@@ -481,6 +481,7 @@ $('#save-mockup').on('click', function(e) {
 
 $('#wrap-mockup').on('click', function(e) {
     e.preventDefault();
+    var mockupIndex = $('#save-mockup').addClass('hidden').attr('mockup-index');
     MockupEditor.save(parseInt(mockupIndex), true);
 });
 
@@ -593,12 +594,31 @@ var mockupsUploader = new plupload.Uploader({
                 // Add label
                 $('[name="upload_url"]').val(url);
                 $(window.plupload_Config.saveFormID).trigger("addlabel", [url]);
+
+                var labelElem = $('<embed class="img-fluid">').prop({
+                    'src': url,
+                    'alt': "image",
+                    'type': "application/pdf",
+                    'height': "500px",
+                    'width': "100%",
+                });
+                $('.product-images embed.img-fluid').parents('.product-image').remove();
+                $('.product-images').append(
+                    $('<div class="product-image hidden">').append(
+                        $('<div class="image-imitation">').append(labelElem)));
+
+                $('input.btn[data-action="preapproved"]').remove();
             } else {
                 // Add image
                 $(window.plupload_Config.saveFormID).append(
                     $('<input type="hidden" name="mockup_urls">').val(url)
                 );
                 $(window.plupload_Config.saveFormID).trigger("addmockups", [url]);
+
+                $('.product-images').append(
+                    $('<div class="product-image hidden">').append(
+                        $('<div class="image-imitation">').append(
+                            $('<img src="' + url + '">'))));
             }
         },
         UploadComplete: function(up, files) {
@@ -606,6 +626,12 @@ var mockupsUploader = new plupload.Uploader({
             $('#modal-mockup-images .modal-content').removeClass('loading');
             $('#save-mockups').prop('disabled', false);
             $('#modal-mockup-images').modal('hide');
+
+            $('.product-images').slick('unslick');
+            $('.product-images .product-image:not(.hidden)').remove();
+            $('.product-images .product-image').removeClass('hidden');
+            $('.product-images').slick({dots: true});
+
             mockupsUploader.splice();
         }
     }

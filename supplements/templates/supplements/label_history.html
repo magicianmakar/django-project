@@ -6,7 +6,7 @@
 {% load compress %}
 {% load widget_tweaks %}
 
-{% block history_content %}
+{% block supplement_form %}
 {% if label %}
 {% url 'pls:label_history' supplement_id=supplement.id as pls_label_history %}
 {% if request.path == pls_label_history %}
@@ -136,7 +136,6 @@
 
 {% include "supplements/partials/mockup_images_modal.html" with label_url=label_url %}
 {% endblock %}
-
 
 {% block extrajs %}
 <script type="text/javascript">
