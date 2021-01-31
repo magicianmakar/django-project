@@ -83,7 +83,7 @@
                     {{ form.password.errors | safe }}
                 </div>
 
-                {% if RECAPTCHA_SITE_KEY %}
+                {% if RECAPTCHA_SITE_KEY and request.session.use_login_captcha %}
                 <div class="form-group" style="margin:30px">
                     <div class="g-recaptcha" data-sitekey="{{ RECAPTCHA_SITE_KEY }}"></div>
                 </div>

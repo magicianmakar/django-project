@@ -81,6 +81,7 @@ from shopified_core.utils import (
     format_queueable_orders,
     products_filter,
     decode_api_token,
+    page_rpm_counter
 )
 from supplements.lib.shipstation import get_address as get_shipstation_address
 from supplements.tasks import update_shipstation_address
@@ -4909,6 +4910,9 @@ def account_password_setup(request, register_id):
 @xframe_options_exempt
 @csrf_protect
 def user_login_view(request):
+    if request.method == 'GET':
+        request.session['use_login_captcha'] = page_rpm_counter('login') > 20
+
     return LoginView.as_view(authentication_form=EmailAuthenticationForm)(request)
 
 

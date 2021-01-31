@@ -1,5 +1,6 @@
 from django.urls import reverse
 from django.test import tag
+from django.conf import settings
 
 from leadgalaxy.tests import factories as f
 from leadgalaxy.models import AppPermission
@@ -49,10 +50,11 @@ class CallflexViewsTestCase(BaseTestCase):
         response = self.client.get(path)
         self.assertRedirects(response, '%s?next=%s' % (reverse('login'), path))
 
-        self.client.login(username=self.user.username, password=self.password)
-        response = self.client.get(reverse('phone_automation_provision'))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'class="provision-phone-number"')
+        if settings.TWILIO_SID and settings.TWILIO_TOKEN:
+            self.client.login(username=self.user.username, password=self.password)
+            response = self.client.get(reverse('phone_automation_provision'))
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'class="provision-phone-number"')
 
     def test_companies(self):
         path = reverse('phone_automation_companies_index')

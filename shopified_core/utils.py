@@ -317,6 +317,19 @@ def hash_url_filename(s):
     return '{}.{}'.format(ctypes.c_int(hashval & 0xFFFFFFFF).value, ext) if hashval else hashval
 
 
+def page_rpm_counter(page, increase=True):
+    cache_key = f'__rpm_{page}'
+    rpm = cache.get(cache_key, 0) + 1
+    ttl = cache.ttl(cache_key)
+    if not ttl:
+        ttl = 60
+
+    if increase:
+        cache.set(cache_key, rpm, timeout=ttl)
+
+    return rpm
+
+
 def get_mimetype(url, default=None):
     content_type = mimetypes.guess_type(remove_link_query(url))[0]
     return content_type if content_type else default

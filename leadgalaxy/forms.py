@@ -218,7 +218,7 @@ class EmailAuthenticationForm(AuthenticationForm):
             raise
 
         # Begin reCAPTCHA validation
-        if settings.RECAPTCHA_SECRET_KEY:
+        if settings.RECAPTCHA_SECRET_KEY and self.request.session['use_login_captcha']:
             recaptcha_response = self.data.get('g-recaptcha-response')
             if not recaptcha_response:
                 raise ValidationError(
