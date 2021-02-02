@@ -21,7 +21,7 @@ from shopified_core.mixins import ApiResponseMixin
 
 from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
-from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem, PLSupplement
+from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem
 from .utils import user_can_download_label
 from .utils.payment import Util, get_shipping_costs
 from .utils.basket import BasketStore
@@ -33,7 +33,6 @@ from shopified_core.utils import (
     CancelledOrderAlert
 )
 from shopified_core.shipping_helper import province_code_from_name, country_from_code
-from django.db.models import Avg
 from my_basket.models import BasketOrderTrack
 from fulfilment_fee.utils import process_sale_transaction_fee
 
@@ -494,17 +493,21 @@ class SupplementsApi(ApiResponseMixin, View):
         checkout_data['shipping_country_code'] = country_code
 
         order_line_items = []
-
-        # check quantity
-        basket_items_qty = user.basket_items.values('user_supplement__pl_supplement').annotate(total_qty=Avg('quantity'))
-        for plsupplement_item in basket_items_qty:
-            pl_supplement = PLSupplement.objects.get(id=plsupplement_item['user_supplement__pl_supplement'])
-            if plsupplement_item['user_supplement__pl_supplement'] > pl_supplement.inventory:
-                return self.api_error("{} doesn't have that much in stock".format(pl_supplement.title),
-                                      status=500)
-
-        basket_items = user.basket_items.all()
+        pl_supplement_inventory = {}
+        basket_items = user.basket_items.select_related('user_supplement__pl_supplement').all()
         for basket_item in basket_items:
+            # Multiple items with different labels but same base product can be ordered
+            pl_supplement_id = basket_item.user_supplement.pl_supplement_id
+            quantity_left = pl_supplement_inventory.get(pl_supplement_id)
+            if quantity_left is None:
+                pl_supplement_inventory[pl_supplement_id] = basket_item.user_supplement.pl_supplement.inventory
+                quantity_left = pl_supplement_inventory[pl_supplement_id]
+
+            if basket_item.quantity > quantity_left:
+                return self.api_error(f"{basket_item.user_supplement.title} doesn't have enough stock ({quantity_left} left)",
+                                      status=500)
+            pl_supplement_inventory[pl_supplement_id] -= basket_item.quantity
+
             # checking target country per line
             target_countries = []
             shipping_countries = basket_item.user_supplement.shipping_countries
