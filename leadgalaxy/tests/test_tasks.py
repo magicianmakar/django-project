@@ -1,5 +1,6 @@
 import json
 from unittest.mock import patch
+from django.test import tag
 
 from lib.test import BaseTestCase
 from leadgalaxy.tests.factories import (
@@ -70,6 +71,7 @@ class TasksTestCase(BaseTestCase):
         self.assertEqual(new_images[0]['src'], new_src)
         self.assertEqual(new_images[0]['variant_ids'], [1, 2])
 
+    @tag('excessive')
     def test_sync_inventory_with_supplier(self):
         product = ShopifyProductFactory(
             store=self.store, user=self.user, source_id=12345678,
@@ -84,12 +86,12 @@ class TasksTestCase(BaseTestCase):
         product.variants_map = json.dumps({
             '32146941476915': json.dumps([
                 {
-                    'title': 'China',
-                    'sku': '200007763:201336100'
+                    'title': 'CN',
+                    'sku': '200007763:201441035#CN'
                 },
                 {
-                    'title': 'QUNC-016G',
-                    'sku': '26:3860#QUNC-016G'
+                    'title': 'SQUNC-032G',
+                    'sku': '26:8649#SQUNC-032G'
                 }
             ]),
         })
@@ -99,11 +101,11 @@ class TasksTestCase(BaseTestCase):
             variants=[{
                 'id': 32146941476915,
                 'product_id': 4566069936179,
-                'title': 'QUNC-016G',
+                'title': 'SQUNC-032G',
                 'price': '42.95',
-                'sku': '26:3860#QUNC-016G',
+                'sku': '26:8649#SQUNC-032G',
                 'inventory_policy': 'deny',
-                'option1': 'QUNC-016G',
+                'option1': 'SQUNC-032G',
                 'option2': None,
                 'option3': None,
                 'inventory_item_id': 34005719449651,
@@ -115,6 +117,7 @@ class TasksTestCase(BaseTestCase):
         with patch('leadgalaxy.models.ShopifyProduct.set_variant_quantity') as mock_set_variant_quantity, \
                 patch('leadgalaxy.utils.get_shopify_product', return_value=product_data):
             sync_shopify_product_quantities(product.id)
+            mock_set_variant_quantity.assert_called_once()
             mock_set_variant_quantity.assert_called_with(
                 quantity=aliexpress_data[1]['availabe_qty'],
                 variant=product_data['variants'][0]
