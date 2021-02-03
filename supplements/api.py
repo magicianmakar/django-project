@@ -491,6 +491,10 @@ class SupplementsApi(ApiResponseMixin, View):
         shipping_country = country_from_code(country_code)
         checkout_data['shipping_country'] = shipping_country
         checkout_data['shipping_country_code'] = country_code
+        try:
+            shipping_country = shipping_country.split(',')[0]
+        except Exception:
+            pass
 
         order_line_items = []
         pl_supplement_inventory = {}
