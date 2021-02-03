@@ -381,10 +381,13 @@ def callback(request):
 
             if is_private_label_app(request):
                 profile.private_label = True
-
-            profile.change_plan(get_plan(
-                payment_gateway='shopify',
-                plan_slug='shopify-free-plan'))
+                profile.change_plan(get_plan(
+                    payment_gateway='shopify',
+                    plan_slug='shopify-plod-free-plan'))
+            else:
+                profile.change_plan(get_plan(
+                    payment_gateway='shopify',
+                    plan_slug='shopify-free-plan'))
 
             profile.save()
 
