@@ -88,9 +88,6 @@ def get_product_feed(request, *args, **kwargs):
 
 
 def shopify_product_feeds(request):
-    if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
-        return render(request, 'upgrade.html')
-
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
         if request.method == 'GET':
             try:

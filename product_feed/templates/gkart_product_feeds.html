@@ -59,12 +59,14 @@
                             <tr data-store="{{item.store.id}}" data-feed="{{item.id}}">
                                 <td>{{item.store.title}}</td>
                                 <td>
+                                    {% if user|can:"product_feeds.use" %}
                                     <div class="m-b-sm">
                                     <a class="copy-feed-url" href="#"
                                         data-clipboard-text="{% build_absolute_uri 'get_product_feed' True store_id=item.store.get_short_hash store_type='gkart' %}/2">
                                         <i class="fa fa-files-o itooltip"></i> Facebook Feed
                                     </a>
                                     </div>
+                                    {% endif %}
 
                                     {% if user|can:"google_product_feed.use" %}
                                     <div>
@@ -114,14 +116,26 @@
                                     </button>
                                     {% endif %}
 
+                                    {% if user|can:"product_feeds.use" %}
                                     <button title="Update this store feed" class="btn btn-outline btn-sm btn-default itooltip update-feed-btn" data-loading-text="<i class='fa fa-refresh fa-spin'></i>">
                                         <i class="fa fa-refresh"></i>
                                     </button>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                </div>
+
+                <div class="row">
+                    {% if not user|can:"product_feeds.use" %}
+                    {% include "common/partial/upsell.html" with alter_upsell_pos=True addon_id=15 message="Add Facebook feeds to your Plan" only %}
+                    {% endif %}
+
+                    {% if not user|can:"google_product_feed.use" %}
+                    {% include "common/partial/upsell.html" with alter_upsell_pos=True addon_id=13 message="Add Google feeds to your Plan" only %}
+                    {% endif %}
                 </div>
 
                 <div class="row">
