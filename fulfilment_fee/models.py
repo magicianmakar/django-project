@@ -29,14 +29,17 @@ class SaleTransactionFee(models.Model):
         unique_together = [['source_model', 'source_id']]
 
     def get_source(self):
+        model = get_track_model(self.source_model)
+
         try:
-            model = get_track_model(self.source_model)
-            source = model.objects.get(id=self.source_id)
+            return model.objects.get(id=self.source_id)
+
+        except model.DoesNotExist:
+            return False
+
         except:
             capture_exception()
-
-            source = False
-        return source
+            return False
 
     @property
     def get_currency_conversion_data(self):
