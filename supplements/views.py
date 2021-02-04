@@ -334,9 +334,14 @@ class LabelMixin:
             send_email_against_comment(comment)
         return comment
 
+    def str_to_unicode(self, string):
+        # Convert each string characters to its unicode decimal value
+        return " ".join(map(lambda c: str(ord(c)), list(string)))
+
     def add_barcode_to_label(self, label):
         data = BytesIO()
-        generate('CODE128', label.sku, output=data)
+        converted_sku = self.str_to_unicode(label.sku)
+        generate('CODE128', converted_sku, output=data)
 
         data.seek(0)
         drawing = svg2rlg(data)
