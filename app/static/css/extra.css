@@ -562,3 +562,7 @@ ul.breadcrumb-right-menu li a {
 .navbar-default.pls {
     background-color: #24272e !important;
 }
+
+ul#id_permissions li {
+    list-style: none;
+}

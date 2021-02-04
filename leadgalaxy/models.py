@@ -57,6 +57,8 @@ PLAN_PAYMENT_TYPE = (
 
 SUBUSER_PERMISSIONS = (
     ('edit_settings', 'Edit settings'),
+    ('edit_custom_description', 'Edit custom description'),
+    ('edit_advanced_markup', 'Edit advanced mark up rules'),
     ('view_product_boards', 'View product boards'),
     ('edit_product_boards', 'Edit product boards'),
     ('view_help_and_support', 'View help and support'),

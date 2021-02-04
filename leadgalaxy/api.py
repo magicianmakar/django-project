@@ -1065,7 +1065,9 @@ class ShopifyStoreApi(ApiBase):
 
             rules_dict = []
 
-            if user.can('advance_markup.use'):
+            if not user.can('edit_advanced_markup.sub'):
+                config['markup_rules'] = []
+            elif user.can('advance_markup.use'):
                 rules = PriceMarkupRule.objects.filter(user=user.models_user)
 
                 for i in rules:
@@ -2421,6 +2423,8 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success({'product': product.id})
 
     def get_description_templates(self, request, user, data):
+        if not user.can('edit_custom_description.sub'):
+            return self.api_success({'description_templates': []})
         if not request.user.can('custom_description.use'):
             return self.api_success({'description_templates': []})
 
@@ -2445,6 +2449,8 @@ class ShopifyStoreApi(ApiBase):
         """
         Add or edit description templates
         """
+        if not user.can('edit_custom_description.sub'):
+            raise PermissionDenied()
         if not request.user.can('custom_description.use'):
             raise permissions.PermissionDenied()
 
@@ -2475,6 +2481,8 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success({'template': template_dict}, status=200)
 
     def delete_description_templates(self, request, user, data):
+        if not user.can('edit_custom_description.sub'):
+            raise PermissionDenied()
         if not request.user.can('custom_description.use'):
             raise permissions.PermissionDenied()
         try:
@@ -2490,6 +2498,8 @@ class ShopifyStoreApi(ApiBase):
 
     def get_markup_rules(self, request, user, data):
 
+        if not user.can('edit_advanced_markup.sub'):
+            raise PermissionDenied()
         if not user.can('advance_markup.use'):
             raise PermissionDenied()
 
@@ -2512,6 +2522,8 @@ class ShopifyStoreApi(ApiBase):
         """
         Add or edit markup rules
         """
+        if not user.can('edit_advanced_markup.sub'):
+            raise PermissionDenied()
         if not user.can('advance_markup.use'):
             raise PermissionDenied()
 
@@ -2563,6 +2575,8 @@ class ShopifyStoreApi(ApiBase):
 
     def delete_markup_rules(self, request, user, data):
 
+        if not user.can('edit_advanced_markup.sub'):
+            raise PermissionDenied()
         if not user.can('advance_markup.use'):
             raise PermissionDenied()
 

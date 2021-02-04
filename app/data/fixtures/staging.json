@@ -97,6 +97,22 @@
         "name": "View profit dashboard",
         "store": null
     }
+},{
+    "model": "leadgalaxy.subuserpermission",
+    "pk": 7,
+    "fields": {
+        "codename": "edit_custom_description",
+        "name": "Edit custom description",
+        "store": null
+    }
+},{
+    "model": "leadgalaxy.subuserpermission",
+    "pk": 8,
+    "fields": {
+        "codename": "edit_advanced_markup",
+        "name": "Edit advanced mark up rules",
+        "store": null
+    }
 },
   {
     "model": "leadgalaxy.shopifystore",
