@@ -18,7 +18,6 @@ import simplejson as json
 class BaseTemplateView(TemplateView):
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
-        ctx['addon_category'] = Category.objects.all().filter(is_visible=True)
         if self.request.user.is_authenticated:
             ctx['user_addons'] = self.request.user.models_user.profile.addons.all()
         else:

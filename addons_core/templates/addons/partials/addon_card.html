@@ -1,7 +1,7 @@
 {% load perms_helper %}
 {% load addons_helper %}
 
-<div class="col-lg-4">
+<div>
     <div class="ibox">
         <a href="{%  url 'addons.details_view' pk=item.id slug=item.slug %}">
             <img class="img-responsive addon-image" width="100%"
@@ -25,7 +25,7 @@
         <div class="card-body add-on-color">
             <div class="row">
                 <div class="col-md-12 text-left">
-                    <h3 class="m-b-none m-t-lg addon-h3">{{ item.title }}</h5>
+                    <h3 class="m-b-none m-t-lg addon-h3">{{ item.title }}</h3>
                     <p class="addon-h4 m-b-heigh m-t-xs">{{ item.short_description|safe }}</p>
                 </div>
             </div>

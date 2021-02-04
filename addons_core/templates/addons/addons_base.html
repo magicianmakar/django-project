@@ -31,7 +31,24 @@
                 </div>
             </form>
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="{% url 'myaddons' %} ">My Addons</a></li>
+                <li>
+                {% if user.is_authenticated %}
+                <a href="{% url 'myaddons' %} ">My Addons</a>
+                {% else %}
+                <a href="https://www.dropified.com/">DROPIFIED.COM</a>
+                {% endif %}
+                </li>
+                <li class="dropdown addon-category-dropdown">
+                    <a class="btn dropdown-toggle" data-toggle="dropdown">Categories
+                    <span class="caret"></span></a>
+                    <ul class="dropdown-menu">
+                        {% for category in active_categories %}
+                        <li>
+                            <a href="{%  url 'addons.category_view' slug=category.slug %}" class="add-on-color addon-h4" aria-haspopup="true" aria-expanded="false">{{ category.title }}</a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
                 <li><a href="http://help.dropified.com/en/articles/4325529-addon-store-faq" target="_blank">FAQs</a></li>
             </ul>
         </div>

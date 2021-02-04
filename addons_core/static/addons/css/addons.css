@@ -113,10 +113,6 @@
     font-size: 30px;
 }
 
-.header-section {
-    margin-bottom: 45px;
-}
-
 .swal2-popup {
     transform: scale(1.7);
 }
@@ -581,4 +577,34 @@ a.addon-install {
 
 #swal2-content p.addon-support-div {
     margin: 0;
+}
+.navbar-default .navbar-nav>.open
+{
+    border: 0px;
+}
+.navbar-default .navbar-nav>.open>a, .navbar-default .navbar-nav>.open>a:focus, .navbar-default .navbar-nav>.open>a:hover
+{
+    background-color: #fff;
+}
+
+a.dropdown-toggle {
+    border: 0;
+    text-align: left;
+}
+
+a.dropdown-toggle:active {
+-webkit-box-shadow: none;
+box-shadow: none;
+}
+
+.dropdown-menu > li > a {
+    border-radius: 0px;
+    color: inherit;
+    line-height: 28px;
+    margin: 5px 20px;
+    text-align: left;
+    font-weight: normal;
+    border-bottom: 1px solid #ececec;
+    padding-left: 9px;
+    padding-right: 0px;
 }
