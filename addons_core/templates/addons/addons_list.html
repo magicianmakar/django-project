@@ -28,13 +28,17 @@
             </div>
         </div>
         <div class="row">
-            <div class="col-md-4">
-                {% for result in search_results %}
-                    {% if not result.hidden %}
-                        {% include 'addons/partials/addon_card.html' with item=result %}
-                    {% endif %}
-                {% endfor %}
-            </div>
+            {% for result in search_results %}
+                {% if not result.hidden %}
+                <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
+                    {% include 'addons/partials/addon_card.html' with item=result %}
+                </div>
+                {% endif %}
+                {% if forloop.counter|divisibleby:"3" %}
+                </div>
+                <div class="row m-t-l">
+            {% endif %}
+            {% endfor %}
         </div>
     {% else %}
         {% if search %}
@@ -62,6 +66,10 @@
                 <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
                     {% include 'addons/partials/addon_card.html' %}
                 </div>
+            {% endif %}
+            {% if forloop.counter|divisibleby:"3" %}
+                </div>
+                <div class="row m-t-l">
             {% endif %}
         {% endfor %}
         </div>

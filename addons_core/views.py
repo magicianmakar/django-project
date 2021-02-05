@@ -31,6 +31,11 @@ class AddonsListView(BaseListView, BaseTemplateView):
     model = Addon
     template_name = 'addons/addons_list.html'
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = queryset.filter(hidden=False)
+        return queryset
+
     def get_context_data(self, **kwargs: dict) -> dict:
         ctx = super().get_context_data(**kwargs)
         ctx['breadcrumbs'] = ['Addons']
