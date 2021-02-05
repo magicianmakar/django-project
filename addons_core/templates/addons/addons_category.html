@@ -20,6 +20,10 @@
             <div class="col-lg-4 col-md-6 col-sm-6 col-xs-12">
                 {% include 'addons/partials/addon_card.html' %}
             </div>
+            {% if forloop.counter|divisibleby:"3" %}
+            </div>
+            <div class="row m-t-xl">
+            {% endif %}
             {% endfor %}
         </div>
 </div>
