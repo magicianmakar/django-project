@@ -157,7 +157,7 @@ def subscription_activated(request):
                 'count': 1
             }))
 
-    else:
+    elif 'current_plan' in request.session:
         request.user.profile.change_plan(GroupPlan.objects.get(id=request.session['current_plan']))
 
         messages.warning(request, 'Your plan was not changed because the charge was declined')

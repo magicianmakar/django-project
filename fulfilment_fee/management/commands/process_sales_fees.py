@@ -2,6 +2,7 @@ from lib.exceptions import capture_exception
 from shopified_core.management import DropifiedBaseCommand
 from fulfilment_fee.models import SaleTransactionFee
 from stripe_subscription.utils import add_invoice
+from shopify_subscription.utils import add_shopify_usage_invoice
 from stripe_subscription.stripe_api import stripe
 from stripe_subscription.models import CustomStripePlan, CustomStripeSubscription
 import arrow
@@ -27,7 +28,6 @@ class Command(DropifiedBaseCommand):
 
         skip_user_ids = []
         for sale_transaction_fee in sale_transaction_fees:
-
             try:
                 if sale_transaction_fee.user.is_stripe_customer() and sale_transaction_fee.user.id not in skip_user_ids:
                     try:
@@ -71,7 +71,12 @@ class Command(DropifiedBaseCommand):
                         capture_exception()
 
                 elif sale_transaction_fee.user.profile.from_shopify_app_store():
-                    # TODO shopify billing can be here (using usage charge api)
-                    pass
+                    # shopify billing (using usage charge api)
+                    charge_id = add_shopify_usage_invoice(sale_transaction_fee.user, 'sale_fee', sale_transaction_fee.fee_value,
+                                                          "Order Sales Fee")
+
+                    if charge_id:
+                        sale_transaction_fee.processed = True
+                        sale_transaction_fee.save()
             except:
                 capture_exception()
