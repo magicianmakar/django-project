@@ -10,6 +10,7 @@ from django.urls import reverse
 from .models import CallflexShopifyUsageCharge
 from lib.exceptions import capture_message
 from shopified_core.utils import last_executed
+from shopify_subscription.utils import get_shopify_recurring as get_default_shopify_recurring
 
 
 class CallflexOveragesBilling:
@@ -146,7 +147,7 @@ class CallflexOveragesBilling:
         shopify_subscription = get_shopify_recurring(self.user)
         charge_id = False
         if shopify_subscription:
-            amount = amount
+            amount = safe_float(amount)
             if shopify_subscription.balance_remaining < amount:
                 # adjusting capped limit by $50 (to not ask to recap very often)
                 shopify_subscription.customize(capped_amount=safe_float(shopify_subscription.capped_amount) + 50)
@@ -198,14 +199,5 @@ class CallflexOveragesBilling:
 
 
 def get_shopify_recurring(user):
-    active_recurring = False
-    try:
-        store = user.profile.get_shopify_stores().first()
-        recurrings = store.shopify.RecurringApplicationCharge.find()
-
-        for recurring in recurrings:
-            if recurring.status == 'active':
-                active_recurring = recurring
-    except:
-        active_recurring = False
-    return active_recurring
+    # some callflex logic can be added here in future
+    return get_default_shopify_recurring(user)
