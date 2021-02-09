@@ -156,8 +156,13 @@ def index(request):
 
     try:
         store = ShopifyStore.objects.exclude(private_label=True).get(shop=request.GET['shop'], is_active=True)
+
     except ShopifyStore.DoesNotExist:
+        if request.user.is_authenticated:
+            user_logout(request)
+
         return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
+
     except ShopifyStore.MultipleObjectsReturned:
         # TODO: Handle multi stores
         if request.user.is_authenticated:
@@ -196,8 +201,13 @@ def private_label_index(request):
 
     try:
         store = ShopifyStore.objects.get(shop=request.GET['shop'], is_active=True, private_label=True)
+
     except ShopifyStore.DoesNotExist:
+        if request.user.is_authenticated:
+            user_logout(request)
+
         return HttpResponseRedirect(reverse(install, kwargs={'store': request.GET['shop'].split('.')[0]}))
+
     except ShopifyStore.MultipleObjectsReturned:
         # TODO: Handle multi stores
         if request.user.is_authenticated:
