@@ -322,10 +322,6 @@
             "{{ profile.churnzero_account_id_hash }}",
             "{{ profile.churnzero_contact_id_hash }}",
         ]);
-        ChurnZero.push(['setAttribute', 'account', {
-            'Shopify Stores Count': parseInt("{{ models_user_profile.get_shopify_stores.count }}"),
-            'WooCommerce Stores Count': parseInt("{{ models_user_profile.get_woo_stores.count }}"),
-        }]);
         ChurnZero.push(['setAttribute', 'contact', {
             FirstName: "{{ user.first_name }}",
             LastName: "{{ user.last_name }}",

@@ -1,12 +1,17 @@
-from unittest.mock import patch, Mock
+from decimal import Decimal
+from unittest.mock import patch, Mock, PropertyMock
+
+import arrow
 
 from django.conf import settings
 from django.test.utils import override_settings
+from django.core.cache import cache
 
 from addons_core.tests.factories import AddonFactory
 from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export, post_churnzero_addon_update
 from leadgalaxy import utils
-from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory
+from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, ShopifyStoreFactory
+from woocommerce_core.tests.factories import WooStoreFactory
 from lib.test import BaseTestCase
 from stripe_subscription.tests.factories import StripePlanFactory, StripeCustomerFactory
 
@@ -135,11 +140,17 @@ class PostChurnZeroAddonUpdateTestCase(BaseTestCase):
 
 
 class SetChurnZeroAccountTestCase(BaseTestCase):
+    def setUp(self):
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
     @override_settings(DEBUG=False)
     @override_settings(CHURNZERO_APP_KEY='test')
     @patch('stripe_subscription.models.stripe')
     @patch('shopified_core.tasks.requests_async.apply_async')
-    def test_must_submit_with_correct_parameters(self, post_request, stripe):
+    def test_must_submit_with_correct_parameters_for_stripe_user(self, post_request, stripe):
         models_user = UserFactory(username='modelsuser')
         user = UserFactory()
         user.profile.subuser_parent = models_user
@@ -154,7 +165,9 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         addon1 = AddonFactory(title='test1')
         addon2 = AddonFactory(title='test2')
         user.models_user.profile.addons.add(addon1, addon2)
-
+        addons_list = user.models_user.profile.addons.values_list('churnzero_name', flat=True)
+        ShopifyStoreFactory(user=models_user)
+        WooStoreFactory(user=models_user)
         utils.set_churnzero_account(user.models_user)
 
         actions = [{
@@ -165,9 +178,60 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'contactExternalIdHash': user.models_user.profile.churnzero_contact_id_hash,
             'action': 'setAttribute',
             'entity': 'account',
+            'attr_Name': ' '.join([models_user.first_name, models_user.last_name]),
             'attr_Stripe_customer_id': 'abc',
             'attr_Gateway': 'Stripe',
-            'attr_Installed Addons': 'test1, test2',
+            'attr_Installed Addons': ', '.join(addons_list),
+            'attr_Shopify Stores Count': 1,
+            'attr_WooCommerce Stores Count': 1,
+        }]
+
+        post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
+
+    @override_settings(DEBUG=False)
+    @override_settings(CHURNZERO_APP_KEY='test')
+    @patch('churnzero_core.utils.ShopifyProfile.is_valid', PropertyMock(return_value=True))
+    @patch('churnzero_core.utils.ShopifyProfile.next_renewal_date', PropertyMock(return_value=arrow.get('2012-04-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.start_date', PropertyMock(return_value=arrow.get('2012-03-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.end_date', PropertyMock(return_value=arrow.get('2012-03-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.total_contract_amount', PropertyMock(return_value=Decimal('100.00')))
+    @patch('churnzero_core.utils.ShopifyProfile.is_active', PropertyMock(return_value=True))
+    @patch('shopified_core.tasks.requests_async.apply_async')
+    def test_must_submit_with_correct_parameters_for_shopify_user(self, post_request):
+        models_user = UserFactory(username='modelsuser')
+        user = UserFactory()
+        user.profile.subuser_parent = models_user
+        user.profile.save()
+        plan = GroupPlanFactory(payment_gateway='shopify')
+        user.models_user.profile.plan = plan
+        user.models_user.profile.plan.is_shopify = Mock(return_value=True)
+        addon1 = AddonFactory(title='test1')
+        addon2 = AddonFactory(title='test2')
+        user.models_user.profile.addons.add(addon1, addon2)
+        addons_list = user.models_user.profile.addons.values_list('churnzero_name', flat=True)
+        ShopifyStoreFactory(user=models_user)
+        WooStoreFactory(user=models_user)
+        utils.set_churnzero_account(user.models_user)
+
+        actions = [{
+            'appKey': settings.CHURNZERO_APP_KEY,
+            'accountExternalId': 'modelsuser',
+            'contactExternalId': 'modelsuser',
+            'accountExternalIdHash': user.models_user.profile.churnzero_account_id_hash,
+            'contactExternalIdHash': user.models_user.profile.churnzero_contact_id_hash,
+            'action': 'setAttribute',
+            'entity': 'account',
+            'attr_Name': ' '.join([models_user.first_name, models_user.last_name]),
+            'attr_NextRenewalDate': arrow.get('2012-04-01').isoformat(),
+            'attr_TotalContractAmount': 100.00,
+            'attr_IsActive': True,
+            'attr_StartDate': arrow.get('2012-03-01').isoformat(),
+            'attr_EndDate': arrow.get('2012-03-01').isoformat(),
+            # Custom attributes
+            'attr_Gateway': models_user.profile.plan.payment_gateway.title(),
+            'attr_Installed Addons': ', '.join(addons_list),
+            'attr_Shopify Stores Count': 1,
+            'attr_WooCommerce Stores Count': 1,
         }]
 
         post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
@@ -176,7 +240,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
     @override_settings(CHURNZERO_APP_KEY='test')
     @patch('stripe_subscription.models.stripe')
     @patch('shopified_core.tasks.requests_async.apply_async')
-    def test_must_update_users_has_churnzero_account_property(self, post_request, stripe):
+    def test_must_update_users_has_churnzero_account_property_of_stripe_user(self, post_request, stripe):
         post_request.return_value = Mock()
         user = UserFactory()
         user.profile.has_churnzero_account = False
@@ -188,6 +252,27 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         user.models_user.profile.plan.is_stripe = Mock(return_value=True)
         user.models_user.profile.plan.stripe_plan = StripePlanFactory(stripe_id='abc')
         user.models_user.stripe_customer = StripeCustomerFactory(customer_id='abc')
-        utils.set_churnzero_account(user.models_user, create=True)
+        utils.set_churnzero_account(user.models_user)
+        user.models_user.profile.refresh_from_db()
+        self.assertTrue(user.models_user.profile.has_churnzero_account)
+
+    @override_settings(DEBUG=False)
+    @override_settings(CHURNZERO_APP_KEY='test')
+    @patch('churnzero_core.utils.ShopifyProfile.is_valid', Mock(return_value=True))
+    @patch('churnzero_core.utils.ShopifyProfile.next_renewal_date', PropertyMock(return_value=arrow.get('2012-04-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.start_date', PropertyMock(return_value=arrow.get('2012-03-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.end_date', PropertyMock(return_value=arrow.get('2012-03-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.total_contract_amount', PropertyMock(return_value=Decimal('100.00')))
+    @patch('churnzero_core.utils.ShopifyProfile.is_active', PropertyMock(return_value=True))
+    @patch('shopified_core.tasks.requests_async.apply_async')
+    def test_must_update_users_has_churnzero_account_property_of_shopify_user(self, post_request):
+        post_request.return_value = Mock()
+        user = UserFactory()
+        user.profile.has_churnzero_account = False
+        user.profile.save()
+        plan = GroupPlanFactory(payment_gateway='shopify')
+        user.models_user.profile.plan = plan
+        user.models_user.profile.plan.is_shopify = Mock(return_value=True)
+        utils.set_churnzero_account(user.models_user)
         user.models_user.profile.refresh_from_db()
         self.assertTrue(user.models_user.profile.has_churnzero_account)
