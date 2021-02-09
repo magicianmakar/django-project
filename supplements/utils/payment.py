@@ -60,8 +60,8 @@ def get_shipping_costs(country_code, province_code, total_weight, default_type=N
             costs.append({'shipping_cost': shipping_data.get('shipping_cost_default')})
 
     except ShippingGroup.DoesNotExist:
-        costs = [{'error': f'We are currently not shipping to {country_code}, contact support to know more'}]
         capture_exception()
+        return [{'error': f'We are currently not shipping to {country_code}, contact support to know more'}]
 
     if isinstance(costs, list) and len(costs) > 0:
         default_cost = costs[0]
@@ -490,13 +490,14 @@ class Util:
                         order_costs['shipping'][order_id][key]['selected'] = True
 
             else:
-                shipping = next(s for s in order_costs['shipping'][order_id] if s.get('selected'))
+                shipping = next(s for s in order_costs['shipping'][order_id] if s.get('selected') or s.get('error'))
 
             if not shipping or shipping.get('error'):
                 for item in orders[order_id]['items']:
                     orders_status[item['order_data_id']].update({
                         'success': False,
                         'status': shipping.get('error') or 'Error calculating shipping',
+                        'supplement': {}
                     })
 
                 # Remove order to prevent processing
