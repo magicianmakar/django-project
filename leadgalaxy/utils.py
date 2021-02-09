@@ -2471,13 +2471,16 @@ class UserEmailEncodeMiddleware(object):
         return HttpResponseRedirect('{}?{}'.format(request.path, params.urlencode()))
 
 
-class AnalyticsMiddleware:
+class ChurnZeroMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.user.is_authenticated:
-            set_churnzero_account(request.user.models_user)
+        if not request.is_ajax() and request.user.is_authenticated:
+            try:
+                set_churnzero_account(request.user.models_user)
+            except:
+                capture_exception(level='warning')
 
         return self.get_response(request)
 
