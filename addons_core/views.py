@@ -171,8 +171,8 @@ class ShopifySubscriptionUpdated(BaseDetailView):
         store = request.user.profile.get_shopify_stores().first()
         charge = store.shopify.RecurringApplicationCharge.find(request.GET['charge_id'])
 
+        charge.activate()
         if charge.status == 'accepted':
-            charge.activate()
             messages.success(request, 'Extra Addons Subscription accepted!')
 
         addon = self.get_object()

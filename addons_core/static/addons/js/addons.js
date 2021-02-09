@@ -18,7 +18,10 @@ function changeAddonSubscription(btn) {
             var shopifyTitle;
             var nextUrl;
             if (data.shopify.limit_exceeded_link) {
-                shopifyMessage += 'to authorize an increase in the amount that Dropified can charge your Shopify account';
+                // shopifyMessage += 'to authorize an increase in the amount that Dropified can charge your Shopify account';
+                shopifyMessage = 'Dropified will need to increase the amount it can charge for your ';
+                shopifyMessage += 'subscription before installing, from ' + data.shopify.from + ' to ';
+                shopifyMessage += data.shopify.to + '. Do you accept?';
                 shopifyTitle = 'Shopify Limit Exceeded';
                 nextUrl = data.shopify.limit_exceeded_link;
             } else if (data.shopify.confirmation_url) {

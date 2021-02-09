@@ -25,7 +25,7 @@
                 {% endif %}
                 <h1 class="m-b-none add-on-title add-on-color">{{ object.title }}</h1>
                 <p class="m-t-xs addon-desc add-on-color">{{ object.short_description }}</p>
-                {% with billing=object.billings.first|for_user:user|first %}
+                {% with billing=object.billings.active.first|for_user:user|first %}
                 <p id="addon-billing"
                    class="add-on-color price-container"
                    data-billing="{{ billing.id }}"

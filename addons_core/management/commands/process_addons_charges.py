@@ -46,8 +46,14 @@ class Command(DropifiedBaseCommand):
         next_day = options['today'].shift(days=1).date()
         seven_days_ago = options['today'].shift(days=-7).date()
 
+        for missed_usage_charge in AddonUsage.objects.filter(
+                next_billing__lt=arrow.get(today).shift(months=-2),
+                cancelled_at__isnull=True):
+            missed_usage_charge.next_billing = missed_usage_charge.get_next_billing_date(today)
+            missed_usage_charge.save()
+
         # Addons that change prices between months in stripe need to make that
-        # change before upcomming invoice is create
+        # change before upcomming invoice is created
         users = User.objects.filter(
             Q(addonusage__cancel_at__range=today_range)
             | (Q(addonusage__next_billing__range=(seven_days_ago, next_day))
@@ -115,6 +121,7 @@ class Command(DropifiedBaseCommand):
                     )
                     continue
 
+                # TODO: create shopify subscription for yearly plans
                 for addon_usage in user.addon_subscriptions:
                     # Add charges at the right time for shopify
                     if addon_usage.next_billing != today:

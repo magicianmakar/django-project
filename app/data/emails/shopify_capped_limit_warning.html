@@ -10,7 +10,7 @@
 </p>
 
 {% if addon_usages %}
-<p>The following Addons have been overdue for 7 days and have now been cancelled:</p>
+<p>The following Addons have been overdue for 7 days and are now cancelled:</p>
 <ul>
     {% for addon_usage in addon_usages %}
     <li>{{ addon_usage.billing.addon.title }}</li>

@@ -9,7 +9,7 @@ from metrics.tasks import update_activecampaign_addons
 from .models import Addon, AddonBilling, AddonUsage
 from .utils import (
     get_shopify_subscription,
-    has_shopify_limit_exceeded,
+    need_shopify_subscription_increase,
     create_shopify_subscription,
     cancel_addon_usages,
 )
@@ -20,11 +20,12 @@ class AddonsApi(ApiResponseMixin):
     def post_install(self, request, user, data):
         # TODO: remove this when we allow multiple billing options for addons
         if 'billing' not in data:
-            billing = get_object_or_404(Addon, id=data['addon']).billings.first()
-            if billing is None:
-                raise permissions.PermissionDenied()
+            billing = get_object_or_404(Addon, id=data['addon']).billings.active().first()
         else:
-            billing = AddonBilling.objects.select_related('addon').get(id=data['billing'])
+            billing = AddonBilling.objects.select_related('addon').active().get(id=data['billing'])
+
+        if billing is None:
+            raise permissions.PermissionDenied()
 
         if not user.profile.plan.support_addons:
             return self.api_error("Your plan doesn't support adding Addons", 422)
@@ -48,9 +49,9 @@ class AddonsApi(ApiResponseMixin):
                 else:
                     return self.api_error(result, status=403)
 
-            limit_exceeded = has_shopify_limit_exceeded(user.models_user, charge=charge)
-            if limit_exceeded:
-                return self.api_success({'shopify': {'limit_exceeded_link': limit_exceeded}})
+            limit_increase = need_shopify_subscription_increase(user.models_user, billing, charge=charge)
+            if limit_increase:
+                return self.api_success({'shopify': {'limit_exceeded_link': limit_increase}})
 
         active_until_period_end = AddonUsage.objects.filter(
             user=user.models_user,

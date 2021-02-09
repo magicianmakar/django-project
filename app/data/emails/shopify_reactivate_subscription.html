@@ -1,0 +1,18 @@
+{% extends 'email_base.html' %}
+
+{% block email-content %}
+<p>We noticed your current subscription was automatically cancelled at Shopify</p>
+
+<p>That usually happens if an update to your subscription weren't confirmed.</p>
+
+<p>
+	To continue with Dropified, access this
+	<a target="_blank" href="{{ confirmation_link }}">link</a>
+	and confirm the re-activation of your subscription at Shopify.
+</p>
+
+<p>
+	In case the link is not available, copy and paste below:<br>
+	{{ confirmation_link }}
+</p>
+{% endblock %}

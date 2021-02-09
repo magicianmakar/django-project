@@ -115,8 +115,8 @@ class AddonAdmin(PreventBillingDeleteMixin, FormWithRequestMixin, admin.ModelAdm
         'store_types',
     )
     prepopulated_fields = {'slug': ('title',)}
-    list_filter = ('hidden', 'created_at', 'updated_at')
-    search_fields = ('slug',)
+    list_filter = ('hidden', 'categories', 'created_at', 'updated_at')
+    search_fields = ('slug', 'title', 'stripe_product_id')
     filter_horizontal = ('categories', 'permissions')
     date_hierarchy = 'created_at'
     inlines = (AddonBillingInline,)
@@ -210,7 +210,7 @@ class AddonPriceAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
     addon_relation = 'billing__addon_id'
 
     list_filter = ('billing__addon_id',)
-    search_fields = ('billing__addon__id', 'billing__addon__title', 'price_descriptor')
+    search_fields = ('billing__addon__id', 'billing__addon__title', 'price_descriptor', 'stripe_price_id')
     list_display = ('billing', 'get_price_title')
     exclude = ('sort_order',)
     raw_id_fields = ('billing',)
@@ -223,9 +223,16 @@ class AddonPriceAdmin(PreventBillingDeleteMixin, admin.ModelAdmin):
 
 @admin.register(AddonUsage)
 class AddonUsageAdmin(admin.ModelAdmin):
-    list_display = ('user', 'billing', 'is_active', 'created_at', 'updated_at', 'cancelled_at')
-
+    list_display = ('user', 'billing', 'next_billing', 'is_active', 'created_at', 'updated_at', 'cancelled_at')
     list_filter = ('billing__addon__title', 'is_active', 'created_at', 'updated_at', 'cancelled_at')
+    search_fields = (
+        'billing__addon__id',
+        'billing__addon__title',
+        'billing__addon__stripe_product_id',
+        'stripe_subscription_id',
+        'stripe_subscription_item_id',
+        'billing__prices__stripe_price_id',
+    )
     date_hierarchy = 'created_at'
     readonly_fields = ('stripe_subscription_id',)
     raw_id_fields = ('user', 'billing', 'price_after_cancel')

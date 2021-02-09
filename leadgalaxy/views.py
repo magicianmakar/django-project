@@ -3945,6 +3945,7 @@ class OrdersView(TemplateView):
                             else:
                                 continue
 
+                            line_item['is_pls'] = b_supplier.is_pls or line_item['is_pls']
                             b_variant_mapping = b_product.get_variant_mapping(name=b_variant_id, for_extension=True, mapping_supplier=True)
                             if b_variant_id and b_variant_mapping:
                                 b_variants = b_variant_mapping
