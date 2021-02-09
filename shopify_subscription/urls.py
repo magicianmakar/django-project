@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.urls import path
 
 import shopify_subscription.views
 
@@ -8,5 +9,8 @@ urlpatterns = [
     url(r'^charged/(?P<store>[0-9]+)$', shopify_subscription.views.subscription_charged, name='shopify_subscription.views.subscription_charged'),
     url(r'^subscription-callflex$', shopify_subscription.views.subscription_callflex, name='shopify_subscription.views.subscription_callflex'),
     url(r'^subscription-callflex-activated$', shopify_subscription.views.subscription_callflex_activated,
-        name='shopify_subscription.views.subscription_callflex_activated')
+        name='shopify_subscription.views.subscription_callflex_activated'),
+    path('reactivate',
+         shopify_subscription.views.ShopifyReactivateRedirectView.as_view(),
+         name='shopify_subscription.views.shopify_reactivate'),
 ]

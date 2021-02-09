@@ -13,7 +13,7 @@ def for_user(addon_billings, user):
     try:
         addon_billings = list(addon_billings)
     except:
-        addon_billings = [addon_billings]
+        addon_billings = [addon_billings] if addon_billings else []
 
     if not user.is_authenticated:
         for addon_billing in addon_billings:

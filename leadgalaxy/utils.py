@@ -87,6 +87,7 @@ from shopified_core.shipping_helper import (
 )
 from shopify_orders.models import ShopifyOrderLine
 from supplements.utils import supplement_customer_address
+from churnzero_core.utils import SetAccountActionBuilder
 
 from django.utils.deprecation import MiddlewareMixin
 
@@ -2384,29 +2385,16 @@ def generate_user_activity(user, output=None):
     return url
 
 
-def set_churnzero_account(models_user, create=False):
-    if models_user.profile.plan.is_stripe() and hasattr(models_user, "stripe_customer"):
-        addons_list = models_user.profile.addons.values_list('churnzero_name', flat=True)
-        actions = [{
-            'appKey': settings.CHURNZERO_APP_KEY,
-            'accountExternalId': models_user.username,
-            'contactExternalId': models_user.username,
-            'accountExternalIdHash': models_user.profile.churnzero_account_id_hash,
-            'contactExternalIdHash': models_user.profile.churnzero_contact_id_hash,
-            'action': 'setAttribute',
-            'entity': 'account',
-            # Custom attributes
-            'attr_Stripe_customer_id': models_user.stripe_customer.customer_id,
-            'attr_Gateway': models_user.profile.plan.payment_gateway.title(),
-            'attr_Installed Addons': ', '.join(addons_list),
-        }]
-
-        # ChurnZero will fill out all the other details
-        post_churnzero_actions(actions)
-
-        if create:
+def set_churnzero_account(models_user):
+    cache_key = f'set_churnzero_account_{models_user.username}'
+    if not cache.get(cache_key):
+        action_builder = SetAccountActionBuilder(models_user)
+        if action_builder.is_shopify_user or action_builder.is_stripe_user:
+            action = action_builder.get_complete_action()
+            post_churnzero_actions([action])
             models_user.profile.has_churnzero_account = True
             models_user.profile.save()
+            cache.set(cache_key, True, 3600)
 
 
 # Helper Classes
@@ -2488,8 +2476,8 @@ class AnalyticsMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if request.user.is_authenticated and not request.user.models_user.profile.has_churnzero_account:
-            set_churnzero_account(request.user.models_user, create=True)
+        if request.user.is_authenticated:
+            set_churnzero_account(request.user.models_user)
 
         return self.get_response(request)
 

@@ -4,8 +4,11 @@ from django.conf import settings
 from django.http import JsonResponse, HttpResponseRedirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
+from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
+from django.views.generic.base import RedirectView
 
 from lib.exceptions import capture_exception
 
@@ -14,7 +17,7 @@ from shopified_core.utils import app_link
 from leadgalaxy.models import GroupPlan, ShopifyStore, ClippingMagic, CaptchaCredit
 from analytic_events.models import PlanSelectionEvent, SuccessfulPaymentEvent
 
-from .models import ShopifySubscription
+from .models import ShopifySubscription, ShopifySubscriptionWarning
 from phone_automation import billing_utils as billing
 
 
@@ -124,12 +127,12 @@ def subscription_activated(request):
     permissions.user_can_view(request.user, sub)
     charge = sub.refresh()
 
+    # Addon subscription accepted, shopify automatically change status to active
     if charge.status in ['accepted', 'active']:
-        is_charged = False
-
         if charge.status == 'accepted':
             charge.activate()
 
+        is_charged = False
         if request.session.get('active_plan'):
             is_charged = True
             request.user.profile.change_plan(GroupPlan.objects.get(
@@ -147,6 +150,11 @@ def subscription_activated(request):
                         charge.destroy()
 
         request.user.shopifysubscription_set.exclude(id=charge_id).update(status='cancelled')
+
+        try:
+            request.user.shopify_subscription_warning.delete()
+        except ShopifySubscriptionWarning.DoesNotExist:
+            pass
 
         request.user.set_config('_can_trial', False)
 
@@ -281,3 +289,13 @@ def subscription_callflex_activated(request):
     profile_link = app_link(reverse('user_profile'))
 
     return HttpResponseRedirect(f'{profile_link}?callflex_anchor#plan')
+
+
+@method_decorator(login_required, name='dispatch')
+class ShopifyReactivateRedirectView(RedirectView):
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        warning = get_object_or_404(ShopifySubscriptionWarning,
+                                    user=self.request.user)
+        return warning.confirmation_url

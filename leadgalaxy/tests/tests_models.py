@@ -25,11 +25,10 @@ from .factories import ShopifyOrderLogFactory
 
 from stripe_subscription.models import StripeCustomer
 from stripe_subscription.tests.factories import StripeCustomerFactory
+from addons_core.tests.factories import AddonFactory
+from addons_core.models import Addon
 
 from analytic_events.models import LoginEvent, StoreCreatedEvent
-
-from addons_core.models import Addon
-from addons_core.tests.factories import AddonFactory
 
 
 class UserTestCase(BaseTestCase):
@@ -199,7 +198,6 @@ class UserProfileTestCase(BaseTestCase):
             user.stripe_customer = StripeCustomerFactory()
             self.assertEquals(user.profile.trial_days_left, trial_days_left)
 
-    @patch('leadgalaxy.signals.post_churnzero_addon_update', Mock())
     @patch('leadgalaxy.utils.set_churnzero_account')
     def test_must_call_set_churnzero_account_upon_login_if_no_account_yet(self, set_churnzero_account):
         user = UserFactory()
@@ -210,7 +208,7 @@ class UserProfileTestCase(BaseTestCase):
         user.models_user.profile.save()
         self.client.login(username=user.username, password=password)
         self.client.get('/')
-        set_churnzero_account.assert_called_with(user.models_user, create=True)
+        set_churnzero_account.assert_called_with(user.models_user)
 
     def test_must_create_login_event_on_login_if_has_churnzero_account(self):
         user = UserFactory()
@@ -233,19 +231,6 @@ class UserProfileTestCase(BaseTestCase):
         user.models_user.profile.plan.is_stripe = Mock(return_value=False)
         self.client.login(username=user.username, password=password)
         self.assertEqual(LoginEvent.objects.count(), 0)
-
-    @patch('leadgalaxy.signals.post_churnzero_addon_update', Mock())
-    @patch('leadgalaxy.utils.set_churnzero_account')
-    def test_must_not_call_set_churnzero_account_upon_login_if_has_account(self, set_churnzero_account):
-        user = UserFactory()
-        password = '123456'
-        user.set_password(password)
-        user.save()
-        user.models_user.profile.has_churnzero_account = True
-        user.models_user.profile.save()
-        self.client.login(username=user.username, password=password)
-        self.client.get('/')
-        self.assertFalse(set_churnzero_account.called)
 
     def test_must_have_correct_churnzero_account_id_hash(self):
         churnzero_secret_token = settings.CHURNZERO_SECRET_TOKEN.encode()
@@ -273,36 +258,21 @@ class UserProfileTestCase(BaseTestCase):
 
         self.assertEqual(user.profile.churnzero_contact_id_hash, churnzero_contact_id_hash)
 
-    @patch('leadgalaxy.signals.post_churnzero_addon_update', Mock())
-    @patch('leadgalaxy.signals.set_churnzero_account')
-    def test_must_set_churnzero_account_on_addon_add(self, set_churnzero_account):
-        user = UserFactory()
-        addon1 = AddonFactory()
-        user.models_user.profile.addons.add(addon1)
-        set_churnzero_account.assert_called_with(user)
-
-    @patch('leadgalaxy.signals.post_churnzero_addon_update', Mock())
-    @patch('leadgalaxy.signals.set_churnzero_account')
-    def test_must_set_churnzero_account_on_addon_remove(self, set_churnzero_account):
-        user = UserFactory()
-        addon1 = AddonFactory()
-        user.models_user.profile.addons.add(addon1)
-        user.models_user.profile.addons.remove(addon1)
-        self.assertEqual(set_churnzero_account.call_count, 2)
-
-    @patch('leadgalaxy.signals.set_churnzero_account', Mock())
     @patch('leadgalaxy.signals.post_churnzero_addon_update')
     def test_must_post_churnzero_addon_update_on_addon_remove(self, post_churnzero_addon_update):
         user = UserFactory()
         addon1 = AddonFactory()
+        user.models_user.profile.has_churnzero_account = True
+        user.models_user.profile.save()
         user.models_user.profile.addons.add(addon1)
         user.models_user.profile.addons.remove(addon1)
         self.assertEqual(post_churnzero_addon_update.call_count, 2)
 
-    @patch('leadgalaxy.signals.set_churnzero_account', Mock())
     @patch('leadgalaxy.signals.post_churnzero_addon_update')
     def test_must_call_post_churnzero_addon_with_correct_added_addons(self, post_churnzero_addon_update):
         user = UserFactory()
+        user.models_user.profile.has_churnzero_account = True
+        user.models_user.profile.save()
         addon1 = Addon.objects.create(title='addon1', slug='addon1', addon_hash="#")
         addon2 = Addon.objects.create(title='addon2', slug='addon2', addon_hash="##")
         user.models_user.profile.addons.add(addon1, addon2)
@@ -310,20 +280,22 @@ class UserProfileTestCase(BaseTestCase):
         addons_param = post_churnzero_addon_update.call_args[1]['addons']
         self.assertEqual(list(addons), list(addons_param))
 
-    @patch('leadgalaxy.signals.set_churnzero_account', Mock())
     @patch('leadgalaxy.signals.post_churnzero_addon_update')
     def test_must_call_post_churnzero_addon_with_correct_added_action(self, post_churnzero_addon_update):
         user = UserFactory()
+        user.models_user.profile.has_churnzero_account = True
+        user.models_user.profile.save()
         addon1 = Addon.objects.create(title='addon1', slug='addon1', addon_hash="#")
         addon2 = Addon.objects.create(title='addon2', slug='addon2', addon_hash="##")
         user.models_user.profile.addons.add(addon1, addon2)
         action_param = post_churnzero_addon_update.call_args[1]['action']
         self.assertEqual('added', action_param)
 
-    @patch('leadgalaxy.signals.set_churnzero_account', Mock())
     @patch('leadgalaxy.signals.post_churnzero_addon_update')
     def test_must_call_post_churnzero_addon_with_correct_removed_addons(self, post_churnzero_addon_update):
         user = UserFactory()
+        user.models_user.profile.has_churnzero_account = True
+        user.models_user.profile.save()
         addon1 = Addon.objects.create(title='addon1', slug='addon1', addon_hash="#")
         addon2 = Addon.objects.create(title='addon2', slug='addon2', addon_hash="##")
         user.models_user.profile.addons.add(addon1, addon2)

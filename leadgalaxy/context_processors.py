@@ -3,6 +3,7 @@ import hashlib
 
 from django.core.cache import cache
 from django.conf import settings
+from django.contrib import messages
 
 import arrow
 import datetime
@@ -159,3 +160,40 @@ def add_side_menu(request):
                          'body': body,
                          'footer': footer,
                          'named': named}}
+
+
+def check_shopify_pending_subscription(request):
+    """
+    https://help.shopify.com/en/manual/your-account/manage-billing/your-invoice/apps#app-usage-charges
+    Apps that issue usage charges include a capped amount that prevents billing from exceeding a maximum
+    threshold over the duration of the billing period. To *continue using an app* after exceeding a capped
+    amount, you need to agree to a new usage charge. This prevents you from being charged for any usage
+    over and above the capped amount.
+    """
+    if not request.user.is_authenticated:
+        return {}
+
+    if not request.user.profile.from_shopify_app_store():
+        return {}
+
+    shopify_subscription = request.user.profile.get_current_shopify_subscription()
+    if shopify_subscription is None:
+        return {}
+
+    if not shopify_subscription.update_capped_amount_url:
+        return {}
+
+    message = 'Please, confirm your pending subscription update '
+    message += f'<a href="{shopify_subscription.update_capped_amount_url}">here</a>. '
+
+    if shopify_subscription.updated_at > arrow.get().shift(hours=-24) and False:
+        message += 'It will expire within 24 hours. '
+        add_message = messages.error
+
+    elif shopify_subscription.updated_at > arrow.get().shift(hours=-48):
+        message += 'It will expire within 48 hours. '
+        add_message = messages.warning
+
+    message += 'Shopify automatically cancels expired subscriptions after 30 days.'
+    add_message(request, message)
+    return {}

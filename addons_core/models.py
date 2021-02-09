@@ -33,7 +33,7 @@ class Category(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'Category: {self.title}'
+        return self.title
 
     @cached_property
     def visible_addon(self):
@@ -42,42 +42,29 @@ class Category(models.Model):
 
 class Addon(models.Model):
     variant_from = models.ForeignKey('self', null=True, blank=True, related_name='variants', on_delete=models.SET_NULL)
+    categories = models.ManyToManyField(Category, blank=True, related_name="addons")
+    permissions = models.ManyToManyField(AppPermission, blank=True)
 
     title = models.TextField()
     slug = models.SlugField(unique=True, max_length=512)
+    store_types = models.CharField(max_length=200, default='', null=True)
     addon_hash = models.TextField(unique=True, editable=False)
 
     short_description = models.TextField(blank=True)
     description = models.TextField(blank=True)
     churnzero_name = models.TextField(blank=True, default='')
     faq = models.TextField(blank=True, null=True)
-
-    categories = models.ManyToManyField(Category, blank=True, related_name="addons")
-
     icon_url = models.URLField(blank=True, null=True)
     banner_url = models.URLField(blank=True, null=True)
     youtube_url = models.URLField(blank=True, null=True)
     vimeo_url = models.URLField(blank=True, null=True)
+    key_benefits = models.TextField(blank=True, default='')
 
     action_name = models.CharField(max_length=128, default='Install')
     action_url = models.URLField(blank=True, null=True)
-
-    monthly_price = models.DecimalField(decimal_places=2, max_digits=9, null=True, blank=True, verbose_name='Monthly Price(in USD)')
-    trial_period_days = models.IntegerField(default=0)
-
-    permissions = models.ManyToManyField(AppPermission, blank=True)
-
-    key_benefits = models.TextField(blank=True, default='')
-
+    stores = models.PositiveIntegerField(default=0, verbose_name='Add store limit')
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     is_active = models.BooleanField(default=True)
-    store_types = models.CharField(
-        max_length=200,
-        default='',
-        null=True
-    )
-
-    stores = models.PositiveIntegerField(default=0, verbose_name='Add store limit')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -134,15 +121,21 @@ class Addon(models.Model):
             return []
 
 
+class IsActiveQuerySet(models.QuerySet):
+    def active(self):
+        return self.filter(is_active=True)
+
+
 class AddonBilling(models.Model):
     class Meta:
         ordering = ('sort_order', 'id')
+
+    objects = IsActiveQuerySet.as_manager()
 
     addon = models.ForeignKey(Addon, related_name='billings', on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     group = models.CharField(max_length=10, default='', blank=True, editable=False)
     sort_order = models.PositiveIntegerField(default=0)
-    # loop = models.BooleanField(default=False)
 
     trial_period_days = models.IntegerField(default=0)
     expire_at = models.DateTimeField(null=True, blank=True)

@@ -34,17 +34,16 @@ from leadgalaxy.models import (
 )
 
 from addons_core.tasks import cancel_all_addons
-from addons_core.models import Addon
 from metrics.tasks import activecampaign_update_plan, activecampaign_update_store_count
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
 from stripe_subscription.stripe_api import stripe
 from shopified_core.tasks import keen_send_event
 from shopified_core.utils import get_domain
-from churnzero_core.utils import post_churnzero_addon_update
 from goals.models import Goal, UserGoalRelationship
-from leadgalaxy.utils import set_churnzero_account
 from analytic_events.models import LoginEvent, StoreCreatedEvent
+from addons_core.models import Addon
+from churnzero_core.utils import post_churnzero_addon_update
 
 
 @receiver(post_save, sender=UserProfile)
@@ -324,8 +323,8 @@ def post_login(sender, user, request, **kwargs):
 
 @receiver(m2m_changed, sender=UserProfile.addons.through)
 def addons_count_change(sender, instance, pk_set, action, **kwargs):
-    if not instance.is_subuser and (action == "post_add" or action == "post_remove"):
-        set_churnzero_account(instance.user)
+    models_user = instance.user.models_user
+    if models_user.profile.has_churnzero_account and action in ["post_add", "post_remove"]:
         addons = Addon.objects.filter(pk__in=pk_set)
         action = 'added' if action == 'post_add' else 'removed'
         post_churnzero_addon_update(instance.user, addons=addons, action=action)

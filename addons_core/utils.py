@@ -619,8 +619,10 @@ def create_shopify_subscription(store, addon_billing):
     """Creates a RecurringApplicationCharge for annual shopify plans so addons
     can be added to the subscription
     """
-    if store.user.profile.plan.payment_gateway != 'shopify' \
-            or store.user.profile.plan.payment_interval != 'yearly':
+    if store.user.profile.plan.payment_gateway != 'shopify':
+        return False
+
+    if store.user.profile.plan.payment_interval != 'yearly':
         return False
 
     addon_price = addon_billing.price_for_user(store.user)
@@ -675,45 +677,68 @@ def has_shopify_limit_exceeded(user, addon_billing=None, charge=None, today=None
     """Get first active subscription and check the capped limit against
     all subscribed addon prices for current period
     """
+    today = arrow.get(today) if today else arrow.get()
     charge = charge or get_shopify_subscription(user)
     if charge is None:
         raise Exception('Shopify Subscription Not Found')
 
-    # Some shopify subscriptions have a base amount
-    total_cost = Decimal(charge.price)
+    try:
+        next_billing_on = arrow.get(charge.billing_on)
+        if next_billing_on < arrow.get():
+            next_billing_on = next_billing_on.shift(months=1)
+            capture_message('Shopify subscription billed in the past',
+                            extra={'charge': charge.to_dict()},
+                            level='warning')
+    except:
+        next_billing_on = arrow.get().shift(months=1)
 
-    # Sum cancelled addons for this month as well
-    today = arrow.get(today) if today else arrow.get()
-    one_month_ago = today.shift(months=-1).floor('day').datetime
-    addon_usages = AddonUsage.objects.filter(
-        Q(cancelled_at__isnull=True) | (
-            Q(cancelled_at__isnull=False)
-            & Q(cancelled_at__range=(one_month_ago, today.datetime))
-        ),
+    future_addon_costs = AddonUsage.objects.filter(
+        cancelled_at__isnull=True,
+        next_billing__range=(today.date(), next_billing_on.date()),
         user=user
-    ).annotate(max_price=Max('billing__prices__price'))
-
+    ).exclude(
+        billing_id=addon_billing.id if addon_billing else None
+    ).annotate(
+        max_price=Max('billing__prices__price')
+    ).aggregate(
+        c=Sum('max_price')
+    )['c'] or Decimal('0.0')
     if addon_billing is not None:
-        addon_usages = addon_usages.exclude(billing_id=addon_billing.id)
-        total_cost += addon_billing.max_cost
+        future_addon_costs += addon_billing.max_cost
 
-    total_cost += addon_usages.aggregate(c=Sum('max_price'))['c'] or Decimal('0.0')
-    if Decimal(charge.capped_amount) < total_cost:
-        # When all addons are paid, sum just recently subscribed addon
-        if charge.balance_remaining == 0 and addon_billing is not None:
-            total_cost = charge.capped_amount + addon_billing.max_cost
+    future_addon_costs -= Decimal(charge.balance_remaining)
+    capped_amount = Decimal(charge.capped_amount)
+    new_capped_amount = capped_amount + future_addon_costs
+    if capped_amount < new_capped_amount:
+        if 'update_capped_amount_url' in charge.to_dict():
+            return charge.update_capped_amount_url
 
-        # Shopify bugs the subscription if we update below capped_amount
-        if total_cost < Decimal(charge.capped_amount):
-            capture_message('Shopify capped amount is lesser than updated amount', extra={
-                'total_cost': total_cost,
-                'capped_amount': charge.capped_amount,
-                'user_id': user.id,
-                'addon_billing': addon_billing.id if addon_billing else '-'
-            })
-            return False
-
-        charge.customize(capped_amount=total_cost)
+        charge.customize(capped_amount=new_capped_amount)
         return charge.update_capped_amount_url
+    else:
+        # Shopify bugs the subscription if we update below capped_amount
+        capture_message('Shopify capped amount is lesser than updated amount', extra={
+            'new_capped_amount': new_capped_amount,
+            'capped_amount': charge.capped_amount,
+            'user_id': user.id,
+            'addon_billing': addon_billing.id if addon_billing else '-'
+        })
+        return False
 
     return False
+
+
+def need_shopify_subscription_increase(user, addon_billing, charge=None):
+    is_increased = AddonUsage.objects.filter(billing_id=addon_billing.id).exists()
+    if is_increased:
+        return False
+
+    shopify_subscription = user.profile.get_current_shopify_subscription()
+    charge = charge or get_shopify_subscription(user)
+    if charge is None:
+        raise Exception('Shopify Subscription Not Found')
+
+    new_capped_amount = Decimal(charge.capped_amount) + addon_billing.max_cost
+    charge.customize(capped_amount=new_capped_amount)
+    shopify_subscription.refresh(charge)
+    return charge.update_capped_amount_url

@@ -1,7 +1,178 @@
+from decimal import Decimal
+
+import arrow
 import requests
+
 from django.conf import settings
+from django.utils.functional import cached_property
 from django.urls import reverse
+
 from shopified_core.utils import app_link, safe_float, last_executed, send_email_from_template
+
+
+def get_application_charge_price(application_charge):
+    return Decimal(application_charge.to_dict()['price'])
+
+
+def get_active_charge(recurring_charges):
+    for charge in recurring_charges:
+        if charge.status == 'active':
+            return charge
+
+
+def get_charge_name(charge):
+    return charge.to_dict().get('name', '')
+
+
+class YearlySubscription:
+    def __init__(self, profile):
+        self._profile = profile
+
+    @cached_property
+    def is_active(self):
+        return self.charge.to_dict().get('status') in ['active', 'accepted']
+
+    @cached_property
+    def start_date(self):
+        created_at = self.charge.to_dict().get('created_at')
+
+        return arrow.get(created_at) if created_at else None
+
+    @cached_property
+    def end_date(self):
+        return self.start_date.shift(years=1) if self.start_date else None
+
+    @cached_property
+    def next_renewal_date(self):
+        return self.end_date
+
+    @cached_property
+    def total_contract_amount(self):
+        return self._get_total_contract_amount()
+
+    @cached_property
+    def charge(self):
+        return self._get_charge()
+
+    def _get_total_contract_amount(self):
+        total_price = self._profile.application_charge_total
+        self_price = get_application_charge_price(self.charge)
+
+        return total_price - self_price
+
+    def _get_charge(self):
+        charges = self._profile.application_charges
+        for charge in charges:
+            if f"Dropified {self._profile.plan.title}" in get_charge_name(charge):
+                return charge
+
+
+class RecurringSubscription:
+    def __init__(self, profile):
+        self._profile = profile
+
+    @cached_property
+    def is_active(self):
+        return self.charge.to_dict().get('status') == 'active'
+
+    @cached_property
+    def start_date(self):
+        activated_on = self.charge.to_dict().get('activated_on')
+
+        return arrow.get(activated_on) if activated_on else None
+
+    @cached_property
+    def end_date(self):
+        billing_on = self.charge.to_dict().get('billing_on')
+
+        return arrow.get(billing_on) if billing_on else None
+
+    @cached_property
+    def next_renewal_date(self):
+        return self.end_date
+
+    @cached_property
+    def total_contract_amount(self):
+        return self._profile.application_charge_total + self.balanced_used
+
+    @cached_property
+    def balanced_used(self):
+        balanced_used = self.charge.to_dict().get('balanced_used', 0)
+
+        return Decimal(balanced_used).quantize(Decimal('1.00'))
+
+    @cached_property
+    def charge(self):
+        return get_active_charge(self._profile.recurring_charges)
+
+
+class ShopifyProfile:
+    def __init__(self, user):
+        self._user = user
+        self._subscription = self._get_subscription() if self.plan else None
+
+    @cached_property
+    def plan(self):
+        return getattr(self._user.profile, "plan")
+
+    @cached_property
+    def is_valid(self):
+        return bool(self.shopify_store and self._subscription.charge)
+
+    @cached_property
+    def shopify_store(self):
+        return self._user.profile.get_shopify_stores().first()
+
+    @cached_property
+    def is_active(self):
+        return self._subscription.is_active
+
+    @cached_property
+    def start_date(self):
+        return self._subscription.start_date
+
+    @cached_property
+    def end_date(self):
+        return self._subscription.end_date
+
+    @cached_property
+    def next_renewal_date(self):
+        return self._subscription.next_renewal_date
+
+    @cached_property
+    def total_contract_amount(self):
+        return self._subscription.total_contract_amount
+
+    @cached_property
+    def application_charges(self):
+        return self._get_application_charges()
+
+    @cached_property
+    def recurring_charges(self):
+        return self._get_recurring_charges()
+
+    @cached_property
+    def application_charge_total(self):
+        return self._get_application_charge_total()
+
+    def _get_subscription(self):
+        yearly = self.plan.payment_interval == 'yearly'
+
+        return YearlySubscription(self) if yearly else RecurringSubscription(self)
+
+    def _get_application_charges(self):
+        return self.shopify_store.shopify.ApplicationCharge.find()
+
+    def _get_recurring_charges(self):
+        return self.shopify_store.shopify.RecurringApplicationCharge.find()
+
+    def _get_application_charge_total(self):
+        total = Decimal('0.00')
+
+        for charge in self.application_charges:
+            total += get_application_charge_price(charge)
+
+        return total
 
 
 class BaremetricsRequest():

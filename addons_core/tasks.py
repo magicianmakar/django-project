@@ -50,5 +50,5 @@ def create_charge_in_shopify(addon_usage_id):
         create_shopify_charge(addon_usage)
     except:
         capture_exception()
-        cancel_addon_usages([addon_usage], now=True)
+        cancel_addon_usages([addon_usage])
         addon_usage.delete()

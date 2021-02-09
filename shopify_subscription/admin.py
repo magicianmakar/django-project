@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import ShopifySubscription, BaremetricsCustomer, BaremetricsSubscription, BaremetricsCharge
+from .models import (
+    ShopifySubscription,
+    ShopifySubscriptionWarning,
+    BaremetricsCustomer,
+    BaremetricsSubscription,
+    BaremetricsCharge,
+)
 
 USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
@@ -14,6 +20,12 @@ class ShopifySubscriptionAdmin(admin.ModelAdmin):
     raw_id_fields = ('user', 'store')
     readonly_fields = ('subscription_id', 'status', 'activated_on', 'created_at', 'updated_at',)
     search_fields = ('store__id', 'store__title', 'store__shop') + USER_SEARCH_FIELDS
+
+
+@admin.register(ShopifySubscriptionWarning)
+class ShopifySubscriptionWarningAdmin(admin.ModelAdmin):
+    list_display = ('user', )
+    search_fields = USER_SEARCH_FIELDS
 
 
 @admin.register(BaremetricsCustomer)

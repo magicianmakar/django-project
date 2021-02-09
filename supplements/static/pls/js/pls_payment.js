@@ -265,14 +265,17 @@ function calculateTotals() {
     var productsTotalCost = 0;
     $('.order-total').each(function() {
         var orderID = $(this).data('order-id');
-        var shippingCost = $('[name="shipping_service_' + orderID + '"]:checked').data('cost') || 0;
-        var taxesCost = $('.tax-' + orderID + ':not(.hidden)').data('cost') || 0;
+        var shippingCost = parseFloat($('[name="shipping_service_' + orderID + '"]:checked').data('cost') || 0);
+        var taxesCost = parseFloat($('.tax-' + orderID + ':not(.hidden)').data('cost') || 0);
         var countProducts = 0;
         var productsCost = $('.product-cost-' + orderID).map(function(i, elem) {
             var cost = $(elem).data('cost');
-            if (cost && cost >= 0) {
-                countProducts += 1;
-                return cost;
+            if (cost) {
+                cost = parseFloat(cost);
+                if (cost >= 0) {
+                    countProducts += 1;
+                    return cost;
+                }
             }
             return 0;
         }).get().reduce(function(a, b) {
