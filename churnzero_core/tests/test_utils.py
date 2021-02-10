@@ -8,12 +8,18 @@ from django.test.utils import override_settings
 from django.core.cache import cache
 
 from addons_core.tests.factories import AddonFactory
-from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export, post_churnzero_addon_update
 from leadgalaxy import utils
 from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, ShopifyStoreFactory
 from woocommerce_core.tests.factories import WooStoreFactory
 from lib.test import BaseTestCase
 from stripe_subscription.tests.factories import StripePlanFactory, StripeCustomerFactory
+
+from churnzero_core.utils import (
+    post_churnzero_product_import,
+    post_churnzero_product_export,
+    post_churnzero_addon_update,
+    SetAccountActionBuilder
+)
 
 
 class PostChurnZeroProductImportTestCase(BaseTestCase):
@@ -276,3 +282,25 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         utils.set_churnzero_account(user.models_user)
         user.models_user.profile.refresh_from_db()
         self.assertTrue(user.models_user.profile.has_churnzero_account)
+
+
+class SetAccountActionBuilderTestCase(BaseTestCase):
+    def test_must_add_user_first_name_and_last_name_as_name_attribute(self):
+        models_user = UserFactory(username='modelsuser', first_name="Models", last_name="User")
+        user = UserFactory()
+        user.profile.subuser_parent = models_user
+        user.profile.save()
+        builder = SetAccountActionBuilder(user)
+        builder.add_name()
+        action = builder.get_action()
+        self.assertEqual(action['attr_Name'], "Models User")
+
+    def test_must_add_default_name_as_name_attribute_if_no_first_and_last_name(self):
+        models_user = UserFactory(username='modelsuser', first_name="", last_name="")
+        user = UserFactory()
+        user.profile.subuser_parent = models_user
+        user.profile.save()
+        builder = SetAccountActionBuilder(user)
+        builder.add_name()
+        action = builder.get_action()
+        self.assertEqual(action['attr_Name'], "(no name)")
