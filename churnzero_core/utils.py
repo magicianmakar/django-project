@@ -3,7 +3,9 @@ import copy
 from django.conf import settings
 from django.utils.functional import cached_property
 
+from lib.exceptions import capture_exception
 from shopified_core.tasks import requests_async
+from shopified_core.utils import last_executed
 from shopify_subscription.utils import ShopifyProfile
 
 
@@ -166,3 +168,27 @@ def post_churnzero_actions(actions):
                 'method': 'post',
                 'json': actions
             })
+
+
+def set_churnzero_account(models_user):
+    action_builder = SetAccountActionBuilder(models_user)
+    if action_builder.is_shopify_user or action_builder.is_stripe_user:
+        action = action_builder.get_complete_action()
+        post_churnzero_actions([action])
+        models_user.profile.has_churnzero_account = True
+        models_user.profile.save()
+
+
+class ChurnZeroMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if not request.is_ajax() and '/api/' not in request.path and request.user.is_authenticated:
+            if not last_executed(f'churn_zero_mw_{request.user.id}', 3600):
+                try:
+                    set_churnzero_account(request.user.models_user)
+                except:
+                    capture_exception(level='warning')
+
+        return self.get_response(request)

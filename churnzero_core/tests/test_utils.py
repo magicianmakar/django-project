@@ -8,7 +8,6 @@ from django.test.utils import override_settings
 from django.core.cache import cache
 
 from addons_core.tests.factories import AddonFactory
-from leadgalaxy import utils
 from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, ShopifyStoreFactory
 from woocommerce_core.tests.factories import WooStoreFactory
 from lib.test import BaseTestCase
@@ -18,6 +17,7 @@ from churnzero_core.utils import (
     post_churnzero_product_import,
     post_churnzero_product_export,
     post_churnzero_addon_update,
+    set_churnzero_account,
     SetAccountActionBuilder
 )
 
@@ -174,7 +174,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         addons_list = user.models_user.profile.addons.values_list('churnzero_name', flat=True)
         ShopifyStoreFactory(user=models_user)
         WooStoreFactory(user=models_user)
-        utils.set_churnzero_account(user.models_user)
+        set_churnzero_account(user.models_user)
 
         actions = [{
             'appKey': settings.CHURNZERO_APP_KEY,
@@ -217,7 +217,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         addons_list = user.models_user.profile.addons.values_list('churnzero_name', flat=True)
         ShopifyStoreFactory(user=models_user)
         WooStoreFactory(user=models_user)
-        utils.set_churnzero_account(user.models_user)
+        set_churnzero_account(user.models_user)
 
         actions = [{
             'appKey': settings.CHURNZERO_APP_KEY,
@@ -258,7 +258,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         user.models_user.profile.plan.is_stripe = Mock(return_value=True)
         user.models_user.profile.plan.stripe_plan = StripePlanFactory(stripe_id='abc')
         user.models_user.stripe_customer = StripeCustomerFactory(customer_id='abc')
-        utils.set_churnzero_account(user.models_user)
+        set_churnzero_account(user.models_user)
         user.models_user.profile.refresh_from_db()
         self.assertTrue(user.models_user.profile.has_churnzero_account)
 
@@ -279,7 +279,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         plan = GroupPlanFactory(payment_gateway='shopify')
         user.models_user.profile.plan = plan
         user.models_user.profile.plan.is_shopify = Mock(return_value=True)
-        utils.set_churnzero_account(user.models_user)
+        set_churnzero_account(user.models_user)
         user.models_user.profile.refresh_from_db()
         self.assertTrue(user.models_user.profile.has_churnzero_account)
 

@@ -64,7 +64,6 @@ from shopified_core.utils import (
     ensure_title,
     add_http_schema,
 )
-from churnzero_core.utils import post_churnzero_actions
 from leadgalaxy.models import (
     AccountRegistration,
     GroupPlan,
@@ -87,7 +86,6 @@ from shopified_core.shipping_helper import (
 )
 from shopify_orders.models import ShopifyOrderLine
 from supplements.utils import supplement_customer_address
-from churnzero_core.utils import SetAccountActionBuilder
 
 from django.utils.deprecation import MiddlewareMixin
 
@@ -2385,18 +2383,6 @@ def generate_user_activity(user, output=None):
     return url
 
 
-def set_churnzero_account(models_user):
-    cache_key = f'set_churnzero_account_{models_user.username}'
-    if not cache.get(cache_key):
-        action_builder = SetAccountActionBuilder(models_user)
-        if action_builder.is_shopify_user or action_builder.is_stripe_user:
-            action = action_builder.get_complete_action()
-            post_churnzero_actions([action])
-            models_user.profile.has_churnzero_account = True
-            models_user.profile.save()
-            cache.set(cache_key, True, 3600)
-
-
 # Helper Classes
 class TimezoneMiddleware(object):
 
@@ -2469,20 +2455,6 @@ class UserEmailEncodeMiddleware(object):
         params[name] = encode_params(value)
 
         return HttpResponseRedirect('{}?{}'.format(request.path, params.urlencode()))
-
-
-class ChurnZeroMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        if not request.is_ajax() and request.user.is_authenticated:
-            try:
-                set_churnzero_account(request.user.models_user)
-            except:
-                capture_exception(level='warning')
-
-        return self.get_response(request)
 
 
 class CookiesSameSite(MiddlewareMixin):
