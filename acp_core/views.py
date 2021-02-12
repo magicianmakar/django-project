@@ -19,6 +19,7 @@ from leadgalaxy.models import UserProfile, AdminEvent, AccountRegistration, Plan
 from leadgalaxy.shopify import ShopifyAPI
 from shopified_core.utils import safe_int, url_join, hash_list
 from stripe_subscription.stripe_api import stripe
+from lib.exceptions import capture_exception
 
 
 class BaseTemplateView(TemplateView):
@@ -175,14 +176,14 @@ class ACPUserSearchView(BaseTemplateView):
                 'content-type': 'application/x-www-form-urlencoded',
             })
 
-            rep.raise_for_status()
+            try:
+                rep.raise_for_status()
 
-            if rep.json()['count'] > 0:
-                for c in rep.json()['data']:
-                    customer_ids.append({
-                        'id': c['id'],
-                        'email': c['email'],
-                    })
+                if rep.json()['count'] > 0:
+                    for c in rep.json()['data']:
+                        customer_ids.append({'id': c['id'], 'email': c['email']})
+            except:
+                capture_exception(level='warning')
 
             if customer_id:
                 found = False
