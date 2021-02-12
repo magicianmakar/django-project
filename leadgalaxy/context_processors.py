@@ -186,7 +186,8 @@ def check_shopify_pending_subscription(request):
     message = 'Please, confirm your pending subscription update '
     message += f'<a href="{shopify_subscription.update_capped_amount_url}">here</a>. '
 
-    if shopify_subscription.updated_at > arrow.get().shift(hours=-24) and False:
+    add_message = None
+    if shopify_subscription.updated_at > arrow.get().shift(hours=-24):
         message += 'It will expire within 24 hours. '
         add_message = messages.error
 
@@ -194,6 +195,7 @@ def check_shopify_pending_subscription(request):
         message += 'It will expire within 48 hours. '
         add_message = messages.warning
 
-    message += 'Shopify automatically cancels expired subscriptions after 30 days.'
-    add_message(request, message)
+    if add_message is not None:
+        message += 'Shopify automatically cancels expired subscriptions after 30 days.'
+        add_message(request, message)
     return {}
