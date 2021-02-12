@@ -198,7 +198,7 @@ class UserProfileTestCase(BaseTestCase):
             user.stripe_customer = StripeCustomerFactory()
             self.assertEquals(user.profile.trial_days_left, trial_days_left)
 
-    @patch('leadgalaxy.utils.set_churnzero_account')
+    @patch('churnzero_core.utils.set_churnzero_account')
     def test_must_call_set_churnzero_account_upon_login_if_no_account_yet(self, set_churnzero_account):
         user = UserFactory()
         password = '123456'
