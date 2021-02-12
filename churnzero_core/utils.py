@@ -41,7 +41,8 @@ class SetAccountActionBuilder:
 
     def add_name(self):
         name_elements = [self._models_user.first_name, self._models_user.last_name]
-        self._action['attr_Name'] = ' '.join(name_elements)
+        name = ' '.join(name_elements).strip()
+        self._action['attr_Name'] = name if name else "(no name)"
 
     def add_stripe_customer_id(self):
         self._action['attr_Stripe_customer_id'] = self._models_user.stripe_customer.customer_id
