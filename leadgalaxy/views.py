@@ -1438,6 +1438,24 @@ def webhook(request, provider, option):
 
             return HttpResponse(f':ok: User {user.email} transactions updated for {pls_orders_count} Orders, Total ${pls_orders_amount}')
 
+        elif request.POST['command'] == '/shipstation':
+            # Available Commands:
+            # /shipstation <order_number>
+
+            args = request.POST['text'].split(' ')
+            order_number = args[0]
+            from product_common.lib.shipstation import get_shipstation_shipments
+            url = f'{settings.SHIPSTATION_API_URL}/shipments?includeShipmentItems=True&orderNumber={order_number}'
+            shipments = get_shipstation_shipments(url)
+
+            result = []
+            for shipment in shipments:
+                shipment_items = shipment['shipmentItems'] or []
+                items = [i['sku'] for k, i in enumerate(shipment_items) if k % 2 == 0]
+                result.append(f"{shipment['trackingNumber']}: {', '.join(items)}")
+
+            return HttpResponse('Results:\n{}'.format('\n'.join(result if result else ['Not found'])))
+
         else:
             return HttpResponse(':x: Unknown Command: {}'.format(request.POST['command']))
 
