@@ -104,7 +104,7 @@ INSTALLED_APPS = (
 )
 
 MIDDLEWARE = (
-    'leadgalaxy.utils.CookiesSameSite',
+    'leadgalaxy.middleware.CookiesSameSite',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -113,10 +113,10 @@ MIDDLEWARE = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'last_seen.middleware.LastSeenMiddleware',
-    'leadgalaxy.utils.UserIpSaverMiddleware',
-    'leadgalaxy.utils.TimezoneMiddleware',
-    'leadgalaxy.utils.UserEmailEncodeMiddleware',
-    'churnzero_core.utils.ChurnZeroMiddleware',
+    'leadgalaxy.middleware.UserIpSaverMiddleware',
+    'leadgalaxy.middleware.TimezoneMiddleware',
+    'leadgalaxy.middleware.UserEmailEncodeMiddleware',
+    'churnzero_core.middleware.ChurnZeroMiddleware',
 )
 
 ROOT_URLCONF = 'app.urls'
