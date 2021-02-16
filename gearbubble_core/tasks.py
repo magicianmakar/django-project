@@ -18,6 +18,7 @@ from app.celery_base import celery_app, CaptureFailure, retry_countdown
 from shopified_core import permissions
 from shopified_core import utils
 
+from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export
 from gearbubble_core.models import GearBubbleStore, GearBubbleProduct, GearBubbleSupplier
 from shopified_core.utils import safe_str
 from .utils import (
@@ -114,6 +115,8 @@ def product_save(req_data, user_id):
 
             product.set_default_supplier(supplier, commit=True)
 
+            post_churnzero_product_import(user, product.title, store_info.get('name', ''))
+
         except PermissionDenied as e:
             capture_exception()
             return {
@@ -158,6 +161,8 @@ def product_export(store_id, product_id, user_id, publish=None):
         product.update_data({'original_images': images[:]})
         product.save()
         pusher_data['success'] = True
+
+        post_churnzero_product_export(user, product.title)
 
         return store.pusher_trigger('product-export', pusher_data)
 

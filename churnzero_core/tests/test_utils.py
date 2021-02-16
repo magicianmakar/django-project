@@ -10,6 +10,9 @@ from django.core.cache import cache
 from addons_core.tests.factories import AddonFactory
 from leadgalaxy.tests.factories import UserFactory, GroupPlanFactory, ShopifyStoreFactory
 from woocommerce_core.tests.factories import WooStoreFactory
+from commercehq_core.tests.factories import CommerceHQStoreFactory
+from gearbubble_core.tests.factories import GearBubbleStoreFactory
+from groovekart_core.tests.factories import GrooveKartStoreFactory
 from lib.test import BaseTestCase
 from stripe_subscription.tests.factories import StripePlanFactory, StripeCustomerFactory
 
@@ -174,6 +177,9 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         addons_list = user.models_user.profile.addons.values_list('churnzero_name', flat=True)
         ShopifyStoreFactory(user=models_user)
         WooStoreFactory(user=models_user)
+        CommerceHQStoreFactory(user=models_user)
+        GearBubbleStoreFactory(user=models_user)
+        GrooveKartStoreFactory(user=models_user)
         set_churnzero_account(user.models_user)
 
         actions = [{
@@ -190,6 +196,10 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'attr_Installed Addons': ', '.join(addons_list),
             'attr_Shopify Stores Count': 1,
             'attr_WooCommerce Stores Count': 1,
+            'attr_CommerceHQ Stores Count': 1,
+            'attr_GearBubble Stores Count': 1,
+            'attr_GrooveKart Stores Count': 1,
+
         }]
 
         post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
@@ -217,6 +227,9 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         addons_list = user.models_user.profile.addons.values_list('churnzero_name', flat=True)
         ShopifyStoreFactory(user=models_user)
         WooStoreFactory(user=models_user)
+        CommerceHQStoreFactory(user=models_user)
+        GearBubbleStoreFactory(user=models_user)
+        GrooveKartStoreFactory(user=models_user)
         set_churnzero_account(user.models_user)
 
         actions = [{
@@ -238,6 +251,9 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'attr_Installed Addons': ', '.join(addons_list),
             'attr_Shopify Stores Count': 1,
             'attr_WooCommerce Stores Count': 1,
+            'attr_CommerceHQ Stores Count': 1,
+            'attr_GearBubble Stores Count': 1,
+            'attr_GrooveKart Stores Count': 1,
         }]
 
         post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))

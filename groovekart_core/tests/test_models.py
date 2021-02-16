@@ -7,6 +7,8 @@ from .factories import GrooveKartStoreFactory
 from leadgalaxy.models import SUBUSER_GKART_STORE_PERMISSIONS
 from leadgalaxy.tests.factories import UserFactory
 
+from analytic_events.models import StoreCreatedEvent
+
 
 class GrooveKartStoreTestCase(BaseTestCase):
     def test_must_have_subuser_permissions(self):
@@ -18,6 +20,18 @@ class GrooveKartStoreTestCase(BaseTestCase):
         store.title = 'Updated title'
         store.save()
         self.assertEqual(store.subuser_gkart_permissions.count(), len(SUBUSER_GKART_STORE_PERMISSIONS))
+
+    def test_must_create_store_created_event_when_created(self):
+        GrooveKartStoreFactory()
+        self.assertEqual(StoreCreatedEvent.objects.count(), 1)
+        print(StoreCreatedEvent.objects.first().churnzero_script)
+
+    def test_must_not_create_store_created_event_when_saved(self):
+        store = GrooveKartStoreFactory()
+        StoreCreatedEvent.objects.all().delete()
+        store.title = 'new'
+        store.save()
+        self.assertEqual(StoreCreatedEvent.objects.count(), 0)
 
 
 class UserProfileTestCase(BaseTestCase):

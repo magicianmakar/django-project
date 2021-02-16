@@ -28,6 +28,7 @@ from shopified_core.utils import (
     safe_str
 )
 
+from churnzero_core.utils import post_churnzero_product_import, post_churnzero_product_export
 from .utils import format_chq_errors, CHQOrderUpdater, get_chq_product
 from .models import (
     CommerceHQStore,
@@ -142,6 +143,8 @@ def product_save(req_data, user_id):
             )
 
             product.set_default_supplier(supplier, commit=True)
+
+            post_churnzero_product_import(user, product.title, store_info.get('name', ''))
 
         except PermissionDenied as e:
             capture_exception()
@@ -364,6 +367,8 @@ def product_export(store_id, product_id, user_id, publish=None):
 
         product.source_id = rep.json()['id']
         product.save()
+
+        post_churnzero_product_export(user, product.title)
 
         store.pusher_trigger('product-export', {
             'success': True,

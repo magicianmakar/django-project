@@ -10,7 +10,8 @@ from shopified_core.utils import get_domain
 
 from profits.utils import get_costs_from_track
 
-from groovekart_core.models import GrooveKartProduct, GrooveKartOrderTrack
+from groovekart_core.models import GrooveKartProduct, GrooveKartOrderTrack, GrooveKartStore
+from analytic_events.models import StoreCreatedEvent
 
 
 @receiver(post_save, sender=GrooveKartOrderTrack, dispatch_uid='gkart_sync_aliexpress_fulfillment_cost')
@@ -48,3 +49,9 @@ def gkart_send_keen_event_for_product(sender, instance, created, **kwargs):
         }
 
         keen_send_event.delay('product_save', keen_data)
+
+
+@receiver(post_save, sender=GrooveKartStore)
+def store_saved(sender, instance, created, **kwargs):
+    if created:
+        StoreCreatedEvent.objects.create(user=instance.user, platform='GrooveKart')

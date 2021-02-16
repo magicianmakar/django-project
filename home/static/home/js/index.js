@@ -1114,6 +1114,7 @@
                 url: api_url('store', 'chq') + '?' + $.param({store_id: storeId}),
                 method: 'DELETE',
                 success: function() {
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'CommerceHQ']);
                     $('#chq-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
                 }
@@ -1213,6 +1214,7 @@
                 url: api_url('store', 'gear') + '?' + $.param({id: storeId}),
                 method: 'DELETE',
                 success: function() {
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'GearBubble']);
                     $('#gear-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
                 }
@@ -1418,6 +1420,7 @@
                 url: api_url('store', 'gkart') + '?' + $.param({id: storeId}),
                 method: 'DELETE',
                 success: function() {
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'GrooveKart']);
                     $('#gk-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
                 }

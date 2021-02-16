@@ -63,6 +63,15 @@ class SetAccountActionBuilder:
     def add_woo_stores_count(self):
         self._action['attr_WooCommerce Stores Count'] = self._profile.get_woo_stores().count()
 
+    def add_chq_stores_count(self):
+        self._action['attr_CommerceHQ Stores Count'] = self._profile.get_chq_stores().count()
+
+    def add_gear_stores_count(self):
+        self._action['attr_GearBubble Stores Count'] = self._profile.get_gear_stores().count()
+
+    def add_gkart_stores_count(self):
+        self._action['attr_GrooveKart Stores Count'] = self._profile.get_gkart_stores().count()
+
     def add_next_renewal_date(self):
         self._action['attr_NextRenewalDate'] = self.shopify_profile.next_renewal_date.isoformat()
 
@@ -87,6 +96,9 @@ class SetAccountActionBuilder:
         self.add_installed_addons()
         self.add_shopify_stores_count()
         self.add_woo_stores_count()
+        self.add_chq_stores_count()
+        self.add_gear_stores_count()
+        self.add_gkart_stores_count()
 
         if self.is_stripe_user:
             self.add_stripe_customer_id()
