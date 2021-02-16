@@ -1065,9 +1065,7 @@ class ShopifyStoreApi(ApiBase):
 
             rules_dict = []
 
-            if not user.can('edit_advanced_markup.sub'):
-                config['markup_rules'] = []
-            elif user.can('advance_markup.use'):
+            if user.can('advance_markup.use'):
                 rules = PriceMarkupRule.objects.filter(user=user.models_user)
 
                 for i in rules:
@@ -2423,8 +2421,6 @@ class ShopifyStoreApi(ApiBase):
         return self.api_success({'product': product.id})
 
     def get_description_templates(self, request, user, data):
-        if not user.can('edit_custom_description.sub'):
-            return self.api_success({'description_templates': []})
         if not request.user.can('custom_description.use'):
             return self.api_success({'description_templates': []})
 
