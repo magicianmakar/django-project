@@ -549,14 +549,13 @@ def process_webhook_event(request, event_id):
             return HttpResponse('Email Notification Sent')
 
         elif not customer.have_source():
+            # Let Stripe handle re-tries and subscription status.
             sub = customer.user.stripesubscription_set.first()
             if not sub:
                 return HttpResponse('Subscription Not found')
 
-            sub = sub.retrieve()
-            sub.delete()
-
-            return HttpResponse('Subscription Deleted')
+            capture_message("Issue with source.")
+            return HttpResponse('Issue with source.')
 
         else:
             return HttpResponse('ok')
