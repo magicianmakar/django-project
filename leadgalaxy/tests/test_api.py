@@ -664,6 +664,16 @@ class ProductsApiTestCase(BaseTestCase):
         count = self.user.productchange_set.count()
         self.assertEqual(count, 0)
 
+    @patch('leadgalaxy.models.UserProfile.can')
+    def test_get_user_config_must_not_check_subuser_permissions(self, user_can):
+        user_can.return_value = True
+        r = self.client.get('/api/shopify/user-config')
+        self.assertEqual(r.status_code, 200)
+
+        for call in user_can.mock_calls:
+            args = call[1]
+            self.assertNotIn('.sub', args[0])
+
 
 # Fix for last_seen cache
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})
