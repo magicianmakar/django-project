@@ -47,7 +47,7 @@ class Command(DropifiedBaseCommand):
         seven_days_ago = options['today'].shift(days=-7).date()
 
         for missed_usage_charge in AddonUsage.objects.filter(
-                next_billing__lt=arrow.get(today).shift(months=-2),
+                next_billing__lt=arrow.get(today).shift(months=-2).datetime,
                 cancelled_at__isnull=True):
             missed_usage_charge.next_billing = missed_usage_charge.get_next_billing_date(today)
             missed_usage_charge.save()
