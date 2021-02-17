@@ -44,5 +44,6 @@ class Command(DropifiedBaseCommand):
 
         shipstation_data = prepare_shipstation_data(pls_order,
                                                     order,
-                                                    order['line_items'])
+                                                    order['line_items'],
+                                                    service_code=pls_order.shipping_service)
         create_shipstation_order(pls_order, shipstation_data)
