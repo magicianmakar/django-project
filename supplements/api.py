@@ -399,9 +399,12 @@ class SupplementsApi(ApiResponseMixin, View):
         except UserSupplement.DoesNotExist:
             return self.api_error('Product not found', status=404)
 
-        if not user_supplement.current_label or user_supplement.current_label.status != "approved":
-            return self.api_error('Label not approved yet', status=500)
-
+        if user_supplement.current_label:
+            if user_supplement.current_label.status != "approved":
+                return self.api_error('Label not approved yet', status=500)
+        else:
+            if not user_supplement.pl_supplement.approved_label_url:
+                return self.api_error('No Sample label for this product', status=500)
         try:
             basket_item = user.basket_items.get(user_supplement=user_supplement)
             basket_item.quantity += 1
@@ -526,6 +529,15 @@ class SupplementsApi(ApiResponseMixin, View):
             order_line['quantity'] = basket_item.quantity
             order_line['price'] = basket_item.user_supplement.pl_supplement.cost_price
             order_line['user_supplement'] = basket_item.user_supplement
+
+            if basket_item.user_supplement.current_label is None:
+                new_label = basket_item.user_supplement.labels.create(url=basket_item.user_supplement.pl_supplement.approved_label_url,
+                                                                      status=UserSupplementLabel.APPROVED)
+                basket_item.user_supplement.current_label = new_label
+                basket_item.user_supplement.current_label.generate_sku()
+                basket_item.user_supplement.current_label.save()
+                basket_item.user_supplement.save()
+
             order_line['label'] = basket_item.user_supplement.current_label
             order_line['title'] = basket_item.user_supplement.title
             order_line['sku'] = basket_item.user_supplement.pl_supplement.shipstation_sku

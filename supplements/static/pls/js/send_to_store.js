@@ -102,6 +102,7 @@ function sendSampleLabelToStore(storeType, storeId, publish) {
     var form = document.getElementById('user_supplement_form');
     form.action.value = 'preapproved';
     form.upload_url.value = $('#sample_label').attr('data-label-url');
+    form.add_to_basket.value = '1';
     var url = $('#sample_label').attr('data-post-url');
     $.ajax({
         url: url,
@@ -110,7 +111,8 @@ function sendSampleLabelToStore(storeType, storeId, publish) {
         dataType: 'json',
         success: function(res) {
             window.apiData = JSON.parse(res.data);
-            sendToStore(storeType, storeId, publish);
+            // adding to basket
+            sendToBasket(window.apiData.user_supplement_id);
         },
         error: function(xhr, status, error) {
             var errorMessage = xhr.status + ': ' + xhr.statusText;
@@ -121,6 +123,28 @@ function sendSampleLabelToStore(storeType, storeId, publish) {
 
         }
     });
+}
+
+function sendToBasket(product_id){
+
+    var data = {'product-id': product_id};
+
+    var url = api_url('add_basket', 'supplements');
+    $.ajax({
+        url: url,
+        type: "POST",
+        data: JSON.stringify(data),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function (response) {
+           toastr.success("Item added to your <a href='#'>Basket</a>");
+           window.location = app_link('supplements/basket');
+        },
+        error: function (response) {
+           toastr.error("Error adding item to your <a href='#'>Basket</a>");
+        },
+    });
+
 }
 
 function redirectToMySupplements() {

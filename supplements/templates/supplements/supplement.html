@@ -69,10 +69,11 @@
                        data-loading-text="Please wait..."
                        >
                 {% if approved_label_url %}
+                <input type="hidden" id="add_to_basket" name="add_to_basket" value="0" />
                 <input type="submit"
-                       value="Send Sample to Store"
-                       id="sample_label"
+                       value="Add Sample to Basket"
                        data-action="preapproved"
+                       id="sample_label"
                        class="btn btn-success"
                        data-loading-text="Please wait..."
                        data-label-url="{{ approved_label_url }}"

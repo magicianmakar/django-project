@@ -5,8 +5,10 @@ $(document).ready(function(){
     $('#sample_label').on('click', function(e) {
         if (form.checkValidity()) {
             e.preventDefault();
+            $(this).val('Processing...');
             $(this).attr('data-send-to-store', 'true');
-            $('#modal-send-to-store').modal({backdrop: 'static', keyboard: false});
+            // $('#modal-send-to-store').modal({backdrop: 'static', keyboard: false});
+            sendSampleLabelToStore();
         }
     });
 
@@ -28,19 +30,19 @@ $(document).ready(function(){
                     toastr.error('A PDF label is required to submit a product for approval');
                 } else {
                     swal({
-                        title: "Are you sure?",
-                        text: "You are about to send this product label for approval and won’t be able to make changes until your product is approved, please ensure your label meets all guidelines.",
-                        type: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: '#79aa63',
-                        cancelButtonColor: '#ed5565',
-                        confirmButtonText: "Submit for Approval",
-                      },
-                      function(isConfirm){
-                          if (isConfirm) {
-                            form.submit();
-                          }
-                      });
+                            title: "Are you sure?",
+                            text: "You are about to send this product label for approval and won’t be able to make changes until your product is approved, please ensure your label meets all guidelines.",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: '#79aa63',
+                            cancelButtonColor: '#ed5565',
+                            confirmButtonText: "Submit for Approval",
+                        },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                form.submit();
+                            }
+                        });
                 }
             } else {
                 if (fileUrl !== "" && $('[name="mockup_urls"]').length === 0) {
