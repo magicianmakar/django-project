@@ -5,6 +5,7 @@ from django.conf import settings
 
 import requests
 
+from lib.exceptions import capture_message
 from shopified_core.utils import base64_encode, hash_text
 from supplements.models import PLSOrderLine
 
@@ -104,12 +105,21 @@ def create_shipstation_order(pls_order, data, service_code=None):
     headers = {'Content-Type': 'application/json'}
     headers.update(get_auth_header())
     url = f'{settings.SHIPSTATION_API_URL}/orders/createOrder'
-    response = requests.post(url, data=json.dumps(data), headers=headers)
-    response.raise_for_status()
-    response = response.json()
 
-    pls_order.shipstation_key = response['orderKey']
-    pls_order.save()
+    for i in range(5):
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+        response.raise_for_status()
+        response = response.json()
+        if response.get('orderKey'):
+            break
+
+        capture_message('ShipStation Order Retry', level='warning', extra={'retry': i + 1, 'data': data})
+
+    if response.get('orderKey'):
+        pls_order.shipstation_key = response['orderKey']
+        pls_order.save()
+    else:
+        capture_message('ShipStation Error', extra={'response': response})
 
 
 def get_shipstation_shipments(resource_url):
