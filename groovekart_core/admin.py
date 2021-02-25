@@ -10,6 +10,9 @@ from .models import (
 )
 
 
+USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
+
+
 @admin.register(GrooveKartStore)
 class GrooveKartStoreAdmin(admin.ModelAdmin):
     list_display = (
@@ -27,6 +30,7 @@ class GrooveKartStoreAdmin(admin.ModelAdmin):
     list_filter = ('is_active', 'created_at', 'updated_at')
     raw_id_fields = ('user',)
     date_hierarchy = 'created_at'
+    search_fields = ('title', 'api_url', 'store_hash') + USER_SEARCH_FIELDS
 
 
 @admin.register(GrooveKartProduct)
@@ -55,6 +59,7 @@ class GrooveKartProductAdmin(admin.ModelAdmin):
     list_filter = ('created_at', 'updated_at')
     raw_id_fields = ('store', 'user', 'default_supplier', 'parent_product')
     date_hierarchy = 'created_at'
+    search_fields = USER_SEARCH_FIELDS
 
 
 @admin.register(GrooveKartSupplier)
