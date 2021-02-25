@@ -109,7 +109,11 @@
                                             <li><a href="#" class="release-sub-user" user-id="{{item.id}}">Release Sub User</a></li>
                                             <li><a href="#" class="reset-auto-fulfill" user-id="{{item.id}}">Reset Auto Fulfill Limit</a></li>
                                             <li class="divider"></li>
+                                            {% if item.is_active %}
                                             <li><a href="text-danger" class="deactivate-account btn-danger btn-outline" user-id="{{item.id}}" username="{{item.username}}">Deactivate Account</a></li>
+                                            {% else %}
+                                            <li><a href="text-danger" class="activate-account btn-success btn-outline" user-id="{{item.id}}" username="{{item.username}}">Activate Account</a></li>
+                                            {% endif %}
                                         </ul>
                                     </div>
                             </td>
@@ -712,6 +716,7 @@
                         },
                         success: function(data) {
                             swal('Deactivate Account', 'Deactivated', 'success');
+                            window.location.reload();
                         },
                         error: function(data) {
                             displayAjaxError('Deactivate Account', data);
@@ -720,6 +725,26 @@
                 }
             });
         }
+        function activateAccount(e) {
+            e.preventDefault();
+
+            var user_id = $(this).attr('user-id');
+            $.ajax({
+                type: 'POST',
+                url: api_url('activate-account', 'acp'),
+                data: {
+                    'user': user_id
+                },
+                success: function(data) {
+                    swal('Activate Account', 'Activated', 'success');
+                    window.location.reload();
+                },
+                error: function(data) {
+                    displayAjaxError('Activate Account', data);
+                },
+            });
+        }
+
         function allowFreeTrial(e) {
             e.preventDefault();
 
@@ -834,6 +859,7 @@
                 $('.add-bundle-btn').unbind('click').click(addBundle);
                 $('.user-profile-btn').unbind('click').click(userProfile);
                 $('.deactivate-account').unbind('click').click(deactivateAccount);
+                $('.activate-account').unbind('click').click(activateAccount);
                 $('.allow-trial-btn').unbind('click').click(allowFreeTrial);
                 $('.release-sub-user').unbind('click').click(releaseSubUser);
                 $('.reset-auto-fulfill').unbind('click').click(resetAutoFulfill);
