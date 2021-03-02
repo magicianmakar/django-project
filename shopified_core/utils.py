@@ -1130,7 +1130,7 @@ def products_filter(res, fdata, tags_field='tags'):
 
 def get_store_api(store_type=''):
     store_type = store_type or 'shopify'
-    if store_type not in ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']:
+    if store_type not in ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce', 'mybasket']:
         raise NotImplementedError('No such Store API')
 
     return import_string(settings.DROPIFIED_API.get(store_type))()
