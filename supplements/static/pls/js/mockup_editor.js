@@ -14,6 +14,8 @@ var MockupEditor = (function() {
         minZoom: 50,
         useControls: window.location.href.indexOf('debug=1') > -1,
         useWrap: window.location.href.indexOf('wrap=1') > -1,
+        imageType: 'image/png',
+        imageQuality: 1.0,
         control: 'label',  // label or mockup
         controlIndex: null,
         dataURLtoFile: function(dataurl, filename) {
@@ -103,7 +105,7 @@ var MockupEditor = (function() {
                     context.globalCompositeOperation = l.mode || 'source-over';
                     context.drawImage(l.image, 0, 0);
                 });
-                layer.image.src = canvas.toDataURL();
+                layer.image.src = canvas.toDataURL(MockupEditor.imageType, MockupEditor.imageQuality);
                 layer.combined = false;
             });
         },
@@ -349,7 +351,8 @@ var MockupEditor = (function() {
                 mockup.canvas.remove();
                 mockup.bgCanvas.remove();
             });
-            $('.previews .mockup-item:nth-child(' + (index + 1) + ') img').attr('src', canvas.toDataURL());
+            $('.previews .mockup-item:nth-child(' + (index + 1) + ') img').attr(
+                'src', canvas.toDataURL(MockupEditor.imageType, MockupEditor.imageQuality));
             canvas.remove();
 
             MockupEditor.labelMockups[index] = MockupEditor.getDimensions();
@@ -374,7 +377,7 @@ function addLabelImage(pdf) {
                 canvasContext: context,
                 viewport: viewport
             }).promise.then(function() {
-                MockupEditor.setLabel(canvas.toDataURL());
+                MockupEditor.setLabel(canvas.toDataURL(MockupEditor.imageType, MockupEditor.imageQuality));
                 $('#save-mockups').prop('disabled', false);
             });
         });
