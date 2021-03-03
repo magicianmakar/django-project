@@ -72,6 +72,9 @@ class SetAccountActionBuilder:
     def add_gkart_stores_count(self):
         self._action['attr_GrooveKart Stores Count'] = self._profile.get_gkart_stores().count()
 
+    def add_bigcommerce_stores_count(self):
+        self._action['attr_BigCommerce Stores Count'] = self._profile.get_bigcommerce_stores().count()
+
     def add_next_renewal_date(self):
         self._action['attr_NextRenewalDate'] = self.shopify_profile.next_renewal_date.isoformat()
 
@@ -99,6 +102,7 @@ class SetAccountActionBuilder:
         self.add_chq_stores_count()
         self.add_gear_stores_count()
         self.add_gkart_stores_count()
+        self.add_bigcommerce_stores_count()
 
         if self.is_stripe_user:
             self.add_stripe_customer_id()

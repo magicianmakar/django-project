@@ -13,6 +13,8 @@ from woocommerce_core.tests.factories import WooStoreFactory
 from commercehq_core.tests.factories import CommerceHQStoreFactory
 from gearbubble_core.tests.factories import GearBubbleStoreFactory
 from groovekart_core.tests.factories import GrooveKartStoreFactory
+from bigcommerce_core.tests.factories import BigCommerceStoreFactory
+
 from lib.test import BaseTestCase
 from stripe_subscription.tests.factories import StripePlanFactory, StripeCustomerFactory
 
@@ -180,6 +182,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         CommerceHQStoreFactory(user=models_user)
         GearBubbleStoreFactory(user=models_user)
         GrooveKartStoreFactory(user=models_user)
+        BigCommerceStoreFactory(user=models_user)
         set_churnzero_account(user.models_user)
 
         actions = [{
@@ -199,7 +202,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'attr_CommerceHQ Stores Count': 1,
             'attr_GearBubble Stores Count': 1,
             'attr_GrooveKart Stores Count': 1,
-
+            'attr_BigCommerce Stores Count': 1,
         }]
 
         post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
@@ -230,6 +233,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         CommerceHQStoreFactory(user=models_user)
         GearBubbleStoreFactory(user=models_user)
         GrooveKartStoreFactory(user=models_user)
+        BigCommerceStoreFactory(user=models_user)
         set_churnzero_account(user.models_user)
 
         actions = [{
@@ -254,6 +258,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'attr_CommerceHQ Stores Count': 1,
             'attr_GearBubble Stores Count': 1,
             'attr_GrooveKart Stores Count': 1,
+            'attr_BigCommerce Stores Count': 1,
         }]
 
         post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
@@ -280,7 +285,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
 
     @override_settings(DEBUG=False)
     @override_settings(CHURNZERO_APP_KEY='test')
-    @patch('churnzero_core.utils.ShopifyProfile.is_valid', Mock(return_value=True))
+    @patch('churnzero_core.utils.ShopifyProfile.is_valid', PropertyMock(return_value=True))
     @patch('churnzero_core.utils.ShopifyProfile.next_renewal_date', PropertyMock(return_value=arrow.get('2012-04-01')))
     @patch('churnzero_core.utils.ShopifyProfile.start_date', PropertyMock(return_value=arrow.get('2012-03-01')))
     @patch('churnzero_core.utils.ShopifyProfile.end_date', PropertyMock(return_value=arrow.get('2012-03-01')))

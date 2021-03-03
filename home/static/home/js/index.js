@@ -1471,6 +1471,7 @@
                 url: api_url('store', 'bigcommerce') + '?' + $.param({id: storeId}),
                 method: 'DELETE',
                 success: function() {
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'BigCommerce']);
                     $('#bigcommerce-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
                 }

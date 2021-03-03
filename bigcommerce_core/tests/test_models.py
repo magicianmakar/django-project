@@ -5,8 +5,10 @@ from .factories import BigCommerceStoreFactory
 from leadgalaxy.models import SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS
 from leadgalaxy.tests.factories import UserFactory
 
+from analytic_events.models import StoreCreatedEvent
 
-class BigCommerceStoreFactoryTestCase(BaseTestCase):
+
+class BigCommerceStoreTestCase(BaseTestCase):
     def test_must_have_subuser_permissions(self):
         store = BigCommerceStoreFactory()
         self.assertEqual(store.subuser_bigcommerce_permissions.count(), len(SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS))
@@ -16,6 +18,17 @@ class BigCommerceStoreFactoryTestCase(BaseTestCase):
         store.title = 'Updated title'
         store.save()
         self.assertEqual(store.subuser_bigcommerce_permissions.count(), len(SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS))
+
+    def test_must_create_store_created_event_when_created(self):
+        BigCommerceStoreFactory()
+        self.assertEqual(StoreCreatedEvent.objects.count(), 1)
+
+    def test_must_not_create_store_created_event_when_saved(self):
+        store = BigCommerceStoreFactory()
+        StoreCreatedEvent.objects.all().delete()
+        store.title = 'new'
+        store.save()
+        self.assertEqual(StoreCreatedEvent.objects.count(), 0)
 
 
 class UserProfileTestCase(BaseTestCase):
