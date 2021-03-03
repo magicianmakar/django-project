@@ -37,11 +37,6 @@
             <a href="#" class="btn-info btn-xs btn-outline btn-primary pls-add-basket" data-product-id="{{item.id}}"> Add to Basket <i class="fa fa-shopping-basket"></i> </a>
           </div>
           {% endif %}
-         {% if request.user|can:'supplements_basket.use' and not item.current_label and item.pl_supplement.approved_label_url %}
-           <div class="col-md-8 text-right">
-            <a href="#" class="btn-info btn-xs btn-outline btn-primary pls-add-basket" data-product-id="{{item.id}}"> Add to Basket (Sample Label) <i class="fa fa-shopping-basket"></i> </a>
-          </div>
-          {% endif %}
 
         </div>
       </div>
