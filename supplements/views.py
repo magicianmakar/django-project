@@ -361,7 +361,7 @@ class LabelMixin:
         page_merge = PageMerge(base_label_pdf.pages[0]).add(barcode_page)
         barcode_obj = page_merge[-1]
         page_height = RectXObj(page_merge.page).h
-        width, height, x = 0.3, 0.6, 8
+        width, height, x = 0.2, 0.5, 8
         if (page_height / 72) <= 1:  # Height is returned in pt. pt / 72 = 1 in
             width, height, x = 0.2, 0.4, 12
         barcode_obj.scale(width, height)

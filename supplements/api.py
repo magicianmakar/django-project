@@ -105,7 +105,7 @@ class SupplementsApi(ApiResponseMixin, View):
                         orders_status[order_data_id].update({
                             'success': False,
                             'status': 'Order placed but unable to automatically track, '
-                                      + 'please contact support. (Dropified Order ID: {placed_order_id})'
+                                      + f'please contact support. (Dropified Order ID: {placed_order_id})'
                         })
                         capture_message('Unable to track supplement', extra={
                             'api_result': json.loads(api_result.content.decode("utf-8")),
