@@ -190,6 +190,10 @@ function processOrders(orderDataIds, finish) {
                     $('.tax-view').css('display', 'none');
                 }
             },
+            error: function(data) {
+                $('#modal-order-detail').modal('hide');
+                displayAjaxError('Place Private Label Orders', data);
+            },
             complete: function() {
                 $('#modal-order-detail .modal-content').removeClass('loading');
                 $('#modal-order-detail .place-label-orders').removeClass('hidden');

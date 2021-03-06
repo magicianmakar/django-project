@@ -41,6 +41,9 @@ class SupplementsApi(ApiResponseMixin, View):
     http_method_names = ['get', 'post', 'delete']
 
     def post_process_orders(self, request, user, data):
+        if not user.can('place_private_label_orders.sub'):
+            return self.api_error('Subuser not allowed to place private label orders', status=403)
+
         util = Util()
         store = util.get_store(data['store_id'], data['store_type'])
         permissions.user_can_view(user, store)
@@ -337,7 +340,7 @@ class SupplementsApi(ApiResponseMixin, View):
         if request.user.can('pls.use'):
             success = error = 0
             try:
-                user.authorize_net_customer
+                user.models_user.authorize_net_customer
                 success += 1
             except User.authorize_net_customer.RelatedObjectDoesNotExist:
                 error += 1
