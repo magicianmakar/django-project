@@ -331,12 +331,12 @@ def get_order_number_label(item, use_latest=False):
     page_merge = PageMerge(base_label_pdf.pages[0]).add(pdf_page)
     pdf_obj = page_merge[-1]
     page_height = RectXObj(page_merge.page).h
-    width, height, x = 0.2, 0.5, 8
+    width, height, x = 0.3, 0.5, 8
     if (page_height / 72) <= 1:
         width, height, x = 0.2, 0.3, 1
     pdf_obj.scale(width, height)
     pdf_obj.x = x
-    pdf_obj.y = page_height * 0.8
+    pdf_obj.y = page_height * 0.5
 
     page_merge.render()
 
