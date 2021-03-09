@@ -1,6 +1,7 @@
 import base64
 from io import BytesIO
 
+import arrow
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -179,6 +180,12 @@ class UserSupplementLabel(models.Model, UserSupplementLabelMixin):
     sku = models.CharField(max_length=20, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def need_barcode_fix(self):
+        # Between dates of below commits:
+        # https://github.com/TheDevelopmentMachine/dropified-webapp/commit/e0d2d09d8aaf2cd3070ec21d210c49d5660f568e
+        # https://github.com/TheDevelopmentMachine/dropified-webapp/commit/39ee21606c694a0fe29c208dab6bba0c903c0b08
+        return arrow.get('2021-02-04') < arrow.get(self.updated_at) < arrow.get('2021-03-09')
 
 
 class LabelComment(models.Model, LabelCommentMixin):

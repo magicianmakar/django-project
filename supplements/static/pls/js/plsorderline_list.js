@@ -84,4 +84,27 @@
             }
         }
     }
+
+    $('.fix-barcode').on('click', function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: $(this).attr('href'),
+            context: $(this),
+            success: function(data) {
+                $('#modal-new-label-barcode .modal-body').empty().append(
+                    $('<embed class="img-fluid" src="' + data.url + '" type="application/pdf" height="500px" width="100%">')
+                );
+                var renewURL = $(this).attr('href').split('?')[0] + '?renew=' + data.url;
+                $('#modal-new-label-barcode .renew').attr('href', renewURL);
+                $('#modal-new-label-barcode').modal('show');
+            },
+            error: function(data) {
+                displayAjaxError('Fix Barcode', data);
+            },
+        });
+    });
+    $('#modal-new-label-barcode .renew').on('click', function() {
+        $('#modal-new-label-barcode').modal('hide');
+    });
 })();
