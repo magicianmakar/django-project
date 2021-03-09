@@ -93,7 +93,6 @@ INSTALLED_APPS = (
     'groovekart_core',
     'bigcommerce_core',
     'phone_automation',
-    'funnels',
     'aliextractor',
     'prints',
     'supplements',
