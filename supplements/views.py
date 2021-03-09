@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from io import BytesIO
 
+from PIL import Image
 from django import template
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -1523,12 +1524,83 @@ class OrderItemListView(common_views.OrderItemListView):
 
 
 class GenerateLabel(LoginRequiredMixin, View):
+    def add_clean_barcode_to_label(self, label):
+        data = BytesIO()
+        generate('CODE128', label.sku, output=data)
+
+        data.seek(0)
+        drawing = svg2rlg(data)
+
+        barcode_data = BytesIO()
+
+        image = Image.new('RGB', (100, 300), (255, 255, 255))
+        blank_image_data = BytesIO()
+        image.save(blank_image_data, format='pdf')
+
+        blank_image_data.seek(0)
+        blank_image_pdf = PdfReader(blank_image_data)
+        blank_pages = PageMerge() + blank_image_pdf.pages
+        blank_page = blank_pages[0]
+
+        renderPDF.drawToFile(drawing, barcode_data)
+        barcode_data.seek(0)
+        barcode_pdf = PdfReader(barcode_data)
+        barcode_pdf.pages[0].Rotate = 270
+        barcode_pages = PageMerge() + barcode_pdf.pages
+        barcode_page = barcode_pages[0]
+
+        label_data = BytesIO(requests.get(label.url).content)
+        base_label_pdf = PdfReader(label_data)
+
+        page_merge = PageMerge(base_label_pdf.pages[0]).add(blank_page).add(barcode_page)
+        barcode_obj = page_merge[-1]
+        page_height = RectXObj(page_merge.page).h
+        width, height, x = 0.2, 0.5, 8
+        if (page_height / 72) <= 1:  # Height is returned in pt. pt / 72 = 1 in
+            width, height, x = 0.2, 0.4, 12
+
+        page_merge[1].scale(width, height)  # Blank space on top of old barcode
+        page_merge[1].x = x
+        page_merge[1].y = page_height * 0.05
+
+        barcode_obj.scale(width, height)
+        barcode_obj.x = x
+        barcode_obj.y = page_height * 0.05
+        page_merge.render()
+
+        label_pdf = BytesIO()
+        PdfWriter().write(label_pdf, base_label_pdf)
+
+        label_pdf.seek(0)
+
+        return upload_supplement_object_to_aws(
+            label.user_supplement,
+            label_pdf,
+            'label.pdf',
+        )
+
+    def get_label(self, line_item):
+        if self.request.GET.get('use_latest', False):
+            label = line_item.label.user_supplement.labels.order_by('-created_at').first()
+        else:
+            label = line_item.label
+        return label
+
     def get(self, request, line_id):
         use_latest = request.GET.get('use_latest', False)
         line_item = get_object_or_404(PLSOrderLine, id=line_id)
+
+        if request.GET.get('validate'):
+            new_pdf_label = self.add_clean_barcode_to_label(self.get_label(line_item))
+            return JsonResponse({'url': new_pdf_label})
+
+        elif request.GET.get('renew'):
+            label = self.get_label(line_item)
+            label.url = request.GET.get('renew')
+            label.save()
+
         line_item.mark_printed()
         base_label_pdf = get_order_number_label(line_item, use_latest)
-
         output = BytesIO()
         PdfWriter().write(output, base_label_pdf)
 

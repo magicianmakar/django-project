@@ -388,13 +388,15 @@ function labelSizeMatch(defaultSize, pdf) {
     var defaultWidth = parseFloat(defaultSize.split('x')[0]);
     var defaultHeight = parseFloat(defaultSize.split('x')[1]);
     return new Promise(function (resolve, reject) {
-        if (window.location.href.indexOf('debug=1') > -1) {
-            resolve();
-        }
         pdfjsLib.getDocument(pdf).promise.then(function(pdf) {
             pdf.getPage(1).then(function(page) {
                 var pdfWidth = parseFloat((page._pageInfo.view[2] / 72).toFixed(3)); // returned in pt => pt / 72 = 1 in
                 var pdfHeight = parseFloat((page._pageInfo.view[3] / 72).toFixed(3));
+                if (window.location.href.indexOf('debug=1') > -1) {
+                    console.log(pdfWidth + 'x' + pdfHeight);
+                    resolve();
+                    return;
+                }
 
                 // Labels can have an exact extra margin of 0.125 inches
                 var margin = 0.125;
@@ -418,7 +420,15 @@ function labelSizeMatch(defaultSize, pdf) {
                     }
                 }
 
-                reject();
+                // Bigger number first, we call width and height but its unknown
+                // because of how label sizes are saved
+                var unmatched = defaultWidth >= defaultHeight ? sizes[0] : sizes[1];
+                if (pdfHeight > pdfWidth) {
+                    unmatched = unmatched.reverse();
+                }
+                unmatched = unmatched[0].toFixed(3) + 'x' + unmatched[1].toFixed(3);
+                var labelSize = pdfWidth.toFixed(3) + 'x' + pdfHeight.toFixed(3);
+                reject('Your uploaded label size is ' + labelSize + ' inches. It should be ' + unmatched + ' inches.');
             });
         });
     });
@@ -437,11 +447,10 @@ $('#label').on('change', function() {
         labelSizeMatch(defaultSize, pdf).then(function (result) {
             addLabelImage(pdf);
         }).catch(function (error){
-            swal(
-                "Label size does not match",
-                "The PDF uploaded does not match the required label size i.e. " + defaultSize,
-                "warning"
-            );
+            if (!error) {
+                error = "The PDF uploaded does not match the required label size i.e. " + defaultSize;
+            }
+            swal("Label size does not match", error, "warning");
             return;
         });
     };

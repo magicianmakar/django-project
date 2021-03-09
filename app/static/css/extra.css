@@ -566,3 +566,9 @@ ul.breadcrumb-right-menu li a {
 ul#id_permissions li {
     list-style: none;
 }
+
+.label-success[href]:focus,
+.label-success[href]:hover {
+  background-color: #1a7bb9;
+  border-color: #1a7bb9;
+}

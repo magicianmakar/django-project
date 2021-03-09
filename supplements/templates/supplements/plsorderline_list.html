@@ -57,6 +57,7 @@
     <th>Status</th>
     <th>Label</th>
     <th>Paid</th>
+    <th></th>
   </thead>
   <tbody>
     {% for line_item in object_list %}
@@ -102,7 +103,16 @@
         <span class="label label-primary">Paid</span>
         {% endif %}
 
-        <a class="btn btn-default btn-xs m-l-xs sync-shipstation" data-button-loading="Syncing" data-order-id="{{ line_item.pls_order.shipstation_order_number }}" href="#">Sync Shipstation</a>
+      </td>
+      <td>
+        <a class="btn btn-success btn-xs m-l-xs sync-shipstation" data-button-loading="Syncing" data-order-id="{{ line_item.pls_order.shipstation_order_number }}" href="#">Sync Shipstation</a>
+
+        {%  if line_item.label.need_barcode_fix %}
+        <a href="{% url 'pls:generate_label' line_item.id %}?validate=1"
+          class="btn btn-success btn-xs m-l-xs m-r-sm fix-barcode">
+          Fix Barcode
+        </a>
+        {% endif %}
       </td>
     {% empty %}
       <td colspan="10">No orders yet.</td>
@@ -114,6 +124,23 @@
 {% include "supplements/partials/paging.html" %}
 
 {% include "supplements/partials/current_label_info_modal.html" %}
+
+<div id="modal-new-label-barcode" class="modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Is this Barcode properly positioned?</h4>
+      </div>
+      <div class="modal-body">
+      </div>
+      <div class="modal-footer">
+        <a href="#" class="btn btn-danger" data-dismiss="modal" aria-label="Close">Cancel</a>
+        <a href="" target="_blank" class="btn btn-primary renew">Yes, save it!</a>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% endblock %}
 
