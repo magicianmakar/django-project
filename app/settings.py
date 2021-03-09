@@ -509,6 +509,7 @@ ALIEXPRESS_API_URL = os.environ.get('ALIEXPRESS_API_URL', 'https://square-dust-d
 # Profits Dashboard FB Ads
 FACEBOOK_APP_ID = os.environ.get('FACEBOOK_APP_ID')
 FACEBOOK_APP_SECRET = os.environ.get('FACEBOOK_APP_SECRET')
+FACEBOOK_MARKETING_API_VERSION = os.environ.get('FACEBOOK_MARKETING_API_VERSION', 'v9.0')
 
 ELASTICSEARCH_API = os.environ.get('FOUNDELASTICSEARCH_URL', '').split(',')
 ELASTICSEARCH_AUTH = (os.environ.get('FOUNDELASTICSEARCH_USER'), os.environ.get('FOUNDELASTICSEARCH_PASSWORD'))
