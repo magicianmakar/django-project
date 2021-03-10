@@ -308,6 +308,8 @@ class OrdersShippedWebHookView(View, BaseMixin):
 
         resource_url = data['resource_url']
         resource_url = resource_url.replace("False", "True")
+        # Search for order number with hash is being treated as a fragment identifier
+        resource_url = resource_url.replace('#', '%23')  # Encoded char
 
         shipments = get_shipstation_shipments(resource_url)
         for shipment in shipments:
