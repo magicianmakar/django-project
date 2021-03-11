@@ -19,12 +19,14 @@ class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
         self.write('Loading orders...')
 
-        tracks = using_replica(ShopifyOrder).filter(created_at__gte=arrow.utcnow().replace(days=-int(options['days'])).datetime)
+        early_id = using_replica(ShopifyOrder).filter(created_at__gte=arrow.utcnow().replace(days=-int(options['days'])).datetime)[0].id
 
+        tracks = using_replica(ShopifyOrder).filter(id__gte=early_id)
         tracks = tracks.prefetch_related('shopifyorderline_set', 'shopifyorderline_set__product', 'shopifyorderline_set__product__default_supplier',
                                          'shopifyorderline_set__product__default_supplier__product')
+
         tracks = tracks.only('id', 'created_at')
-        tracks = tracks.order_by('created_at')
+        tracks = tracks.order_by('id')
 
         self.progress = options['progress']
 
@@ -45,7 +47,9 @@ class Command(DropifiedBaseCommand):
                         if source_id not in self.product_info:
                             self.product_info[source_id] = {
                                 'title': supplier.product.title[:80],
-                                'price': supplier.product.price
+                                'price': supplier.product.price,
+                                'store': line.product.store_id,
+                                'user': line.product.user_id
                             }
 
             except KeyboardInterrupt:
@@ -55,23 +59,31 @@ class Command(DropifiedBaseCommand):
 
         filename = f"products_data-{random_filename('.csv')}"
         with open(filename, 'w', newline='') as csvfile:
-            fieldnames = ['title', 'url', 'price', 'orders']
+            fieldnames = ['title', 'url', 'store', 'user', 'price', 'orders']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
 
-            for k, v in self.product_count.items():
+            # for k, v in self.product_count.items():
+            top_count = 200
+            for k, v in sorted(self.product_count.items(), key=lambda item: item[1], reverse=True):
                 writer.writerow({
                     'url': f'https://www.aliexpress.com/item/{k}.html',
                     'title': self.product_info[k]['title'],
                     'price': self.product_info[k]['price'],
+                    'store': self.product_info[k]['store'],
+                    'user': self.product_info[k]['user'],
                     'orders': v
                 })
 
+                top_count -= 1
+
+                if not top_count:
+                    break
+
         url = aws_s3_upload(filename=filename, input_filename=filename)
         send_email_from_template(
-            tpl=f'Products Analytics Data has been exported:\n{url}',
+            tpl=f'Products Analytics Data has been exported <a href="{url}">Download</a>',
             subject='[Dropified] Products Analytics Data',
             recipient='ahmed@dropified.com',
             data={},
-            nl2br=True
         )
