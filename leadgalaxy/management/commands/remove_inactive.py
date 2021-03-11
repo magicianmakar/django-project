@@ -25,10 +25,16 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--least-orders', action='store_true', help='Start with new stores first')
         parser.add_argument('--no-progress', dest='progress', action='store_false', help='Show progress')
         parser.add_argument('--no-uninstall', action='store_true', help='Show progress')
+        parser.add_argument('--days', type=int, default=30, help='Remove stores with inactive number of days.')
+        parser.add_argument('--max-count', type=int, default=0, help='Remove stores with inactive number of days.')
         parser.add_argument('--not-found', action='store_true', help='Delete stores with not found errors')
+        parser.add_argument('--sync-uninstall-date', action='store_true', help='Fix inactive stores without uninstall date')
 
     def start_command(self, *args, **options):
         self.active_stores = [i.shop for i in ShopifyStore.objects.filter(is_active=True).only('shop')]
+
+        if options['sync_uninstall_date']:
+            self.fix_unsintall_date()
 
         stores = ShopifyStore.objects.filter(is_active=False)
 
@@ -50,7 +56,10 @@ class Command(DropifiedBaseCommand):
             stores = stores.filter(uninstall_reason='HTTP:404')
 
         if not options['no_uninstall']:
-            stores = stores.exclude(uninstalled_at__isnull=True).filter(uninstalled_at__lt=arrow.utcnow().replace(days=-30).datetime)
+            stores = stores.exclude(uninstalled_at__isnull=True)
+
+        if not options['days']:
+            stores = stores.filter(uninstalled_at__lt=arrow.utcnow().replace(days=-int(options['days'])).datetime)
 
         stores = stores.select_related('user', 'user__profile', 'user__profile__plan')
 
@@ -63,7 +72,10 @@ class Command(DropifiedBaseCommand):
             self.write('Nothing to delete')
             return
 
-        if options['progress']:
+        self.max_count = options['max_count']
+        self.progress = options['progress']
+
+        if self.progress:
             self.progress_total(stores.count())
 
         self.plan_count = defaultdict(int)
@@ -76,7 +88,7 @@ class Command(DropifiedBaseCommand):
         self.progress_close()
 
         if options['force']:
-            if options['progress']:
+            if self.progress:
                 self.progress_total(len(self.stores_to_delete))
 
             # random.shuffle(self.stores_to_delete)
@@ -220,17 +232,20 @@ class Command(DropifiedBaseCommand):
         name = str(model).split('.').pop().strip("'>")
         self.set_description(shop=store.shop, model_name=name)
 
-        model_ids = list(using_replica(model).filter(**match).values_list('id', flat=True))
+        qs = using_replica(model).filter(**match)
+
+        if self.max_count:
+            model_count = qs.count()
+            if model_count > self.max_count:
+                self.write(f'>>> SKIP: {name} {model_count:3,} for {store.shop}')
+                return None
+
+        model_ids = list(qs.values_list('id', flat=True))
         model_count = len(model_ids)
 
         self.set_description(shop=store.shop, model_name=name, model_count=model_count)
 
-        # if model_count > 30000:
-        #     self.write(f'>>> SKIP: {name} {model_count:3,}')
-        #     return None
-        # return model_ids.delete()[0]
-
-        if model_count > steps:
+        if self.progress and model_count > steps:
             obar = tqdm(total=model_count, smoothing=0)
             obar.set_description(f' {name} {store.shop}')
         else:
@@ -296,3 +311,10 @@ class Command(DropifiedBaseCommand):
             ])
 
             self.progress_bar.set_description(' '.join(info))
+
+    def fix_unsintall_date(self):
+        stores = ShopifyStore.objects.filter(is_active=False, uninstalled_at__isnull=True).order_by('-updated_at')
+        self.write(f'Sync uninstall date for {stores.count()} stores')
+
+        for i in stores:
+            ShopifyStore.objects.filter(id=i.id).update(uninstalled_at=i.updated_at)
