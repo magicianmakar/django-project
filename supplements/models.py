@@ -340,6 +340,9 @@ class LabelSize(models.Model):
 
 
 class MockupType(models.Model):
+    class Meta:
+        ordering = 'name',
+
     slug = models.SlugField(max_length=100)
     name = models.CharField(max_length=255)
     presets = models.TextField(default='[]', blank=True)

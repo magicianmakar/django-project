@@ -71,10 +71,16 @@ var MockupEditor = (function() {
                 });
             });
         },
-        getDimensions: function() {
+        getDimensions: function(decimalPlaces) {
+            decimalPlaces = typeof decimalPlaces === 'undefined' ? 5 : decimalPlaces;
             $('#mockup-editor .btn-group').addClass('hidden');
             var dimensions = MockupEditor.mockups.map(function(mockup) {
                 var mockupClone = $.extend({}, mockup);
+                for (var key in mockup) {
+                    if (!isNaN(mockup[key])) {
+                        mockupClone[key] = parseFloat(mockup[key].toFixed(decimalPlaces));
+                    }
+                }
                 delete mockupClone.canvas;
                 delete mockupClone.bgCanvas;
                 return mockupClone;
