@@ -1,13 +1,15 @@
 import arrow
-import traceback
 from collections import defaultdict
 
+from django.core.cache import cache
 from django.db.models import Count
+from django.utils import timezone
 
 from tqdm import tqdm
 
 from last_seen.models import LastSeen
 from leadgalaxy.models import ShopifyProduct, ShopifyStore, ShopifyOrderTrack, GroupPlan
+from lib.exceptions import capture_message
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import using_replica
 from shopify_orders.models import ShopifyOrder, ShopifySyncStatus, ShopifyOrderLog
@@ -29,12 +31,16 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--max-count', type=int, default=0, help='Remove stores with inactive number of days.')
         parser.add_argument('--not-found', action='store_true', help='Delete stores with not found errors')
         parser.add_argument('--sync-uninstall-date', action='store_true', help='Fix inactive stores without uninstall date')
+        parser.add_argument('--uptime', action='store', type=int, default=60, help='Maximum task uptime (minutes)')
 
     def start_command(self, *args, **options):
-        self.active_stores = [i.shop for i in ShopifyStore.objects.filter(is_active=True).only('shop')]
-
         if options['sync_uninstall_date']:
             self.fix_unsintall_date()
+
+        self.uptime = options['uptime']
+        self.max_count = options['max_count']
+        self.progress = options['progress']
+        self.start_at = timezone.now()
 
         stores = ShopifyStore.objects.filter(is_active=False)
 
@@ -72,9 +78,6 @@ class Command(DropifiedBaseCommand):
             self.write('Nothing to delete')
             return
 
-        self.max_count = options['max_count']
-        self.progress = options['progress']
-
         if self.progress:
             self.progress_total(stores.count())
 
@@ -108,18 +111,19 @@ class Command(DropifiedBaseCommand):
             self.write(f'\t{v:3,}\t{k}')
 
     def load_stores(self, stores):
+        self.write("Load stores to delete")
+        self.active_stores = [i.shop for i in ShopifyStore.objects.filter(is_active=True).only('shop')]
+
         for store in stores:
             self.progress_update()
             ignore = False
 
             try:
                 when_seen = LastSeen.objects.when(store.user, 'website')
-                seen = arrow.get(when_seen).humanize()
                 last_30_days = arrow.get(when_seen) > arrow.utcnow().replace(days=-30)
             except KeyboardInterrupt:
                 raise
             except:
-                seen = None
                 last_30_days = False
 
             if store.shop in self.active_stores:
@@ -131,9 +135,6 @@ class Command(DropifiedBaseCommand):
                 ignore = True
 
             plan = store.user.profile.plan
-
-            if False:
-                self.write(f'{store.shop.ljust(50)} | {plan.title.ljust(50)} | {plan.monthly_price} | {seen} | {last_30_days} | Ignore: {ignore}')
 
             if ignore:
                 self.ignored_plan_count[plan.title] += 1
@@ -160,12 +161,14 @@ class Command(DropifiedBaseCommand):
     def delete_stores(self):
         for store in self.stores_to_delete:
             self.progress_update()
-            try:
-                self.delete_shopify_store(store)
-            except KeyboardInterrupt:
-                raise
-            except:
-                traceback.print_exc()
+
+            self.delete_shopify_store(store)
+
+            if (timezone.now() - self.start_at) > timezone.timedelta(seconds=self.uptime * 60):
+                capture_message('Remove Inactive Timeout',
+                                level="warning",
+                                extra={'delta': (timezone.now() - self.start_at).total_seconds()})
+                break
 
     def delete_shopify_store(self, store):
         self.set_description(shop=store.shop)
@@ -235,7 +238,12 @@ class Command(DropifiedBaseCommand):
         qs = using_replica(model).filter(**match)
 
         if self.max_count:
-            model_count = qs.count()
+            cache_key = f'models_count_{name}_{store.shop}'
+            model_count = cache.get(cache_key)
+            if model_count is None:
+                model_count = qs.count()
+                cache.set(cache_key, model_count, timeout=604800)
+
             if model_count > self.max_count:
                 self.write(f'>>> SKIP: {name} {model_count:3,} for {store.shop}')
                 return None
