@@ -41,6 +41,8 @@ def prepare_shipstation_data(pls_order, order, line_items, service_code=None):
     ship_to = get_address(order['shipping_address'])
     try:
         bill_to = get_address(order['billing_address'])
+        if not bill_to['address1'].strip():
+            raise KeyError('address1')
     except KeyError:
         bill_to = ship_to
 
