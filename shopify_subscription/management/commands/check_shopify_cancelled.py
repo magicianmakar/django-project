@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models import Q
 from tqdm import tqdm
 
+from lib.exceptions import capture_exception
 from leadgalaxy.models import GroupPlan
 from shopified_core.management import DropifiedBaseCommand
 from shopify_subscription.models import ShopifySubscription, ShopifySubscriptionWarning
@@ -30,6 +31,7 @@ class Command(DropifiedBaseCommand):
         outdated_subscriptions = ShopifySubscription.objects.exclude(
             user__profile__plan__slug='shopify-free-plan'
         ).filter(
+            user__profile__plan__payment_gateway='shopify',
             status__in=['pending', 'active', 'expired'],
             updated_at__range=(
                 arrow.get().shift(days=days_ago * -1).datetime,
@@ -42,7 +44,10 @@ class Command(DropifiedBaseCommand):
         for subscription in outdated_subscriptions:
             if self.progress:
                 progress_bar.update(1)
-            subscription.refresh()
+            try:
+                subscription.refresh()
+            except:
+                capture_exception()
 
         if self.progress:
             progress_bar.close()
