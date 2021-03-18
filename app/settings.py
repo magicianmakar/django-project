@@ -105,6 +105,7 @@ INSTALLED_APPS = (
 
 MIDDLEWARE = (
     'leadgalaxy.middleware.CookiesSameSite',
+    'leadgalaxy.middleware.PlanSetupMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

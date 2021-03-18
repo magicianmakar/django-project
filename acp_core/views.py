@@ -141,6 +141,8 @@ class ACPUserSearchView(BaseTemplateView):
 
         if len(users) == 1:
             target_user = users[0]
+            target_user.profile.ensure_has_plan()
+
             for addon_usage in AddonUsage.objects.select_related('billing__addon').filter(user=target_user.id):
                 if addon_usage.created_at:
                     logs.append({

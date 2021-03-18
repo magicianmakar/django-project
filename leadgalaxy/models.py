@@ -232,6 +232,11 @@ class UserProfile(models.Model):
         except:
             return None
 
+    def ensure_has_plan(self):
+        if self.plan is None:
+            self.plan = GroupPlan.objects.get(default_plan=1)
+            self.save()
+
     def bundles_list(self):
         return [b.replace('Bundle', '').strip() for b in self.bundles.all().values_list('title', flat=True)]
 
