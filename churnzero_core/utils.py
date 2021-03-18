@@ -40,9 +40,14 @@ class SetAccountActionBuilder:
         )
 
     def add_name(self):
-        name_elements = [self._models_user.first_name, self._models_user.last_name]
-        name = ' '.join(name_elements).strip()
-        self._action['attr_Name'] = name if name else "(no name)"
+        store_title = self._get_shopify_store_title()
+        if self._models_user.email:
+            self._action['attr_Name'] = self._models_user.email
+        elif store_title:
+            self._action['attr_Name'] = store_title
+        else:
+            name = self._models_user.get_full_name()
+            self._action['attr_Name'] = name if name else self._models_user.username
 
     def add_stripe_customer_id(self):
         self._action['attr_Stripe_customer_id'] = self._models_user.stripe_customer.customer_id
@@ -90,6 +95,9 @@ class SetAccountActionBuilder:
     def add_is_active(self):
         self._action['attr_IsActive'] = self.shopify_profile.is_active
 
+    def add_plan(self):
+        self._action['attr_Plan'] = self._plan.title
+
     def get_action(self):
         return self._action
 
@@ -97,6 +105,7 @@ class SetAccountActionBuilder:
         self.add_name()
         self.add_gateway()
         self.add_installed_addons()
+        self.add_plan()
         self.add_shopify_stores_count()
         self.add_woo_stores_count()
         self.add_chq_stores_count()
@@ -118,6 +127,11 @@ class SetAccountActionBuilder:
                 self.add_next_renewal_date()
 
         return self._action
+
+    def _get_shopify_store_title(self):
+        stores = self._profile.get_shopify_stores()
+
+        return stores.first().title if stores.exists() else None
 
 
 # Create your views here.

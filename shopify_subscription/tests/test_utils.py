@@ -1,3 +1,5 @@
+import datetime
+
 from decimal import Decimal
 
 from unittest.mock import Mock, PropertyMock, patch
@@ -158,16 +160,17 @@ class RecurringSubscriptionTestCase(BaseTestCase):
         self.assertEqual(subscription.start_date, arrow.get(self.start_date))
 
     @patch('shopify_subscription.utils.RecurringSubscription.charge', PropertyMock(return_value=charge))
-    def test_must_return_correct_end_date(self):
+    def test_must_return_correct_renewal_date(self):
         profile = Mock()
         subscription = RecurringSubscription(profile)
         self.assertEqual(subscription.end_date, arrow.get(self.billing_on))
 
     @patch('shopify_subscription.utils.RecurringSubscription.charge', PropertyMock(return_value=charge))
-    def test_must_return_correct_renewal_date(self):
+    def test_must_return_correct_end_date(self):
         profile = Mock()
         subscription = RecurringSubscription(profile)
-        self.assertEqual(subscription.next_renewal_date, arrow.get(self.billing_on))
+        end_date = arrow.get(self.start_date).datetime + datetime.timedelta(days=30)
+        self.assertEqual(subscription.next_renewal_date, arrow.get(end_date))
 
     @patch('shopify_subscription.utils.RecurringSubscription.charge', PropertyMock(return_value=charge))
     def test_must_return_correct_balanced_used(self):
@@ -266,8 +269,10 @@ class YearlySubscriptionTestCase(BaseTestCase):
         profile = Mock()
         type(profile).plan = PropertyMock(return_value=Mock(title="Yearly"))
         application_charge1 = Mock()
+        application_charge1.status = "active"
         application_charge1.to_dict = Mock(return_value={'name': 'Addon Charge'})
         application_charge2 = Mock()
+        application_charge2.status = "active"
         application_charge_name = 'Dropified Yearly for $100'
         application_charge2.to_dict = Mock(return_value={'name': application_charge_name})
         application_charges = [application_charge1, application_charge2]

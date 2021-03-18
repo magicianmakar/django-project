@@ -23,7 +23,7 @@ from churnzero_core.utils import (
     post_churnzero_product_export,
     post_churnzero_addon_update,
     set_churnzero_account,
-    SetAccountActionBuilder
+    SetAccountActionBuilder,
 )
 
 
@@ -162,12 +162,12 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
     @patch('stripe_subscription.models.stripe')
     @patch('shopified_core.tasks.requests_async.apply_async')
     def test_must_submit_with_correct_parameters_for_stripe_user(self, post_request, stripe):
-        models_user = UserFactory(username='modelsuser')
+        models_user = UserFactory(username='modelsuser', email='test@email.com')
         user = UserFactory()
         user.profile.subuser_parent = models_user
         user.profile.save()
         stripe.Plan = Mock()
-        plan = GroupPlanFactory(payment_gateway='stripe')
+        plan = GroupPlanFactory(payment_gateway='stripe', title='Test Plan')
         stripe.Plan.retrieve = Mock(return_value=plan)
         user.models_user.profile.plan = plan
         user.models_user.profile.plan.is_stripe = Mock(return_value=True)
@@ -193,10 +193,11 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'contactExternalIdHash': user.models_user.profile.churnzero_contact_id_hash,
             'action': 'setAttribute',
             'entity': 'account',
-            'attr_Name': ' '.join([models_user.first_name, models_user.last_name]),
+            'attr_Name': models_user.email,
             'attr_Stripe_customer_id': 'abc',
             'attr_Gateway': 'Stripe',
             'attr_Installed Addons': ', '.join(addons_list),
+            'attr_Plan': plan.title,
             'attr_Shopify Stores Count': 1,
             'attr_WooCommerce Stores Count': 1,
             'attr_CommerceHQ Stores Count': 1,
@@ -217,7 +218,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
     @patch('churnzero_core.utils.ShopifyProfile.is_active', PropertyMock(return_value=True))
     @patch('shopified_core.tasks.requests_async.apply_async')
     def test_must_submit_with_correct_parameters_for_shopify_user(self, post_request):
-        models_user = UserFactory(username='modelsuser')
+        models_user = UserFactory(username='modelsuser', email='test@email.com')
         user = UserFactory()
         user.profile.subuser_parent = models_user
         user.profile.save()
@@ -244,7 +245,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'contactExternalIdHash': user.models_user.profile.churnzero_contact_id_hash,
             'action': 'setAttribute',
             'entity': 'account',
-            'attr_Name': ' '.join([models_user.first_name, models_user.last_name]),
+            'attr_Name': models_user.email,
             'attr_NextRenewalDate': arrow.get('2012-04-01').isoformat(),
             'attr_TotalContractAmount': 100.00,
             'attr_IsActive': True,
@@ -253,6 +254,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             # Custom attributes
             'attr_Gateway': models_user.profile.plan.payment_gateway.title(),
             'attr_Installed Addons': ', '.join(addons_list),
+            'attr_Plan': plan.title,
             'attr_Shopify Stores Count': 1,
             'attr_WooCommerce Stores Count': 1,
             'attr_CommerceHQ Stores Count': 1,
@@ -262,6 +264,36 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         }]
 
         post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
+
+    @override_settings(DEBUG=False)
+    @override_settings(CHURNZERO_APP_KEY='test')
+    @patch('churnzero_core.utils.ShopifyProfile.is_valid', PropertyMock(return_value=True))
+    @patch('churnzero_core.utils.ShopifyProfile.next_renewal_date', PropertyMock(return_value=arrow.get('2012-04-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.start_date', PropertyMock(return_value=arrow.get('2012-03-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.end_date', PropertyMock(return_value=arrow.get('2012-03-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.total_contract_amount', PropertyMock(return_value=Decimal('100.00')))
+    @patch('churnzero_core.utils.ShopifyProfile.is_active', PropertyMock(return_value=True))
+    @patch('shopified_core.tasks.requests_async.apply_async')
+    def test_must_not_submit_if_user_is_neither_stripe_nor_shopify(self, post_request):
+        models_user = UserFactory(username='modelsuser', email='test@email.com')
+        user = UserFactory()
+        user.profile.subuser_parent = models_user
+        user.profile.save()
+        plan = GroupPlanFactory(payment_gateway='')
+        user.models_user.profile.plan = plan
+        user.models_user.profile.plan.is_shopify = Mock(return_value=False)
+        user.models_user.profile.plan.is_stripe = Mock(return_value=False)
+        addon1 = AddonFactory(title='test1')
+        addon2 = AddonFactory(title='test2')
+        user.models_user.profile.addons.add(addon1, addon2)
+        ShopifyStoreFactory(user=models_user)
+        WooStoreFactory(user=models_user)
+        CommerceHQStoreFactory(user=models_user)
+        GearBubbleStoreFactory(user=models_user)
+        GrooveKartStoreFactory(user=models_user)
+        BigCommerceStoreFactory(user=models_user)
+        set_churnzero_account(user.models_user)
+        self.assertFalse(post_request.called)
 
     @override_settings(DEBUG=False)
     @override_settings(CHURNZERO_APP_KEY='test')
@@ -304,10 +336,55 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         user.models_user.profile.refresh_from_db()
         self.assertTrue(user.models_user.profile.has_churnzero_account)
 
+    @override_settings(DEBUG=False)
+    @override_settings(CHURNZERO_APP_KEY='test')
+    @patch('churnzero_core.utils.ShopifyProfile.is_valid', PropertyMock(return_value=True))
+    @patch('churnzero_core.utils.ShopifyProfile.next_renewal_date', PropertyMock(return_value=arrow.get('2012-04-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.start_date', PropertyMock(return_value=arrow.get('2012-03-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.end_date', PropertyMock(return_value=arrow.get('2012-03-01')))
+    @patch('churnzero_core.utils.ShopifyProfile.total_contract_amount', PropertyMock(return_value=Decimal('100.00')))
+    @patch('churnzero_core.utils.ShopifyProfile.is_active', PropertyMock(return_value=True))
+    @patch('shopified_core.tasks.requests_async.apply_async')
+    def test_must_not_update_users_has_churnzero_account_property_if_neither_shopify_nor_stripe_user(self, post_request):
+        post_request.return_value = Mock()
+        user = UserFactory()
+        user.profile.has_churnzero_account = False
+        user.profile.save()
+        plan = GroupPlanFactory(payment_gateway='')
+        user.models_user.profile.plan = plan
+        user.models_user.profile.plan.is_shopify = Mock(return_value=False)
+        user.models_user.profile.plan.is_stripe = Mock(return_value=False)
+        set_churnzero_account(user.models_user)
+        user.models_user.profile.refresh_from_db()
+        self.assertFalse(user.models_user.profile.has_churnzero_account)
+
 
 class SetAccountActionBuilderTestCase(BaseTestCase):
-    def test_must_add_user_first_name_and_last_name_as_name_attribute(self):
-        models_user = UserFactory(username='modelsuser', first_name="Models", last_name="User")
+    def test_must_add_user_email_as_name_attribute(self):
+        email = 'modelsuser@test.com'
+        models_user = UserFactory(email=email)
+        user = UserFactory()
+        user.profile.subuser_parent = models_user
+        user.profile.save()
+        builder = SetAccountActionBuilder(user)
+        builder.add_name()
+        action = builder.get_action()
+        self.assertEqual(action['attr_Name'], email)
+
+    def test_must_add_store_name_as_name_attribute_if_no_email(self):
+        models_user = UserFactory(email='')
+        title = 'The Store'
+        ShopifyStoreFactory(user=models_user, title=title)
+        user = UserFactory()
+        user.profile.subuser_parent = models_user
+        user.profile.save()
+        builder = SetAccountActionBuilder(user)
+        builder.add_name()
+        action = builder.get_action()
+        self.assertEqual(action['attr_Name'], title)
+
+    def test_must_add_user_first_name_and_last_name_as_name_attribute_if_no_email_or_store_name(self):
+        models_user = UserFactory(email='', first_name="Models", last_name="User")
         user = UserFactory()
         user.profile.subuser_parent = models_user
         user.profile.save()
@@ -316,12 +393,26 @@ class SetAccountActionBuilderTestCase(BaseTestCase):
         action = builder.get_action()
         self.assertEqual(action['attr_Name'], "Models User")
 
-    def test_must_add_default_name_as_name_attribute_if_no_first_and_last_name(self):
-        models_user = UserFactory(username='modelsuser', first_name="", last_name="")
+    def test_must_add_username_as_name_attribute_as_last_fallback(self):
+        models_user = UserFactory(email="", username='modelsuser', first_name="", last_name="")
         user = UserFactory()
         user.profile.subuser_parent = models_user
         user.profile.save()
         builder = SetAccountActionBuilder(user)
         builder.add_name()
         action = builder.get_action()
-        self.assertEqual(action['attr_Name'], "(no name)")
+        self.assertEqual(action['attr_Name'], "modelsuser")
+
+    def test_must_add_group_plan_name(self):
+        models_user = UserFactory()
+        user = UserFactory()
+        user.profile.subuser_parent = models_user
+        user.profile.save()
+        title = 'Test Plan'
+        plan = GroupPlanFactory(payment_gateway='stripe', title=title)
+        user.models_user.profile.plan = plan
+        user.models_user.profile.save()
+        builder = SetAccountActionBuilder(user)
+        builder.add_plan()
+        action = builder.get_action()
+        self.assertEqual(action['attr_Plan'], title)

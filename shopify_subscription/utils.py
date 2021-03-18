@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 
 import arrow
@@ -64,7 +65,8 @@ class YearlySubscription:
         charges = self._profile.application_charges
         for charge in charges:
             if f"Dropified {self._profile.plan.title}" in get_charge_name(charge):
-                return charge
+                if charge.status == 'active':
+                    return charge
 
 
 class RecurringSubscription:
@@ -83,13 +85,15 @@ class RecurringSubscription:
 
     @cached_property
     def end_date(self):
-        billing_on = self.charge.to_dict().get('billing_on')
-
-        return arrow.get(billing_on) if billing_on else None
+        if self.start_date:
+            end_date = self.start_date.datetime + timedelta(days=30)
+            return arrow.get(end_date)
 
     @cached_property
     def next_renewal_date(self):
-        return self.end_date
+        billing_on = self.charge.to_dict().get('billing_on')
+
+        return arrow.get(billing_on) if billing_on else None
 
     @cached_property
     def total_contract_amount(self):
