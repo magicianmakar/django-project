@@ -176,10 +176,8 @@ class UserSupplementMixin(PLSupplementMixin):
             self.save()
 
     def mark_as_unread(self, user_id):
-        seen_users = self.get_seen_users_list()
-        if 'All' not in seen_users:
-            self.seen_users = json.dumps([user_id])
-            self.save()
+        self.seen_users = json.dumps([user_id])
+        self.save()
 
     @property
     def is_supplement_deleted(self):

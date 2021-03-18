@@ -505,7 +505,6 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form = self.get_form()
         if form.is_valid():
             new_user_supplement = self.save_supplement(form)
-            new_user_supplement.mark_as_unread(user.id)
 
             # Always use saved label URL for pre-approved labels
             upload_url = form.cleaned_data['upload_url']
@@ -555,7 +554,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             kwargs = {'supplement_id': new_user_supplement.id}
             redirect_url = self.get_redirect_url(**kwargs)
 
-            return redirect(f'{redirect_url}?unread=True')
+            return redirect(redirect_url)
 
         context = self.get_supplement_data(user, self.supplement_id)
 
@@ -765,6 +764,8 @@ class LabelHistory(UserSupplementView):
                 if comment:
                     is_private = form.cleaned_data['is_private']
                     self.create_comment(comments, comment, is_private=is_private)
+                    user_supplement.mark_as_unread(request.user.id)
+                    reverse_url = f'{reverse_url}?unread=True'
 
                 # Restart review process for new labels
                 upload_url = form.cleaned_data['upload_url']
@@ -783,8 +784,7 @@ class LabelHistory(UserSupplementView):
                     for position, mockup_url in enumerate(mockup_urls):
                         user_supplement.images.create(image_url=mockup_url, position=position)
 
-                user_supplement.mark_as_unread(request.user.id)
-                return redirect(f'{reverse_url}?unread=True')
+                return redirect(reverse_url)
 
         context = self.get_supplement_data(request.user, user_supplement.id)
         context.update({
@@ -838,8 +838,7 @@ class AdminLabelHistory(LabelHistory):
                        f"{label.status_string}</span>")
             self.create_comment(label.comments, comment, new_status=action)
 
-            user_supplement.mark_as_unread(request.user.id)
-            return redirect(f'{reverse_url}?unread=True')
+            return redirect(reverse_url)
 
         # Call action to comment label for admins
         return super().post(request, supplement_id)
