@@ -73,6 +73,15 @@ def get_datetime(isodate):
     return arrow.get(isodate).datetime
 
 
+@register.filter(expects_localtime=True)
+def user_date(date, format='MM.DD.YYYY hh:mmA ZZ'):
+    if not date:
+        return ''
+
+    date = arrow.get(date)
+    return date.format(format)
+
+
 @register.simple_tag(takes_context=True)
 def encode_order(context, data, auto):
     data['auto'] = (auto == 'True')

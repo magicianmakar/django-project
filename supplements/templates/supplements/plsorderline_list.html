@@ -1,5 +1,5 @@
 {% extends "supplements/tab_view_admin.html" %}
-{% load static compress %}
+{% load static compress template_helper %}
 
 {% block extra_pls_css %}
 <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
@@ -55,6 +55,7 @@
     <th>Quantity</th>
     <th>Date</th>
     <th>Status</th>
+    <th>Shipping Method</th>
     <th>Label</th>
     <th>Paid</th>
     <th></th>
@@ -81,8 +82,9 @@
       <td>{{ line_item.pls_order.batch_number|default:'N/A' }}</td>
       <td>{{ line_item.fulfillment_status_string }}</td>
       <td>{{ line_item.quantity }}</td>
-      <td>{{ line_item.created_at|date:"m.d.Y h:iA" }}</td>
+      <td>{{ line_item.created_at|user_date }}</td>
       <td>{{ line_item.label_status_string }}</td>
+      <td>{{ line_item.shipping_service }}</td>
       <td>
         <a href="{% url 'pls:generate_label' line_item.id %}"
           class='download-order-item-label'

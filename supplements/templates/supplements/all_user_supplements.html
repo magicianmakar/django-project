@@ -1,5 +1,5 @@
 {% extends "supplements/tab_view_admin.html" %}
-{% load static compress widget_tweaks perms_helper %}
+{% load static compress widget_tweaks perms_helper template_helper %}
 
 {% block tab_content %}
 
@@ -116,7 +116,7 @@
       <td>{{ supplement.pl_supplement.title }}</td>
       <td>{{ supplement.current_label.sku }}</td>
       <td>{{ supplement.user.get_full_name }}</td>
-      <td>{{ supplement.current_label.updated_at_string }}</td>
+      <td>{{ supplement.current_label.updated_at|user_date }}</td>
       <td>
         {% if supplement|is_supplement_seen:request.user %}
         <i class="fa fa-comments"></i>&nbsp;{{ supplement.labels_comment_count }}

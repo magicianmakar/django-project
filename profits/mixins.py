@@ -33,7 +33,10 @@ class ProfitDashboardMixin():
 
             sync, created = models.ProfitSync.objects.get_or_create(
                 store_content_type=self.store_content_type,
-                store_object_id=self.store.id
+                store_object_id=self.store.id,
+                defaults={
+                    'last_sync': arrow.get().shift(days=-2).datetime
+                }
             )
 
             if created or sync.last_sync < arrow.get().shift(days=-1).datetime:  # Sync daily

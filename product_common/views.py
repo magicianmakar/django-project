@@ -522,7 +522,7 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
 
             email = form.cleaned_data['email']
             if email:
-                queryset = queryset.filter(pls_order__user__email=email)
+                queryset = queryset.filter(pls_order__user__email__icontains=email)
 
             reference_number = form.cleaned_data['refnum']
             if reference_number:
