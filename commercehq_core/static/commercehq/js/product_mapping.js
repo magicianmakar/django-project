@@ -109,6 +109,11 @@
         return product_suppliers[supplier].url;
     }
 
+    function getSupplierProductId() {
+        var supplier = parseInt($('.supplier-select').val(), 10);
+        return product_suppliers[supplier].source_id;
+    }
+
     function fetchSupplierOptions(callback) {
         var supplier_url = getSupplierUrl();
         window.extensionSendMessage({
@@ -127,6 +132,7 @@
         $('#modal-variant-select').data('var', $(this).data('var'));
 
         var render_options = function(response) {
+            response = response.hasOwnProperty('variant_data') ? response['variant_data'] : response;
             var variant_tpl = Handlebars.compile($("#variant-template").html());
             var option_tpl = Handlebars.compile($("#variant-option-template").html());
             var extra_input_tpl = Handlebars.compile($("#extra-input-template").html());
@@ -209,6 +215,16 @@
                 success: render_options,
                 error: function(data) {
                     displayAjaxError('Variants Mapping', data);
+                }
+            });
+        } else if (supplierUrl.indexOf('alibaba.com') !== -1){
+            $.ajax({
+                url: api_url('product-variants', 'alibaba'),
+                type: 'GET',
+                data: {'product_id': getSupplierProductId()},
+                success: render_options,
+                error: function(data) {
+                    displayAjaxError('Alibaba Variants Mapping', data);
                 }
             });
         } else {

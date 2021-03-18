@@ -102,6 +102,20 @@ function renderSupplierInfo(product_url, parent) {
         });
     } else if ((/dropified.com\/supplements\/usersupplement/i).test(product_url)) {
         $('.product-supplier-name', parent).val('Supplements on Demand');
+    } else if (/alibaba.com/.test(product_url)) {
+        $.ajax({
+            type: 'GET',
+            url: api_url('product-data', 'alibaba'),
+            data: {'product_id': product_url.match(/(\d+)\.html/)[1]},
+            beforeSend: function() {
+                $('.product-original-link-loading', parent).show();
+            },
+            success: function(data) {
+                $('.product-original-link-loading', parent).hide();
+                $('.product-supplier-name', parent).val(data.store.name);
+                $('.product-supplier-link', parent).val(data.store.url);
+            }
+        });
     }
 }
 

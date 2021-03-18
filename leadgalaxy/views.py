@@ -39,6 +39,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.views.generic.base import TemplateView
 
+from alibaba_core import utils as alibaba_utils
 from infinite_pagination.paginator import InfinitePaginator
 from lib.exceptions import capture_exception, capture_message
 from analytic_events.models import RegistrationEvent
@@ -81,7 +82,7 @@ from shopified_core.utils import (
     format_queueable_orders,
     products_filter,
     decode_api_token,
-    page_rpm_counter
+    page_rpm_counter,
 )
 from supplements.lib.shipstation import get_address as get_shipstation_address
 from supplements.tasks import update_shipstation_address
@@ -1551,6 +1552,17 @@ def webhook(request, provider, option):
         capture_message('Non-handled Intercom Topic', extra={'topic': option})
         return HttpResponse()
 
+    elif provider == 'alibaba':
+        if option == 'add-product':
+            alibaba_user_id = request.GET['user_id']
+            product_id = request.GET['id']
+            products_data = {
+                alibaba_user_id: [product_id],
+            }
+
+            alibaba_utils.save_alibaba_products(request, products_data)
+
+        return HttpResponse('ok')
     else:
         capture_message('Unknown Webhook Provider')
         return JsonResponse({'status': 'ok', 'warning': 'Unknown provider'}, status=500)
@@ -2050,7 +2062,8 @@ def product_mapping(request, product_id):
         product_suppliers[i.id] = {
             'id': i.id,
             'name': i.get_name(),
-            'url': i.product_url
+            'url': i.product_url,
+            'source_id': i.source_id,
         }
 
     return render(request, 'product_mapping.html', {
@@ -2115,7 +2128,8 @@ def mapping_supplier(request, product_id):
         product_suppliers[i.id] = {
             'id': i.id,
             'name': i.get_name(),
-            'url': i.product_url
+            'url': i.product_url,
+            'source_id': i.source_id,
         }
 
     shipping_map = product.get_shipping_mapping()
@@ -2452,14 +2466,22 @@ def get_shipping_info(request):
 
         if hasattr(supplier, 'is_ebay') and supplier.is_ebay:
             supplier_type = 'ebay'
+        elif supplier.is_alibaba:
+            supplier_type = 'alibaba'
         else:
             supplier_type = 'aliexpress'
 
     try:
         if supplier_type == 'ebay':
             shippement_data = utils.ebay_shipping_info(item_id, country_name, zip_code)
-        else:
+        elif supplier_type == 'aliexpress':
             shippement_data = utils.aliexpress_shipping_info(item_id, country_code)
+        elif supplier_type == 'alibaba':
+            shippement_data = alibaba_utils.alibaba_shipping_info(
+                request.user.alibaba.first(),
+                item_id,
+                country_code,
+            )
     except requests.Timeout:
         capture_exception()
 
@@ -4022,6 +4044,7 @@ class OrdersView(TemplateView):
                             'quantity': line_item['quantity'],
                             'weight': line_item.get('weight'),
                             'shipping_address': customer_address,
+                            'shipping_method': line_item.get('shipping_method'),
                             'order_id': order['id'],
                             'line_id': line_item['id'],
                             'product_id': product.id if product else None,
@@ -4040,6 +4063,7 @@ class OrdersView(TemplateView):
                                 'aliexpress_shipping_method': self.config.aliexpress_shipping_method,
                                 'auto_mark': self.config.auto_ordered_mark,
                             },
+                            'is_refunded': line_item['refunded'],
                             'products': bundle_data,
                             'is_bundle': len(bundle_data) > 0
                         }

@@ -107,6 +107,11 @@
         return product_suppliers[supplier].url;
     }
 
+    function getSupplierProductId() {
+        var supplier = parseInt($('.supplier-select').val(), 10);
+        return product_suppliers[supplier].source_id;
+    }
+
     $('.select-var-mapping').click(function(e) {
         e.preventDefault();
 
@@ -114,12 +119,8 @@
 
         $('#modal-variant-select').data('var', $(this).data('var'));
 
-        window.extensionSendMessage({
-            subject: 'getVariants',
-            from: 'webapp',
-            url: getSupplierUrl(),
-            cache: true,
-        }, function(response) {
+        var render_options = function(response) {
+            response = response.hasOwnProperty('variant_data') ? response['variant_data'] : response;
             var variant_tpl = Handlebars.compile($("#variant-template").html());
             var option_tpl = Handlebars.compile($("#variant-option-template").html());
             var extra_input_tpl = Handlebars.compile($("#extra-input-template").html());
@@ -189,7 +190,39 @@
             $('.select-var-mapping').bootstrapBtn('reset');
 
             selectColor();
-        });
+        };
+
+        var supplierUrl = getSupplierUrl();
+        if (supplierUrl.indexOf('dropified.com') !== -1) {
+            // Remove Dropified domain (matches with or without https)
+            supplierUrl = supplierUrl.replace(/\S{0,}\/\/.+?\//, '/');
+            $.ajax({
+                url: supplierUrl,
+                type: 'GET',
+                data: {'variants': '1'},
+                success: render_options,
+                error: function(data) {
+                    displayAjaxError('Variants Mapping', data);
+                }
+            });
+        } else if (supplierUrl.indexOf('alibaba.com') !== -1){
+            $.ajax({
+                url: api_url('product-variants', 'alibaba'),
+                type: 'GET',
+                data: {'product_id': getSupplierProductId()},
+                success: render_options,
+                error: function(data) {
+                    displayAjaxError('Alibaba Variants Mapping', data);
+                }
+            });
+        } else {
+            window.extensionSendMessage({
+                subject: 'getVariants',
+                from: 'webapp',
+                url: supplierUrl,
+                cache: true,
+            }, render_options);
+        }
     });
 
     $('#save-var-mapping').click(function(e) {

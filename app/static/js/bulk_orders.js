@@ -1,3 +1,11 @@
+var bulkOptions = $('#bulk-order-btn').parent().find('.dropdown-menu li');
+
+if (bulkOptions.length === 1) {
+    $('#bulk-order-btn').addClass('bulk-order-btn').data('source', bulkOptions.find('a').data('source'));
+    $('#bulk-order-btn .caret').remove();
+    $('#bulk-order-btn .dropdown-menu').remove();
+}
+
 function bulkAddOrderToQueue(order) {
     if (!window.extensionSendMessage) {
         swal('Please reload the page and make sure you are using the latest version of the extension.');
@@ -24,6 +32,21 @@ function addOrdersToPrivateLabel(orders) {
         }
     }
     processOrders(orderDataIDs, false);
+}
+
+function addOrdersToAlibaba(orders) {
+    var orderDataIDs = [];
+    for (var i = 0, iLength = orders.length; i < iLength; i++) {
+        var bulkItems = orders[i].items;
+        if (bulkItems) {
+            for (var y = 0, yLength = bulkItems.length; y < yLength; y++) {
+                orderDataIDs.push(bulkItems[y].order_data);
+            }
+        } else {
+            orderDataIDs.push(window.bulkOrderQueue.data[i].order_data);
+        }
+    }
+    orderItemsAlibaba(orderDataIDs);
 }
 
 window.bulkOrderQueue = null;
@@ -75,10 +98,10 @@ function fetchOrdersToQueue(data) {
     });
 }
 
-$('.bulk-order-btn').click(function (e) {
+$('#bulk-order-button-wrapper').on('click', '.bulk-order-btn', function (e) {
     e.preventDefault();
 
-    var orders_count = parseInt($(e.target).attr('orders-count'));
+    var orders_count = parseInt($('#bulk-order-btn').attr('orders-count'));
     if (!orders_count) {
         swal({
             title: 'No orders found',
@@ -89,14 +112,27 @@ $('.bulk-order-btn').click(function (e) {
         return;
     }
 
-    $('#bulk-order-modal').data('dropified-print', $(this).data('dropified-print') || false);
+    var source = $(this).data('source');
 
-    var isPrivateLabel = $(this).data('dropified-supplements') || false;
+    var isPrintOnDemand = source === 'print-on-demand' || false;
+    $('#bulk-order-modal').data('dropified-print', isPrintOnDemand);
+
+    var isPrivateLabel = source === 'private-label' || false;
     $('#bulk-order-modal').data('dropified-supplements', isPrivateLabel);
+
+    var isAlibaba = source === 'alibaba' || false;
+    $('#bulk-order-modal').data('alibaba', isAlibaba);
+
     if (window.bulkOrderQueue && window.bulkOrderQueue.data.length) {
         if (isPrivateLabel && window.bulkOrderQueue.is_supplement_bulk_order) {
             addOrdersToPrivateLabel(window.bulkOrderQueue.data);
             $('#modal-order-detail').modal('show');
+            return true;
+        }
+
+        if (isAlibaba && window.bulkOrderQueue.is_alibaba_bulk_order) {
+            addOrdersToAlibaba(window.bulkOrderQueue.data);
+            $('#modal-alibaba-order-detail').modal('show');
             return true;
         }
     }
@@ -106,10 +142,11 @@ $('.bulk-order-btn').click(function (e) {
         data: [],
         stop: false,
         next: null,
-        is_dropified_print: $('#bulk-order-modal').data('dropified-print'),
+        is_dropified_print: isPrintOnDemand,
         is_supplement_bulk_order: isPrivateLabel,
+        is_alibaba_bulk_order: isAlibaba,
     };
-    console.log(window.bulkOrderQueue.is_supplement_bulk_order);
+    console.log(window.bulkOrderQueue);
 
     var is_dropified_print = window.bulkOrderQueue.is_dropified_print;
     $('#bulk-order-modal .modal-title .original-title').toggleClass('hidden', is_dropified_print);
@@ -154,7 +191,7 @@ $("#bulk-order-steps").steps({
         if (currentIndex == 0) {
             var pageFrom = parseInt($('[name="queue_page_from"]').val());
             var pageTo = parseInt($('[name="queue_page_to"]').val());
-            var maxPages = parseInt($('.bulk-order-btn').attr('pages-count'));
+            var maxPages = parseInt($('#bulk-order-btn').attr('pages-count'));
 
             if (isNaN(pageFrom) || isNaN(pageTo)) {
                 $('#bulk-order-step-error').css('display', '');
@@ -219,6 +256,8 @@ $("#bulk-order-steps").steps({
             formData.push({name: 'page_end', value: window.bulkOrderQueue.pages.to});
             if (window.bulkOrderQueue.is_supplement_bulk_order) {
                 formData.push({name: 'is_supplement_bulk_order', value: '1'});
+            } else if (window.bulkOrderQueue.is_alibaba_bulk_order) {
+                formData.push({name: 'single_supplier', value: 'alibaba'});
             } else if (window.bulkOrderQueue.is_dropified_print) {
                 formData.push({name: 'is_dropified_print', value: '1'});
             }
@@ -241,6 +280,8 @@ $("#bulk-order-steps").steps({
             addOrdersToPrint(window.bulkOrderQueue.data);
         } else if(window.bulkOrderQueue.is_supplement_bulk_order) {
             addOrdersToPrivateLabel(window.bulkOrderQueue.data);
+        } else if(window.bulkOrderQueue.is_alibaba_bulk_order) {
+            addOrdersToAlibaba(window.bulkOrderQueue.data);
         } else {
             $.each(window.bulkOrderQueue.data, function (i, order) {
                 bulkAddOrderToQueue(order);

@@ -13,6 +13,7 @@ from django.utils import timezone
 from django.utils.decorators import method_decorator
 from lib.exceptions import capture_exception, capture_message
 
+from alibaba_core.models import AlibabaOrderItem
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.decorators import HasSubuserPermission, restrict_subuser_access
@@ -762,15 +763,19 @@ class GrooveKartApi(ApiBase):
         user = user.models_user
         order_id, line_id = safe_int(data.get('order_id')), safe_int(data.get('line_id'))
         orders = GrooveKartOrderTrack.objects.filter(user=user, order_id=order_id, line_id=line_id)
+        deleted_ids = []
 
         if not len(orders) > 0:
             return self.api_error('Order not found.', status=404)
 
         for order in orders:
             permissions.user_can_delete(user, order)
+            deleted_ids.append(order.id)
             order.delete()
             data = {'store_id': order.store.id, 'order_id': order_id, 'line_id': line_id}
             order.store.pusher_trigger('order-source-id-delete', data)
+
+        AlibabaOrderItem.objects.filter(order_track_id__in=deleted_ids).delete()
 
         return self.api_success()
 

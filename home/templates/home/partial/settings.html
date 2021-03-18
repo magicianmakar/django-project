@@ -847,7 +847,120 @@
                     </div>
                 </div>
             </div>
+            {% endif %}
 
+            {% if user|can:'alibaba_integration.use' %}
+            <div id="alibaba-settings" class="panel panel-default">
+                <div class="panel-heading">
+                    Alibaba
+                </div>
+
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <div class="form-group">
+                                <label for="alibaba-connect" class="col-sm-4 col-xs-8 control-label">
+                                    Connect Your Account
+                                </label>
+                                <div class="col-sm-6 col-xs-4">
+                                    {% if user.alibaba.first.is_expired %}
+                                    <p class="text-danger">
+                                        Alibaba expired your access on {{ user.alibaba.first.expired_at|date:"M jS Y" }}
+                                        - please <a href="{{ alibaba_login_url }}">click here</a> to update this.
+                                    </p>
+                                    {% elif user.alibaba.first.is_nearly_expired %}
+                                    <p style="color: #337ab7;">
+                                        Alibaba will automatically expire your access on {{ user.alibaba.first.expired_at|date:"M jS Y" }}
+                                        - please <a href="{{ alibaba_login_url }}">click here</a> to update this.
+                                    </p>
+                                    {% endif %}
+
+                                    {% if user.alibaba.first.is_expired %}
+                                    <a href="{{ alibaba_login_url }}" class="btn btn-primary btn-sm">
+                                        Re-Connect Account
+                                    </a>
+                                    <span class="badge badge-danger">Expired</span>
+                                    {% elif user.alibaba.first.access_token %}
+                                    <a href="{{ alibaba_login_url }}" class="btn btn-primary btn-sm">
+                                        Re-Connect Account
+                                    </a>
+                                    <span class="badge badge-success">Connected</span>
+                                    {% else %}
+                                    <a href="{{ alibaba_login_url }}" class="btn btn-primary btn-sm">
+                                        Connect Account
+                                    </a>
+                                    <span class="badge badge-primary">Not Connected</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <div class="form-group">
+                                <label for="alibaba_default_import" class="col-sm-4 col-xs-8 control-label">
+                                    Import Products To
+                                </label>
+                                <div class="col-sm-3 col-xs-12">
+                                    <select id="alibaba_default_import" name="alibaba_default_import" class="form-control">
+                                        <optgroup label="Save For Later">
+                                            <option value="shopify" {% if config.alibaba_default_import == 'shopify' %}selected{% endif %}>Shopify</option>
+                                            <option value="chq" {% if config.alibaba_default_import == 'chq' %}selected{% endif %}>CommerceHQ</option>
+                                            <option value="woo" {% if config.alibaba_default_import == 'woo' %}selected{% endif %}>WooCommerce</option>
+                                            <option value="gkart" {% if config.alibaba_default_import == 'gkart' %}selected{% endif %}>GrooveKart</option>
+                                            <option value="bigcommerce" {% if config.alibaba_default_import == 'bigcommerce' %}selected{% endif %}>BigCommerce</option>
+                                        </optgroup>
+                                        <optgroup></optgroup>
+                                        <optgroup label="Send To Store">
+                                            {% for store in user_stores.all %}
+                                            <option value="{{ store.store_type_key }}"
+                                                    {% if config.alibaba_default_import == store.store_type_key %}
+                                                    selected="selected"
+                                                    {% endif %}
+                                                >{{ store.title }}</option>
+                                            {% endfor %}
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <div class="col-sm-3 col-xs-12">
+                                    {% if user.alibaba.first.ecology_token %}
+                                    <a target="_blank"
+                                       class="btn btn-success btn-sm"
+                                       href="{% url 'alibaba:test_products' %}">
+                                        <i class="fa fa-external-link"></i> Access Dropshipping Products
+                                    </a>
+                                    {% else %}
+                                    <span qtip-tooltip="Connect your alibaba account to see dropshipping products">
+                                        <a class="btn btn-success btn-sm" href="#" disabled>
+                                            <i class="fa fa-external-link"></i> Access Dropshipping Products
+                                        </a>
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <div class="form-group">
+                                <label for="alibaba_default_shipping" class="col-sm-4 col-xs-8 control-label">
+                                    Default Shipping Option (when found)
+                                </label>
+                                <div class="col-sm-3 col-xs-3">
+                                    <select id="alibaba_default_shipping" name="alibaba_default_shipping" class="form-control">
+                                        <option></option>
+                                        {% for shipping in 'ALIBABA_COMMON_SHIPPINGS'|app_setting_filter %}
+                                        <option value="{{ shipping.code }}" {% if config.alibaba_default_shipping == shipping.code %}selected="selected"{% endif %}>{{ shipping.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             {% endif %}
 
             {% if user|can:'pls.use' %}

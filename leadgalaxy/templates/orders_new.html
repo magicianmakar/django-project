@@ -443,7 +443,7 @@
                                                     Order Items
                                                 </button>
 
-                                                <button type="button" class="btn btn-success btn-xs dropdown-toggle"
+                                                <button type="button" class="btn btn-success btn-xs dropdown-toggle order-by-supplier"
                                                         data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                                     {% if order.mixed_supplier_types %}
                                                     Order Items From
@@ -862,7 +862,7 @@
                                                 {% endfor %}
                                                 {% if item.supplier_type != 'pls' %}
                                                     {% if not order.pending_payment and not item.refunded %}
-                                                        <button class="btn btn-success btn-xs order-bundle"
+                                                        <button class="btn btn-success btn-xs order-bundle {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
                                                                 store-type="shopify"
                                                                 supplier-type="{{item.supplier_type}}"
                                                                 order-data="{{item.order_data_id}}"
@@ -1000,6 +1000,7 @@
 
 {% include "partial/shopify_product_selector.html" %}
 {% include "supplements/partials/order_details_modal.html" %}
+{% include 'alibaba/partials/orders.html' %}
 {% endblock %}
 
 
@@ -1010,6 +1011,7 @@
 <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/jquery.steps/demo/css/jquery.steps.css' %}" rel="stylesheet">
+<link href="{% static 'alibaba/css/orders.css' %}" rel="stylesheet">
 <link href="{% static 'shopified/css/orders.css' %}" rel="stylesheet">
 
 {% endcompress %}
@@ -1039,6 +1041,9 @@
     var STORE_ID = "{{ store.id }}";
 
     window.storeType = 'shopify';
+    var config = {
+        currencyFormat: "{{ store.currency_format|default:'' }}"
+    }
 </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
@@ -1052,6 +1057,7 @@
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script src="{% static 'prints/js/track_orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'prints/js/place_orders.js' %}" type="text/javascript"></script>
+    <script src="{% static 'alibaba/js/orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/bulk_orders.js' %}" type="text/javascript"></script>
     <script src="{% static 'js/order_items.js' %}" type="text/javascript"></script>
     <script src="{% static 'pls/js/pls_payment.js' %}" type="text/javascript"></script>

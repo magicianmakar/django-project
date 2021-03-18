@@ -25,6 +25,7 @@ from django.utils import timezone
 from lib.exceptions import capture_exception, capture_message
 from app.celery_base import celery_app
 
+from alibaba_core.models import AlibabaOrderItem
 from stripe_subscription.stripe_api import stripe
 from stripe_subscription.models import StripeSubscription, StripeCustomer
 from stripe_subscription.utils import update_subscription
@@ -1872,6 +1873,8 @@ class ShopifyStoreApi(ApiBase):
                     'order_id': track.order_id,
                     'line_id': track.line_id,
                 })
+
+            AlibabaOrderItem.objects.filter(order_track_id__in=deleted_ids).delete()
 
             return self.api_success()
         else:

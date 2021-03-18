@@ -96,12 +96,30 @@
         supplier_type = typeof(supplier_type) !== 'undefined' ? supplier_type : null;
         exclude_lines = typeof(exclude_lines) !== 'undefined' ? exclude_lines : false;
 
+        var items = {alibaba: []};
         var order = {
             cart: true,
             items: []
         };
 
         var orderBundles = 0;
+
+        // Ordering by supplier doesn't show order selected items, so we intrinsically add
+        if (current_order.find('.line-checkbox:checked').length > 0) {
+            if (supplier_type) {
+                exclude_lines = true;
+                current_order.find('.line-checkbox').each(function (i, el) {
+                    if(!el.checked) {
+                        $(el).parents('.line').attr('exclude', 'true');
+                    } else {
+                        $(el).parents('.line').attr('exclude', 'false');
+                    }
+                });
+
+            }
+        } else {
+            current_order.find('.line').attr('exclude', '');
+        }
 
         $('.line', current_order).each(function(i, el) {
             if (exclude_lines) {
@@ -111,15 +129,21 @@
                 }
             }
 
+            var itemSupplier = $(el).attr('supplier-type');
             if (supplier_type) {
                 // If Supplier type (Aliexpress/eBay) doesn't match exclude this item
-                if ($(el).attr('supplier-type') !== supplier_type) {
+                if (itemSupplier !== supplier_type) {
                     return;
                 }
             }
 
+            if (itemSupplier === 'alibaba') {
+                items.alibaba.push($(el).attr('order-data-id'));
+                return;
+            }
+
             if ($(el).attr('line-data') && !$(el).attr('line-track')) {
-                if ($(el).hasClass('bundled')) {
+                if ($(el).hasClass('bundled') && $(el).attr('supplier-type') != 'alibaba') {
                     var bundleBtn = $('.order-bundle', el);
                     var order_data_id = bundleBtn.attr('order-data');
                     var order_name = bundleBtn.attr('order-number');
@@ -167,6 +191,10 @@
             order.line_title += '</ul>';
 
             addOrderToQueue(order);
+
+        } else if (items.alibaba.length > 0) {
+            orderItemsAlibaba(items.alibaba);
+
         } else {
             var addressTxt = $('.line', current_order).parent().parent().contents('.shipping-info').contents('div').first().text();
             addressTxt = addressTxt.replace(/[,]/gm,'').trim();
@@ -180,6 +208,28 @@
             }
         }
     }
+
+    $('.order-by-supplier').on('click', function() {
+        var addTextSelected = function(button) {
+            if (button.text().indexOf('Selected') === -1) {
+                button.text('Selected ' + button.text());
+            }
+        };
+        var removeTextSelected = function(button) {
+            if (button.text().indexOf('Selected') !== -1) {
+                button.text(button.text().replace('Selected ', ''));
+            }
+        };
+
+        var hasSelected = $(this).parents('.order').find('.line-checkbox:checked').length > 0;
+        $(this).next('.dropdown-menu').find('.order-seleted-suppliers').each(function() {
+            if (hasSelected) {
+                addTextSelected($(this));
+            } else {
+                removeTextSelected($(this));
+            }
+        });
+    });
 
     $('.order-seleted-lines').click(function (e) {
         e.preventDefault();
@@ -195,11 +245,6 @@
                 $(el).parents('.line').attr('exclude', 'false');
             }
         });
-
-        if(selected <= 1) {
-            swal('Order Selected', 'Please Select at least 2 items to order', 'warning');
-            return;
-        }
 
         orderItems(order, null, true);
 
@@ -234,6 +279,7 @@
 
     $('.order-items').on('click', function(e) {
         var order = $(this).parents('.order');
+
         orderItems(order, null, true);
     });
 
@@ -253,6 +299,12 @@
         e.preventDefault();
         var btn = $(e.target);
         var group = btn.parents('.order-line-group');
+
+        var line = $(this).parents('.line');
+        if (line && line.attr('supplier-type') === 'alibaba') {
+            orderItemsAlibaba([line.attr('order-data-id')]);
+            return;
+        }
 
         addOrderToQueue({
             url: btn.data('href'),

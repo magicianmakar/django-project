@@ -41,6 +41,9 @@ class SupplementsApi(ApiResponseMixin, View):
     http_method_names = ['get', 'post', 'delete']
 
     def post_process_orders(self, request, user, data):
+        if not user.models_user.can('pls.use'):
+            return self.api_error('Your current plan doesn\'t have this feature.', status=403)
+
         if not user.can('place_private_label_orders.sub'):
             return self.api_error('Subuser not allowed to place private label orders', status=403)
 

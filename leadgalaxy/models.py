@@ -66,6 +66,7 @@ SUBUSER_PERMISSIONS = (
     ('view_profit_dashboard', 'View profit dashboard'),
     ('use_callflex', 'CallFlex Access'),
     ('place_private_label_orders', 'Place Private Label Orders'),
+    ('place_alibaba_orders', 'Place Alibaba Orders'),
 )
 
 SUBUSER_STORE_PERMISSIONS_BASE = (
@@ -1824,7 +1825,7 @@ class ProductSupplier(SupplierBase):
 
     def get_source_id(self):
         try:
-            if self.is_aliexpress:
+            if self.is_aliexpress or self.is_alibaba:
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
             elif self.is_ebay:
                 return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])

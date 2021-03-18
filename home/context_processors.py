@@ -24,6 +24,7 @@ def all_stores(request):
 
     sort_key = 'list_index' if any([v.list_index for v in stores['all']]) else 'created_at'
     stores['all'] = sorted(stores['all'], key=attrgetter(sort_key))
+    stores['first'] = stores['all'][0] if stores['type_count'] > 0 else None
 
     return {
         'user_stores': stores

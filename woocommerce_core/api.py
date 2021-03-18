@@ -16,6 +16,7 @@ from django.core.cache import cache
 from django.utils import timezone
 from django.db import transaction
 
+from alibaba_core.models import AlibabaOrderItem
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
@@ -773,11 +774,14 @@ class WooStoreApi(ApiBase):
         orders = WooOrderTrack.objects.filter(user=user.models_user,
                                               order_id=order_id,
                                               line_id=line_id)
+        deleted_ids = []
+
         if not len(orders) > 0:
             return self.api_error('Order not found.', status=404)
 
         for order in orders:
             permissions.user_can_delete(user, order)
+            deleted_ids.append(order.id)
             order.delete()
             data = {
                 'store_id': order.store.id,
@@ -786,6 +790,8 @@ class WooStoreApi(ApiBase):
                 'product_id': order.product_id}
 
             order.store.pusher_trigger('order-source-id-delete', data)
+
+        AlibabaOrderItem.objects.filter(order_track_id__in=deleted_ids).delete()
 
         return self.api_success()
 

@@ -99,7 +99,8 @@ INSTALLED_APPS = (
     'product_common',
     'dropified_product',
     'my_basket',
-    'fulfilment_fee'
+    'fulfilment_fee',
+    'alibaba_core',
 )
 
 MIDDLEWARE = (
@@ -194,6 +195,7 @@ DROPIFIED_API = {
     'addons': 'addons_core.api.AddonsApi',
     'mybasket': 'supplements.api.BasketApi',
     'acp': 'acp_core.api.ACPApi',
+    'alibaba': 'alibaba_core.api.AlibabaApi',
 }
 
 # Database
@@ -597,3 +599,17 @@ ZONOS_API_URL = os.environ.get('ZONOS_API_URL', '')
 
 RECAPTCHA_SITE_KEY = os.environ.get('RECAPTCHA_SITE_KEY')
 RECAPTCHA_SECRET_KEY = os.environ.get('RECAPTCHA_SECRET_KEY')
+
+# Alibaba
+ALIBABA_APP_VERSION = '2.0'
+ALIBABA_APP_KEY = os.environ.get('ALIBABA_APP_KEY')
+ALIBABA_APP_SECRET = os.environ.get('ALIBABA_APP_SECRET')
+ALIBABA_APP_USE_LIVE = (os.environ.get('ALIBABA_APP_USE_LIVE') == 'TRUE')
+
+ALIBABA_API_LIMIT = os.environ.get('ALIBABA_API_LIMIT', '1000000/day')  # Use number/unit: 100/second, 100/hour, etc
+ALIBABA_COMMON_SHIPPINGS = (
+    {'code': 'EX_ASP_OCEAN_EXPRESS', 'name': 'Alibaba.com Ocean+Express'},
+    {'code': 'EX_ASP_Economy_Express', 'name': 'Alibaba.com Economy Express'},
+    {'code': 'EX_ASP_Express_US', 'name': 'Alibaba.com Air Express'},
+    {'code': 'HKUPS', 'name': 'Express UPS Saver (HK)'},
+)

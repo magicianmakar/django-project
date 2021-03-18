@@ -579,12 +579,8 @@
                                                     </div>
                                                 </div>
                                                 {% endfor %}
-                                                {% if item.supplier_type == 'pls' %}
-                                                    {% if not item.is_paid %}
-                                                        {% include 'partial/make_payment_btn.html' %}
-                                                    {% endif %}
-                                                {% else %}
-                                                    <button class="btn btn-success btn-xs order-bundle"
+                                                {% if item.supplier_type != 'pls' %}
+                                                    <button class="btn btn-success btn-xs order-bundle {% if item.supplier_type == 'alibaba' %}hidden{% endif %}"
                                                             store-type="bigcommerce"
                                                             supplier-type="{{item.supplier_type}}"
                                                             order-data="{{item.order_data_id}}"
@@ -679,6 +675,9 @@
     var STORE_ID = "{{ store.id }}";
 
     window.storeType = 'bigcommerce';
+    var config = {
+        currencyFormat: "{{ store.currency_format|default:'' }}"
+    }
 </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>

@@ -2,23 +2,24 @@
 <div id="modal-add-order-id" class="modal" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="m-t-none modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Add Order ID</h4>
-            </div>
+            <form role="form" action="post">
+                <div class="m-t-none modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Add Order ID</h4>
+                </div>
 
-            <div class="modal-body">
-                <p>Link this {{ store_title }} item to a supplier order</p>
-                <ul class="m-b-lg">
-                    <li>For Aliexpress orders you can use the Order ID or Order Details url</li>
-                    <li>For eBay orders you have to use the Order Details url</li>
-                </ul>
+                <div class="modal-body">
+                    <p>Link this {{ store_title }} item to a supplier order</p>
+                    <ul class="m-b-lg">
+                        <li>For Aliexpress orders you can use the Order ID or Order Details url</li>
+                        <li>For eBay orders you have to use the Order Details url</li>
+                    </ul>
 
-                <form role="form">
                     <div class="form-group">
                         <label forHtml="supplier-type">Supplier Type:</label>
                         <select class="supplier-type form-control">
                             <option value="aliexpress">Aliexpress</option>
+                            <option value="alibaba">Alibaba</option>
                             <option value="ebay">eBay</option>
                             <option value="dropified-print">Dropified Print</option>
                             <option value="supplements">Supplements</option>
@@ -29,12 +30,12 @@
                         <label forHtml="order-id">Order ID:</label>
                         <input type="text" class="order-id form-control">
                     </div>
-                </form>
-            </div>
+                </div>
 
-            <div class="modal-footer">
-                <button class="btn btn-primary save-order-id-btn" type="button"><i class="fa fa-save"></i> Save</button>
-            </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary save-order-id-btn" type="submit"><i class="fa fa-save"></i> Save</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

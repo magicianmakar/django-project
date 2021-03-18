@@ -514,8 +514,12 @@ class ProductMappingView(DetailView):
     def get_product_suppliers(self, product):
         suppliers = {}
         for supplier in product.get_suppliers():
-            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
-            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+            suppliers[supplier.id] = {
+                'id': supplier.id,
+                'name': supplier.get_name(),
+                'url': supplier.product_url,
+                'source_id': supplier.get_source_id(),
+            }
 
         return suppliers
 
@@ -575,8 +579,12 @@ class MappingSupplierView(DetailView):
     def get_product_suppliers(self, product):
         suppliers = {}
         for supplier in product.get_suppliers():
-            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
-            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+            suppliers[supplier.id] = {
+                'id': supplier.id,
+                'name': supplier.get_name(),
+                'url': supplier.product_url,
+                'source_id': supplier.get_source_id(),
+            }
 
         return suppliers
 
@@ -1082,12 +1090,11 @@ class OrdersList(ListView):
                         order_data['products'] = bundle_data
                         order_data['is_bundle'] = len(bundle_data) > 0
                         order_data['variant'] = self.get_order_data_variant(product, item)
+                        order_data['is_refunded'] = order['status_id'] == 4 or item['is_refunded']
                         order_data_id = order_data['id']
-                        orders_cache['bigcommerce_order_{}'.format(order_data_id)] = order_data
                         attributes = [variant['title'] for variant in order_data['variant']]
                         item['attributes'] = ', '.join(attributes)
                         item['order_data_id'] = order_data_id
-                        item['order_data'] = order_data
                         item['supplier'] = supplier
 
                         is_pls = item['is_pls'] = supplier.is_pls
@@ -1128,11 +1135,15 @@ class OrdersList(ListView):
                                         'image_url': item['image'],
                                     })
 
-                        item['order_data']['weight'] = item.get('weight')
+                        order_data['weight'] = item.get('weight')
                         item['supplier_type'] = supplier.supplier_type()
                         order['supplier_types'].add(supplier.supplier_type())
                         item['shipping_method'] = self.get_item_shipping_method(
                             product, item, variant_id, country_code)
+                        order_data['shipping_method'] = item['shipping_method']
+
+                        orders_cache['bigcommerce_order_{}'.format(order_data_id)] = order_data
+                        item['order_data'] = order_data
 
                     key = '{}_{}_{}'.format(order['id'], item['id'], item['product_id'])
                     item['order_track'] = order_track_by_item.get(key)

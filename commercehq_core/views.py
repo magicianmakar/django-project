@@ -480,7 +480,8 @@ class ProductMappingView(DetailView):
             product_suppliers[i.id] = {
                 'id': i.id,
                 'name': i.get_name(),
-                'url': i.product_url
+                'url': i.product_url,
+                'source_id': i.get_source_id(),
             }
 
         context['breadcrumbs'] = [
@@ -551,7 +552,8 @@ class MappingSupplierView(DetailView):
             product_suppliers[i.id] = {
                 'id': i.id,
                 'name': i.get_name(),
-                'url': i.product_url
+                'url': i.product_url,
+                'source_id': i.get_source_id(),
             }
 
         context['breadcrumbs'] = [
@@ -1083,6 +1085,7 @@ class OrdersList(ListView):
                     'quantity': line['quantity'],
                     'weight': line.get('weight'),
                     'shipping_address': customer_address,
+                    'shipping_method': line.get('shipping_method'),
                     'order_id': order['id'],
                     'line_id': line['id'],
                     'product_id': product.id if product else None,
@@ -1101,6 +1104,7 @@ class OrdersList(ListView):
                         'aliexpress_shipping_method': models_user.get_config('aliexpress_shipping_method'),
                         'auto_mark': bool(models_user.get_config('auto_ordered_mark', True)),  # Auto mark as Ordered
                     },
+                    'is_refunded': line['refunded'],
                     'products': bundle_data,
                     'is_bundle': len(bundle_data) > 0
                 }

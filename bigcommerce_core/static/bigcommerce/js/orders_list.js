@@ -276,10 +276,14 @@ $('#modal-add-order-id .supplier-type').on('change', function (e) {
     $('#modal-add-order-id .order-id').focus();
 });
 
-$('#modal-add-order-id .save-order-id-btn').click(function (e) {
+$('#modal-add-order-id').on('shown.bs.modal', function() {
+    $(this).find('input.order-id').trigger('focus');
+});
+
+$('#modal-add-order-id form').on('submit', function (e) {
     e.preventDefault();
 
-    var btn = $(e.target);
+    var btn = $(this).find('.save-order-id-btn');
 
     var orderData = $('#modal-add-order-id').data('order');
 
@@ -301,7 +305,7 @@ $('#modal-add-order-id .save-order-id-btn').click(function (e) {
 
     ga('clientTracker.send', 'event', 'Add Order ID', supplierType, sub_conf.shop);
 
-    if (supplierType === 'aliexpress' || supplierType === 'other' || supplierType === 'supplements') {
+    if (['aliexpress', 'alibaba', 'other', 'supplements'].indexOf(supplierType) > -1) {
         var order_link = orderId.match(/orderId=([0-9]+)/);
         if (supplierType !== 'other' && order_link && order_link.length == 2) {
             orderId = order_link[1];

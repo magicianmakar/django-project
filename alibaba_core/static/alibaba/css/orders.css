@@ -1,0 +1,16 @@
+.alibaba-info {
+    border-bottom: 1px solid #eee;
+    padding: 15px 1px;
+}
+
+.alibaba-info label {
+    margin-bottom: 0;
+}
+
+.alibaba-info .radio-inline {
+    margin-top: 0;
+}
+
+.alibaba-info .radio-inline input[type=radio] {
+    margin-top: 2px;
+}

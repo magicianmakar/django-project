@@ -7,6 +7,7 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 
 from lib.exceptions import capture_message
 
+from alibaba_core.utils import get_access_token_url as get_alibaba_access_token_url
 from shopified_core import permissions
 from shopified_core.utils import last_executed
 from shopified_core.mocks import get_mocked_config_alerts
@@ -105,6 +106,7 @@ def home_page_view(request):
         'user_goals': user_goals,
         'platform_videos': platform_videos,
         'upsell_alerts': upsell_alerts,
+        'alibaba_login_url': get_alibaba_access_token_url(user.models_user)
     })
 
 

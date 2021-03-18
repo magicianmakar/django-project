@@ -12,6 +12,7 @@ from app.celery_base import celery_app
 import requests
 from lib.exceptions import capture_exception, capture_message
 
+from alibaba_core.models import AlibabaOrderItem
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
 from shopified_core.exceptions import ProductExportException
@@ -440,6 +441,7 @@ class CHQStoreApi(ApiBase):
         line_id = data.get('line_id')
 
         orders = CommerceHQOrderTrack.objects.filter(user=user.models_user, order_id=order_id, line_id=line_id)
+        deleted_ids = []
 
         if len(orders):
             for order in orders:
@@ -456,6 +458,7 @@ class CHQStoreApi(ApiBase):
                     }]
                 )
 
+                deleted_ids.append(order.id)
                 order.delete()
 
                 order.store.pusher_trigger('order-source-id-delete', {
@@ -463,6 +466,8 @@ class CHQStoreApi(ApiBase):
                     'order_id': order.order_id,
                     'line_id': order.line_id,
                 })
+
+            AlibabaOrderItem.objects.filter(order_track_id__in=deleted_ids).delete()
 
             return self.api_success()
         else:

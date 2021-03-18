@@ -1,0 +1,168 @@
+<div id="modal-alibaba-order-detail" class="modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Details</h4>
+      </div>
+      <div class="modal-loading sk-spinner sk-spinner-double-bounce">
+        <div class="sk-double-bounce1"></div>
+        <div class="sk-double-bounce2"></div>
+      </div>
+      <div class="loading-background"></div>
+      <div class="modal-body">
+        <table class="table">
+          <thead>
+            <th>
+              <input type="checkbox" name="alibaba_pay_all" value="" checked>
+            </th>
+            <th class="text-left">Order</th>
+            <th>Item</th>
+            <th>Total Price</th>
+            <th>Alibaba Product</th>
+            <th>Total Cost (USD)</th>
+            <th width="130px">Shipping (USD)</th>
+            <th>Total (USD)</th>
+            <th>Status</th>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <a href="#" class="btn btn-danger" data-dismiss="modal" aria-label="Close">Close</a>
+        <button class="btn btn-primary place-alibaba-orders"
+          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Place Orders</button>
+        <button class="btn btn-success reload-alibaba-orders hidden"
+          data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Sending">Reload Selected Orders</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% verbatim %}
+<script id="alibaba-order-detail-template" type="text/x-handlebars-template">
+  {{#each orders}}{{#each this.products}}
+  <tr class="alibaba-item-payment" order-id="{{ ../id }}" split-id="{{ ../split }}" data-order-id="{{ this.order_data_id }}" data-source-id="{{ this.source_id }}_{{this.variant.id}}">
+    <td>
+      <input type="checkbox" name="alibaba_pay" value="" checked>
+    </td>
+    <td>
+      {{ ../order_name }}
+    </td>
+
+    <td class="no-text-overflow w-150 itooltip" title="{{ this.item.quantity }}x {{ this.item.title }}">
+      {{ this.item.quantity }}x {{ this.item.title }}
+    </td>
+    <td class="text-center">
+      {{#if this.item.split_price}}
+      <span style="text-decoration: line-through;">{{currencyFormat this.item.total_price }}</span>
+      {{currencyFormat this.item.split_price }}
+      {{else}}
+      {{currencyFormat this.item.total_price }}
+      {{/if}}
+    </td>
+
+    <td class="no-text-overflow w-150 itooltip" title="{{ this.title }}{{#if this.variant.title }} - {{ this.variant.title }}{{/if}}">
+      {{ this.quantity }}x {{ this.title }}{{#if this.variant.title }} - {{ this.variant.title }}{{/if}}
+    </td>
+    <td class="text-center {{#if this.cost_more}}text-danger{{else}}text-success{{/if}}">
+      {{#if this.variant.total_price}}
+      ${{ this.variant.total_price }}
+      {{/if}}
+    </td>
+
+    {{#unless @index}}
+    <td rowspan="{{ ../products.length }}" class="text-center">
+      <select class="form-control shipping-service" name="shipping_service_{{ ../id }}-{{ ../split }}">
+        {{#each ../shippings}}
+        <option value="{{ this.vendor_code }}"
+                data-cost="{{ this.fee.amount }}"
+                {{#if this.selected}}selected{{/if}}>
+          {{ this.vendor_name }} ($ {{ this.fee.amount }})
+        </option>
+        {{/each}}
+      </select>
+    </td>
+    <td rowspan="{{ ../products.length }}"
+        class="order-total text-center"
+        product-total="{{ ../product_total }}">
+    </td>
+    {{/unless}}
+    <td class="text-center">
+      {{#if ../error}}
+        <p class="text-danger">{{ ../error }}</p>
+      {{else}}
+        {{#if this.error}}
+        <p class="text-danger">{{ this.error }}</p>
+        {{else}}
+        <p class="text-success">{{ ../success }}</p>
+        {{/if}}
+      {{/if}}
+    </td>
+  </tr>
+  {{/each}}{{/each}}
+</script>
+{% endverbatim %}
+
+
+<style type="text/css">
+  #modal-alibaba-order-detail .modal-content .modal-loading {
+    display: none;
+    position: absolute;
+    top: 40%;
+    left: 0;
+    right: 0;
+    z-index: 2000;
+  }
+  #modal-alibaba-order-detail .modal-content.loading .modal-loading {
+      display: block;
+  }
+  #modal-alibaba-order-detail .modal-content .modal-body {
+    overflow: auto;
+    max-height: calc(100vh - 176px);
+  }
+  #modal-alibaba-order-detail .modal-content.loading .loading-background {
+      content: '';
+      background-color: rgba(255, 255, 255, 0.7);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 2000;
+  }
+  #modal-alibaba-order-detail table tr td {
+    vertical-align: middle;
+  }
+
+  #modal-alibaba-order-detail .w-150 {
+    max-width: 150px;
+  }
+
+  #modal-alibaba-order-detail .tooltip-inner {
+    max-width: 400px;
+    white-space: break-spaces;
+  }
+
+  #modal-alibaba-order-detail .tooltip {
+    z-index: 2060;
+    font-size: 13px;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+
+  #modal-alibaba-order-detail input[type=checkbox] {
+    float: left;
+    margin: 2px 8px 0px 0;
+  }
+
+  #modal-alibaba-order-detail .table > thead > tr > th.text-left {
+    text-align: left;
+  }
+
+  #modal-alibaba-order-detail .table tbody p.text-success,
+  #modal-alibaba-order-detail .table tbody p.text-danger,
+  #modal-alibaba-order-detail .table tbody p.text-warning {
+    margin: 0;
+  }
+</style>

@@ -2261,6 +2261,63 @@ def update_shopify_product(self, store_id, shopify_id, shopify_product=None, pro
             raise self.retry(exc=e, countdown=countdown, max_retries=3)
 
 
+def format_shopify_send_to_store(save_for_later_product):
+    send_to_store_product = {
+        "product": {
+            "title": save_for_later_product['title'],
+            "body_html": save_for_later_product['description'],
+            "product_type": save_for_later_product['type'],
+            "vendor": save_for_later_product['vendor'],
+            "published": save_for_later_product['published'],
+            "tags": save_for_later_product['tags'],
+            "variants": [],
+            "options": [{'name': v['title'], 'values': v['values']} for v in save_for_later_product['variants']],
+            "images": []
+        }
+    }
+
+    variants = []
+    for title, info in save_for_later_product['variants_info'].items():
+        variant = {
+            'price': info['price'],
+            'title': title.replace(' / ', ' & '),
+            'compare_at_price': info['compare_at'],
+            'sku': info['sku'],
+            'image': info['image']
+        }
+
+        attr_ids = []
+        for i, attr_name in enumerate(title.split(' / ')):
+            variant[f'option{i + 1}'] = attr_name
+            attr_ids.append(save_for_later_product['variants_sku'].get(attr_name))
+
+        if not variant['sku']:
+            variant['sku'] = ';'.join(attr_ids)
+
+        variants.append(variant)
+    if not variants:
+        variants = [{
+            'price': safe_float(save_for_later_product['price']),
+        }]
+        if save_for_later_product['compare_at_price']:
+            variants[0]['compare_at_price'] = save_for_later_product['compare_at_price']
+
+    send_to_store_product['product']['variants'] = variants
+
+    for image_src in save_for_later_product['images']:
+        image = {
+            'src': image_src,
+        }
+
+        image_file_name = save_for_later_product['variants_images'].get(hash_url_filename(image_src))
+        if image_file_name:
+            image['filename'] = f"v-{extension_hash_text(image_file_name)}__{image_file_name}"
+
+        send_to_store_product['product']['images'].append(image)
+
+    return send_to_store_product
+
+
 def fetchall_athena(query_string, output=None):
     import boto3
 

@@ -750,8 +750,12 @@ class ProductMappingView(DetailView):
     def get_product_suppliers(self, product):
         suppliers = {}
         for supplier in product.get_suppliers():
-            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
-            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+            suppliers[supplier.id] = {
+                'id': supplier.id,
+                'name': supplier.get_name(),
+                'url': supplier.product_url,
+                'source_id': supplier.get_source_id(),
+            }
 
         return suppliers
 
@@ -804,8 +808,12 @@ class MappingSupplierView(DetailView):
     def get_product_suppliers(self, product):
         suppliers = {}
         for supplier in product.get_suppliers():
-            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
-            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+            suppliers[supplier.id] = {
+                'id': supplier.id,
+                'name': supplier.get_name(),
+                'url': supplier.product_url,
+                'source_id': supplier.get_source_id(),
+            }
 
         return suppliers
 

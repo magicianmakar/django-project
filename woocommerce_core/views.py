@@ -3,6 +3,7 @@ import re
 import arrow
 import jwt
 import requests
+from decimal import Decimal
 
 from lib.exceptions import capture_exception
 
@@ -464,8 +465,12 @@ class ProductMappingView(DetailView):
     def get_product_suppliers(self, product):
         suppliers = {}
         for supplier in product.get_suppliers():
-            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
-            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+            suppliers[supplier.id] = {
+                'id': supplier.id,
+                'name': supplier.get_name(),
+                'url': supplier.product_url,
+                'source_id': supplier.get_source_id(),
+            }
 
         return suppliers
 
@@ -525,8 +530,12 @@ class MappingSupplierView(DetailView):
     def get_product_suppliers(self, product):
         suppliers = {}
         for supplier in product.get_suppliers():
-            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
-            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+            suppliers[supplier.id] = {
+                'id': supplier.id,
+                'name': supplier.get_name(),
+                'url': supplier.product_url,
+                'source_id': supplier.get_source_id(),
+            }
 
         return suppliers
 
@@ -966,6 +975,7 @@ class OrdersList(ListView):
             order['supplier_types'] = set()
             update_shipstation_items = {}
             shipstation_address_changed = None
+            refunded_amounts = [Decimal(r['total']) * -1 for r in order['refunds']]
 
             for item in order.get('items'):
                 self.update_placed_orders(order, item)
@@ -1042,13 +1052,18 @@ class OrdersList(ListView):
                         order_data['products'] = bundle_data
                         order_data['is_bundle'] = len(bundle_data) > 0
                         order_data['variant'] = self.get_order_data_variant(product, item)
+                        # TODO: search for item total in order refunded amounts is not accurate but refunds API might slow the page
+                        order_data['is_refunded'] = order['status'] == 'refunded' or item['total'] in refunded_amounts
                         order_data_id = order_data['id']
-                        orders_cache['woo_order_{}'.format(order_data_id)] = order_data
                         attributes = [variant['title'] for variant in order_data['variant']]
                         item['attributes'] = ', '.join(attributes)
                         item['order_data_id'] = order_data_id
-                        item['order_data'] = order_data
                         item['supplier'] = supplier
+                        item['supplier_type'] = supplier.supplier_type()
+                        order['supplier_types'].add(supplier.supplier_type())
+                        item['shipping_method'] = self.get_item_shipping_method(product, item, variant_id, country_code)
+                        order_data['shipping_method'] = item['shipping_method']
+
                         is_pls = item['is_pls'] = supplier.is_pls
                         if is_pls:
                             item['is_paid'] = False
@@ -1056,7 +1071,7 @@ class OrdersList(ListView):
                             # pass orders without PLS products (when one store is used in multiple account)
                             try:
                                 item['weight'] = supplier.user_supplement.get_weight(item['quantity'])
-                                item['order_data']['weight'] = item['weight']
+                                order_data['weight'] = item['weight']
                             except:
                                 item['weight'] = False
 
@@ -1089,10 +1104,8 @@ class OrdersList(ListView):
                                         'image_url': item['image'],
                                     })
 
-                        item['supplier_type'] = supplier.supplier_type()
-                        order['supplier_types'].add(supplier.supplier_type())
-                        item['shipping_method'] = self.get_item_shipping_method(
-                            product, item, variant_id, country_code)
+                        orders_cache['woo_order_{}'.format(order_data_id)] = order_data
+                        item['order_data'] = order_data
 
                         if supplier.is_dropified_print:
                             context['has_print_on_demand'] = True

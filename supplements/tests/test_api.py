@@ -33,6 +33,7 @@ class PLSBaseTestCase(BaseTestCase):
         self.user.profile.unique_supplements = -1
         self.user.profile.user_supplements = -1
         self.user.profile.save()
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls.use'))
 
         self.supplement = PLSupplementFactory.create(
             title='Fish Oil',

@@ -183,7 +183,7 @@ class RestApi(object):
 
     def getResponse(self, authrize=None, timeout=30):
         if(self.__port == 443):
-            connection = http.client.HTTPSConnection(self.__domain, self.__port, None, None, False, timeout)
+            connection = http.client.HTTPSConnection(self.__domain, self.__port, None, None, timeout)
         else:
             connection = http.client.HTTPConnection(self.__domain, self.__port)
 
@@ -218,7 +218,10 @@ class RestApi(object):
         else:
             body = urllib.parse.urlencode(application_parameter)
 
-        url = N_REST + "?" + urllib.parse.urlencode(sys_parameters)
+        if 'pre-gw' in self.__domain:
+            url = f'/top/router/rest?{urllib.parse.urlencode(sys_parameters)}'
+        else:
+            url = N_REST + "?" + urllib.parse.urlencode(sys_parameters)
 
         connection.request(self.__httpmethod, url, body=body, headers=header)
         response = connection.getresponse()

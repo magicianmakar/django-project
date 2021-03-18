@@ -93,7 +93,7 @@
 
         {% for item in section.items %}
         <li class="item {{ item.classes }}">
-          <a href="{{ item.url }}">{{ item.title }}</a>
+          <a {% if item.new_tab %}target="_blank"{% endif %} href="{{ item.url }}">{{ item.title }}</a>
         </li>
         {% endfor %}
       {% endfor %}

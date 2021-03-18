@@ -13,6 +13,7 @@ def get_menu_structure(namespace):
             'alerts',
             'us-product-database',
             'import-products',
+            'alibaba-products'
         ]),
         ('orders', ['place-orders', 'tracking']),
         ('business', [
@@ -97,6 +98,13 @@ def get_menu_item_data(request):
             'url_kwargs': {"slug_article": "source-import-products"},
             'permissions': ["import_list.use"],
             'match': re.compile(r'(/\w+)?/pages/content/source-import-products'),
+        },
+        'alibaba-products': {
+            'title': 'Alibaba Products',
+            'url_name': 'alibaba:products',
+            'permissions': ['alibaba_integration.use'],
+            'match': re.compile(r'(/\w+)?/alibaba/products'),
+            'new_tab': True,
         },
         'boards': {
             'title': 'Boards',

@@ -2,7 +2,7 @@
 
 ignore = E722, E402, W503
 max-line-length = 150
-exclude = 
+exclude =
 	venv*,
     app/config,
     app/data,
@@ -14,3 +14,4 @@ exclude =
     tests.py,
     scripts,
     patches
+    alibaba_core/tests/mock_data.py

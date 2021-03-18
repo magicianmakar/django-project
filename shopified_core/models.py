@@ -27,6 +27,10 @@ class StoreBase(models.Model):
     def store_type(self):
         return prefix_from_model(self)
 
+    @property
+    def store_type_key(self):
+        return f"{self.store_type}_{self.id}"
+
     def get_url(self, name):
         prefix = self.store_type
         if prefix and prefix != 'shopify':
@@ -63,6 +67,10 @@ class SupplierBase(models.Model):
             )
         except:
             return False
+
+    @property
+    def is_alibaba(self):
+        return self.supplier_type() == 'alibaba'
 
     @property
     def is_supplement_deleted(self):
@@ -282,6 +290,8 @@ class OrderTrackBase(models.Model):
                 return f"{reverse('pls:my_orders')}?transaction_id={self.source_id}"
             elif self.source_type == 'dropified-print':
                 return f"{reverse('prints:orders')}?order={self.source_id}"
+            elif self.source_type == 'alibaba':
+                return f'https://biz.alibaba.com/ta/detail.htm?orderId={self.source_id}'
             else:
                 return 'https://trade.aliexpress.com/order_detail.htm?orderId={}'.format(self.source_id)
         else:
@@ -330,6 +340,12 @@ class OrderTrackBase(models.Model):
             "D_PAID": "Confirmed Payment",
             "D_PENDING_SHIPMENT": "Pending Shipment",
             "D_SHIPPED": "Shipped",
+
+            # Alibaba
+            "ALIBABA_to_be_audited": "High risk order, awaiting manual review",
+            "ALIBABA_unpay": "Awaiting Payment",
+            "ALIBABA_undeliver": "Pending Shipment",
+            "ALIBABA_delivering": "Shipped",
         }
 
         if self.source_status and ',' in self.source_status:

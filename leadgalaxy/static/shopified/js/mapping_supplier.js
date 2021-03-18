@@ -13,6 +13,11 @@
         return product_suppliers[supplier].url;
     }
 
+    function getSelectedSupplierProductId(el) {
+        var supplier = getSelectedSupplier(el);
+        return product_suppliers[supplier].source_id;
+    }
+
     function parse_variant_map(variants) {
         if (!variants || (typeof(variants) === 'string' && !variants.trim().length)) {
             return [];
@@ -84,6 +89,7 @@
         $('#modal-variant-select').data('supplier', getSelectedSupplier(this));
 
         var render_options = function(response) {
+            response = response.hasOwnProperty('variant_data') ? response['variant_data'] : response;
             var variant_tpl = Handlebars.compile($("#variant-template").html());
             var option_tpl = Handlebars.compile($("#variant-option-template").html());
             var extra_input_tpl = Handlebars.compile($("#extra-input-template").html());
@@ -158,6 +164,7 @@
         };
 
         var supplier_url = getSelectedSupplierUrl($(this));
+        var product_id = getSelectedSupplierProductId($(this));
         if (supplier_url.indexOf('dropified.com') !== -1 ||
             supplier_url.indexOf('shopifytools-pr') !== -1) {
             $.ajax({
@@ -167,6 +174,16 @@
                 success: render_options,
                 error: function(data) {
                     displayAjaxError('Variants Mapping', data);
+                }
+            });
+        } else if (supplier_url.indexOf('alibaba.com') !== -1){
+            $.ajax({
+                url: api_url('product-variants', 'alibaba'),
+                type: 'GET',
+                data: {'product_id': product_id},
+                success: render_options,
+                error: function(data) {
+                    displayAjaxError('Alibaba Variants Mapping', data);
                 }
             });
         } else {

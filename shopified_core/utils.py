@@ -7,6 +7,7 @@ import hmac
 import mimetypes
 import ctypes
 import simplejson as json
+from decimal import Decimal
 from functools import wraps
 from copy import deepcopy
 from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
@@ -99,6 +100,13 @@ def dict_val(data, name, default=None):
         return default
     else:
         return data.get(name, default)
+
+
+def float_to_str(v, default='0.00'):
+    try:
+        return str(Decimal(v).quantize(Decimal('.01')))
+    except:
+        return default
 
 
 def prefix_from_model(model):
@@ -942,6 +950,7 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
     enable_supplier_grouping = False
     is_dropified_print = request.GET.get('is_dropified_print') == '1'
     only_private_label_orders = request.GET.get('is_supplement_bulk_order') == '1'
+    single_supplier = request.GET.get('single_supplier')
 
     if store_type in ['shopify', '']:
         orders_place_url = reverse('orders_place')
@@ -1014,6 +1023,13 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                     if line_item.get('is_paid'):
                         continue
 
+                elif single_supplier:
+                    if single_supplier != 'alibaba':
+                        continue
+
+                    if not line_item['supplier'].is_alibaba:
+                        continue
+
                 else:
                     if not line_item['supplier'].support_auto_fulfill():
                         continue
@@ -1051,7 +1067,7 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
 
                     for product in line_item['order_data']['products']:
                         # Do only aliexpress orders for now
-                        if product['supplier_type'] != 'aliexpress':
+                        if product['supplier_type'] not in ['aliexpress', 'alibaba']:
                             continue
 
                         queue_bundle['items'].append({
@@ -1194,3 +1210,28 @@ def get_product_model(store_type):
     else:
         from leadgalaxy.models import ShopifyProduct
         return ShopifyProduct
+
+
+def get_cached_order(user, store_type, order_data_id):
+    if store_type == 'chq':
+        key = order_data_cache_key(order_data_id, prefix='order')
+    elif store_type == 'woo':
+        key = order_data_cache_key(order_data_id, prefix='woo_order')
+    elif store_type == 'gkart':
+        key = order_data_cache_key(order_data_id, prefix='gkart_order')
+    elif store_type == 'bigcommerce':
+        key = order_data_cache_key(order_data_id, prefix='bigcommerce_order')
+    else:
+        key = order_data_cache_key(order_data_id, prefix='order')
+
+    order = order_data_cache(key)
+
+    phone = order['order']['phone']
+    phone_country_code, phone_number = order_phone_number(None, user.models_user, phone['number'], phone['country'])
+    order['order']['phone'] = {
+        'country': phone['country'],
+        'number': phone_number,
+        'code': phone_country_code,
+    }
+
+    return key, order

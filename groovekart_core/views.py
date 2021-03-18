@@ -751,13 +751,15 @@ class OrdersList(ListView):
                         order_data['is_bundle'] = len(bundle_data) > 0
                         order_data['variant'] = self.get_order_data_variant(item)
                         order_data['weight'] = item.get('weight')
+                        order_data['is_refunded'] = order['order_status'] == 'Refunded'
                         order_data_id = order_data['id']
-                        orders_cache['gkart_order_{}'.format(order_data_id)] = order_data
                         item['order_data_id'] = order_data_id
-                        item['order_data'] = order_data
                         item['shipping_method'] = self.get_item_shipping_method(
                             product, item, variant_id, country_code)
                         order['connected_lines'] += 1
+                        order_data['shipping_method'] = item['shipping_method']
+                        orders_cache['gkart_order_{}'.format(order_data_id)] = order_data
+                        item['order_data'] = order_data
 
                         if supplier.is_dropified_print:
                             context['has_print_on_demand'] = True
@@ -1160,8 +1162,12 @@ class ProductMappingView(DetailView):
     def get_product_suppliers(self, product):
         suppliers = {}
         for supplier in product.get_suppliers():
-            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
-            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+            suppliers[supplier.id] = {
+                'id': supplier.id,
+                'name': supplier.get_name(),
+                'url': supplier.product_url,
+                'source_id': supplier.get_source_id(),
+            }
 
         return suppliers
 
@@ -1217,8 +1223,12 @@ class MappingSupplierView(DetailView):
     def get_product_suppliers(self, product):
         suppliers = {}
         for supplier in product.get_suppliers():
-            pk, name, url = supplier.id, supplier.get_name(), supplier.product_url
-            suppliers[pk] = {'id': pk, 'name': name, 'url': url}
+            suppliers[supplier.id] = {
+                'id': supplier.id,
+                'name': supplier.get_name(),
+                'url': supplier.product_url,
+                'source_id': supplier.get_source_id(),
+            }
 
         return suppliers
 
