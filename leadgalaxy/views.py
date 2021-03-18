@@ -2474,14 +2474,11 @@ def get_shipping_info(request):
     try:
         if supplier_type == 'ebay':
             shippement_data = utils.ebay_shipping_info(item_id, country_name, zip_code)
-        elif supplier_type == 'aliexpress':
-            shippement_data = utils.aliexpress_shipping_info(item_id, country_code)
         elif supplier_type == 'alibaba':
-            shippement_data = alibaba_utils.alibaba_shipping_info(
-                request.user.alibaba.first(),
-                item_id,
-                country_code,
-            )
+            shippement_data = alibaba_utils.alibaba_shipping_info(request.user.alibaba.first(), item_id, country_code)
+        else:
+            shippement_data = utils.aliexpress_shipping_info(item_id, country_code)
+
     except requests.Timeout:
         capture_exception()
 
