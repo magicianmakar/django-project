@@ -4,6 +4,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic.base import RedirectView
 
@@ -49,7 +50,12 @@ class ProductsRedirectView(RedirectView):
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
-        token = self.request.user.models_user.alibaba.first().get_ecology_token()
+        try:
+            token = self.request.user.models_user.alibaba.first().get_ecology_token()
+        except:
+            messages.error(self.request, "Your Dropified account is not connected to Alibaba")
+            return f"{reverse('settings')}#alibaba-settings"
+
         params = (
             ('wx_screen_direc', 'portrait'),
             ('wx_navbar_transparent', 'true'),
