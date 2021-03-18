@@ -15,6 +15,7 @@ from shopified_core.utils import using_replica
 from shopify_orders.models import ShopifyOrder, ShopifySyncStatus, ShopifyOrderLog
 from shopify_orders.utils import get_elastic
 from profit_dashboard.models import AliexpressFulfillmentCost
+from metrics.tasks import add_number_metric
 
 
 class Command(DropifiedBaseCommand):
@@ -65,7 +66,7 @@ class Command(DropifiedBaseCommand):
             stores = stores.exclude(uninstalled_at__isnull=True)
 
         if not options['days']:
-            stores = stores.filter(uninstalled_at__lt=arrow.utcnow().replace(days=-int(options['days'])).datetime)
+            stores = stores.filter(uninstalled_at__lte=arrow.utcnow().replace(days=-int(options['days'])).datetime)
 
         stores = stores.select_related('user', 'user__profile', 'user__profile__plan')
 
@@ -86,6 +87,9 @@ class Command(DropifiedBaseCommand):
         self.deleted_models = defaultdict(int)
         self.stores_to_delete = []
 
+        self.skipped_stores = 0
+        self.deleted_stores = 0
+
         self.load_stores(stores)
 
         self.progress_close()
@@ -93,6 +97,8 @@ class Command(DropifiedBaseCommand):
         if options['force']:
             if self.progress:
                 self.progress_total(len(self.stores_to_delete))
+
+            add_number_metric.apply_async(args=['remove_inactive.to_deleted', 'stores', len(self.stores_to_delete)], expires=500)
 
             # random.shuffle(self.stores_to_delete)
             self.delete_stores()
@@ -106,9 +112,18 @@ class Command(DropifiedBaseCommand):
         for k, v in self.ignored_plan_count.items():
             self.write(f'\t{v:3,}\t{k}')
 
-        self.write('Deleted Models Count:')
-        for k, v in self.deleted_models.items():
-            self.write(f'\t{v:3,}\t{k}')
+        if options['force']:
+            self.write('Deleted Models Count:')
+            for k, v in self.deleted_models.items():
+                if v:
+                    self.write(f'\t{v:3,}\t{k}')
+                    add_number_metric.apply_async(args=['remove_inactive.deleted', k, v], expires=500)
+
+            self.write(f'Deleted Stores: {self.deleted_stores}')
+            self.write(f'Skipped Stores: {self.skipped_stores}')
+
+            add_number_metric.apply_async(args=['remove_inactive.deleted', 'stores', self.deleted_stores], expires=500)
+            add_number_metric.apply_async(args=['remove_inactive.skipped', 'stores', self.skipped_stores], expires=500)
 
     def load_stores(self, stores):
         self.write("Load stores to delete")
@@ -163,6 +178,8 @@ class Command(DropifiedBaseCommand):
             self.progress_update()
 
             self.delete_shopify_store(store)
+
+            self.deleted_stores += 1
 
             if (timezone.now() - self.start_at) > timezone.timedelta(seconds=self.uptime * 60):
                 capture_message('Remove Inactive Timeout',
@@ -240,12 +257,19 @@ class Command(DropifiedBaseCommand):
         if self.max_count:
             cache_key = f'models_count_{name}_{store.shop}'
             model_count = cache.get(cache_key)
+            count_not_cached = False
             if model_count is None:
                 model_count = qs.count()
-                cache.set(cache_key, model_count, timeout=604800)
+                count_not_cached = True
+
+            cache.set(cache_key, model_count, timeout=604800)
 
             if model_count > self.max_count:
-                self.write(f'>>> SKIP: {name} {model_count:3,} for {store.shop}')
+                if count_not_cached:
+                    self.write(f'>>> SKIP: {name} {model_count:3,} for {store.shop}')
+
+                self.skipped_stores += 1
+
                 return None
 
         model_ids = list(qs.values_list('id', flat=True))
