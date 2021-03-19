@@ -884,7 +884,12 @@ class OrderProcess:
 
             order['success'] = 'Order Placed'
 
-            trade_id = self.alibaba_account.create_order(param_order_create)
+            try:
+                trade_id = self.alibaba_account.create_order(param_order_create)
+            except:
+                capture_exception()
+                raise OrderException('Failed to place orders, please contact support')
+
             if not trade_id:
                 raise OrderException('Failed to place orders, try again or contact support')
             elif isinstance(trade_id, dict) and 'error' in trade_id:

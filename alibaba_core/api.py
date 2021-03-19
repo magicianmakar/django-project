@@ -34,7 +34,7 @@ class AlibabaApi(ApiResponseMixin):
                 orders = order_process.create_unpaid_orders(orders)
 
         except OrderException as e:
-            return self.api_error(str(e), status=500)
+            return self.api_success({'error': str(e), 'orders': orders}, status=500)
 
         return self.api_success({'orders': orders})
 

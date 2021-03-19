@@ -142,6 +142,32 @@ var orderItemsAlibaba = (function() {
         });
     }
 
+    function formatAjaxOrders(orders) {
+        var orderDetailTemplate = Handlebars.compile($("#alibaba-order-detail-template").html());
+        for (var o = 0, oLength = orders.length; o < oLength; o++) {
+            orders[o]['product_total'] = 0;
+
+            for (var p = 0, pLength = orders[o]['products'].length; p < pLength; p++) {
+                orders[o]['product_total'] += parseFloat(orders[o]['products'][p]['variant']['total_price']);
+            }
+        }
+        var ordersElem = $(orderDetailTemplate({'orders': orders}));
+        var orderKeys = ordersElem.map(function(k, v) { return $(v).attr('data-order-id') + ';' + $(v).attr('data-source-id'); }).get();
+        $('#modal-alibaba-order-detail tbody').append(ordersElem);
+
+        loadTooltip($('#modal-alibaba-order-detail tbody .itooltip'));
+        for (var i = 0, iLength = orderKeys.length; i < iLength; i++) {
+            var orderKey = orderKeys[i].split(';');
+            var dataOrderId = orderKey[0];
+            var dataSourceId = orderKey[1];
+            var selector = '[data-order-id="' + dataOrderId + '"][data-source-id="' + dataSourceId + '"]';
+            if ($(selector).length > 1) {
+                $(selector + ':first').remove();
+            }
+            updateTotal($(selector + ' .shipping-service'));
+        }
+    }
+
     function processOrdersAlibaba(orderDataIds, orderShippings, orderSplits, useCache, finish) {
         var data = {
             'order_data_ids': orderDataIds,
@@ -184,32 +210,14 @@ var orderItemsAlibaba = (function() {
                 $('#modal-alibaba-order-detail .reload-alibaba-orders').addClass('hidden');
             },
             success: function(data) {
-                var orderDetailTemplate = Handlebars.compile($("#alibaba-order-detail-template").html());
-                for (var o = 0, oLength = data.orders.length; o < oLength; o++) {
-                    data.orders[o]['product_total'] = 0;
-
-                    for (var p = 0, pLength = data.orders[o]['products'].length; p < pLength; p++) {
-                        data.orders[o]['product_total'] += parseFloat(data.orders[o]['products'][p]['variant']['total_price']);
-                    }
-                }
-                var ordersElem = $(orderDetailTemplate({'orders': data.orders}));
-                var orderKeys = ordersElem.map(function(k, v) { return $(v).attr('data-order-id') + ';' + $(v).attr('data-source-id'); }).get();
-                $('#modal-alibaba-order-detail tbody').append(ordersElem);
-
-                loadTooltip($('#modal-alibaba-order-detail tbody .itooltip'));
-                for (var i = 0, iLength = orderKeys.length; i < iLength; i++) {
-                    var orderKey = orderKeys[i].split(';');
-                    var dataOrderId = orderKey[0];
-                    var dataSourceId = orderKey[1];
-                    var selector = '[data-order-id="' + dataOrderId + '"][data-source-id="' + dataSourceId + '"]';
-                    if ($(selector).length > 1) {
-                        $(selector + ':first').remove();
-                    }
-                    updateTotal($(selector + ' .shipping-service'));
-                }
+                formatAjaxOrders(data.orders);
             },
             error: function(data) {
                 displayAjaxError('Alibaba Ordering', data);
+
+                if (data.orders) {
+                    formatAjaxOrders(orders);
+                }
             }
         });
     }
