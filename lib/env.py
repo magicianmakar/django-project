@@ -20,7 +20,7 @@ def read_file(fname):
 
 def setup_env():
     if not os.environ.get('SHOPIFY_API_KEY'):
-        print('Setting up environment variables from:', end='')
+        print('[+] Setting up environment variables from:', end='')
         read_file('env.yaml')
         read_file('env.dev.yaml')
         print()
