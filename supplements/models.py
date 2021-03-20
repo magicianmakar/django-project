@@ -291,7 +291,7 @@ class UserUnpaidOrder(User):
         proxy = True
 
     def total_amount(self):
-        return f'${((self.total) / 100.):.2f}'
+        return f'${(self.total / 100.):.2f}'
 
 
 class Payout(PayoutMixin, model_base.AbstractPayout):
