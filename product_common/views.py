@@ -13,7 +13,8 @@ from django.views.generic.list import ListView
 import simplejson as json
 from lib.exceptions import capture_message, capture_exception
 
-from shopified_core.utils import get_store_api, get_track_model
+from shopified_core.utils import get_store_api
+from shopified_core.models_utils import get_track_model
 
 from .forms import OrderFilterForm, PayoutFilterForm, ProductEditForm, ProductForm
 from .lib.shipstation import get_shipstation_orders, get_shipstation_shipments

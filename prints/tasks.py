@@ -1,7 +1,8 @@
 from lib.exceptions import capture_exception
 
 from app.celery_base import celery_app, CaptureFailure
-from shopified_core.utils import hash_url_filename, get_store_model
+from shopified_core.utils import hash_url_filename
+from shopified_core.models_utils import get_store_model
 
 from . import utils
 

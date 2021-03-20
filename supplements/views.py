@@ -44,8 +44,8 @@ from shopified_core.utils import (
     safe_int,
     safe_float,
     aws_s3_context as images_aws_s3_context,
-    get_store_model,
 )
+from shopified_core.models_utils import get_store_model
 from churnzero_core.utils import post_churnzero_product_import
 from analytic_events.models import SupplementLabelForApprovalEvent
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile

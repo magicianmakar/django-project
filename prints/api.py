@@ -11,7 +11,7 @@ from lib.exceptions import capture_exception
 
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import get_store_model, get_track_model, get_product_model
+from shopified_core.models_utils import get_track_model, get_store_model, get_product_model
 
 from . import tasks
 from . import utils

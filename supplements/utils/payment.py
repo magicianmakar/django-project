@@ -11,7 +11,8 @@ from django.utils import timezone
 from django.urls import reverse
 
 from lib.exceptions import capture_exception
-from shopified_core.utils import get_store_api, get_store_model, safe_int, safe_float, dict_val
+from shopified_core.utils import get_store_api, safe_int, safe_float, dict_val
+from shopified_core.models_utils import get_store_model
 from supplements.models import UserSupplement, PLSupplement, PLSOrder, PLSOrderLine, ShippingGroup
 from supplements.utils import supplement_customer_address
 

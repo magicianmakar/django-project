@@ -3,7 +3,7 @@ from django.db import models
 import simplejson as json
 
 from lib.exceptions import capture_exception
-from shopified_core.utils import get_track_model
+from shopified_core.models_utils import get_track_model
 
 
 class SalesFeeConfig(models.Model):

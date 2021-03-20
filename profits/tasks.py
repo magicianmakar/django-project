@@ -6,7 +6,7 @@ from app.celery_base import celery_app, CaptureFailure
 
 from groovekart_core.models import GrooveKartStore
 from bigcommerce_core.models import BigCommerceStore
-from shopified_core.utils import get_store_model
+from shopified_core.models_utils import get_store_model
 from woocommerce_core.models import WooStore
 from commercehq_core.models import CommerceHQStore
 

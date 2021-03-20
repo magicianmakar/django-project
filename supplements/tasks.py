@@ -2,7 +2,7 @@ from app.celery_base import celery_app, CaptureFailure
 
 from lib.exceptions import capture_exception
 
-from shopified_core.utils import get_store_model
+from shopified_core.models_utils import get_store_model
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
 from .models import UserSupplement, UserSupplementLabel, PLSOrder
 

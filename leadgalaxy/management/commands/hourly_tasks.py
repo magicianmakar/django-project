@@ -20,7 +20,7 @@ from product_feed.models import (
     BigCommerceFeedStatus,
 )
 from shopified_core.management import DropifiedBaseCommand
-from shopified_core.utils import get_store_model
+from shopified_core.models_utils import get_store_model
 
 
 class Command(DropifiedBaseCommand):

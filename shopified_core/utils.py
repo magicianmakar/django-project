@@ -1152,66 +1152,6 @@ def get_store_api(store_type=''):
     return import_string(settings.DROPIFIED_API.get(store_type))()
 
 
-def get_track_model(store_type=''):
-    if store_type in ['chq', 'CommerceHQOrderTrack']:
-        from commercehq_core.models import CommerceHQOrderTrack
-        return CommerceHQOrderTrack
-    elif store_type in ['woo', 'WooOrderTrack']:
-        from woocommerce_core.models import WooOrderTrack
-        return WooOrderTrack
-    elif store_type in ['gkart', 'GrooveKartOrderTrack']:
-        from groovekart_core.models import GrooveKartOrderTrack
-        return GrooveKartOrderTrack
-    elif store_type in ['bigcommerce', 'BigCommerceOrderTrack']:
-        from bigcommerce_core.models import BigCommerceOrderTrack
-        return BigCommerceOrderTrack
-    elif store_type in ['mybasket', 'BasketOrderTrack']:
-        from my_basket.models import BasketOrderTrack
-        return BasketOrderTrack
-    else:
-        from leadgalaxy.models import ShopifyOrderTrack
-        return ShopifyOrderTrack
-
-
-def get_store_model(store_type=''):
-    if store_type in ['chq', 'CommerceHQStore']:
-        from commercehq_core.models import CommerceHQStore
-        return CommerceHQStore
-    elif store_type in ['woo', 'WooStore']:
-        from woocommerce_core.models import WooStore
-        return WooStore
-    elif store_type in ['gkart', 'GrooveKartStore']:
-        from groovekart_core.models import GrooveKartStore
-        return GrooveKartStore
-    elif store_type in ['bigcommerce', 'BigCommerceStore']:
-        from bigcommerce_core.models import BigCommerceStore
-        return BigCommerceStore
-    elif store_type in ['mybasket']:
-        from supplements.utils.basket import BasketStore
-        return BasketStore
-    else:
-        from leadgalaxy.models import ShopifyStore
-        return ShopifyStore
-
-
-def get_product_model(store_type):
-    if store_type in ['chq', 'CommerceHQProduct']:
-        from commercehq_core.models import CommerceHQProduct
-        return CommerceHQProduct
-    elif store_type in ['woo', 'WooProduct']:
-        from woocommerce_core.models import WooProduct
-        return WooProduct
-    elif store_type in ['gkart', 'GrooveKartProduct']:
-        from groovekart_core.models import GrooveKartProduct
-        return GrooveKartProduct
-    elif store_type in ['bigcommerce', 'BigCommerceStore']:
-        from bigcommerce_core.models import BigCommerceProduct
-        return BigCommerceProduct
-    else:
-        from leadgalaxy.models import ShopifyProduct
-        return ShopifyProduct
-
-
 def get_cached_order(user, store_type, order_data_id):
     if store_type == 'chq':
         key = order_data_cache_key(order_data_id, prefix='order')

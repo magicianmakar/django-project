@@ -8,7 +8,8 @@ from leadgalaxy import tasks
 from leadgalaxy.models import ShopifyProduct, ProductSupplier
 from shopified_core import permissions
 from shopified_core.management import DropifiedBaseCommand
-from shopified_core.utils import get_domain, remove_link_query, get_store_model
+from shopified_core.utils import get_domain, remove_link_query
+from shopified_core.models_utils import get_store_model
 
 
 class ImportException(Exception):

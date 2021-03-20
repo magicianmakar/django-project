@@ -29,8 +29,8 @@ from shopified_core.utils import (
     orders_update_limit,
     serializers_orders_track,
     using_replica,
-    get_store_model,
 )
+from shopified_core.models_utils import get_store_model
 from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 
 from shopified_core.decorators import HasSubuserPermission

@@ -16,7 +16,8 @@ from leadgalaxy.utils import format_shopify_send_to_store
 from lib.aliexpress_api import RestApi, TopException
 from lib.exceptions import capture_exception, capture_message
 from prints.utils import get_price_markup
-from shopified_core.utils import dict_val, float_to_str, get_cached_order, get_store_api, get_store_model, safe_int
+from shopified_core.utils import dict_val, float_to_str, get_cached_order, get_store_api, safe_int
+from shopified_core.models_utils import get_store_model
 
 from .models import AlibabaOrder, AlibabaOrderItem
 
