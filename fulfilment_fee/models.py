@@ -32,7 +32,7 @@ class SaleTransactionFee(models.Model):
         model = get_track_model(self.source_model)
 
         try:
-            return model.objects.get(id=self.source_id)
+            return model.objects.filter(source_id=self.source_id).first()
 
         except model.DoesNotExist:
             return False
