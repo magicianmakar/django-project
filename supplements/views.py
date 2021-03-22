@@ -6,6 +6,7 @@ from io import BytesIO
 
 from PIL import Image
 from django import template
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -1743,7 +1744,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use'):
+        if not settings.DEBUG and request.user.can('pls_admin.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1806,7 +1807,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 class DownloadJSON(LoginRequiredMixin, View):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if request.user.can('pls_admin.use'):
+        if not settings.DEBUG and request.user.can('pls_admin.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()

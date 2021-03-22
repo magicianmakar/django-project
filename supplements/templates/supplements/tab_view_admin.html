@@ -2,7 +2,7 @@
 
 {% load static %}
 {% load compress %}
-{% load perms_helper %}
+{% load template_helper perms_helper %}
 
 {% block main-container %}
 {% url 'pls:admin_index' as pls_admin_index %}
@@ -13,6 +13,8 @@
 {% url 'pls:orderitem_list' as pls_orderitems %}
 {% url 'pls:upload_json' as pls_upload_json %}
 {% url 'pls:reports' as pls_reports %}
+
+{% app_setting 'DEBUG' as debug %}
 
 {% with pls_admin=request.user|can:'pls_admin.use' pls_staff=request.user|can:'pls_staff.use' %}
 <div class="tabs-container">
@@ -50,10 +52,10 @@
     <li><a href="{% url 'pls:order_list' %}">Payments</a></li>
     {% endif %}
 
-    {% if request.path == pls_upload_json %}
+    {% if not debug and request.path == pls_upload_json %}
     <li class="active"><a data-toggle="tab" href="#tab-1">Import / Export</a></li>
-    {% else %}
-    <li><a href="{% url 'pls:upload_json' %}">Import / Export</a></li>
+    {% elif not debug %}
+    <li><a href="{% url 'pls:upload_json' %}">Import / Export </a></li>
     {% endif %}
 
     {% if request.path == pls_reports %}
