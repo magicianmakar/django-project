@@ -254,8 +254,7 @@ class GrooveKartProduct(ProductBase):
     def is_connected(self):
         return bool(self.source_id)
 
-    @property
-    def has_supplier(self):
+    def have_supplier(self):
         try:
             return self.default_supplier is not None
         except:
@@ -597,7 +596,7 @@ class GrooveKartProduct(ProductBase):
         return image_id[0] if image_id else None
 
     def get_original_info(self):
-        if self.has_supplier:
+        if self.have_supplier():
             url = self.default_supplier.product_url
 
             try:

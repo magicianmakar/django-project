@@ -190,8 +190,7 @@ class GearBubbleProduct(ProductBase):
     def boards(self):
         return self.gearbubbleboard_set
 
-    @property
-    def has_supplier(self):
+    def have_supplier(self):
         try:
             return self.default_supplier is not None
         except:

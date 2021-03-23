@@ -245,12 +245,6 @@ class BigCommerceProduct(ProductBase):
     def boards(self):
         return self.bigcommerceboard_set
 
-    def has_supplier(self):
-        try:
-            return self.default_supplier is not None
-        except:
-            return False
-
     def have_supplier(self):
         try:
             return self.default_supplier is not None

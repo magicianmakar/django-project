@@ -1084,7 +1084,7 @@ class OrdersList(ListView):
                         item['is_bundle'] = len(bundle_data) > 0
                         order['have_bundle'] = True
 
-                    if product.has_supplier():
+                    if product.have_supplier():
                         supplier = self.get_product_supplier(product, variant_id)
                         order_data = self.get_order_data(order, item, product, supplier)
                         order_data['products'] = bundle_data

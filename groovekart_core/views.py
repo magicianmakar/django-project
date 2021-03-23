@@ -709,7 +709,7 @@ class OrdersList(ListView):
                         item['is_bundle'] = len(bundle_data) > 0
                         order['have_bundle'] = True
 
-                    if product.has_supplier:
+                    if product.have_supplier():
                         item['supplier'] = supplier = product.default_supplier
                         is_pls = item['is_pls'] = supplier.is_pls
                         if is_pls:

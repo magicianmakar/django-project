@@ -407,7 +407,7 @@ class OrdersList(ListView):
                 item['total'] = safe_float(item['price'] * item['qty'])
                 item = add_details_from_product_data(item, product_data)
 
-                if product and product.has_supplier:
+                if product and product.have_supplier():
                     item['supplier'] = supplier = product.default_supplier
                     item['supplier_type'] = supplier.supplier_type()
                     order_data = self.get_order_data(order, item, product, supplier)
