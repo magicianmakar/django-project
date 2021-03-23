@@ -297,6 +297,20 @@ class OrderTrackBase(models.Model):
         else:
             return None
 
+    def get_source_name(self):
+        if self.source_type == 'ebay':
+            return 'eBay'
+        elif self.source_type == 'other':
+            return 'Custom'
+        elif self.source_type == 'supplements':
+            return 'Private Label'
+        elif self.source_type == 'dropified-print':
+            return 'Print on Demand'
+        elif self.source_type == 'alibaba':
+            return 'Alibaba'
+        else:
+            return 'Aliexpress'
+
     def get_source_status(self):
         status_map = {
             # Aliexpress
