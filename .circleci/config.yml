@@ -2,7 +2,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/ShopifiedApp/webapp
   docker:
-    - image: heroku/heroku:18
+    - image: circleci/python:3.6.10-node
       environment:
         SECRET_KEY: dBEn2nkwPvlKuEwrQtBwMLlOOTm3TObmllyOb0j6ZepIqztLQh28oItsJQCbVsF1
 
@@ -173,7 +173,7 @@ jobs:
   deploy:
     working_directory: ~/ShopifiedApp/webapp
     docker:
-      - image: heroku/heroku:18
+      - image: circleci/python:3.6.10
     steps:
       - run:
           name: Deploy Master to Heroku
