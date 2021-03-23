@@ -1079,12 +1079,7 @@ class CHQOrderUpdater:
 
         if track:
             url = track.get_source_url()
-            if track.source_type == 'ebay':
-                source = 'eBay'
-            elif track.source_type == 'supplements':
-                source = 'Supplements'
-            elif track.source_type == 'other':
-                source = 'Custom'
+            source = track.get_source_name()
 
         else:
             url = 'https://trade.aliexpress.com/order_detail.htm?orderId={}'.format(source_id)

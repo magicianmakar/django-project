@@ -43,7 +43,8 @@ class Command(DropifiedBaseCommand):
                     products_data[alibaba_user_id].append(content['product_id'])
 
                 if message['topic'] == 'icbu_trade_OrderNotify':
-                    order = AlibabaOrder.objects.prefetch_related('items').filter(trade_id=message['trade_id']).first()
+                    content = json.loads(message['content'])
+                    order = AlibabaOrder.objects.prefetch_related('items').filter(trade_id=content['trade_id']).first()
                     if order:
                         order.reload_details()
                         order.handle_tracking()

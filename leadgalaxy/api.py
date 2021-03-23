@@ -1753,11 +1753,11 @@ class ShopifyStoreApi(ApiBase):
 
                     if not from_oberlo:
                         if using_dropified_extension:
-                            log = 'Order Placed In Aliexpress using Dropified Extension'
+                            log = f'Order Placed In {track.get_source_name()} using Dropified Extension'
                         elif using_fulfillbox:
-                            log = 'Order Placed In Aliexpress using Dropifed FulfilBox'
+                            log = f'Order Placed In {track.get_source_name()} using Dropifed FulfilBox'
                         else:
-                            log = 'Manually link to Aliexpress Order'
+                            log = f'Manually link to {track.get_source_name()} Order'
 
                         ShopifyOrderLog.objects.update_order_log(
                             store=store,
