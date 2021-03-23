@@ -43,7 +43,7 @@ from shopified_core.utils import get_domain
 from goals.models import Goal, UserGoalRelationship
 from analytic_events.models import LoginEvent, StoreCreatedEvent
 from addons_core.models import Addon
-from churnzero_core.utils import post_churnzero_addon_update
+from churnzero_core.utils import post_churnzero_addon_update, set_churnzero_account
 
 
 @receiver(post_save, sender=UserProfile)
@@ -74,6 +74,9 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
     UserGoalRelationship.objects.filter(user=user).delete()
     for goal in Goal.objects.filter(plans=current_plan):
         UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
+
+    if instance.plan and not instance.has_churnzero_account and not user.is_subuser and not user.is_staff:
+        set_churnzero_account(user)
 
 
 @receiver(post_save, sender=UserProfile)

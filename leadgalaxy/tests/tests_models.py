@@ -238,6 +238,7 @@ class UserProfileTestCase(BaseTestCase):
         user = UserFactory()
         user.profile.subuser_parent = models_user
         user.profile.save()
+        user.refresh_from_db()
         account_owner = user.models_user.username.encode()
         churnzero_account_id_hash = hmac.new(churnzero_secret_token,
                                              account_owner,
@@ -304,6 +305,11 @@ class UserProfileTestCase(BaseTestCase):
         addons = Addon.objects.all()
         addons_param = post_churnzero_addon_update.call_args[1]['addons']
         self.assertEqual(list(addons), list(addons_param))
+
+    @patch('leadgalaxy.signals.set_churnzero_account')
+    def test_must_send_data_to_churnzero_once_profile_is_saved(self, set_churnzero_account):
+        UserFactory()
+        self.assertTrue(set_churnzero_account.called)
 
 
 class ShopifyOrderLogTestCase(BaseTestCase):
