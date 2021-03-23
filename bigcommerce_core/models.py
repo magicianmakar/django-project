@@ -330,7 +330,7 @@ class BigCommerceProduct(ProductBase):
             return []
 
     def get_original_info(self):
-        if self.has_supplier():
+        if self.have_supplier():
             url = self.default_supplier.product_url
 
             try:
