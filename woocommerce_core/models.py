@@ -223,7 +223,7 @@ class WooProduct(ProductBase):
     def boards(self):
         return self.wooboard_set
 
-    def has_supplier(self):
+    def have_supplier(self):
         try:
             return self.default_supplier is not None
         except:
@@ -312,7 +312,7 @@ class WooProduct(ProductBase):
         return images[0] if images else None
 
     def get_original_info(self):
-        if self.has_supplier():
+        if self.have_supplier():
             url = self.default_supplier.product_url
 
             try:

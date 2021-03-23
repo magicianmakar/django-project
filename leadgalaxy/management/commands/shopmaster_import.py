@@ -5,11 +5,11 @@ from urllib.parse import parse_qs, urlparse
 import requests
 
 from leadgalaxy import tasks
-from leadgalaxy.models import ShopifyProduct, ProductSupplier
+from product_alerts.utils import parse_supplier_sku
 from shopified_core import permissions
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import get_domain, remove_link_query
-from shopified_core.models_utils import get_store_model
+from shopified_core.models_utils import get_store_model, get_supplier_model, get_product_model
 
 
 class ImportException(Exception):
@@ -42,7 +42,7 @@ class Command(DropifiedBaseCommand):
 
         for i in reader:
             self.progress_update()
-            self.import_product(i)
+            self.import_product(store_type, i)
 
             self.import_counter += 1
 
@@ -50,19 +50,20 @@ class Command(DropifiedBaseCommand):
         self.store = get_store_model(store_type).objects.get(id=store)
         return self.store
 
-    def import_product(self, info):
+    def import_product(self, store_type, info):
         shopify_id = info['productId']
         supplier_url = info['sourceUrl']
+        supplier = None
 
         if shopify_id and supplier_url:
             try:
-                if info['platform'] == 'shopify':
-                    self.last_product = self.import_shopify(self.store, shopify_id, supplier_url)
+                self.last_product = self.import_shopify(store_type, self.store, shopify_id, supplier_url)
+                supplier = self.last_product.default_supplier
             except ImportException:
                 pass
 
         elif supplier_url and self.last_product:
-            ProductSupplier.objects.create(
+            supplier = get_supplier_model(store_type).objects.create(
                 store=self.last_product.store,
                 product=self.last_product,
                 product_url=supplier_url,
@@ -70,7 +71,16 @@ class Command(DropifiedBaseCommand):
                 supplier_url='https://www.aliexpress.com/'
             )
 
-    def import_shopify(self, store, shopify_id, supplier_url):
+        if self.last_product and info.get('productVarId') and info.get('sourceVarId'):
+            if not supplier:
+                if self.last_product:
+                    supplier = self.last_product.default_supplier
+
+            if supplier:
+                self.last_product.set_variant_mapping({info['productVarId']: self.format_sku(info['sourceVarId'])}, supplier=supplier)
+
+    def import_shopify(self, store_type, store, shopify_id, supplier_url):
+        is_shopify = store_type == 'shopify'
         user = store.user
 
         can_add, total_allowed, user_count = permissions.can_add_product(user.models_user, ignore_daily_limit=True)
@@ -79,7 +89,13 @@ class Command(DropifiedBaseCommand):
 
         product = None
 
-        found_products = user.models_user.shopifyproduct_set.filter(store=store, shopify_id=shopify_id)
+        filter_kwargs = {'store': store}
+        if is_shopify:
+            filter_kwargs['shopify_id'] = shopify_id
+        else:
+            filter_kwargs['source_id'] = shopify_id
+
+        found_products = get_product_model(store_type).objects.filter(**filter_kwargs)
         if len(found_products):
             if len(found_products) == 1:
                 if not found_products[0].have_supplier():
@@ -104,10 +120,9 @@ class Command(DropifiedBaseCommand):
         supplier_url = remove_link_query(supplier_url)
 
         if not product:
-            product = ShopifyProduct(
-                store=store,
+            product = get_product_model(store_type)(
+                **filter_kwargs,
                 user=user.models_user,
-                shopify_id=shopify_id,
                 data=json.dumps({
                     'title': 'Importing...',
                     'variants': [],
@@ -116,10 +131,13 @@ class Command(DropifiedBaseCommand):
             )
 
             permissions.user_can_add(user, product)
-            product.set_original_data('{}')
-            product.save()
 
-        supplier = ProductSupplier.objects.create(
+            if is_shopify:
+                product.save()
+            else:
+                product.sync()
+
+        supplier = get_supplier_model(store_type).objects.create(
             store=product.store,
             product=product,
             product_url=supplier_url,
@@ -130,9 +148,17 @@ class Command(DropifiedBaseCommand):
 
         product.set_default_supplier(supplier, commit=True)
 
-        tasks.update_shopify_product.apply_async(
-            args=[store.id, product.shopify_id],
-            kwargs={'product_id': product.id},
-            countdown=self.import_counter * 0.5)
+        if is_shopify:
+            tasks.update_shopify_product.apply_async(
+                args=[store.id, product.shopify_id],
+                kwargs={'product_id': product.id},
+                countdown=self.import_counter * 0.5)
+        else:
+            product.sync()
 
         return product
+
+    def format_sku(self, original_sku):
+        sku = parse_supplier_sku(original_sku)
+        sku = [{'title': i['option_title'], 'sku': f"{i['option_group']}:{i['option_id']}"} for i in sku]
+        return json.dumps(sku)

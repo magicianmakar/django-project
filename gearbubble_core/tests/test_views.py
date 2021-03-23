@@ -674,7 +674,7 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         product = GearBubbleProduct.objects.get(id=r.json()['product'])
         self.assertEqual(product.source_id, source_id)
-        self.assertTrue(product.has_supplier)
+        self.assertTrue(product.have_supplier)
 
         r = self.client.post('/api/gear/import-product', data)
         self.assertEqual(r.status_code, 422)

@@ -919,7 +919,7 @@ class ApiTestCase(BaseTestCase):
         self.assertEqual(r.status_code, 200)
         product = WooProduct.objects.get(id=r.json()['product'])
         self.assertEqual(product.source_id, source_id)
-        self.assertTrue(product.has_supplier())
+        self.assertTrue(product.have_supplier())
 
         r = self.client.post('/api/woo/import-product', data)
         self.assertEqual(r.status_code, 422)

@@ -820,7 +820,7 @@ class OrdersList(ListView):
         return context
 
     def get_product_supplier(self, product, variant_id=None):
-        if product.has_supplier():
+        if product.have_supplier():
             return product.get_supplier_for_variant(variant_id)
 
     def get_order_date_created(self, order):
