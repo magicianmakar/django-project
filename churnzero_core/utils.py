@@ -188,6 +188,19 @@ def post_churnzero_addon_update(user, addons, action):
     return post_churnzero_actions(actions=actions)
 
 
+def post_churnzero_change_plan_event(user, new_plan_name):
+    return post_churnzero_actions(actions=[{
+        'appKey': settings.CHURNZERO_APP_KEY,
+        'accountExternalId': user.models_user.username,
+        'contactExternalId': user.username,
+        'accountExternalIdHash': user.profile.churnzero_account_id_hash,
+        'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
+        'action': 'trackEvent',
+        'eventName': 'Changed Plan',
+        'description': new_plan_name,
+    }])
+
+
 def post_churnzero_actions(actions):
     if settings.CHURNZERO_APP_KEY and not settings.DEBUG:
         requests_async.apply_async(

@@ -306,6 +306,24 @@ class UserProfileTestCase(BaseTestCase):
         addons_param = post_churnzero_addon_update.call_args[1]['addons']
         self.assertEqual(list(addons), list(addons_param))
 
+    @patch('leadgalaxy.signals.post_churnzero_change_plan_event')
+    def test_must_send_data_to_churnzero_when_change_plan(self, post_churnzero_change_plan_event):
+        user = UserFactory()
+        user.profile.plan = GroupPlanFactory(payment_gateway='shopify')
+        user.profile.save()
+        user.profile.plan = GroupPlanFactory(payment_gateway='shopify')
+        user.profile.save()
+        self.assertTrue(post_churnzero_change_plan_event.called)
+
+    @patch('leadgalaxy.signals.post_churnzero_change_plan_event')
+    def test_must_send_data_to_churnzero_when_change_plan_with_correct_params(self, post_churnzero_change_plan_event):
+        user = UserFactory()
+        user.profile.plan = GroupPlanFactory(payment_gateway='shopify', title="Old Plan")
+        user.profile.save()
+        user.profile.plan = GroupPlanFactory(payment_gateway='shopify', title="New Plan")
+        user.profile.save()
+        post_churnzero_change_plan_event.assert_called_with(user, "New Plan")
+
     @patch('leadgalaxy.signals.set_churnzero_account')
     def test_must_send_data_to_churnzero_once_profile_is_saved(self, set_churnzero_account):
         UserFactory()
