@@ -43,7 +43,11 @@ from shopified_core.utils import get_domain
 from goals.models import Goal, UserGoalRelationship
 from analytic_events.models import LoginEvent, StoreCreatedEvent
 from addons_core.models import Addon
-from churnzero_core.utils import post_churnzero_addon_update, set_churnzero_account
+from churnzero_core.utils import (
+    post_churnzero_addon_update,
+    post_churnzero_change_plan_event,
+    set_churnzero_account
+)
 
 
 @receiver(post_save, sender=UserProfile)
@@ -55,6 +59,9 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         change_log, created = GroupPlanChangeLog.objects.get_or_create(user=user)
     except:
         return
+
+    if current_plan and current_plan.is_shopify() and change_log.plan.is_shopify() and current_plan != change_log.plan:
+        post_churnzero_change_plan_event(instance.user, current_plan.title)
 
     if current_plan != change_log.plan:
         change_log.previous_plan = change_log.plan
