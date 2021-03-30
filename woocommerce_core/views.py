@@ -48,6 +48,7 @@ from shopified_core.utils import (
     safe_json,
     http_excption_status_code,
     order_data_cache,
+    format_queueable_orders
 )
 from shopified_core.tasks import keen_order_event
 from product_alerts.models import ProductChange
@@ -702,6 +703,10 @@ class OrdersList(ListView):
             messages.warning(request, "You don't have access to this store orders")
             return redirect('woo:index')
 
+        self.bulk_queue = bool(request.GET.get('bulk_queue'))
+        if self.bulk_queue and not request.user.can('bulk_order.use'):
+            return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."}, status=402)
+
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
 
     def get_store(self):
@@ -709,6 +714,12 @@ class OrdersList(ListView):
             self.store = get_store_from_request(self.request)
 
         return self.store
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.bulk_queue:
+            return format_queueable_orders(self.request, context['orders'], context['page_obj'], store_type='woo')
+
+        return super().render_to_response(context, **response_kwargs)
 
     def get_filters(self):
         filters = {}
@@ -973,6 +984,8 @@ class OrdersList(ListView):
             order['lines_count'] = len(order['items'])
             order['has_shipping_address'] = any(order['shipping'].values())
             order['supplier_types'] = set()
+            order['pending_payment'] = 'pending' in order['status'].lower()
+            order['is_fulfilled'] = order['status'] in ['cancelled', 'refunded', 'completed', 'trash']
             update_shipstation_items = {}
             shipstation_address_changed = None
             refunded_amounts = [Decimal(r['total']) * -1 for r in order['refunds']]
@@ -1128,7 +1141,7 @@ class OrdersList(ListView):
                         countdown=5
                     )
 
-        caches['orders'].set_many(orders_cache, timeout=21600)
+        caches['orders'].set_many(orders_cache, timeout=86400 if self.bulk_queue else 21600)
 
 
 class OrdersTrackList(ListView):

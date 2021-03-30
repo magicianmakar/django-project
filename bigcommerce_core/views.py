@@ -44,6 +44,7 @@ from shopified_core.utils import (
     safe_float,
     http_excption_status_code,
     order_data_cache,
+    format_queueable_orders
 )
 from shopified_core.tasks import keen_order_event
 from supplements.lib.shipstation import get_address as get_shipstation_address
@@ -751,7 +752,17 @@ class OrdersList(ListView):
             messages.warning(request, "You don't have access to this store orders")
             return redirect(f"{reverse('bigcommerce:index')}?new_tab=1")
 
+        self.bulk_queue = bool(request.GET.get('bulk_queue'))
+        if self.bulk_queue and not request.user.can('bulk_order.use'):
+            return JsonResponse({'error': "Your plan doesn't have Bulk Ordering feature."}, status=402)
+
         return super(OrdersList, self).dispatch(request, *args, **kwargs)
+
+    def render_to_response(self, context, **response_kwargs):
+        if self.bulk_queue:
+            return format_queueable_orders(self.request, context['orders'], context['page_obj'], store_type='bigcommerce')
+
+        return super().render_to_response(context, **response_kwargs)
 
     def get_store(self):
         if not hasattr(self, 'store'):
@@ -1014,6 +1025,8 @@ class OrdersList(ListView):
             order['lines_count'] = len(order['items'])
             order['has_shipping_address'] = len(order['shipping_addresses']) > 0
             order['supplier_types'] = set()
+            order['pending_payment'] = 'pending' in order['status'].lower()
+            order['is_fulfilled'] = order['status'] in ['Cancelled', 'Refunded', 'Delivered', 'Shipped', 'Partially Refunded']
             update_shipstation_items = {}
             shipstation_address_changed = None
 
@@ -1162,8 +1175,7 @@ class OrdersList(ListView):
                         args=[pls_order_id, line_items, self.store.id, 'bigcommerce'],
                         countdown=5
                     )
-
-        caches['orders'].set_many(orders_cache, timeout=21600)
+        caches['orders'].set_many(orders_cache, timeout=86400 if self.bulk_queue else 21600)
 
 
 class OrdersTrackList(ListView):

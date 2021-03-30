@@ -269,6 +269,10 @@
                     </div>
                     </form>
 
+                    {% if paginator.count and user|can:'bulk_order.use' %}
+                    {% include 'partial/bulk_orders.html' with orders_count=paginator.count %}
+                    {% endif %}
+
                     <div class="orders">
                         {% for order in orders %}
                         <div
@@ -744,6 +748,7 @@
     <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
+    <link href="{% static 'libs/bower_components/jquery.steps/demo/css/jquery.steps.css' %}" rel="stylesheet">
     <link href="{% static 'woocommerce/css/orders_list.css' %}" rel="stylesheet">
 {% endcompress %}
 
@@ -786,6 +791,8 @@
     <script type="text/javascript" src="{% static 'prints/js/place_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/order_items.js' %}"></script>
     <script src="{% static 'pls/js/pls_payment.js' %}" type="text/javascript"></script>
+    <script src="{% static 'libs/bower_components/jquery.steps/build/jquery.steps.js' %}" type="text/javascript"></script>
+    <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'woocommerce/js/woocommerce_product_selector.js' %}"></script>
     <script type="text/javascript" src="{% static 'woocommerce/js/orders_list.js' %}"></script>
 {% endcompress %}
