@@ -9,4 +9,9 @@ class Command(DropifiedBaseCommand):
             if user.profile.plan:
                 if user.profile.plan.is_stripe() or user.profile.plan.is_shopify():
                     self.write(f"Updating ChurnZero account for {user.username}")
-                    set_churnzero_account(user)
+                    try:
+                        set_churnzero_account(user)
+                    except Exception:
+                        self.write("Update failed")
+                    else:
+                        self.write("Update successful")
