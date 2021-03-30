@@ -24,6 +24,7 @@ class AlibabaApi(ApiResponseMixin):
             return self.api_error('Missing alibaba account, did you connected at settings?', status=403)
 
         place_order = not data.get('validate')
+        alibaba_order_ids = None
         try:
             order_process = OrderProcess(parent_user, store, data['order_data_ids'], data.get('order_splits'),
                                          data.get('order_shippings', {}), safe_int(data.get('debug', 0)),
@@ -31,12 +32,12 @@ class AlibabaApi(ApiResponseMixin):
             orders = order_process.get_orders_info()
 
             if place_order:
-                orders = order_process.create_unpaid_orders(orders)
+                orders, alibaba_order_ids = order_process.create_unpaid_orders(orders)
 
         except OrderException as e:
             return self.api_success({'error': str(e), 'orders': orders}, status=500)
 
-        return self.api_success({'orders': orders})
+        return self.api_success({'orders': orders, 'alibaba_order_ids': alibaba_order_ids or None})
 
     def get_product_data(self, request, user, data):
         if not user.can('alibaba_integration.use'):
@@ -99,3 +100,14 @@ class AlibabaApi(ApiResponseMixin):
         })
 
         return self.api_success()
+
+    def post_pay_orders(self, request, user, data):
+        if not user.can('alibaba_integration.use'):
+            return self.api_error('Your current plan doesn\'t have this feature.', status=500)
+
+        alibaba_account = user.alibaba.first()
+        if not alibaba_account:
+            return self.api_error('Missing connection with Alibaba.')
+
+        result = alibaba_account.pay_orders(request.META, data['order_data_ids'])
+        return self.api_success(result)

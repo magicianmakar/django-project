@@ -364,6 +364,35 @@ class AlibabaAccount(models.Model):
     def allow_message_consumption(self):
         return self.request.post('taobao.tmc.user.permit', {'topics': 'icbu_trade_OrderNotify'})
 
+    def pay_orders(self, request_meta, alibaba_order_ids):
+        ids = list(self.user.alibabaorder_set.filter(id__in=alibaba_order_ids).values_list('trade_id', flat=True))
+        r = self.request.post('alibaba.dropshipping.order.pay', {'param_order_pay_request': json.dumps({
+            "user_ip": request_meta['REMOTE_ADDR'],
+            "isv_drop_shipper_registration_time": int(self.user.date_joined.timestamp()),
+            "is_pc": True,
+            "order_id_list": ids,
+            "accept_language": request_meta['HTTP_ACCEPT_LANGUAGE'],
+            "screen_resolution": request_meta['HTTP_X_FRAME_SIZE'] and '1920*1080',
+            "user_agent": request_meta['HTTP_USER_AGENT']
+        })})
+
+        result = r['alibaba_dropshipping_order_pay_response']['value']
+        if not result:
+            raise Exception(f'Error paying for alibaba orders {alibaba_order_ids}')
+
+        if result['status'] == 'PAY_FAILED':
+            if result['reason_code'] == 'NEVER_PAY_SUCCESS_IN_DROPSHIPER':
+                return {
+                    'error': 'A saved payment method is required to pay for orders.',
+                    'action': result['pay_url'],
+                    'action_message': 'Click here to register'
+                }
+
+            if result['reason_code'] == 'ORDER_HAVE_PAID':
+                return {
+                    'error': 'Payment previously processed',
+                }
+
 
 class AlibabaOrder(models.Model):
     SHOPIFY = 'shopify'

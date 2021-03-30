@@ -1322,6 +1322,10 @@ $(function() {
             }
         }, 1000);
     }
+
+    $.ajaxSetup({
+        headers: {'x-frame-size': window.screen.width + '*' + window.screen.height}
+    });
 });
 
 var ravenOptions = {

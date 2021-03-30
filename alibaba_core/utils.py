@@ -139,10 +139,11 @@ class APIRequest():
             'alibaba.dropshipping.token.create',
             'alibaba.shipping.freight.calculate',
             'alibaba.dropshipping.product.get',
-            'alibaba.buyer.order.create',
-            'alibaba.buynow.order.create',
+            # 'alibaba.buyer.order.create',
+            # 'alibaba.buynow.order.create',
             'alibaba.order.freight.calculate',
             'alibaba.order.logistics.tracking.get',
+            'alibaba.dropshipping.order.pay',
             # 'alibaba.seller.order.logistics.get',
             # 'taobao.tmc.user.permit',
         ]
@@ -206,7 +207,10 @@ def apply_user_config(user, product):
     elif desc_mode == 'custom':
         product['description'] = user.get_config('default_desc', '')
     elif desc_mode == 'simplified':
-        product['description'] = get_description_simplified(product['description'])
+        try:
+            product['description'] = get_description_simplified(product['description'])
+        except:
+            capture_exception()
 
     return product
 
@@ -897,8 +901,8 @@ class OrderProcess:
                 raise OrderException(trade_id['error'])
 
             trade = {'trade_id': trade_id, 'order_id': order['id'], 'items': [], 'defaults': {
-                'shipping_cost': param_order_create['payment_detail']['shipment_fee'],
-                'products_cost': float_to_str(order['product_total']),
+                'shipping_cost': Decimal(param_order_create['payment_detail']['shipment_fee']),
+                'products_cost': Decimal(float_to_str(order['product_total'])),
                 'currency': 'USD',
             }}
 
@@ -927,6 +931,7 @@ class OrderProcess:
 
             trades.append(trade)
 
+        alibaba_order_ids = []
         with atomic():
             for trade in trades:
                 order, created = AlibabaOrder.objects.get_or_create(
@@ -956,8 +961,9 @@ class OrderProcess:
                     )
 
                 self.fulfilled_data.update(order.handle_tracking())
+                alibaba_order_ids.append(order.id)
 
-        return orders
+        return orders, alibaba_order_ids
 
 
 def get_batches(items, batch_size=10):

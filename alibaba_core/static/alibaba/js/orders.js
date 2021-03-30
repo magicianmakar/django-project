@@ -208,9 +208,16 @@ var orderItemsAlibaba = (function() {
 
                 $('#modal-alibaba-order-detail .place-alibaba-orders').removeClass('hidden');
                 $('#modal-alibaba-order-detail .reload-alibaba-orders').addClass('hidden');
+                $('#modal-alibaba-order-detail .pay-alibaba-orders').addClass('hidden').attr('data-orders', '');
             },
             success: function(data) {
                 formatAjaxOrders(data.orders);
+                if (data.alibaba_order_ids) {
+                    $('#modal-alibaba-order-detail .btn:not(.btn-danger)').addClass('hidden');
+                    $('#modal-alibaba-order-detail .pay-alibaba-orders').removeClass('hidden').attr(
+                        'data-orders', data.alibaba_order_ids.join(',')
+                    );
+                }
             },
             error: function(data) {
                 displayAjaxError('Alibaba Ordering', data);
@@ -301,6 +308,51 @@ var orderItemsAlibaba = (function() {
         })).always(function(){
             $('#modal-alibaba-order-detail .modal-content').removeClass('loading');
             reloadTableStripes();
+        });
+    });
+
+    $('#modal-alibaba-order-detail .pay-alibaba-orders').on('click', function(e) {
+        e.preventDefault();
+
+        $.ajax({
+            url: api_url('pay-orders', 'alibaba'),
+            type: 'POST',
+            data: JSON.stringify({
+                'order_data_ids': $(this).attr('data-orders').split(','),
+                'store_type': window.storeType,
+                'store_id': STORE_ID,
+            }),
+            dataType: 'json',
+            contentType: 'application/json',
+            beforeSend: function() {
+                $('#modal-alibaba-order-detail .modal-content').addClass('loading');
+            },
+            success: function(data) {
+                if (data.error) {
+                    var errorLink = '';
+                    if (data.action) {
+                        errorLink = $('<a target="_blank">').attr(
+                            'href', data.action
+                        ).text(data.action_message).prop('outerHTML');
+                    }
+
+                    swal({
+                        title: 'Payment Error',
+                        text: data.error + ' ' + errorLink,
+                        type: 'error',
+                        html: true
+                    });
+                } else {
+                    swal({
+                        title: 'Payment Success',
+                        text: 'Your orders are being processed',
+                        type: 'success',
+                    });
+                }
+            },
+            complete: function() {
+                $('#modal-alibaba-order-detail .modal-content').removeClass('loading');
+            }
         });
     });
 
