@@ -20,7 +20,7 @@ def get_response(url):
             pass
 
 
-countries = ['AU', 'CL', 'ES', 'NL', 'UA', 'UK', 'NZ', 'US', 'CA', 'RU', 'ID', 'TH', 'PL', 'FR', 'IT', 'TR', 'BR', 'KR', 'SA']
+countries = ['AU', 'CL', 'ES', 'NL', 'UA', 'UK', 'NZ', 'US', 'CA', 'RU', 'ID', 'TH', 'PL', 'FR', 'IT', 'TR', 'BR', 'KR', 'SA', 'DE']
 
 saved_data = json.loads(open('app/data/shipping/aliexpress_countries.json').read())
 for i in countries:
