@@ -20,6 +20,9 @@ class AlibabaAccount(models.Model):
     ecology_token = models.TextField(default='')
     ecology_token_expired_at = models.DateTimeField(null=True, blank=True)
 
+    def __str__(self):
+        return f"{self.user.email} - AlibabaID: {self.alibaba_user_id}"
+
     @property
     def request(self):
         from .utils import APIRequest
