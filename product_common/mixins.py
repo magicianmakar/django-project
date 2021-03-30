@@ -24,7 +24,7 @@ class ProductMixin:
 
     @property
     def thumbnail(self):
-        return self.images.filter(position=0).first().image_url
+        return self.images.filter(position=0).get().image_url
 
     @property
     def description_short(self):
