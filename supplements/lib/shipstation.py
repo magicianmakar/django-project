@@ -54,16 +54,15 @@ def prepare_shipstation_data(pls_order, order, line_items, service_code=None):
 
     items = []
     for item in line_items:
+        label = item['label']
         quantity = item['quantity']
         items.append({
-            'name': item['title'],
+            'name': item['title'] or label.user_supplement.title,  # Shipstation name is required
             'quantity': quantity,
             'sku': item['sku'],
             'unitPrice': float(item['user_supplement'].cost_price),
             'imageUrl': item.get('image_url', ''),
         })
-
-        label = item['label']
 
         key = get_shipstation_line_key(pls_order.store_type,
                                        pls_order.store_id,
