@@ -1,4 +1,5 @@
 import simplejson as json
+from decimal import Decimal
 from tempfile import mktemp
 from zipfile import ZipFile
 
@@ -660,7 +661,43 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
             store.pusher_trigger('products-supplier-sync', push_data)
             continue
 
+        def get_prices(price):
+            max_percent = Decimal('100.0')
+            price = Decimal(price)
+            new_price = price * Decimal(100 + price_markup) / max_percent
+            new_compare = price * Decimal(100 + compare_markup) / max_percent
+
+            return new_price.quantize(Decimal('.01')), new_compare.quantize(Decimal('.01'))
+
         try:
+            if not product_data.get('variants'):
+                for variant in supplier_variants:
+                    if variant.get('sku') is None and len(supplier_variants) != 1:
+                        continue
+
+                    idx = variant_index_from_supplier_sku(product, variant.get('sku'), [{'id': -1}])
+                    if idx is not None:
+                        break
+                else:
+                    push_data['status'] = 'fail'
+                    push_data['fail'] += 1
+                    push_data['error'] = 'Warning - Unmapped Product'
+                    store.pusher_trigger('products-supplier-sync', push_data)
+                    continue
+
+                price, compare = get_prices(supplier_variants[idx]['price'])
+                rep = store.request.patch(
+                    url='{}/{}'.format(store.get_api_url('products'), commercehq_id),
+                    json={
+                        'price': price,
+                        'compare_price': compare if product_data.get('compare_price') else None
+                    }
+                )
+                rep.raise_for_status()
+                push_data['success'] += 1
+                store.pusher_trigger('products-supplier-sync', push_data)
+                continue
+
             # Check if there's only one price
             same_price = (len('variants') == 1
                           or len(set([v['price'] for v in product_data['variants']])) == 1
