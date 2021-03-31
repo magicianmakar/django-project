@@ -1,11 +1,15 @@
-{% load perms_helper %}
+{% load perms_helper static %}
 
 <div class="col-xs-12 col-md-3">
   <div class="ibox">
     <div class="ibox-content product-box" product-id="{{item.id}}" product-title="{{item.title}}">
       <div class="product-imitation pls">
         <a href="{{ item.get_url }}">
+          {% if item.thumbnail %}
           <img src="{{ item.thumbnail }}">
+          {% else %}
+          <img class="no-img unveil" src="{% static 'img/no-image.png' %}">
+          {% endif %}
         </a>
         <button class="btn btn-xs btn-danger delete-product-btn"><i class="fa fa-times"></i></button>
       </div>

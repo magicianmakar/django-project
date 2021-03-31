@@ -48,6 +48,7 @@ from woocommerce_core.models import WooProduct, WooSupplier, WooUserUpload
 from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier, GearUserUpload
 from groovekart_core.models import GrooveKartStore, GrooveKartProduct, GrooveKartSupplier, GrooveKartUserUpload
 from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier, BigCommerceUserUpload
+from churnzero_core.utils import post_churnzero_cancellation_event
 from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
 from phone_automation import billing_utils as billing
 from shopified_core import permissions
@@ -640,6 +641,8 @@ def webhook(request, provider, option):
                     store.user.profile.change_plan(GroupPlan.objects.get(
                         payment_gateway='shopify',
                         slug='shopify-free-plan'))
+
+                post_churnzero_cancellation_event(store.user)
 
                 return JsonResponse({'status': 'ok'})
             else:

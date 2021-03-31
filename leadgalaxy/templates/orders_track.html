@@ -355,6 +355,12 @@
 {% endblock %}
 
 {% block extrajs %}
+<script type="text/javascript">
+    window.store = {
+        type: 'shopify',
+        id: '{{ store.id }}',
+    }
+</script>
 
 {% compress js %}
     <script src="{% static 'libs/bower_components/moment/min/moment.min.js' %}"></script>
@@ -367,4 +373,3 @@
 {% endcompress %}
 
 {% endblock %}
-

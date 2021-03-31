@@ -305,7 +305,8 @@
                 url: api_url('sync-order', 'supplements'),
                 type: 'POST',
                 data: {
-                    'store_type': window.storeType,
+                    'store_id': window.store.id,
+                    'store_type': window.store.type,
                     'source_id': order.source_id
                 }
             }).then(function(data) {

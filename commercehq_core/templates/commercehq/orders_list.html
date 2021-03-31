@@ -148,7 +148,7 @@
                     </div>
                     </form>
 
-                    {% if paginator.count and user|can:'bulk_order.use' %}
+                    {% if paginator.count and user|can:'bulk_order.use' or user|can:'pls.use' or user|can:'alibaba_integration.use' %}
                         {% include 'partial/bulk_orders.html' with orders_count=paginator.count show_pod=has_print_on_demand %}
                     {% endif %}
 

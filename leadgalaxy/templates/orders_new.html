@@ -317,7 +317,7 @@
                     </div>
                     </form>
 
-                    {% if store_sync_enabled and open_orders and user|can:'bulk_order.use' %}
+                    {% if store_sync_enabled and open_orders and user|can:'bulk_order.use' or user|can:'pls.use' or user|can:'alibaba_integration.use' %}
                         {% include 'partial/bulk_orders.html' with orders_count=open_orders show_pod=open_print_on_demand %}
                     {% elif not store_sync_enabled %}
                         <div class="row m-t hidden-xs">

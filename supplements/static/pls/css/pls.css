@@ -428,6 +428,10 @@
   content: "New Mockups:";
 }
 
+#mockup-thumbnails:empty + .control-label {
+  display: none;
+}
+
 #mockup-thumbnails img {
   max-width: 70px;
   padding: 0 15px;

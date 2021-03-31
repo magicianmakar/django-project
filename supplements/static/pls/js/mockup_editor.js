@@ -551,6 +551,20 @@ $('#save-mockups').on('click', function(e) {
     }
 });
 
+$(window.plupload_Config.saveFormID).on("addmockups", function(e, url) {
+    e.preventDefault();
+    $('#mockup-thumbnails').append($('<img>').attr('src', url));
+}).on("cleanmockups", function(e) {
+    e.preventDefault();
+    $('#mockup-thumbnails').empty();
+}).on("addlabel", function(e) {
+    e.preventDefault();
+    var fileList = $('#label').get(0).files;
+    if (fileList.length > 0) {
+        $('#single-label-upload').get(0).files = fileList;
+    }
+});
+
 var mockupsUploader = new plupload.Uploader({
     runtimes: 'html5',
     browse_button: document.getElementById('save-mockups'),

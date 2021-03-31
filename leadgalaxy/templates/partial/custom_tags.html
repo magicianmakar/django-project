@@ -278,7 +278,7 @@
   {% endif %}
 </script>
 
-{% if user.is_authenticated %}
+{% if user.is_authenticated and user.models_user.profile.has_churnzero_account %}
     {% with user=request.user profile=request.user.profile models_user=request.user.models_user models_user_profile=request.user.models_user.profile %}
     <script>
         var ChurnZero = ChurnZero || [];

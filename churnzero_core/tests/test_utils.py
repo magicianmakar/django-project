@@ -24,6 +24,7 @@ from churnzero_core.utils import (
     post_churnzero_addon_update,
     set_churnzero_account,
     SetAccountActionBuilder,
+    post_churnzero_cancellation_event,
 )
 
 
@@ -416,3 +417,41 @@ class SetAccountActionBuilderTestCase(BaseTestCase):
         builder.add_plan()
         action = builder.get_action()
         self.assertEqual(action['attr_Plan'], title)
+
+
+class PostChurnZeroCancellationEventTestCase(BaseTestCase):
+    @override_settings(DEBUG=False)
+    @override_settings(CHURNZERO_APP_KEY='test')
+    @patch('shopified_core.tasks.requests_async.apply_async')
+    def test_must_be_called_with_correct_credentials_cancelling(self, post_request):
+        user = UserFactory(first_name="John", last_name="Doe", username='username')
+        post_churnzero_cancellation_event(user)
+        actions = [{
+            'appKey': settings.CHURNZERO_APP_KEY,
+            'accountExternalId': 'username',
+            'contactExternalId': 'username',
+            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
+            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
+            'action': 'trackEvent',
+            'eventName': 'Cancellation',
+            'description': "John Doe",
+        }]
+        post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
+
+    @override_settings(DEBUG=False)
+    @override_settings(CHURNZERO_APP_KEY='test')
+    @patch('shopified_core.tasks.requests_async.apply_async')
+    def test_must_be_called_with_username_and_not_full_name_when_cancelling(self, post_request):
+        user = UserFactory(username='username', first_name='', last_name='')
+        post_churnzero_cancellation_event(user)
+        actions = [{
+            'appKey': settings.CHURNZERO_APP_KEY,
+            'accountExternalId': 'username',
+            'contactExternalId': 'username',
+            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
+            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
+            'action': 'trackEvent',
+            'eventName': 'Cancellation',
+            'description': 'username',
+        }]
+        post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
