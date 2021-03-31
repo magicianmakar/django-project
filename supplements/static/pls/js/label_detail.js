@@ -1,17 +1,3 @@
-$(window.plupload_Config.saveFormID).on("addmockups", function(e, url) {
-    e.preventDefault();
-    $('#mockup-thumbnails').append($('<img>').attr('src', url));
-}).on("cleanmockups", function(e) {
-    e.preventDefault();
-    $('#mockup-thumbnails').empty();
-}).on("addlabel", function(e) {
-    e.preventDefault();
-    var fileList = $('#label').get(0).files;
-    if (fileList.length > 0) {
-        $('#single-label-upload').get(0).files = fileList;
-    }
-});
-
 $('#single-label-upload').on('change', function() {
     // Update label in mockup editor
     var files = this.files;

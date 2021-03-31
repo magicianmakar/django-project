@@ -27,6 +27,13 @@
 
 {% block form_action %}
 <div class="form-group">
+  <!-- No spaces between tags for :empty selector -->
+  <div id="mockup-thumbnails" class="col-sm-10 col-xs-12 pull-right"></div>
+  <label class="col-sm-2 col-xs-12 control-label pull-left">New Mockups:</label>
+</div>
+
+
+<div class="form-group">
   <div class="col-sm-offset-2 col-sm-10 col-xs-12">
     {% if is_submitted %}
     <input type="submit"
@@ -60,4 +67,10 @@
     <input type="reset" value="Reset" class="btn btn-default">
   </div>
 </div>
+
+<style type="text/css">
+  #mockup-thumbnails:before {
+    content: "";
+  }
+</style>
 {% endblock %}

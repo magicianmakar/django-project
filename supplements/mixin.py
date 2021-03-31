@@ -18,9 +18,10 @@ from supplements.lib.authorizenet import (
 class PLSupplementMixin:
     is_admin_editable = True
 
-    @property
+    @cached_property
     def thumbnail(self):
-        return self.images.filter(position=0).get().image_url
+        first_image = self.images.all().order_by('position').first()
+        return first_image.image_url if first_image else ''
 
     @property
     def description_short(self):
