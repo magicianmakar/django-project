@@ -1054,6 +1054,8 @@ class ShopifyStoreApi(ApiBase):
             profile = user.models_user.profile
 
         config = profile.get_config()
+        if 'make_visisble' not in config:
+            config['make_visisble'] = True
         if not user.can('auto_margin.use'):
             for i in ['auto_margin', 'auto_margin_cents', 'auto_compare_at', 'auto_compare_at_cents']:
                 if i in config:
