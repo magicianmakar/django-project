@@ -630,6 +630,7 @@
 
 {% include "groovekart/partial/groovekart_product_selector.html" %}
 {% include "supplements/partials/order_details_modal.html" %}
+{% include 'alibaba/partials/orders.html' %}
 {% endblock %}
 
 
@@ -640,6 +641,7 @@
     <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/select2/dist/css/select2.min.css' %}" rel="stylesheet">
     <link href="{% static 'libs/bower_components/jquery.steps/demo/css/jquery.steps.css' %}" rel="stylesheet">
+    <link href="{% static 'alibaba/css/orders.css' %}" rel="stylesheet">
     <link href="{% static 'groovekart/css/orders_list.css' %}" rel="stylesheet">
 {% endcompress %}
 
@@ -724,6 +726,7 @@
     <script src="{% static 'libs/bower_components/switchery/dist/switchery.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'prints/js/track_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'prints/js/place_orders.js' %}"></script>
+    <script type="text/javascript" src="{% static 'alibaba/js/orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/bulk_orders.js' %}"></script>
     <script type="text/javascript" src="{% static 'js/order_items.js' %}"></script>
     <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
