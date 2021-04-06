@@ -3,7 +3,6 @@
 (function(user_filter, sub_conf) {
 'use strict';
     function addOrderToQueue(order, warn) {
-        ChurnZero.push(['trackEvent', 'Auto Order Placed', order.supplier_type]);
 
         warn = typeof(warn) !== 'undefined' ? warn : true;
 
@@ -21,6 +20,10 @@
                 toastr.error('Product is already in Orders Queue');
             }
         });
+
+        if (ChurnZero) {
+            ChurnZero.push(['trackEvent', 'Auto Order Placed', order.supplier_type]);
+        }
     }
 
     function orderBundle(order_data_id, order_name, store_type, fail_callback) {

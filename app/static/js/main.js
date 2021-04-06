@@ -848,7 +848,6 @@ $(function() {
             },
             success: function(data) {
                 if ('status' in data && data.status == 'ok') {
-                    ChurnZero.push(['trackEvent', 'Create a Board', board_name]);
 
                     $('#modal-board-add').modal('hide');
                     if (typeof(window.onBoardAdd) == 'function') {
@@ -858,6 +857,8 @@ $(function() {
                     }
 
                     $('#add-board-name').val('');
+
+                    ChurnZero.push(['trackEvent', 'Create a Board', board_name]);
                 } else {
                     displayAjaxError('Create Board', data);
                 }

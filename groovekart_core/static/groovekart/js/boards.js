@@ -39,7 +39,6 @@ $(document).ready(function() {
             data: {title: boardName},
             success: function(data) {
                 if ('status' in data && data.status == 'ok') {
-                    ChurnZero.push(['trackEvent', 'Create a Board', boardName]);
                     $('#gkart-modal-board-add').modal('hide');
                     $title.val('');
 
@@ -48,6 +47,8 @@ $(document).ready(function() {
                     } else {
                         window.location.href = window.location.href;
                     }
+
+                    ChurnZero.push(['trackEvent', 'Create a Board', boardName]);
                 } else {
                     displayAjaxError('Create Board', data);
                 }

@@ -245,7 +245,7 @@ function formatAPIDetails(data) {
             };
 
             // Push 1 notification for each order
-            if (orderStatus.placed) {
+            if (orderStatus.placed && ChurnZero) {
                 ChurnZero.push(['trackEvent', 'Auto Order Placed', 'supplement']);
             }
         }

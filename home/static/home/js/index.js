@@ -236,11 +236,11 @@
 
                     syncConfig();
 
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'Shopify']);
-
                     setTimeout(function() {
                         window.location.reload();
                     }, 1000);
+
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'Shopify']);
                 },
                 error: function(data) {
                     displayAjaxError('Delete Store', data);
@@ -1114,9 +1114,10 @@
                 url: api_url('store', 'chq') + '?' + $.param({store_id: storeId}),
                 method: 'DELETE',
                 success: function() {
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'CommerceHQ']);
                     $('#chq-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
+
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'CommerceHQ']);
                 }
             });
         });
@@ -1214,9 +1215,10 @@
                 url: api_url('store', 'gear') + '?' + $.param({id: storeId}),
                 method: 'DELETE',
                 success: function() {
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'GearBubble']);
                     $('#gear-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
+
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'GearBubble']);
                 }
             });
         });
@@ -1293,8 +1295,9 @@
                 method: 'DELETE',
                 success: function() {
                     $('#woo-store-row-' + storeId).hide();
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'WooCommerce']);
                     swal('Deleted!', 'The store has been deleted.', 'success');
+
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'WooCommerce']);
                 }
             });
         });
@@ -1420,9 +1423,10 @@
                 url: api_url('store', 'gkart') + '?' + $.param({id: storeId}),
                 method: 'DELETE',
                 success: function() {
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'GrooveKart']);
                     $('#gk-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
+
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'GrooveKart']);
                 }
             });
         });
@@ -1471,9 +1475,10 @@
                 url: api_url('store', 'bigcommerce') + '?' + $.param({id: storeId}),
                 method: 'DELETE',
                 success: function() {
-                    ChurnZero.push(['trackEvent', 'Removed Store', 'BigCommerce']);
                     $('#bigcommerce-store-row-' + storeId).hide();
                     swal('Deleted!', 'The store has been deleted.', 'success');
+
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'BigCommerce']);
                 }
             });
         });
