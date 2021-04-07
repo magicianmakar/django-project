@@ -362,6 +362,16 @@ def create_stripe_subscription(addon_usage, today=None):
         price=addon_usage.next_price.stripe_price_id
     )['data']
     if len(existing_subscriptions) > 0:
+        if not addon_usage.cancelled_at:
+            addon_usage.user.profile.addons.add(addon_usage.billing.addon)
+            for sub in existing_subscriptions:
+                for item in sub['items']['data']:
+                    if item['price']['id'] == addon_usage.next_price.stripe_price_id:
+                        addon_usage.stripe_subscription_item_id = item['id']
+                        addon_usage.stripe_subscription_id = sub['id']
+                        addon_usage.save()
+                        break
+
         raise Exception(f'Existing stripe subscription to Addon found for <AddonUsage: {addon_usage.id}>')
 
     subscription_item = None
