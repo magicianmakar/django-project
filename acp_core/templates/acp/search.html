@@ -509,6 +509,7 @@
                                 <th>Refunded / Dispute</th>
                                 <th>Status</th>
                                 <th>Invoice</th>
+                                <th>Receipt</th>
                                 <th>Options</th>
                             </tr>
                         </thead>
@@ -543,6 +544,9 @@
                                 </td>
                                 <td>
                                     <a href="{{i.invoice.url}}" target="_blank">{{i.invoice.id}}</a>
+                                </td>
+                                <td>
+                                    <a href="{{i.receipt_url}}" target="_blank">{{i.receipt_number|default:'View Receipt'}}</a>
                                 </td>
                                 <td>
                                     <a href="#" class="btn btn-xs btn-warning refund-charge-btn" {% if i.amount == i.amount_refunded %}disabled{% endif %} user-id="{{users.0.id}}"

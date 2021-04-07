@@ -214,6 +214,8 @@ class ACPUserSearchView(BaseTemplateView):
                         'failure_message': i.failure_message,
                         'amount': '${:0.2f}'.format(i.amount / 100.0),
                         'amount_refunded': '${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
+                        'receipt_number': i.receipt_number,
+                        'receipt_url': i.receipt_url,
                     }
 
                     if i.invoice:
