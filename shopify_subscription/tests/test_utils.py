@@ -21,7 +21,41 @@ class ShopifyProfileTestCase(BaseTestCase):
     def test_must_return_true_if_status_is_active(self, _get_subscription):
         _get_subscription.return_value = Mock(is_active=True)
         profile = ShopifyProfile(UserFactory())
+        profile.plan = Mock()
+        profile.plan.free_plan = False
+        profile.plan.is_free = False
+        profile.plan.is_active_free = False
         self.assertTrue(profile.is_active)
+
+    @patch('shopify_subscription.utils.ShopifyProfile._get_subscription')
+    def test_must_return_not_active_if_no_plan(self, _get_subscription):
+        _get_subscription.return_value = Mock(is_active=True)
+        profile = ShopifyProfile(UserFactory())
+        self.assertFalse(profile.is_active)
+
+    @patch('shopify_subscription.utils.ShopifyProfile._get_subscription')
+    def test_must_return_not_active_if_free_plan(self, _get_subscription):
+        _get_subscription.return_value = Mock(is_active=True)
+        profile = ShopifyProfile(UserFactory())
+        profile.plan = Mock()
+        profile.plan.free_plan = True
+        self.assertFalse(profile.is_active)
+
+    @patch('shopify_subscription.utils.ShopifyProfile._get_subscription')
+    def test_must_return_not_active_if_is_free(self, _get_subscription):
+        _get_subscription.return_value = Mock(is_active=True)
+        profile = ShopifyProfile(UserFactory())
+        profile.plan = Mock()
+        profile.plan.is_free = True
+        self.assertFalse(profile.is_active)
+
+    @patch('shopify_subscription.utils.ShopifyProfile._get_subscription')
+    def test_must_return_not_active_if_is_active_free(self, _get_subscription):
+        _get_subscription.return_value = Mock(is_active=True)
+        profile = ShopifyProfile(UserFactory())
+        profile.plan = Mock()
+        profile.plan.is_active_free = True
+        self.assertFalse(profile.is_active)
 
     @patch('shopify_subscription.utils.ShopifyProfile._get_subscription')
     def test_must_return_correct_date_for_start_date(self, _get_subscription):

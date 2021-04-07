@@ -120,6 +120,14 @@ class ShopifyProfile:
         return getattr(self._user.profile, "plan")
 
     @cached_property
+    def has_free_plan(self):
+        return bool(self.plan and self.plan.free_plan)
+
+    @cached_property
+    def has_other_free(self):
+        return bool(self.plan and (self.plan.is_free or self.plan.is_active_free))
+
+    @cached_property
     def is_valid(self):
         return bool(self.shopify_store and self._subscription.charge)
 
@@ -129,7 +137,7 @@ class ShopifyProfile:
 
     @cached_property
     def is_active(self):
-        return self._subscription.is_active
+        return self._subscription.is_active and not self.has_free_plan and not self.has_other_free
 
     @cached_property
     def start_date(self):
