@@ -21,15 +21,15 @@ def get_auth_header():
 
 def get_address(store_data, hashed=False):
     ship_to = {
-        'name': store_data['name'],
-        'company': store_data.get('company', ''),
-        'street1': store_data['address1'],
-        'street2': store_data.get('address2', ''),
-        'city': store_data['city'],
-        'state': store_data['province'],
-        'postalCode': store_data['zip'],
-        'country': store_data['country_code'],
-        'phone': store_data['phone'],
+        'name': store_data['name'] or '',
+        'company': store_data.get('company') or '',
+        'street1': store_data['address1'] or '',
+        'street2': store_data.get('address2') or '',
+        'city': store_data['city'] or '',
+        'state': store_data['province'] or '',
+        'postalCode': store_data['zip'] or '',
+        'country': store_data['country_code'] or '',
+        'phone': store_data['phone'] or '',
     }
     if hashed:
         ship_to = hash_text(json.dumps(ship_to, sort_keys=True))
