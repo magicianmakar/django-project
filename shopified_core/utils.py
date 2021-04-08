@@ -612,7 +612,7 @@ def unique_username(username='user', fullname=None):
             username = fullname
 
     if not username:
-        username = 'user'
+        username = f"user{get_random_string(10, '0123456789')}"
 
     username = username.lower().strip()
     if len(username) > 30:

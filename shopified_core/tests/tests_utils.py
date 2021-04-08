@@ -1,4 +1,5 @@
 import os
+import re
 
 from django.conf import settings
 from django.core.cache import cache, caches
@@ -268,7 +269,8 @@ class UtilsTestCase(BaseTestCase):
         User.objects.create(username=username)
 
         username = unique_username()
-        self.assertEqual(username, 'user1')
+        self.assertTrue(re.match(r'user[0-9]{10}', username))
+
         User.objects.create(username=username)
 
         username = unique_username('john')
@@ -276,20 +278,20 @@ class UtilsTestCase(BaseTestCase):
         User.objects.create(username=username)
 
         username = unique_username('john@example.com')
-        self.assertEqual(username, 'john1')
+        self.assertTrue(re.match(r'user[0-9]{10}', username))
         User.objects.create(username=username)
 
         username = unique_username('John@example.com')
-        self.assertEqual(username, 'john2')
+        self.assertTrue(re.match(r'user[0-9]{10}', username))
         User.objects.create(username=username)
 
         username = unique_username('John')
-        self.assertEqual(username, 'john3')
+        self.assertTrue(re.match(r'user[0-9]{10}', username))
         User.objects.create(username=username)
 
         for i in range(30):
             username = unique_username('john')
-            self.assertEqual(username, 'john%d' % (4 + i))
+            self.assertTrue(re.match(r'user[0-9]{10}', username))
             User.objects.create(username=username)
 
     def test_unique_username_fullname(self):
@@ -306,11 +308,11 @@ class UtilsTestCase(BaseTestCase):
         User.objects.create(username='john.smith')
 
         username = unique_username('john', fullname="John & Smith")
-        self.assertEqual(username, 'john.smith1')
+        self.assertTrue(re.match(r'user[0-9]{10}', username))
         User.objects.create(username=username)
 
         username = unique_username('john', fullname=['John', 'Smith'])
-        self.assertEqual(username, 'john.smith2')
+        self.assertTrue(re.match(r'user[0-9]{10}', username))
 
         username = unique_username('john2', fullname=[])
         self.assertEqual(username, 'john2')
@@ -328,7 +330,7 @@ class UtilsTestCase(BaseTestCase):
         self.assertEqual(username, 'john2')
 
         username = unique_username('', fullname=[])
-        self.assertEqual(username, 'user')
+        self.assertTrue(re.match(r'user[0-9]{10}', username))
 
     def test_unique_username_long_name(self):
         username = unique_username('', fullname='Thiago Reges Rodrigues De Souza')
