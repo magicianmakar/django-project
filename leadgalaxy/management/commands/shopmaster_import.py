@@ -19,7 +19,7 @@ class ImportException(Exception):
 class Command(DropifiedBaseCommand):
 
     def add_arguments(self, parser):
-        parser.add_argument('--progress', action='store_true', help='Show progress')
+        parser.add_argument('--no-progress', dest='progress', action='store_false', help='Show progress')
         parser.add_argument('--store', action='store', type=int, required=True, help='Import to this store')
         parser.add_argument('--store_type', action='store', type=str, required=True, choices=['shopify', 'chq', 'woo'], help='Import to this store')
         parser.add_argument('data_file', type=open)
@@ -59,8 +59,8 @@ class Command(DropifiedBaseCommand):
             try:
                 self.last_product = self.import_shopify(store_type, self.store, shopify_id, supplier_url)
                 supplier = self.last_product.default_supplier
-            except ImportException:
-                pass
+            except ImportException as e:
+                self.write(f'Import error: {str(e)}')
 
         elif supplier_url and self.last_product:
             supplier = get_supplier_model(store_type).objects.create(
@@ -114,8 +114,6 @@ class Command(DropifiedBaseCommand):
                 rep.raise_for_status()
 
                 supplier_url = rep.headers.get('location')
-        else:
-            raise ImportException('Not an aliexpress product')
 
         supplier_url = remove_link_query(supplier_url)
 
@@ -142,7 +140,7 @@ class Command(DropifiedBaseCommand):
             product=product,
             product_url=supplier_url,
             supplier_name='Supplier',
-            supplier_url='https://www.aliexpress.com/',
+            supplier_url=f'https://{get_domain(supplier_url, full=True)}/',
             is_default=True
         )
 
