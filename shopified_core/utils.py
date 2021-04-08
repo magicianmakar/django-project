@@ -601,8 +601,6 @@ def unique_username(username='user', fullname=None):
     if username.strip() and not User.objects.filter(username__iexact=username.strip()).exists():
         return username.lower().strip()
 
-    n = 0
-
     if type(fullname) is list:
         fullname = ' '.join(fullname).strip()
 
@@ -623,8 +621,7 @@ def unique_username(username='user', fullname=None):
     new_username = username[:30]
 
     while User.objects.filter(username__iexact=new_username).exists():
-        n += 1
-        new_username = '{}{}'.format(username.strip()[:29], n)
+        new_username = f"user{get_random_string(10, '0123456789')}"
 
     return new_username
 
