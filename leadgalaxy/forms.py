@@ -213,6 +213,8 @@ class EmailAuthenticationForm(AuthenticationForm):
             username = self.data['username'].strip()
 
             validate_email(username)
+        except ValidationError:
+            raise
         except:
             capture_exception()
             raise
