@@ -62,7 +62,7 @@ function file_uploaded(url) {
 
     $.ajax({
         type: 'POST',
-        url: '/api/add-user-upload',
+        url: api_url('add-user-upload', 'shopify'),
         data: {
             'url': url,
             'product': config.product_id,

@@ -1002,17 +1002,6 @@ class ShopifyStoreApi(ApiBase):
 
         return self.api_success()
 
-    def post_add_user_upload(self, request, user, data):
-        product = ShopifyProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        upload = UserUpload(user=user.models_user, product=product, url=data.get('url'))
-        permissions.user_can_add(user, upload)
-
-        upload.save()
-
-        return self.api_success()
-
     def post_product_randomize_image_names(self, request, user, data):
         product = ShopifyProduct.objects.get(id=data.get('product'))
         permissions.user_can_edit(user, product)

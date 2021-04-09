@@ -35,7 +35,6 @@ from .models import (
     GrooveKartProduct,
     GrooveKartSupplier,
     GrooveKartBoard,
-    GrooveKartUserUpload,
     GrooveKartOrderTrack,
 )
 from . import tasks
@@ -776,17 +775,6 @@ class GrooveKartApi(ApiBase):
             order.store.pusher_trigger('order-source-id-delete', data)
 
         AlibabaOrderItem.objects.filter(order_track_id__in=deleted_ids).delete()
-
-        return self.api_success()
-
-    def post_add_user_upload(self, request, user, data):
-        product = GrooveKartProduct.objects.get(id=data.get('product'))
-        permissions.user_can_edit(user, product)
-
-        upload = GrooveKartUserUpload(user=user.models_user, product=product, url=data.get('url'))
-        permissions.user_can_add(user, upload)
-
-        upload.save()
 
         return self.api_success()
 

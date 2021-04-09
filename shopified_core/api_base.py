@@ -30,7 +30,7 @@ from shopified_core.utils import (
     serializers_orders_track,
     using_replica,
 )
-from shopified_core.models_utils import get_store_model
+from shopified_core.models_utils import get_store_model, get_user_upload_model
 from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 
 from shopified_core.decorators import HasSubuserPermission
@@ -834,3 +834,28 @@ class ApiBase(ApiResponseMixin, View):
             return self.api_success()
 
         return self.api_error('Store can not be added', status=403)
+
+    def post_add_user_upload(self, request, user, data):
+        try:
+            product = self.product_model.objects.get(id=data.get('product'))
+            permissions.user_can_edit(user, product)
+        except ObjectDoesNotExist:
+            return self.api_error('Product not found.', status=404)
+        #
+        try:
+            product = self.product_model.objects.get(id=data.get('product'))
+            permissions.user_can_edit(user, product)
+
+        except ObjectDoesNotExist:
+            return self.api_error('Product not found')
+
+        upload = get_user_upload_model(self.store_slug).objects.create(
+            user=user.models_user,
+            product=product,
+            url=data.get('url'))
+
+        upload.save()
+
+        permissions.user_can_add(user, upload)
+
+        return self.api_success()

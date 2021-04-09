@@ -59,10 +59,10 @@ function upload_file(file, signed_request, url){
 function file_uploaded(url) {
     product.images.push(url);
     document.renderImages();
-    /*
+
     $.ajax({
         type: 'POST',
-        url: '/api/add-user-upload',
+        url: api_url('add-user-upload', 'woo'),
         data: {
             'url': url,
             'product': config.product_id,
@@ -70,7 +70,6 @@ function file_uploaded(url) {
         success: function(data) {},
         error: function(data) {},
     });
-    */
 }
 
 document.file_uploaded = file_uploaded;
