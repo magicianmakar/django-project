@@ -2016,7 +2016,7 @@ def get_timezones(country=None):
 def fix_product_url(data, request):
     if 'product' in data:
         if not data['product']['url'].startswith('http'):
-            data['product']['url'] = request.build_absolute_uri(data['product']['url'])
+            data['product']['url'] = app_link(data['product']['url'])
 
     return data
 
