@@ -498,6 +498,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         supplement.pl_supplement_id = self.supplement_id
         supplement.user_id = self.request.user.models_user.id
         supplement.tags = form.cleaned_data['tags']
+        supplement.seen_users = json.dumps(['All'])
         supplement.save()
         return supplement
 
@@ -555,7 +556,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             kwargs = {'supplement_id': new_user_supplement.id}
             redirect_url = self.get_redirect_url(**kwargs)
 
-            return redirect(redirect_url)
+            return redirect(f'{redirect_url}?unread=True')
 
         context = self.get_supplement_data(user, self.supplement_id)
 

@@ -281,7 +281,7 @@ class SupplementTestCase(PLSBaseTestCase):
 
         kwargs = {'supplement_id': self.user_supplement.id + 1}
         url = reverse('pls:user_supplement', kwargs=kwargs)
-        self.assertRedirects(response, url)
+        self.assertRedirects(response, f'{url}?unread=True')
         self.assertEqual(self.user.pl_supplements.count(), 2)
         self.assertEqual(UserSupplementImage.objects.count(), 1)
         self.assertEqual(UserSupplementLabel.objects.all().count(), 2)
@@ -842,7 +842,7 @@ class UserSupplementViewTestCase(PLSBaseTestCase):
         self.assertEqual(self.user.pl_supplements.count(), 2)
         response = self.client.post(self.get_url(), data=data)
         self.assertEqual(self.user.pl_supplements.count(), 2)
-        self.assertRedirects(response, self.get_url())
+        self.assertRedirects(response, f'{self.get_url()}?unread=True')
 
         user_supplement.refresh_from_db()
         self.assertTrue(user_supplement.title, new_title)
