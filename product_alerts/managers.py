@@ -1026,7 +1026,6 @@ class BigCommerceProductChangeManager(ProductChangeManager):
         if self.config['variant_disappears'] == 'remove':
             if variant_id > 0:
                 self.product_data_changed = True
-                del product_data['variants'][idx]
                 del api_product_data['variants'][idx]
         elif self.config['variant_disappears'] == 'zero_quantity':
             if variant_id > 0:
