@@ -531,6 +531,7 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
                     else:
                         idx = variant_index_from_supplier_sku(product, sku, product_data['variants'])
 
+                        variant_id = 0
                         if idx is not None:
                             variant_id = product_data['variants'][idx]['id']
                         if variant_id > 0:
