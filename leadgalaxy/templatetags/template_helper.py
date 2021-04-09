@@ -9,6 +9,7 @@ from shopified_core.utils import (
     decode_params,
     app_link as utils_app_link,
     base64_encode,
+    safe_int
 )
 
 import simplejson as json
@@ -393,7 +394,7 @@ def sec_to_min(s):
 
 @register.filter
 def min_value(amount, minimum):
-    return min(amount, minimum)
+    return min(safe_int(amount), safe_int(minimum))
 
 
 @register.filter(takes_context=True)
