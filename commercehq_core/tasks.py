@@ -458,10 +458,13 @@ def product_update(product_id, data):
 
         images_need_upload = []
         for img in data['images']:
-            if img not in product_images + variant_images:
+            if img and img not in product_images + variant_images:
                 images_need_upload.append(img)
 
         for idx, img in enumerate(images_need_upload):
+            if not img:
+                continue
+
             store.pusher_trigger('product-update', {
                 'product': product.id,
                 'progress': 'Uploading Images ({:,.2f}%)'.format(((idx + 1) * 100 / len(images_need_upload)) - 1),
