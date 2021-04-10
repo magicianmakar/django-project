@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.shortcuts import reverse
+from django.test import override_settings
 
 from leadgalaxy.tests.factories import AppPermissionFactory, GroupPlanFactory, ShopifyOrderTrackFactory, ShopifyStoreFactory, UserFactory
 from lib.test import BaseTestCase
@@ -969,6 +970,7 @@ class BillingTestCase(PLSBaseTestCase):
         self.assertEqual(response.status_code, 302)
 
 
+@override_settings(DEBUG=True)
 class UploadJSONTestCase(PLSBaseTestCase):
     def get_url(self):
         return reverse('pls:upload_json')
@@ -997,6 +999,7 @@ class UploadJSONTestCase(PLSBaseTestCase):
         self.assertRedirects(response, reverse('pls:index'))
 
 
+@override_settings(DEBUG=True)
 class DownloadJSONTestCase(PLSBaseTestCase):
     def get_url(self):
         return reverse('pls:download_json')

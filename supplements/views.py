@@ -1745,7 +1745,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if not settings.DEBUG and request.user.can('pls_admin.use'):
+        if settings.DEBUG and request.user.can('pls_admin.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()
@@ -1808,7 +1808,7 @@ class UploadJSON(LoginRequiredMixin, TemplateView):
 class DownloadJSON(LoginRequiredMixin, View):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
-        if not settings.DEBUG and request.user.can('pls_admin.use'):
+        if settings.DEBUG and request.user.can('pls_admin.use'):
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()

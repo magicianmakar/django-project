@@ -10,11 +10,13 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 """
 
 
-import os
 import dj_database_url
+import os
+import sys
 import warnings
 
 from lib.env import setup_env
+
 setup_env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -27,6 +29,8 @@ ENCRYPTION_SECRECT_KEY = os.environ.get('ENCRYPTION_SECRECT_KEY', 'TEST')
 SSO_SECRET_KEY = os.environ.get('SSO_SECRET_KEY', 'TEST')
 
 DEBUG = (os.environ.get('DEBUG_APP') == 'TRUE')
+
+TESTING_MODE = 'test' in sys.argv
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
@@ -398,7 +402,7 @@ COMPRESS_CSS_FILTERS = [
 ]
 
 # Django toolbar
-if DEBUG:
+if DEBUG and not TESTING_MODE:
     INTERNAL_IPS = ['127.0.0.1']
     INSTALLED_APPS = INSTALLED_APPS + ('debug_toolbar',)
     MIDDLEWARE = MIDDLEWARE + ('debug_toolbar.middleware.DebugToolbarMiddleware',)
