@@ -53,7 +53,7 @@ class SupplementsApi(ApiResponseMixin, View):
 
         orders, orders_status, order_costs = util.get_order_data(
             request.user,
-            data['order_data_ids'],
+            list(set(data['order_data_ids'])),
             data.get('shippings', {}),
             data.get('pay_taxes', {})
         )
