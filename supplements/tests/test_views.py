@@ -735,12 +735,12 @@ class OrderListTestCase(PLSBaseTestCase):
         )
 
         self.assertEqual(self.pls_order.refund, None)
-        error = [b'Transaction must be setteled']
+        error = ['Transaction must be setteled']
         with patch('supplements.mixin.AuthorizeNetCustomerMixin.refund',
                    return_value=(None, error)):
             response = self.client.post(self.get_url(), data=data)
             self.assertEqual(response.status_code, 200)
-            self.assertIn(error[0], response.content)
+            self.assertIn(error[0], response.content.decode("utf-8"))
             self.pls_order.refresh_from_db()
             self.assertEqual(self.pls_order.refund, None)
 

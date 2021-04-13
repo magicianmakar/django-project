@@ -208,7 +208,7 @@ $(document).ready(function(){
             $(".refund-amount").each(function (i, item) {
                 if ($(item).val()) {
                     data[($(item).data("line-id"))] = $(item).val();
-                    amount += parseInt($(item).val());
+                    amount += parseFloat($(item).val());
                 }
             });
         }

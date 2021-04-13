@@ -12,6 +12,8 @@ from supplements.lib.authorizenet import (
     get_customer_payment_profile,
     refund_customer_profile,
     charge_customer_for_items,
+    void_unsettled_transaction,
+    retrieve_transaction_status,
 )
 
 
@@ -316,6 +318,11 @@ class PLSOrderMixin:
         return '${:.2f}'.format(self.refund_amount + self.shipping_refund)
 
     @property
+    def order_refund_id(self):
+        if self.refund:
+            return self.refund.transaction_id
+
+    @property
     def is_taxes_paid(self):
         return (self.taxes + self.duties) > 0
 
@@ -553,6 +560,19 @@ class AuthorizeNetCustomerMixin:
             amount,
             self.customer_id,
             self.payment_id,
+            transaction_id,
+        )
+
+    def void(self, transaction_id):
+        return void_unsettled_transaction(
+            self.customer_id,
+            self.payment_id,
+            transaction_id,
+        )
+
+    def status(self, transaction_id):
+        return retrieve_transaction_status(
+            self.customer_id,
             transaction_id,
         )
 

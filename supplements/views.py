@@ -27,6 +27,7 @@ from django.views.generic.list import ListView
 import arrow
 import bleach
 import requests
+import re
 import simplejson as json
 from barcode import generate
 from pdfrw import PageMerge, PdfReader, PdfWriter
@@ -1158,8 +1159,21 @@ class Order(common_views.OrderView):
         self.add_paging_context(context)
         return context
 
+    def void_transaction(self, request, refund, transaction_id):
+        transaction_id, errors = request.user.authorize_net_customer.void(transaction_id)
+        if transaction_id:
+            refund.transaction_id = transaction_id
+            refund.status = 'voided'
+            refund.save()
+            messages.success(request, f"The transaction with the id {transaction_id} is voided.")
+        elif errors:
+            messages.error(request, f"{errors[0]}.")
+
+    def retrieve_transaction_status(self, request, transaction_id):
+        transaction_status = request.user.authorize_net_customer.status(transaction_id)
+        return transaction_status
+
     def post(self, request):
-        error = False
         refund_form = self.refund_form = self.refund_form(request.POST)
         if refund_form.is_valid():
             with transaction.atomic():
@@ -1181,20 +1195,34 @@ class Order(common_views.OrderView):
                     transaction_id = None
                     if order.stripe_transaction_id:
                         transaction_id, errors = request.user.authorize_net_customer.refund(
-                            refund.amount - refund.fee,
+                            refund.amount - refund.fee + refund.shipping,
                             order.stripe_transaction_id,
                         )
 
                     if transaction_id:
                         refund.transaction_id = transaction_id
                         refund.save()
+                        messages.success(request, f"The transaction with the id {order.stripe_transaction_id} is refunded.")
                     elif errors:
-                        transaction.set_rollback(True)
-                        error = errors[0]
+                        error_code = ''
+                        reg = re.search(r'^[a-zA-Z0-9]+[:]', errors[0])
+                        if reg is not None:
+                            error_code = reg[0]
+                        # Void a transaction if error code is 54 which means transaction cannot be refunded
+                        if error_code == '54:':
+                            transaction_status = self.retrieve_transaction_status(request, order.stripe_transaction_id)
+                            # Ensure to void only Unsettled transaction
+                            if transaction_status == 'capturedPendingSettlement':
+                                self.void_transaction(request, refund, order.stripe_transaction_id)
+                            else:
+                                messages.error(request, f"The transaction with the id {order.stripe_transaction_id} cannot be refunded or voided.")
+                                transaction.set_rollback(True)
+                        else:
+                            messages.error(request, f"{errors[0]}.")
+                            transaction.set_rollback(True)
 
         self.object_list = self.get_queryset()
         context = self.get_context_data()
-        context['error'] = error
 
         return render(request, self.template_name, context=context)
 

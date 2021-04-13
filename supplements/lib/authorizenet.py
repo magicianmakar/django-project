@@ -8,7 +8,8 @@ from authorizenet.apicontrollers import (
     createCustomerPaymentProfileController,
     createCustomerProfileController,
     createTransactionController,
-    getCustomerPaymentProfileController
+    getCustomerPaymentProfileController,
+    getTransactionDetailsController,
 )
 from authorizenet.constants import constants
 
@@ -256,6 +257,46 @@ def refund_customer_profile(amount, customer_id, payment_id, trans_id):
     response = controller.getresponse()
 
     return get_authnet_response(response)
+
+
+def void_unsettled_transaction(customer_id, payment_id, trans_id):
+    transaction_request = apicontractsv1.transactionRequestType()
+    transaction_request.transactionType = "voidTransaction"
+    transaction_request.refTransId = trans_id
+
+    create_transaction = apicontractsv1.createTransactionRequest()
+    create_transaction.merchantAuthentication = get_merchant_auth()
+    create_transaction.transactionRequest = transaction_request
+
+    controller = createTransactionController(create_transaction)
+    if settings.AUTH_NET_PROD:
+        controller.setenvironment(constants.PRODUCTION)
+
+    controller.execute()
+
+    response = controller.getresponse()
+    return get_authnet_response(response)
+
+
+def retrieve_transaction_status(customer_id, trans_id):
+    transaction_status = None
+
+    transactionDetailsRequest = apicontractsv1.getTransactionDetailsRequest()
+    transactionDetailsRequest.merchantAuthentication = get_merchant_auth()
+    transactionDetailsRequest.transId = trans_id
+
+    controller = getTransactionDetailsController(transactionDetailsRequest)
+    if settings.AUTH_NET_PROD:
+        controller.setenvironment(constants.PRODUCTION)
+
+    controller.execute()
+    transactionDetailsResponse = controller.getresponse()
+
+    if transactionDetailsResponse is not None:
+        if transactionDetailsResponse.messages.resultCode == apicontractsv1.messageTypeEnum.Ok:
+            transaction_status = transactionDetailsResponse.transaction.transactionStatus
+
+    return transaction_status
 
 
 def get_authnet_response(response):

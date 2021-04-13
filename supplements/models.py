@@ -396,11 +396,18 @@ class MockupType(models.Model):
 
 
 class RefundPayments(models.Model):
+
+    REFUND_CHOICES = (
+        ('refunded', 'Refunded'),
+        ('voided', 'Voided'),
+    )
+
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     shipping = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     fee = models.DecimalField(max_digits=10, decimal_places=2)
     transaction_id = models.CharField(max_length=255, null=True)
+    status = models.CharField(choices=REFUND_CHOICES, default='refunded', max_length=8)
     order_shipped = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
