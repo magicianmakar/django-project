@@ -305,7 +305,7 @@ class Util:
         orders_status = {}
         orders = {}
         for order_data_id in order_data_ids:
-            orders_status[order_data_id] = {'id': order_data_id, 'status': 'Awaiting payment', 'supplement': {}}
+            orders_status[order_data_id] = {'id': order_data_id, 'status': 'Awaiting payment', 'supplements': []}
             try:
                 api_result = StoreApi.get_order_data(None, user, {
                     'order': order_data_id, 'original': '1'})
@@ -409,17 +409,11 @@ class Util:
 
                 image = user_supplement.images.first()
                 image_url = image.image_url if image else ''
-                orders_status[order_data_id].update({
-                    'supplement': {
-                        'price': user_supplement.cost_price,
-                        'subtotal': user_supplement.cost_price * product_quantity,
-                        'image_url': image_url,
-                    }
-                })
-
                 inventory_mapping[pl_supplement_id] -= product_quantity
-                total_weight += Decimal(product['weight'])
+                product_weight = Decimal(product['weight'])
+                total_weight += product_weight
                 total_wholesale += user_supplement.pl_supplement.wholesale_price
+
                 items.append({
                     'order_data_id': order_data_id,
                     'id': order_data['line_id'],
@@ -430,6 +424,15 @@ class Util:
                     'image_url': image_url,
                     'quantity': product_quantity,
                     'price': order_data['total'],
+                })
+
+                orders_status[order_data_id]['supplements'].append({
+                    'title': user_supplement.title,
+                    'price': user_supplement.cost_price,
+                    'subtotal': user_supplement.cost_price * product_quantity,
+                    'quantity': product_quantity,
+                    'image_url': image_url,
+                    'weight': product_weight,
                 })
             else:
                 # Define order and shipping only if no errors happen
@@ -475,6 +478,8 @@ class Util:
                 shipping_mapping[order_id]['total_weight'],
                 default_shipping_option,
             )
+            for i in order_costs['shipping'][order_id]:
+                i['total_weight'] = shipping_mapping[order_id]['total_weight']
 
             # Shipping location must be supported by our carrier
             if orders[order_id]['shipping_service']:
@@ -498,7 +503,7 @@ class Util:
                     orders_status[item['order_data_id']].update({
                         'success': False,
                         'status': shipping.get('error') or 'Error calculating shipping',
-                        'supplement': {}
+                        'supplements': []
                     })
 
                 # Remove order to prevent processing

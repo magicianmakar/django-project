@@ -1064,7 +1064,7 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
 
                     for product in line_item['order_data']['products']:
                         # Do only aliexpress orders for now
-                        if product['supplier_type'] not in ['aliexpress', 'alibaba']:
+                        if product['supplier_type'] not in ['aliexpress', 'alibaba', 'pls']:
                             continue
 
                         queue_bundle['items'].append({

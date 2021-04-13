@@ -278,10 +278,11 @@
   {% endif %}
 </script>
 
-{% if user.is_authenticated %}
+<script>
+    var ChurnZero = ChurnZero || [];
+
+{% if user.is_authenticated and user.models_user.profile.has_churnzero_account %}
     {% with user=request.user profile=request.user.profile models_user=request.user.models_user models_user_profile=request.user.models_user.profile %}
-    <script>
-        var ChurnZero = ChurnZero || [];
         (function(a,b,c,d){var cz=a.createElement(b); cz.type=c; cz.async=true; cz.src=d;var s=a.getElementsByTagName(b)[0];s.parentNode.insertBefore(cz, s);})(document, "script",'text/javascript', '//analytics.churnzero.net/churnzero.js');
         ChurnZero.push(['setAppKey', "{% app_setting 'CHURNZERO_APP_KEY' %}"]);
         ChurnZero.push([
@@ -298,6 +299,7 @@
             SubUser: "{{ profile.is_subuser }}",
             UserName: "{{ user.username }}"
         }]);
-    </script>
     {% endwith %}
 {% endif %}
+
+</script>

@@ -7,13 +7,6 @@
 
 {% block tab_content %}
 
-{% if error %}
-<div class="alert alert-info alert-dismissable">
-  <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-  {{ error }}
-</div>
-{% endif %}
-
 <div>
   {% include "supplements/partials/filter_form.html" %}
 </div>
@@ -33,6 +26,7 @@
     <th>Status</th>
     <th id="edit-column">Payout</th>
     <th>Print</th>
+    <th>Refund Button/Id</th>
   </thead>
   <tbody>
     {% for pls_order in object_list %}
@@ -58,7 +52,7 @@
         {% endif %}
       </td>
       <td>{{ pls_order.created_at|date:"m.d.Y h:iA" }}</td>
-      <td>{{ pls_order.status_string }}</td>
+      <td> {%if pls_order.refund %} <span class="label label-danger">{{ pls_order.refund.status | capfirst}} </span> {% else %} {{ pls_order.status_string }} {% endif %}</td>
       <td>
         <div class="order-payout-wrapper editable-column-wrapper" data-order-id="{{ pls_order.id }}">
           <input
@@ -76,6 +70,8 @@
         {% if not pls_order.refund %}
         <button class="btn btn-default btn-outline btn-xs make-refund" data-order-id="{{ pls_order.id }}"
           {% if refund_form.errors %} style="color:#ed5565;"{% endif %}>Refund</button>
+          {% else %}
+          {{ pls_order.order_refund_id }}
         {% endif %}
       </td>
     {% empty %}

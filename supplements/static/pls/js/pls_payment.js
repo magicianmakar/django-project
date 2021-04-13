@@ -19,6 +19,22 @@ function formatUSD(amount) {
     return formatter.format(parseFloat(amount));
 }
 
+function reloadPLTableStripes() {
+    var isActive = false;
+    var currentKey = null;
+    $('.supplement-item-payment').removeClass('active').each(function() {
+        var newKey = $(this).attr('order-id');
+        if (newKey !== currentKey) {
+            currentKey = newKey;
+            isActive = !isActive;
+        }
+
+        if (isActive) {
+            $(this).addClass('active');
+        }
+    });
+}
+
 function userHasBilling() {
     return new Promise(function (resolve, reject) {
         $.ajax({
@@ -250,15 +266,22 @@ function formatAPIDetails(data) {
             }
         }
 
-        if (orderStatus.supplement) {
-            if (orderStatus.supplement.price) {
-                orderStatus.supplement.price = formatUSD(orderStatus.supplement.price);
+        if (orderStatus.supplements) {
+            for (var s = 0, sLength = orderStatus.supplements.length; s < sLength; s++) {
+                var supplement = orderStatus.supplements[s];
+                var newOrderStatus = $.extend(true, {}, orderStatus, {supplement: supplement});
+                if (supplement.price) {
+                    newOrderStatus.supplement.price = formatUSD(supplement.price);
+                }
+                if (supplement.subtotal) {
+                    newOrderStatus.supplement.currency_subtotal = formatUSD(supplement.subtotal);
+                }
+
+                details[orderStatus.order_id].items.push(newOrderStatus);
             }
-            if (orderStatus.supplement.subtotal) {
-                orderStatus.supplement.currency_subtotal = formatUSD(orderStatus.supplement.subtotal);
-            }
+        } else {
+            details[orderStatus.order_id].items.push(orderStatus);
         }
-        details[orderStatus.order_id].items.push(orderStatus);
     }
     return details;
 }
@@ -300,6 +323,8 @@ function calculateTotals() {
     $('#supplement-shipping-total').text(formatUSD(shippingsTotalCost));
     $('#supplement-taxes-total').text(formatUSD(taxesTotalCost));
     $('#supplement-orders-total').text(formatUSD(productsTotalCost + shippingsTotalCost + taxesTotalCost));
+
+    reloadPLTableStripes();
 }
 
 $('#modal-order-detail').on('change', '.shipping-service [type="radio"]', function() {
