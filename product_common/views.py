@@ -621,16 +621,11 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        count = sum(context['object_list'].values_list('quantity', flat=True))
-        if count == 1:
-            total_line_items = '1 item'
-        else:
-            total_line_items = f'{count} items'
-
+        count = sum(self.get_queryset().values_list('quantity', flat=True))
         context.update({
             'form': self.form,
             'breadcrumbs': self.get_breadcrumbs(),
-            'total_line_items': total_line_items,
+            'total_line_items': count,
             'date_range': self.request.GET.get('date', None),
         })
         self.add_paging_context(context)
