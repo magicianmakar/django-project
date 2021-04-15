@@ -273,6 +273,10 @@ def fuzzy_find_in_list(options, value, default=None):
     global fazzy_list_map
 
     if options and value:
+        direct_match = find_in_list(options, value)
+        if direct_match:
+            return direct_match
+
         list_hash = hash_list(options)
         f = fazzy_list_map.get(list_hash)
         if not f:
@@ -288,7 +292,7 @@ def fuzzy_find_in_list(options, value, default=None):
     return default
 
 
-def find_in_list(items, value):
+def find_in_list(items, value, default=None):
     if type(items) is dict:
         for key, val in items.items():
             if key.upper() == value.upper():
@@ -298,7 +302,7 @@ def find_in_list(items, value):
         if i.upper() == value.upper():
             return i
 
-    return None
+    return default
 
 
 def valide_aliexpress_province(country, province, city, auto_correct=False):
