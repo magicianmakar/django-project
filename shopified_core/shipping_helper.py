@@ -20,6 +20,7 @@ aliexpress_countries = None
 ebay_countries = None
 countries_code = None
 provinces_code = {}
+fazzy_list_map = {}
 
 ALIEXPRESS_UK_PROVINCES = [
     "aberdeenshire", "angus", "argyll", "avon", "ayrshire", "banffshire", "bedfordshire", "berkshire", "berwickshire", "buckinghamshire",
@@ -269,8 +270,15 @@ def fix_br_address(customer_address):
 
 
 def fuzzy_find_in_list(options, value, default=None):
+    global fazzy_list_map
+
     if options and value:
-        f = FuzzySet(options)
+        list_hash = hash_list(options)
+        f = fazzy_list_map.get(list_hash)
+        if not f:
+            f = FuzzySet(options)
+            fazzy_list_map[list_hash] = f
+
         res = f.get(value)
         if res and len(res):
             score, match = res[0]
