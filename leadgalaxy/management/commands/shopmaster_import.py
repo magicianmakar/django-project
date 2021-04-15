@@ -11,6 +11,8 @@ from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import get_domain, remove_link_query
 from shopified_core.models_utils import get_store_model, get_supplier_model, get_product_model
 
+import openpyxl
+
 
 class ImportException(Exception):
     pass
@@ -22,29 +24,56 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--no-progress', dest='progress', action='store_false', help='Show progress')
         parser.add_argument('--store', action='store', type=int, required=True, help='Import to this store')
         parser.add_argument('--store_type', action='store', type=str, required=True, choices=['shopify', 'chq', 'woo'], help='Import to this store')
-        parser.add_argument('data_file', type=open)
+        parser.add_argument('data_file', type=str)
 
     def start_command(self, progress, store, store_type, data_file, *args, **options):
         self.find_store(store, store_type)
 
-        lines_count = len(data_file.readlines())
-        data_file.seek(0)
-
-        if progress:
-            self.progress_total(lines_count)
-        else:
-            self.write(f'Import {lines_count} products')
-
-        reader = csv.DictReader(data_file)
-
         self.import_counter = 0
         self.last_product = None
 
-        for i in reader:
+        file_data = list(self.load_data(data_file))
+
+        if progress:
+            self.progress_total(len(file_data))
+        else:
+            self.write(f'Import {len(file_data)} products')
+
+        for i in file_data:
             self.progress_update()
             self.import_product(store_type, i)
-
             self.import_counter += 1
+
+    def load_data(self, data_file):
+        ext = data_file.split('.').pop().lower()
+
+        if ext == 'csv':
+            for i in csv.DictReader(open(data_file)):
+                yield i
+        elif ext == 'xlsx':
+            wb = openpyxl.load_workbook(filename=data_file, data_only=True)
+            ws = wb[list(wb.sheetnames).pop()]
+
+            first_row = True
+            column_names = []
+
+            for r in ws.rows:
+                row_value = {}
+                col_index = 0
+                for c in r:
+                    if first_row:
+                        column_names.append(c.value)
+                    else:
+                        row_value[column_names[col_index]] = c.value
+
+                    col_index += 1
+
+                if not first_row:
+                    yield row_value
+                else:
+                    first_row = False
+        else:
+            raise Exception(f'Unsupported file format: {ext}')
 
     def find_store(self, store, store_type):
         self.store = get_store_model(store_type).objects.get(id=store)
@@ -130,10 +159,7 @@ class Command(DropifiedBaseCommand):
 
             permissions.user_can_add(user, product)
 
-            if is_shopify:
-                product.save()
-            else:
-                product.sync()
+            product.save()
 
         supplier = get_supplier_model(store_type).objects.create(
             store=product.store,
@@ -152,7 +178,11 @@ class Command(DropifiedBaseCommand):
                 kwargs={'product_id': product.id},
                 countdown=self.import_counter * 0.5)
         else:
-            product.sync()
+            try:
+                product.sync()
+            except:
+                product.delete()
+                raise ImportException('Product sync error')
 
         return product
 
