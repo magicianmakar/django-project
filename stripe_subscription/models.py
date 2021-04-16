@@ -160,6 +160,12 @@ class StripeCustomer(models.Model):
             return days_left
         return 0
 
+    @cached_property
+    def is_active(self):
+        if self.current_subscription:
+            return self.current_subscription['status'] == 'active'
+        return False
+
 
 class StripePlan(models.Model):
     class Meta:

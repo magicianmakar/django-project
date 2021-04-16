@@ -93,7 +93,19 @@ class SetAccountActionBuilder:
         self._action['attr_TotalContractAmount'] = float(self.shopify_profile.total_contract_amount)
 
     def add_is_active(self):
-        self._action['attr_IsActive'] = self.shopify_profile.is_active
+        if self.is_shopify_user:
+            self._action['attr_IsActive'] = self.shopify_profile.is_active
+        if self.is_stripe_user:
+            stripe_active = (
+                self._models_user.stripe_customer.is_active
+                and self._models_user.profile.plan
+                and not (
+                    self._models_user.profile.plan.free_plan
+                    or self._models_user.profile.plan.is_free
+                    or self._models_user.profile.plan.is_active_free
+                )
+            )
+            self._action['attr_IsActive'] = stripe_active
 
     def add_plan(self):
         self._action['attr_Plan'] = self._plan.title
@@ -112,12 +124,12 @@ class SetAccountActionBuilder:
         self.add_gear_stores_count()
         self.add_gkart_stores_count()
         self.add_bigcommerce_stores_count()
+        self.add_is_active()
 
         if self.is_stripe_user:
             self.add_stripe_customer_id()
 
         if self.is_shopify_user:
-            self.add_is_active()
             self.add_total_contract_amount()
             if self.shopify_profile.start_date:
                 self.add_start_date()

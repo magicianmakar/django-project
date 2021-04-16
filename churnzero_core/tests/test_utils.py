@@ -168,12 +168,13 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         user.profile.subuser_parent = models_user
         user.profile.save()
         stripe.Plan = Mock()
-        plan = GroupPlanFactory(payment_gateway='stripe', title='Test Plan')
+        plan = GroupPlanFactory(payment_gateway='stripe', title='Test Plan', free_plan=False)
         stripe.Plan.retrieve = Mock(return_value=plan)
         user.models_user.profile.plan = plan
         user.models_user.profile.plan.is_stripe = Mock(return_value=True)
         user.models_user.profile.plan.stripe_plan = StripePlanFactory(stripe_id='abc')
         user.models_user.stripe_customer = StripeCustomerFactory(customer_id='abc')
+        type(user.models_user.stripe_customer).is_active = PropertyMock(return_value=True)
         addon1 = AddonFactory(title='test1')
         addon2 = AddonFactory(title='test2')
         user.models_user.profile.addons.add(addon1, addon2)
@@ -205,6 +206,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'attr_GearBubble Stores Count': 1,
             'attr_GrooveKart Stores Count': 1,
             'attr_BigCommerce Stores Count': 1,
+            'attr_IsActive': True
         }]
 
         post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))

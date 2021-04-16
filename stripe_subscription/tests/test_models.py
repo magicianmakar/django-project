@@ -164,6 +164,13 @@ class StripeCustomerTestCase(BaseTestCase):
             stripe_customer = f.StripeCustomerFactory()
             self.assertFalse(stripe_customer.on_trial)
 
+    def test_returns_true_if_current_subscription_is_active(self):
+        target = 'stripe_subscription.models.StripeCustomer.current_subscription'
+        with patch(target, new_callable=PropertyMock) as current_subscription:
+            current_subscription.return_value = {'status': 'active'}
+            stripe_customer = f.StripeCustomerFactory()
+            self.assertTrue(stripe_customer.is_active)
+
     def test_trial_days_left_is_zero_if_not_on_trial(self):
         target = 'stripe_subscription.models.StripeCustomer.current_subscription'
         with patch(target, new_callable=PropertyMock) as current_subscription:
