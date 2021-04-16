@@ -223,6 +223,15 @@ def post_churnzero_cancellation_event(user):
         'action': 'trackEvent',
         'eventName': 'Cancellation',
         'description': user.get_full_name() or user.username,
+    }, {
+        'appKey': settings.CHURNZERO_APP_KEY,
+        'accountExternalId': user.models_user.username,
+        'contactExternalId': user.username,
+        'accountExternalIdHash': user.profile.churnzero_account_id_hash,
+        'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
+        'action': 'setAttribute',
+        'entity': 'account',
+        'attr_IsActive': False
     }])
 
 

@@ -642,7 +642,8 @@ def webhook(request, provider, option):
                         payment_gateway='shopify',
                         slug='shopify-free-plan'))
 
-                post_churnzero_cancellation_event(store.user)
+                if store.user.models_user.profile.has_churnzero_account:
+                    post_churnzero_cancellation_event(store.user)
 
                 return JsonResponse({'status': 'ok'})
             else:

@@ -437,6 +437,15 @@ class PostChurnZeroCancellationEventTestCase(BaseTestCase):
             'action': 'trackEvent',
             'eventName': 'Cancellation',
             'description': "John Doe",
+        }, {
+            'appKey': settings.CHURNZERO_APP_KEY,
+            'accountExternalId': 'username',
+            'contactExternalId': 'username',
+            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
+            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
+            'action': 'setAttribute',
+            'entity': 'account',
+            'attr_IsActive': False
         }]
         post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
 
@@ -455,5 +464,14 @@ class PostChurnZeroCancellationEventTestCase(BaseTestCase):
             'action': 'trackEvent',
             'eventName': 'Cancellation',
             'description': 'username',
+        }, {
+            'appKey': settings.CHURNZERO_APP_KEY,
+            'accountExternalId': 'username',
+            'contactExternalId': 'username',
+            'accountExternalIdHash': user.profile.churnzero_account_id_hash,
+            'contactExternalIdHash': user.profile.churnzero_contact_id_hash,
+            'action': 'setAttribute',
+            'entity': 'account',
+            'attr_IsActive': False
         }]
         post_request.assert_called_with(kwargs=dict(url="https://analytics.churnzero.net/i", method="post", json=actions))
