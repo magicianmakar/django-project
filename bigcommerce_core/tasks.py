@@ -37,7 +37,8 @@ from .utils import (
     create_variants_api_data,
     get_latest_order_note,
     find_or_create_category,
-    get_product_data
+    get_product_data,
+    get_deleted_product_images,
 )
 
 from product_alerts.utils import (
@@ -294,6 +295,7 @@ def product_update(product_id, data):
         product = BigCommerceProduct.objects.get(id=product_id)
         store = product.store
         api_data = product.retrieve()
+        deleted_images = get_deleted_product_images(api_data, data)
         api_data = update_product_api_data(api_data, data)
         api_data = update_product_images_api_data(api_data, data)
         api_data['variants'] = update_variants_api_data(api_data.get('variants', []), data.get('variants', []))
@@ -303,10 +305,13 @@ def product_update(product_id, data):
             json=api_data
         )
         r.raise_for_status()
-
         product.source_id = r.json()['data']['id']
-        product.save()
 
+        for image_id in deleted_images:
+            r = store.request.delete(url=store.get_api_url(f'v3/catalog/products/{product.source_id}/images/{image_id}'))
+            r.raise_for_status()
+
+        product.save()
         store.pusher_trigger('product-update', {
             'success': True,
             'product': product.id,

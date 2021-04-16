@@ -197,17 +197,19 @@ def update_product_images_api_data(api_data, data):
     product_images = api_data.get('images', [])
     product_image_srcs = [img['url_standard'] for img in product_images]
 
-    for product_image in product_images:
-        if product_image['url_standard'] in data_images:
-            images.append({'id': product_image['id']})  # Keeps the current image
-
     for data_image in data_images:
         if data_image not in product_image_srcs:
-            images.append({'src': data_image})  # Adds the new image
+            images.append({'image_url': data_image})  # Adds the new image
 
     api_data['images'] = images
 
     return api_data
+
+
+def get_deleted_product_images(api_data, data):
+    data_images = data.get('images', [])
+    api_images = api_data.get('images', [])
+    return [img['id'] for img in api_images if img['url_standard'] not in data_images]
 
 
 def update_variants_api_data(api_data, data):
