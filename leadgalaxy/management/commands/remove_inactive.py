@@ -11,7 +11,7 @@ from last_seen.models import LastSeen
 from leadgalaxy.models import ShopifyProduct, ShopifyStore, ShopifyOrderTrack, GroupPlan
 from lib.exceptions import capture_message
 from shopified_core.management import DropifiedBaseCommand
-from shopified_core.utils import using_replica
+from shopified_core.utils import using_replica, safe_str
 from shopify_orders.models import ShopifyOrder, ShopifySyncStatus, ShopifyOrderLog
 from shopify_orders.utils import get_elastic
 from profit_dashboard.models import AliexpressFulfillmentCost
@@ -37,6 +37,10 @@ class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
         if options['sync_uninstall_date']:
             self.fix_unsintall_date()
+
+        self.delete_users = ['projects@xeecreatives.com', 'byronbra@gmail.com', 'contacto@ecomkers.com', 'duchatinierstores@gmail.com',
+                             'cindy@wave.ly', 'alexia@communeasy.fr', 'main@sunriseatozstore.com', 'vincent.zbaeren@overbying.com',
+                             'contact.elona38@gmail.com', 'leomarchand48@gmail.com']
 
         self.uptime = options['uptime']
         self.max_count = options['max_count']
@@ -145,7 +149,9 @@ class Command(DropifiedBaseCommand):
                 self.ignored_plan_count[':ignored'] += 1
                 ignore = True
 
-            if last_30_days:
+            if last_30_days and store.user.email.lower() not in self.delete_users \
+                    and store.info is not None \
+                    and not safe_str(store.info).startswith('ERROR:'):
                 self.ignored_plan_count[':last_30_days'] += 1
                 ignore = True
 
