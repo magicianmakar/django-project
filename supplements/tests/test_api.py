@@ -172,7 +172,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
         }
 
         self.transaction_id = '8888'
-
+        self.error = ''
         self.mock_order_response = MagicMock()
         self.mock_order_response.json.return_value = {'order': self.order_data}
         self.mock_response = MagicMock()
@@ -210,7 +210,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
                 patch('shopified_core.api_base.order_data_cache',
                       return_value=self.order_data_cache), \
                 patch('supplements.mixin.AuthorizeNetCustomerMixin.charge_items',
-                      return_value=self.transaction_id), \
+                      return_value=[self.transaction_id, self.error]), \
                 patch('supplements.lib.shipstation.requests.post',
                       return_value=self.mock_response), \
                 patch('leadgalaxy.tasks.update_shopify_order.apply_async',
@@ -374,6 +374,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
         }
 
         self.transaction_id = '8888'
+        self.error = ''
 
         self.mock_order_response = MagicMock()
         self.mock_order_response.json.return_value = {'order': self.order_data}
@@ -412,7 +413,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
                 patch('shopified_core.api_base.order_data_cache',
                       return_value=self.order_data_cache), \
                 patch('supplements.mixin.AuthorizeNetCustomerMixin.charge_items',
-                      return_value=self.transaction_id), \
+                      return_value=[self.transaction_id, self.error]), \
                 patch('supplements.lib.shipstation.requests.post',
                       return_value=self.mock_response), \
                 patch('leadgalaxy.tasks.update_shopify_order.apply_async',
@@ -605,6 +606,7 @@ class BasketTestCase(PLSBaseTestCase):
         }
 
         self.transaction_id = '8888'
+        self.error = ''
 
         self.mock_order_response = MagicMock()
         self.mock_order_response.json.return_value = {'order': self.order_data}
@@ -737,7 +739,7 @@ class BasketTestCase(PLSBaseTestCase):
                 patch('shopified_core.api_base.order_data_cache',
                       return_value=self.order_data_cache), \
                 patch('supplements.mixin.AuthorizeNetCustomerMixin.charge',
-                      return_value=self.transaction_id), \
+                      return_value=[self.transaction_id, self.error]), \
                 patch('supplements.lib.shipstation.requests.post',
                       return_value=self.mock_response), \
                 patch('leadgalaxy.tasks.update_shopify_order.apply_async',

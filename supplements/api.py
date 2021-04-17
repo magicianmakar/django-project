@@ -66,26 +66,32 @@ class SupplementsApi(ApiResponseMixin, View):
             })
 
         paid_orders = []
-        with atomic():
-            for order_id in orders_status:
-                if orders_status[order_id]['success']:
-                    orders_status[order_id]['status'] = 'Processing payment'
+        try:
+            with atomic():
+                for order_id in orders_status:
+                    if orders_status[order_id]['success']:
+                        orders_status[order_id]['status'] = 'Processing payment'
 
-            unpaid_orders = []
-            for order in orders.values():
-                order_shippings = order_costs['shipping'].get(order['id'])
-                if not order_shippings or order_shippings[0].get('error'):
-                    continue
+                unpaid_orders = []
+                for order in orders.values():
+                    order_shippings = order_costs['shipping'].get(order['id'])
+                    if not order_shippings or order_shippings[0].get('error'):
+                        continue
 
-                unpaid_order = util.create_unpaid_order(
-                    order,
-                    user.models_user,
-                    order_shippings
-                )
-                unpaid_orders.append([unpaid_order, order])
+                    unpaid_order = util.create_unpaid_order(
+                        order,
+                        user.models_user,
+                        order_shippings
+                    )
+                    unpaid_orders.append([unpaid_order, order])
 
-            paid_orders = util.create_payment(user.models_user, unpaid_orders)
-
+                paid_orders = util.create_payment(user.models_user, unpaid_orders)
+        except Exception as e:
+            error_code = str(e).split(':')
+            error_code_lookup = f'https://developer.authorize.net/api/reference/responseCodes.html?code={error_code[0]}'
+            return self.api_error(f'Payment failed with Error Code {str(e)} \
+                                  <a target="_blank" href="{error_code_lookup}"> Learn more.</a>',
+                                  status=500)
         for pls_order, order in paid_orders:
             shipstation_data = prepare_shipstation_data(pls_order,
                                                         order,
@@ -563,10 +569,14 @@ class SupplementsApi(ApiResponseMixin, View):
                 order_line_items,
                 user.models_user,
             )
-        except Exception:
+        except Exception as e:
             basket_order.delete()
+            error_code = str(e).split(':')
+            error_code_lookup = f'https://developer.authorize.net/api/reference/responseCodes.html?code={error_code[0]}'
             capture_exception(level='warning')
-            return self.api_error("Payment Error", status=500)
+            return self.api_error(f'Payment failed with Error Code {str(e)} \
+                                  <a target="_blank" href="{error_code_lookup}"> Learn more.</a>',
+                                  status=500)
         else:
             # clear basket items
             user.basket_items.all().delete()

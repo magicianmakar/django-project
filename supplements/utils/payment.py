@@ -22,9 +22,6 @@ def complete_payment(transaction_id, pls_order_id):
     This function is suppposed to run in a queue.
     """
     pls_order = PLSOrder.objects.get(id=pls_order_id)
-    if not transaction_id:
-        raise Exception('Payment processing failed')
-
     pls_order.status = pls_order.PAID
     pls_order.payment_date = timezone.now()
     pls_order.stripe_transaction_id = transaction_id
@@ -185,10 +182,12 @@ class Util:
                 unit_price=amount,
             )
 
-            transaction_id = user.authorize_net_customer.charge(
+            transaction_id, error = user.authorize_net_customer.charge(
                 amount,
                 auth_net_line,
             )
+            if not transaction_id:
+                raise Exception(error[0])
 
             # TODO: Add to queue.
             pls_order = complete_payment(transaction_id, pls_order.id)
@@ -282,9 +281,9 @@ class Util:
                 'amount': Decimal(order.amount / 100).quantize(Decimal('.01'))
             })
 
-        transaction_id = user.authorize_net_customer.charge_items(payment_items)
+        transaction_id, error = user.authorize_net_customer.charge_items(payment_items)
         if not transaction_id:
-            raise Exception('Payment processing failed')
+            raise Exception(error)
 
         for order, order_data in orders:
             order.status = order.PAID

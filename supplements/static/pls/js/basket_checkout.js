@@ -74,7 +74,15 @@ function basketMakePayment() {
             }
         },
         error: function (api_data) {
-            toastr.warning(getAjaxError(api_data));
+            toastr.options = {
+                "closeButton": true,
+                "positionClass": "toast-top-right",
+                "preventDuplicates": true,
+                "timeOut": "20000",
+                "extendedTimeOut": "20000"
+              };
+            toastr.error(getAjaxError(api_data));
+            $('#basket-modal-make-payment button.close').trigger('click');
             $('#basket-make-payment-confirm').html($('#basket-make-payment-confirm').data('default-text'));
         }
 

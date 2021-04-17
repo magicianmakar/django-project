@@ -118,6 +118,8 @@ def create_payment_profile(payment_data, customer_profile_id):
 
 
 def charge_customer_profile(amount, customer_id, payment_id, line):
+    transaction_id = None
+
     profile_to_charge = apicontractsv1.customerProfilePaymentType()
     profile_to_charge.customerProfileId = customer_id
     profile_to_charge.paymentProfile = apicontractsv1.paymentProfile()
@@ -156,7 +158,7 @@ def charge_customer_profile(amount, customer_id, payment_id, line):
     errors = []
     if response.messages.resultCode == "Ok":
         if hasattr(response.transactionResponse, 'messages'):
-            return response.transactionResponse.transId
+            transaction_id = response.transactionResponse.transId
         else:
             if hasattr(response.transactionResponse, 'errors'):
                 for error in response.transactionResponse.errors.error:
@@ -171,6 +173,8 @@ def charge_customer_profile(amount, customer_id, payment_id, line):
 
     if errors:
         capture_message('Auth.NET transaction error', extra={'authnet-errors': errors})
+
+    return transaction_id, errors
 
 
 def get_transaction_errors(response):
@@ -187,6 +191,8 @@ def get_transaction_errors(response):
 
 def charge_customer_for_items(transaction, items):
     total_amount = Decimal('0.0')
+    transaction_id = None
+    errors = []
 
     if len(items) > 30:
         total_amount = sum(item['amount'] * item['quantity'] for item in items)
@@ -225,11 +231,13 @@ def charge_customer_for_items(transaction, items):
     controller.execute()
     response = controller.getresponse()
     if response.messages.resultCode == "Ok" and hasattr(response.transactionResponse, 'messages'):
-        return response.transactionResponse.transId
+        transaction_id = response.transactionResponse.transId
 
     errors = get_transaction_errors(response)
     if errors:
         capture_message('Auth.NET transaction error', extra={'authnet-errors': errors})
+
+    return transaction_id, errors[0]
 
 
 def refund_customer_profile(amount, customer_id, payment_id, trans_id):

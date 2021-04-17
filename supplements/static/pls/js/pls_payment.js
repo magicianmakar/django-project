@@ -208,7 +208,12 @@ function processOrders(orderDataIds, finish) {
             },
             error: function(data) {
                 $('#modal-order-detail').modal('hide');
-                displayAjaxError('Place Private Label Orders', data);
+                swal({
+                    title: 'Place Private Label Orders',
+                    text: data.responseJSON.error,
+                    type: 'warning',
+                    html: true,
+                });
             },
             complete: function() {
                 $('#modal-order-detail .modal-content').removeClass('loading');
