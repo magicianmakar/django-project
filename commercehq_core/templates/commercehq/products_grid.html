@@ -90,7 +90,7 @@
                                         <small class="text-muted">{{item.parsed.type}}</small>
                                         {% if item.have_supplier %}
                                         <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
-                                            <a href="{{item.parsed.original_url}}" target="_blank">
+                                            <a href="{{item.default_supplier.product_url}}" target="_blank">
                                                 {{item.get_original_info.source}}
                                             </a>
                                         </small>

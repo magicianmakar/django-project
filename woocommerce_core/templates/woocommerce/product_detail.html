@@ -342,8 +342,8 @@
                                     <i class="fa fa-code-fork"></i> Split Variants</a>
                                 </li>
 
-                                {% if product.parsed.original_url %}
-                                    <li><a href="{{product.parsed.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product</a></li>
+                                {% if product.default_supplier or product.parsed.original_url %}
+                                    <li><a href="{{product.default_supplier.product_url|default:product.parsed.original_url}}" target="_blank"><i class="fa fa-external-link"></i> Original Product</a></li>
                                 {% endif %}
                                 </ul>
                             </div>
