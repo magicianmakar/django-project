@@ -1092,8 +1092,9 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
 
     page_end = safe_int(request.GET.get('page_end'), 0)
     page_start = safe_int(request.GET.get('page_start'), 1) - 1
-    if current_page.has_next() and (not page_end or current_page.next_page_number() <= page_end):
-        page = current_page.next_page_number() - page_start
+    next_page_number = safe_int(current_page.next_page_number())
+    if current_page.has_next() and (not page_end or next_page_number <= page_end):
+        page = next_page_number - page_start
         next_page_url = get_next_page_from_request(request, page)
 
     return JsonResponse({
