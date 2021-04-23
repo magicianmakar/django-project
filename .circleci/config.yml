@@ -2,7 +2,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/ShopifiedApp/webapp
   docker:
-    - image: circleci/python:3.6.10-node
+    - image: circleci/python:3.8.9-node
       environment:
         SECRET_KEY: dBEn2nkwPvlKuEwrQtBwMLlOOTm3TObmllyOb0j6ZepIqztLQh28oItsJQCbVsF1
 
@@ -46,7 +46,7 @@ defaults: &defaults
 
         JVZOO_SECRET: ""
 
-    - image: circleci/postgres:9.5
+    - image: circleci/postgres:12.6
       environment:
         POSTGRES_USER: ubuntu
         POSTGRES_DB: circle_test
