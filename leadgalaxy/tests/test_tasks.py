@@ -128,10 +128,10 @@ class TasksTestCase(BaseTestCase):
             store=self.store, user=self.user, source_id=12345678,
             data='''{"store": {
                 "name": "Suplier 1",
-                "url": "https://www.aliexpress.com/item/32583696994.html"
+                "url": "https://www.aliexpress.com/item/1005001699144763.html"
             }}''')
 
-        supplier = ProductSupplierFactory(product=product, product_url='https://www.aliexpress.com/item/32583696994.html')
+        supplier = ProductSupplierFactory(product=product, product_url='https://www.aliexpress.com/item/1005001699144763.html')
 
         product.default_supplier = supplier
         product.variants_map = json.dumps({
