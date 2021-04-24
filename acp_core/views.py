@@ -204,7 +204,7 @@ class ACPUserSearchView(BaseTemplateView):
 
             invoices = {}
             if customer_id:
-                for i in stripe.Charge.list(limit=10, customer=customer_id).data:
+                for i in stripe.Charge.list(limit=10, customer=customer_id, expand=['dispute']).data:
                     charge = {
                         'id': i.id,
                         'date': arrow.get(i.created).format('MM/DD/YYYY HH:mm'),
