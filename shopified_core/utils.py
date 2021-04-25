@@ -943,7 +943,6 @@ def get_next_page_from_request(request, page):
 
 def format_queueable_orders(request, orders, current_page, store_type='shopify'):
     orders_result = []
-    next_page_url = None
     enable_supplier_grouping = False
     is_dropified_print = request.GET.get('is_dropified_print') == '1'
     only_private_label_orders = request.GET.get('is_supplement_bulk_order') == '1'
@@ -1092,10 +1091,13 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
 
     page_end = safe_int(request.GET.get('page_end'), 0)
     page_start = safe_int(request.GET.get('page_start'), 1) - 1
-    next_page_number = safe_int(current_page.next_page_number())
-    if current_page.has_next() and (not page_end or next_page_number <= page_end):
-        page = next_page_number - page_start
-        next_page_url = get_next_page_from_request(request, page)
+    next_page_url = None
+    if current_page.has_next():
+        next_page_number = safe_int(current_page.next_page_number())
+        # Pagination can be limited by user
+        if not page_end or next_page_number <= page_end:
+            page = next_page_number - page_start
+            next_page_url = get_next_page_from_request(request, page)
 
     return JsonResponse({
         'orders': orders_result,
