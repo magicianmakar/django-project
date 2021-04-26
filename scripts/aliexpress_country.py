@@ -4,20 +4,20 @@ from requests import get
 from tqdm import tqdm
 
 import json
+import time
 
 
 def get_response(url):
-    tries = 5
+    tries = 10
     while tries:
         tries -= 1
 
         try:
-            if tries != 4:
-                print('Try:', tries)
             r = get(url, timeout=10)
             return json.loads(r.text.strip()[5:-1])
         except:
-            pass
+            print('Try:', tries)
+            time.sleep(tries)
 
 
 countries = ['AU', 'CL', 'ES', 'NL', 'UA', 'UK', 'NZ', 'US', 'CA', 'RU', 'ID', 'TH', 'PL', 'FR', 'IT', 'TR', 'BR', 'KR', 'SA', 'DE']
