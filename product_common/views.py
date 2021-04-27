@@ -13,7 +13,7 @@ from django.views.generic.list import ListView
 import simplejson as json
 from lib.exceptions import capture_message, capture_exception
 
-from shopified_core.utils import get_store_api
+from shopified_core.utils import get_store_api, safe_int
 from shopified_core.models_utils import get_track_model
 
 from .forms import OrderFilterForm, PayoutFilterForm, ProductEditForm, ProductForm
@@ -369,7 +369,7 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
             if transaction_id:
                 queryset = queryset.filter(
                     Q(stripe_transaction_id=transaction_id)
-                    | Q(id=transaction_id)
+                    | Q(id=safe_int(transaction_id))
                 )
 
             supplier = form.cleaned_data['supplier']
