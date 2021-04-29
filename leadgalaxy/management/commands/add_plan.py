@@ -67,7 +67,9 @@ class Command(DropifiedBaseCommand):
                     name = plan_name
                     price = 0.00
 
-                    if interval == 'monthly':
+                    if free_plan:
+                        name = f'{name} Free'
+                    elif interval == 'monthly':
                         name = f'{name} Monthly'
                         price = monthly_price
                     elif interval == 'yearly':
@@ -127,7 +129,7 @@ class Command(DropifiedBaseCommand):
             interval = 'year'
 
         else:
-            raise Exception('Unsupported Stripe plan interval')
+            interval = 'month'
 
         StripePlan.objects.create(
             name=plan.title,
