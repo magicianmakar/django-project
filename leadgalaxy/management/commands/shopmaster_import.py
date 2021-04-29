@@ -5,6 +5,7 @@ from urllib.parse import parse_qs, urlparse
 import requests
 
 from leadgalaxy import tasks
+from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import parse_supplier_sku
 from shopified_core import permissions
 from shopified_core.management import DropifiedBaseCommand
@@ -24,13 +25,19 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--no-progress', dest='progress', action='store_false', help='Show progress')
         parser.add_argument('--store', action='store', type=int, required=True, help='Import to this store')
         parser.add_argument('--store_type', action='store', type=str, required=True, choices=['shopify', 'chq', 'woo'], help='Import to this store')
+        parser.add_argument('--shopify-check', action='store_true', help='Check if shopify product exists')
+        parser.add_argument('--shopify-duplicate', action='store_true', help='Delete duplicate found products')
         parser.add_argument('data_file', type=str)
 
-    def start_command(self, progress, store, store_type, data_file, *args, **options):
+    def start_command(self, progress, store, store_type, data_file, shopify_check, shopify_duplicate, *args, **options):
         self.find_store(store, store_type)
+
+        self.write(f'Importing product for {self.store.title} {self.store.user.email}')
 
         self.import_counter = 0
         self.last_product = None
+        self.shopify_check = store_type == 'shopify' and shopify_check
+        self.shopify_duplicate = self.shopify_check and shopify_duplicate
 
         file_data = list(self.load_data(data_file))
 
@@ -82,16 +89,23 @@ class Command(DropifiedBaseCommand):
     def import_product(self, store_type, info):
         shopify_id = info['productId']
         supplier_url = info['sourceUrl']
+        title = info['title']
+
         supplier = None
 
         if shopify_id and supplier_url:
+            self.write(f'Importing {shopify_id}...')
             try:
-                self.last_product = self.import_shopify(store_type, self.store, shopify_id, supplier_url)
+                self.last_product = self.import_shopify(store_type, self.store, shopify_id, supplier_url, title)
                 supplier = self.last_product.default_supplier
+                self.write(f'Imported to {supplier.id}')
+            except KeyboardInterrupt:
+                raise
             except ImportException as e:
                 self.write(f'Import error: {str(e)}')
 
         elif supplier_url and self.last_product:
+            self.write(f'Importing Supplier {supplier_url}...')
             supplier = get_supplier_model(store_type).objects.create(
                 store=self.last_product.store,
                 product=self.last_product,
@@ -99,6 +113,8 @@ class Command(DropifiedBaseCommand):
                 supplier_name='Supplier',
                 supplier_url='https://www.aliexpress.com/'
             )
+        else:
+            self.write('Nothing to import')
 
         if self.last_product and info.get('productVarId') and info.get('sourceVarId'):
             if not supplier:
@@ -108,13 +124,36 @@ class Command(DropifiedBaseCommand):
             if supplier:
                 self.last_product.set_variant_mapping({info['productVarId']: self.format_sku(info['sourceVarId'])}, supplier=supplier)
 
-    def import_shopify(self, store_type, store, shopify_id, supplier_url):
+    def import_shopify(self, store_type, store, shopify_id, supplier_url, title):
         is_shopify = store_type == 'shopify'
         user = store.user
 
         can_add, total_allowed, user_count = permissions.can_add_product(user.models_user, ignore_daily_limit=True)
         if not can_add:
             raise ImportException(f'Your current plan allows up to {total_allowed} saved product(s). Currently you have {user_count} saved products.')
+
+        shopify_product = None
+        if self.shopify_check:
+            try:
+                shopify_product = get_shopify_product(store, shopify_id, raise_for_status=True)
+            except KeyboardInterrupt:
+                raise
+            except:
+                self.write(f'Product not found: {shopify_id}. Trying to find it using: {title}')
+                if title:
+                    product_ids = store.gql.find_products_by_title(title, exact_match=True).split(',')
+                    if product_ids and len(product_ids) == 1 and '123' not in product_ids:
+                        self.write(f'\t> Product ID changed from {shopify_id} to {product_ids[0]}')
+                        shopify_id = product_ids[0]
+                    elif product_ids and 2 <= len(product_ids) <= 4:
+                        self.write(f'\t> Delete duplicates {product_ids}')
+                        shopify_id = self.remove_duplicates(product_ids)
+                    else:
+                        self.write(f'\t> Product search didn\'t return correct results ({len(product_ids)} | {product_ids})')
+                        raise ImportException('Product missing')
+                else:
+                    self.write('\t> Product title is empty')
+                    raise ImportException('Product missing and without title')
 
         product = None
 
@@ -175,11 +214,15 @@ class Command(DropifiedBaseCommand):
         if is_shopify:
             tasks.update_shopify_product.apply_async(
                 args=[store.id, product.shopify_id],
-                kwargs={'product_id': product.id},
+                kwargs={'product_id': product.id, 'shopify_product': shopify_product},
                 countdown=self.import_counter * 0.5)
         else:
             try:
                 product.sync()
+
+            except KeyboardInterrupt:
+                raise
+
             except:
                 product.delete()
                 raise ImportException('Product sync error')
@@ -190,3 +233,11 @@ class Command(DropifiedBaseCommand):
         sku = parse_supplier_sku(original_sku)
         sku = [{'title': i['option_title'], 'sku': f"{i['option_group']}:{i['option_id']}"} for i in sku]
         return json.dumps(sku)
+
+    def remove_duplicates(self, product_ids):
+        for product_id in product_ids[1:]:
+            self.write(f'\t\t> Deleting {product_id}')
+            rep = requests.delete(url=self.store.api('products', product_id))
+            rep.raise_for_status()
+
+        return product_ids[0]
