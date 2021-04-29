@@ -54,7 +54,7 @@ class GroupPlanAdmin(admin.ModelAdmin):
 
     exclude = ('default_plan',)
     prepopulated_fields = {'slug': ('title',)}
-    list_filter = ('free_plan', 'payment_gateway', 'payment_interval', 'monthly_price', 'trial_days', 'hidden', 'locked', 'support_addons')
+    list_filter = ('free_plan', 'payment_gateway', 'payment_interval', 'show_in_plod_app', 'revision', 'hidden', 'locked', 'support_addons')
     readonly_fields = ('register_hash',)
     search_fields = ('title', 'slug', 'description', 'register_hash')
 

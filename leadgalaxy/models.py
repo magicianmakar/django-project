@@ -2109,6 +2109,8 @@ class GroupPlan(models.Model):
 
     payment_gateway = models.CharField(max_length=25, choices=PLAN_PAYMENT_GATEWAY, default=PLAN_PAYMENT_GATEWAY[0][0])
     payment_interval = models.CharField(max_length=25, choices=PLAN_PAYMENT_TYPE, default='')
+
+    revision = models.CharField(max_length=128, blank=True, null=True)
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     locked = models.BooleanField(default=False, verbose_name='Disable Direct Subscription')
 
