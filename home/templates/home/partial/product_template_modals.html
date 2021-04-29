@@ -1,3 +1,4 @@
+{% load perms_helper %}
 
 <div id="product-template-modal" class="modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -47,6 +48,7 @@
 
             <div class="modal-body">
                 <div class="row">
+                    {% if user|can:'custom_description.use' %}
                     <div class="col-sm-12">
                         <table class="table table-ligthborder" id="description-template-table">
                             <thead>
@@ -87,6 +89,56 @@
                             <i class="fa fa-plus"></i> Add New Template
                         </a>
                     </div>
+                    {% else %}
+                    <div class="col-sm-12">
+                        {% include "common/partial/upsell.html" with addon_id=21 message="Add Custom Product Description to your Plan" only %}
+                        <table class="table table-ligthborder">
+                            <thead>
+                                <tr>
+                                    <th style="vertical-align: middle; min-width: 100px;">Title</th>
+                                    <th style="width: 150px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="template-row">
+                                    <td class="template-title">Hot sale</td>
+                                    <td>
+                                        <a href="#" class="edit-template" title="Edit" style="padding: 8px;">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="delete-template" title="Delete" style="padding: 8px;">
+                                            <i class="fa fa-remove"></i>
+                                        </a>
+                                    </td>
+                                </tr><tr class="template-row">
+                                    <td class="template-title">Standard</td>
+                                    <td>
+                                        <a href="#" class="edit-template" title="Edit" style="padding: 8px;">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="delete-template" title="Delete" style="padding: 8px;">
+                                            <i class="fa fa-remove"></i>
+                                        </a>
+                                    </td>
+                                </tr><tr class="template-row">
+                                    <td class="template-title">Product with discount</td>
+                                    <td>
+                                        <a href="#" class="edit-template" title="Edit" style="padding: 8px;">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                        <a href="#" class="delete-template" title="Delete" style="padding: 8px;">
+                                            <i class="fa fa-remove"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <a class="btn btn-success btn-sm" style="margin: 0;">
+                            <i class="fa fa-plus"></i> Add New Template
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
