@@ -292,7 +292,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         GrooveKartStoreFactory(user=models_user)
         BigCommerceStoreFactory(user=models_user)
         set_churnzero_account(user.models_user)
-        self.assertFalse(post_request.called)
+        self.assertTrue(post_request.called)
 
     @override_settings(DEBUG=False)
     @override_settings(CHURNZERO_APP_KEY='test')
@@ -355,7 +355,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
         user.models_user.profile.plan.is_stripe = Mock(return_value=False)
         set_churnzero_account(user.models_user)
         user.models_user.profile.refresh_from_db()
-        self.assertFalse(user.models_user.profile.has_churnzero_account)
+        self.assertTrue(user.models_user.profile.has_churnzero_account)
 
 
 class SetAccountActionBuilderTestCase(BaseTestCase):
