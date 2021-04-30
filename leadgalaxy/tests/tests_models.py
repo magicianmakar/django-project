@@ -230,7 +230,7 @@ class UserProfileTestCase(BaseTestCase):
         user.models_user.profile.plan = GroupPlanFactory()
         user.models_user.profile.plan.is_stripe = Mock(return_value=False)
         self.client.login(username=user.username, password=password)
-        self.assertEqual(LoginEvent.objects.count(), 0)
+        self.assertEqual(LoginEvent.objects.count(), 1)
 
     def test_must_have_correct_churnzero_account_id_hash(self):
         churnzero_secret_token = settings.CHURNZERO_SECRET_TOKEN.encode()
