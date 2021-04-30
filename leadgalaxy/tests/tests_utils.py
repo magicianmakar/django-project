@@ -1038,7 +1038,7 @@ class ShippingHelperTestCase(BaseTestCase):
             country='Canada', country_code='CA', province='Newfoundland', city="Stephenville", zip='ACF855')
         order, customer_address = utils.shopify_customer_address(order, aliexpress_fix=True, aliexpress_fix_city=True)
 
-        self.assertEqual(customer_address['province'], 'Not Found, Newfoundland')
+        self.assertEqual(customer_address['province'], 'Newfoundland and Labrador')
         self.assertEqual(customer_address['city'], 'Stephenville')
         self.assertEqual(customer_address['zip'], 'ACF855')
 
