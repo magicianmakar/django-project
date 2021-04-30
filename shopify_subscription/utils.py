@@ -101,9 +101,12 @@ class RecurringSubscription:
 
     @cached_property
     def balanced_used(self):
-        balanced_used = self.charge.to_dict().get('balanced_used', 0)
+        try:
+            balanced_used = self.charge.to_dict().get('balanced_used', 0)
 
-        return Decimal(balanced_used).quantize(Decimal('1.00'))
+            return Decimal(balanced_used).quantize(Decimal('1.00'))
+        except:
+            return 0.0
 
     @cached_property
     def charge(self):
@@ -129,7 +132,7 @@ class ShopifyProfile:
 
     @cached_property
     def is_valid(self):
-        return bool(self.shopify_store and self._subscription.charge)
+        return bool(self.shopify_store)
 
     @cached_property
     def shopify_store(self):
@@ -157,11 +160,17 @@ class ShopifyProfile:
 
     @cached_property
     def application_charges(self):
-        return self._get_application_charges()
+        try:
+            return self._get_application_charges()
+        except:
+            return []
 
     @cached_property
     def recurring_charges(self):
-        return self._get_recurring_charges()
+        try:
+            return self._get_recurring_charges()
+        except:
+            return []
 
     @cached_property
     def application_charge_total(self):

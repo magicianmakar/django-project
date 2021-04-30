@@ -40,14 +40,15 @@ class SetAccountActionBuilder:
         )
 
     def add_name(self):
-        store_title = self._get_shopify_store_title()
         if self._models_user.email:
             self._action['attr_Name'] = self._models_user.email
-        elif store_title:
-            self._action['attr_Name'] = store_title
         else:
-            name = self._models_user.get_full_name()
-            self._action['attr_Name'] = name if name else self._models_user.username
+            store_title = self._get_shopify_store_title()
+            if store_title:
+                self._action['attr_Name'] = store_title
+            else:
+                name = self._models_user.get_full_name()
+                self._action['attr_Name'] = name if name else self._models_user.username
 
     def add_stripe_customer_id(self):
         self._action['attr_Stripe_customer_id'] = self._models_user.stripe_customer.customer_id
@@ -55,8 +56,10 @@ class SetAccountActionBuilder:
     def add_gateway(self):
         if self.is_stripe_user:
             self._action['attr_Gateway'] = 'Stripe'
-        if self.is_shopify_user:
+        elif self.is_shopify_user:
             self._action['attr_Gateway'] = 'Shopify'
+        else:
+            self._action['attr_Gateway'] = 'JVZoo'
 
     def add_installed_addons(self):
         addons_list = self._profile.addons.values_list('churnzero_name', flat=True)
@@ -84,28 +87,22 @@ class SetAccountActionBuilder:
         self._action['attr_NextRenewalDate'] = self.shopify_profile.next_renewal_date.isoformat()
 
     def add_start_date(self):
-        self._action['attr_StartDate'] = self.shopify_profile.start_date.isoformat()
+        try:
+            self._action['attr_StartDate'] = self.shopify_profile.start_date.isoformat()
+        except:
+            pass
 
     def add_end_date(self):
         self._action['attr_EndDate'] = self.shopify_profile.end_date.isoformat()
 
     def add_total_contract_amount(self):
-        self._action['attr_TotalContractAmount'] = float(self.shopify_profile.total_contract_amount)
+        try:
+            self._action['attr_TotalContractAmount'] = float(self.shopify_profile.total_contract_amount)
+        except:
+            pass
 
     def add_is_active(self):
-        if self.is_shopify_user:
-            self._action['attr_IsActive'] = self.shopify_profile.is_active
-        if self.is_stripe_user:
-            stripe_active = (
-                self._models_user.stripe_customer.is_active
-                and self._models_user.profile.plan
-                and not (
-                    self._models_user.profile.plan.free_plan
-                    or self._models_user.profile.plan.is_free
-                    or self._models_user.profile.plan.is_active_free
-                )
-            )
-            self._action['attr_IsActive'] = stripe_active
+        self._action['attr_IsActive'] = not self._models_user.profile.plan.is_free
 
     def add_plan(self):
         self._action['attr_Plan'] = self._plan.title
@@ -128,15 +125,6 @@ class SetAccountActionBuilder:
 
         if self.is_stripe_user:
             self.add_stripe_customer_id()
-
-        if self.is_shopify_user:
-            self.add_total_contract_amount()
-            if self.shopify_profile.start_date:
-                self.add_start_date()
-            if self.shopify_profile.end_date:
-                self.add_end_date()
-            if self.shopify_profile.next_renewal_date:
-                self.add_next_renewal_date()
 
         return self._action
 

@@ -249,11 +249,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'action': 'setAttribute',
             'entity': 'account',
             'attr_Name': models_user.email,
-            'attr_NextRenewalDate': arrow.get('2012-04-01').isoformat(),
-            'attr_TotalContractAmount': 100.00,
             'attr_IsActive': True,
-            'attr_StartDate': arrow.get('2012-03-01').isoformat(),
-            'attr_EndDate': arrow.get('2012-03-01').isoformat(),
             # Custom attributes
             'attr_Gateway': models_user.profile.plan.payment_gateway.title(),
             'attr_Installed Addons': ', '.join(addons_list),
