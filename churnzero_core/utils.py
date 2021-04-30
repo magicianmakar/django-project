@@ -51,7 +51,8 @@ class SetAccountActionBuilder:
                 self._action['attr_Name'] = name if name else self._models_user.username
 
     def add_stripe_customer_id(self):
-        self._action['attr_Stripe_customer_id'] = self._models_user.stripe_customer.customer_id
+        if self.is_stripe_user:
+            self._action['attr_Stripe_customer_id'] = self._models_user.stripe_customer.customer_id
 
     def add_gateway(self):
         if self.is_stripe_user:
@@ -122,9 +123,7 @@ class SetAccountActionBuilder:
         self.add_gkart_stores_count()
         self.add_bigcommerce_stores_count()
         self.add_is_active()
-
-        if self.is_stripe_user:
-            self.add_stripe_customer_id()
+        self.add_stripe_customer_id()
 
         return self._action
 
@@ -235,8 +234,7 @@ def post_churnzero_actions(actions):
 
 def set_churnzero_account(models_user):
     action_builder = SetAccountActionBuilder(models_user)
-    if action_builder.is_shopify_user or action_builder.is_stripe_user:
-        action = action_builder.get_complete_action()
-        post_churnzero_actions([action])
-        models_user.profile.has_churnzero_account = True
-        models_user.profile.save()
+    action = action_builder.get_complete_action()
+    post_churnzero_actions([action])
+    models_user.profile.has_churnzero_account = True
+    models_user.profile.save()
