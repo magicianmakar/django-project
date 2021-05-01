@@ -103,7 +103,7 @@ class SetAccountActionBuilder:
             pass
 
     def add_is_active(self):
-        self._action['attr_IsActive'] = not self._models_user.profile.plan.is_free
+        self._action['attr_IsActive'] = not self._models_user.profile.plan.free_plan
 
     def add_plan(self):
         self._action['attr_Plan'] = self._plan.title
