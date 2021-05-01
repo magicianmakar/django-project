@@ -2184,7 +2184,7 @@ class GroupPlan(models.Model):
 
     @property
     def is_free(self):
-        return self.free_plan
+        return self.free_plan or self.slug in ['free-stripe-plan', 'free-plan', 'shopify-free-plan'] or self.is_startup
 
     @property
     def is_active_free(self):
