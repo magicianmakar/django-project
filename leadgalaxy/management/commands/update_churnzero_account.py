@@ -23,9 +23,12 @@ def worker(q, cmd):
 
 
 class Command(DropifiedBaseCommand):
-    def start_command(self, *args, **options):
+    def add_arguments(self, parser):
+        parser.add_argument('--progress', action='store_true', help='Show Update Progress')
+
+    def start_command(self, progress, *args, **options):
         users = User.objects.filter(profile__subuser_parent__isnull=True)
-        self.progress_total(users.count())
+        self.progress_total(users.count(), progress)
 
         q = Queue()
         for i in range(40):
