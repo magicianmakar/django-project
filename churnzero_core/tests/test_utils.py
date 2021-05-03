@@ -249,7 +249,7 @@ class SetChurnZeroAccountTestCase(BaseTestCase):
             'action': 'setAttribute',
             'entity': 'account',
             'attr_Name': models_user.email,
-            'attr_IsActive': True,
+            'attr_IsActive': False,
             # Custom attributes
             'attr_Gateway': models_user.profile.plan.payment_gateway.title(),
             'attr_Installed Addons': ', '.join(addons_list),
