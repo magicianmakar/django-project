@@ -2825,6 +2825,8 @@ def user_profile(request):
     plan_filter = {'hidden': False}
     if request.GET.get('_revision'):
         plan_filter = {'revision': request.GET['_revision']}
+    elif settings.PLAN_REVISION:
+        plan_filter = {'revision': settings.PLAN_REVISION}
 
     stripe_plans = GroupPlan.objects.filter(show_in_plod_app=show_plod_plan) \
                                     .filter(**plan_filter) \
