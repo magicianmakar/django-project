@@ -36,6 +36,11 @@
                                                     {% else %}
                                                         <p class="price"><span style="font-size:26px !important">Free</span></p>
                                                     {% endif %}
+                                                    {% if item.sales_fee_config.fee_percent %}
+                                                            <span>Plus {{ item.sales_fee_config.fee_percent }}% Fulfillment Fee</span>
+                                                        {% else %}
+                                                            <span>No Fulfillment Fee</span>
+                                                        {% endif %}
 
                                                     {% if item.stripe_plan.retail_amount %}
                                                         <p class="retail-price" title="Retail Price">
@@ -131,6 +136,11 @@
                                                     {% else %}
                                                         <p class="retail-price"></p>
                                                     {% endif %}
+                                                    {% if item.sales_fee_config.fee_percent %}
+                                                            <span>Plus {{ item.sales_fee_config.fee_percent }}% Fulfillment Fee</span>
+                                                        {% else %}
+                                                            <span>No Fulfillment Fee</span>
+                                                        {% endif %}
 
                                                     <p class="cta">
                                                         {% if current_plan == item %}
