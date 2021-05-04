@@ -4,6 +4,15 @@
 {% block submit_buttons_bottom %}
 {{ original }}
     <div class="submit-row">
+        {% if original.permalink %}
+        <a href="{{ original.permalink }}"
+           name="_viewaddon"
+           class="button closelink"
+           target="_blank">
+           {% trans 'View Addon' %}
+        </a>
+        {% endif %}
+
         <a href="#"
            name="_copypermalink"
            class="button closelink"
