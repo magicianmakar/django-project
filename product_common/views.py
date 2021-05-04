@@ -580,6 +580,7 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 )
 
             date = self.request.GET.get('date', None)
+            self.paginate_by = self.request.GET.get('paginate_by', 20)
             created_at_start, created_at_end = None, None
             if date:
                 try:

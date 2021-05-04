@@ -464,3 +464,16 @@
   max-width:100px;
   max-width:100px;
 }
+
+.paging-supplement {
+  display: flex;
+  margin: auto;
+}
+
+.paging-supplement .dropdown {
+  margin-left: 1rem;
+}
+
+.paging-supplement .dropdown-menu {
+  top: -328%;
+}

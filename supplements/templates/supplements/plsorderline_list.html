@@ -83,7 +83,7 @@
       <td>{{ line_item.fulfillment_status_string }}</td>
       <td>{{ line_item.quantity }}</td>
       <td>{{ line_item.created_at|user_date }}</td>
-      <td>{{ line_item.label_status_string }}</td>
+      <td class="label-status">{{ line_item.label_status_string }}</td>
       <td>{{ line_item.shipping_service }}</td>
       <td>
         <a href="{% url 'pls:generate_label' line_item.id %}"
@@ -123,7 +123,21 @@
   </tbody>
 </table>
 
-{% include "supplements/partials/paging.html" %}
+<div class="paging-supplement">
+  {% include "supplements/partials/paging.html" %}
+  <div class="dropdown">
+    <button class="btn btn-default btn-outline dropdown-toggle" type="button" id="dropdownMenu2" >
+      Page
+      <span class="caret"></span>
+    </button>
+    <ul id="store-dropdown-menu-2" class="dropdown-menu" style="display: none;">
+      <li><a>20</a></li>
+      <li><a>50</a></li>
+      <li><a>100</a></li>
+    </ul>
+  </div>
+</div>
+
 
 {% include "supplements/partials/current_label_info_modal.html" %}
 
@@ -149,6 +163,7 @@
 {% block extracss %}
 
 {% compress css %}
+<link href="{% static 'pls/css/pls.css' %}" rel="stylesheet">
 <link href="{% static 'libs/bower_components/bootstrap-daterangepicker/daterangepicker.css' %}" rel="stylesheet">
 {% endcompress %}
 

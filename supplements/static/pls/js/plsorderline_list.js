@@ -21,6 +21,8 @@
                     if (r.current_is_rejected || newVersionApproved) {
                         showWarnings(r);
                     } else {
+                        $(e.target).closest('tr').find('.label-status').find('.label').hide();
+                        $(e.target).closest('tr').find('.label-status').append('<span class="label label-primary">Printed</span>');
                         markLabelAsPrinted.call(this);
                         window.open(r.label_url, '_blank');
                     }

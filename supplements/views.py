@@ -1531,7 +1531,6 @@ class PayoutDetail(LoginRequiredMixin, TemplateView):
 
 class OrderItemListView(common_views.OrderItemListView):
     model = PLSOrderLine
-    paginate_by = 20
     ordering = '-created_at'
     filter_form = LineFilterForm
     namespace = 'pls'

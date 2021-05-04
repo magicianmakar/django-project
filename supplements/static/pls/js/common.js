@@ -48,6 +48,19 @@ $(document).ready(function(){
         }
     });
 
+    $(".paging-supplement .dropdown-menu a").click(function(event){
+        var urlParams = new URLSearchParams(window.location.search);
+        var page = urlParams.get("page") || 1;
+        var paginateBy = $(this).text();
+        window.location.href = "?paginate_by=" + paginateBy + "&page=" + page;
+    });
+
+    $('#dropdownMenu2, #store-dropdown-menu-2 li').hover(function() {
+        $('#store-dropdown-menu-2').stop(true, true).fadeIn(0);
+    }, function() {
+        $('#store-dropdown-menu-2').stop(true, true).delay(200).fadeOut(200);
+    });
+
     $("#print-all-labels").click(function (e) {
         e.preventDefault();
         var data = {'item-ids': []};
