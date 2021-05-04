@@ -225,7 +225,7 @@ class Command(DropifiedBaseCommand):
             order_id=data['id'],
             order_number=data['number'],
             customer_id=customer.get('id', 0),
-            customer_name=str_max(get_customer_name(customer), 255),
+            customer_name=str_max(get_customer_name(address), 255),
             customer_email=str_max(customer.get('email'), 255),
             financial_status=data['financial_status'],
             fulfillment_status=data['fulfillment_status'],
