@@ -5,6 +5,7 @@ import itertools
 import phonenumbers
 from lib.exceptions import capture_exception
 
+from django.contrib.auth.models import User
 from django.views.generic import View
 from django.utils.decorators import method_decorator
 from django.db.models import ObjectDoesNotExist, F
@@ -32,9 +33,9 @@ from shopified_core.utils import (
 )
 from shopified_core.models_utils import get_store_model, get_user_upload_model
 from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
-
 from shopified_core.decorators import HasSubuserPermission
 
+from stripe_subscription.models import ExtraSubUser
 from stripe_subscription.signals import get_extra_model_from_store
 
 from product_alerts.models import ProductChange
@@ -834,6 +835,34 @@ class ApiBase(ApiResponseMixin, View):
             return self.api_success()
 
         return self.api_error('Store can not be added', status=403)
+
+    def post_add_extra_subuser(self, request, user, data):
+        subuser_id = data.get('subuser_id')
+        try:
+            subuser = User.objects.get(id=subuser_id)
+        except User.DoesNotExist:
+            return self.api_error('User not found', status=404)
+
+        if user.is_subuser \
+                and not subuser.profile.subuser_parent == user:
+            raise permissions.PermissionDenied()
+
+        can_add, total_allowed, user_count = permissions.can_add_subuser(user)
+        subusers_count = user.profile.get_sub_users_count()
+
+        if user.profile.plan.is_stripe() \
+                and not user.profile.plan.is_paused \
+                and total_allowed > -1 \
+                and total_allowed < subusers_count:
+
+            ExtraSubUser.objects.create(
+                user=user,
+                period_start=timezone.now(),
+            )
+
+            return self.api_success()
+
+        return self.api_error('Subuser can not be added', status=403)
 
     def post_add_user_upload(self, request, user, data):
         try:

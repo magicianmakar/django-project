@@ -18,7 +18,7 @@
                     <div class="col-sm-12 b-r">
                         <h3 class="m-t-none m-b">
                             {% if stores_limit_max == 0 %}
-                            Your current plan doesn't allow adding any stores
+                            Your current plan doesn't include any stores.
                             {% elif stores_limit_max == 1%}
                             You've exceeded the number of stores for your plan. <br>Only one store can be active.
                             {% else %}
@@ -29,7 +29,7 @@
                         <h3 class="m-b">
                         Please <a class="" href="/user/profile#plan">upgrade your plan</a> or select which stores to deactivate.
                         {% if additional_stores %}
-                          <br> Your current plan also allows you to accept additional cost for each extra store per month.
+                          <br> You may also select the stores to keep at a cost of ${{cost_per_store}}/store per month.
                         {% endif %}
                         </h3>
 
@@ -53,7 +53,7 @@
                 <button type="button" class="btn btn-danger btn-primary pull-left" id="check-plan-limits-update">Deactivate Selected Stores</button>
                 {% if additional_stores %}
                   <button type="button" class="btn btn-info pull-left"
-                    id="accept-additional-cost"
+                    id="accept-store-additional-cost"
                     data-store-cost="{{cost_per_store}}"
                     data-plan-store-count="{{request.user.profile.plan.stores}}"
                     data-user-store-count="{{request.user.profile.get_stores_count}}">
@@ -106,7 +106,7 @@
         margin-bottom: 0;
         margin-left: 4.5px;
     }
-    ##check-plan-limits-stores {
+    #check-plan-limits-stores {
         border: 1px solid #eee;
     }
     #check-plan-limits-stores > tbody > tr > td {
@@ -309,7 +309,7 @@
             });
         });
 
-        $('#accept-additional-cost').on('click', function(e) {
+        $('#accept-store-additional-cost').on('click', function(e) {
             e.preventDefault();
             var additionalCost = $(this).data('store-cost'),
                 planStoreCount = $(this).data('plan-store-count'),
@@ -317,16 +317,16 @@
 
             var selected = $('#check-plan-limits-form input[type="checkbox"]:checked');
             if (!selected.length) {
-                swal('Additional Cost per Store', 'Select one or more stores first', 'warning');
+                swal('Add Stores', 'Select one or more stores first', 'warning');
                 return;
             }
-            var text = 'You will be charged $' + additionalCost + ' for each additional store per month';
+            var text = 'You will be charged $' + additionalCost + ' for each store per month';
             if (selected.length > 1) {
                 text = text + ' with a total of $' + (selected.length * additionalCost);
             }
 
             swal({
-                  title: 'Additional Cost per Store',
+                  title: 'Add Stores',
                   text: text,
                   showCancelButton: true,
                   closeOnConfirm: false,

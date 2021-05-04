@@ -331,5 +331,9 @@
     {% if stores_limit_reached %}
         {% include 'partial/stores_limit_reached.html' %}
     {% endif %}
+
+    {% if subusers_limit_reached %}
+        {% include 'partial/subusers_limit_reached.html' %}
+    {% endif %}
   </body>
 </html>

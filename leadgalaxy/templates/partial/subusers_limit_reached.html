@@ -1,0 +1,278 @@
+{% load static %}
+
+<div id="check-plan-limits-modal" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="m-t-none modal-header">
+                <h4 class="modal-title">Sub Users Limit Exceeded</h4>
+            </div>
+            <div id="check-plan-limits-modal-body" class="modal-body sk-loading">
+                <div class="sk-spinner-wrapper">
+                    <div class="sk-spinner sk-spinner-double-bounce">
+                        <div class="sk-double-bounce1"></div>
+                        <div class="sk-double-bounce2"></div>
+                    </div>
+                    <label>Loading subusers...</label>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12 b-r">
+                        <h3 class="m-t-none m-b">
+                            {% if subusers_limit_max == 0 %}
+                            Your current plan doesn't include any subusers.
+                            {% elif subusers_limit_max == 1 %}
+                            You've exceeded the number of subusers for your plan. <br>Only one subuser can be active.
+                            {% else %}
+                            You've exceeded the number of subusers for your plan. <br>Only {{subusers_limit_max}} subusers can be active.
+                            {% endif %}
+                        </h3>
+
+                        <h3 class="m-b">
+                        Please <a class="" href="/user/profile#plan">upgrade your plan</a> or select which subusers to delete.
+                        {% if additional_subusers %}
+                          <br> You may also select the users to keep at a cost of ${{cost_per_subuser}}/user per month.
+                        {% endif %}
+                        </h3>
+
+                        <form id="check-plan-limits-form" method="post" action="">
+                            <table id="check-plan-limits-subusers" class="table table-ligthborder">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th class="hidden-xs" style="">Email</th>
+                                        <th class="hidden-xs" style="width: 13%;">Delete{% if additional_subusers %}/Accept{% endif %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-danger btn-primary pull-left" id="check-plan-limits-update">Delete Selected Subuser</button>
+                {% if additional_subusers %}
+                  <button type="button" class="btn btn-info pull-left"
+                    id="accept-subuser-additional-cost"
+                    data-subuser-cost="{{cost_per_subuser}}"
+                    data-plan-subuser-count="{{request.user.profile.plan.subusers}}"
+                    data-user-subuser-count="{{request.user.profile.get_sub_users_count}}">
+                    Accept Additional Cost/Subuser</button>
+                {% endif %}
+                <a class="btn btn-primary" href="/user/profile#plan">Upgrade Account Plan</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style type="text/css">
+    .modal-body.sk-loading {
+        position: relative;
+        min-height: 100px;
+    }
+    .modal-body > .sk-spinner-wrapper {
+        display: none;
+    }
+    .modal-body.sk-loading > .sk-spinner-wrapper {
+        display: block;
+        position: absolute;
+        top: calc(50% - 20px);
+        left: 0;
+        right: 0;
+        z-index: 2000;
+        text-align: center;
+    }
+    .modal-body.sk-loading:after {
+        content: '';
+        background-color: rgba(255, 255, 255, 0.7);
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        box-sizing: border-box;
+    }
+    .modal-body.sk-loading > .sk-spinner-wrapper > .sk-spinner-double-bounce.sk-spinner {
+        display: inline-block;
+        margin: 0;
+    }
+    .modal-body.sk-loading > .sk-spinner-wrapper > label {
+        display: inline-block;
+        margin: 0 0 0 10px;
+        line-height: 40px;
+        overflow: hidden;
+    }
+    .modal-footer .btn+.btn {
+        margin-bottom: 0;
+        margin-left: 4.2px;
+    }
+    #check-plan-limits-subusers {
+        border: 1px solid #eee;
+    }
+    #check-plan-limits-subusers > tbody > tr > td {
+      vertical-align: middle;
+    }
+    #check-plan-limits-subusers td:first-child {
+        width: 40%;
+    }
+    #check-plan-limits-modal .icheckbox_square-blue {
+        position: relative;
+    }
+    #check-plan-limits-subusers thead tr th:first-child {
+        text-align: left;
+    }
+    #check-plan-limits-subusers > tbody > tr > td:last-child {
+        text-align: center;
+    }
+</style>
+
+<script type="text/javascript">
+    $(function () {
+        var LimitReached = {
+            countSubusers: 0,  // Count how many ajax calls were started
+            countCompleteSubusers: 0,  // Count how many ajax calls were finished
+            ajaxCallbacks: {
+                beforeSend: function() {
+                    LimitReached.countSubusers += 1;
+                },
+                success: function(data) {
+                    $('tr[data-subuser-id="'+this.subuserId+'"][data-subuser-type="'+this.type+'"]').remove();
+                },
+                error: function(data) {
+                    displayAjaxError('Delete Subuser', data);
+                },
+                complete: function() {
+                    LimitReached.countCompleteSubusers += 1;
+                    LimitReached.checkComplete();
+                }
+            },
+            loading: {
+                add: function() {
+                    $('#check-plan-limits-modal-body').addClass('sk-loading');
+                },
+                remove: function() {
+                    $('#check-plan-limits-modal-body').removeClass('sk-loading');
+                }
+            },
+            removeSubuser: function(subuserId) {
+                $.ajax({
+                    url: '/api/subusers/delete',
+                    type: 'POST',
+                    data: {'subuser': subuserId},
+                    beforeSend: LimitReached.ajaxCallbacks.beforeSend,
+                    success: LimitReached.ajaxCallbacks.success,
+                    error: LimitReached.ajaxCallbacks.error,
+                    complete: LimitReached.ajaxCallbacks.complete
+                });
+            },
+            checkComplete: function() {
+                if (LimitReached.countSubusers == LimitReached.countCompleteSubusers) {
+                    LimitReached.loading.remove();
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1000);
+                }
+            },
+            acceptCostPerSubuser: function(subuserId) {
+                $.ajax({
+                    url: api_url('add-extra-subuser'),
+                    method: 'POST',
+                    data: {subuser_id: subuserId},
+                    beforeSend: LimitReached.ajaxCallbacks.beforeSend,
+                    success: LimitReached.ajaxCallbacks.success,
+                    error: LimitReached.ajaxCallbacks.error,
+                    complete: LimitReached.ajaxCallbacks.complete
+                });
+            }
+        };
+
+        $.ajax({
+            url: '/api/subusers/subusers',
+            type: 'GET',
+            data: {all: true},
+            beforeSend: LimitReached.loading.add(),
+            success: function (data) {
+                $('#check-plan-limits-subusers tbody tr').remove();
+                for (var key in data.subusers) {
+                    var activeSubuser = data.subusers[key];
+                    $('#check-plan-limits-subusers tbody').append(
+                        $('<tr class="subuser-limit-reached-row" data-subuser-id="' + activeSubuser.id + '">').append(
+                            $('<td>').append($('<span>', {text: activeSubuser.name})),
+                            $('<td>').append($('<span>', {'text': activeSubuser.email}) ),
+                            $('<td>').append(
+                                $('<input type="checkbox" class="check-plan-limits-checkbox" value="'+activeSubuser.id+'">')
+                            )
+                        )
+                    );
+                }
+
+                $('.check-plan-limits-checkbox').iCheck({
+                    checkboxClass: 'icheckbox_square-blue',
+                    radioClass: 'iradio_square-blue',
+                });
+            },
+            error: function (data) {
+                displayAjaxError('Subusers List', data);
+            },
+            complete: LimitReached.loading.remove(),
+        });
+
+        $('#check-plan-limits-update').on('click', function(e) {
+            e.preventDefault();
+
+            var selected = $('#check-plan-limits-form input[type="checkbox"]:checked');
+            if (!selected.length) {
+                swal('Delete Subusers', 'Select one or more users first', 'warning');
+                return;
+            }
+
+            LimitReached.loading.add();
+            selected.each(function() {
+                var subuserRow = $(this).parents('.subuser-limit-reached-row'),
+                    subuserId = subuserRow.attr('data-subuser-id');
+
+                LimitReached.removeSubuser(subuserId);
+            });
+        });
+
+        $('#accept-subuser-additional-cost').on('click', function(e) {
+            e.preventDefault();
+            var additionalCost = $(this).data('subuser-cost'),
+                planSubuserCount = $(this).data('plan-subuser-count'),
+                userSubuserCount = $(this).data('user-subuser-count');
+
+            var selected = $('#check-plan-limits-form input[type="checkbox"]:checked');
+            if (!selected.length) {
+                swal('Add Subusers', 'Select one or more users first', 'warning');
+                return;
+            }
+            var text = 'You will be charged $' + additionalCost + ' for each subuser per month';
+            if (selected.length > 1) {
+                text = text + ' with a total of $' + (selected.length * additionalCost);
+            }
+
+            swal({
+                  title: 'Add Subusers',
+                  text: text,
+                  showCancelButton: true,
+                  closeOnConfirm: false,
+                  showLoaderOnConfirm: true,
+                  confirmButtonText: "Continue",
+                  cancelButtonText: "Cancel",
+              },
+              function(isConfirmed) {
+                  if (isConfirmed) {
+                      LimitReached.loading.add();
+                      selected.each(function() {
+                          var subuserRow = $(this).parents('.subuser-limit-reached-row'),
+                              subuserId = subuserRow.attr('data-subuser-id');
+
+                          LimitReached.acceptCostPerSubuser(subuserId);
+                      });
+                  }
+              });
+        });
+
+        $('#check-plan-limits-modal').modal({backdrop: 'static', keyboard: false});
+    });
+</script>

@@ -114,3 +114,20 @@ class SubusersApi(ApiResponseMixin, View):
         return self.api_success({
             'hash': reg.register_hash
         })
+
+    def get_subusers(self, request, user, data):
+        if not user.can('sub_users.use') or user.is_subuser:
+            raise PermissionDenied()
+
+        try:
+            users = User.objects.filter(profile__subuser_parent=user)
+        except User.DoesNotExist:
+            return self.api_error('Subusers not found', status=404)
+
+        subusers = [{
+            'id': i.id,
+            'name': i.get_full_name() if i.get_full_name() else i.username,
+            'email': i.email,
+        } for i in users]
+
+        return self.api_success({'subusers': subusers})

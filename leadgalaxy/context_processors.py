@@ -8,7 +8,7 @@ from django.contrib import messages
 import arrow
 import datetime
 
-from shopified_core.permissions import can_add_store
+from shopified_core.permissions import can_add_store, can_add_subuser
 from leadgalaxy.side_menu import (
     get_menu_structure,
     get_menu_item_data,
@@ -82,6 +82,46 @@ def store_limits_check(request):
         'stores_limit_max': stores_limit_max,
         'additional_stores': additional_stores,
         'cost_per_store': cost_per_store,
+    }
+
+
+def subuser_limits_check(request):
+    subusers_limit_reached = False
+    subusers_limit_max = 1
+    additional_subusers = False
+    cost_per_subuser = None
+
+    if request.user.is_authenticated and \
+            not request.user.profile.plan.is_paused and \
+            not request.path.startswith('/user/profile') and \
+            not settings.DEBUG:
+
+        user_plan = request.user.profile.plan
+        additional_subusers = user_plan.extra_subusers
+        cost_per_subuser = user_plan.extra_subuser_cost
+        cache_key = 'subuser_limit_reached_{}'.format(request.user.id)
+        cached_value = cache.get(cache_key)
+
+        if cached_value is not None:
+            subusers_limit_reached = cached_value
+        else:
+            can_add, total_allowed, user_count = can_add_subuser(request.user)
+            total_allowed += request.user.extra_sub_user.count()
+            if not can_add and total_allowed < user_count:  # if the user `can_add` a subuser he definetly didn't reach the limit
+                subusers_limit_reached = True
+                subusers_limit_max = total_allowed
+            else:
+                # Only cache value if the subuser limit is not reached
+                cache.set(cache_key, False, timeout=900)
+
+        if request.user.models_user.profile.plan.is_paused:
+            subusers_limit_reached = False
+
+    return {
+        'subusers_limit_reached': subusers_limit_reached,
+        'subusers_limit_max': subusers_limit_max,
+        'additional_subusers': additional_subusers,
+        'cost_per_subuser': cost_per_subuser,
     }
 
 
