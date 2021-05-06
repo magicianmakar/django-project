@@ -1,6 +1,7 @@
 import csv
 import json
 from urllib.parse import parse_qs, urlparse
+from collections import defaultdict
 
 import requests
 
@@ -27,9 +28,10 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--store_type', action='store', type=str, required=True, choices=['shopify', 'chq', 'woo'], help='Import to this store')
         parser.add_argument('--shopify-check', action='store_true', help='Check if shopify product exists')
         parser.add_argument('--shopify-duplicate', action='store_true', help='Delete duplicate found products')
+        parser.add_argument('--skip', type=int, default=0, help='Number of entries to skip')
         parser.add_argument('data_file', type=str)
 
-    def start_command(self, progress, store, store_type, data_file, shopify_check, shopify_duplicate, *args, **options):
+    def start_command(self, progress, store, store_type, data_file, shopify_check, shopify_duplicate, skip, *args, **options):
         self.find_store(store, store_type)
 
         self.write(f'Importing product for {self.store.title} {self.store.user.email}')
@@ -38,6 +40,7 @@ class Command(DropifiedBaseCommand):
         self.last_product = None
         self.shopify_check = store_type == 'shopify' and shopify_check
         self.shopify_duplicate = self.shopify_check and shopify_duplicate
+        self.suppliers_mapping = defaultdict(dict)
 
         file_data = list(self.load_data(data_file))
 
@@ -48,8 +51,21 @@ class Command(DropifiedBaseCommand):
 
         for i in file_data:
             self.progress_update()
+
+            if skip > 0:
+                skip -= 1
+                continue
+
             self.import_product(store_type, i)
             self.import_counter += 1
+
+        self.progress_close()
+        self.progress_total(len(self.suppliers_mapping))
+
+        for product, suppliers in self.suppliers_mapping.items():
+            self.progress_update()
+            for supplier, mapping in suppliers.items():
+                product.set_variant_mapping(mapping, supplier=supplier)
 
     def load_data(self, data_file):
         ext = data_file.split('.').pop().lower()
@@ -94,18 +110,18 @@ class Command(DropifiedBaseCommand):
         supplier = None
 
         if shopify_id and supplier_url:
-            self.write(f'Importing {shopify_id}...')
+            self.progress_description(f'Importing {shopify_id}...')
             try:
                 self.last_product = self.import_shopify(store_type, self.store, shopify_id, supplier_url, title)
                 supplier = self.last_product.default_supplier
-                self.write(f'Imported to {supplier.id}')
+                self.progress_description(f'Imported to {supplier.id}')
             except KeyboardInterrupt:
                 raise
             except ImportException as e:
                 self.write(f'Import error: {str(e)}')
 
         elif supplier_url and self.last_product:
-            self.write(f'Importing Supplier {supplier_url}...')
+            self.progress_description(f'Importing Supplier {supplier_url}...')
             supplier = get_supplier_model(store_type).objects.create(
                 store=self.last_product.store,
                 product=self.last_product,
@@ -113,8 +129,6 @@ class Command(DropifiedBaseCommand):
                 supplier_name='Supplier',
                 supplier_url='https://www.aliexpress.com/'
             )
-        else:
-            self.write('Nothing to import')
 
         if self.last_product and info.get('productVarId') and info.get('sourceVarId'):
             if not supplier:
@@ -122,7 +136,10 @@ class Command(DropifiedBaseCommand):
                     supplier = self.last_product.default_supplier
 
             if supplier:
-                self.last_product.set_variant_mapping({info['productVarId']: self.format_sku(info['sourceVarId'])}, supplier=supplier)
+                if supplier not in self.suppliers_mapping[self.last_product]:
+                    self.suppliers_mapping[self.last_product][supplier] = {}
+
+                self.suppliers_mapping[self.last_product][supplier][info['productVarId']] = self.format_sku(info['sourceVarId'])
 
     def import_shopify(self, store_type, store, shopify_id, supplier_url, title):
         is_shopify = store_type == 'shopify'
