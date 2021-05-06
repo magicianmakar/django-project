@@ -628,3 +628,5 @@ ALIBABA_COMMON_SHIPPINGS = (
     {'code': 'EX_ASP_Express_US', 'name': 'Alibaba.com Air Express'},
     {'code': 'HKUPS', 'name': 'Express UPS Saver (HK)'},
 )
+
+SUBUSERS_LIMIT_CHECK = os.environ.get('SUBUSERS_LIMIT_CHECK')

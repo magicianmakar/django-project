@@ -86,6 +86,9 @@ def store_limits_check(request):
 
 
 def subuser_limits_check(request):
+    if not settings.SUBUSERS_LIMIT_CHECK:
+        return {}
+
     subusers_limit_reached = False
     subusers_limit_max = 1
     additional_subusers = False
