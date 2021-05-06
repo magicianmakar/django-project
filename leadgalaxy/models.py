@@ -2220,6 +2220,14 @@ class GroupPlan(models.Model):
     def is_black(self):
         return self.slug in ['new-black-yearly-shopify', 'new-black-monthly-shopify', 'new-black-yearly', 'new-black-monthly']
 
+    @property
+    def is_build(self):
+        return self.slug in ['build-yearly-shopify', 'build-monthly-shopify', 'build-yearly', 'build-monthly']
+
+    @property
+    def is_plod(self):
+        return self.slug in ['plod-yearly-shopify', 'plod-monthly-shopify', 'plod-yearly', 'plod-monthly']
+
 
 class GroupPlanChangeLog(models.Model):
     user = models.OneToOneField(User, related_name='plan_change_log', on_delete=models.CASCADE)

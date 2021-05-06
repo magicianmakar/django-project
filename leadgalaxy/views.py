@@ -2821,7 +2821,16 @@ def upload_file_sign(request):
 def user_profile(request):
     bundles = request.user.profile.bundles.filter(hidden_from_user=False)
 
-    show_plod_plan = 1 if request.user.models_user.profile.private_label else 0
+    show_plod_plan = 0
+    if request.user.models_user.profile.plan.is_private_label:
+        show_plod_plan = 1
+    if request.user.models_user.profile.plan.is_black:
+        show_plod_plan = 1
+    if request.user.models_user.profile.plan.is_plod:
+        show_plod_plan = 1
+    if request.user.models_user.profile.private_label:
+        show_plod_plan = 1
+
     plan_filter = {'hidden': False}
     if request.GET.get('_revision'):
         plan_filter = {'revision': request.GET['_revision']}
