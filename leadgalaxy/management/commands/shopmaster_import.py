@@ -139,7 +139,8 @@ class Command(DropifiedBaseCommand):
                 if supplier not in self.suppliers_mapping[self.last_product]:
                     self.suppliers_mapping[self.last_product][supplier] = {}
 
-                self.suppliers_mapping[self.last_product][supplier][info['productVarId']] = self.format_sku(info['sourceVarId'])
+                self.suppliers_mapping[self.last_product][supplier][info['productVarId']] = self.format_sku(info['sourceVarId'],
+                                                                                                            info.get('sourceVarAttr') or '')
 
     def import_shopify(self, store_type, store, shopify_id, supplier_url, title):
         is_shopify = store_type == 'shopify'
@@ -246,9 +247,18 @@ class Command(DropifiedBaseCommand):
 
         return product
 
-    def format_sku(self, original_sku):
-        sku = parse_supplier_sku(original_sku)
-        sku = [{'title': i['option_title'], 'sku': f"{i['option_group']}:{i['option_id']}"} for i in sku]
+    def format_sku(self, original_sku, original_titles):
+        sku = []
+        for key, item in enumerate(parse_supplier_sku(original_sku)):
+            try:
+                title = original_titles.split('/')[key]
+            except IndexError:
+                title = ''
+
+            sku.append({
+                'title': item['option_title'].strip() or title,
+                'sku': f"{item['option_group']}:{item['option_id']}"
+            })
         return json.dumps(sku)
 
     def remove_duplicates(self, product_ids):
