@@ -3,6 +3,7 @@ import json
 from urllib.parse import parse_qs, urlparse
 from collections import defaultdict
 
+import arrow
 import requests
 
 from leadgalaxy import tasks
@@ -29,13 +30,15 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--shopify-check', action='store_true', help='Check if shopify product exists')
         parser.add_argument('--shopify-duplicate', action='store_true', help='Delete duplicate found products')
         parser.add_argument('--skip', type=int, default=0, help='Number of entries to skip')
+        parser.add_argument('--supplier-date', type=str, action='store', help='Change suppliers updated/created before specific date (isoformat)')
         parser.add_argument('data_file', type=str)
 
-    def start_command(self, progress, store, store_type, data_file, shopify_check, shopify_duplicate, skip, *args, **options):
+    def start_command(self, progress, store, store_type, data_file, shopify_check, shopify_duplicate, skip, supplier_date, *args, **options):
         self.find_store(store, store_type)
 
         self.write(f'Importing product for {self.store.title} {self.store.user.email}')
 
+        self.before_supplier = arrow.get(supplier_date) if supplier_date else False
         self.import_counter = 0
         self.last_product = None
         self.shopify_check = store_type == 'shopify' and shopify_check
@@ -121,14 +124,23 @@ class Command(DropifiedBaseCommand):
                 self.write(f'Import error: {str(e)}')
 
         elif supplier_url and self.last_product:
-            self.progress_description(f'Importing Supplier {supplier_url}...')
-            supplier = get_supplier_model(store_type).objects.create(
-                store=self.last_product.store,
-                product=self.last_product,
-                product_url=supplier_url,
-                supplier_name='Supplier',
-                supplier_url='https://www.aliexpress.com/'
-            )
+            if self.before_supplier:
+                self.progress_description(f'Finding Supplier {supplier_url}...')
+                supplier = get_supplier_model(store_type).objects.filter(
+                    store=self.last_product.store,
+                    product=self.last_product,
+                    product_url=supplier_url,
+                ).first()
+
+            if not supplier:
+                self.progress_description(f'Importing Supplier {supplier_url}...')
+                supplier = get_supplier_model(store_type).objects.create(
+                    store=self.last_product.store,
+                    product=self.last_product,
+                    product_url=supplier_url,
+                    supplier_name='Supplier',
+                    supplier_url='https://www.aliexpress.com/'
+                )
 
         if self.last_product and info.get('productVarId') and info.get('sourceVarId'):
             if not supplier:
@@ -136,6 +148,9 @@ class Command(DropifiedBaseCommand):
                     supplier = self.last_product.default_supplier
 
             if supplier:
+                if self.before_supplier and supplier.updated_at > self.before_supplier.datetime:
+                    return False
+
                 if supplier not in self.suppliers_mapping[self.last_product]:
                     self.suppliers_mapping[self.last_product][supplier] = {}
 
@@ -218,14 +233,19 @@ class Command(DropifiedBaseCommand):
 
             product.save()
 
-        supplier = get_supplier_model(store_type).objects.create(
-            store=product.store,
-            product=product,
-            product_url=supplier_url,
-            supplier_name='Supplier',
-            supplier_url=f'https://{get_domain(supplier_url, full=True)}/',
-            is_default=True
-        )
+        supplier = None
+        if self.before_supplier:
+            supplier = product.default_supplier
+
+        if not supplier:
+            supplier = get_supplier_model(store_type).objects.create(
+                store=product.store,
+                product=product,
+                product_url=supplier_url,
+                supplier_name='Supplier',
+                supplier_url=f'https://{get_domain(supplier_url, full=True)}/',
+                is_default=True
+            )
 
         product.set_default_supplier(supplier, commit=True)
 
