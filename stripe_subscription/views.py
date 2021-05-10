@@ -133,6 +133,10 @@ def subscription_plan(request):
         sub_plan = subscription.get_main_subscription_item_plan(sub=sub)
 
         if sub_plan.id != plan.stripe_plan.stripe_id:
+            if sub.status == 'past_due':
+                return JsonResponse({'error': 'Currently your subscription is past due. '
+                                              'Please check your payment methods to finalize pending invoices or contact '
+                                              'Dropified support to get help.'}, status=403)
             if sub.status == 'trialing':
                 trial_delta = arrow.get(sub.trial_end) - arrow.utcnow()
                 still_in_trial = sub.trial_end and trial_delta.days > 0
