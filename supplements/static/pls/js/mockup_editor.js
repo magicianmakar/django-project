@@ -8,7 +8,7 @@ var MockupEditor = (function() {
         loadedImages: 0,
         canvasSize: 400,
         saveCanvasSize: null,
-        labelScale: 6,
+        labelScale: 1.55,
         currentZoom: 100,
         maxZoom: 150,
         minZoom: 50,
@@ -45,6 +45,48 @@ var MockupEditor = (function() {
                 }
             });
             $('#mockup-editor').removeClass('hidden');
+        },
+        labelSizeUnmatch: function(labelImage) {
+            var defaultSize = $('#id_label_size').val();
+            var defaultWidth = parseFloat(defaultSize.split('x')[0]);
+            var defaultHeight = parseFloat(defaultSize.split('x')[1]);
+            // Our /pdf/convert converts to 300dpi
+            var pdfWidth = parseFloat((labelImage.width / 300).toFixed(2));
+            var pdfHeight = parseFloat((labelImage.height / 300).toFixed(2));
+            if (window.location.href.indexOf('debug=1') > -1) {
+                console.log(pdfWidth + 'x' + pdfHeight);
+                return false;
+            }
+
+            // Labels can have an exact extra margin of 0.125 inches
+            var margin = 0.125;
+
+            // Can either be of vertical or horizontal orientation
+            var sizes = [[defaultWidth, defaultHeight], [defaultHeight, defaultWidth]];
+            for (var i = 0, iLength = sizes.length; i < iLength; i++) {
+                var sizeX = sizes[i][0];
+                var sizeY = sizes[i][1];
+
+                if (pdfHeight === sizeX && pdfWidth === sizeY) {
+                    return false;
+                }
+
+                sizeX += margin;
+                sizeY += margin;
+                if (pdfHeight === sizeX && pdfWidth === sizeY) {
+                    return false;
+                }
+            }
+
+            // Bigger number first, we call width and height but its unknown
+            // because of how label sizes are saved
+            var unmatched = defaultWidth >= defaultHeight ? sizes[0] : sizes[1];
+            if (pdfHeight > pdfWidth) {
+                unmatched = unmatched.reverse();
+            }
+            unmatched = unmatched[0].toFixed(3) + 'x' + unmatched[1].toFixed(3);
+            var labelSize = pdfWidth.toFixed(3) + 'x' + pdfHeight.toFixed(3);
+            return 'Your uploaded label size is ' + labelSize + ' inches. It should be ' + unmatched + ' inches.';
         },
         setDimensions: function(dimensions) {
             // :dimensions: [{left:0,top:0,size:1,bgLeft:0,bgTop:0,bgSize:1}]
@@ -118,6 +160,15 @@ var MockupEditor = (function() {
         loadImages: function(callback) {
             callback = typeof(callback) !== 'undefined' ? callback : function() {};
             var imageLoaded = function() {
+                if (this.src.indexOf('pdf/convert') > -1) {
+                    var labelMismatch = MockupEditor.labelSizeUnmatch(this);
+                    if (labelMismatch) {
+                        this.src = '';
+                        swal("Label size does not match", labelMismatch, "warning");
+                        return false;
+                    }
+                }
+
                 MockupEditor.loadedImages += 1;
                 if (MockupEditor.loadedImages === MockupEditor.totalImages) {
                     // Merge layers and reload
@@ -370,106 +421,47 @@ var MockupEditor = (function() {
 
 function addLabelImage(pdf) {
     $('#modal-mockup-images .modal-content').addClass('loading');
-    pdfjsLib.getDocument(pdf).promise.then(function(pdf) {
-        pdf.getPage(1).then(function(page) {
-            var viewport = page.getViewport({scale: MockupEditor.labelScale});
+    $('.mockup-save-progress').removeClass('show').empty();
 
-            var canvas = $('<canvas>').get(0);
-            canvas.width = viewport.width;
-            canvas.height = viewport.height;
-            var context = canvas.getContext('2d');
-
-            page.render({
-                canvasContext: context,
-                viewport: viewport
-            }).promise.then(function() {
-                MockupEditor.setLabel(canvas.toDataURL(MockupEditor.imageType, MockupEditor.imageQuality));
-                $('#save-mockups').prop('disabled', false);
-            });
-        });
+    /*var imageUrl = "https://app.dropified.com/api/ali/get-image?" + $.param({
+        url: "http://dev.dropified.com/pdf/convert/?" + $.param({
+            url: pdf
+        })
+    });*/
+    var imageUrl = "http://dev.dropified.com/pdf/convert/?" + $.param({
+        url: pdf
     });
-}
 
-function labelSizeMatch(defaultSize, pdf) {
-    var defaultWidth = parseFloat(defaultSize.split('x')[0]);
-    var defaultHeight = parseFloat(defaultSize.split('x')[1]);
-    return new Promise(function (resolve, reject) {
-        pdfjsLib.getDocument(pdf).promise.then(function(pdf) {
-            pdf.getPage(1).then(function(page) {
-                var pdfWidth = parseFloat((page._pageInfo.view[2] / 72).toFixed(3)); // returned in pt => pt / 72 = 1 in
-                var pdfHeight = parseFloat((page._pageInfo.view[3] / 72).toFixed(3));
-                if (window.location.href.indexOf('debug=1') > -1) {
-                    console.log(pdfWidth + 'x' + pdfHeight);
-                    resolve();
-                    return;
-                }
-
-                // Labels can have an exact extra margin of 0.125 inches
-                var margin = 0.125;
-
-                // Can either be of vertical or horizontal orientation
-                var sizes = [[defaultWidth, defaultHeight], [defaultHeight, defaultWidth]];
-                for (var i = 0, iLength = sizes.length; i < iLength; i++) {
-                    var sizeX = sizes[i][0];
-                    var sizeY = sizes[i][1];
-
-                    if (pdfHeight === sizeX && pdfWidth === sizeY) {
-                        resolve();
-                        return true;
-                    }
-
-                    sizeX += margin;
-                    sizeY += margin;
-                    if (pdfHeight === sizeX && pdfWidth === sizeY) {
-                        resolve();
-                        return true;
-                    }
-                }
-
-                // Bigger number first, we call width and height but its unknown
-                // because of how label sizes are saved
-                var unmatched = defaultWidth >= defaultHeight ? sizes[0] : sizes[1];
-                if (pdfHeight > pdfWidth) {
-                    unmatched = unmatched.reverse();
-                }
-                unmatched = unmatched[0].toFixed(3) + 'x' + unmatched[1].toFixed(3);
-                var labelSize = pdfWidth.toFixed(3) + 'x' + pdfHeight.toFixed(3);
-                reject('Your uploaded label size is ' + labelSize + ' inches. It should be ' + unmatched + ' inches.');
-            });
-        });
-    });
+    MockupEditor.setLabel(imageUrl);
+    $('#save-mockups').prop('disabled', false);
 }
 
 $('#label').on('change', function() {
+    var labelFile = this.files[0];
     var reader = new FileReader();
+
     reader.onload = function() {
         if (!this.result.includes('application/pdf')) {
             swal("Only PDF Formatted Label allowed");
             return;
         }
 
-        var pdf = this.result;
-        var defaultSize = $('#id_label_size').val();
-        labelSizeMatch(defaultSize, pdf).then(function (result) {
-            addLabelImage(pdf);
-        }).catch(function (error){
-            if (!error) {
-                error = "The PDF uploaded does not match the required label size i.e. " + defaultSize;
-            }
-            swal("Label size does not match", error, "warning");
-            return;
-        });
+        mockupsUploader.addFile(labelFile, 'label.pdf');
+        $('#modal-mockup-images .modal-content').addClass('loading');
+        $('#save-mockups').prop('disabled', true);
+        $('.mockup-save-progress').addClass('show');
+        mockupsUploader.start();
     };
 
     // Allowed upload size by PLUpload setting is 100mb
-    if (this.files[0].size > 104857600) {
+    if (labelFile.size > 104857600) {
         swal(
             "Label file size",
             "You label file size exceeded the 100MB allowed",
             "error"
         );
     } else {
-        reader.readAsDataURL(this.files[0]);
+        reader.readAsDataURL(labelFile);
     }
 });
 
@@ -545,7 +537,7 @@ $('#save-mockups').on('click', function(e) {
         $(window.plupload_Config.saveFormID).trigger("cleanmockups");
         $('#modal-mockup-images .modal-content').addClass('loading');
         $('.mockup-save-progress').addClass('show');
-        $(this).prop('disabled', true);
+        $('#save-mockups').prop('disabled', true);
         $('[name="label_presets"]').val(JSON.stringify(MockupEditor.labelMockups));
         mockupsUploader.start();
     }
@@ -557,12 +549,14 @@ $(window.plupload_Config.saveFormID).on("addmockups", function(e, url) {
 }).on("cleanmockups", function(e) {
     e.preventDefault();
     $('#mockup-thumbnails').empty();
-}).on("addlabel", function(e) {
+}).on("addlabel", function(e, labelUrl) {
     e.preventDefault();
     var fileList = $('#label').get(0).files;
-    if (fileList.length > 0) {
+    if (fileList.length > 0 && $('#single-label-upload').length > 0) {
         $('#single-label-upload').get(0).files = fileList;
     }
+
+    addLabelImage(labelUrl);
 });
 
 var mockupsUploader = new plupload.Uploader({
@@ -615,7 +609,8 @@ var mockupsUploader = new plupload.Uploader({
         },
         UploadProgress: function(up, file) {
             var progressBar = $('.mockup-save-progress [upload-id="' + file.id + '"]');
-            var percent = (file.percent / up.files.length) + '%';
+            var barsLength = $('.mockup-save .progress-bar:not(.clone)').length;
+            var percent = (file.percent / barsLength) + '%';
             progressBar.css('width', percent).find('.sr-only').text(percent);
         },
         FileUploaded: function(up, file, info) {
@@ -654,10 +649,12 @@ var mockupsUploader = new plupload.Uploader({
             }
         },
         UploadComplete: function(up, files) {
-            $('.mockup-save-progress').removeClass('show').empty();
-            $('#modal-mockup-images .modal-content').removeClass('loading');
+            if (files.length !== 1 || files[0].type !== 'application/pdf') {
+                $('#modal-mockup-images').modal('hide');
+                $('#modal-mockup-images .modal-content').removeClass('loading');
+                $('.mockup-save-progress').removeClass('show').empty();
+            }
             $('#save-mockups').prop('disabled', false);
-            $('#modal-mockup-images').modal('hide');
 
             $('.product-images').slick('unslick');
             $('.product-images .product-image:not(.hidden)').remove();
@@ -672,5 +669,5 @@ mockupsUploader.init();
 
 var currentLabel = $('[name="current_label"]').val();
 if (currentLabel) {
-    addLabelImage('https://app.dropified.com/api/ali/get-image?' + $.param({url: currentLabel}));
+    addLabelImage(currentLabel);
 }
