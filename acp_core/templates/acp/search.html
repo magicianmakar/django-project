@@ -34,8 +34,9 @@
                             <th style="width:13%">Last Login</th>
                             {% if users_count == 1 %}
                             <th>Last Seen</th>
+                            <th>PLoD User</th>
                             {% endif %}
-                            <th style="width:25%">Actions</th>
+                            <th style="width:15%">Actions</th>
                         </tr>
                     </thead>
                     {% endif %}
@@ -69,6 +70,11 @@
                             <td>{{item.last_login|date}}</td>
                             {% if users_count == 1 %}
                             <td style=" white-space:nowrap">{{user_last_seen}}</td>
+                            <td style=" white-space:nowrap">
+                                {% if not item.is_subuser %}
+                                    {% if item.profile.private_label or item.profile.dropified_private_label %}Yes{% else %}No{% endif %}
+                                {% endif %}
+                            </td>
                             {% endif %}
                             <td>
                                 {% if user.is_superuser %}
@@ -105,6 +111,7 @@
                                             <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
                                             <li><a href="#" class="add-bundle-btn" user-id="{{item.id}}">Add Bundle</a></li>
                                             <li class="divider"></li>
+                                            <li><a href="#" class="toggle-plod" user-id="{{item.id}}">Toggle PLoD</a></li>
                                             <li><a href="#" class="allow-trial-btn" user-id="{{item.id}}">Allow Free Trial</a></li>
                                             <li><a href="#" class="release-sub-user" user-id="{{item.id}}">Release Sub User</a></li>
                                             <li><a href="#" class="reset-auto-fulfill" user-id="{{item.id}}">Reset Auto Fulfill Limit</a></li>
@@ -751,6 +758,26 @@
             });
         }
 
+        function togglePlod(e) {
+            e.preventDefault();
+
+            var user_id = $(this).attr('user-id');
+            $.ajax({
+                type: 'POST',
+                url: api_url('toggle-plod', 'acp'),
+                data: {
+                    'user': user_id
+                },
+                success: function(data) {
+                    swal('Toggle PLoD', 'Done', 'success');
+                    window.location.reload();
+                },
+                error: function(data) {
+                    displayAjaxError('Toggle PLoD', data);
+                },
+            });
+        }
+
         function allowFreeTrial(e) {
             e.preventDefault();
 
@@ -866,6 +893,7 @@
                 $('.user-profile-btn').unbind('click').click(userProfile);
                 $('.deactivate-account').unbind('click').click(deactivateAccount);
                 $('.activate-account').unbind('click').click(activateAccount);
+                $('.toggle-plod').unbind('click').click(togglePlod);
                 $('.allow-trial-btn').unbind('click').click(allowFreeTrial);
                 $('.release-sub-user').unbind('click').click(releaseSubUser);
                 $('.reset-auto-fulfill').unbind('click').click(resetAutoFulfill);

@@ -2821,21 +2821,21 @@ def upload_file_sign(request):
 def user_profile(request):
     bundles = request.user.profile.bundles.filter(hidden_from_user=False)
 
+    profile = request.user.models_user.profile
+
     show_plod_plan = 0
-    if request.user.models_user.profile.plan.is_private_label:
-        show_plod_plan = 1
-    if request.user.models_user.profile.plan.is_black:
-        show_plod_plan = 1
-    if request.user.models_user.profile.plan.is_plod:
-        show_plod_plan = 1
-    if request.user.models_user.profile.private_label:
+    if profile.private_label or profile.dropified_private_label:
         show_plod_plan = 1
 
-    plan_filter = {'hidden': False}
-    if request.GET.get('_revision'):
-        plan_filter = {'revision': request.GET['_revision']}
+    if request.GET.get('__plod'):
+        show_plod_plan = request.GET['__plod']
+
+    if request.GET.get('__revision'):
+        plan_filter = {'revision': request.GET['__revision']}
     elif settings.PLAN_REVISION:
         plan_filter = {'revision': settings.PLAN_REVISION}
+    else:
+        plan_filter = {'hidden': False}
 
     stripe_plans = GroupPlan.objects.filter(show_in_plod_app=show_plod_plan) \
                                     .filter(**plan_filter) \

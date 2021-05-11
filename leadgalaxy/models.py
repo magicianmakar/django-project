@@ -150,6 +150,7 @@ class UserProfile(models.Model):
     sync_delay_notify = models.IntegerField(default=0, null=True, db_index=True, verbose_name='Notify if no tracking number is found (days)')
     shopify_app_store = models.BooleanField(default=False, verbose_name='User Register from Shopify App Store')
     private_label = models.NullBooleanField(default=False, verbose_name='Using Private Label App')
+    dropified_private_label = models.NullBooleanField(default=False, verbose_name='PLOD user on Dropified App')
 
     plan_expire_at = models.DateTimeField(blank=True, null=True, verbose_name="Plan Expire Date")
     plan_after_expire = models.ForeignKey('GroupPlan', blank=True, null=True, related_name="expire_plan",
@@ -2103,6 +2104,7 @@ class GroupPlan(models.Model):
 
     default_plan = models.IntegerField(default=0, choices=YES_NO_CHOICES)
     show_in_plod_app = models.IntegerField(default=0, choices=YES_NO_CHOICES, verbose_name='Show in PLoD App Listing')
+    private_label = models.BooleanField(default=False, verbose_name='Private Label Plan')
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
     goals = models.ManyToManyField('goals.Goal', related_name='plans', blank=True)
@@ -2219,14 +2221,6 @@ class GroupPlan(models.Model):
     @property
     def is_black(self):
         return self.slug in ['new-black-yearly-shopify', 'new-black-monthly-shopify', 'new-black-yearly', 'new-black-monthly']
-
-    @property
-    def is_build(self):
-        return self.slug in ['build-yearly-shopify', 'build-monthly-shopify', 'build-yearly', 'build-monthly']
-
-    @property
-    def is_plod(self):
-        return self.slug in ['plod-yearly-shopify', 'plod-monthly-shopify', 'plod-yearly', 'plod-monthly']
 
 
 class GroupPlanChangeLog(models.Model):

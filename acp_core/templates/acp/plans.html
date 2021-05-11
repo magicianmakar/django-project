@@ -36,6 +36,7 @@
                             <th>Addons Support</th>
                             <th>Active Users</th>
                             <td>Visible to Users</td>
+                            <td>PLoD Plan</td>
                             <td>Fulfillment Fee %</td>
                             {% if user.is_superuser %}
                             <th></th>
@@ -56,6 +57,7 @@
                             <td>{{ support_addons|yesno:'Yes,No' }}</td>
                             <td><a href="{% url 'acp_search_view' %}?plan={{item.id}}">{{item.userprofile_set.count}}</a></td>
                             <td>{{item.hidden|yesno:'No,Yes'}}</td>
+                            <td>{{item.private_label|yesno:'Yes,No'}}</td>
                             <td>{{item.sales_fee_config.fee_percent|default:''}}</td>
                             {% if user.is_superuser or user|has_group:'Plan Inviter' %}
                             <td>
