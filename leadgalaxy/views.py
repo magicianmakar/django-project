@@ -2824,7 +2824,7 @@ def user_profile(request):
     profile = request.user.models_user.profile
 
     show_plod_plan = 0
-    if profile.private_label or profile.dropified_private_label:
+    if profile.private_label or profile.dropified_private_label or profile.plan.private_label:
         show_plod_plan = 1
 
     if request.GET.get('__plod'):
