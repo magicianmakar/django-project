@@ -6,7 +6,7 @@ services:
     environment:
       POSTGRES_USER: postgres
   redis:
-    image: redis:3.0
+    image: redis:6.0-alpine
   celery:
     build: ..
     container_name: dropified_celery
