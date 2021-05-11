@@ -121,6 +121,8 @@
               <div class='alert label-info-box'>
                 Submitting a new label will restart the review process.
               </div>
+
+              {% include 'supplements/partials/label_requirements.html' %}
             </div>
           </div>
         </div>
@@ -156,26 +158,6 @@
 
   {% include "supplements/partials/mockup_images_modal.html" with label_url=label_url approved_label_url=approved_label_url %}
   {% endblock %}
-</div>
-{% endblock %}
-
-{% block product_footer %}
-<div class='row'>
-  <div class='col-md-6 m-t'>
-    <div class="panel panel-info label-banner">
-      <div class="panel-heading label-banner">
-        <h3>Label Requirements</h3>
-      </div>
-      <div class="panel-body">
-        <p>
-        Before you upload your label please read our guidelines to learn how to
-        present your design and ensure it is approved.
-        You can learn more about what you can include in our support portal.
-       </p>
-       <p><a href="https://help.dropified.com/en/articles/3824485-supplement-label-guidelines" target="_blank" role="button" class="btn btn-primary btn-md">Read Guidelines</a></p>
-      </div>
-    </div>
-  </div>
 </div>
 
 {% include "supplements/partials/send_to_store_modal.html" %}
