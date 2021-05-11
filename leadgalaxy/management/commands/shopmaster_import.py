@@ -8,7 +8,7 @@ import requests
 
 from leadgalaxy import tasks
 from leadgalaxy.utils import get_shopify_product
-from product_alerts.utils import parse_supplier_sku
+from product_alerts.utils import parse_supplier_sku, get_supplier_variants
 from shopified_core import permissions
 from shopified_core.management import DropifiedBaseCommand
 from shopified_core.utils import get_domain, remove_link_query
@@ -31,6 +31,7 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--shopify-duplicate', action='store_true', help='Delete duplicate found products')
         parser.add_argument('--skip', type=int, default=0, help='Number of entries to skip')
         parser.add_argument('--supplier-date', type=str, action='store', help='Change suppliers updated/created before specific date (isoformat)')
+        parser.add_argument('--match-supplier-variants', action='store_true', help='Call price monitor app to match supplier variants')
         parser.add_argument('data_file', type=str)
 
     def start_command(self, progress, store, store_type, data_file, shopify_check, shopify_duplicate, skip, supplier_date, *args, **options):
@@ -44,6 +45,8 @@ class Command(DropifiedBaseCommand):
         self.shopify_check = store_type == 'shopify' and shopify_check
         self.shopify_duplicate = self.shopify_check and shopify_duplicate
         self.suppliers_mapping = defaultdict(dict)
+        self.match_supplier_variants = options.get('match_supplier_variants')
+        self.last_supplier_variants = {}
 
         file_data = list(self.load_data(data_file))
 
@@ -117,6 +120,10 @@ class Command(DropifiedBaseCommand):
             try:
                 self.last_product = self.import_shopify(store_type, self.store, shopify_id, supplier_url, title)
                 supplier = self.last_product.default_supplier
+
+                if self.match_supplier_variants and supplier.get_source_id():
+                    self.last_supplier_variants = get_supplier_variants('aliexpress', supplier.get_source_id())
+
                 self.progress_description(f'Imported to {supplier.id}')
             except KeyboardInterrupt:
                 raise
@@ -142,20 +149,22 @@ class Command(DropifiedBaseCommand):
                     supplier_url='https://www.aliexpress.com/'
                 )
 
+            if self.match_supplier_variants and supplier.get_source_id():
+                self.last_supplier_variants = get_supplier_variants('aliexpress', supplier.get_source_id())
+
         if self.last_product and info.get('productVarId') and info.get('sourceVarId'):
             if not supplier:
                 if self.last_product:
                     supplier = self.last_product.default_supplier
 
             if supplier:
-                if self.before_supplier and supplier.updated_at > self.before_supplier.datetime:
+                if 'image' in supplier.variants_map:
                     return False
 
                 if supplier not in self.suppliers_mapping[self.last_product]:
                     self.suppliers_mapping[self.last_product][supplier] = {}
 
-                self.suppliers_mapping[self.last_product][supplier][info['productVarId']] = self.format_sku(info['sourceVarId'],
-                                                                                                            info.get('sourceVarAttr') or '')
+                self.suppliers_mapping[self.last_product][supplier][info['productVarId']] = self.format_sku(info['sourceVarId'])
 
     def import_shopify(self, store_type, store, shopify_id, supplier_url, title):
         is_shopify = store_type == 'shopify'
@@ -267,16 +276,22 @@ class Command(DropifiedBaseCommand):
 
         return product
 
-    def format_sku(self, original_sku, original_titles):
+    def format_sku(self, original_sku):
         sku = []
-        for key, item in enumerate(parse_supplier_sku(original_sku)):
-            try:
-                title = original_titles.split('/')[key]
-            except IndexError:
-                title = ''
+        options = parse_supplier_sku(original_sku)
 
+        # Price monitor app has better names for each variant
+        if self.match_supplier_variants:
+            option_ids = sorted([o['option_id'] for o in options])
+            for v in self.last_supplier_variants:
+                variant_ids = v['variant_ids'].split(',')
+                if option_ids == sorted(variant_ids):
+                    options = parse_supplier_sku(v['sku'])
+                    break
+
+        for key, item in enumerate(options):
             sku.append({
-                'title': item['option_title'].strip() or title,
+                'title': item['option_title'].strip(),
                 'sku': f"{item['option_group']}:{item['option_id']}"
             })
         return json.dumps(sku)

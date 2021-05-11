@@ -784,7 +784,7 @@ function select_variant(variants, variant_title, variant_sku) {
                     }
                 } else if (typeof(mapped) === 'object') {
                     if (mapped.sku && variant_sku) {
-                        if (comapre_sku(mapped.sku, variant_sku) && mapped.title.toLowerCase().trim() === variant_title) {
+                        if (comapre_sku(mapped.sku, variant_sku) && (mapped.title.length === 0 || mapped.title.toLowerCase().trim() === variant_title)) {
                             return true;
                         }
                     } else if (mapped.title.toLowerCase().trim() == variant_title) {
