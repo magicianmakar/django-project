@@ -385,7 +385,7 @@ class PLSOrderLineMixin:
 
 
 class PayoutMixin:
-    @property
+    @cached_property
     def cost_price(self):
         return sum(self.payout_lines.values_list('pls_order__amount', flat=True))
 
@@ -397,7 +397,7 @@ class PayoutMixin:
     def cost_price_withuot_shipping_string(self):
         return self.to_currency(self.cost_price - self.order_shipping_price)
 
-    @property
+    @cached_property
     def wholesale_price(self):
         return sum(self.payout_lines.values_list('pls_order__wholesale_price', flat=True))
 
@@ -405,7 +405,7 @@ class PayoutMixin:
     def wholesale_price_string(self):
         return self.to_currency(self.wholesale_price)
 
-    @property
+    @cached_property
     def sale_price(self):
         return sum(self.payout_lines.values_list('pls_order__sale_price', flat=True))
 
@@ -413,11 +413,11 @@ class PayoutMixin:
     def sale_price_string(self):
         return self.to_currency(self.sale_price)
 
-    @property
+    @cached_property
     def order_shipping_price(self):
         return sum(self.payout_lines.values_list('pls_order__shipping_price', flat=True))
 
-    @property
+    @cached_property
     def shipping_price(self):
         return sum(self.ship_payout_lines.values_list('pls_order__shipping_price', flat=True))
 
@@ -425,7 +425,7 @@ class PayoutMixin:
     def shipping_price_string(self):
         return self.to_currency(self.shipping_price)
 
-    @property
+    @cached_property
     def total_shipping(self):
         shipping = self.shipping_price - (int(self.shipping_refund) * 100)
         if self.shipping_cost:
@@ -437,7 +437,7 @@ class PayoutMixin:
     def total_shipping_string(self):
         return self.to_currency(self.total_shipping)
 
-    @property
+    @cached_property
     def profit_split(self):
         price = self.cost_price - self.wholesale_price - self.order_shipping_price
         price = price - (int(self.refund_amount) * 100)
@@ -476,11 +476,11 @@ class PayoutMixin:
 
         return self.to_currency(split)
 
-    @property
+    @cached_property
     def profit_string(self):
         return self.to_currency(self.profit_split)
 
-    @property
+    @cached_property
     def supplier_payout(self):
         commission = float(self.supplier.profit_percentage) / 100.
         price = (self.profit_split * commission) + self.wholesale_price
@@ -501,14 +501,14 @@ class PayoutMixin:
 
         return self.to_currency(payout)
 
-    @property
+    @cached_property
     def shipping_cost_string(self):
         if self.shipping_cost:
             return self.to_currency(self.shipping_cost)
 
         return '$0.00'
 
-    @property
+    @cached_property
     def refund_amount(self):
         refund = 0
         for line in self.payout_lines.all():
@@ -520,7 +520,7 @@ class PayoutMixin:
     def refund_amount_string(self):
         return '${:.2f}'.format(self.refund_amount)
 
-    @property
+    @cached_property
     def shipping_refund(self):
         refund = 0
         for line in self.ship_payout_lines.all():
