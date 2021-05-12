@@ -424,11 +424,11 @@ function addLabelImage(pdf) {
     $('.mockup-save-progress').removeClass('show').empty();
 
     /*var imageUrl = "https://app.dropified.com/api/ali/get-image?" + $.param({
-        url: "http://dev.dropified.com/pdf/convert/?" + $.param({
+        url: "http://app.dropified.com/pdf/convert/?" + $.param({
             url: pdf
         })
     });*/
-    var imageUrl = "http://dev.dropified.com/pdf/convert/?" + $.param({
+    var imageUrl = "http://app.dropified.com/pdf/convert/?" + $.param({
         url: pdf
     });
 
