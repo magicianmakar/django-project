@@ -563,8 +563,9 @@ def process_webhook_event(request, event_id):
     elif event.type == 'invoice.payment_succeeded':
         invoice = event.data.object
 
-        try:
-            customer = StripeCustomer.objects.get(customer_id=invoice.customer)
+        counter = 0
+        for customer in StripeCustomer.objects.get(customer_id=invoice.customer):
+            counter += 1
             for item in invoice['lines']['data']:
                 try:
                     # Stripe Plan metadata format:
@@ -600,10 +601,8 @@ def process_webhook_event(request, event_id):
                 except:
                     capture_exception(level='warning')
 
-        except StripeCustomer.DoesNotExist:
-            return HttpResponse('Customer not found (1st invoice, skipping)')
+        return HttpResponse(f'Found {counter} customers')
 
-        return HttpResponse('ok')
     elif event.type == 'customer.subscription.created':
         sub = event.data.object
 
@@ -842,13 +841,12 @@ def process_webhook_event(request, event_id):
     elif event.type == 'customer.updated':
         cus = event.data.object
 
-        try:
-            customer = StripeCustomer.objects.get(customer_id=cus.id)
+        counter = 0
+        for customer in StripeCustomer.objects.filter(customer_id=cus.id):
             customer.refresh()
-        except StripeCustomer.DoesNotExist:
-            return HttpResponse('Customer Not Found')
+            counter += 1
 
-        return HttpResponse('Customer Refreshed')
+        return HttpResponse(f'{counter} Customer Refreshed')
 
     elif event.type == 'customer.created':
         cus = event.data.object
@@ -879,6 +877,8 @@ def process_webhook_event(request, event_id):
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)
             response_message = "User Found"
+        except User.MultipleObjectsReturned:
+            response_message = "Multiple users with same email"
         except User.DoesNotExist:
             description = safe_str(charge.description)
 
