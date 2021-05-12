@@ -314,10 +314,13 @@ def make_pdf_of(number):
     return pdf_pages[0]
 
 
-def get_order_number_label(item, use_latest=False):
+def get_order_number_label(item, use_latest=False, label_id=None):
     if use_latest:
         latest_label = item.label.user_supplement.labels.order_by('-created_at').first()
         label_url = latest_label.url if latest_label else item.label.url
+    elif label_id:
+        found_label = item.label.user_supplement.labels.get(id=label_id)
+        label_url = found_label.url if found_label else item.label.url
     else:
         label_url = item.label.url
 

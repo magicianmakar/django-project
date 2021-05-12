@@ -332,7 +332,7 @@ class PLSOrderLineMixin:
     @property
     def label_status_string(self):
         def get_string(color, value):
-            label = f"<span class='label label-{color}'>{value}</span>"
+            label = f"<span class='badge badge-{color}'>{value}</span>"
             return format_html(label)
 
         if self.is_label_printed:

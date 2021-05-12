@@ -56,7 +56,6 @@
     <th>Date</th>
     <th>Status</th>
     <th>Shipping Method</th>
-    <th>Label</th>
     <th>Paid</th>
     <th></th>
   </thead>
@@ -86,28 +85,62 @@
       <td class="label-status">{{ line_item.label_status_string }}</td>
       <td>{{ line_item.shipping_service }}</td>
       <td>
-        <a href="{% url 'pls:generate_label' line_item.id %}"
-          class='download-order-item-label'
-          target="_blank"
-          data-item-id="{{ line_item.id }}">
-          Download
-        </a>
-      </td>
-      <td>
         {% if line_item.is_refunded %}
-        <span class="label label-warning">Refunded</span>
+        <span class="badge badge-warning">Refunded</span>
         <i class="fa fa-fw fa-question-circle"
           qtip-tooltip="Refund Amount: <b>{{ line_item.refund_amount }}</b><br>Description: {{ line_item.pls_order.refund.description }}"
           qtip-my="bottom right"
           qtip-at="top right"
         ></i>
         {% else %}
-        <span class="label label-primary">Paid</span>
+        <span class="badge badge-primary">Paid</span>
         {% endif %}
 
       </td>
       <td>
-        <a class="btn btn-success btn-xs m-l-xs sync-shipstation" data-button-loading="Syncing" data-order-id="{{ line_item.pls_order.shipstation_order_number }}" href="#">Sync Shipstation</a>
+        <a href="{% url 'pls:generate_label' line_item.id %}"
+          class="download-order-item-label btn btn-success btn-xs m-l-xs"
+          target="_blank"
+          data-item-id="{{ line_item.id }}">
+          Download
+        </a>
+
+        <a class="btn btn-info btn-xs m-l-xs" data-toggle="modal" data-target="#modal-label-history" href="#">History</a>
+        <div class="hidden history">
+          <table class="table table-striped"><tbody>
+            {% for l in line_item.label.user_supplement.labels.all %}
+            <tr>
+              <td>{{ l.created_at|user_date }}</td>
+              <td>
+                <a href="{% url 'pls:generate_label' line_id=line_item.id %}?label_id={{ l.id }}" target="_blank">
+                  {% if l.image %}
+                  <img class="img-responsive" src="{{ l.image }}" />
+                  {% else %}
+                  {{ l.url }}
+                  {% endif %}
+                </a>
+              </td>
+              <td>
+                <span class="label
+                            {% if l.status == l.APPROVED %}
+                            label-primary
+                            {% elif l.status == l.AWAITING_REVIEW %}
+                            label-warning
+                            {% elif l.status == l.REJECTED %}
+                            label-danger
+                            {% endif %}">
+                  {{ l.status_string }}
+                </span>
+              </td>
+              <td>
+                {{ l.status_updated_at|user_date }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody></table>
+        </div>
+
+        <a class="btn btn-info btn-xs m-l-xs sync-shipstation" data-button-loading="Syncing" data-order-id="{{ line_item.pls_order.shipstation_order_number }}" href="#">Sync Shipstation</a>
 
         {%  if line_item.label.need_barcode_fix %}
         <a href="{% url 'pls:generate_label' line_item.id %}?validate=1"
@@ -158,9 +191,32 @@
   </div>
 </div>
 
+<div id="modal-label-history" class="modal" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="border: 0;">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">
+          Label History
+        </h4>
+      </div>
+      <div class="modal-body"></div>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
 
 {% block extracss %}
+<style type="text/css">
+  #modal-label-history tr td {
+    vertical-align: middle;
+  }
+
+  #modal-label-history tr td img {
+    max-width: 200px;
+  }
+</style>
 
 {% compress css %}
 <link href="{% static 'pls/css/pls.css' %}" rel="stylesheet">

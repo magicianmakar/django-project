@@ -109,4 +109,8 @@
     $('#modal-new-label-barcode .renew').on('click', function() {
         $('#modal-new-label-barcode').modal('hide');
     });
+
+    $('#modal-label-history').on('show.bs.modal', function(e) {
+        $(this).find('.modal-body').html($(e.relatedTarget).siblings('.history').html());
+    });
 })();

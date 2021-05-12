@@ -4,6 +4,7 @@ from io import BytesIO
 import arrow
 from django.contrib.auth.models import User
 from django.db import models
+from django.utils.functional import cached_property
 
 import simplejson as json
 from PIL import Image
@@ -155,6 +156,9 @@ class UserSupplementImage(model_base.AbstractImage):
 
 
 class UserSupplementLabel(models.Model, UserSupplementLabelMixin):
+    class Meta:
+        ordering = ('-created_at',)
+
     DRAFT = 'draft'
     APPROVED = 'approved'
     AWAITING_REVIEW = 'awaiting'
@@ -180,6 +184,14 @@ class UserSupplementLabel(models.Model, UserSupplementLabelMixin):
     sku = models.CharField(max_length=20, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @cached_property
+    def status_updated_at(self):
+        if self.status in [self.DRAFT, self.AWAITING_REVIEW]:
+            return self.updated_at
+
+        comment = self.comments.filter(new_status=self.status).order_by('-created_at').first()
+        return comment.created_at if comment else self.updated_at
 
     def need_barcode_fix(self):
         # Between dates of below commits:

@@ -1628,7 +1628,7 @@ class GenerateLabel(LoginRequiredMixin, View):
             label.save()
 
         line_item.mark_printed()
-        base_label_pdf = get_order_number_label(line_item, use_latest)
+        base_label_pdf = get_order_number_label(line_item, use_latest, request.GET.get('label_id'))
         output = BytesIO()
         PdfWriter().write(output, base_label_pdf)
 
