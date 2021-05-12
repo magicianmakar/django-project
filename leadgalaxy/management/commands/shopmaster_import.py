@@ -158,7 +158,7 @@ class Command(DropifiedBaseCommand):
                     supplier = self.last_product.default_supplier
 
             if supplier:
-                if 'image' in supplier.variants_map:
+                if supplier.variants_map and 'image' in supplier.variants_map:
                     return False
 
                 if supplier not in self.suppliers_mapping[self.last_product]:

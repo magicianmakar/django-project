@@ -182,8 +182,21 @@ class UserSupplementLabel(models.Model, UserSupplementLabelMixin):
 
     url = models.URLField()
     sku = models.CharField(max_length=20, blank=True)
+    image_url = models.URLField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def image(self):
+        if self.image_url:
+            return self.image_url
+
+        from leadgalaxy.utils import upload_file_to_s3
+        url = f'https://dropified-captcha.herokuapp.com/pdf/convert/?url={self.url}&ext=.png'
+        self.image_url = upload_file_to_s3(url, self.user_supplement.user.id, prefix='/labels')
+        self.save()
+
+        return self.image_url
 
     @cached_property
     def status_updated_at(self):

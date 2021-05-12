@@ -334,7 +334,7 @@ class SupplementsApi(ApiResponseMixin, View):
         current_is_rejected = label.status == UserSupplementLabel.REJECTED
         latest_is_approved = latest_label.status == UserSupplementLabel.APPROVED
         label_url = reverse('pls:generate_label', args=(item_id,))
-        latest_label_url = label_url + '?use_latest=1'
+        latest_label_url = label_url
 
         return self.api_success({
             'item_id': item_id,

@@ -517,7 +517,6 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             elif upload_url:
                 self.save_label(user, upload_url, new_user_supplement)
 
-            # Old images should be removed when new label is uploaded
             mockup_urls = request.POST.getlist('mockup_urls')
             if len(mockup_urls) or upload_url:
                 new_user_supplement.images.all().delete()

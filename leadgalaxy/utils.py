@@ -2155,10 +2155,10 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
         return upload_url
 
 
-def upload_file_to_s3(url, user_id, fp=None):
+def upload_file_to_s3(url, user_id, fp=None, prefix=''):
     # Randomize filename in order to not overwrite an existing file
     name = random_filename(url.split('/')[-1])
-    name = 'uploads/u%d/%s' % (user_id, name)
+    name = f'uploads{prefix}/u{user_id}/{name}'
     mimetype = mimetypes.guess_type(url)[0]
 
     if fp is None:

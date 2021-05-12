@@ -22,7 +22,7 @@
     <tr class=" basket-row basket-id-{{ basket_item.id }}">
       <td>
           <a class="basket-item-img" href="{{ basket_item.user_supplement.get_url }}">
-             <img src="{{ basket_item.user_supplement.thumbnail }}">
+             <img src="{{ basket_item.user_supplement.current_label.image }}">
           </a>
 
           <a href="{{ basket_item.user_supplement.get_url }}" class="product-name">{{ basket_item.user_supplement.title }}</a>

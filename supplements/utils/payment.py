@@ -406,8 +406,7 @@ class Util:
                     })
                     break
 
-                image = user_supplement.images.first()
-                image_url = image.image_url if image else ''
+                image_url = user_supplement.current_label.image
                 inventory_mapping[pl_supplement_id] -= product_quantity
                 product_weight = Decimal(product['weight'])
                 total_weight += product_weight

@@ -60,6 +60,7 @@ class PLSBaseTestCase(BaseTestCase):
         self.label = UserSupplementLabelFactory.create(
             user_supplement=self.user_supplement,
             url="http://example.com",
+            image_url="http://example.com",
         )
 
         self.label.status = self.label.APPROVED
@@ -331,6 +332,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
         bundle_label = UserSupplementLabelFactory.create(
             user_supplement=bundle_supplement,
             url="http://example.com",
+            image_url="http://example.com",
         )
         bundle_label.status = bundle_label.APPROVED
         bundle_label.save()
