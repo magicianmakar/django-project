@@ -142,6 +142,14 @@ def charge_customer_profile(amount, customer_id, payment_id, line):
 
     transaction_request.lineItems = line_items
 
+    # Add values for transaction settings
+    duplicateWindowSetting = apicontractsv1.settingType()
+    duplicateWindowSetting.settingName = "duplicateWindow"
+    duplicateWindowSetting.settingValue = "0"
+    transSetting = apicontractsv1.ArrayOfSetting()
+    transSetting.setting.append(duplicateWindowSetting)
+    transaction_request.transactionSettings = transSetting
+
     create_transaction = apicontractsv1.createTransactionRequest()
     create_transaction.merchantAuthentication = get_merchant_auth()
     create_transaction.transactionRequest = transaction_request
@@ -210,6 +218,14 @@ def charge_customer_for_items(transaction, items):
             line_items.lineItem.append(line_item)
 
         transaction.lineItems = line_items
+
+        # Add values for transaction settings
+        duplicateWindowSetting = apicontractsv1.settingType()
+        duplicateWindowSetting.settingName = "duplicateWindow"
+        duplicateWindowSetting.settingValue = "0"
+        transSetting = apicontractsv1.ArrayOfSetting()
+        transSetting.setting.append(duplicateWindowSetting)
+        transaction.transactionSettings = transSetting
 
     if len(items) > 1:
         order_description = f"Processing Orders between #{items[0]['id']} - #{items[-1]['id']}"
