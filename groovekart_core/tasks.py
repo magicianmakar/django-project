@@ -153,10 +153,12 @@ def product_export(store_id, product_id, user_id, publish=None):
         pusher_data['error'] = 'Product already connected to GrooveKart store.'
         return store.pusher_trigger('product-export', pusher_data)
 
-    try:
-        product.update_data({'exporting': True})
-        product.save()
+    data = json.loads(product.data)
+    data['exporting'] = True
+    # Avoid .save() to allow "Importing..." title to change after product is imported
+    GrooveKartProduct.objects.filter(id=product_id).update(data=json.dumps(data), store_id=store_id)
 
+    try:
         permissions.user_can_view(user, store)
         permissions.user_can_edit(user, product)
         product_data = product.parsed

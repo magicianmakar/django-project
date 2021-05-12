@@ -17,7 +17,7 @@ from lib.aliexpress_api import RestApi, TopException
 from lib.exceptions import capture_exception, capture_message
 from prints.utils import get_price_markup
 from shopified_core.utils import dict_val, float_to_str, get_cached_order, get_store_api, safe_int
-from shopified_core.models_utils import get_store_model
+from shopified_core.models_utils import get_store_model, get_product_model
 
 from .models import AlibabaOrder, AlibabaOrderItem
 
@@ -26,7 +26,6 @@ class TopAuthTokenCreateRequest(RestApi):
     def __init__(self, domain='api.taobao.com', port=443):
         super().__init__(domain, port)
         self.code = None
-        self.uuid = 'abc'
         self.set_app_info(settings.ALIBABA_APP_KEY, settings.ALIBABA_APP_SECRET)
 
     def getapiname(self):
@@ -247,6 +246,10 @@ def save_alibaba_products(request, products_data):
                 store_type, store_id = import_to, None
 
             api_product = apply_user_config(user, api_product)
+            original_title = api_product['title']
+
+            if store_id and store_type == 'shopify':
+                api_product['title'] = 'Importing...'
 
             data = {
                 'data': json.dumps(api_product),
@@ -275,7 +278,10 @@ def save_alibaba_products(request, products_data):
             product = result['product']
 
             if store_id:  # Send to Store
+                get_product_model(store_type).objects.filter(id=product['id']).update(title='Importing...')
+
                 if store_type == 'shopify':
+                    api_product['title'] = original_title
                     data = {
                         'store': store_id,
                         'data': json.dumps(format_shopify_send_to_store(api_product)),
@@ -286,6 +292,7 @@ def save_alibaba_products(request, products_data):
                     StoreAPI.target = 'shopify'
                     StoreAPI.post_shopify(request, user, data)
                 else:
+                    # get_product_model(store_type).objects.filter(id=product['id']).update(data=json.dumps(api_product))
                     data = {
                         'product': product['id'],
                         'store': store_id,

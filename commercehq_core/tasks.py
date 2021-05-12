@@ -176,7 +176,8 @@ def product_export(store_id, product_id, user_id, publish=None):
             product.update_data({'published': publish})
 
         product.store = store
-        product.save()
+        # Avoid .save() to allow "Importing..." title to change after product is imported
+        CommerceHQProduct.objects.filter(id=product_id).update(store_id=store_id)
 
         p = product.parsed
 

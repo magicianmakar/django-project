@@ -181,7 +181,8 @@ def product_export(store_id, product_id, user_id, publish=None):
         permissions.user_can_edit(user, product)
 
         product.store = store
-        product.save()
+        # Avoid .save() to allow "Importing..." title to change after product is imported
+        WooProduct.objects.filter(id=product_id).update(store_id=store_id)
 
         saved_data = product.parsed
         saved_data['published'] = saved_data['published'] if publish is None else publish

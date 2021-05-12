@@ -90,7 +90,7 @@ class AlibabaApi(ApiResponseMixin):
         details = order.reload_details()
         return self.api_success(details)
 
-    def post_import(self, request, user, data):
+    def get_import(self, request, user, data):
         alibaba_account = user.alibaba.first()
         if not alibaba_account:
             return self.api_error('Missing connection with Alibaba.')

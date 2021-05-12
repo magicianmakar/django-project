@@ -359,6 +359,11 @@ def export_product(req_data, target, user_id):
                         product.default_supplier.variants_map = variants_mapping
                         product.default_supplier.save()
 
+                    if product.title == 'Importing...' and 'product' in parsed_data:
+                        old_product_data = json.loads(product.data)
+                        old_product_data['title'] = parsed_data['product']['title']
+                        product.data = json.dumps(old_product_data)
+
                     product.save()
 
                     # Initial Products Inventory Sync
