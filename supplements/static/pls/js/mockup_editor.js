@@ -165,6 +165,8 @@ var MockupEditor = (function() {
                     if (labelMismatch) {
                         this.src = '';
                         swal("Label size does not match", labelMismatch, "warning");
+                        $('#modal-mockup-images .modal-content').removeClass('loading');
+                        $('#mockup-editor').addClass('hidden');
                         return false;
                     }
                 }
@@ -187,6 +189,7 @@ var MockupEditor = (function() {
                     return;
                 }
                 var img = new Image();
+                img.crossOrigin = "anonymous";
                 img.src = layer.file;
                 img.onload = imageLoaded;
                 layer.image = img;
@@ -423,15 +426,7 @@ function addLabelImage(pdf) {
     $('#modal-mockup-images .modal-content').addClass('loading');
     $('.mockup-save-progress').removeClass('show').empty();
 
-    /*var imageUrl = "https://app.dropified.com/api/ali/get-image?" + $.param({
-        url: "http://app.dropified.com/pdf/convert/?" + $.param({
-            url: pdf
-        })
-    });*/
-    var imageUrl = "http://app.dropified.com/pdf/convert/?" + $.param({
-        url: pdf
-    });
-
+    var imageUrl = "https://app.dropified.com/pdf/convert/?" + $.param({url: pdf});
     MockupEditor.setLabel(imageUrl);
     $('#save-mockups').prop('disabled', false);
 }
