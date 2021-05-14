@@ -2189,6 +2189,15 @@ class GroupPlan(models.Model):
         return self.slug in ['free-stripe-plan', 'free-plan', 'shopify-free-plan'] or self.is_startup
 
     @property
+    def is_lifetime_free(self):
+        return self.slug in [
+            'plod-lifetime-free-shopify',
+            'plod-lifetime-free',
+            'build-lifetime-free-shopify',
+            'build-lifetime-free',
+        ]
+
+    @property
     def is_active_free(self):
         # Free plans with access to features paying fee charges
         return self.slug in ['free-import-shopify', 'free-import-stripe']
@@ -2221,6 +2230,23 @@ class GroupPlan(models.Model):
     @property
     def is_black(self):
         return self.slug in ['new-black-yearly-shopify', 'new-black-monthly-shopify', 'new-black-yearly', 'new-black-monthly']
+
+    @property
+    def has_installments(self):
+        return self.slug in [
+            'build-lifetime-monthly-shopify',
+            'build-lifetime-monthly',
+            'plod-lifetime-monthly-shopify',
+            'plod-lifetime-monthly',
+        ]
+
+    @property
+    def is_build(self):
+        return self.slug in ['build-yearly-shopify', 'build-monthly-shopify', 'build-yearly', 'build-monthly']
+
+    @property
+    def is_plod(self):
+        return self.slug in ['plod-yearly-shopify', 'plod-monthly-shopify', 'plod-yearly', 'plod-monthly']
 
 
 class GroupPlanChangeLog(models.Model):

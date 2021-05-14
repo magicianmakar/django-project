@@ -520,8 +520,8 @@
         });
     });
 
-    $(".update-shopify-plan").click(function(e) {
-        var plan = $(this).data('shopify-plan');
+    $(".update-plan-shopify").click(function(e) {
+        var plan = $(this).data('plan');
         var btn = $(e.target);
         btn.button('loading');
 
@@ -544,6 +544,11 @@
                 displayAjaxError('Plan Subscription', data);
             }
         });
+    });
+
+    $(".update-plan").click(function(e) {
+        $(this).button('loading');
+        selectPlan($(this).data('plan'));
     });
 
     $('.reactivate-sub-btn').click(function(e) {
