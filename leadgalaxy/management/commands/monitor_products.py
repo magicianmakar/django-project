@@ -41,7 +41,7 @@ class Command(DropifiedBaseCommand):
         parser.add_argument('--remove-inactive', dest='remove-inactive', action='store_true', help='Remove products of inactive users')
 
     def start_command(self, *args, **options):
-        self.ignored_users = [16088, 10052, 10889, 13366, 8869, 6680, 8699, 11765, 14651, 12755, 10142, 14970]
+        self.ignored_users = [16088, 10052, 10889, 13366, 8869, 6680, 8699, 11765, 14651, 12755, 10142, 14970, 34440]
 
         if not options['plan_id']:
             options['plan_id'] = []
