@@ -16,19 +16,16 @@ from bigcommerce_core.models import BigCommerceStore
 from shopified_core.utils import safe_float
 
 REVENUE_TAX_PERCENT = 20
-REVENUE_REPORT_EMAIL = 'bigcommerce@dropified.com'
+REVENUE_REPORT_EMAIL = [
+    'bigcommerce@dropified.com',
+    'weaver@arndtcpas.com'
+]
 
 
 class Command(DropifiedBaseCommand):
     help = 'Generates Tax report for Big Commerce users'
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            '-email',
-            '--email',
-            default=REVENUE_REPORT_EMAIL,
-            help='email to send report to'
-        )
         parser.add_argument(
             '-user_id',
             '--user_id',
@@ -80,15 +77,10 @@ class Command(DropifiedBaseCommand):
                             monthly_revenue_share = safe_float(monthly_revenue / active_stores.count()) * \
                                 (safe_float(REVENUE_TAX_PERCENT) / 100)
                             data_item.append('No')
-                        if user.email in ['bigninking@gmail.com',
-                                          'dgzanezebi@gmail.com',
-                                          'ben@thedevelopmentmachine.com',
-                                          'kevin@thedevelopmentmachine.com',
-                                          'greg@thedevelopmentmachine.com',
-                                          'jake@thedevelopmentmachine.com',
-                                          'riley@dropified.com',
-                                          'matt.crawford@bigcommerce.com',
-                                          'online@ksbsol.com']:
+                        if user.email in ['bigninking@gmail.com', 'dgzanezebi@gmail.com', 'matt.crawford@bigcommerce.com', 'online@ksbsol.com'] \
+                                or '@dropified.com' in user.email \
+                                or '@thedevelopmentmachine.com' in user.email \
+                                or user.is_staff:
                             monthly_revenue = 0
                             monthly_revenue_share = 0
 
@@ -122,10 +114,10 @@ class Command(DropifiedBaseCommand):
             'totals': totals
         }
 
-        self.send_report(email_data, options['email'])
+        for email in REVENUE_REPORT_EMAIL:
+            self.send_report(email_data, email)
 
-    @staticmethod
-    def get_monthly_revenue(user):
+    def get_monthly_revenue(self, user):
         group_plan = user.profile.plan
         monthly_price = 0
         if group_plan.monthly_price:
@@ -137,8 +129,9 @@ class Command(DropifiedBaseCommand):
 
         return monthly_price
 
-    @staticmethod
-    def send_report(email_data, email_to):
+    def send_report(self, email_data, email_to):
+        self.write(f'Sending BigCommerce Report to {email_to}')
+
         template_file = os.path.join(settings.BASE_DIR, 'app', 'data', 'emails', 'bc_taxes_report.html')
         template = Template(open(template_file).read())
         ctx = Context(email_data)
