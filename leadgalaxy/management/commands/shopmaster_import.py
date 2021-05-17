@@ -46,6 +46,8 @@ class Command(DropifiedBaseCommand):
         self.shopify_duplicate = self.shopify_check and shopify_duplicate
         self.suppliers_mapping = defaultdict(dict)
         self.match_supplier_variants = options.get('match_supplier_variants')
+
+        self.last_supplier_id = None
         self.last_supplier_variants = {}
 
         file_data = list(self.load_data(data_file))
@@ -121,9 +123,6 @@ class Command(DropifiedBaseCommand):
                 self.last_product = self.import_shopify(store_type, self.store, shopify_id, supplier_url, title)
                 supplier = self.last_product.default_supplier
 
-                if self.match_supplier_variants and supplier.get_source_id():
-                    self.last_supplier_variants = get_supplier_variants('aliexpress', supplier.get_source_id())
-
                 self.progress_description(f'Imported to {supplier.id}')
             except KeyboardInterrupt:
                 raise
@@ -149,9 +148,6 @@ class Command(DropifiedBaseCommand):
                     supplier_url='https://www.aliexpress.com/'
                 )
 
-            if self.match_supplier_variants and supplier.get_source_id():
-                self.last_supplier_variants = get_supplier_variants('aliexpress', supplier.get_source_id())
-
         if self.last_product and info.get('productVarId') and info.get('sourceVarId'):
             if not supplier:
                 if self.last_product:
@@ -163,6 +159,11 @@ class Command(DropifiedBaseCommand):
 
                 if supplier not in self.suppliers_mapping[self.last_product]:
                     self.suppliers_mapping[self.last_product][supplier] = {}
+
+                if self.match_supplier_variants and supplier.get_source_id() \
+                        and supplier.get_source_id() != self.last_supplier_id:
+                    self.last_supplier_id = supplier.get_source_id()
+                    self.last_supplier_variants = get_supplier_variants(supplier.supplier_type(), supplier.get_source_id(), from_api=True)
 
                 self.suppliers_mapping[self.last_product][supplier][info['productVarId']] = self.format_sku(info['sourceVarId'])
 
@@ -278,16 +279,19 @@ class Command(DropifiedBaseCommand):
 
     def format_sku(self, original_sku):
         sku = []
-        options = parse_supplier_sku(original_sku)
+        options = None
 
         # Price monitor app has better names for each variant
         if self.match_supplier_variants:
-            option_ids = sorted([o['option_id'] for o in options])
+            option_ids = ','.join(sorted([o['option_id'] for o in parse_supplier_sku(original_sku)]))
             for v in self.last_supplier_variants:
-                variant_ids = v['variant_ids'].split(',')
-                if option_ids == sorted(variant_ids):
+                variant_ids = ','.join(sorted(v['variant_ids'].split(',')))
+                if option_ids == variant_ids:
                     options = parse_supplier_sku(v['sku'])
                     break
+
+        if options is None:
+            options = parse_supplier_sku(original_sku)
 
         for key, item in enumerate(options):
             sku.append({

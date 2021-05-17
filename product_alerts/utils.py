@@ -9,9 +9,47 @@ from munch import Munch
 from shopified_core.utils import app_link, url_join, safe_float, safe_int
 
 
-def get_supplier_variants(supplier_type, product_id):
+def get_supplier_variants(supplier_type, product_id, from_api=False):
     if supplier_type != 'aliexpress' and supplier_type != 'ebay':
         return []
+
+    if from_api and supplier_type == 'aliexpress':
+        try:
+            from lib.aliexpress_api import find_aliexpress_product
+            data = find_aliexpress_product(product_id)
+
+            result = []
+            for variant_data in data['aeop_ae_product_s_k_us']['aeop_ae_product_sku']:
+                variant = {
+                    'variant_ids': [],
+                    'sku_short': [],
+                    'sku': [],
+                    'price': variant_data.get('offer_sale_price') or variant_data.get('sku_price'),
+                    'availabe_qty': variant_data['s_k_u_available_stock'],
+                }
+
+                for option in variant_data['aeop_s_k_u_propertys']['aeop_sku_property']:
+                    value_id = str(option['property_value_id_long'])
+                    variant['variant_ids'].append(value_id)
+
+                    sku_short = f"{option['sku_property_id']}:{value_id}"
+                    variant['sku_short'].append(sku_short)
+
+                    variant_name = option['sku_property_value']
+                    variant['sku'].append(f"{sku_short}#{variant_name}")
+
+                    if option['sku_property_name'].lower() == 'ships from':
+                        variant['ships_from_id'] = value_id
+                        variant['ships_from_title'] = variant_name
+
+                variant['variant_ids'] = ','.join(variant['variant_ids'])
+                variant['sku_short'] = ';'.join(variant['sku_short'])
+                variant['sku'] = ';'.join(variant['sku'])
+                result.append(variant)
+            return result
+
+        except:
+            capture_exception()
 
     rep = requests.get(
         url=url_join(settings.PRICE_MONITOR_HOSTNAME, '/api', supplier_type, '/products', product_id, '/variants'),
