@@ -155,6 +155,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
         self.order_data_cache = {
             **self.order_data,
             'id': self.order_data_ids[0],
+            'title': self.order_data['name'],
             'order_data_id': self.order_data_ids[0],
             'order_id': self.order_data['id'],
             'line_id': self.order_data['line_items'][0]['id'],
@@ -356,6 +357,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
         self.order_data_cache = {
             **self.order_data,
             'id': self.order_data_ids[0],
+            'title': self.order_data['name'],
             'order_data_id': self.order_data_ids[0],
             'order_id': self.order_data['id'],
             'line_id': self.order_data['line_items'][0]['id'],
@@ -597,6 +599,7 @@ class BasketTestCase(PLSBaseTestCase):
 
         self.order_data_cache = {
             **self.order_data,
+            'title': self.order_data['name'],
             'order_data_id': self.order_data_ids[0],
             'source_id': self.user_supplement.id,
             'order': {

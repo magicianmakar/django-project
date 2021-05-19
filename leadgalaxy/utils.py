@@ -2156,17 +2156,19 @@ def aws_s3_upload(filename, content=None, fp=None, input_filename=None, mimetype
 
 
 def upload_file_to_s3(url, user_id, fp=None, prefix=''):
-    # Randomize filename in order to not overwrite an existing file
-    name = random_filename(url.split('/')[-1])
-    name = f'uploads{prefix}/u{user_id}/{name}'
-    mimetype = mimetypes.guess_type(url)[0]
-
     if fp is None:
         headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux i686; rv:64.0)'
                           ' Gecko/20100101 Firefox/64.0'
         }
-        fp = io.BytesIO(requests.get(url, headers=headers).content)
+        r = requests.get(url, headers=headers)
+        fp = io.BytesIO(r.content)
+        url = r.url  # In case of redirects, get last redirected url
+
+    # Randomize filename in order to not overwrite an existing file
+    name = random_filename(url.split('/')[-1])
+    name = f'uploads{prefix}/u{user_id}/{name}'
+    mimetype = mimetypes.guess_type(url)[0]
 
     return aws_s3_upload(
         filename=name,

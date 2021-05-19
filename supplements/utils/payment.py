@@ -267,6 +267,7 @@ class Util:
                 wholesale_price=wholesale_price,
                 shipping_service=order['selected_shipping'].get('service', {}).get('service_name'),
                 sku=item['sku'],  # Product SKU
+                is_bundled=item.get('is_bundle') or False,
             )
 
         return pls_order
@@ -318,6 +319,7 @@ class Util:
                 continue
 
             orders_status[order_data_id].update(order_data)
+            orders_status[order_data_id]['supplement'] = {'title': order_data['title']}
             if order_data['supplier_type'] != 'pls':
                 orders_status[order_data_id].update({
                     'success': False,
@@ -325,18 +327,21 @@ class Util:
                 })
                 continue
 
-            existing_item = PLSOrderLine.objects.filter(
+            existing_items = PLSOrderLine.objects.filter(
                 store_type=self.store.store_type,
                 store_id=self.store.id,
                 store_order_id=order_data['order_id'],
                 line_id=order_data['line_id']
             )
-            if len(existing_item) > 0:
+            if len(existing_items) > 0:
+                for existing_item in existing_items:
+                    existing_item.save_order_track()
+
                 orders_status[order_data_id].update({
                     'success': False,
                     'status': 'Item previously paid for',
                     'status_link': reverse('pls:my_order_detail', kwargs={
-                        'order_id': existing_item[0].pls_order_id
+                        'order_id': existing_items[0].pls_order_id
                     })
                 })
                 continue
@@ -422,6 +427,7 @@ class Util:
                     'image_url': image_url,
                     'quantity': product_quantity,
                     'price': order_data['total'],
+                    'is_bundle': order_data.get('is_bundle'),
                 })
 
                 orders_status[order_data_id]['supplements'].append({

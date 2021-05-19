@@ -1,15 +1,17 @@
 import base64
 from io import BytesIO
+from decimal import Decimal
 
 import arrow
+import simplejson as json
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils.functional import cached_property
-
-import simplejson as json
 from PIL import Image
+
+from lib.exceptions import capture_exception
 from product_common import models as model_base
-from shopified_core.utils import safe_float
+from shopified_core.utils import safe_float, get_store_api
 from .mixin import (
     AuthorizeNetCustomerMixin,
     LabelCommentMixin,
@@ -192,7 +194,7 @@ class UserSupplementLabel(models.Model, UserSupplementLabelMixin):
             return self.image_url
 
         from leadgalaxy.utils import upload_file_to_s3
-        url = f'https://dropified-captcha.herokuapp.com/pdf/convert/?url={self.url}&ext=.png'
+        url = f'https://app.dropified.com/pdf/convert/?url={self.url}&ext=.png'
         self.image_url = upload_file_to_s3(url, self.user_supplement.user.id, prefix='/labels')
         self.save()
 
@@ -243,6 +245,18 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
                                   null=True,
                                   blank=True)
 
+    @property
+    def payment_details(self):
+        total_price = Decimal(self.amount) / Decimal(100)
+        shipping_price = Decimal(self.shipping_price) / Decimal(100)
+        products_price = total_price - shipping_price
+        return {'cost': {
+            'products': str(products_price.quantize(Decimal('0.01'))),
+            'shipping': str(shipping_price.quantize(Decimal('0.01'))),
+            'total': str(total_price.quantize(Decimal('0.01'))),
+            'currency': 'USD',
+        }}
+
     def tracking_numbers_str(self):
         tracking_str = ""
         for pls_item in self.order_items.all():
@@ -266,6 +280,8 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
     sale_price = models.IntegerField()
     wholesale_price = models.IntegerField()
     shipping_service = models.CharField(max_length=255, blank=True, null=True)
+    is_bundled = models.BooleanField(default=False)
+    order_track_id = models.BigIntegerField(null=True, blank=True)
 
     label = models.ForeignKey(UserSupplementLabel,
                               on_delete=models.SET_NULL,
@@ -290,6 +306,67 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
                                         decimal_places=2,
                                         blank=True,
                                         null=True)
+
+    @property
+    def store_api(self):
+        if not hasattr(self, '_store_api') or not self._store_api:
+            self._store_api = get_store_api(self.store_type)
+        return self._store_api
+
+    @property
+    def store_api_request(self):
+        if not hasattr(self, '_store_api_request') or not self._store_api_request:
+            class MockRequest:
+                META = {}
+
+            self._store_api_request = MockRequest()
+        return self._store_api_request
+
+    def save_order_track(self):
+        if not self.order_track_id:
+            self.create_tracking()
+
+        self.update_tracking()
+
+    def create_tracking(self):
+        api_data = {
+            'store': self.store_id,
+            'order_id': self.store_order_id,
+            'line_id': self.line_id,
+            'aliexpress_order_id': self.pls_order.get_dropified_source_id(),
+            'source_type': 'supplements',
+        }
+
+        try:
+            response = self.store_api.post_order_fulfill(self.store_api_request, self.pls_order.user, api_data)
+            result = json.loads(response.content.decode("utf-8"))
+            if response.status_code == 200 and result.get('order_track_id'):
+                self.order_track_id = result['order_track_id']
+            else:
+                raise Exception(result)
+        except:
+            capture_exception()
+
+    def update_tracking(self):
+        api_data = {
+            'store': self.store_id,
+            'status': self.pls_order.status,
+            'order': self.order_track_id,
+            'order_details': json.dumps(self.pls_order.payment_details),
+            'tracking_number': self.tracking_number,
+            'source_id': self.pls_order.get_dropified_source_id(),
+            'source_type': 'supplements',
+        }
+        if self.is_bundled:
+            api_data['bundle'] = True
+
+        try:
+            response = self.store_api.post_order_fulfill_update(self.store_api_request, self.pls_order.user, api_data)
+            if response.status_code != 200:
+                result = json.loads(response.content.decode("utf-8"))
+                raise Exception(result)
+        except:
+            capture_exception()
 
 
 class PLSUnpaidOrderManager(models.Manager):

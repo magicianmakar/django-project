@@ -271,7 +271,7 @@ function formatAPIDetails(data) {
             }
         }
 
-        if (orderStatus.supplements) {
+        if (orderStatus.supplements && orderStatus.supplements.length) {
             for (var s = 0, sLength = orderStatus.supplements.length; s < sLength; s++) {
                 var supplement = orderStatus.supplements[s];
                 var newOrderStatus = $.extend(true, {}, orderStatus, {supplement: supplement});
