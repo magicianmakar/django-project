@@ -15,7 +15,11 @@
     <div id="tab-1" class="tab-pane active">
       <div class="panel-body">
         {% if upsell %}
+        {% if request.user.profile.plan.support_addons %}
           {% include "common/partial/upsell.html" with top="200px" addon_id=10 message="Add Profit Dashboard to your Plan" only %}
+        {% else %}
+        {% include "common/partial/upsell.html" with top="200px" addon_id='' message="Please upgrade your Plan to add Profit Dashboard" only %}
+        {% endif %}
         {% endif %}
         {% if api_error %}
             <p class="text-center">Error: {{api_error}}</p>
