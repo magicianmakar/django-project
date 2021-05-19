@@ -1370,6 +1370,7 @@ class TestUploadFileToS3(BaseTestCase):
 
         mock_get = MagicMock()
         mock_get.content = data
+        mock_get.url = url
         with patch('leadgalaxy.utils.aws_s3_upload') as mock_aws_upload, \
                 patch('requests.get', return_value=mock_get), \
                 patch('io.BytesIO', return_value='bytes'), \

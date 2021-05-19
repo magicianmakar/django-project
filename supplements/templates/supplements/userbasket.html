@@ -21,7 +21,7 @@
     {% for basket_item in basket_items %}
     <tr class=" basket-row basket-id-{{ basket_item.id }}">
       <td>
-          <a class="basket-item-img" href="{{ basket_item.user_supplement.get_url }}">
+          <a class="basket-item-img" href="{{ basket_item.user_supplement.current_label.image_url }}">
              <img src="{{ basket_item.user_supplement.current_label.image }}">
           </a>
 

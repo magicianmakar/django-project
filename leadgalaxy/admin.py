@@ -50,7 +50,7 @@ USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
 @admin.register(GroupPlan)
 class GroupPlanAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'payment_gateway', 'monthly_price', 'trial_days', 'hidden', 'locked', 'permissions_count')
+    list_display = ('title', 'slug', 'payment_gateway', 'monthly_price', 'trial_days', 'revision', 'hidden', 'locked', 'permissions_count')
 
     exclude = ('default_plan',)
     prepopulated_fields = {'slug': ('title',)}

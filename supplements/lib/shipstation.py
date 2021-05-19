@@ -108,11 +108,15 @@ def create_shipstation_order(pls_order, data, service_code=None):
     url = f'{settings.SHIPSTATION_API_URL}/orders/createOrder'
 
     for i in range(5):
-        response = requests.post(url, data=json.dumps(data), headers=headers)
-        response.raise_for_status()
-        response = response.json()
-        if response.get('orderKey'):
-            break
+        try:
+            response = requests.post(url, data=json.dumps(data), headers=headers)
+            response.raise_for_status()
+            response = response.json()
+            if response.get('orderKey'):
+                break
+
+        except requests.HTTPError:
+            pass
 
         capture_message('ShipStation Order Retry', level='warning', extra={'retry': i + 1, 'data': data})
 

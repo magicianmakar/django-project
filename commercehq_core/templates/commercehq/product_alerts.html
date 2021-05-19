@@ -16,7 +16,11 @@
                 <div id="tab-1" class="tab-pane active">
                     <div class="panel-body">
                         {% if upsell %}
+                        {% if request.user.profile.plan.support_addons %}
                         {% include "common/partial/upsell.html" with addon_id=20 message="Add Alerts to your Plan" only %}
+                        {% else %}
+                        {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Alerts" only %}
+                        {% endif %}
                         {% endif %}
                         <div class="row">
                             <div class="col-md-8 filter-col">

@@ -721,7 +721,11 @@
         <div id="tab-7" class="tab-pane">
             <div class="panel-body" style="min-height:300px">
                 {% if upsell_alerts %}
+                {% if request.user.profile.plan.support_addons %}
                 {% include "common/partial/upsell.html" with addon_id=20 message="Add Alerts to your Plan" only %}
+                {% else %}
+                {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Bundles" only %}
+                {% endif %}
                 {% endif %}
                 <form id="product-config-form" role="form">
                     <input type="hidden" name="product" value="{{product.id}}" />

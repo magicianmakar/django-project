@@ -168,7 +168,7 @@ def get_menu_item_data(request):
             'title': 'Tools',
             'url_name': 'article-content-page',
             'url_kwargs': {"slug_article": "tools-business-tools"},
-            'permissions': request.user.is_authenticated and not request.user.models_user.profile.plan.support_addons,
+            'permissions': ['businesstools_page.use'],
             'match': re.compile(r'(/\w+)?/pages/content/tools-business-tools'),
         },
         'academy': {

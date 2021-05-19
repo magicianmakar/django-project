@@ -209,7 +209,10 @@
           <tbody>
             {% for basket_item in basket_items %}
                 <tr class="supplement-item-payment">
-                    <td>{{ basket_item.user_supplement.title }}</td>
+                    <td>
+                        <img src="{{ basket_item.user_supplement.current_label.image_url }}" style="max-width: 80px; margin-right: 5px;">
+                        {{ basket_item.user_supplement.title }}
+                    </td>
                     <td>${{ basket_item.user_supplement.pl_supplement.cost_price }}</td>
                     <td>{{ basket_item.quantity }}</td>
                     <td>${{ basket_item.total_price }}</td>

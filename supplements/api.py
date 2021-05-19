@@ -14,7 +14,7 @@ from django.utils import timezone
 from pdfrw import PdfWriter
 
 from leadgalaxy.utils import aws_s3_upload
-from lib.exceptions import capture_exception, capture_message
+from lib.exceptions import capture_exception
 from product_common.models import ProductSupplier
 from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
@@ -26,7 +26,6 @@ from .utils import user_can_download_label
 from .utils.payment import Util, get_shipping_costs
 from .utils.basket import BasketStore
 from shopified_core.utils import (
-    get_store_api,
     safe_int,
     safe_float,
     clean_tracking_number,
@@ -99,36 +98,28 @@ class SupplementsApi(ApiResponseMixin, View):
                                                         service_code=order['shipping_service'])
             create_shipstation_order(pls_order, shipstation_data)
 
-            StoreApi = get_store_api(data['store_type'])
+            item_track_map = {}
             for item in pls_order.order_items.all():
-                if item.shipstation_key:
-                    placed_order_id = str(pls_order.get_dropified_source_id())
-                    api_data = {
-                        'store': store.id,
-                        'order_id': item.store_order_id,
-                        'line_id': item.line_id,
-                        'aliexpress_order_id': placed_order_id,
-                        'source_type': 'supplements'
-                    }
+                if item_track_map.get(item.line_id):  # Bundled items
+                    item.order_track_id = item_track_map[item.line_id]
 
-                    api_result = StoreApi.post_order_fulfill(request, user, api_data)
-                    order_data_id = f'{store.id}_{item.store_order_id}_{item.line_id}'
-                    if api_result.status_code != 200:
-                        orders_status[order_data_id].update({
-                            'success': False,
-                            'status': 'Order placed but unable to automatically track, '
-                                      + f'please contact support. (Dropified Order ID: {placed_order_id})'
-                        })
-                        capture_message('Unable to track supplement', extra={
-                            'api_result': json.loads(api_result.content.decode("utf-8")),
-                            'api_data': api_data
-                        }, level='warning')
-                    else:
-                        orders_status[order_data_id].update({
-                            'success': True,
-                            'placed': True,
-                            'status': 'Order placed'
-                        })
+                item.save_order_track()
+
+                order_data_id = f'{store.id}_{item.store_order_id}_{item.line_id}'
+                if item.order_track_id:
+                    item_track_map[item.line_id] = item.order_track_id
+                    orders_status[order_data_id].update({
+                        'success': True,
+                        'placed': True,
+                        'status': 'Order placed'
+                    })
+
+                else:
+                    orders_status[order_data_id].update({
+                        'success': False,
+                        'status': 'Order placed but unable to automatically track, please contact support.'
+                                  + f' (Dropified Order ID: {pls_order.get_dropified_source_id()})'
+                    })
 
         return self.api_success({
             'orders_status': list(orders_status.values()),
