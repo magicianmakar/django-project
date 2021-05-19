@@ -350,7 +350,13 @@ class GrooveKartProduct(ProductBase):
             try:
                 r = self.store.request.post(endpoint, json=json_data)
                 r.raise_for_status()
-                return r.json()['products']['0']
+                product_data = r.json()['products']['0']
+
+                for variant in product_data['variants']:
+                    if variant['default_on'] == '1':
+                        product_data['price'] = variant['price']
+
+                return product_data
 
             except:
                 if attempts > 0:
