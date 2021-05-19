@@ -5574,6 +5574,13 @@
         "description": "Supplements Basket Ordering"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 148,
+    "fields": {
+        "name": "businesstools_page.use",
+        "description": "Tools page under Business category"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {

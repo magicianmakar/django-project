@@ -52,6 +52,9 @@ def view(request, id_article=None, slug_article=None):
 
 def content(request, slug_article=None):
     try:
+        if slug_article == 'tools-business-tools':
+            if not request.user.is_authenticated or not request.user.can('businesstools_page.use'):
+                return redirect('index', permanent=True)
         article = Article.objects.get(slug=slug_article)
     except Article.DoesNotExist:
         article = Article(
