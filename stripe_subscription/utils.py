@@ -564,7 +564,7 @@ def process_webhook_event(request, event_id):
         invoice = event.data.object
 
         counter = 0
-        for customer in StripeCustomer.objects.get(customer_id=invoice.customer):
+        for customer in StripeCustomer.objects.filter(customer_id=invoice.customer):
             counter += 1
             for item in invoice['lines']['data']:
                 try:

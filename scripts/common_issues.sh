@@ -44,6 +44,13 @@ if [ "$?" == "0" ]; then
     EXIT_CODE="-1"
 fi
 
+grep -E "for [^ ]+ in [^ ]+\.objects.get\([^)]+):" --exclude-dir='venv*' --include="*.py" --recursive .
+if [ "$?" == "0" ]; then
+    echo
+    echo "[-] FOR loop with a get query?"
+    EXIT_CODE="-1"
+fi
+
 OUTFILE="$(mktemp)"
 python manage.py makemigrations > $OUTFILE 2>&1
 grep 'No changes detected' $OUTFILE > /dev/null
