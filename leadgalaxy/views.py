@@ -1341,35 +1341,8 @@ def webhook(request, provider, option):
             return HttpResponse(f'OK => {url}')
 
         elif request.POST['command'] == '/login-as':
-            args = request.POST['text'].split(' ')
-            email = args[0]
-
-            try:
-                user_id = safe_int(email, None)
-                if user_id is not None:
-                    user = User.objects.get(id=user_id)
-                else:
-                    user = User.objects.get(email__iexact=email)
-            except:
-                return HttpResponse(f':x: User not found {email} (or duplicate accounts) {request_from.email}')
-
-            if user.is_superuser or user.is_staff:
-                return HttpResponse(f':x: Can not login as {email} (Staff account)')
-
-            token = jwt.encode({
-                'id': user.id,
-                'exp': arrow.utcnow().replace(hours=1).timestamp
-            }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
-
-            link = app_link(reverse('sudo_login'), token=token)
-
-            AdminEvent.objects.create(
-                user=request_from,
-                event_type='generate_login_as_user',
-                target_user=user,
-                data=json.dumps({'token': token}))
-
-            return HttpResponse(f'Login as {user.email} using:\n{link}')
+            return HttpResponse(':x: You can now login directly from Admin Users Search page\n'
+                                'Search by a customer email then click "Options" then "Login as this user"')
 
         elif request.POST['command'] == '/user-flags':
             args = [i.strip() for i in request.POST['text'].split(' ') if i.strip()]

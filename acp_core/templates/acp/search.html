@@ -111,6 +111,8 @@
                                             <li><a href="#" class="change-plan-btn" user-id="{{item.id}}">Change Plan</a></li>
                                             <li><a href="#" class="add-bundle-btn" user-id="{{item.id}}">Add Bundle</a></li>
                                             <li class="divider"></li>
+                                            <li><a href="#" class="login-as" user-id="{{item.id}}">Login as this user</a></li>
+                                            <li class="divider"></li>
                                             <li><a href="#" class="toggle-plod" user-id="{{item.id}}">Toggle PLoD</a></li>
                                             <li><a href="#" class="allow-trial-btn" user-id="{{item.id}}">Allow Free Trial</a></li>
                                             <li><a href="#" class="release-sub-user" user-id="{{item.id}}">Release Sub User</a></li>
@@ -778,6 +780,25 @@
             });
         }
 
+        function loginAs(e) {
+            e.preventDefault();
+
+            var user_id = $(this).attr('user-id');
+            $.ajax({
+                type: 'POST',
+                url: api_url('login-as', 'acp'),
+                data: {
+                    'user': user_id
+                },
+                success: function(data) {
+                    window.location.href = data.url;
+                },
+                error: function(data) {
+                    displayAjaxError('Login As User', data);
+                },
+            });
+        }
+
         function allowFreeTrial(e) {
             e.preventDefault();
 
@@ -894,6 +915,7 @@
                 $('.deactivate-account').unbind('click').click(deactivateAccount);
                 $('.activate-account').unbind('click').click(activateAccount);
                 $('.toggle-plod').unbind('click').click(togglePlod);
+                $('.login-as').unbind('click').click(loginAs);
                 $('.allow-trial-btn').unbind('click').click(allowFreeTrial);
                 $('.release-sub-user').unbind('click').click(releaseSubUser);
                 $('.reset-auto-fulfill').unbind('click').click(resetAutoFulfill);
