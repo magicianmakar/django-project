@@ -813,6 +813,39 @@ def process_webhook_event(request, event_id):
 
             profile = customer.user.profile
 
+            try:
+                if profile.plan.slug in ['build-lifetime-monthly', 'plod-lifetime-monthly']:
+                    charges_count = len(stripe.Charge.list(customer=sub.customer, status='succeeded', limit=20).data)
+                    remaining_months = charges_count - 12
+                    if remaining_months > 0:
+                        remaining_amount = remaining_months * float(profile.plan.monthly_price)
+
+                        stripe.InvoiceItem.create(
+                            customer=sub.customer,
+                            amount=remaining_amount * 100,
+                            currency='usd',
+                            description=f'Remaining x{remaining_amount} Months',
+                        )
+
+                        invoice = stripe.Invoice.create(
+                            customer=sub.customer,
+                            description=f'{profile.plan.title} Remaining Amount',
+                        )
+
+                        # In case there is an error, we don't want to pay this invoice right away
+                        # Instead we will log it in Sentry and manally pay it in Stripe if it looks fine
+                        # invoice.pay()
+
+                        capture_message('Monthly Lifetime Cancellation', extra={
+                            'invoice': invoice.id,
+                            'customer': sub.customer,
+                            'remaining_months': remaining_months,
+                            'remaining_amount': remaining_amount,
+                            'plan': profile.plan.title,
+                        })
+            except:
+                capture_exception()
+
         except StripeCustomer.DoesNotExist:
             try:
                 profile = UserProfile.objects.get(user=sub.metadata.user_id)
