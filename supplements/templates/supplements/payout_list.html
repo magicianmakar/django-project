@@ -30,16 +30,16 @@
 
 <table class='table table-striped' >
   <thead>
-    <th>Date</th>
-    <th>Payout Reference ID</th>
+    <th>Reference ID</th>
     <th>Supplier</th>
+    <th>Date From - To</th>
     <th>Status</th>
+    <th>Created At</th>
     <th>Action</th>
   </thead>
   <tbody>
     {% for payout in object_list %}
     <tr>
-      <td>{{ payout.created_at|date:"m.d.Y h:iA" }}</td>
       <td>
         {% if request.user|can:'pls_admin.use' %}
         <a title="Edit" href="{% url 'admin:supplements_payout_change' payout.id %}">
@@ -50,7 +50,15 @@
         {% endif %}
       </td>
       <td>{{ payout.supplier.title }}</td>
+      <td>
+        {% if payout.start_date and payout.end_date %}
+        {{ payout.start_date|date:"m.d.Y" }} - {{ payout.end_date|date:"m.d.Y" }}
+        {% else %}
+        {{ payout.date_from_to }}
+        {% endif %}
+      </td>
       <td>{{ payout.status_string }}</td>
+      <td>{{ payout.created_at|date:"m.d.Y h:iA" }}</td>
       <td>
         <a href="{% url 'pls:order_list' %}?refnum={{ payout.reference_number}}">
           View Orders
@@ -89,5 +97,8 @@
 <script type="text/javascript" src="{% static 'pls/js/pls_payment.js' %}"></script>
 <script type='application/javascript'>
   setupDateRangePicker('#date', 'input[name="date"]');
+  {% for i in supplier_list %}
+    setupDateRangePicker('#payout_date{{ i.id }}', 'input[name="payout_date{{ i.id }}"]');
+  {% endfor %}
 </script>
 {% endblock %}

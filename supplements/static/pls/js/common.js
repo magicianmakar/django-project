@@ -266,8 +266,12 @@ $(document).ready(function(){
         $(".check-supplier input[type='checkbox']").each(function (i, item) {
             var id = $(item).attr('id');
             var input = $(item).parents('.check-supplier').find('input[type="text"]');
+            var date = $(item).parents('.check-supplier').find('input[type="hidden"]');
             if ($(item).prop('checked')) {
-                data[$(item).attr('id')] = $(input).val();
+                data[id] = {
+                    'ref_num': $(input).val(),
+                    'date': $(date).val(),
+                };
             }
         });
         if (Object.keys(data).length == 0) {
@@ -275,7 +279,7 @@ $(document).ready(function(){
             return;
         }
         for (var id in data) {
-            if (!data[id]) {
+            if (!data[id].ref_num) {
                 toastr.info('Please make sure to enter reference number for each selected supplier.');
                 return;
             }
@@ -288,6 +292,10 @@ $(document).ready(function(){
             dataType: 'json',
             contentType: 'application/json',
             success: function (response) {
+                if (response.count == 0) {
+                    toastr.info('There were no orders found to add in payout hence, No Payout Added.');
+                    return;
+                }
                 toastr.success("Payout was created successfully.", "Success!");
                 window.location.reload();
             }

@@ -18,13 +18,21 @@
                 <input type="hidden" name="line_item_ids" value="">
                 {% for supplier in supplier_list %}
                 <div class="form-group check-supplier">
-                  <div class="col-sm-4">
+                  <div class="col-sm-3">
                     <input type="checkbox" id="{{ supplier.id }}" value="">
                     <label class="m-l-xs" for="{{ supplier.id }}">{{ supplier.title }}</label>
                   </div>
-                  <div class="col-sm-7">
+                  <div class="col-sm-4">
                     <input type="text" class="form-control" value="" disabled />
                   </div>
+                <div class="col-sm-5">
+                   <div id="payout_date{{ supplier.id }}" class="form-control">
+                       <i class="fa fa-calendar m-r-xs"></i>
+                       <span>All Time </span>
+                       <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+                      </div>
+                      <input id="date-{{ supplier.id }}" type="hidden" name="payout_date{{ supplier.id }}" value="">
+                </div>
                 </div>
                 {% endfor %}
 

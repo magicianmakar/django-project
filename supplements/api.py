@@ -1,3 +1,4 @@
+import arrow
 import json
 from decimal import Decimal
 from io import BytesIO
@@ -373,26 +374,53 @@ class SupplementsApi(ApiResponseMixin, View):
         if not request.user.can('pls_admin.use'):
             raise permissions.PermissionDenied()
 
+        lines_count = 0
         supplier_ids = data.keys()
         for id in supplier_ids:
             supplier = ProductSupplier.objects.get(id=id)
+            try:
+                date = data[id].get('date').split('-')
+                start_date = arrow.get(date[0], 'M/D/YYYY').datetime
+                end_date = arrow.get(f'{date[1]} 235959', 'M/D/YYYY Hms').datetime
+            except Exception:
+                start_date, end_date = '', ''
+
             if supplier.is_shipping_supplier:
-                line_items = PLSOrderLine.objects.filter(pls_order__is_fulfilled=True,
-                                                         shipping_payout__isnull=True)
+                if start_date and end_date:
+                    line_items = PLSOrderLine.objects.filter(pls_order__is_fulfilled=True,
+                                                             shipping_payout__isnull=True,
+                                                             created_at__gte=start_date,
+                                                             created_at__lte=end_date)
+                else:
+                    line_items = PLSOrderLine.objects.filter(pls_order__is_fulfilled=True,
+                                                             shipping_payout__isnull=True)
                 if line_items.count():
-                    payout = Payout.objects.create(reference_number=data[id],
-                                                   supplier=supplier)
+                    lines_count += line_items.count()
+                    payout = Payout.objects.create(reference_number=data[id].get('ref_num'),
+                                                   supplier=supplier,
+                                                   start_date=start_date,
+                                                   end_date=end_date)
                     line_items.update(shipping_payout=payout)
             else:
-                line_items = PLSOrderLine.objects.filter(pls_order__is_fulfilled=True,
-                                                         label__user_supplement__pl_supplement__supplier=supplier,
-                                                         line_payout__isnull=True)
+                if start_date and end_date:
+                    line_items = PLSOrderLine.objects.filter(pls_order__is_fulfilled=True,
+                                                             label__user_supplement__pl_supplement__supplier=supplier,
+                                                             line_payout__isnull=True,
+                                                             created_at__gte=start_date,
+                                                             created_at__lte=end_date)
+                else:
+                    line_items = PLSOrderLine.objects.filter(pls_order__is_fulfilled=True,
+                                                             label__user_supplement__pl_supplement__supplier=supplier,
+                                                             line_payout__isnull=True)
                 if line_items.count():
-                    payout = Payout.objects.create(reference_number=data[id],
-                                                   supplier=supplier)
+                    lines_count += line_items.count()
+                    payout = Payout.objects.create(reference_number=data[id].get('ref_num'),
+                                                   supplier=supplier,
+                                                   start_date=start_date,
+                                                   end_date=end_date)
                     line_items.update(line_payout=payout)
 
-        return self.api_success()
+        return self.api_success({'count': lines_count})
 
     def post_add_basket(self, request, user, data):
         product_id = data['product-id']

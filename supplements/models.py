@@ -402,6 +402,8 @@ class Payout(PayoutMixin, model_base.AbstractPayout):
                                  on_delete=models.SET_NULL,
                                  null=True,
                                  related_name='supplier_payouts')
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
 
 
 class AuthorizeNetCustomer(models.Model, AuthorizeNetCustomerMixin):
