@@ -38,8 +38,8 @@
                                                         {% else %}
                                                             ${{item.stripe_plan.amount|stringformat:"i"}}<span>/mo</span></p>
                                                         {% endif %}
-                                                    {% if item.sales_fee_config.fee_percent %}
-                                                            <span>Plus {{ item.sales_fee_config.fee_percent }}% Fulfillment Fee</span>
+                                                    {% if item.sales_fee_config.fee_percent_rounded %}
+                                                            <span>Plus {{ item.sales_fee_config.fee_percent_rounded }}% Fulfillment Fee</span>
                                                         {% else %}
                                                             <span>No Fulfillment Fee</span>
                                                         {% endif %}
@@ -156,11 +156,13 @@
                                                     {% else %}
                                                         <p class="retail-price"></p>
                                                     {% endif %}
-                                                    {% if item.sales_fee_config.fee_percent %}
-                                                            <span>Plus {{ item.sales_fee_config.fee_percent }}% Fulfillment Fee</span>
+                                                    {% if item.sales_fee_config.fee_percent_rounded %}
+                                                            <span>Plus {{ item.sales_fee_config.fee_percent_rounded }}% Fulfillment Fee</span>
                                                         {% else %}
                                                             <span>No Fulfillment Fee</span>
                                                         {% endif %}
+
+                                                    <p class="retail-price"></p>
 
                                                     <p class="cta">
                                                         {% if current_plan == item %}

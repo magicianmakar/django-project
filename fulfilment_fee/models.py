@@ -14,6 +14,14 @@ class SalesFeeConfig(models.Model):
     def __str__(self):
         return f'<SalesFeeConfig: {self.id} {self.title} >'
 
+    @property
+    def fee_percent_rounded(self):
+        integer_percent = int(self.fee_percent)
+        if integer_percent == self.fee_percent:
+            return integer_percent
+
+        return self.fee_percent
+
 
 class SaleTransactionFee(models.Model):
     user = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
