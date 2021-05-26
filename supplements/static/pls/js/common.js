@@ -49,10 +49,32 @@ $(document).ready(function(){
     });
 
     $(".paging-supplement .dropdown-menu a").click(function(event){
-        var urlParams = new URLSearchParams(window.location.search);
-        var page = urlParams.get("page") || 1;
-        var paginateBy = $(this).text();
-        window.location.href = "?paginate_by=" + paginateBy + "&page=" + page;
+        var paginateBy = parseInt($(this).text());
+        var finalString = '';
+        var url = new URL(window.location.toString());
+        var searchParams = new URLSearchParams(url.search);
+
+        if (!searchParams.has('paginate_by') && paginateBy == 20) {
+            toastr.info("Already showing " + paginateBy + " items a page");
+            return false; // 20 Items a page are shown by default
+        }
+        if (window.location.search !== '') {
+            if (searchParams.has('paginate_by')) {
+                if (parseInt(searchParams.get('paginate_by')) == paginateBy) {
+                    toastr.info("Already showing " + paginateBy + " items a page");
+                    return false; // Do not redirect if User choose same number to paginate by
+                }
+                searchParams.delete('paginate_by');
+            }
+            if (searchParams.has('page')) {
+                searchParams.delete('page'); // Start from page 1 when total items in a page change
+            }
+            searchParams.forEach(function(value, key) {
+                searchParams.set(key, value); // set function ensures that query string param key doesn't repeat.
+            });
+            finalString = searchParams.toString();
+        }
+        window.location.href = "?" + finalString + "&paginate_by=" + paginateBy;
     });
 
     $('#dropdownMenu2, #store-dropdown-menu-2 li').hover(function() {
