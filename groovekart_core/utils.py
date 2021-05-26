@@ -582,10 +582,10 @@ def order_track_fulfillment(order_track, user_config=None):
     }
 
     send_email = user_config.get('send_shipping_confirmation')
-    if send_email == 'yes':
-        fulfillment_data['send_email'] = True
-    elif send_email == 'no':
+    if send_email == 'no':
         fulfillment_data['send_email'] = False
+    else:
+        fulfillment_data['send_email'] = True
 
     return changed, fulfillment_data
 

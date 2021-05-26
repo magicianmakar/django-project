@@ -95,6 +95,8 @@ class Command(DropifiedBaseCommand):
                 api_url = store.get_api_url('trackings.json')
                 r = store.request.post(api_url, json=api_data)
                 r.raise_for_status()
+                if r.json()['status'] != 'success':
+                    raise Exception(r.content)
 
                 fulfilled = True
                 break
