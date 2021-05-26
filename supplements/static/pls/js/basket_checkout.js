@@ -25,26 +25,23 @@ function basketCalculateShipping(country_code,province) {
                     basketMakePayment();
                 });
 
-                if (shippingsCount > 1) {
-                    var servicesTemplate = Handlebars.compile($("#shipping-services-template").html());
-                    $('#basket-modal-make-payment .shipping-service-selection').html(servicesTemplate(api_data));
-                    $('#basket-modal-make-payment [name="shipping_service"]').off('change').on('change', function() {
-                        var serviceId = $(this).attr('data-service-id');
-                        for (var i = 0; i < shippingsCount; i++) {
-                            if (serviceId == api_data.shippings[i].service_id) {
+                var servicesTemplate = Handlebars.compile($("#shipping-services-template").html());
+                $('#basket-modal-make-payment .shipping-service-selection').html(servicesTemplate(api_data));
+                $('#basket-modal-make-payment [name="shipping_service"]').off('change').on('change', function() {
+                    var serviceId = $(this).attr('data-service-id');
+                    for (var i = 0; i < shippingsCount; i++) {
+                        if (serviceId == api_data.shippings[i].service_id) {
 
-                                $('#basket-modal-make-payment .shipping-cost').html(
-                                    '$'+parseFloat(api_data.shippings[i].shipping_cost).toFixed(2)
-                                );
-                                $('#basket-modal-make-payment .total-cost').html(
-                                    '$'+( parseFloat(checkout_total) + parseFloat(api_data.shippings[i].shipping_cost)).toFixed(2)
-                                );
-                                break;
-                            }
+                            $('#basket-modal-make-payment .shipping-cost').html(
+                                '$'+parseFloat(api_data.shippings[i].shipping_cost).toFixed(2)
+                            );
+                            $('#basket-modal-make-payment .total-cost').html(
+                                '$'+( parseFloat(checkout_total) + parseFloat(api_data.shippings[i].shipping_cost)).toFixed(2)
+                            );
+                            break;
                         }
-                    });
-                }
-
+                    }
+                });
             },
             error: function (api_data) {
                 toastr.warning(getAjaxError(api_data));
