@@ -73,19 +73,6 @@
                 }
             };
 
-            window.beamer_config = {
-                product_id : "zaFRJEVf1753",
-                selector: "#product-update-fx",
-                {% if user.is_authenticated %}
-                user_firstname : "{{user.first_name}}",
-                user_lastname : "{{user.first_name}}",
-                user_email : "{{user.email}}",
-                filter: "{{user.profile.plan.title}}",
-                right: 15,
-                top: 3,
-                {% endif %}
-            };
-
             {% if user.is_stripe_customer %}
             window.onboardFlowSettings = {
                 "siteKey": "lCcWxLzX",
@@ -248,18 +235,6 @@
 
 
 </script>
-
-{% if '/addons' not in request.path %}
-<script type="text/javascript">
-    if (window.beamer_config) {
-        var beamerJS = document.createElement('script');
-        beamerJS.src = '//app.getbeamer.com/js/beamer-embed.js';
-        beamerJS.async = true;
-
-        document.head.appendChild(beamerJS);
-    }
-</script>
-{% endif %}
 
 <script src="https://script.tapfiliate.com/tapfiliate.js" type="text/javascript" async></script>
 <script type="text/javascript">
