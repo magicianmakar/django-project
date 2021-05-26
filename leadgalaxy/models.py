@@ -2087,6 +2087,7 @@ class GroupPlan(models.Model):
     auto_fulfill_limit = models.IntegerField(default=-1, verbose_name="Auto Fulfill Limit")
 
     support_addons = models.BooleanField(default=False)
+    single_charge = models.BooleanField(default=False)
     sales_fee_config = models.ForeignKey('fulfilment_fee.SalesFeeConfig', blank=True, null=True, on_delete=models.SET_NULL)
 
     badge_image = models.CharField(max_length=512, blank=True, default='')
@@ -2247,6 +2248,12 @@ class GroupPlan(models.Model):
     @property
     def is_plod(self):
         return self.slug in ['plod-yearly-shopify', 'plod-monthly-shopify', 'plod-yearly', 'plod-monthly']
+
+    def get_internal_plan(self):
+        if self.slug in ['build-lifetime-monthly', 'build-lifetime-yearly']:
+            return GroupPlan.objects.get(slug='build-lifetime-free')
+        elif self.slug in ['plod-lifetime-monthly', 'plod-lifetime-yearly']:
+            return GroupPlan.objects.get(slug='plod-lifetime-free')
 
 
 class GroupPlanChangeLog(models.Model):

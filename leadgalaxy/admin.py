@@ -50,11 +50,12 @@ USER_SEARCH_FIELDS = ('user__id', 'user__username', 'user__email')
 
 @admin.register(GroupPlan)
 class GroupPlanAdmin(admin.ModelAdmin):
-    list_display = ('title', 'slug', 'payment_gateway', 'monthly_price', 'trial_days', 'revision', 'hidden', 'locked', 'permissions_count')
+    list_display = ('title', 'slug', 'payment_gateway', 'monthly_price', 'trial_days', 'permissions_count')
 
     exclude = ('default_plan',)
     prepopulated_fields = {'slug': ('title',)}
-    list_filter = ('free_plan', 'payment_gateway', 'payment_interval', 'show_in_plod_app', 'revision', 'hidden', 'locked', 'support_addons')
+    list_filter = ('free_plan', 'payment_gateway', 'payment_interval', 'show_in_plod_app', 'revision', 'single_charge', 'hidden', 'locked',
+                   'support_addons')
     readonly_fields = ('register_hash',)
     search_fields = ('title', 'slug', 'description', 'register_hash')
 

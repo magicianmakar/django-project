@@ -319,3 +319,9 @@ $('.profile-submenus').on('click', function() {
         checkSelectedMenu(window.location.hash);
     }, 1);
 });
+
+$('.panel-toggle .panel-heading').click(function (e) {
+    e.preventDefault();
+
+    $(e.currentTarget).parent().find('.panel-body').toggleClass('hidden');
+}).css('cursor', 'pointer');

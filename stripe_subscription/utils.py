@@ -7,7 +7,7 @@ import simplejson as json
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.core.cache import cache
 from django.db.models import Q
 
@@ -1113,3 +1113,49 @@ def add_invoice(sub_container, invoice_type, amount, replace_flag=False, descrip
         )
 
     return upcoming_invoice_item
+
+
+def charge_single_charge_plan(user: User, plan: GroupPlan):
+    try:
+        customer_id = user.stripe_customer.customer_id
+
+        # pay the one time price of lifetime plan
+        stripe.InvoiceItem.create(
+            customer=customer_id,
+            amount=int(float(plan.monthly_price) * 12 * 100),
+            currency='usd',
+            description=plan.title,
+        )
+
+        invoice = stripe.Invoice.create(
+            customer=customer_id,
+            description=f'{plan.title} Subscription',
+        )
+
+        invoice.pay()
+
+        # Internal is a free stripe plan the customer will be on going forward
+        internal_plan = plan.get_internal_plan()
+
+        # Delete any active subscriptions
+        subs = stripe.Subscription.list(customer=customer_id)
+        for sub in subs.data:
+            stripe.Subscription.delete(sub.id)
+
+        # Subscribe to the internal lifetime plan
+        stripe.Subscription.create(
+            customer=customer_id,
+            plan=internal_plan.stripe_plan.stripe_id,
+        )
+
+        user.profile.change_plan(internal_plan)
+
+        return JsonResponse({'status': 'ok'})
+
+    except (stripe.error.CardError, stripe.error.InvalidRequestError) as e:
+        capture_exception(level='warning')
+        msg = 'Subscription Error: {}'.format(str(e))
+        if 'This customer has no attached payment source' in str(e):
+            msg = 'Please add your billing information first'
+
+        return JsonResponse({'error': msg}, status=500)

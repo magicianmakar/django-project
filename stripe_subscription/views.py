@@ -24,6 +24,7 @@ from .utils import (
     get_stripe_invoice,
     refresh_invoice_cache,
     get_main_subscription_item,
+    charge_single_charge_plan,
 )
 from phone_automation.models import CallflexCreditsPlan, CallflexCredit
 from stripe_subscription.models import CustomStripePlan, CustomStripeSubscription
@@ -126,6 +127,9 @@ def subscription_plan(request):
 
     if not plan.is_stripe():
         return JsonResponse({'error': 'Plan is not valid'}, status=403)
+
+    if plan.single_charge:
+        return charge_single_charge_plan(user, plan)
 
     if user.stripesubscription_set.exists():
         subscription = user.stripesubscription_set.latest('created_at')
