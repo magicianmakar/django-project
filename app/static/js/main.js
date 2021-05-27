@@ -395,15 +395,41 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
             vars_list.push(el.values);
         });
 
+        var variant_object_keys = [];
+        var variant_info = '';
+        if(product.hasOwnProperty('variants_info')) {
+            variant_info = product.variants_info;
+            if(typeof variant_info === 'object') {
+                variant_object_keys = Object.keys(variant_info);
+            }
+        }
+
         if (vars_list.length>0) {
             vars_list = allPossibleCases(vars_list);
 
             for (var i=0; i<vars_list.length; i++) { // jshint ignore:line
                 var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
+                var alternate_title = vars_list[i].join ? vars_list[i].join(' / ') : vars_list[i];
+
+                var vprice = product.price;
+                var compare_at_price = '';
+                if (product.compare_at_price) {
+                    compare_at_price = product.compare_at_price;
+                }
+
+                if(variant_object_keys.length) {
+                    if(variant_object_keys.includes(alternate_title)) {
+                        vprice = variant_info[alternate_title].price;
+                        if (product.compare_at_price) {
+                            compare_at_price = variant_info[alternate_title].compare_at;
+                        }
+                    }
+                }
 
                 var vdata = { // jshint ignore:line
-                    "price": product.price,
+                    "price": vprice,
                     "title": title,
+                    "compare_at_price": compare_at_price,
                 };
 
                 if (typeof(vars_list[i]) == "string") {
@@ -426,10 +452,6 @@ function sendProductToShopify (product, store_id, product_id, callback, callback
                     if (sku.length) {
                         vdata["sku"] = sku.join(';');
                     }
-                }
-
-                if (product.compare_at_price) {
-                    vdata.compare_at_price = product.compare_at_price;
                 }
 
                 if (product.weight) {

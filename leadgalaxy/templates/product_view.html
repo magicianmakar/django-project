@@ -250,6 +250,11 @@
                         {% endif %}
                     </div>
 
+                    <div class="advanced" style="text-align:right; {% if shopify_product %}display:none; {% endif %}">
+                        <input type="checkbox" name="advanced_variants" id="advanced_variants" class="js-switch">
+                        <label for="advanced_variants">Advanced</label>
+                    </div>
+
                     <div id="variants" class="row well"
                          style="margin:5px 0px 10px 0;padding: 20px 0 0px; {% if shopify_product %}display:none{% endif %}">
 
@@ -265,6 +270,22 @@
                         </div>
                     </div>
 
+                    <div class="well" style="margin: 5px 0px 10px; padding: 20px 0px 0px; {% if shopify_product %}display:none{% endif %}">
+                        <table id="product-variants" class="table table-condensed no-border" style="margin-bottom:0; display:none;">
+                            <thead>
+                                <tr>
+                                    <th style="width:64px">Image</th>
+                                    <th>Title</th>
+                                    <th>Price</th>
+                                    <th>Compare at price</th>
+                                    <th>Sku</th>
+                                    <th>Weight</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
 
                     <div class="form-group col-xs-12" style="padding:0">
                         <textarea name="product-description" class="form-control"></textarea>
