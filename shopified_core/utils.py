@@ -843,7 +843,7 @@ class CancelledOrderAlert():
             # Increase number of e-mails sent for cancelled orders
             cache.set(cancelled_orders_key, cancelled_orders_count + 1, timeout=86400)
 
-            params = {'query': self.source_id, 'reason': self.new_source_status_details}
+            params = {'store': self.order_track.store_id, 'query': self.source_id, 'reason': self.new_source_status_details}
             send_email_from_template(
                 tpl='aliexpress_order_cancellation.html',
                 subject='[Dropified] Aliexpress Order has been Cancelled',
@@ -851,14 +851,14 @@ class CancelledOrderAlert():
                 data={
                     'username': self.user.username,
                     'track': self.order_track,
-                    'track_url': app_link('{}/orders/track'.format(self.store_type), **params),
+                    'track_url': app_link(f'{self.store_type}/orders/track', **params),
                 },
             )
         elif cancelled_orders_count == 10:
             # Ensure no new e-mails are sent for 24 hours
             cache.set(cancelled_orders_key, cancelled_orders_count + 1, timeout=86400)
 
-            params = {'reason': self.new_source_status_details}
+            params = {'store': self.order_track.store_id, 'reason': self.new_source_status_details}
             send_email_from_template(
                 tpl='aliexpress_order_cancellation.html',
                 subject='[Dropified] Many Aliexpress Orders has been Cancelled',
@@ -866,7 +866,7 @@ class CancelledOrderAlert():
                 data={
                     'username': self.user.username,
                     'track': self.order_track,
-                    'track_url': app_link('{}/orders/track'.format(self.store_type), **params),
+                    'track_url': app_link(f'{self.store_type}/orders/track', **params),
                     'bulk': True
                 },
             )
