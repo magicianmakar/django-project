@@ -50,9 +50,13 @@ function addOrdersToAlibaba(orders) {
 }
 
 window.bulkOrderQueue = null;
-function fetchOrdersToQueue(data) {
-    $('.stop-bulk-btn').show();
-    $('.stop-bulk-btn').button('reset').removeClass('btn-primary').addClass('btn-danger');
+function fetchOrdersToQueue(data, page_count) {
+    page_count = typeof (page_count) === 'undefined' ? 0 : page_count;
+
+    $('.stop-bulk-btn').show()
+        .button('reset')
+        .removeClass('btn-primary')
+        .addClass('btn-danger');
 
     var api_url = /^http/.test(data) ? data : cleanUrlPatch(window.location.href);
     var api_data = /^http/.test(data) ? null : data;
@@ -61,8 +65,10 @@ function fetchOrdersToQueue(data) {
         type: 'GET',
         data: api_data,
         success: function(data) {
+            page_count += 1;
+
             var pbar = $('#bulk-order-modal .progress .progress-bar');
-            var page = parseInt(pbar.attr('current')) + 1;
+            var page = page_count;
             var pmax = parseInt(pbar.attr('max'));
             pbar.css('width', ((page * 100.0) / pmax) + '%')
                 .text(page + ' Page' + (page > 1 ? 's' : ''))
@@ -73,14 +79,16 @@ function fetchOrdersToQueue(data) {
             });
 
             window.bulkOrderQueue.next = data.next;
-            if (data.next && !window.bulkOrderQueue.stop) {
-                fetchOrdersToQueue(data.next);
-            } else if (!data.next) {
+            if (data.next && !window.bulkOrderQueue.stop && page_count < pmax) {
+                fetchOrdersToQueue(data.next, page_count);
+            } else if (!data.next || page_count >= pmax) {
                 $('.stop-bulk-btn').hide();
                 $("#bulk-order-steps").steps('next');
             } else {
-                $('.stop-bulk-btn').button('continue');
-                $('.stop-bulk-btn').removeClass('btn-danger').addClass('btn-primary');
+                $('.stop-bulk-btn')
+                    .button('continue')
+                    .removeClass('btn-danger')
+                    .addClass('btn-primary');
 
                 var currentStep = $("#bulk-order-steps").steps('getCurrentIndex');
                 if (currentStep == 1) {  // Still at progress bar step
@@ -92,8 +100,8 @@ function fetchOrdersToQueue(data) {
             displayAjaxError('Bulk Order Processing', data);
 
             window.bulkOrderQueue.stop = true;
-            $('.stop-bulk-btn').button('continue');
-            $('.stop-bulk-btn').removeClass('btn-danger').addClass('btn-primary');
+            $('.stop-bulk-btn').button('continue')
+                .removeClass('btn-danger').addClass('btn-primary');
         }
     });
 }
@@ -113,15 +121,16 @@ $('#bulk-order-button-wrapper').on('click', '.bulk-order-btn', function (e) {
     }
 
     var source = $(this).data('source');
+    var bulkModal = $('#bulk-order-modal');
 
-    var isPrintOnDemand = source === 'print-on-demand' || false;
-    $('#bulk-order-modal').data('dropified-print', isPrintOnDemand);
+    var isPrintOnDemand = source === 'print-on-demand';
+    bulkModal.data('dropified-print', isPrintOnDemand);
 
-    var isPrivateLabel = source === 'private-label' || false;
-    $('#bulk-order-modal').data('dropified-supplements', isPrivateLabel);
+    var isPrivateLabel = source === 'private-label';
+    bulkModal.data('dropified-supplements', isPrivateLabel);
 
-    var isAlibaba = source === 'alibaba' || false;
-    $('#bulk-order-modal').data('alibaba', isAlibaba);
+    var isAlibaba = source === 'alibaba';
+    bulkModal.data('alibaba', isAlibaba);
 
     if (window.bulkOrderQueue && window.bulkOrderQueue.data.length) {
         if (isPrivateLabel && window.bulkOrderQueue.is_supplement_bulk_order) {
@@ -152,18 +161,18 @@ $('#bulk-order-button-wrapper').on('click', '.bulk-order-btn', function (e) {
     $('#bulk-order-modal .modal-title .original-title').toggleClass('hidden', is_dropified_print);
     $('#bulk-order-modal .modal-title .dropified-print-title').toggleClass('hidden', !is_dropified_print);
 
-    ga('clientTracker.send', 'event', 'Bulk Order', 'Shopify', sub_conf.shop);
-    $('#bulk-order-modal').modal({
+    bulkModal.modal({
         backdrop: 'static',
         keyboard: false
     });
+
     $('.bulk-order-step [name="queue_page_from"]').trigger('focus');
+
+    ga('clientTracker.send', 'event', 'Bulk Order', 'Shopify', sub_conf.shop);
 });
 
 $('#bulk-order-modal').on('click', '.stop-bulk-btn', function (e) {
     e.preventDefault();
-
-    ga('clientTracker.send', 'event', 'Stop Bulk Order', 'Shopify', sub_conf.shop);
 
     if (window.bulkOrderQueue.stop == true && window.bulkOrderQueue.next) {
         $(e.target).button('reset').removeClass('btn-danger').addClass('btn-primary');
@@ -173,6 +182,8 @@ $('#bulk-order-modal').on('click', '.stop-bulk-btn', function (e) {
         window.bulkOrderQueue.stop = true;
         $(e.target).button('loading');
     }
+
+    ga('clientTracker.send', 'event', 'Stop Bulk Order', 'Shopify', sub_conf.shop);
 });
 
 $("#bulk-order-steps").steps({
@@ -191,7 +202,7 @@ $("#bulk-order-steps").steps({
         if (currentIndex == 0) {
             var pageFrom = parseInt($('[name="queue_page_from"]').val());
             var pageTo = parseInt($('[name="queue_page_to"]').val());
-            var maxPages = parseInt($('#bulk-order-btn').attr('pages-count'));
+            var maxPages = 100;
 
             if (isNaN(pageFrom) || isNaN(pageTo)) {
                 $('#bulk-order-step-error').css('display', '');
@@ -221,17 +232,6 @@ $("#bulk-order-steps").steps({
                     next: null,
                 });
             }
-        } else if (currentIndex == 1) {
-            var progress = $('#bulk-order-modal .progress .progress-bar');
-            var progressMax = parseInt(progress.attr('max'));
-            var progressCurrent = parseInt(progress.attr('current'));
-
-            if (progressMax == progressCurrent || window.bulkOrderQueue.stop) {
-                $('#bulk-order-load-error').css('display', 'none');
-            } else {
-                $('#bulk-order-load-error').css('display', '');
-                return false;
-            }
         }
 
         return true;
@@ -246,9 +246,10 @@ $("#bulk-order-steps").steps({
             window.bulkOrderQueue.data = [];
 
             var maxPages = window.bulkOrderQueue.pages.to - window.bulkOrderQueue.pages.from + 1;
-            $('#bulk-order-modal .progress .progress-bar').css('width', '0px');
-            $('#bulk-order-modal .progress .progress-bar').attr('max', maxPages);
-            $('#bulk-order-modal .progress .progress-bar').attr('current', '0');
+            $('#bulk-order-modal .progress .progress-bar')
+                .css('width', '0px')
+                .attr('max', maxPages)
+                .attr('current', '0');
 
             var formData = $('form.filter-form').serializeArray();
             formData.push({name: 'bulk_queue', value: '1'});

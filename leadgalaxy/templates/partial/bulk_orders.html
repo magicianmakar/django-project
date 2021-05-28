@@ -6,7 +6,8 @@
             <button {% if not orders_count %}disabled{% endif %}
                     id="bulk-order-btn"
                     data-store-id="{{ store.id }}"
-                    pages-count="{{paginator.num_pages}}" orders-count="{{ orders_count }}"
+                    pages-count="{{paginator.num_pages}}"
+                    orders-count="{{ orders_count }}"
                     type="button"
                     class="btn btn-success btn-rounded btn-sm dropdown-toggle"
                     title="Place orders in bulk"
@@ -69,7 +70,6 @@
                             <h1>Select Pages</h1>
                             <div class="bulk-order-step">
                                 <h2>Select the pagination range to queue</h2>
-                                <p>Total number of pages: {{ paginator.num_pages }}</p>
                                 <div class="row">
                                     <div class="col-md-3">
                                         <div class="form-group">
@@ -111,7 +111,7 @@
                                     </div>
                                     <div class="col-sm-9">
                                         <div id="bulk-order-load-error" class="text-right form-group has-error" style="display: none;">
-                                            <span class="help-block">Wait for the loading to end or click in stop to finish</span>
+                                            <span class="help-block">Click on "Stop" button to start fulfilling found orders</span>
                                         </div>
                                     </div>
                                 </div>
