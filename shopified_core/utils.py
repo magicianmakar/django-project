@@ -1089,15 +1089,10 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
             if queue_order is not None:
                 orders_result.append(queue_order)
 
-    page_end = safe_int(request.GET.get('page_end'), 0)
-    page_start = safe_int(request.GET.get('page_start'), 1) - 1
     next_page_url = None
     if current_page.has_next():
-        next_page_number = safe_int(current_page.next_page_number())
-        # Pagination can be limited by user
-        if not page_end or next_page_number <= page_end:
-            page = next_page_number - page_start
-            next_page_url = get_next_page_from_request(request, page)
+        next_page_number = current_page.next_page_number()
+        next_page_url = get_next_page_from_request(request, next_page_number)
 
     return JsonResponse({
         'orders': orders_result,

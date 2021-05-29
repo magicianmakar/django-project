@@ -48,10 +48,141 @@ function showProductInfo(rproduct) {
             });
         }
 
+        var has_advanced_variants = false;
+        if(product.hasOwnProperty('advanced_variants_data')) {
+            has_advanced_variants = true;
+        }
+
+        if(has_advanced_variants && product.advanced_variants_data.length) {
+            product.advanced_variants_data.forEach(function(data, i) {
+            var vdata = { // jshint ignore:line
+                "title": data.title,
+                "price": data.price,
+                "compare_at_price": data.compare_at_price,
+                "sku": data.sku,
+                "image_src": data.image,
+                "weight": data.weight,
+                "weight_unit": data.weight_unit,
+                "option1": data.option1,
+                "option2": data.option2,
+                "option3": data.option3,
+            };
+            $('#product-variants tbody').append(drawSeparatedVariant(vdata, i));
+        });
+        }
+        else {
+            var variant_object_keys = [];
+            var variant_info = '';
+            if(product.hasOwnProperty('variants_info')) {
+                variant_info = product.variants_info;
+                if(typeof variant_info === 'object') {
+                    variant_object_keys = Object.keys(variant_info);
+                }
+            }
+            var vars_list = [];
+            $('#variants .variant').each(function (i, el) {
+                var vals = $(el).find('#product-variant-values').val().split(',');
+                vars_list.push(vals);
+            });
+            if (vars_list.length > 0) {
+                vars_list = allPossibleCases(vars_list);
+                for (var i = 0; i < vars_list.length; i++) { // jshint ignore:line
+                    var title = vars_list[i].join ? vars_list[i].join(' / ') : vars_list[i];
+
+                    var vprice = product.price;
+                    var compare_at_price = '';
+                    var image_src = '';
+                    if ($('#product-compare-at').val().length) {
+                        compare_at_price = parseFloat($('#product-compare-at').val());
+                    }
+
+                    if(variant_object_keys.length) {
+                        if(variant_object_keys.includes(title)) {
+                            vprice = variant_info[title].price;
+                            if ($('#product-compare-at').val().length) {
+                                compare_at_price = variant_info[title].compare_at;
+                            }
+                            image_src = variant_info[title].image;
+                        }
+                    }
+
+                    var vdata = { // jshint ignore:line
+                        "price": vprice,
+                        "title": title,
+                        "compare_at_price": compare_at_price,
+                        "image_src": image_src,
+                        "weight": parseFloat($('#product-weight').val()),
+                        "weight_unit": product.weight_unit,
+                        "sku": '',
+                    };
+                    if (typeof(vars_list[i]) == "string") {
+                        vdata["option1"] = vars_list[i];
+                        if (product.variants_sku && product.variants_sku.hasOwnProperty(vars_list[i])) {
+                            vdata["sku"] = product.variants_sku[vars_list[i]];
+                        }
+                    } else {
+                        var sku = [];
+
+                        $.each(vars_list[i], function (j, va) { // jshint ignore:line
+                            vdata["option"+(j+1)] = va;
+                            if (product.variants_sku && product.variants_sku.hasOwnProperty(va)) {
+                                sku.push(product.variants_sku[va]);
+                            }
+                        });
+
+                        if (sku.length) {
+                            vdata["sku"] = sku.join(';');
+                        }
+                    }
+
+                    if ($('#product-weight').val().length) {
+                        vdata.weight = parseFloat($('#product-weight').val());
+                        vdata.weight_unit = $('#product-weight-unit').val();
+                    }
+
+                    if (vdata.title in config.shopify_variants) {
+                        vdata.id = config.shopify_variants[vdata.title];
+                    }
+
+                    $('#product-variants tbody').append(drawSeparatedVariant(vdata, i));
+                }
+            }
+        }
         renderImages();
     }
 }
 
+function drawSeparatedVariant(vdata, i) {
+    var var_str = '<tr class="shopify-variant">' + '<td><image src="' + vdata.image_src + '" class="unveil" style="width:64px"></td>' +
+            '<td><input type="hidden" name="option1" value="' + vdata.option1 + '">' +
+            '<input type="hidden" name="option2" value="' + vdata.option2 + '">' +
+            '<input type="hidden" name="option3" value="' + vdata.option3 + '">' +
+            '<input type="hidden" name="title" value="' + vdata.title + '">' + vdata.title + '</td>' +
+            '<input type="hidden" name="image" value="' + vdata.image_src + '">' +
+
+            '<td style="white-space:nowrap"><div class="input-group" style="width:120px"><span class="input-group-addon popup-currency-sign">$</span><input type="number" name="price" class="form-control splitted-price" value="' +
+            vdata.price + '" data-price="' + vdata.price + '"/></div></td>' +
+
+            '<td style="white-space:nowrap"><div class="input-group" style="width:120px"><span class="input-group-addon popup-currency-sign">$</span><input type="number" class="form-control splitted-compare-at" name="compare_at_price" ' + ' value="' +
+            vdata.compare_at_price + '"data-price="' + vdata.compare_at_price + '"/></div></td>' +
+
+            '<td style="white-space:nowrap"><div class="input-group" style="width:120px"><input type="text" name="sku" class="form-control splitted-price" value="' +
+            vdata.sku + '" data-price="' + vdata.sku + '"/></div></td>' +
+            '<td style="white-space:nowrap"><input class="form-control" type="number" name="weight" value="' + vdata.weight +'" min="0" step="0.1" data-number-to-fixed="2" data-number-stepfactor="100" style="display:inline-block;width:100px;"><select class="form-control" name="weight_unit" style="width:65px;display:inline-block;">';
+
+            var weight_unit_array = ['g', 'kg', 'oz', 'lb'];
+            var weight_unit_str = '';
+            for(var unit in weight_unit_array) {
+                if(vdata.weight_unit === weight_unit_array[unit]) {
+                weight_unit_str+= '<option selected="selected" value="' + vdata.weight_unit +'">' + vdata.weight_unit + '</option>';
+                } else {
+                    weight_unit_str+= '<option value="' + weight_unit_array[unit]+ '">' + weight_unit_array[unit] + '</option>';
+                }
+            }
+            var_str = var_str + weight_unit_str + '</select></td>' + '</tr>';
+
+            return var_str;
+}
 
 var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
 elems.forEach(function(html) {
@@ -235,51 +366,77 @@ $('#export-btn').click(function () {
             });
 
             if (vars_list.length>0) {
-                vars_list = allPossibleCases(vars_list);
-                for (var i = 0; i < vars_list.length; i++) { // jshint ignore:line
-                    var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
+                if (!$('#advanced_variants').prop('checked')) {
+                    vars_list = allPossibleCases(vars_list);
+                    for (var i = 0; i < vars_list.length; i++) { // jshint ignore:line
+                        var title = vars_list[i].join ? vars_list[i].join(' & ') : vars_list[i];
 
-                    var vdata = { // jshint ignore:line
-                        "price": parseFloat($('#product-price').val()),
-                        "title": title,
-                    };
+                        var vdata = { // jshint ignore:line
+                            "price": parseFloat($('#product-price').val()),
+                            "title": title,
+                        };
 
-                    if (typeof(vars_list[i]) == "string") {
-                        vdata["option1"] = vars_list[i];
+                        if (typeof(vars_list[i]) == "string") {
+                            vdata["option1"] = vars_list[i];
 
-                        if (product.variants_sku && product.variants_sku.hasOwnProperty(vars_list[i])) {
-                            vdata["sku"] = product.variants_sku[vars_list[i]];
+                            if (product.variants_sku && product.variants_sku.hasOwnProperty(vars_list[i])) {
+                                vdata["sku"] = product.variants_sku[vars_list[i]];
+                            }
+                        } else {
+                            var sku = [];
+
+                            $.each(vars_list[i], function (j, va) { // jshint ignore:line
+                                vdata["option"+(j+1)] = va;
+
+                                if (product.variants_sku && product.variants_sku.hasOwnProperty(va)) {
+                                    sku.push(product.variants_sku[va]);
+                                }
+                            });
+
+                            if (sku.length) {
+                                vdata["sku"] = sku.join(';');
+                            }
                         }
-                    } else {
-                        var sku = [];
 
-                        $.each(vars_list[i], function (j, va) { // jshint ignore:line
-                            vdata["option"+(j+1)] = va;
+                        if ($('#product-compare-at').val().length) {
+                            vdata.compare_at_price = parseFloat($('#product-compare-at').val());
+                        }
 
-                            if (product.variants_sku && product.variants_sku.hasOwnProperty(va)) {
-                                sku.push(product.variants_sku[va]);
+                        if ($('#product-weight').val().length) {
+                            vdata.weight = parseFloat($('#product-weight').val());
+                            vdata.weight_unit = $('#product-weight-unit').val();
+                        }
+
+                        if (vdata.title in config.shopify_variants) {
+                            vdata.id = config.shopify_variants[vdata.title];
+                        }
+
+                        api_data.product.variants.push(vdata);
+                    }
+                } else {
+                    var element = $('#product-variants tr.shopify-variant');
+                    element.each(function(k, tr) {
+                        var variant_data = {};
+                        var attrs = [
+                            'option1', 'option2', 'option3', 'title', 'weight_unit',
+                            'price', 'compare_at_price', 'weight', 'sku'
+                        ];
+                        $.each(attrs, function(k, att) {
+                            var att_val = $('[name="' + att + '"]', tr).val();
+                            if (att_val && att_val.length > 0 && att_val != "undefined") {
+                                if (k === 'price' || k === 'compare_at_price' || k === 'weight') {
+                                    att_val = parseFloat(att_val);
+                                }
+                                if (att === 'title') {
+                                    att_val = att_val.replace('/', '&');
+                                }
+                                variant_data[att] = att_val;
+                            } else {
+                                variant_data[att] = '';
                             }
                         });
-
-                        if (sku.length) {
-                            vdata["sku"] = sku.join(';');
-                        }
-                    }
-
-                    if ($('#product-compare-at').val().length) {
-                        vdata.compare_at_price = parseFloat($('#product-compare-at').val());
-                    }
-
-                    if ($('#product-weight').val().length) {
-                        vdata.weight = parseFloat($('#product-weight').val());
-                        vdata.weight_unit = $('#product-weight-unit').val();
-                    }
-
-                    if (vdata.title in config.shopify_variants) {
-                        vdata.id = config.shopify_variants[vdata.title];
-                    }
-
-                    api_data.product.variants.push(vdata);
+                        api_data.product.variants.push(variant_data);
+                    });
                 }
             } else {
                 swal('Variants should have more than one value separated by comma (,)');
@@ -472,7 +629,8 @@ $('#save-for-later-btn').click(function (e) {
         'weight_unit': $('#product-weight-unit').val(),
         'published': $('#product-visible').prop('checked'),
         'boards': $('#boards').val(),
-        'variants': []
+        'variants': [],
+        'advanced_variants_data': []
     };
 
     if ($('#variants .variant').length) {
@@ -484,6 +642,28 @@ $('#save-for-later-btn').click(function (e) {
 
         });
     }
+
+    $('#product-variants tr.shopify-variant').each(function(j, tr) {
+        var attrs = [
+            'option1', 'option2', 'option3', 'title', 'weight_unit',
+            'price', 'compare_at_price', 'weight', 'sku', 'image'
+        ];
+        var variant_data = {};
+
+        $.each(attrs, function(k, att) {
+            var att_val = $('[name="' + att + '"]', tr).val();
+            if (att_val && att_val.length > 0) {
+                if (k === 'price' || k === 'compare_at_price' || k === 'weight') {
+                    att_val = parseFloat(att_val);
+                }
+
+                variant_data[att] = att_val;
+            } else {
+                variant_data[att] = '';
+            }
+        });
+        api_data.advanced_variants_data.push(variant_data);
+    });
 
     $.ajax({
         url: '/api/' + target,
@@ -1371,6 +1551,16 @@ $('#include-product').on('click', function(e) {
             });
         }
     });
+});
+
+$('#advanced_variants').on('change', function(){
+    if($(this).prop('checked')) {
+        $('#variants').hide();
+        $('#product-variants').show();
+    } else {
+        $('#variants').show();
+        $('#product-variants').hide();
+    }
 });
 
 $('.delete-product-btn').click(function(e) {
