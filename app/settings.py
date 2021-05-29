@@ -37,7 +37,7 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 APP_DOMAIN = os.environ.get('APP_DOMAIN', 'app.dropified.com')
 APP_URL = os.environ.get('APP_URL', f'https://{APP_DOMAIN}')
 
-if DEBUG:
+if DEBUG and APP_DOMAIN != 'dev.dropified.com':
     print(f'[+] Running in Debug mode at {APP_URL}')
 
 # Application definition
@@ -251,11 +251,8 @@ USE_TZ = True
 # Parse database configuration from $DATABASE_URL
 if os.environ.get('DATABASE_URL'):
     DATABASES['default'] = dj_database_url.config()
-    if DEBUG:
-        print(f'[+] Using PostgreSQL database at {DATABASES["default"]["HOST"]}:{DATABASES["default"]["PORT"]}')
-else:
-    if DEBUG:
-        print(f'[+] Using SQLite database at {DATABASES["default"]["NAME"]}')
+elif DEBUG:
+    print(f'[+] Using SQLite database at {DATABASES["default"]["NAME"]}')
 
 STORE_DATABASE = None
 if os.environ.get('DATA_STORE_DATABASE_URL'):
