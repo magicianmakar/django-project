@@ -155,7 +155,6 @@ $('#bulk-order-button-wrapper').on('click', '.bulk-order-btn', function (e) {
         is_supplement_bulk_order: isPrivateLabel,
         is_alibaba_bulk_order: isAlibaba,
     };
-    console.log(window.bulkOrderQueue);
 
     var is_dropified_print = window.bulkOrderQueue.is_dropified_print;
     $('#bulk-order-modal .modal-title .original-title').toggleClass('hidden', is_dropified_print);
@@ -167,6 +166,8 @@ $('#bulk-order-button-wrapper').on('click', '.bulk-order-btn', function (e) {
     });
 
     $('.bulk-order-step [name="queue_page_from"]').trigger('focus');
+
+    startBulkOrderSteps();
 
     ga('clientTracker.send', 'event', 'Bulk Order', 'Shopify', sub_conf.shop);
 });
@@ -186,109 +187,114 @@ $('#bulk-order-modal').on('click', '.stop-bulk-btn', function (e) {
     ga('clientTracker.send', 'event', 'Stop Bulk Order', 'Shopify', sub_conf.shop);
 });
 
-$("#bulk-order-steps").steps({
-    bodyTag: "div.bulk-order-step",
-    enableAllSteps: false,
-    forceMoveForward: true,
-    labels: {
-        finish: "Start ordering",
-    },
-    onStepChanging: function(event, currentIndex, newIndex) {
-        // Always allow going backward
-        if (currentIndex > newIndex) {
+function startBulkOrderSteps() {
+    $("#bulk-order-steps > div").addClass('bulk-order-step');
+
+    $("#bulk-order-steps").steps({
+        bodyTag: "div.bulk-order-step",
+        enableAllSteps: false,
+        forceMoveForward: true,
+        labels: {
+            finish: "Start ordering",
+        },
+        onStepChanging: function (event, currentIndex, newIndex) {
+            // Always allow going backward
+            if (currentIndex > newIndex) {
+                return true;
+            }
+
+            if (currentIndex == 0) {
+                var pageFrom = parseInt($('[name="queue_page_from"]').val());
+                var pageTo = parseInt($('[name="queue_page_to"]').val());
+                var maxPages = 100;
+
+                if (isNaN(pageFrom) || isNaN(pageTo)) {
+                    $('#bulk-order-step-error').css('display', '');
+                    $('#bulk-order-step-error span').text('Page range is not a number');
+
+                    return false;
+                } else if (pageFrom < 1 || pageTo > maxPages) {
+                    $('#bulk-order-step-error').css('display', '');
+                    $('#bulk-order-step-error span').text('Page numbers outside of range 1-' + maxPages);
+
+                    return false;
+                } else if (pageFrom > pageTo) {
+                    $('#bulk-order-step-error').css('display', '');
+                    $('#bulk-order-step-error span').text('Starting page number must be higher than ending');
+
+                    return false;
+                } else {
+                    $('#bulk-order-step-error').css('display', 'none');
+                    $('#bulk-order-step-error span').text('');
+                    window.bulkOrderQueue = $.extend(true, window.bulkOrderQueue, {
+                        pages: {
+                            'from': pageFrom,
+                            'to': pageTo
+                        },
+                        data: [],
+                        stop: false,
+                        next: null,
+                    });
+                }
+            }
+
             return true;
-        }
+        },
+        onStepChanged: function (event, currentIndex, priorIndex) {
+            if (currentIndex == 0) {
+                // Stop progress if we go back to one
+                window.bulkOrderQueue.stop = true;
 
-        if (currentIndex == 0) {
-            var pageFrom = parseInt($('[name="queue_page_from"]').val());
-            var pageTo = parseInt($('[name="queue_page_to"]').val());
-            var maxPages = 100;
+            } else if (currentIndex == 1 && priorIndex == 0) {  // Coming from "Select Pages" step
+                window.bulkOrderQueue.stop = false;
+                window.bulkOrderQueue.data = [];
 
-            if (isNaN(pageFrom) || isNaN(pageTo)) {
-                $('#bulk-order-step-error').css('display', '');
-                $('#bulk-order-step-error span').text('Page range is not a number');
+                var maxPages = window.bulkOrderQueue.pages.to - window.bulkOrderQueue.pages.from + 1;
+                $('#bulk-order-modal .progress .progress-bar')
+                    .css('width', '0px')
+                    .attr('max', maxPages)
+                    .attr('current', '0');
 
-                return false;
-            } else if (pageFrom < 1 || pageTo > maxPages) {
-                $('#bulk-order-step-error').css('display', '');
-                $('#bulk-order-step-error span').text('Page numbers outside of range 1-' + maxPages);
+                var formData = $('form.filter-form').serializeArray();
+                formData.push({name: 'bulk_queue', value: '1'});
+                formData.push({name: 'page_start', value: window.bulkOrderQueue.pages.from});
+                formData.push({name: 'page_end', value: window.bulkOrderQueue.pages.to});
+                if (window.bulkOrderQueue.is_supplement_bulk_order) {
+                    formData.push({name: 'is_supplement_bulk_order', value: '1'});
+                } else if (window.bulkOrderQueue.is_alibaba_bulk_order) {
+                    formData.push({name: 'single_supplier', value: 'alibaba'});
+                } else if (window.bulkOrderQueue.is_dropified_print) {
+                    formData.push({name: 'is_dropified_print', value: '1'});
+                }
 
-                return false;
-            } else if (pageFrom > pageTo) {
-                $('#bulk-order-step-error').css('display', '');
-                $('#bulk-order-step-error span').text('Starting page number must be higher than ending');
+                fetchOrdersToQueue(formData);
+            } else if (currentIndex == 2) {
+                var queueOrdersLength = window.bulkOrderQueue.data.length;
 
-                return false;
+                if (queueOrdersLength == 0) {
+                    $('#bulk-order-count').text('No Orders');
+                } else if (queueOrdersLength == 1) {
+                    $('#bulk-order-count').text('1 Order');
+                } else if (queueOrdersLength > 1) {
+                    $('#bulk-order-count').text(queueOrdersLength + ' Orders');
+                }
+            }
+        },
+        onFinished: function (event, currentIndex) {
+            if (window.bulkOrderQueue.is_dropified_print) {
+                addOrdersToPrint(window.bulkOrderQueue.data);
+            } else if (window.bulkOrderQueue.is_supplement_bulk_order) {
+                addOrdersToPrivateLabel(window.bulkOrderQueue.data);
+            } else if (window.bulkOrderQueue.is_alibaba_bulk_order) {
+                addOrdersToAlibaba(window.bulkOrderQueue.data);
             } else {
-                $('#bulk-order-step-error').css('display', 'none');
-                $('#bulk-order-step-error span').text('');
-                window.bulkOrderQueue = $.extend(true, window.bulkOrderQueue, {
-                    pages: {
-                        'from': pageFrom,
-                        'to': pageTo
-                    },
-                    data: [],
-                    stop: false,
-                    next: null,
+                $.each(window.bulkOrderQueue.data, function (i, order) {
+                    bulkAddOrderToQueue(order);
                 });
             }
+
+            $('#bulk-order-modal').modal('hide');
+            $("#bulk-order-steps").steps('destroy');
         }
-
-        return true;
-    },
-    onStepChanged: function (event, currentIndex, priorIndex) {
-        if (currentIndex == 0) {
-            // Stop progress if we go back to one
-            window.bulkOrderQueue.stop = true;
-
-        } else if (currentIndex == 1 && priorIndex == 0) {  // Coming from "Select Pages" step
-            window.bulkOrderQueue.stop = false;
-            window.bulkOrderQueue.data = [];
-
-            var maxPages = window.bulkOrderQueue.pages.to - window.bulkOrderQueue.pages.from + 1;
-            $('#bulk-order-modal .progress .progress-bar')
-                .css('width', '0px')
-                .attr('max', maxPages)
-                .attr('current', '0');
-
-            var formData = $('form.filter-form').serializeArray();
-            formData.push({name: 'bulk_queue', value: '1'});
-            formData.push({name: 'page_start', value: window.bulkOrderQueue.pages.from});
-            formData.push({name: 'page_end', value: window.bulkOrderQueue.pages.to});
-            if (window.bulkOrderQueue.is_supplement_bulk_order) {
-                formData.push({name: 'is_supplement_bulk_order', value: '1'});
-            } else if (window.bulkOrderQueue.is_alibaba_bulk_order) {
-                formData.push({name: 'single_supplier', value: 'alibaba'});
-            } else if (window.bulkOrderQueue.is_dropified_print) {
-                formData.push({name: 'is_dropified_print', value: '1'});
-            }
-
-            fetchOrdersToQueue(formData);
-        } else if (currentIndex == 2) {
-            var queueOrdersLength = window.bulkOrderQueue.data.length;
-
-            if (queueOrdersLength == 0) {
-                $('#bulk-order-count').text('No Orders');
-            } else if (queueOrdersLength == 1) {
-                $('#bulk-order-count').text('1 Order');
-            } else if (queueOrdersLength > 1) {
-                $('#bulk-order-count').text(queueOrdersLength + ' Orders');
-            }
-        }
-    },
-    onFinished: function (event, currentIndex) {
-        if (window.bulkOrderQueue.is_dropified_print) {
-            addOrdersToPrint(window.bulkOrderQueue.data);
-        } else if(window.bulkOrderQueue.is_supplement_bulk_order) {
-            addOrdersToPrivateLabel(window.bulkOrderQueue.data);
-        } else if(window.bulkOrderQueue.is_alibaba_bulk_order) {
-            addOrdersToAlibaba(window.bulkOrderQueue.data);
-        } else {
-            $.each(window.bulkOrderQueue.data, function (i, order) {
-                bulkAddOrderToQueue(order);
-            });
-        }
-
-        $('#bulk-order-modal').modal('hide');
-    }
-});
+    });
+}
