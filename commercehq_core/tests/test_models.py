@@ -22,7 +22,6 @@ class CommerceHQStoreTestCase(BaseTestCase):
     def test_must_create_store_created_event_when_created(self):
         CommerceHQStoreFactory()
         self.assertEqual(StoreCreatedEvent.objects.count(), 1)
-        print(StoreCreatedEvent.objects.first().churnzero_script)
 
     def test_must_not_create_store_created_event_when_saved(self):
         store = CommerceHQStoreFactory()

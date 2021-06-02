@@ -39,6 +39,7 @@ urlpatterns = [
     url(r'^ckeditor/', include('ckeditor_uploader.urls')),
     url(r'^offer/', include('offers.urls', 'offers')),
     url(r'^alibaba/', include('alibaba_core.urls', 'alibaba')),
+    url(r'^webhook/', include('webhooks.urls')),
 ]
 
 if settings.DEBUG:

@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 
 from lib.test import BaseTestCase
 from leadgalaxy.models import ShopifyProduct, PriceMarkupRule
-from leadgalaxy.views import webhook
+from webhooks.views import price_monitor_webhook
 from leadgalaxy.tasks import manage_product_change
 from leadgalaxy import utils
 from commercehq_core.models import CommerceHQProduct
@@ -125,17 +125,6 @@ class ProductChangeManagerTestCase(BaseTestCase):
         self.assertEqual(idx, 0)
 
     @tag('slow')
-    def test_get_gkart_variant(self):
-        print('\nIgnoring test_get_gkart_variant')
-        return
-
-        product_change = ProductChange.objects.get(pk=6)
-        manager = ProductChangeManager.initialize(product_change)
-        product_data = product_change.product.retrieve()
-        idx = manager.get_variant(product_data, manager.variant_changes[0])
-        self.assertEqual(idx, 0)
-
-    @tag('slow')
     def test_get_woo_variant(self):
         product_change = ProductChange.objects.get(pk=7)
         manager = ProductChangeManager.initialize(product_change)
@@ -191,7 +180,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             data=json.dumps(product_changes),
             content_type='application/json'
         )
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         updated_variant = shopify_product['variants'][0]
@@ -242,7 +231,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             data=json.dumps(product_changes),
             content_type='application/json'
         )
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         updated_variant = shopify_product['variants'][0]
@@ -305,7 +294,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             data=json.dumps(product_changes),
             content_type='application/json'
         )
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
         shopify_product = utils.get_shopify_product(product.store, product.shopify_id)
         updated_variant = shopify_product['variants'][0]
@@ -351,7 +340,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             content_type='application/json'
         )
 
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
 
         updated_quantity = product.get_variant_quantity(variant_id=shopify_product['variants'][0]['id'])
@@ -402,7 +391,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             data=json.dumps(product_changes),
             content_type='application/json'
         )
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
         chq_product = product.retrieve()
 
@@ -453,7 +442,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             data=json.dumps(product_changes),
             content_type='application/json'
         )
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
         gkart_product = product.retrieve()
 
@@ -510,7 +499,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             data=json.dumps(product_changes),
             content_type='application/json'
         )
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
         gkart_product = product.retrieve()
 
@@ -566,7 +555,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             data=json.dumps(product_changes),
             content_type='application/json'
         )
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
         woo_product = product.retrieve()
 
@@ -616,7 +605,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             data=json.dumps(product_changes),
             content_type='application/json'
         )
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
         bigcommerce_product = product.retrieve()
 
@@ -671,7 +660,7 @@ class ProductChangeManagerTestCase(BaseTestCase):
             data=json.dumps(product_changes),
             content_type='application/json'
         )
-        response = webhook(request, 'price-monitor', None)
+        response = price_monitor_webhook(request)
         self.assertEqual(response.status_code, 200)
         bigcommerce_product = product.retrieve()
 

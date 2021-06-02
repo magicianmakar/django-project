@@ -92,6 +92,7 @@ INSTALLED_APPS = (
     'acp_core',
     'churnzero_core',
     'offers',
+    'webhooks',
 
     'commercehq_core',
     'woocommerce_core',

@@ -8,7 +8,6 @@ import leadgalaxy.api
 urlpatterns = [
     url(r'^logout$', leadgalaxy.views.logout, name="leadgalaxy.views.logout"),
 
-    url(r'^webhook/(?P<provider>[a-z-]+)/(?P<option>[a-z:-]+)/?$', leadgalaxy.views.webhook),
     url(r'^product/edit/(?P<what>[a-z-]+)$', leadgalaxy.views.bulk_edit, name='bulk_edit'),
     url(r'^product/?(?P<tpl>(grid|table))?$', leadgalaxy.views.products_list, name='product'),
     url(r'^product/shopify/migrate$', leadgalaxy.views.shopify_migration, name='shopify_migration'),
