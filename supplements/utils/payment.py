@@ -459,6 +459,12 @@ class Util:
                         'items': [],
                     }
 
+                if len(items) and items[0]['is_bundle']:
+                    total_paid = sum((i['user_supplement'].cost_price * i['quantity']) for i in items)
+                    for item in items:
+                        item['price'] = Decimal(item['price']) * ((item['user_supplement'].cost_price * item['quantity']) / total_paid)
+                        item['price'] = item['price'] / item['quantity']
+
                 orders[order_id]['items'] += items
                 orders_status[order_data_id].update({'success': True})
 
