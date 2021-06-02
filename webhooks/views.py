@@ -423,17 +423,25 @@ def zaxaa_webhook(request, option):
 
 class ShopifyProductUpdateWebhook(ShopifyWebhookMixing):
     def process_webhook(self, store, shopify_data):
-        cache.set(f'webhook_product_{store.id}_{shopify_data["id"]}', shopify_data, timeout=600)
+        try:
+            product = self.get_product()
+        except ShopifyProduct.DoesNotExist:
+            return HttpResponse('ok')
 
-        countdown_key = f'eta_product_{store.id}_{shopify_data["id"]}'
+        cache.set(f'webhook_product_{store.id}_{product.shopify_id}', shopify_data, timeout=600)
+
+        countdown_key = f'eta_product_{store.id}_{product.shopify_id}'
         if cache.get(countdown_key) is None:
             cache.set(countdown_key, True, timeout=5)
-            tasks.update_shopify_product.apply_async(args=[store.id, shopify_data['id']], countdown=5)
+            tasks.update_shopify_product.apply_async(args=[store.id, product.shopify_id], countdown=5)
 
 
 class ShopifyProductDeleteWebhook(ShopifyWebhookMixing):
     def process_webhook(self, store, shopify_data):
-        product = self.get_product()
+        try:
+            product = self.get_product()
+        except ShopifyProduct.DoesNotExist:
+            return HttpResponse('ok')
 
         # Remove from Price Monitor Service
         if product.monitor_id and product.monitor_id > 0:
@@ -456,7 +464,7 @@ class ShopifyProductDeleteWebhook(ShopifyWebhookMixing):
 
         ProductChange.objects.filter(shopify_product=product).delete()
 
-        ShopifyProductImage.objects.filter(store=store, product=shopify_data['id']).delete()
+        ShopifyProductImage.objects.filter(store=store, product=product.shopify_id).delete()
 
 
 class ShopifyOrderCreateWebhook(ShopifyWebhookMixing):
