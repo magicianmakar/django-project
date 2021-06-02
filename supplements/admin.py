@@ -180,9 +180,12 @@ class PLSOrderAdmin(admin.ModelAdmin):
             return HttpResponse('There are no items in that order')
 
         shipstation_order = get_shipstation_order(pls_order.shipstation_order_number)
-        if shipstation_order and shipstation_order.get('orderKey') and False:
+        if shipstation_order:
             pls_order.shipstation_key = shipstation_order['orderKey']
             pls_order.save()
+            return HttpResponseRedirect(reverse('admin:supplements_plsorder_changelist'))
+
+        if request.GET.get('notcreate'):
             return HttpResponseRedirect(reverse('admin:supplements_plsorder_changelist'))
 
         try:
