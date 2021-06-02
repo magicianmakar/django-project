@@ -5,9 +5,13 @@ from django.contrib import admin, messages
 from django.contrib.admin import helpers
 from django.db.models import Sum
 from django.http import HttpResponse, HttpResponseRedirect
-from django.urls import reverse
+from django.urls import reverse, path
 from django.utils import timezone
+from django.utils.html import format_html
 
+from lib.exceptions import capture_exception
+from shopified_core.models_utils import get_store_model
+from .lib.shipstation import get_shipstation_order, prepare_shipstation_data, create_shipstation_order
 from .forms import ShippingGroupAdminForm
 from .models import (
     AuthorizeNetCustomer,
@@ -125,7 +129,7 @@ class PLSOrderAdmin(admin.ModelAdmin):
         'id',
         'order_number',
         'stripe_transaction_id',
-        'shipstation_key',
+        'get_shipstation_key',
         'store_type',
         'store_id',
         'store_order_id',
@@ -154,6 +158,60 @@ class PLSOrderAdmin(admin.ModelAdmin):
                 request.POST = post
 
         return super().changelist_view(request, extra_context=extra_context)
+
+    def get_shipstation_key(self, obj):
+        if obj.shipstation_key:
+            return obj.shipstation_key
+        elif obj.store_type == 'mybasket':
+            return 'No Support for Basket Order'
+        else:
+            return format_html(f'<a href="{reverse("admin:shipstation_sync", kwargs={"order_id": obj.pk})}">Sync Shipstation</a>')
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('shipstation/sync/<int:order_id>', self.shipstation_sync, name='shipstation_sync'),
+        ]
+        return custom_urls + urls
+
+    def shipstation_sync(self, request, order_id):
+        pls_order = PLSOrder.objects.get(id=order_id)
+        if pls_order.order_items.count() == 0:
+            return HttpResponse('There are no items in that order')
+
+        shipstation_order = get_shipstation_order(pls_order.shipstation_order_number)
+        if shipstation_order and shipstation_order.get('orderKey') and False:
+            pls_order.shipstation_key = shipstation_order['orderKey']
+            pls_order.save()
+            return HttpResponseRedirect(reverse('admin:supplements_plsorder_changelist'))
+
+        try:
+            store = get_store_model(pls_order.store_type).objects.get(id=pls_order.store_id)
+            order = store.get_order(pls_order.store_order_id)
+            order['items'] = []
+            for item in pls_order.order_items.all():
+                order['items'].append({
+                    'label': item.label,
+                    'user_supplement': item.label.user_supplement,
+                    'id': item.line_id,
+                    'title': item.label.user_supplement.title,
+                    'quantity': item.quantity,
+                    'sku': item.label.user_supplement.shipstation_sku,
+                    'image_url': item.label.user_supplement.current_label.image,
+                })
+                order['shipping_service'] = item.shipping_service
+            shipstation_data = prepare_shipstation_data(pls_order,
+                                                        order,
+                                                        order['items'],
+                                                        service_code=order['shipping_service'])
+            pls_order.shipstation_key = create_shipstation_order(pls_order, shipstation_data, raw_request=True)
+            pls_order.save()
+
+        except:
+            capture_exception()
+            return HttpResponse(status=500)
+
+        return HttpResponseRedirect(reverse('admin:supplements_plsorder_changelist'))
 
     def export_order_lines(self, request, queryset):
         response = HttpResponse(content_type='text/csv')

@@ -102,29 +102,52 @@ def prepare_shipstation_data(pls_order, order, line_items, service_code=None):
     return shipping_data
 
 
-def create_shipstation_order(pls_order, data, service_code=None):
+def create_shipstation_order(pls_order, data, raw_request=False):
     headers = {'Content-Type': 'application/json'}
     headers.update(get_auth_header())
     url = f'{settings.SHIPSTATION_API_URL}/orders/createOrder'
 
-    for i in range(5):
-        try:
-            response = requests.post(url, data=json.dumps(data), headers=headers)
-            response.raise_for_status()
-            response = response.json()
-            if response.get('orderKey'):
-                break
+    if raw_request:
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+        response.raise_for_status()
+        response = response.json()
+        if not response.get('orderKey'):
+            raise Exception(response)
 
-        except requests.HTTPError:
-            pass
+        return response['orderKey']
 
-        capture_message('ShipStation Order Retry', level='warning', extra={'retry': i + 1, 'data': data})
-
-    if response.get('orderKey'):
-        pls_order.shipstation_key = response['orderKey']
-        pls_order.save()
     else:
-        capture_message('ShipStation Error', extra={'response': response})
+        for i in range(2):
+            try:
+                response = requests.post(url, data=json.dumps(data), headers=headers)
+                response.raise_for_status()
+                response = response.json()
+                if response.get('orderKey'):
+                    break
+
+            except requests.HTTPError:
+                pass
+
+            capture_message('ShipStation Order Retry', level='warning', extra={'retry': i + 1, 'data': data})
+
+        if response.get('orderKey'):
+            pls_order.shipstation_key = response['orderKey']
+            pls_order.save()
+        else:
+            capture_message('ShipStation Error', extra={'response': response})
+
+
+def get_shipstation_order(order_number):
+    headers = {'Content-Type': 'application/json'}
+    headers.update(get_auth_header())
+    url = f'{settings.SHIPSTATION_API_URL}/orders'
+
+    response = requests.get(url, params={'orderNumber': order_number}, headers=headers)
+    response.raise_for_status()
+    result = response.json()
+    if isinstance(result, dict) and 'orders' in result:
+        result = result['orders'][0] if len(result['orders']) > 0 else {}
+    return result
 
 
 def get_shipstation_shipments(resource_url):
