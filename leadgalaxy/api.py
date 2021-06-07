@@ -544,7 +544,7 @@ class ShopifyStoreApi(ApiBase):
             return self.api_success()
 
         plan = GroupPlan.objects.get(id=data.get('plan'))
-        if not plan.is_free and user.id not in [2, 1466]:
+        if not plan.is_free and user.id not in [2, 1466, 7690]:
             return self.api_error('Plan should be changed from Stripe or from the user Profile page for Shopify', status=422)
 
         try:

@@ -2,7 +2,7 @@ from django.utils import timezone
 
 import arrow
 
-from leadgalaxy.models import UserProfile
+from leadgalaxy.models import UserProfile, AppPermission
 from leadgalaxy.utils import get_plan
 from product_alerts.models import ProductChange
 from shopified_core.management import DropifiedBaseCommand
@@ -13,7 +13,9 @@ from shopify_subscription.models import ShopifySubscription
 
 class Command(DropifiedBaseCommand):
     def start_command(self, *args, **options):
-        # Disable affilaites
+        self.remove_blacklisted_permissions()
+
+        # Disable affiliates
         for u in UserProfile.objects.filter(config__contains="_disable_affiliate"):
             u.del_config_values('_disable_affiliate')
 
@@ -86,3 +88,16 @@ class Command(DropifiedBaseCommand):
 
             i.charge_type = 'xexpired'
             i.save()
+
+    def remove_blacklisted_permissions(self):
+        perms_blacklist = [
+            'admitad_affiliate.use',
+            'aliexpress_affiliate.use',
+            'aliexpress_mobile_order.use',
+            'ebay_manual_affiliate_link.use'
+        ]
+
+        for name in perms_blacklist:
+            permission = AppPermission.objects.get(name=name)
+            for plan in permission.groupplan_set.all():
+                plan.permissions.remove(permission)
