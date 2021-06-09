@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load cache %}
+{% load template_helper %}
+{% load url_tools %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-content">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-striped table-bordered user-data">
+                            <tr>
+                                <th>Username</th>
+                                <td>
+                                    {% if not request.user.is_superuser %}
+                                        <a href="{% url 'acp_user_view' user=target_user.id %}">{{target_user.username}}</a>
+                                    {% else %}
+                                        <a href="/admin/auth/user/{{target_user.id}}" target="_blank">{{target_user.username}}</a>
+
+                                        <a href="{% url 'admin:leadgalaxy_userprofile_change' target_user.profile.id %}" class="pull-right" target="_blank">
+                                            <i class="fa fa-external-link-top" style=" margin-top:4px;margin-right:2px"></i> Profile
+                                        </a>
+
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Email</th>
+                                <td>
+                                    {{ target_user.email | urlize }}
+
+                                    {% if not target_user.is_active %}
+                                        <strong class="text-danger"> (Inactive)</strong>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Plan</th>
+                                <td>
+                                    <span title="Plan ID: {{ target_user.profile.plan_id }}">{{target_user.profile.plan.title}}</span>
+
+                                    {% if target_user.is_subuser %}
+                                    <br><b>{{target_user.profile.subuser_parent.profile.plan.title}}</b><br>
+                                    Parent: <a href="{% url 'acp_search_view' %}?q={{target_user.profile.subuser_parent.email}}"
+                                               target="_blank">
+                                            {{target_user.profile.subuser_parent.username}}</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Join Date</th>
+                                <td>
+                                    {{target_user.date_joined|date}}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Last Login</th>
+                                <td>
+                                    {{target_user.last_login|date}}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Last Seen</th>
+                                <td>
+                                    {{user_last_seen}}
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>PLoD User?</th>
+                                <td>
+                                    {% if not target_user.is_subuser %}
+                                        {% if target_user.profile.private_label or target_user.profile.dropified_private_label %}Yes{% else %}No{% endif %}
+                                    {% else %}
+                                        Sub User, check parent account
+                                    {% endif %}
+
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <th>Actions</th>
+                                <td>
+                                    {% if request.user.is_superuser %}
+                                        <a href="/hijack/{{target_user.id}}/" class="btn btn-success btn-outline btn-xs m-r-xs">Login with</a>
+                                    {% else %}
+                                        <a href="#" class="btn btn-success btn-outline btn-xs m-r-xs login-as" user-id="{{target_user.id}}">Login with</a>
+                                    {% endif %}
+
+                                    <a href="https://dashboard.stripe.com/search?query={{target_user.email|urlencode}}" target="_blank" class="btn btn-primary btn-outline btn-xs">Stripe</a>
+                                    <a href="#" class="intercom-btn btn btn-primary btn-outline btn-xs" data-email="{{target_user.email}}" target="_blank">Intercom</a>
+
+                                    <div class="btn-group m-l-xs">
+
+                                        <a class="btn btn-default btn-outline btn-xs dropdown-toggle" data-toggle="dropdown" href="#">
+                                            Options <span class="caret"></span>
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-user">
+                                            {% if request.user.is_superuser %}
+                                            <li><a href="{% url 'admin:leadgalaxy_planregistration_changelist' %}?q={{target_user.email|urlencode}}" target="_blank">Registration Links</a></li>
+                                            <li><a href="{% url 'admin:leadgalaxy_planpayment_changelist' %}?q={{target_user.email|urlencode}}" target="_blank">Payments</a></li>
+                                            <li><a href="{% url 'admin:stripe_subscription_stripecustomer_changelist' %}?q={{target_user.email|urlencode}}" target="_blank">Stripe Customer</a></li>
+                                            {% endif %}
+                                            <li class="divider"></li>
+                                            <li><a href="#" class="change-plan-btn" user-id="{{target_user.id}}">Change Plan</a></li>
+                                            <li><a href="#" class="add-bundle-btn" user-id="{{target_user.id}}">Add Bundle</a></li>
+                                            <li class="divider"></li>
+                                            <li><a href="#" class="toggle-plod" user-id="{{target_user.id}}">Toggle PLoD</a></li>
+                                            <li><a href="#" class="allow-trial-btn" user-id="{{target_user.id}}">Allow Free Trial</a></li>
+                                            <li><a href="#" class="release-sub-user" user-id="{{target_user.id}}">Release Sub User</a></li>
+                                            <li><a href="#" class="reset-auto-fulfill" user-id="{{target_user.id}}">Reset Auto Fulfill Limit</a></li>
+                                            <li class="divider"></li>
+                                            {% if target_user.is_active %}
+                                            <li><a href="#" class="deactivate-account btn-danger btn-outline text-danger" user-id="{{target_user.id}}" username="{{target_user.username}}">Deactivate Account</a></li>
+                                            {% else %}
+                                            <li><a href="#" class="activate-account btn-success btn-outline text-danger" user-id="{{target_user.id}}" username="{{target_user.username}}">Activate Account</a></li>
+                                            {% endif %}
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+
+                {% with product_count=request.GET.pcount %}
+                    <div class="col-md-6">
+                        <table class="table table-striped table-bordered user-data">
+                            <tr>
+                                <th>Shopify</th>
+                                <td>
+                                        <a href="{% url 'admin:leadgalaxy_shopifystore_changelist' %}?q={{target_user.email|urlencode}}">
+                                            {{target_user.profile.get_shopify_stores.count}} Stores
+                                        </a>
+
+                                        {% if product_count %}
+                                            <span style="float:right">{{target_user.shopifyproduct_set.count}} Products</span>
+                                        {% else %}
+                                            <a style="float:right" href="{% url_replace 'pcount' 1 %}">Show Products Count</a>
+                                        {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>CommerceHQ</th>
+                                <td>
+                                    <a href="{% url 'admin:commercehq_core_commercehqstore_changelist' %}?q={{target_user.email|urlencode}}">
+                                            {{target_user.profile.get_chq_stores.count}} Stores
+                                    </a>
+
+                                    {% if product_count %}
+                                        <span style="float:right">{{target_user.commercehqproduct_set.count}} Products</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>WooCommerce</th>
+                                <td>
+                                    <a href="{% url 'admin:woocommerce_core_woostore_changelist' %}?q={{target_user.email|urlencode}}">
+                                            {{target_user.profile.get_woo_stores.count}} Stores
+                                    </a>
+
+                                    {% if product_count %}
+                                        <span style="float:right">{{target_user.wooproduct_set.count}} Products</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>GrooveKart</th>
+                                <td>
+                                    <a href="{% url 'admin:groovekart_core_groovekartstore_changelist' %}?q={{target_user.email|urlencode}}">
+                                            {{target_user.profile.get_gkart_stores.count}} Stores
+                                    </a>
+
+                                    {% if product_count %}
+                                        <span style="float:right">{{target_user.groovekartproduct_set.count}} Products</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>BigCommerce</th>
+                                <td style=" white-space:nowrap">
+                                    <a href="{% url 'admin:bigcommerce_core_bigcommercestore_changelist' %}?q={{target_user.email|urlencode}}">
+                                            {{target_user.profile.get_bigcommerce_stores.count}} Stores
+                                    </a>
+
+                                    {% if product_count %}
+                                        <span style="float:right">{{target_user.bigcommerceproduct_set.count}} Products</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Bundles</th>
+                                <td>
+                                    <ul style="margin: 0;padding: 0 0 0 15px;">
+                                        {% for bundle in target_user.profile.bundles.all %}
+                                        <li>{{bundle.title}}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Addons</th>
+                                <td>
+                                    {% for bundle in target_user.profile.addons.all %}
+                                    <div class="row user-addon">
+                                        <div class="col-md-10">
+                                            {{bundle.title}}
+                                        </div>
+
+                                        <div class="col-md-2 text-right">
+                                            <a href="#"
+                                               data-addon-id="{{ bundle.id }}"
+                                               data-title="{{ bundle.title }}"
+                                               data-user-id="{{ target_user.id }}"
+                                               class="btn-remove-addon text-danger no-wrap">
+                                                <i class="fa fa-times-circle"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Offered Coupons</th>
+                                <td>
+                                    <ul style="margin: 0;padding: 0 0 0 15px;">
+                                        {% for offer in target_user.purchases.all %}
+                                        <li>
+                                            {{ offer.coupon.name }}
+                                            {% if offer.coupon.stripe_coupon_id == stripe_customer.discount.coupon.id %}
+                                            <span class="label label-primary">Active</span>
+                                            {% endif %}
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                {% endwith %}
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="tabs-container">
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li class="active"><a class="nav-link active" data-toggle="tab" href="#tab-1">Stripe Subscriptions ({{ subscriptions|length }})</a></li>
+                                <li><a class="nav-link" data-toggle="tab" href="#tab-2">Stripe Charges ({{ last_charges|length }})</a></li>
+                                <li><a class="nav-link" data-toggle="tab" href="#tab-3">Stripe Customer ({{ customer_ids|length }})</a></li>
+                                <li><a class="nav-link" data-toggle="tab" href="#tab-4">Shopify Subscriptions ({{ shopify_charges|length }})</a></li>
+                                <li><a class="nav-link" data-toggle="tab" href="#tab-5">Shopify Charges ({{ shopify_application_charges|length }})</a></li>
+                                <li><a class="nav-link" data-toggle="tab" href="#tab-6">Lifetime Purchases ({{ registrations|length }})</a></li>
+                                <li><a class="nav-link" data-toggle="tab" href="#tab-7"> Account Setup Link ({{ account_registration | yesno:'1,0' }})</a></li>
+                            </ul>
+                            <div class="tab-content">
+                                <div role="tabpanel" id="tab-1" class="tab-pane active">
+                                    <div class="panel-body">{% include 'acp/partial/stripe_subscriptions.html' %}</div>
+                                </div>
+
+                                <div role="tabpanel" id="tab-2" class="tab-pane">
+                                    <div class="panel-body">{% include 'acp/partial/stripe_charges.html' %}</div>
+                                </div>
+
+                                <div role="tabpanel" id="tab-3" class="tab-pane">
+                                    <div class="panel-body">{% include 'acp/partial/stripe_customer.html' %}</div>
+                                </div>
+
+                                <div role="tabpanel" id="tab-4" class="tab-pane">
+                                    <div class="panel-body">{% include 'acp/partial/shopify_subscriptions.html' %}</div>
+                                </div>
+
+                                <div role="tabpanel" id="tab-5" class="tab-pane">
+                                    <div class="panel-body">{% include 'acp/partial/shopify_charges.html' %}</div>
+                                </div>
+
+                                <div role="tabpanel" id="tab-6" class="tab-pane">
+                                    <div class="panel-body">{% include 'acp/partial/lifetime_purchases.html' %}</div>
+                                </div>
+
+                                <div role="tabpanel" id="tab-7" class="tab-pane">
+                                    <div class="panel-body">{% include 'acp/partial/password_setup.html' %}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        {% if addon_logs %}
+            <div class="ibox float-e-margins addon-logs">
+                <div class="ibox-title">
+                    <h2>Addon logs</h2>
+                    <div class="ibox-tools">
+                        <a class="collapse-link"><i class="fa fa-chevron-down"></i></a>
+                    </div>
+                </div>
+                <div id="addon-logs-content" class="ibox-content" style="display: none;">
+                    {% for log in addon_logs %}
+                        <p class="log">{{ log.text }}</p>
+                    {% endfor %}
+                    <a id="more-show">Show more</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div id="modal-plan-select" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Change Plan</h3>
+
+                        <label for="send-select-store">Select Plan:</label>
+                        <select class="form-control" name="selected-actions" id="plan-change-select" style="display: inline-block; width: 191px; ">
+                            {% for item in plans %}
+                            <option value="{{target_user.id}}">{{target_user.title}}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button id="change-plan-apply" class="btn btn-primary" style="margin-bottom: 5px; margin-left: 25px;">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="modal-bundle-select" class="modal" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Add Bundle</h3>
+
+                        <label for="send-select-store">Select Plan:</label>
+                        <select class="form-control" name="selected-actions"
+                                id="bundle-change-select" style="display:inline-block;width:191px">
+                            {% for item in bundles %}
+                            <option value="{{target_user.id}}">{{target_user.title}}</option>
+                            {% endfor %}
+                        </select>
+
+                        <button id="select-bundle-apply" class="btn btn-primary"
+                                style="margin-bottom:5px;margin-left:25px">Add Bundle</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+    tbody td {
+        padding: 0px;
+        margin: 0px;
+    }
+
+    .user-profile-btn {
+        margin-right: 5px;
+    }
+
+    .user-data td {
+        vertical-align: middle !important;
+    }
+
+    .addon-logs .ibox-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .tabs-container .tab-pane .panel-body {
+        min-height: 250px;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <script src="{% static 'acp/js/user_info.js' %}" type="text/javascript"></script>
+{% endblock %}

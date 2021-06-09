@@ -9,13 +9,14 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
+from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
 from addons_core.models import AddonUsage
 from last_seen.models import LastSeen
-from leadgalaxy.models import UserProfile, AdminEvent, AccountRegistration, PlanRegistration, GroupPlan, FeatureBundle
+from leadgalaxy.models import AdminEvent, AccountRegistration, PlanRegistration, GroupPlan, FeatureBundle
 from leadgalaxy.shopify import ShopifyAPI
 from shopified_core.utils import safe_int, url_join, hash_list
 from stripe_subscription.stripe_api import stripe
@@ -56,18 +57,12 @@ class ACPUserSearchView(BaseTemplateView):
         ctx['breadcrumbs'].extend(["Search"])
 
         request = self.request
-        random_cache = 0
         q = request.GET.get('q') or request.GET.get('user') or request.GET.get('store')
-
-        if q or cache.get('template.cache.acp_users.invalidate'):
-            random_cache = arrow.now().timestamp
 
         users = User.objects.select_related('profile').defer('profile__config').order_by('-date_joined')
 
         if request.GET.get('plan', None):
             users = users.filter(profile__plan_id=request.GET.get('plan'))
-
-        registrations_email = None
 
         if q:
             if request.GET.get('store'):
@@ -113,148 +108,174 @@ class ACPUserSearchView(BaseTemplateView):
 
                     users = limited_users
 
-            profiles = UserProfile.objects.filter(user__in=users)
-
-            if '@' in q:
-                registrations_email = q
-
             AdminEvent.objects.create(
                 user=request.user,
                 event_type='user_search',
                 target_user=users[0] if len(users) == 1 else None,
                 data=json.dumps({'query': q}))
 
+        if len(users) == 1:
+            self.redirect_url = reverse('acp_user_view', kwargs={'user': users[0].id})
         else:
-            profiles = UserProfile.objects.filter(user__in=users)
+            self.redirect_url = None
+
+        ctx.update({
+            'q': q,
+            'users': users,
+            'users_count': len(users),
+        })
+
+        return ctx
+
+    def get(self, request, *args, **kwargs):
+        response = super().get(request, args, kwargs)
+
+        if self.redirect_url:
+            return HttpResponseRedirect(self.redirect_url)
+        else:
+            return response
+
+
+class ACPUserInfoView(BaseTemplateView):
+    template_name = 'acp/user_info.html'
+
+    def get_context_data(self, **kwargs: dict) -> dict:
+        ctx = super().get_context_data(**kwargs)
+
+        target_user = User.objects.get(id=kwargs['user'])
+
+        AdminEvent.objects.create(
+            user=self.request.user,
+            event_type='user_view',
+            target_user=target_user,
+            data=json.dumps({'user': target_user.id}))
+
+        ctx['breadcrumbs'].extend(["View", target_user.email])
 
         charges = []
         subscriptions = []
         registrations = []
-        user_last_seen = None
         customer_ids = []
-        customer_id = request.GET.get('customer_id')
+        customer_id = self.request.GET.get('customer_id')
         stripe_customer = None
         shopify_charges = []
         shopify_application_charges = []
-        account_registration = None
-        logs = []
+        addon_logs = []
 
-        if len(users) == 1:
-            target_user = users[0]
-            target_user.profile.ensure_has_plan()
+        target_user.profile.ensure_has_plan()
 
-            for addon_usage in AddonUsage.objects.select_related('billing__addon').filter(user=target_user.id):
-                if addon_usage.created_at:
-                    logs.append({
-                        'key': arrow.get(addon_usage.created_at),
-                        'text': '{} addon is installed at {}'
-                        .format(addon_usage.billing.addon.title, arrow.get(addon_usage.created_at).format('MM/DD/YYYY HH:mm'))
-                    })
+        for addon_usage in AddonUsage.objects.select_related('billing__addon').filter(user=target_user.id):
+            if addon_usage.created_at:
+                addon_logs.append({
+                    'key': arrow.get(addon_usage.created_at),
+                    'text': '{} addon is installed at {}'
+                    .format(addon_usage.billing.addon.title, arrow.get(addon_usage.created_at).format('MM/DD/YYYY HH:mm'))
+                })
 
-                if addon_usage.cancelled_at:
-                    logs.append({
-                        'key': arrow.get(addon_usage.cancelled_at),
-                        'text': '{} addon is uninstalled at {}'
-                        .format(addon_usage.billing.addon.title, arrow.get(addon_usage.cancelled_at).format('MM/DD/YYYY HH:mm'))
-                    })
+            if addon_usage.cancelled_at:
+                addon_logs.append({
+                    'key': arrow.get(addon_usage.cancelled_at),
+                    'text': '{} addon is uninstalled at {}'
+                    .format(addon_usage.billing.addon.title, arrow.get(addon_usage.cancelled_at).format('MM/DD/YYYY HH:mm'))
+                })
 
-            def extract_time(json_obj):
-                try:
-                    return json_obj['key']
-                except KeyError:
-                    return 0
-
-            logs.sort(key=extract_time, reverse=True)
-
-            account_registration = AccountRegistration.objects.filter(user=target_user).first()
-
-            rep = requests.get('https://dashboard.stripe.com/v1/search', params={
-                'count': 20,
-                'include[]': 'total_count',
-                'query': 'is:customer {}'.format(target_user.email),
-                'facets': 'true'
-            }, headers={
-                'authorization': 'Bearer {}'.format(settings.STRIPE_SECRET_KEY),
-                'content-type': 'application/x-www-form-urlencoded',
-            })
-
+        def extract_time(json_obj):
             try:
-                rep.raise_for_status()
+                return json_obj['key']
+            except KeyError:
+                return 0
 
-                if rep.json()['count'] > 0:
-                    for c in rep.json()['data']:
-                        customer_ids.append({'id': c['id'], 'email': c['email']})
-            except:
-                capture_exception(level='warning')
+        addon_logs.sort(key=extract_time, reverse=True)
 
-            if customer_id:
-                found = False
-                for i in customer_ids:
-                    if customer_id == i['id']:
-                        found = True
-                        break
+        account_registration = AccountRegistration.objects.filter(user=target_user).first()
 
-                assert found
+        rep = requests.get('https://dashboard.stripe.com/v1/search', params={
+            'count': 20,
+            'include[]': 'total_count',
+            'query': 'is:customer {}'.format(target_user.email),
+            'facets': 'true'
+        }, headers={
+            'authorization': 'Bearer {}'.format(settings.STRIPE_SECRET_KEY),
+            'content-type': 'application/x-www-form-urlencoded',
+        })
 
-            if not customer_id:
-                if target_user.have_stripe_billing():
-                    customer_id = target_user.stripe_customer.customer_id
-                elif len(customer_ids):
-                    customer_id = customer_ids[0]['id']
+        try:
+            rep.raise_for_status()
 
-            invoices = {}
-            if customer_id:
-                for i in stripe.Charge.list(limit=10, customer=customer_id, expand=['data.dispute']).data:
-                    charge = {
-                        'id': i.id,
-                        'date': arrow.get(i.created).format('MM/DD/YYYY HH:mm'),
-                        'date_str': arrow.get(i.created).humanize(),
-                        'status': i.status,
-                        'dispute': i.dispute,
-                        'failure_message': i.failure_message,
-                        'amount': '${:0.2f}'.format(i.amount / 100.0),
-                        'amount_refunded': '${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
-                        'receipt_number': i.receipt_number,
-                        'receipt_url': i.receipt_url,
+            if rep.json()['count'] > 0:
+                for c in rep.json()['data']:
+                    customer_ids.append({'id': c['id'], 'email': c['email']})
+        except:
+            capture_exception(level='warning')
+
+        if customer_id:
+            found = False
+            for i in customer_ids:
+                if customer_id == i['id']:
+                    found = True
+                    break
+
+            assert found
+
+        if not customer_id:
+            if target_user.have_stripe_billing():
+                customer_id = target_user.stripe_customer.customer_id
+            elif len(customer_ids):
+                customer_id = customer_ids[0]['id']
+
+        invoices = {}
+        if customer_id:
+            for i in stripe.Charge.list(limit=10, customer=customer_id, expand=['data.dispute']).data:
+                charge = {
+                    'id': i.id,
+                    'date': arrow.get(i.created).format('MM/DD/YYYY HH:mm'),
+                    'date_str': arrow.get(i.created).humanize(),
+                    'status': i.status,
+                    'dispute': i.dispute,
+                    'failure_message': i.failure_message,
+                    'amount': '${:0.2f}'.format(i.amount / 100.0),
+                    'amount_refunded': '${:0.2f}'.format(i.amount_refunded / 100.0) if i.amount_refunded else None,
+                    'receipt_number': i.receipt_number,
+                    'receipt_url': i.receipt_url,
+                }
+
+                if i.invoice:
+                    if i.invoice in invoices:
+                        inv = invoices[i.invoice]
+                    else:
+                        inv = stripe.Invoice.retrieve(i.invoice)
+                        invoices[i.invoice] = inv
+
+                    charge['invoice'] = {
+                        'id': inv.id,
+                        'url': inv.hosted_invoice_url,
                     }
 
-                    if i.invoice:
-                        if i.invoice in invoices:
-                            inv = invoices[i.invoice]
-                        else:
-                            inv = stripe.Invoice.retrieve(i.invoice)
-                            invoices[i.invoice] = inv
+                charges.append(charge)
 
-                        charge['invoice'] = {
-                            'id': inv.id,
-                            'url': inv.hosted_invoice_url,
-                        }
+            for i in stripe.Subscription.list(customer=customer_id).data:
+                subscriptions.append(i)
 
-                    charges.append(charge)
+            stripe_customer = stripe.Customer.retrieve(customer_id)
+            stripe_customer.account_balance = stripe_customer.account_balance / 100.0
 
-                for i in stripe.Subscription.list(customer=customer_id).data:
-                    subscriptions.append(i)
+        registrations_email = target_user.email
 
-                stripe_customer = stripe.Customer.retrieve(customer_id)
-                stripe_customer.account_balance = stripe_customer.account_balance / 100.0
+        try:
+            user_last_seen = arrow.get(LastSeen.objects.when(target_user, 'website')).humanize()
+        except:
+            user_last_seen = ''
 
-            registrations_email = target_user.email
+        if target_user.profile.plan.is_shopify:
+            for store in target_user.profile.get_shopify_stores():
+                try:
+                    for charge in ShopifyAPI(store).recurring_charges():
+                        shopify_charges.append(charge)
 
-            try:
-                user_last_seen = arrow.get(LastSeen.objects.when(target_user, 'website')).humanize()
-            except:
-                user_last_seen = ''
-
-            if target_user.profile.plan.is_shopify:
-                for store in target_user.profile.get_shopify_stores():
-                    try:
-                        for charge in ShopifyAPI(store).recurring_charges():
-                            shopify_charges.append(charge)
-
-                        for charge in ShopifyAPI(store).application_charges():
-                            shopify_application_charges.append(charge)
-                    except:
-                        pass
+                    for charge in ShopifyAPI(store).application_charges():
+                        shopify_application_charges.append(charge)
+                except:
+                    pass
 
         if registrations_email:
             for i in PlanRegistration.objects.filter(email__iexact=registrations_email):
@@ -264,19 +285,15 @@ class ACPUserSearchView(BaseTemplateView):
                 registrations.append(i)
 
             if subscriptions and registrations:
-                messages.warning(request, 'You have to cancel monthly subscription if the user is on Lifetime plan')
+                messages.warning(self.request, 'You have to cancel monthly subscription if the user is on Lifetime plan')
 
-        plans = GroupPlan.objects.all().order_by('-id')
         bundles = FeatureBundle.objects.all().order_by('-id')
 
         ctx.update({
-            'q': q,
-            'users': users,
-            'logs': logs,
-            'plans': plans,
+            'target_user': target_user,
+            'addon_logs': addon_logs,
             'bundles': bundles,
-            'profiles': profiles,
-            'users_count': len(users),
+            'plans': GroupPlan.objects.all().order_by('-id'),
             'customer_id': customer_id,
             'customer_ids': customer_ids,
             'stripe_customer': stripe_customer,
@@ -286,9 +303,8 @@ class ACPUserSearchView(BaseTemplateView):
             'shopify_charges': shopify_charges,
             'account_registration': account_registration,
             'shopify_application_charges': shopify_application_charges,
-            'random_cache': random_cache,
             'user_last_seen': user_last_seen,
-            'show_products': request.GET.get('products'),
+            'show_products': self.request.GET.get('products'),
         })
 
         return ctx

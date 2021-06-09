@@ -1,0 +1,26 @@
+{% if registrations %}
+    <table class="table table-striped table-hover">
+        <thead>
+        <tr>
+            <th>Purchases</th>
+            <th>Date</th>
+            <th>Used</th>
+            <th>Options</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for i in registrations %}
+            <tr>
+                <td>{{ i }}</td>
+                <td><span class="itooltip" title="{{ i.date }}">{{ i.date_str }}</span></td>
+                <td>{{ i.expired|yesno:'Yes,No' }}</td>
+                <td>
+                    <a href="#" class="btn btn-xs btn-info registration-apply-btn"
+                       user-id="{{ target_user.id }}"
+                       register-id="{{ i.id }}">Apply</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}

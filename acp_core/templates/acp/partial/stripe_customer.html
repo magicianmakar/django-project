@@ -1,0 +1,54 @@
+{% load template_helper %}
+
+{% if customer_ids %}
+    <div class="row">
+        <form action="{{ request.get_full_path }}">
+            {% for k, v in request.GET.items %}
+                {% if k != 'customer_id' %}
+                    <input type="hidden" name="{{ k }}" value="{{ v }}">
+                {% endif %}
+            {% endfor %}
+
+            <div class="col-md-3">
+                <select class="form-control" name="customer_id" id="customer_id">
+                    {% for i in customer_ids %}
+                        <option value="{{ i.id }}" {% if customer_id == i.id %}selected{% endif %}>
+                            {{ i.email }} -- {{ i.id }} {% if target_user.is_stripe_customer and i.id == target_user.stripe_customer.customer_id %}
+                            (current){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-1" style="padding:0">
+                {% if stripe_customer %}
+                    Balance: <b>{% money_format stripe_customer.account_balance %}</b>
+                    {% include 'partial/help_tooltip.html' with help="This balance will be applied to any future invoice.<br><br><b>Negative balance</b> will appear as creadit (or can be refunded upon user request)<br><br><b>Positive balance</b> will appear as additional charge (not used by Dropified)" %}
+                    <br>
+                    Have CC: <b>{{ stripe_customer.sources|yesno:'Yes,No' }}</b>
+                {% endif %}
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-success btn-sm" style="margin-top:2px">View</button>
+
+                {% if stripe_customer and stripe_customer.account_balance %}
+                    <a href="#" class="btn btn-info btn-sm reset-customer-balance-btn" style="margin-top:2px"
+                       customer-id="{{ customer_id }}" user-id="{{ target_user.id }}">Reset Balance</a>
+                {% endif %}
+
+                {% if target_user.is_stripe_customer %}
+                    <a href="#" class="btn btn-warning btn-sm change-customer-id-btn" style="margin-top:2px"
+                       customer-id="{{ customer_id }}" user-id="{{ target_user.id }}">Change Customer ID</a>
+
+                    {% if target_user.profile.from_shopify_app_store %}
+                        <a href="#" class="btn btn-info btn-sm convert-to-stripe-btn" style="margin-top:2px"
+                           customer-id="{{ customer_id }}" user-id="{{ target_user.id }}" data-convert="true">Convert To Stripe</a>
+                    {% endif %}
+                {% else %}
+                    <a href="#" class="btn btn-warning btn-sm change-customer-id-btn" style="margin-top:2px"
+                       customer-id="{{ customer_id }}" user-id="{{ target_user.id }}" data-convert="true">Convert To Stripe User</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+{% endif %}

@@ -1,0 +1,51 @@
+{% if subscriptions %}
+    <table class="table table-striped table-hover">
+        <thead>
+        <tr>
+            <th>Plan</th>
+            <th>Status</th>
+            <th>Options</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for i in subscriptions %}
+            <tr>
+                <td>
+                    {% if i.plan.name %}
+                        {{ i.plan.name }}
+                    {% else %}
+                        {% for item in i.items.data %}
+                            {{ target_user.plan.name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                </td>
+                <td>
+                    {{ i.status }}
+                    {% if i.cancel_at_period_end %}
+                        (Cancel at period end)
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-xs btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true"
+                                aria-expanded="false">
+                            Cancel Subscription <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li class="text-danger">
+                                <a href="#" class="cancel-subscription-btn" user-id="{{ target_user.id }}" charge-id="{{ i.id }}"
+                                   data-cancel-now="true">Cancel now</a>
+                            </li>
+
+                            <li class="text-danger">
+                                <a href="#" class="cancel-subscription-btn" user-id="{{ target_user.id }}" charge-id="{{ i.id }}">Cancel when billing
+                                    cycle end</a>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
