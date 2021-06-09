@@ -101,7 +101,11 @@ class APIRequest():
             return self.get_response(api, remaining_tries=remaining_tries - 1)
 
         except Exception as e:
-            capture_exception()
+            capture_exception(extra={
+                'errorcode': getattr(e, 'errorcode', None),
+                'subcode': getattr(e, 'subcode', None),
+                'message': getattr(e, 'message', None),
+            })
 
             if e.errorcode == 7 and 'call limited' in e.message.lower():
                 seconds = re.findall(r'(\d+).+?(?=seconds)', e.submsg)
