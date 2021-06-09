@@ -5581,6 +5581,13 @@
         "description": "Tools page under Business category"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 149,
+    "fields": {
+        "name": "send_to_store.use",
+        "description": "Send products to store"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {

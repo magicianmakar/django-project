@@ -292,6 +292,9 @@ class BigCommerceStoreApi(ApiBase):
             if not user.can('send_to_bigcommerce.sub', store):
                 raise PermissionDenied()
 
+            if not user.can('send_to_store.use'):
+                raise PermissionDenied()
+
         try:
             product = BigCommerceProduct.objects.get(pk=safe_int(data.get('product')))
         except BigCommerceProduct.DoesNotExist:
