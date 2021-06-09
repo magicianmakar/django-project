@@ -162,7 +162,7 @@ $(document).ready(function(){
     });
 
     $("#id_store_type").change(function() {
-        var val = $(this).val();
+        var val = $(this).val() || 'shopify';
         var stores = storeData[val];
 
         $('#id_store_list').find('option').remove().end();
