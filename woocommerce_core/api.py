@@ -442,6 +442,9 @@ class WooStoreApi(ApiBase):
             if not user.can('send_to_woo.sub', store):
                 raise PermissionDenied()
 
+            if not user.can('send_to_store.use'):
+                raise PermissionDenied()
+
         try:
             product = WooProduct.objects.get(pk=safe_int(data.get('product')))
         except WooProduct.DoesNotExist:

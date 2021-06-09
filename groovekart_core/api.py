@@ -351,6 +351,9 @@ class GrooveKartApi(ApiBase):
         if not user.can('send_to_gkart.sub', store):
             raise PermissionDenied()
 
+        if not user.can('send_to_store.use'):
+            raise PermissionDenied()
+
         product_id = safe_int(data.get('product'))
 
         try:

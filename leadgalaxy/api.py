@@ -209,8 +209,11 @@ class ShopifyStoreApi(ApiBase):
 
             if self.target == 'save-for-later' and not user.can('save_for_later.sub', store):
                 raise PermissionDenied()
-            elif self.target in ['shopify', 'shopify-update'] and not user.can('send_to_shopify.sub', store):
-                raise PermissionDenied()
+            elif self.target in ['shopify', 'shopify-update']:
+                if not user.can('send_to_shopify.sub', store):
+                    raise PermissionDenied()
+                if not user.can('send_to_store.use'):
+                    raise PermissionDenied()
 
         delayed = data.get('b')
 

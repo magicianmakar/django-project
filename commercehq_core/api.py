@@ -64,6 +64,9 @@ class CHQStoreApi(ApiBase):
             if not user.can('send_to_chq.sub', store):
                 raise PermissionDenied()
 
+            if not user.can('send_to_store.use'):
+                raise PermissionDenied()
+
             tasks.product_export.apply_async(
                 args=[data.get('store'), data.get('product'), user.id, data.get('publish')],
                 countdown=0,
