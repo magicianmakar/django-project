@@ -390,7 +390,7 @@ $(document).ready(function () {
                 return false;
             }
 
-            inputValue = parseFloat(inputValue)
+            inputValue = parseFloat(inputValue);
             if (!inputValue) {
                 swal.showInputError("The entered amount is invalid.");
                 return false;
@@ -502,7 +502,7 @@ $(document).ready(function () {
                 },
             }).done(function (data) {
                 toastr.success('Reseted!', 'Customer Balance');
-                window.location.reload()
+                window.location.reload();
                 swal.close();
             }).fail(function (data) {
                 displayAjaxError('Customer Balance', data);
