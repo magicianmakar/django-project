@@ -875,7 +875,8 @@ def boards_list(request):
 
     store = utils.get_store_from_request(request)
     if not store:
-        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'boards_list'}))
+        if request.user.profile.get_stores_count():
+            return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'boards_list'}))
 
     search_title = request.GET.get('search') or None
     user_boards_list = request.user.models_user.shopifyboard_set.all()
