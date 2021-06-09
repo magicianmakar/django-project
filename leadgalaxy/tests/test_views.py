@@ -170,6 +170,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
     def setUp(self):
         self.error_message = "Permission Denied: You don't have permission to perform this action"
         self.parent_user = f.UserFactory()
+        self.parent_user.profile.plan.permissions.add(f.AppPermissionFactory(name='send_to_store.use', description=''))
         self.user = f.UserFactory()
         self.user.profile.subuser_parent = self.parent_user
         self.user.profile.save()

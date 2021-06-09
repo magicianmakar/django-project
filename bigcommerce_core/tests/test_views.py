@@ -942,6 +942,7 @@ class ApiTestCase(BaseTestCase):
 
     @patch('bigcommerce_core.tasks.product_export.apply_async')
     def test_post_product_export(self, product_export):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='send_to_store.use', description=''))
         product = BigCommerceProductFactory(store=self.store, user=self.user, source_id=12345678)
         data = {
             'store': self.store.id,

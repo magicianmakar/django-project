@@ -528,6 +528,7 @@ class SubuserpermissionsApiTestCase(BaseTestCase):
     def setUp(self):
         self.error_message = "Permission Denied: You don't have permission to perform this action"
         self.parent_user = UserFactory()
+        self.parent_user.profile.plan.permissions.add(AppPermissionFactory(name='send_to_store.use', description=''))
         self.user = UserFactory()
         self.user.profile.subuser_parent = self.parent_user
         self.user.profile.save()
@@ -1375,6 +1376,7 @@ class ApiTestCase(BaseTestCase):
 
     @patch('commercehq_core.tasks.product_export.apply_async')
     def test_post_product_export(self, product_export):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='send_to_store.use', description=''))
         product = CommerceHQProductFactory(store=self.store, user=self.user, source_id=12345678)
         data = {
             'store': self.store.id,

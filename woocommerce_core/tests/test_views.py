@@ -1023,6 +1023,7 @@ class ApiTestCase(BaseTestCase):
 
     @patch('woocommerce_core.tasks.product_export.apply_async')
     def test_post_product_export(self, product_export):
+        self.user.profile.plan.permissions.add(AppPermissionFactory(name='send_to_store.use', description=''))
         product = WooProductFactory(store=self.store, user=self.user)
         data = {
             'store': self.store.id,
