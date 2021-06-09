@@ -221,8 +221,6 @@ def create_user_without_signals(**kwargs):
 
 
 def register_new_user(email, fullname, intercom_attributes=None, without_signals=False):
-    from shopified_core.tasks import requests_async
-
     first_name = ''
     last_name = ''
 
@@ -269,43 +267,6 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
             },
             is_async=True,
         )
-
-        if not settings.DEBUG and settings.INTERCOM_ACCESS_TOKEN:
-            headers = {
-                'Authorization': 'Bearer {}'.format(settings.INTERCOM_ACCESS_TOKEN),
-                'Accept': 'application/json'
-            }
-
-            data = {
-                "user_id": user.id,
-                "email": user.email,
-                "name": ' '.join(fullname),
-                "signed_up_at": arrow.utcnow().timestamp,
-                "custom_attributes": {}
-            }
-
-            if intercom_attributes and intercom_attributes.get('phone'):
-                data['phone'] = intercom_attributes['phone']
-                del intercom_attributes['phone']
-
-            try:
-                data['custom_attributes'].update({
-                    'plan': user.profile.plan.title
-                })
-            except:
-                pass
-
-            if intercom_attributes:
-                data['custom_attributes'].update(intercom_attributes)
-
-            requests_async.apply_async(
-                kwargs={
-                    'url': 'https://api.intercom.io/users',
-                    'method': 'post',
-                    'headers': headers,
-                    'json': data
-                },
-                queue='priority_high')
 
         return user, True
 

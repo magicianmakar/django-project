@@ -641,17 +641,16 @@ def clickfunnels_register(request):
         funnel_id = str(data['funnel_id'])
         funnel_step_id = str(data['funnel_step_id'])
 
-        if funnel_id != request.GET.get('funnel_id', '4600766') or funnel_step_id != request.GET.get('funnel_step_id', '25561209'):
+        if funnel_id != request.GET['funnel_id'] or funnel_step_id != request.GET['funnel_step_id']:
             return HttpResponse('Ignore Webhook')
 
-        intercom_attrs = {
-            "register_source": request.GET.get('register_source', 'clickfunnels'),
-            "register_medium": request.GET.get('register_medium', 'webhook'),
-        }
+        plan = GroupPlan.objects.get(id=request.GET['plan_id'])
 
-        user, created = utils.register_new_user(email, fullname, intercom_attributes=intercom_attrs)
+        user, created = utils.register_new_user(email, fullname)
 
         if created:
+            user.profile.change_plan(plan)
+
             capture_message(
                 'Clickfunnels Registration',
                 level='warning',
