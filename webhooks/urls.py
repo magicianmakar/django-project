@@ -24,7 +24,7 @@ urlpatterns = [
     path('gdpr-shopify/delete-store', webhooks.views.ShopifyGDPRDeleteStoreWebhook.as_view()),
 
     path('stripe/subs', webhooks.views.stripe_webhook),
-    path('clickfunnels/register', webhooks.views.clickfunnels_register),
+    path('clickfunnels/register/<int:funnel_id>/<int:funnel_step_id>/<int:plan_id>', webhooks.views.clickfunnels_register),
     path('clickfunnels/checklogin', webhooks.views.clickfunnels_checklogin),
     path('price-monitor/product', webhooks.views.price_monitor_webhook),
     path('slack/command', webhooks.views.slack_webhook),

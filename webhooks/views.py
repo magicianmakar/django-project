@@ -633,19 +633,17 @@ def stripe_webhook(request):
         return HttpResponse('Server Error', status=500)
 
 
-def clickfunnels_register(request):
+def clickfunnels_register(request, funnel_id, funnel_step_id, plan_id):
     try:
         data = json.loads(request.body)
 
         email = data['email']
         fullname = data['name']
-        funnel_id = str(data['funnel_id'])
-        funnel_step_id = str(data['funnel_step_id'])
 
-        if funnel_id != request.GET['funnel_id'] or funnel_step_id != request.GET['funnel_step_id']:
+        if funnel_id != int(data['funnel_id']) or funnel_step_id != int(data['funnel_step_id']):
             return HttpResponse('Ignore Webhook')
 
-        plan = GroupPlan.objects.get(id=request.GET['plan_id'])
+        plan = GroupPlan.objects.get(id=plan_id)
 
         user, created = utils.register_new_user(email, fullname)
 
@@ -673,6 +671,8 @@ def clickfunnels_register(request):
 
     except:
         capture_exception()
+
+    return HttpResponse('OK')
 
 
 def clickfunnels_checklogin(request):
