@@ -27,7 +27,7 @@ def home_page_view(request):
 
     if user.get_config('__plan'):
         free_plan = GroupPlan.objects.get(id=user.get_config('__plan'))
-        if user.profile.plan != free_plan and not user.profile.plan.free_plan:
+        if user.profile.plan != free_plan and user.profile.plan.free_plan:
             user.profile.change_plan(free_plan)
 
     aliexpress_shipping_method = config.get('aliexpress_shipping_method')
