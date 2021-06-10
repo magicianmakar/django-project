@@ -58,21 +58,29 @@
                             <tr>
                                 <th>Join Date</th>
                                 <td>
-                                    {{target_user.date_joined|date}}
+                                    {% date_humanize target_user.date_joined %}
                                 </td>
                             </tr>
 
                             <tr>
                                 <th>Last Login</th>
                                 <td>
-                                    {{target_user.last_login|date}}
+                                    {% if target_user.last_login %}
+                                        {% date_humanize target_user.last_login %}
+                                    {% else %}
+                                        <strong class="text-warning">N/A</strong>
+                                    {% endif %}
                                 </td>
                             </tr>
 
                             <tr>
                                 <th>Last Seen</th>
                                 <td>
-                                    {{user_last_seen}}
+                                    {% if user_last_seen %}
+                                        {% date_humanize user_last_seen %}
+                                    {% else %}
+                                        <strong class="text-warning">N/A</strong>
+                                    {% endif %}
                                 </td>
                             </tr>
 
@@ -330,7 +338,7 @@
                         <label for="send-select-store">Select Plan:</label>
                         <select class="form-control" name="selected-actions" id="plan-change-select" style="display: inline-block; width: 191px; ">
                             {% for item in plans %}
-                            <option value="{{target_user.id}}">{{target_user.title}}</option>
+                            <option value="{{item.id}}">{{item.title}}</option>
                             {% endfor %}
                         </select>
 
@@ -355,7 +363,7 @@
                         <select class="form-control" name="selected-actions"
                                 id="bundle-change-select" style="display:inline-block;width:191px">
                             {% for item in bundles %}
-                            <option value="{{target_user.id}}">{{target_user.title}}</option>
+                            <option value="{{item.id}}">{{item.title}}</option>
                             {% endfor %}
                         </select>
 

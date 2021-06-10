@@ -262,9 +262,9 @@ class ACPUserInfoView(BaseTemplateView):
         registrations_email = target_user.email
 
         try:
-            user_last_seen = arrow.get(LastSeen.objects.when(target_user, 'website')).humanize()
+            user_last_seen = LastSeen.objects.when(target_user, 'website')
         except:
-            user_last_seen = ''
+            user_last_seen = None
 
         if target_user.profile.plan.is_shopify:
             for store in target_user.profile.get_shopify_stores():
