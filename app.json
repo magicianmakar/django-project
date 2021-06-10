@@ -44,10 +44,6 @@
 
         "SENTRY_URL": "https://56ee6f4ecf714073b8608ec7697e8c88:06389ef924014d688d955666e7890f6d@sentry.io/145440",
 
-        "INTERCOM_ACCESS_TOKEN": "",
-        "INTERCOM_APP_ID": "",
-        "INTERCOM_SECRET_KEY": "",
-
         "BAREMETRICS_ACCESS_TOKEN": {"required": true},
         "BAREMETRICS_API_KEY": {"required": true},
         "BAREMETRICS_JWT_TOKEN_KEY": {"required": true},
