@@ -39,9 +39,9 @@
                     {% for item in users %}
                         <tr>
                             <td>
-                                <a href="{% url 'acp_user_view' user=item.id %}">{{item.username}}</a></td>
+                                <a href="{% url 'acp_user_view' user=item.id %}">{{ item.username }}</a></td>
                             <td>
-                                {{item.email}}
+                                {{ item.email | urlize }}
 
                                 {% if not item.is_active %}
                                     <strong class="text-danger"> (Inactive)</strong>
@@ -49,15 +49,29 @@
                             </td>
 
                             <td>
-                                <span class="plan-title" data-plan="{{item.profile.plan_id|default:''}}"></span>
+                                {% if item.profile.plan %}
+                                    {% if item.profile.plan.is_free %}
+                                        <span>{{ item.profile.plan.title }}</span>
+                                    {% else %}
+                                        <strong class="text-success">{{ item.profile.plan.title }}</strong>
+                                    {% endif %}
+
+                                    <i class="text-muted pull-right">{{ item.profile.plan.payment_gateway }}</i>
+                                {% else %}
+                                    <strong class="text-danger">N/A</strong>
+                                {% endif %}
                             </td>
 
                             <td>
-                                {{item.date_joined|date}}
+                                {% date_humanize item.date_joined %}
                             </td>
 
                             <td>
-                                {{item.last_login|date}}
+                                {% if item.last_login %}
+                                    {% date_humanize item.last_login %}
+                                {% else %}
+                                    <strong class="text-warning">N/A</strong>
+                                {% endif %}
                             </td>
                         </tr>
                     {% empty %}
@@ -113,23 +127,7 @@
     <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
 
     <script type="text/javascript">
-        var plans = {
-        {% for item in plans %}
-            '{{item.id}}': '{{item.title|escapejs}}',
-        {% endfor %}
-        };
-
         $(document).ready(function() {
-            function handleEvents() {
-                $('.plan-title').each(function (i, el) {
-                    if($(el).data('plan')) {
-                        $(el).empty().append($('<span>', {
-                            text: plans[$(el).data('plan')],
-                        }));
-                    }
-                });
-            }
-
             $('.dataTables').dataTable({
                 responsive: true,
                 autoWidth: false,
@@ -141,10 +139,6 @@
                     sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
                 }
             });
-
-            $('.dataTables').on('draw.dt', handleEvents);
-
-            handleEvents();
         });
     </script>
 {% endblock %}
