@@ -48,6 +48,7 @@ from shopify_orders import utils as shopify_orders_utils
 from shopify_orders.models import ShopifyOrder
 from stripe_subscription.utils import process_webhook_event
 from supplements.models import PLSOrder
+from webhooks.tasks import setup_free_account
 from webhooks.utils import ShopifyWebhookMixing
 
 
@@ -649,6 +650,12 @@ def clickfunnels_register(request, funnel_id, funnel_step_id, plan_id):
 
         if created:
             user.profile.change_plan(plan)
+            user.set_config('__plan', plan.id)
+
+            if data.get('phone'):
+                user.set_config('__phone', data.get('phone'))
+
+            setup_free_account.apply_async(args=[user.id], countdown=30)
 
             capture_message(
                 'Clickfunnels Registration',

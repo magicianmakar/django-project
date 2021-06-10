@@ -11,7 +11,7 @@ from alibaba_core.utils import get_access_token_url as get_alibaba_access_token_
 from shopified_core import permissions
 from shopified_core.utils import last_executed
 from shopified_core.mocks import get_mocked_config_alerts
-from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule, DashboardVideo
+from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule, DashboardVideo, GroupPlan
 from leadgalaxy.shopify import ShopifyAPI
 from goals.utils import get_dashboard_user_goals
 
@@ -24,6 +24,11 @@ def home_page_view(request):
     user = request.user
 
     config = user.models_user.profile.get_config()
+
+    if user.get_config('__plan'):
+        free_plan = GroupPlan.objects.get(id=user.get_config('__plan'))
+        if user.profile.plan != free_plan and not user.profile.plan.free_plan:
+            user.profile.change_plan(free_plan)
 
     aliexpress_shipping_method = config.get('aliexpress_shipping_method')
     epacket_shipping = config.get('epacket_shipping')
