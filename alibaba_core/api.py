@@ -1,6 +1,9 @@
+import arrow
+from django.conf import settings
 from django.core.cache import cache
 
 from shopified_core.mixins import ApiResponseMixin
+from shopified_core.models_utils import get_track_model
 from shopified_core.utils import safe_int
 
 from .decorators import can_access_store
@@ -17,6 +20,20 @@ class AlibabaApi(ApiResponseMixin):
 
         if not user.can('place_alibaba_orders.sub'):
             return self.api_error('Subuser not allowed to place orders in alibaba', status=403)
+
+        # Check for the store auto fulfill limit
+        parent_user = user.models_user
+        auto_fulfill_limit = parent_user.profile.plan.auto_fulfill_limit
+        limit_check_key = f'order_limit_{store.store_type}_{parent_user.id}'
+        if cache.get(limit_check_key) is None and auto_fulfill_limit != -1:
+            month_start = arrow.utcnow().floor('month').datetime
+            order_track = get_track_model(store_type=store.store_type)
+            orders_count = order_track.objects.filter(user=parent_user, created_at__gte=month_start).count()
+
+            if not settings.DEBUG and not auto_fulfill_limit or orders_count + 1 > auto_fulfill_limit:
+                return self.api_error('You have reached your plan auto fulfill limit', status=403)
+
+            cache.set(limit_check_key, arrow.utcnow().timestamp, timeout=3600)
 
         parent_user = user.models_user
         alibaba_account = parent_user.alibaba.first()
