@@ -70,13 +70,14 @@ class Command(DropifiedBaseCommand):
                         skip_user_ids.append(sale_transaction_fee.user.id)
                         capture_exception()
 
-                elif sale_transaction_fee.user.profile.from_shopify_app_store():
+                elif sale_transaction_fee.user.profile.from_shopify_app_store() and sale_transaction_fee.user.id not in skip_user_ids:
                     # shopify billing (using usage charge api)
                     charge_id = add_shopify_usage_invoice(sale_transaction_fee.user, 'sale_fee', sale_transaction_fee.fee_value,
                                                           "Order Sales Fee")
-
                     if charge_id:
                         sale_transaction_fee.processed = True
                         sale_transaction_fee.save()
+                    else:
+                        skip_user_ids.append(sale_transaction_fee.user.id)
             except:
                 capture_exception()
