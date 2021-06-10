@@ -541,6 +541,7 @@ def order_track_fulfillment(order_track, user_config=None):
     tracking_number = order_track.source_tracking
     carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
     country = cache.get('gkart_auto_country_{}_{}'.format(order_track.store.id, order_track.order_id))
+    send_email = user_config.get('send_shipping_confirmation')
 
     if country and country == 'US':
         if leadgalaxy_utils.is_chinese_carrier(tracking_number) or leadgalaxy_utils.shipping_carrier(tracking_number) == 'USPS':
@@ -557,6 +558,7 @@ def order_track_fulfillment(order_track, user_config=None):
         if fulfillment['tracking_number']:
             tracking_numbers = fulfillment['tracking_number'].split(',')
             tracking_numbers = [str(number) for number in tracking_numbers]
+            send_email = 'no'
         if fulfillment.get('carrier_name'):
             carrier_names = fulfillment['carrier_name'].split(',')
         if fulfillment.get('carrier_url'):
@@ -581,7 +583,6 @@ def order_track_fulfillment(order_track, user_config=None):
         'carrier_url': carrier_urls,
     }
 
-    send_email = user_config.get('send_shipping_confirmation')
     if send_email == 'no':
         fulfillment_data['send_email'] = False
     else:

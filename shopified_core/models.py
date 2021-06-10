@@ -380,7 +380,7 @@ class OrderTrackBase(models.Model):
             custom_tracking = self.user.get_config(self.CUSTOM_TRACKING_KEY).get(str(self.store_id), custom_tracking)
 
             if '{{tracking_number}}' not in custom_tracking:
-                custom_tracking = "https://{}.`aftership.com/{{{{tracking_number}}}}".format(custom_tracking)
+                custom_tracking = "https://{}.aftership.com/{{{{tracking_number}}}}".format(custom_tracking)
             elif not custom_tracking.startswith('http'):
                 custom_tracking = 'http://{}'.format(re.sub('^([:/]*)', r'', custom_tracking))
 
