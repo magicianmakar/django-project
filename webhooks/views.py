@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.core.signing import Signer
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import get_object_or_404
@@ -703,7 +704,7 @@ def price_monitor_webhook(request):
 
     try:
         product = get_product_model(dropified_type).objects.get(id=product_id)
-    except ShopifyProduct.DoesNotExist:
+    except ObjectDoesNotExist:
         return JsonResponse({'error': 'Product Not Found'}, status=404)
 
     monitor_id = request.GET.get('monitor_id')
