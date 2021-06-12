@@ -1651,7 +1651,7 @@ def order_track_fulfillment(**kwargs):
                 if '{{tracking_number}}' not in aftership_domain:
                     aftership_domain = "https://{}.aftership.com/{{{{tracking_number}}}}".format(aftership_domain)
                 elif not aftership_domain.startswith('http'):
-                    aftership_domain = 'http://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
+                    aftership_domain = 'https://{}'.format(re.sub('^([:/]*)', r'', aftership_domain))
 
             aftership_domain = add_http_schema(aftership_domain)
 

@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
+from django.utils.functional import cached_property
 
 import re
 import simplejson as json
@@ -15,6 +16,8 @@ from shopified_core.utils import (
     hash_url_filename,
     get_domain,
     safe_str,
+    safe_int,
+    add_http_schema,
 )
 from shopified_core.decorators import add_to_class
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
@@ -158,6 +161,11 @@ class CommerceHQStore(StoreBase):
             secret=settings.PUSHER_SECRET)
 
         pusher.trigger(self.pusher_channel(), event, data)
+
+    @cached_property
+    def get_shipping_carriers(self):
+        from commercehq_core.utils import store_shipping_carriers
+        return store_shipping_carriers(self)
 
 
 class CommerceHQProduct(ProductBase):
@@ -774,6 +782,41 @@ class CommerceHQOrderTrack(OrderTrackBase):
 
     def get_commercehq_link(self):
         return self.store.get_admin_url('orders', self.order_id)
+
+    def get_tracking_link(self):
+        custom_tracking = 'https://track.aftership.com/{{tracking_number}}'
+
+        if type(self.user.get_config(self.CUSTOM_TRACKING_KEY)) is dict:
+            custom_tracking_id = safe_int(self.user.get_config(self.CUSTOM_TRACKING_KEY).get(str(self.store_id)))
+            if custom_tracking_id:
+                carrier_url = self.get_shipping_carrier_url(custom_tracking_id)
+                if carrier_url:
+                    custom_tracking = carrier_url
+
+            if not custom_tracking or '{{tracking_number}}' not in custom_tracking:
+                custom_tracking = "https://track.aftership.com/{{tracking_number}}"
+            elif not custom_tracking.startswith('http'):
+                custom_tracking = 'https://{}'.format(re.sub('^([:/]*)', r'', custom_tracking))
+
+            custom_tracking = add_http_schema(custom_tracking)
+
+        if self.source_tracking:
+            if ',' in self.source_tracking:
+                urls = []
+                for tracking in self.source_tracking.split(','):
+                    urls.append([tracking, custom_tracking.replace('{{tracking_number}}', tracking)])
+
+                return urls
+            else:
+                return custom_tracking.replace('{{tracking_number}}', self.source_tracking)
+
+    def get_shipping_carrier_url(self, shipping_id, shipping_carriers=None):
+        if shipping_carriers is None:
+            shipping_carriers = self.store.get_shipping_carriers
+
+        for shipping in shipping_carriers:
+            if safe_int(shipping_id) == safe_int(shipping['id']):
+                return shipping['url'] + '{{tracking_number}}'
 
 
 class CommerceHQUserUpload(UserUploadBase):

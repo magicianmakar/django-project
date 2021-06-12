@@ -37,6 +37,8 @@ from shopified_core.shipping_helper import (
 import leadgalaxy.utils as leadgalaxy_utils
 from supplements.utils import supplement_customer_address
 
+STORE_SHIPPING_CARRIERS = {}
+
 
 def get_store_from_request(request):
     """
@@ -552,9 +554,13 @@ def format_chq_errors(e):
 
 
 def store_shipping_carriers(store):
+    if STORE_SHIPPING_CARRIERS.get(store.id):
+        return STORE_SHIPPING_CARRIERS[store.id]
+
     rep = store.request.get(store.get_api_url('shipping-carriers'), params={'size': 100})
     if rep.ok:
-        return rep.json()['items']
+        STORE_SHIPPING_CARRIERS[store.id] = rep.json()['items']
+        return STORE_SHIPPING_CARRIERS[store.id]
     else:
         carriers = [
             {1: 'USPS'}, {2: 'UPS'}, {3: 'FedEx'}, {4: 'LaserShip'},
