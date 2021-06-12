@@ -14,14 +14,9 @@
                     <li><a href="#shopify-section" data-toggle="tab"></a></li>
                     <li><a href="#chq-section" data-toggle="tab"></a></li>
                     <li><a href="#woo-section" data-toggle="tab"></a></li>
-                    <li><a href="#gk-section" data-toggle="tab"></a></li>
 
                     {% if request.user|can:'bigcommerce.use' %}
                     <li><a href="#bigcommerce-section" data-toggle="tab"></a></li>
-                    {% endif %}
-
-                    {% if request.user|can:'groovekart_lite.use' %}
-                    <li><a href="#gk-lite-section" data-toggle="tab"></a></li>
                     {% endif %}
                 </ul>
                 <div class="tab-content">
@@ -45,22 +40,10 @@
                                     <span class="label-text"><strong>Woocommerce</strong></span>
                                 </label>
 
-                                <label style="display: block;">
-                                    <input name="amt" value="#gk-section" type="radio">
-                                    <span class="label-text"><strong>GrooveKart</strong></span>
-                                </label>
-
                                 {% if request.user|can:'bigcommerce.use' %}
                                 <label style="display: block;">
                                     <input name="amt" value="#bigcommerce-section" type="radio">
                                     <span class="label-text"><strong>BigCommerce</strong></span>
-                                </label>
-                                {% endif %}
-
-                                {% if request.user|can:'groovekart_lite.use' %}
-                                <label style="display: block;">
-                                    <input name="amt" value="#gk-lite-section" type="radio">
-                                    <span class="label-text"><strong>GrooveKart Lite</strong></span>
                                 </label>
                                 {% endif %}
                             </fieldset>
@@ -153,41 +136,6 @@
                         </div>
                     </div>
 
-                    <!-- GrooveKart -->
-                    <div id="gk-section" class="tab-pane fade">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <h3 class="m-t-none m-b">Add GrooveKart Store</h3>
-                                <form id="gk-store-create-form" method="post" role="form">
-                                    <div class="form-group">
-                                        <label>Title</label>
-                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Store URL</label>
-                                        <input type="url" name="api_url" placeholder="https://your-shop-url.com" class="form-control" required />
-                                    </div>
-                                    <div class="form-group">
-                                        <label>API Key</label>
-                                        <input type="password" name="api_key" class="form-control" autocomplete="off" required />
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Auth Token</label>
-                                        <input type="text" name="api_token" class="form-control" autocomplete="off" required />
-                                    </div>
-
-                                    <hr style="margin:20px -30px">
-
-                                    <div>
-                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                            <strong>Add store</strong>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- BigCommerce -->
                     <div id="bigcommerce-section" class="tab-pane fade">
                         <div class="row">
@@ -207,29 +155,6 @@
 
                             <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
                             <button class="btn btn-primary pull-right install-store" type="button" data-store-type="bigcommerce"><strong>Add store</strong></button>
-                        </div>
-                    </div>
-
-                    <!-- GrooveKart Lite -->
-                    <div id="gk-lite-section" class="tab-pane fade">
-                        <div class="row">
-                            <div class="col-sm-12">
-                                <form id="gk-lite-store-create-form" method="post" role="form">
-                                    <input type="hidden" name="is_lite" value="1" />
-                                    <div class="form-group">
-                                        <label>Title</label>
-                                        <input type="text" name="title" placeholder="Store name" class="form-control" />
-                                    </div>
-
-                                    <hr style="margin:20px -30px">
-
-                                    <div>
-                                        <button type="submit" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
-                                            <strong>Create GrooveKart Lite Account</strong>
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
                         </div>
                     </div>
                 </div>

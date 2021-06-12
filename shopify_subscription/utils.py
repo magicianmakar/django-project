@@ -7,8 +7,9 @@ import requests
 from django.conf import settings
 from django.utils.functional import cached_property
 from django.urls import reverse
-
+from fulfilment_fee.models import SaleTransactionFee
 from shopified_core.utils import app_link, safe_float, last_executed, send_email_from_template
+from django.db.models import Sum
 
 
 def get_application_charge_price(application_charge):
@@ -253,11 +254,13 @@ def add_shopify_usage_invoice(user, invoice_type, amount, description="Usage for
     # getting last created active shopify subscriptioon
     shopify_subscription = get_shopify_recurring(user)
     charge_id = False
+    total_unpaid = SaleTransactionFee.objects.filter(processed=False, user_id=user.id).aggregate(Sum('fee_value')).get('fee_value__sum', 0)
+
     if shopify_subscription:
         amount = safe_float(amount)
         if shopify_subscription.balance_remaining < amount:
             # adjusting capped limit by $50 (to not ask to recap very often)
-            shopify_subscription.customize(capped_amount=safe_float(shopify_subscription.capped_amount) + 50)
+            shopify_subscription.customize(capped_amount=safe_float(shopify_subscription.capped_amount) + total_unpaid + 1)
 
             # refresh shopify sub to use capp increase lin in email
             shopify_subscription = get_shopify_recurring(user)

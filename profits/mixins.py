@@ -27,13 +27,13 @@ class ProfitDashboardMixin():
     store_model = None
 
     def get_store(self):
-        if not hasattr(self, 'store'):
-            self.store = utils.get_store_from_request(self.request, self.store_type)
-            self.store_content_type = ContentType.objects.get_for_model(self.store)
+        if not hasattr(self, '_store'):
+            self._store = utils.get_store_from_request(self.request, self.store_type)
+            self.store_content_type = ContentType.objects.get_for_model(self._store)
 
             sync, created = models.ProfitSync.objects.get_or_create(
                 store_content_type=self.store_content_type,
-                store_object_id=self.store.id,
+                store_object_id=self._store.id,
                 defaults={
                     'last_sync': arrow.get().shift(days=-2).datetime
                 }
@@ -41,23 +41,23 @@ class ProfitDashboardMixin():
 
             if created or sync.last_sync < arrow.get().shift(days=-1).datetime:  # Sync daily
                 if self.store_type == 'gkart':
-                    tasks.sync_gkart_store_profits.delay(sync.id, self.store.id)
+                    tasks.sync_gkart_store_profits.delay(sync.id, self._store.id)
                 elif self.store_type == 'bigcommerce':
-                    tasks.sync_bigcommerce_store_profits.delay(sync.id, self.store.id)
+                    tasks.sync_bigcommerce_store_profits.delay(sync.id, self._store.id)
                 elif self.store_type == 'woo':
-                    tasks.sync_woocommerce_store_profits.delay(sync.id, self.store.id)
+                    tasks.sync_woocommerce_store_profits.delay(sync.id, self._store.id)
 
             if created or sync.last_sync < arrow.get().shift(hours=-1).datetime:  # Sync hourly
                 if self.store_type == 'chq':
-                    tasks.sync_commercehq_store_profits.delay(sync.id, self.store.id)
+                    tasks.sync_commercehq_store_profits.delay(sync.id, self._store.id)
 
-        return self.store
+        return self._store
 
     def dispatch(self, request, *args, **kwargs):
         if not self.store_type:
             raise NotImplementedError('Store Type')
 
-        store = self.get_store()
+        store = utils.get_store_from_request(self.request, self.store_type)
         if not store:
             messages.warning(request, 'Please add at least one store before using the Profit Dashboard page')
             return HttpResponseRedirect('/')

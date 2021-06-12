@@ -1544,12 +1544,3 @@ class ProfitDashboardView(ProfitDashboardMixin, ListView):
     store_type = 'bigcommerce'
     store_model = BigCommerceStore
     base_template = 'base_bigcommerce_core.html'
-
-    def get_context_data(self, **kwargs):
-        # Check for new orders in BigCommerce
-        current_page = safe_int(self.request.GET.get('page'), 1)
-        if current_page == 1:
-            self.get_store()
-            pass
-
-        return super().get_context_data(**kwargs)
