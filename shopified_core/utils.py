@@ -983,6 +983,8 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
             first_line_id = None
 
             for line_item in group_lines:
+                supplier = line_item['supplier']
+
                 # Line item is not connected
                 if not line_item.get('order_data_id') or not line_item.get('product'):
                     continue
@@ -1005,7 +1007,7 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
 
                 # Return Print On Demand orders separately
                 if is_dropified_print:
-                    if not line_item['supplier'].is_dropified_print:
+                    if not supplier.is_dropified_print:
                         continue
 
                     # No bundle support yet
@@ -1023,18 +1025,16 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                     if single_supplier != 'alibaba':
                         continue
 
-                    if not line_item['supplier'].is_alibaba:
+                    if not supplier.is_alibaba:
                         continue
 
                 else:
-                    if not line_item['supplier'].support_auto_fulfill():
+                    if not supplier.support_auto_fulfill():
                         continue
 
-                    # Do only aliexpress orders for now
-                    if not line_item['supplier'].is_aliexpress:
+                    if not supplier.is_aliexpress and not supplier.is_ebay:
                         continue
 
-                supplier = line_item['supplier']
                 shipping_method = line_item.get('shipping_method') or {}
                 line_data = {
                     'order_data': line_item.get('order_data_id'),
@@ -1047,6 +1047,7 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                     'price': line_item['order_data']['total'],
                     'store_type': store_type,
                     'source_id': str(supplier.get_source_id()),
+                    "supplier_type": supplier.supplier_type(),
                     'url': app_link(
                         orders_place_url,
                         supplier=supplier.id,
@@ -1062,8 +1063,7 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                     queue_bundle = {"cart": True, "items": [], "line_id": [], 'bundle': True}
 
                     for product in line_item['order_data']['products']:
-                        # Do only aliexpress orders for now
-                        if product['supplier_type'] not in ['aliexpress', 'alibaba', 'pls']:
+                        if product['supplier_type'] not in ['aliexpress', 'ebay', 'alibaba', 'pls']:
                             continue
 
                         queue_bundle['items'].append({
