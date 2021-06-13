@@ -983,7 +983,11 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
             first_line_id = None
 
             for line_item in group_lines:
-                supplier = line_item['supplier']
+                supplier = line_item.get('supplier')
+
+                # Ignore items without a supplier
+                if not supplier:
+                    continue
 
                 # Line item is not connected
                 if not line_item.get('order_data_id') or not line_item.get('product'):
@@ -999,10 +1003,6 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
 
                 # Order is already placed (linked to a ShopifyOrderTrack)
                 if line_item.get('order_track') and line_item['order_track'].id:
-                    continue
-
-                # Ignore items without a supplier
-                if not line_item.get('supplier'):
                     continue
 
                 # Return Print On Demand orders separately
