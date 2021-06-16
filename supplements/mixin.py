@@ -534,14 +534,15 @@ class PayoutMixin:
 
     @property
     def date_from_to(self):
-        lines = self.payout_lines
-        if self.supplier.is_shipping_supplier:
-            lines = self.ship_payout_lines
-
-        date_from = lines.first().created_at.strftime('%m.%d.%Y')
-        date_to = lines.last().created_at.strftime('%m.%d.%Y')
-
-        return f'{date_from} - {date_to}'
+        try:
+            lines = self.payout_lines
+            if self.supplier.is_shipping_supplier:
+                lines = self.ship_payout_lines
+            date_from = lines.first().created_at.strftime('%m.%d.%Y')
+            date_to = lines.last().created_at.strftime('%m.%d.%Y')
+            return f'{date_from} - {date_to}'
+        except:
+            return ''
 
     def to_currency(self, value):
         return "${:.2f}".format(value / 100)

@@ -1,4 +1,5 @@
 import arrow
+import datetime
 
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, Count, Sum
@@ -10,6 +11,7 @@ from woocommerce_core.models import WooStore
 from gearbubble_core.models import GearBubbleStore
 from groovekart_core.models import GrooveKartStore
 from bigcommerce_core.models import BigCommerceStore
+from supplements.models import UserSupplementLabel
 
 from lib.exceptions import capture_message
 
@@ -395,3 +397,38 @@ def can_use_unique_supplement(user, pl_supplement_id=0):
             can_add = False
 
     return can_add, total_allowed, user_count
+
+
+def can_upload_label(user):
+    """ Check if the user plan allows uploading a label """
+
+    profile = user.profile
+
+    if profile.is_subuser:
+        return can_upload_label(profile.subuser_parent)
+
+    today = datetime.date.today()
+
+    total_allowed_labels = int(profile.label_upload_limit)
+    if total_allowed_labels == -2:
+        total_allowed = profile.plan.label_upload_limit  # -1 mean unlimited
+    else:
+        total_allowed = total_allowed_labels
+
+    if total_allowed == -1:  # No need for query
+        return True, -1, -1
+
+    labels_count_keys = 'label_limit_count_{}'.format(user.id)
+    label_count = cache.get(labels_count_keys)
+
+    if label_count is None:
+        label_count = UserSupplementLabel.objects.filter(user_supplement__user=user,
+                                                         created_at__month=today.month,
+                                                         created_at__year=today.year).count()
+        cache.set(labels_count_keys, label_count, timeout=6)
+
+    can_add = True
+    if (total_allowed > -1) and (label_count + 1 > total_allowed):
+        can_add = False
+
+    return can_add, total_allowed, label_count

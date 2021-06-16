@@ -20,6 +20,7 @@ from .forms import OrderFilterForm, PayoutFilterForm, ProductEditForm, ProductFo
 from .lib.shipstation import get_shipstation_orders, get_shipstation_shipments
 from .lib.views import BaseMixin, PagingMixin, SendToStoreMixin, upload_image_to_aws
 from .models import Order, OrderLine, Payout, Product
+from django.core.cache import cache
 
 
 class IndexView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
@@ -572,7 +573,6 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 cancelled_order_ids = self.get_cancelled_order_ids()
                 for id, number in cancelled_order_ids.items():
                     queryset = queryset.exclude(pls_order_id=id, pls_order__order_number=number)
-
             supplier = form.cleaned_data['supplier']
             if supplier:
                 queryset = queryset.filter(
@@ -607,7 +607,12 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
         ]
 
     def get_cancelled_order_ids(self):
-        if not self.cancelled_orders_cache:
+        cache_key = 'shipstation_cancelled_orders'
+        try:
+            cached_order_data = cache.get(cache_key).get('data', False)
+        except:
+            cached_order_data = False
+        if not cached_order_data:
             params = {'orderStatus': 'cancelled'}
             orders = get_shipstation_orders(params=params)
             for order in orders:
@@ -617,6 +622,24 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                     continue
                 else:
                     self.cancelled_orders_cache[id] = number
+            cache.set(cache_key, {'executed_date': str(timezone.now()), 'data': self.cancelled_orders_cache},
+                      timeout=86400 * 3)  # "hard" refresh 3 days
+        else:
+            if not self.cancelled_orders_cache:
+                self.cancelled_orders_cache = cache.get(cache_key)['data']
+
+                # fetch lastly modified orders and add them into local cache
+                params = {'orderStatus': 'cancelled', 'modifyDateStart': cache.get(cache_key)['executed_date']}
+                orders = get_shipstation_orders(params=params)
+                for order in orders:
+                    try:
+                        number, id = order['orderNumber'].split('-')
+                    except ValueError:
+                        continue
+                    else:
+                        self.cancelled_orders_cache[id] = number
+                cache.set(cache_key, {'executed_date': str(timezone.now()), 'data': self.cancelled_orders_cache},
+                          timeout=600)  # refresh cache with latest updated orders
 
         return self.cancelled_orders_cache
 

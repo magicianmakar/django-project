@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from django.db import models, transaction
 from django.db.models import Q
 from django.db.models.functions import Concat
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -307,7 +307,13 @@ class SendToStoreMixin(common_lib_views.SendToStoreMixin):
 
 
 class LabelMixin:
-    def save_label(self, user, url, user_supplement):
+    def save_label(self, user, url, user_supplement, action=''):
+
+        can_add_label, total_allowed_label, label_limit_left = self.check_user_can_upload_label(user)
+        if not can_add_label and action != 'preapproved':
+            messages.error(self.request, "You have exhausted your monthly label upload limit.")
+            return HttpResponseRedirect(self.request.path_info)
+
         user_name = user.get_full_name()
         new_label = user_supplement.labels.create(url=url)
 
@@ -317,6 +323,13 @@ class LabelMixin:
         user_supplement.current_label = new_label
         user_supplement.current_label.generate_sku()
         user_supplement.save()
+
+    def check_user_can_upload_label(self, user):
+        can_add_label, total_allowed_label, user_uploaded_label_count = permissions.can_upload_label(user)
+        label_limit_left = total_allowed_label - user_uploaded_label_count if total_allowed_label != -1 else float('inf')
+        if label_limit_left < 0:
+            label_limit_left = 0
+        return can_add_label, total_allowed_label, label_limit_left
 
     def create_comment(self, comments, text, new_status='', is_private=False, send_email=True):
         tags = bleach.sanitizer.ALLOWED_TAGS + [
@@ -451,6 +464,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         return weight
 
     def get_supplement_data(self, user, supplement_id):
+        can_add_label, total_allowed_label, label_limit_left = self.check_user_can_upload_label(user)
         supplement = self.get_supplement(user, supplement_id)
 
         form_data = supplement.to_dict()
@@ -484,6 +498,8 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
             product_information=supplement.product_information,
             authenticity_cert=supplement.authenticity_certificate_url,
             mockup_layers=supplement.mockup_type.get_layers(),
+            total_allowed_label=total_allowed_label,
+            label_limit_left=label_limit_left
         )
 
         if 'label_url' in form_data:
@@ -507,15 +523,19 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         user = request.user.models_user
         form = self.get_form()
         if form.is_valid():
+            can_add_label, total_allowed_label, label_limit_left = self.check_user_can_upload_label(user)
+            if not can_add_label and form.cleaned_data['action'] != 'preapproved':
+                messages.error(self.request, "You have exhausted your monthly label upload limit.")
+                return HttpResponseRedirect(self.request.path_info)
             new_user_supplement = self.save_supplement(form)
 
             # Always use saved label URL for pre-approved labels
             upload_url = form.cleaned_data['upload_url']
             if form.cleaned_data['action'] == 'preapproved':
                 upload_url = new_user_supplement.pl_supplement.approved_label_url
-                self.save_label(user, upload_url, new_user_supplement)
+                self.save_label(user, upload_url, new_user_supplement, form.cleaned_data['action'])
             elif upload_url:
-                self.save_label(user, upload_url, new_user_supplement)
+                self.save_label(user, upload_url, new_user_supplement, form.cleaned_data['action'])
 
             mockup_urls = request.POST.getlist('mockup_urls')
             if len(mockup_urls) or upload_url:
@@ -675,11 +695,15 @@ class UserSupplementView(Supplement):
             label_size=supplement.pl_supplement.label_size,
         )
 
+        can_add_label, total_allowed_label, label_limit_left = self.check_user_can_upload_label(user)
+
         data = dict(
             supplement=supplement,
             form_data=form_data,
             image_urls=form_data.pop('image_urls'),
             label_template_url=form_data.pop('label_template_url'),
+            total_allowed_label=total_allowed_label,
+            label_limit_left=label_limit_left,
             is_approved=supplement.is_approved,
             is_awaiting_review=supplement.is_awaiting_review,
             api_data=api_data,
@@ -728,6 +752,7 @@ class LabelHistory(UserSupplementView):
             raise permissions.PermissionDenied()
 
     def get_breadcrumbs(self, supplement_id):
+
         supplement = self.get_supplement(self.request.user, supplement_id)
         url = reverse('pls:user_supplement',
                       kwargs={'supplement_id': supplement.id})
@@ -773,7 +798,7 @@ class LabelHistory(UserSupplementView):
                 upload_url = form.cleaned_data['upload_url']
                 if upload_url:
                     user_supplement.label_presets = request.POST.get('label_presets') or '{}'
-                    self.save_label(request.user, upload_url, user_supplement)
+                    self.save_label(request.user, upload_url, user_supplement, action)
                     user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
                     user_supplement.current_label.save()
                     SupplementLabelForApprovalEvent.objects.create(user=request.user,

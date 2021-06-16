@@ -383,7 +383,7 @@ class SupplementsApi(ApiResponseMixin, View):
                 start_date = arrow.get(date[0], 'M/D/YYYY').datetime
                 end_date = arrow.get(f'{date[1]} 235959', 'M/D/YYYY Hms').datetime
             except Exception:
-                start_date, end_date = '', ''
+                start_date, end_date = None, None
 
             if supplier.is_shipping_supplier:
                 if start_date and end_date:
@@ -394,12 +394,14 @@ class SupplementsApi(ApiResponseMixin, View):
                 else:
                     line_items = PLSOrderLine.objects.filter(pls_order__is_fulfilled=True,
                                                              shipping_payout__isnull=True)
+
                 if line_items.count():
-                    lines_count += line_items.count()
                     payout = Payout.objects.create(reference_number=data[id].get('ref_num'),
                                                    supplier=supplier,
                                                    start_date=start_date,
                                                    end_date=end_date)
+                    lines_count += line_items.count()
+
                     line_items.update(shipping_payout=payout)
             else:
                 if start_date and end_date:
@@ -413,11 +415,13 @@ class SupplementsApi(ApiResponseMixin, View):
                                                              label__user_supplement__pl_supplement__supplier=supplier,
                                                              line_payout__isnull=True)
                 if line_items.count():
-                    lines_count += line_items.count()
                     payout = Payout.objects.create(reference_number=data[id].get('ref_num'),
                                                    supplier=supplier,
                                                    start_date=start_date,
                                                    end_date=end_date)
+
+                    lines_count += line_items.count()
+
                     line_items.update(line_payout=payout)
 
         return self.api_success({'count': lines_count})
