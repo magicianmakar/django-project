@@ -136,6 +136,7 @@ class UserProfile(models.Model):
     boards = models.IntegerField(default=-2)
     unique_supplements = models.IntegerField(default=-2)
     user_supplements = models.IntegerField(default=-2)
+    label_upload_limit = models.IntegerField(default=-2)
     sub_users_limit = models.IntegerField(default=-2)
 
     status = models.IntegerField(default=1, choices=ENTITY_STATUS_CHOICES)
@@ -2076,6 +2077,7 @@ class GroupPlan(models.Model):
     boards = models.IntegerField(default=0, verbose_name="Boards Limit")
     unique_supplements = models.IntegerField(default=0, verbose_name="Unique Supplements Limit")
     user_supplements = models.IntegerField(default=0, verbose_name="User Supplements Limit")
+    label_upload_limit = models.IntegerField(default=-1, verbose_name="Label Upload Limit per month")
     sub_users_limit = models.IntegerField(default=-1, verbose_name='Sub Users Limit')
 
     extra_stores = models.BooleanField(default=True, verbose_name='Support adding extra stores')

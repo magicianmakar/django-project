@@ -94,6 +94,7 @@
 
             <div class='form-group row label-comment-action'>
               <div class='col-sm-4'>
+                {% if label_limit_left %}
                 <a href=""
                    data-toggle="modal"
                    data-target="#modal-mockup-images"
@@ -101,6 +102,7 @@
                    class="btn btn-success">
                   Update Label
                 </a>
+                {% endif %}
 
                 <button class='btn btn-primary'
                         type="submit"
@@ -110,6 +112,13 @@
               </div>
             </div>
           </form>
+          {% if total_allowed_label != -1 %}
+              <div class="row">
+                <div class="alert alert-info m-sm m-b-md">
+                  <h3>You have {{ label_limit_left}} labels left of your monthly limit of {{ total_allowed_label }}. </h3>
+                </div>
+              </div>
+            {% endif %}
           {% include 'supplements/partials/label_requirements.html' %}
         </div>
       </div>

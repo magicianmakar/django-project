@@ -109,14 +109,24 @@
               </div>
 
               <div class="row m-t">
-                <div class="col-md-5 col-md-offset-1 m-t">
+                <div class="col-md-5 m-t">
                   <a href="{{ label_template_url }}" target="_blank" class="btn btn-primary">Download Template</a>
                 </div>
 
                 <div class="col-md-5 col-md-offset-1 m-t">
+                  {% if label_limit_left %}
                   <a href="" data-toggle="modal" data-target="#modal-mockup-images" data-backdrop="static" class="btn btn-success">Customize Label</a>
+                  {% endif %}
                 </div>
               </div>
+
+              {% if total_allowed_label != -1 %}
+                <div class="row">
+                  <div class="col-md-11 col-md-offset-1 alert-info m-t label-upload-limit">
+                    <h3>You have {{ label_limit_left}} labels left of your monthly limit of {{ total_allowed_label }}. </h3>
+                  </div>
+                </div>
+              {% endif %}
 
               <div class='alert label-info-box'>
                 Submitting a new label will restart the review process.

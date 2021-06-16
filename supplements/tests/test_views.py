@@ -34,6 +34,7 @@ class PLSBaseTestCase(BaseTestCase):
         self.user.profile.plan = GroupPlanFactory(title='Dropified Black', slug='black')
         self.user.profile.plan.unique_supplements = -1
         self.user.profile.plan.user_supplements = -1
+        self.user.profile.plan.label_upload_limit = -1
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls_admin.use', description='PLS Admin'))
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='pls.use', description='PLS'))
         self.user.profile.plan.permissions.add(AppPermissionFactory(name='supplements_basket.use', description='PLS Basket'))
