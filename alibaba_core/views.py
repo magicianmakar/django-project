@@ -57,12 +57,12 @@ class ProductsRedirectView(RedirectView):
             return f"{reverse('settings')}#alibaba-settings"
 
         params = (
-            ('wx_screen_direc', 'portrait'),
-            ('wx_navbar_transparent', 'true'),
-            ('path', '/p/dt0c706ur/index.html'),
+            # ('wx_screen_direc', 'portrait'),
+            # ('wx_navbar_transparent', 'true'),
+            # ('path', '/p/dt0c706ur/index.html'),
             ('ecology_token', token),
         )
-        return f"https://sale.alibaba.com/p/dt0c706ur/index.html?{urlencode(params)}"
+        return f"https://dropshipping.alibaba.com?{urlencode(params)}"
 
 
 @login_required
