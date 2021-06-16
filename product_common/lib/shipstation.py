@@ -103,7 +103,6 @@ def get_shipstation_orders(params=None):
     headers = {'Content-Type': 'application/json'}
     headers.update(get_auth_header())
     response = requests.get(resource_url, headers=headers).json()
-
     orders = get_paginated_response(response, resource_url, 'orders')
 
     return orders
