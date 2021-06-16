@@ -14,9 +14,11 @@
                     {% if i.plan.name %}
                         {{ i.plan.name }}
                     {% else %}
-                        {% for item in i.items.data %}
-                            {{ target_user.plan.name }}{% if not forloop.last %}, {% endif %}
+                        <ul class="list-unstyled">
+                        {% for sub_item in i.items.data %}
+                            <li>{{ sub_item.plan.name }}</li>
                         {% endfor %}
+                        </ul>
                     {% endif %}
                 </td>
                 <td>

@@ -944,9 +944,19 @@ class BulkOrderTestCase(BaseTestCase):
 
     @patch('leadgalaxy.shopify.ShopifyAPI.get_orders_count', Mock(return_value=1))
     @patch('leadgalaxy.shopify.ShopifyAPI.get_orders')
-    def test_not_aliexpress_supplier(self, get_orders):
+    def test_ebay_supplier(self, get_orders):
         get_orders.return_value = [self.shopify_order, None, None]
         self.product.default_supplier.product_url = self.product.default_supplier.product_url.replace('aliexpress', 'ebay')
+        self.product.default_supplier.save()
+
+        result = self.client.get(self.bulk_order_url).json()
+        self.assertEqual(len(result['orders']), 1)
+
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders_count', Mock(return_value=1))
+    @patch('leadgalaxy.shopify.ShopifyAPI.get_orders')
+    def test_not_supported_supplier(self, get_orders):
+        get_orders.return_value = [self.shopify_order, None, None]
+        self.product.default_supplier.product_url = self.product.default_supplier.product_url.replace('aliexpress', 'amazon')
         self.product.default_supplier.save()
 
         result = self.client.get(self.bulk_order_url).json()
