@@ -288,7 +288,11 @@
 {% endif %}
   });
   Candu.renderContent({
-    slug: 'features-overview',
+  {% if request.GET.canduslug %}
+    slug: {{ request.GET.canduslug }},
+  {% else %}
+    slug: 'dashboard',
+  {% endif %}
     selector: "#candu-mount",
   });
 </script>
