@@ -278,3 +278,17 @@
 {% endif %}
 
 </script>
+
+<script src="https://cdn.candu.ai/sdk/latest/candu.umd.js"></script>
+<script>
+  Candu.init({
+     clientToken: 'l2aWk6HTWT',
+{% if user.is_authenticated %}
+     userId: '{{ user.id }}'
+{% endif %}
+  });
+  Candu.renderContent({
+    slug: 'features-overview',
+    selector: "#candu-mount",
+  });
+</script>
