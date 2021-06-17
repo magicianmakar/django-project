@@ -287,11 +287,11 @@
      userId: '{{ user.id }}'
 {% endif %}
   });
-  Candu.renderContent({
+  Candu.renderTutorial({
   {% if request.GET.canduslug %}
     slug: '{{ request.GET.canduslug }}',
   {% else %}
-    slug: 'dashboard',
+    slug: 'features-overview',
   {% endif %}
     selector: "#candu-mount",
   });
