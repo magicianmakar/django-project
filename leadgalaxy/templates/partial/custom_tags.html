@@ -289,12 +289,12 @@
             userId: '{{ user.id }}',
             traits: {
                 name: window.intercomSettings.name,
-                plan: window.intercomSettings.plan,
+                plan: window.intercomSettings.parent_plan || window.intercomSettings.plan,
                 email: window.intercomSettings.email,
             },
         });
 
-        Candu.renderTutorial({
+        Candu.renderPortal({
             slug: 'dashboard',
             selector: "#candu-mount",
         });
