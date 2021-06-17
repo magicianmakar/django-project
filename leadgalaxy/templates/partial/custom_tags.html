@@ -281,18 +281,22 @@
 
 <script src="https://cdn.candu.ai/sdk/latest/candu.umd.js"></script>
 <script>
-  Candu.init({
-     clientToken: 'l2aWk6HTWT',
-{% if user.is_authenticated %}
-     userId: '{{ user.id }}'
-{% endif %}
-  });
-  Candu.renderTutorial({
-  {% if request.GET.canduslug %}
-    slug: '{{ request.GET.canduslug }}',
-  {% else %}
-    slug: 'features-overview',
-  {% endif %}
-    selector: "#candu-mount",
-  });
+
+    if (window.intercomSettings) {
+
+        Candu.init({
+            clientToken: 'l2aWk6HTWT',
+            userId: '{{ user.id }}',
+            traits: {
+                name: window.intercomSettings.name,
+                plan: window.intercomSettings.plan,
+                email: window.intercomSettings.email,
+            },
+        });
+
+        Candu.renderTutorial({
+            slug: 'features-overview',
+            selector: "#candu-mount",
+        });
+    }
 </script>
