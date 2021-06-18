@@ -1327,6 +1327,9 @@ class ShopifyProduct(ProductBase):
         except:
             self.price = 0.0
 
+        if '\x00' in self.tag:
+            self.tag = self.tag.replace('\x00', '')
+
         super(ShopifyProduct, self).save(*args, **kwargs)
 
     def get_config(self):
