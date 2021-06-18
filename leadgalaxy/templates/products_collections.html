@@ -12,6 +12,8 @@
 
 {% block main-container %}
 
+    {% include 'home/partial/candu.html' with mount_id='candu-us-products-info-above' %}
+
     <div class="tabs-container">
         <div class="tab-content">
             <div id="tab-1" class="tab-pane active">
@@ -256,4 +258,3 @@
     <script type="text/javascript" src="{% static 'shopified/js/products_collections.js' %}"></script>
 {% endcompress %}
 {% endblock %}
-

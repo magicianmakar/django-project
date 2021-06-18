@@ -13,6 +13,9 @@
 
 {% block main-container %}
 
+    {% if not request.GET.store or request.GET.store == 'n' %}
+        {% include 'home/partial/candu.html' with mount_id='candu-saved-products-info-above' %}
+    {% endif %}
 
     <div class="tabs-container">
         {% include 'home/partial/tabs/products.html' %}

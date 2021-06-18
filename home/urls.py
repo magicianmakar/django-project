@@ -1,11 +1,9 @@
-from django.conf.urls import url
+from django.urls import path
 
 import home.views
 
 urlpatterns = [
-    url(r'^$', home.views.home_page_view, name='index'),
-    url(r'^settings$', home.views.home_page_view, name='settings'),
-    url(r'^goto/page/(?P<url_name>[a-zA-Z-_\.]+)$',
-        home.views.GotoPage.as_view(),
-        name='goto-page'),
+    path('', home.views.HomePageView.as_view(), name='index'),
+    path('settings', home.views.SettingsPageView.as_view(), name='settings'),
+    path('goto/page/<str:url_name>', home.views.GotoPage.as_view(), name='goto-page'),
 ]

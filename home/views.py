@@ -1,9 +1,10 @@
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
 from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.views.generic import View
+from django.shortcuts import redirect
+from django.views.generic import View, TemplateView
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.utils.decorators import method_decorator
 
 from lib.exceptions import capture_message
 
@@ -18,101 +19,128 @@ from goals.utils import get_dashboard_user_goals
 from .context_processors import all_stores
 
 
-@login_required
-@xframe_options_exempt
-def home_page_view(request):
-    user = request.user
+class HomePageMixing(TemplateView):
+    @method_decorator(login_required)
+    @method_decorator(xframe_options_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
 
-    config = user.models_user.profile.get_config()
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
 
-    if user.get_config('__plan'):
-        free_plan = GroupPlan.objects.get(id=user.get_config('__plan'))
-        if user.profile.plan != free_plan and user.profile.plan.free_plan:
-            user.profile.change_plan(free_plan)
+        user = self.request.user
 
-    aliexpress_shipping_method = config.get('aliexpress_shipping_method')
-    epacket_shipping = config.get('epacket_shipping')
+        config = user.models_user.profile.get_config()
 
-    if epacket_shipping:
-        aliexpress_shipping_method = 'EMS_ZX_ZX_US'
+        if user.get_config('__plan'):
+            free_plan = GroupPlan.objects.get(id=user.get_config('__plan'))
+            if user.profile.plan != free_plan and user.profile.plan.free_plan:
+                user.profile.change_plan(free_plan)
 
-    can_add, total_allowed, user_count = permissions.can_add_store(user)
+        aliexpress_shipping_method = config.get('aliexpress_shipping_method')
+        epacket_shipping = config.get('epacket_shipping')
 
-    extra_stores = can_add and user.profile.plan.is_stripe() and \
-        user.profile.get_stores_count() >= total_allowed and \
-        total_allowed != -1
+        if epacket_shipping:
+            aliexpress_shipping_method = 'EMS_ZX_ZX_US'
 
-    add_store_btn = not user.is_subuser \
-        and (can_add or user.profile.plan.extra_stores) \
-        and not user.profile.from_shopify_app_store()
+        can_add, total_allowed, user_count = permissions.can_add_store(user)
 
-    templates = DescriptionTemplate.objects.filter(user=user.models_user).defer('description')
-    markup_rules = PriceMarkupRule.objects.filter(user=user.models_user)
+        extra_stores = can_add and user.profile.plan.is_stripe() and \
+            user.profile.get_stores_count() >= total_allowed != -1
 
-    user_goals = get_dashboard_user_goals(request.user)
-    videos = DashboardVideo.objects.filter(is_active=True, plans=user.models_user.profile.plan)
-    platform_videos = {t[0]: [] for t in DashboardVideo.STORE_TYPES}
-    for video in videos:
-        platform_videos[video.store_type].append(video)
+        add_store_btn = not user.is_subuser \
+            and (can_add or user.profile.plan.extra_stores) \
+            and not user.profile.from_shopify_app_store()
 
-    plan = user.models_user.profile.plan
-    if plan.is_shopify() and not plan.is_free and not last_executed(f'recurring_charges_check_{user.models_user.id}', 3600):
-        stores = user.profile.get_shopify_stores()
-        if len(stores) == 0:
-            capture_message(
-                'Shopify Subscription - Missing Stores',
-                level='warning',
-                tags={
-                    'user': user.models_user.email,
-                    'store': 'none',
-                    'count': len(stores)
-                })
-        elif len(stores) > 1:
-            capture_message(
-                'Shopify Subscription - Many Stores',
-                level='warning',
-                tags={
-                    'user': user.models_user.email,
-                    'store': 'none',
-                    'count': len(stores)
-                })
-        else:
-            try:
-                charges = ShopifyAPI(stores[0])
-                if not charges.recurring_charges(active=True):
-                    capture_message(
-                        'Shopify Subscription - Missing Subscription',
-                        level='warning',
-                        tags={
-                            'user': user.models_user.email,
-                            'store': 'none',
-                            'count': len(stores)
-                        })
-            except:
-                pass
+        templates = DescriptionTemplate.objects.filter(user=user.models_user).defer('description')
+        markup_rules = PriceMarkupRule.objects.filter(user=user.models_user)
 
-    upsell_alerts = False
-    if not user.can('price_changes.use'):
-        upsell_alerts = True
-        config.update(get_mocked_config_alerts())
+        user_goals = get_dashboard_user_goals(self.request.user)
+        videos = DashboardVideo.objects.filter(is_active=True, plans=user.models_user.profile.plan)
+        platform_videos = {t[0]: [] for t in DashboardVideo.STORE_TYPES}
+        for video in videos:
+            platform_videos[video.store_type].append(video)
 
-    return render(request, 'home/index.html', {
-        'config': config,
-        'epacket_shipping': epacket_shipping,
-        'aliexpress_shipping_method': aliexpress_shipping_method,
-        'extra_stores': extra_stores,
-        'add_store_btn': add_store_btn,
-        'templates': templates,
-        'markup_rules': markup_rules,
-        'settings_tab': request.path == '/settings',
-        'page': 'index',
-        'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
-        'breadcrumbs': ['Stores'],
-        'user_goals': user_goals,
-        'platform_videos': platform_videos,
-        'upsell_alerts': upsell_alerts,
-        'alibaba_login_url': get_alibaba_access_token_url(user.models_user)
-    })
+        plan = user.models_user.profile.plan
+        if plan.is_shopify() and not plan.is_free and not last_executed(f'recurring_charges_check_{user.models_user.id}', 3600):
+            stores = user.profile.get_shopify_stores()
+            if len(stores) == 0:
+                capture_message(
+                    'Shopify Subscription - Missing Stores',
+                    level='warning',
+                    tags={
+                        'user': user.models_user.email,
+                        'store': 'none',
+                        'count': len(stores)
+                    })
+            elif len(stores) > 1:
+                capture_message(
+                    'Shopify Subscription - Many Stores',
+                    level='warning',
+                    tags={
+                        'user': user.models_user.email,
+                        'store': 'none',
+                        'count': len(stores)
+                    })
+            else:
+                try:
+                    charges = ShopifyAPI(stores[0])
+                    if not charges.recurring_charges(active=True):
+                        capture_message(
+                            'Shopify Subscription - Missing Subscription',
+                            level='warning',
+                            tags={
+                                'user': user.models_user.email,
+                                'store': 'none',
+                                'count': len(stores)
+                            })
+                except:
+                    pass
+
+        upsell_alerts = False
+        if not user.can('price_changes.use'):
+            upsell_alerts = True
+            config.update(get_mocked_config_alerts())
+
+        ctx.update({
+            'config': config,
+            'epacket_shipping': epacket_shipping,
+            'aliexpress_shipping_method': aliexpress_shipping_method,
+            'extra_stores': extra_stores,
+            'add_store_btn': add_store_btn,
+            'templates': templates,
+            'markup_rules': markup_rules,
+            'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
+            'breadcrumbs': ['Stores'],
+            'user_goals': user_goals,
+            'platform_videos': platform_videos,
+            'upsell_alerts': upsell_alerts,
+            'alibaba_login_url': get_alibaba_access_token_url(user.models_user)
+        })
+
+        return ctx
+
+
+class HomePageView(HomePageMixing):
+    template_name = 'home/index.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        ctx['page'] = 'index'
+
+        return ctx
+
+
+class SettingsPageView(HomePageMixing):
+    template_name = 'home/settings.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        ctx['page'] = 'settings'
+
+        return ctx
 
 
 class GotoPage(View):

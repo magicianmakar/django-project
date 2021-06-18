@@ -6,29 +6,24 @@
 {% load compress %}
 
 {% block main-container %}
-    {% include 'home/partial/candu.html' with mount_id='candu-stores-info-above' %}
 
     <div class="tabs-container m-b-xl">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active">
-                <a class="nav-link active" data-toggle="tab" href="#stores"><i class="fa fa-bars"></i> Stores</a>
-            </li>
             <li>
-                <a class="nav-link" href="{% url 'settings' %}"><i class="fa fa-cogs"></i> Settings</a>
+                <a class="nav-link" href="{% url 'index' %}"><i class="fa fa-bars"></i> Stores</a>
+            </li>
+            <li class="active">
+                <a class="nav-link active" data-toggle="tab" href="#settings"><i class="fa fa-cogs"></i> Settings</a>
             </li>
         </ul>
         <div class="tab-content">
-            <div role="tabpanel" id="stores" class="tab-pane active">
+            <div role="tabpanel" id="settings" class="tab-pane active">
                 <div class="panel-body">
-                    {% include 'home/partial/stores_list.html' %}
+                    {% include 'home/partial/settings.html'%}
                 </div>
-
-                {% include 'home/partial/training_and_goals.html' %}
             </div>
         </div>
     </div>
-
-    {% include 'home/partial/candu.html' %}
 
     {% include 'home/partial/add_store_modals.html' %}
     {% include 'home/partial/update_store_modals.html' %}
@@ -68,7 +63,7 @@
         var bigcommerce_app_id = "{% app_setting 'BIGCOMMERCE_APP_ID' %}";
         {% endif %}
 
-        ChurnZero.push(['setModule', 'Stores Page']);
+        ChurnZero.push(['setModule', 'Settings Page']);
     </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>

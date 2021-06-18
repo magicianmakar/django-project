@@ -6,7 +6,7 @@ import subusers.views
 import leadgalaxy.views
 
 urlpatterns = [
-    url(r'^$', home.views.home_page_view, name='index'),
+    url(r'^$', home.views.HomePageView.as_view(), name='index'),
 
     url(r'^auth$', bigcommerce_core.views.auth, name='bigcommerce_auth'),
     url(r'^load$', bigcommerce_core.views.load, name='bigcommerce_load'),

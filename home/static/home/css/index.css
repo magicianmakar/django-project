@@ -26,19 +26,23 @@ h4.days-remaining {
 .dropified-green {
     color: rgb(147, 196, 125);
 }
+
 .step-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #676a6c;
-  display: block;
-  margin: 2px 0 5px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #676a6c;
+    display: block;
+    margin: 2px 0 5px 0;
 }
+
 .goal-steps:hover .step-title {
     color: rgb(147, 196, 125);
 }
+
 .step-actions {
     min-height: 35.45px;
 }
+
 .disabled-gray {
     color: #999c9e;
 }
@@ -103,6 +107,7 @@ img.step-icon {
     .training-videos .training-video strong {
         font-size: 16px;
     }
+
     .training-videos .training-video small {
         font-size: 85%;
     }
@@ -114,5 +119,109 @@ img.step-icon {
 }
 
 .goal-step.clickable {
-  cursor: pointer;
+    cursor: pointer;
+}
+
+label {
+    text-align: left !important;
+}
+
+.setting-section {
+    margin-top: 15px;
+    border-left: 2px #eee solid;
+    padding-top: 5px;
+    margin-left: 20px;
+    margin-bottom: 15px;
+    padding-bottom: 5px;
+    background-color: rgb(250, 250, 250);
+    padding-left: 15px;
+}
+
+h3.setting-title {
+    padding: 0;
+    margin: 5px 0;
+}
+
+.table-ligthborder {
+    border: 1px solid #eee;
+}
+
+.table-ligthborder > thead > tr > th {
+    background-color: #fafafa;
+}
+
+.label {
+    border-radius: 3px;
+    background-color: #f7f7f8;
+    color: #564c4c;
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.label:hover {
+    background-color: #dbdbdb;
+}
+
+table a.label:focus, a.label:hover {
+    color: #564c4c;
+}
+
+.label .num {
+    font-weight: 600;
+}
+
+.label-danger {
+    background-color: #ed5565 !important;
+    color: #FFFFFF !important;
+}
+
+.label-danger[href]:focus,
+.label-danger[href]:hover {
+    background-color: #c9302c !important;
+}
+
+table td:first-child {
+    width: 100%;
+}
+
+.table > tbody > tr > td {
+    vertical-align: middle;
+}
+
+.table > tbody > tr > td > .btn {
+    margin-bottom: 0;
+}
+
+.v-center {
+    display: flex !important;
+    align-items: center !important;
+}
+
+.statistics-link {
+    display: none;
+}
+
+.sync-delay-config {
+    text-align: right !important;
+}
+
+.sync-delay-config label {
+    text-align: right !important;
+}
+
+.sync-delay-config .left {
+    text-align: left !important;
+}
+
+.btn-group .dropdown-menu .btn-success:hover {
+    background-color: #1a7bb9;
+}
+
+.btn-group .dropdown-menu .btn-info:hover {
+    background-color: #21bdbb;
+}
+
+.btn-group .dropdown-menu .btn-danger:hover {
+    background-color: #ec4758;
 }

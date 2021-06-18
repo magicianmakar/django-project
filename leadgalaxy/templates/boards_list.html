@@ -5,6 +5,8 @@
 
 {% block main-container %}
 
+{% include 'home/partial/candu.html' with mount_id='candu-boards-info-above' %}
+
 <div class="tabs-container">
     {% include 'home/partial/tabs/boards.html' %}
     <div class="tab-content margin-before-banner">
@@ -69,6 +71,8 @@
         </div>
     </div>
 </div>
+
+{% include 'home/partial/candu.html' with mount_id='candu-boards-info-below' %}
 
 {% include "partial/board_banner.html" %}
 
