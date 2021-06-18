@@ -1316,6 +1316,9 @@ class ShopifyProduct(ProductBase):
             pass
 
     def save(self, *args, **kwargs):
+        if self.data and '\x00' in self.data:
+            self.data = self.data.replace('\x00', '')
+
         data = json.loads(self.data)
 
         self.title = data.get('title', '')
@@ -1326,9 +1329,6 @@ class ShopifyProduct(ProductBase):
             self.price = '%.02f' % float(data['price'])
         except:
             self.price = 0.0
-
-        if '\x00' in self.tag:
-            self.tag = self.tag.replace('\x00', '')
 
         super(ShopifyProduct, self).save(*args, **kwargs)
 
