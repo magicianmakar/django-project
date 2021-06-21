@@ -633,7 +633,6 @@ def process_webhook_event(request, event_id):
         # checking if it's a custom single subscription ( when mixing yearly/monthly )
         try:
             if sub['plan']['metadata']['custom']:
-                capture_message('Single Custom Subscription Event', level='info')
                 return HttpResponse('Subscription Updated')
         except:
             pass
@@ -761,7 +760,6 @@ def process_webhook_event(request, event_id):
         # checking if it's a custom single subscription ( when mixing yearly/monthly )
         try:
             if sub['plan']['metadata']['custom']:
-                capture_message('Single Custom Subscription Event', level='info')
                 return HttpResponse('ok')
         except:
             pass
@@ -797,7 +795,6 @@ def process_webhook_event(request, event_id):
         # checking if it's a custom single subscription ( when mixing yearly/monthly )
         try:
             if sub['plan']['metadata']['custom']:
-                capture_message('Single Custom Subscription Event', level='info')
                 return HttpResponse('Custom Subscription Deleted')
         except:
             pass
