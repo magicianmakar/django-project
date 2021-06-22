@@ -232,6 +232,8 @@ class AddonUsageAdmin(admin.ModelAdmin):
         'stripe_subscription_id',
         'stripe_subscription_item_id',
         'billing__prices__stripe_price_id',
+        'user__email',
+        'user__id',
     )
     date_hierarchy = 'created_at'
     readonly_fields = ('stripe_subscription_id',)

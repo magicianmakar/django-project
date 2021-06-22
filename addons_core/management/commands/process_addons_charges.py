@@ -40,14 +40,11 @@ class Command(DropifiedBaseCommand):
 
     def start_command(self, *args, **options):
         today = options['today'].date()
-        today_range = (options['today'].floor('day').datetime,
-                       options['today'].ceil('day').datetime)
-        prev_day = options['today'].shift(days=-1).date()
         next_day = options['today'].shift(days=1).date()
         seven_days_ago = options['today'].shift(days=-7).date()
 
         for missed_usage_charge in AddonUsage.objects.filter(
-                next_billing__lt=arrow.get(today).shift(months=-2).datetime,
+                next_billing__lt=arrow.get(today).shift(days=-16).datetime,
                 cancelled_at__isnull=True):
             missed_usage_charge.next_billing = missed_usage_charge.get_next_billing_date(today)
             missed_usage_charge.save()
@@ -55,25 +52,26 @@ class Command(DropifiedBaseCommand):
         # Addons that change prices between months in stripe need to make that
         # change before upcomming invoice is created
         users = User.objects.filter(
-            Q(addonusage__cancel_at__range=today_range)
-            | (Q(addonusage__next_billing__range=(seven_days_ago, next_day))
-               & Q(addonusage__cancelled_at__isnull=True))
+            (Q(addonusage__next_billing__range=(today, next_day)) & Q(addonusage__cancelled_at__isnull=True))
+            | (Q(addonusage__next_billing__lt=today) & Q(addonusage__cancelled_at__isnull=True))
+            | (Q(addonusage__cancel_at__lte=today) & Q(addonusage__is_active=True))
         ).distinct()
-        usages = AddonUsage.objects.filter(
+        addon_subscriptions = AddonUsage.objects.filter(
             next_billing__range=(today, next_day),
             cancelled_at__isnull=True,
         )
-        overdue_usages = AddonUsage.objects.filter(
-            next_billing__range=(seven_days_ago, prev_day),
+        overdue_subscriptions = AddonUsage.objects.filter(
+            next_billing__lt=today,
             cancelled_at__isnull=True,
         )
-        cancelled_usages = AddonUsage.objects.filter(
-            cancel_at__range=today_range
+        cancelled_subscriptions = AddonUsage.objects.filter(
+            cancel_at__lte=today,
+            is_active=True,
         )
         users = users.prefetch_related(
-            Prefetch('addonusage_set', usages, to_attr='addon_subscriptions'),
-            Prefetch('addonusage_set', overdue_usages, to_attr='overdue_subscriptions'),
-            Prefetch('addonusage_set', cancelled_usages, to_attr='cancelled_subscriptions'),
+            Prefetch('addonusage_set', addon_subscriptions, to_attr='addon_subscriptions'),
+            Prefetch('addonusage_set', overdue_subscriptions, to_attr='overdue_subscriptions'),
+            Prefetch('addonusage_set', cancelled_subscriptions, to_attr='cancelled_subscriptions'),
         )
 
         if options['user_id']:
@@ -100,7 +98,7 @@ class Command(DropifiedBaseCommand):
             elif user.profile.from_shopify_app_store():
                 limit_exceeded = has_shopify_limit_exceeded(user, today=today)
                 if limit_exceeded:
-                    # Cancel addons overdue for 7 days
+                    # Cancel addons overdue after 7 days
                     addon_usages = []
                     for addon_usage in user.overdue_subscriptions:
                         if addon_usage.next_billing > seven_days_ago:

@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import arrow
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.db import transaction
 from django.db.models import Q, Sum, Max
 from django.urls import reverse
@@ -524,21 +525,19 @@ def remove_cancelled_addons(cancelled_usages):
     if len(cancelled_usages) == 0:
         return False
 
-    user = cancelled_usages[0].user
-    cancelled_usage_ids = [usage.id for usage in cancelled_usages]
-    remaining_addon_ids = user.addonusage_set.exclude(
-        Q(id__in=cancelled_usage_ids)
-        | Q(cancelled_at__isnull=False)
-    ).values_list('billing__addon_id', flat=True)
+    subscription_ids = [usage.id for usage in cancelled_usages]
+    for user in User.objects.filter(addonusage__id__in=subscription_ids):
+        user.profile.addons.clear()
+        subscribed_addons = Addon.objects.filter(
+            Q(billings__subscriptions__cancel_at__isnull=True)
+            | Q(billings__subscriptions__cancel_at__gt=arrow.get().date()),
+            billings__subscriptions__user_id=user.id
+        )
+        [user.profile.addons.add(addon) for addon in subscribed_addons]
 
-    # Some addons might be installed on other subscriptions
-    user_addon_ids = user.profile.addons.values_list('id', flat=True)
-    removed_addon_ids = [addon_id for addon_id in user_addon_ids if addon_id not in remaining_addon_ids]
-    user.profile.addons.through.objects.filter(
-        addon_id__in=removed_addon_ids,
-        userprofile=user.profile,
-    ).delete()
-    AddonUsage.objects.filter(id__in=cancelled_usage_ids).update(is_active=False)
+    AddonUsage.objects.filter(
+        id__in=subscription_ids
+    ).update(is_active=False)
 
 
 @transaction.atomic
@@ -616,7 +615,12 @@ def cancel_stripe_addons(subscription, item_ids=None):
 def get_shopify_subscription(user):
     # Shopify allows only one store per subscription
     store = user.profile.get_shopify_stores().first()
-    charges = store.shopify.RecurringApplicationCharge.find()
+    try:
+        charges = store.shopify.RecurringApplicationCharge.find()
+    except:
+        capture_exception()
+        return None
+
     for charge in charges:
         if charge.status == 'active':
             break
@@ -663,24 +667,28 @@ def create_shopify_subscription(store, addon_billing):
 def create_shopify_charge(addon_usage, today=None):
     today = today if today else arrow.get().date()
     if addon_usage.next_price is None:
-        if today == addon_usage.next_billing:
+        if addon_usage.next_billing <= today:  # Addon installed for limited time
             cancel_addon_usages([addon_usage], now=True)
         return False
 
     charge = get_shopify_subscription(addon_usage.user)
-    # Collect overdue charges in case customer didn't had limit in shopify store
-    if charge and addon_usage.next_billing <= today:
-        store = addon_usage.user.profile.get_shopify_stores().first()
-        usage_charge = store.shopify.UsageCharge.create({
-            "test": settings.DEBUG,
-            "recurring_application_charge_id": charge.id,
-            "description": f'{addon_usage.billing.addon.title} Addon',
-            "price": addon_usage.next_price.price,
-        })
+    if charge:
+        # Collect overdue charges in case customer didn't had limit in shopify store
+        if addon_usage.next_billing <= today:
+            store = addon_usage.user.profile.get_shopify_stores().first()
+            usage_charge = store.shopify.UsageCharge.create({
+                "test": settings.DEBUG,
+                "recurring_application_charge_id": charge.id,
+                "description": f'{addon_usage.billing.addon.title} Addon',
+                "price": addon_usage.next_price.price,
+            })
 
-        addon_usage.next_billing = addon_usage.get_next_billing_date(today=today)
-        addon_usage.save()
-        return usage_charge
+            addon_usage.next_billing = addon_usage.get_next_billing_date(today=today)
+            addon_usage.save()
+            return usage_charge
+
+    else:
+        cancel_addon_usages([addon_usage], now=True)
 
 
 def has_shopify_limit_exceeded(user, addon_billing=None, charge=None, today=None):
@@ -689,8 +697,9 @@ def has_shopify_limit_exceeded(user, addon_billing=None, charge=None, today=None
     """
     today = arrow.get(today) if today else arrow.get()
     charge = charge or get_shopify_subscription(user)
-    if charge is None:
-        raise Exception('Shopify Subscription Not Found')
+    if not charge:
+        cancel_addon_usages(user.addonusage_set.filter(is_active=True), now=True)
+        return False
 
     try:
         next_billing_on = arrow.get(charge.billing_on)
@@ -745,7 +754,7 @@ def need_shopify_subscription_increase(user, addon_billing, charge=None):
 
     shopify_subscription = user.profile.get_current_shopify_subscription()
     charge = charge or get_shopify_subscription(user)
-    if charge is None:
+    if not charge:
         raise Exception('Shopify Subscription Not Found')
 
     new_capped_amount = Decimal(charge.capped_amount) + addon_billing.max_cost

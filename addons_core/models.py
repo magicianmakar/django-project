@@ -314,5 +314,6 @@ class AddonUsage(models.Model):
         from_date = arrow.get() if not from_date else from_date
         days_left = arrow.get(self.created_at).shift(days=previous_days_left) - from_date
 
+        plan_trial_days += 1  # Plan trial days don't count day one
         addon_trial_days = days_left.days if days_left.days > 0 else 0
         return addon_trial_days if addon_trial_days > plan_trial_days else plan_trial_days
