@@ -260,7 +260,7 @@ def add_shopify_usage_invoice(user, invoice_type, amount, description="Usage for
         amount = safe_float(amount)
         if shopify_subscription.balance_remaining < amount:
             # adjusting capped limit by $50 (to not ask to recap very often)
-            shopify_subscription.customize(capped_amount=safe_float(shopify_subscription.capped_amount) + total_unpaid + 1)
+            shopify_subscription.customize(capped_amount=safe_float(shopify_subscription.capped_amount) + safe_float(total_unpaid) + 1.0)
 
             # refresh shopify sub to use capp increase lin in email
             shopify_subscription = get_shopify_recurring(user)
