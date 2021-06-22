@@ -1,0 +1,38 @@
+<table class="table table-bordered dataTables dataTable no-footer dtr-inline" id="DataTables_Table_0" role="grid" aria-describedby="DataTables_Table_0_info">
+    <thead>
+        <tr role="row"><th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Name: activate to sort column ascending" style="width: 104px;">Name</th><th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Email: activate to sort column ascending" style="width: 330px;">Email</th><th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Join Date: activate to sort column ascending" style="width: 181px;">Join Date</th><th class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Last Activity: activate to sort column ascending" style="width: 185px;">Last Activity</th><th style="width: 99px;" class="sorting" tabindex="0" aria-controls="DataTables_Table_0" rowspan="1" colspan="1" aria-label="Actions: activate to sort column ascending">Actions</th></tr>
+    </thead>
+    <tbody>        
+    <tr role="row" class="odd">
+            <td>
+                <a href="#">User</a>
+            </td>
+            <td>user@dropified.com</td>
+            <td><span class="date itooltip" title="">7 minutes ago</span></td>
+            <td></td>
+            <td>
+                <button class="btn btn-danger btn-xs">
+                    <i class="fa fa-user-times"></i> Remove
+                </button>
+            </td>
+        </tr>
+        <tr role="row" class="odd">
+            <td>
+                <a href="#">User 1</a>
+            </td>
+            <td>user1@dropified.com</td>
+            <td><span class="date itooltip" title="">10 minutes ago</span></td>
+            <td></td>
+            <td>
+                <button class="btn btn-danger btn-xs">
+                    <i class="fa fa-user-times"></i> Remove
+                </button>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<div class="ibox-content">
+    <button class="btn btn-success invite-subuser" data-extra={{ extra_subusers|lower }} data-cost="{{ extra_user_cost }}">
+        <i class="fa fa-user-plus"></i> Add User
+    </button>
+</div>

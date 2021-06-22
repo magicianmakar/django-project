@@ -24,8 +24,6 @@ from shopified_core.permissions import can_add_subuser
 
 @login_required
 def subusers(request):
-    if not request.user.can('sub_users.use'):
-        return render(request, 'upgrade.html')
 
     if request.user.is_subuser:
         raise PermissionDenied()

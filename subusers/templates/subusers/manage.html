@@ -16,6 +16,7 @@
             </div>
 
             <div class="ibox-content">
+                {% if user|can:'sub_users.use' %}
                 <table class="table table-bordered dataTables">
                     <thead>
                         <tr>
@@ -54,6 +55,10 @@
                 <button class="btn btn-success invite-subuser" data-extra={{ extra_subusers|lower }} data-cost="{{ extra_user_cost }}">
                     <i class="fa fa-user-plus"></i> Add User
                 </button>
+                {% else %}
+                {% include "subusers/subusers_upsell.html" %}
+                {% include "common/partial/upsell.html" with message="Add Sub Users to your Plan" only %}
+                {% endif %}
             </div>
         </div>
     </div>

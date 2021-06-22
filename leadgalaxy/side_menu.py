@@ -229,7 +229,7 @@ def create_menu(menu_structure, menu_data, request, namespace):
 
     # Know which bypass instead of removing these permissions from menu
     upsell_permission_exceptions = ['price_changes.use', 'profit_dashboard.view',
-                                    'mapping_bundle.use', 'suppliers_shipping_mapping.use']
+                                    'mapping_bundle.use', 'suppliers_shipping_mapping.use', 'sub_users.use']
     menu = []
     for section_key, item_keys in menu_structure:
         section = menu_data[section_key]
