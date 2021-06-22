@@ -527,7 +527,6 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
 
         for order in orders:
             key = store.id, order['id']
-            cache_data['gkart_auto_country_{}_{}'.format(*key)] = order.get('shipping_address', {}).get('country_code')
             fulfillment = order.get('trackings', [])
             cache_data['gkart_auto_fulfillment_{}_{}'.format(*key)] = fulfillment if len(fulfillment) > 0 else None
 
@@ -539,33 +538,28 @@ def cache_fulfillment_data(order_tracks, orders_max=None):
 def order_track_fulfillment(order_track, user_config=None):
     user_config = {} if user_config is None else user_config
     tracking_number = order_track.source_tracking
-    carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
-    country = cache.get('gkart_auto_country_{}_{}'.format(order_track.store.id, order_track.order_id))
     send_email = user_config.get('send_shipping_confirmation')
 
-    if country and country == 'US':
-        if leadgalaxy_utils.is_chinese_carrier(tracking_number) or leadgalaxy_utils.shipping_carrier(tracking_number) == 'USPS':
-            carrier_name = 'USPS'
-
+    carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
     carrier_name = 'AfterShip' if not carrier_name else carrier_name
-    carrier_url = order_track.get_tracking_link() if carrier_name == 'AfterShip' else ''
+    carrier_url = order_track.get_tracking_link()
+
     tracking_numbers = []
     carrier_names = []
     carrier_urls = []
-    fulfillment = cache.get('gkart_auto_fulfillment_{}_{}'.format(order_track.store.id, order_track.order_id))
+    cache_key = 'gkart_auto_fulfillment_{}_{}'.format(order_track.store.id, order_track.order_id)
+    fulfillment = cache.get(cache_key)
 
     if fulfillment:
         if fulfillment['tracking_number']:
             tracking_numbers = fulfillment['tracking_number'].split(',')
             tracking_numbers = [str(number) for number in tracking_numbers]
-            send_email = 'no'
         if fulfillment.get('carrier_name'):
             carrier_names = fulfillment['carrier_name'].split(',')
         if fulfillment.get('carrier_url'):
             carrier_urls = fulfillment['carrier_url'].split(',')
 
     changed = False
-
     if tracking_number not in tracking_numbers:
         changed = True
         tracking_numbers.append(tracking_number)
@@ -579,15 +573,12 @@ def order_track_fulfillment(order_track, user_config=None):
     fulfillment_data = {
         'order_id': order_track.order_id,
         'tracking_number': tracking_numbers,
-        'carrier_name': carrier_names,
+        'carrier_name': carrier_names if not carrier_urls else '',
         'carrier_url': carrier_urls,
+        'send_email': send_email != 'no',  # Can also be auto
     }
 
-    if send_email == 'no':
-        fulfillment_data['send_email'] = False
-    else:
-        fulfillment_data['send_email'] = True
-
+    cache.set(cache_key, fulfillment_data, timeout=3600)
     return changed, fulfillment_data
 
 
