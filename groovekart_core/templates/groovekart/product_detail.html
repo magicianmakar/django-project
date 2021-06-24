@@ -522,7 +522,12 @@
             </div>
             {% else %}
             <div class="panel-body" style="min-height:300px">
-                {% include "common/partial/upsell.html" with addon_id=11 message="Add Reviews to your Plan" only %}
+               
+                {% if request.user.profile.plan.support_addons %}
+                    {% include "common/partial/upsell.html" with addon_id=11 message="Add Reviews to your Plan" only %}
+                {% else %}
+                    {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Reviews" only %}
+                {% endif %}
             </div>
             {% endif %}
         </div>
