@@ -195,7 +195,7 @@ def get_menu_item_data(request):
             'is_ns_aware': False,
         },
         'get-started': {
-            'title': 'Get Started',
+            'title': 'Home',
             'url_name': 'index',
             'match': re.compile(r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$'),
         },
