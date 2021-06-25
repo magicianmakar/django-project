@@ -87,7 +87,7 @@ phonenumbers==8.9.10
 Pillow==7.2.0
 ply==3.11
 premailer==3.7.0
-psycopg2==2.9.1
+psycopg2==2.8.6
 pusher==2.0.1
 pyactiveresource==2.1.2
 pyasn1-modules==0.2.1
