@@ -183,34 +183,15 @@ class BigCommerceProduct(ProductBase):
         verbose_name = 'BigCommerce Product'
         ordering = ['-created_at']
 
-    store = models.ForeignKey('BigCommerceStore', related_name='products', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey('BigCommerceStore', related_name='products', null=True, on_delete=models.CASCADE)
 
-    data = models.TextField(default='{}', blank=True)
-    notes = models.TextField(null=True, blank=True)
-
-    title = models.CharField(max_length=300, db_index=True)
-    price = models.FloatField(blank=True, null=True, db_index=True)
     tags = models.TextField(blank=True, default='', db_index=True)
-    product_type = models.CharField(max_length=300, db_index=True)
 
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='BigCommerce Product ID')
     source_slug = models.CharField(max_length=300, blank=True, default='')
     default_supplier = models.ForeignKey('BigCommerceSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
-    config = models.TextField(null=True, blank=True)
-    variants_map = models.TextField(default='', blank=True)
-    supplier_map = models.TextField(default='', null=True, blank=True)
-    shipping_map = models.TextField(default='', null=True, blank=True)
-    bundle_map = models.TextField(null=True, blank=True)
-    mapping_config = models.TextField(null=True, blank=True)
-
     parent_product = models.ForeignKey('BigCommerceProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
-
-    monitor_id = models.IntegerField(null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'<BigCommerceProduct: {self.id}'
@@ -620,7 +601,7 @@ class BigCommerceProduct(ProductBase):
 
 
 class BigCommerceSupplier(SupplierBase):
-    store = models.ForeignKey(BigCommerceStore, related_name='suppliers', on_delete=models.CASCADE)
+    store = models.ForeignKey(BigCommerceStore, null=True, related_name='suppliers', on_delete=models.CASCADE)
     product = models.ForeignKey(BigCommerceProduct, on_delete=models.CASCADE)
 
     product_url = models.CharField(max_length=512, null=True, blank=True)

@@ -1240,38 +1240,20 @@ class ShopifyProduct(ProductBase):
         ordering = ['-created_at']
 
     store = models.ForeignKey(ShopifyStore, blank=True, null=True, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    data = models.TextField()
     original_data = models.TextField(default='', blank=True)
     original_data_key = models.CharField(max_length=32, null=True, blank=True)
 
-    config = models.TextField(null=True, blank=True)
-    variants_map = models.TextField(default='', blank=True)
-    supplier_map = models.TextField(default='', null=True, blank=True)
-    shipping_map = models.TextField(default='', null=True, blank=True)
-    bundle_map = models.TextField(null=True, blank=True)
-    mapping_config = models.TextField(null=True, blank=True)
-
-    notes = models.TextField(default='', blank=True)
     is_active = models.BooleanField(default=True)
     is_excluded = models.NullBooleanField(null=True)
 
-    title = models.TextField(blank=True, default='', db_index=True)
-    price = models.FloatField(default=0.0)
-    product_type = models.CharField(max_length=255, blank=True, default='')
     tag = models.TextField(blank=True, default='')
 
-    parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
-
-    price_notification_id = models.IntegerField(default=0)
-    monitor_id = models.IntegerField(null=True)
-
     shopify_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True)
-    default_supplier = models.ForeignKey('ProductSupplier', on_delete=models.SET_NULL, null=True, blank=True)
+    price_notification_id = models.IntegerField(default=0)
 
-    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
-    updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')
+    parent_product = models.ForeignKey('ShopifyProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Dupliacte of product')
+    default_supplier = models.ForeignKey('ProductSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f'<ShopifyProduct: {self.id}>'

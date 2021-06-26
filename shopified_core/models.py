@@ -1,6 +1,7 @@
 import json
 import re
 
+import arrow
 from django.contrib.auth.models import User
 from django.db import models
 from django.db.models import Q
@@ -124,9 +125,28 @@ class ProductBase(models.Model):
     class Meta:
         abstract = True
 
-    user_supplement = models.ForeignKey(UserSupplement,
-                                        null=True,
-                                        on_delete=models.SET_NULL)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    title = models.TextField(blank=True, null=True, db_index=True)
+    price = models.FloatField(default=0.0)
+    product_type = models.CharField(max_length=255, blank=True, default='')
+
+    data = models.TextField(default='{}', null=True, blank=True)
+    notes = models.TextField(null=True, blank=True)
+
+    config = models.TextField(null=True, blank=True)
+    variants_map = models.TextField(default='', blank=True)
+    supplier_map = models.TextField(default='', null=True, blank=True)
+    shipping_map = models.TextField(default='', null=True, blank=True)
+    bundle_map = models.TextField(null=True, blank=True)
+    mapping_config = models.TextField(null=True, blank=True)
+
+    monitor_id = models.IntegerField(null=True)
+
+    user_supplement = models.ForeignKey(UserSupplement, null=True, on_delete=models.SET_NULL)
+
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def get_bundle_mapping(self, variant=None, default=None):
         try:
@@ -158,6 +178,41 @@ class ProductBase(models.Model):
             return config.get('real_variant_map').get(str(variant_id), variant_id)
 
         return variant_id
+
+    def to_json(self):
+        try:
+            tags = self.tag
+        except:
+            tags = self.tags
+
+        try:
+            data = json.loads(self.data)
+        except:
+            data = {}
+
+        return {
+            'id': self.id,
+            'title': self.title,
+            'price': self.price,
+            'product_type': self.product_type,
+            'notes': self.notes,
+            'tags': tags,
+            'data': data,
+            'created_at': arrow.get(self.created_at).timestamp,
+        }
+
+    def from_json(self, product_data):
+        self.title = product_data['title']
+        self.price = product_data['price']
+        self.product_type = product_data['product_type']
+        self.notes = product_data['notes']
+
+        self.tag = product_data['tags']  # Shopify
+        self.tags = product_data['tags']  # Other platforms
+
+        self.data = json.dumps(product_data['data'])
+
+        self.created_at = arrow.get(product_data['created_at']).timestamp
 
 
 class BoardBase(models.Model):

@@ -173,24 +173,10 @@ class CommerceHQProduct(ProductBase):
         verbose_name = 'CHQ Product'
         ordering = ['-created_at']
 
-    store = models.ForeignKey('CommerceHQStore', related_name='products', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    store = models.ForeignKey('CommerceHQStore', related_name='products', null=True, on_delete=models.CASCADE)
 
-    data = models.TextField(default='{}', blank=True)
-    notes = models.TextField(null=True, blank=True)
-
-    title = models.CharField(max_length=300, db_index=True)
-    price = models.FloatField(blank=True, null=True, db_index=True)
-    product_type = models.CharField(max_length=300, db_index=True)
     tags = models.TextField(blank=True, default='', db_index=True)
     is_multi = models.BooleanField(default=False)
-
-    config = models.TextField(null=True, blank=True)
-    variants_map = models.TextField(default='', blank=True)
-    supplier_map = models.TextField(default='', null=True, blank=True)
-    shipping_map = models.TextField(default='', null=True, blank=True)
-    bundle_map = models.TextField(null=True, blank=True)
-    mapping_config = models.TextField(null=True, blank=True)
 
     parent_product = models.ForeignKey(
         'CommerceHQProduct', on_delete=models.SET_NULL,
@@ -198,11 +184,6 @@ class CommerceHQProduct(ProductBase):
 
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='CommerceHQ Product ID')
     default_supplier = models.ForeignKey('CommerceHQSupplier', on_delete=models.SET_NULL, null=True, blank=True)
-
-    monitor_id = models.IntegerField(null=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'<CommerceHQProduct: {self.id}'
@@ -668,7 +649,7 @@ class CommerceHQProduct(ProductBase):
 
 
 class CommerceHQSupplier(SupplierBase):
-    store = models.ForeignKey(CommerceHQStore, related_name='suppliers', on_delete=models.CASCADE)
+    store = models.ForeignKey(CommerceHQStore, null=True, related_name='suppliers', on_delete=models.CASCADE)
     product = models.ForeignKey(CommerceHQProduct, on_delete=models.CASCADE)
 
     product_url = models.CharField(max_length=512, null=True, blank=True)

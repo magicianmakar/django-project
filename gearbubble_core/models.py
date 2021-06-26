@@ -113,29 +113,14 @@ class GearBubbleProduct(ProductBase):
         ordering = ['-created_at']
 
     store = models.ForeignKey('GearBubbleStore', related_name='products', null=True, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    data = models.TextField(default='{}', blank=True)
-    notes = models.TextField(null=True, blank=True)
-
-    title = models.CharField(max_length=300, blank=True, db_index=True)
-    price = models.FloatField(blank=True, null=True, db_index=True)
     tags = models.TextField(blank=True, default='', db_index=True)
-    product_type = models.CharField(max_length=300, blank=True, default='', db_index=True)
 
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='GearBubble Product ID')
     source_slug = models.CharField(max_length=300, blank=True, default='')
+
     default_supplier = models.ForeignKey('GearBubbleSupplier', on_delete=models.SET_NULL, null=True, blank=True)
-
-    variants_map = models.TextField(default='', blank=True)
-    supplier_map = models.TextField(default='', null=True, blank=True)
-    shipping_map = models.TextField(default='', null=True, blank=True)
-    mapping_config = models.TextField(null=True, blank=True)
-
     parent_product = models.ForeignKey('GearBubbleProduct', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Duplicate of product')
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     @staticmethod
     def update_variant_properties(product_data):

@@ -364,10 +364,16 @@ class ProductDetailView(DetailView):
                 messages.error(self.request, "Product Not Found in CommerceHQ")
 
         context['breadcrumbs'] = [
-            {'title': 'Products', 'url': reverse('chq:products_list')},
-            {'title': self.object.store.title, 'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)},
-            self.object.title
+            {'title': 'Products', 'url': reverse('chq:products_list')}
         ]
+
+        if self.object.store:
+            context['breadcrumbs'].append({
+                'title': self.object.store.title,
+                'url': '{}?store={}'.format(reverse('chq:products_list'), self.object.store.id)
+            })
+
+        context['breadcrumbs'].append(self.object.title)
 
         context.update(aws_s3_context())
 
