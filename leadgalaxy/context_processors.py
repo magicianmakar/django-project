@@ -192,7 +192,7 @@ def add_side_menu(request):
         namespace = ''
 
     menu_data = get_menu_item_data(request)
-    menu_structure = get_menu_structure(namespace)
+    menu_structure = get_menu_structure(namespace, request)
 
     header = create_menu(menu_structure['header'], menu_data, request, namespace)
     body = create_menu(menu_structure['body'], menu_data, request, namespace)

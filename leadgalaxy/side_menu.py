@@ -4,7 +4,7 @@ from django.urls import reverse_lazy
 from django.urls import resolve
 
 
-def get_menu_structure(namespace):
+def get_menu_structure(namespace, request):
     body = [
         ('products', [
             'all-products',
@@ -34,6 +34,9 @@ def get_menu_structure(namespace):
     footer = [
         ('help', ['help']),
     ]
+
+    if request.user.profile.plan.is_plod:
+        footer.append(('plod_help', ['plod_help']))
 
     named = [
         ('account', ['account']),
@@ -182,8 +185,12 @@ def get_menu_item_data(request):
             'match': re.compile(r'(/\w+)?/user/profile'),
         },
         'help': {
-            'title': 'Help Center',
+            'title': f'{"Dropified " if request.user.profile.plan.is_plod else ""}Help Center',
             'url': 'https://learn.dropified.com/',
+        },
+        'plod_help': {
+            'title': 'PLOD Help Center',
+            'url': 'https://plod.dropified.com/',
         },
         'settings': {
             'title': 'Settings',
