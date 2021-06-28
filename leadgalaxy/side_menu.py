@@ -185,7 +185,7 @@ def get_menu_item_data(request):
         },
         'help': {
             'title': 'Get Support',
-            'url': 'https://help.dropified.com/',
+            'url': 'https://learn.dropified.com/',
         },
         'settings': {
             'title': 'Settings',
