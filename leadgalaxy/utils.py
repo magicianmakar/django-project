@@ -215,12 +215,12 @@ def create_user_without_signals(**kwargs):
 
     user.save()
 
-    profile = UserProfile.objects.create(user=user)
+    profile = UserProfile.objects.create(user=user, plan=kwargs.get('sub_profile_plan'))
 
     return user, profile
 
 
-def register_new_user(email, fullname, intercom_attributes=None, without_signals=False):
+def register_new_user(email, fullname, intercom_attributes=None, without_signals=False, sub_profile_plan=None):
     first_name = ''
     last_name = ''
 
@@ -238,11 +238,14 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
 
     if not User.objects.filter(email__iexact=email).exists():
         if not without_signals:
-            user = User.objects.create(
-                username=username,
-                email=email,
-                first_name=first_name,
-                last_name=last_name)
+            user = User()
+            user.username = username
+            user.email = email
+            user.first_name = first_name
+            user.last_name = last_name
+
+            if sub_profile_plan:
+                user.sub_profile_plan = sub_profile_plan
 
             user.set_password(password)
             user.save()
@@ -253,7 +256,8 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
                 email=email,
                 first_name=first_name[:30],
                 last_name=last_name[:30],
-                password=password)
+                password=password,
+                sub_profile_plan=sub_profile_plan)
 
         account_reg = AccountRegistration.objects.create(user=user)
 

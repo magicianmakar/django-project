@@ -646,7 +646,7 @@ def clickfunnels_register(request, funnel_id, funnel_step_id, plan_id):
 
         plan = GroupPlan.objects.get(id=plan_id)
 
-        user, created = utils.register_new_user(email, fullname)
+        user, created = utils.register_new_user(email, fullname, sub_profile_plan=plan)
 
         if created:
             user.profile.change_plan(plan)

@@ -117,17 +117,13 @@ def userprofile_creation(sender, instance, created, **kwargs):
 
         except UserProfile.DoesNotExist:
             plan = GroupPlan.objects.filter(default_plan=1).first()
+            plan = getattr(instance, 'sub_profile_plan', plan)
             if not plan:
                 plan = GroupPlan.objects.create(title='Default Plan', slug='default-plan', default_plan=1)
 
             # only show order banner to new users.
-            config = json.dumps(dict(
-                show_order_banner=True,
-            ))
-            profile = UserProfile.objects.create(user=instance,
-                                                 plan=plan,
-                                                 config=config,
-                                                 )
+            config = json.dumps(dict(show_order_banner=True))
+            profile = UserProfile.objects.create(user=instance, plan=plan, config=config)
 
             if plan.is_stripe():
                 profile.apply_subscription(plan)
