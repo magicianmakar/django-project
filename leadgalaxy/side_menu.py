@@ -31,12 +31,12 @@ def get_menu_structure(namespace, request):
         ('settings', ['settings']),
     ]
 
-    footer = [
-        ('help', ['help']),
-    ]
-
-    if request.user.profile.plan.is_plod:
-        footer.append(('plod_help', ['plod_help']))
+    if request.user.profile.plan.is_black:
+        footer = [('help', ['help']), ('plod_help', ['plod_help'])]
+    elif request.user.profile.plan.is_plod:
+        footer = [('plod_help', ['plod_help'])]
+    else:
+        footer = [('help', ['help'])]
 
     named = [
         ('account', ['account']),
@@ -185,11 +185,11 @@ def get_menu_item_data(request):
             'match': re.compile(r'(/\w+)?/user/profile'),
         },
         'help': {
-            'title': f'{"Dropified " if request.user.profile.plan.is_plod else ""}Help Center',
+            'title': f'{"Dropified " if request.user.profile.plan.is_black else ""}Help Center',
             'url': 'https://learn.dropified.com/',
         },
         'plod_help': {
-            'title': 'PLOD Help Center',
+            'title': f'{"PLOD " if request.user.profile.plan.is_black else ""} Help Center',
             'url': 'https://plod.dropified.com/',
         },
         'settings': {
