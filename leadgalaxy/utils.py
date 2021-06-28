@@ -293,7 +293,7 @@ def register_new_user(email, fullname, intercom_attributes=None, without_signals
 def smart_board_by_product(user, product):
     product_info = {
         'title': product.title,
-        'tags': product.tag,
+        'tags': product.tags,
         'type': product.product_type,
     }
 

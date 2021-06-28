@@ -1247,8 +1247,6 @@ class ShopifyProduct(ProductBase):
     is_active = models.BooleanField(default=True)
     is_excluded = models.NullBooleanField(null=True)
 
-    tag = models.TextField(blank=True, default='')
-
     shopify_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True)
     price_notification_id = models.IntegerField(default=0)
 
@@ -1304,7 +1302,7 @@ class ShopifyProduct(ProductBase):
         data = json.loads(self.data)
 
         self.title = data.get('title', '')
-        self.tag = data.get('tags', '')[:1024]
+        self.tags = data.get('tags', '')[:1024]
         self.product_type = data.get('type', '')[:254]
 
         try:

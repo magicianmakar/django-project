@@ -130,6 +130,7 @@ class ProductBase(models.Model):
     title = models.TextField(blank=True, null=True, db_index=True)
     price = models.FloatField(default=0.0)
     product_type = models.CharField(max_length=255, blank=True, default='')
+    tags = models.TextField(blank=True, null=True, default='')
 
     data = models.TextField(default='{}', null=True, blank=True)
     notes = models.TextField(null=True, blank=True)
@@ -181,11 +182,6 @@ class ProductBase(models.Model):
 
     def to_json(self):
         try:
-            tags = self.tag
-        except:
-            tags = self.tags
-
-        try:
             data = json.loads(self.data)
         except:
             data = {}
@@ -196,7 +192,7 @@ class ProductBase(models.Model):
             'price': self.price,
             'product_type': self.product_type,
             'notes': self.notes,
-            'tags': tags,
+            'tags': self.tags,
             'data': data,
             'created_at': arrow.get(self.created_at).timestamp,
         }
@@ -207,8 +203,7 @@ class ProductBase(models.Model):
         self.product_type = product_data['product_type']
         self.notes = product_data['notes']
 
-        self.tag = product_data['tags']  # Shopify
-        self.tags = product_data['tags']  # Other platforms
+        self.tags = product_data['tags']
 
         self.data = json.dumps(product_data['data'])
 

@@ -167,7 +167,7 @@ def get_product(request, filter_products, post_per_page=25, sort=None, store=Non
         permissions.user_can_view(user, get_object_or_404(ShopifyBoard, id=board))
 
     if filter_products:
-        res = products_filter(res, request.GET, tags_field='tag')
+        res = products_filter(res, request.GET)
 
     sort = sort if sort else '-date'
     if sort:
@@ -1213,8 +1213,8 @@ def autocomplete(request, target):
 
     elif target == 'tags':
         tags = []
-        for product in request.user.models_user.shopifyproduct_set.only('tag').filter(tag=q).order_by()[:10]:
-            for i in product.tag.split(','):
+        for product in request.user.models_user.shopifyproduct_set.only('tags').filter(tags=q).order_by()[:10]:
+            for i in product.tags.split(','):
                 i = i.strip()
                 if i and i not in tags:
                     if q.lower() in i.lower():

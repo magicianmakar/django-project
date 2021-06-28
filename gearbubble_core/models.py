@@ -114,8 +114,6 @@ class GearBubbleProduct(ProductBase):
 
     store = models.ForeignKey('GearBubbleStore', related_name='products', null=True, on_delete=models.CASCADE)
 
-    tags = models.TextField(blank=True, default='', db_index=True)
-
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='GearBubble Product ID')
     source_slug = models.CharField(max_length=300, blank=True, default='')
 

@@ -164,8 +164,6 @@ class WooProduct(ProductBase):
 
     store = models.ForeignKey('WooStore', related_name='products', null=True, on_delete=models.CASCADE)
 
-    tags = models.TextField(blank=True, default='', db_index=True)
-
     source_id = models.BigIntegerField(default=0, null=True, blank=True, db_index=True, verbose_name='WooCommerce Product ID')
     default_supplier = models.ForeignKey('WooSupplier', on_delete=models.SET_NULL, null=True, blank=True)
 

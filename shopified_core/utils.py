@@ -1109,7 +1109,7 @@ def normalize_product_title(title):
         return title.strip()
 
 
-def products_filter(res, fdata, tags_field='tags'):
+def products_filter(res, fdata):
     if fdata.get('title'):
         title = decode_params(fdata.get('title'))
         res = res.filter(title__icontains=title)
@@ -1131,7 +1131,7 @@ def products_filter(res, fdata, tags_field='tags'):
         res = res.filter(product_type__icontains=fdata.get('type'))
 
     if fdata.get('tag'):
-        res = res.filter(**{f'{tags_field}__icontains': fdata.get('tag')})
+        res = res.filter(**{'tags__icontains': fdata.get('tag')})
 
     if fdata.get('vendor'):
         res = res.filter(default_supplier__supplier_name__icontains=fdata.get('vendor'))

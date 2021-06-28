@@ -175,7 +175,6 @@ class CommerceHQProduct(ProductBase):
 
     store = models.ForeignKey('CommerceHQStore', related_name='products', null=True, on_delete=models.CASCADE)
 
-    tags = models.TextField(blank=True, default='', db_index=True)
     is_multi = models.BooleanField(default=False)
 
     parent_product = models.ForeignKey(
@@ -192,7 +191,7 @@ class CommerceHQProduct(ProductBase):
         data = json.loads(self.data)
 
         self.title = data.get('title', '')
-        self.tag = safe_str(data.get('tags', ''))[:1024]
+        self.tags = safe_str(data.get('tags', ''))[:1024]
         self.product_type = safe_str(data.get('type', ''))[:254]
 
         try:
