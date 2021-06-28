@@ -37,8 +37,6 @@ def get_menu_structure(namespace):
 
     named = [
         ('account', ['account']),
-        ('academy', ['academy']),
-        ('video_training', ['video_training']),
     ]
 
     return {'body': body, 'header': header, 'footer': footer, 'named': named}
@@ -184,7 +182,7 @@ def get_menu_item_data(request):
             'match': re.compile(r'(/\w+)?/user/profile'),
         },
         'help': {
-            'title': 'Get Support',
+            'title': 'Help Center',
             'url': 'https://learn.dropified.com/',
         },
         'settings': {
