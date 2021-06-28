@@ -105,7 +105,6 @@ def get_menu_item_data(request):
             'permissions': ['alibaba_integration.use'],
             'match': re.compile(r'(/\w+)?/alibaba/products'),
             'is_ns_aware': False,
-            'new_tab': True,
         },
         'boards': {
             'title': 'Boards',
