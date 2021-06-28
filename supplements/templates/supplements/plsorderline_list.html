@@ -105,41 +105,6 @@
           Download
         </a>
 
-        <a class="btn btn-info btn-xs m-l-xs" data-toggle="modal" data-target="#modal-label-history" href="#">History</a>
-        <div class="hidden history">
-          <table class="table table-striped"><tbody>
-            {% for l in line_item.label.user_supplement.labels.all %}
-            <tr>
-              <td>{{ l.created_at|user_date }}</td>
-              <td>
-                <a href="{% url 'pls:generate_label' line_id=line_item.id %}?label_id={{ l.id }}" target="_blank">
-                  {% if l.image %}
-                  <img class="img-responsive" src="{{ l.image }}" />
-                  {% else %}
-                  {{ l.url }}
-                  {% endif %}
-                </a>
-              </td>
-              <td>
-                <span class="label
-                            {% if l.status == l.APPROVED %}
-                            label-primary
-                            {% elif l.status == l.AWAITING_REVIEW %}
-                            label-warning
-                            {% elif l.status == l.REJECTED %}
-                            label-danger
-                            {% endif %}">
-                  {{ l.status_string }}
-                </span>
-              </td>
-              <td>
-                {{ l.status_updated_at|user_date }}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody></table>
-        </div>
-
         <a class="btn btn-info btn-xs m-l-xs sync-shipstation" data-button-loading="Syncing" data-order-id="{{ line_item.pls_order.shipstation_order_number }}" href="#">Sync Shipstation</a>
 
         {%  if line_item.label.need_barcode_fix %}
