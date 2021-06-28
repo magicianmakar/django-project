@@ -15,6 +15,7 @@ from leadgalaxy.models import PriceMarkupRule
 from leadgalaxy.utils import format_shopify_send_to_store
 from lib.aliexpress_api import RestApi, TopException
 from lib.exceptions import capture_exception, capture_message
+from metrics.tasks import add_number_metric
 from prints.utils import get_price_markup
 from shopified_core.utils import dict_val, float_to_str, get_cached_order, get_store_api, safe_int
 from shopified_core.models_utils import get_store_model, get_product_model
@@ -240,7 +241,6 @@ def save_alibaba_products(request, products_data):
 
         user = account.user
         products = account.get_products(product_ids)
-
         for api_product in products:
             # can be {store_type} or {store_type}_{store_id}
             import_to = user.get_config('alibaba_default_import', 'shopify')
@@ -304,6 +304,7 @@ def save_alibaba_products(request, products_data):
                     }
                     StoreAPI.target = 'product-export'
                     StoreAPI.post_product_export(request, user, data)
+            add_number_metric.apply_async(args=['product', 'alibaba', 1])
 
 
 class OrderException(Exception):

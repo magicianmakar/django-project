@@ -8,6 +8,7 @@ from django.db import models
 from django.utils.functional import cached_property
 
 from lib.exceptions import capture_exception
+from metrics.tasks import add_number_metric
 from shopified_core.utils import float_to_str, get_store_api, hash_text, hash_url_filename
 
 
@@ -239,7 +240,7 @@ class AlibabaAccount(models.Model):
 
         if 'error' in response:
             return response
-
+        add_number_metric.apply_async(args=['order', 'alibaba', 1])
         result = response['alibaba_buynow_order_create_response']
         return result['value']['trade_id']
 
