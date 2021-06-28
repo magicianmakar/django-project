@@ -1508,6 +1508,11 @@ def user_profile(request):
         if subscription and settings.BAREMETRICS_ACCESS_TOKEN:
             stripe_customer_id = request.user.stripe_customer.customer_id
 
+    if request.user.get_config('__plan'):
+        free_plan = GroupPlan.objects.get(id=request.user.get_config('__plan'))
+        if request.user.profile.plan != free_plan and request.user.profile.plan.free_plan:
+            request.user.profile.change_plan(free_plan)
+
     return render(request, 'user/profile.html', {
         'countries': get_counrties_list(),
         'now': timezone.now(),
