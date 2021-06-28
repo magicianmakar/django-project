@@ -207,6 +207,10 @@ def create_user_without_signals(**kwargs):
     if password:
         del kwargs['password']
 
+    plan = kwargs.get('sub_profile_plan')
+    if plan:
+        del kwargs['sub_profile_plan']
+
     user = User(**kwargs)
     user.no_auto_profile = True
 
@@ -215,7 +219,7 @@ def create_user_without_signals(**kwargs):
 
     user.save()
 
-    profile = UserProfile.objects.create(user=user, plan=kwargs.get('sub_profile_plan'))
+    profile = UserProfile.objects.create(user=user, plan=plan)
 
     return user, profile
 
