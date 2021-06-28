@@ -31,9 +31,16 @@ def get_menu_structure(namespace, request):
         ('settings', ['settings']),
     ]
 
-    if request.user.profile.plan.is_black:
+    try:
+        is_black = request.user.profile.plan.is_black
+        is_plod = request.user.profile.plan.is_plod
+    except:
+        is_black = False
+        is_plod = False
+
+    if is_black:
         footer = [('help', ['help']), ('plod_help', ['plod_help'])]
-    elif request.user.profile.plan.is_plod:
+    elif is_plod:
         footer = [('plod_help', ['plod_help'])]
     else:
         footer = [('help', ['help'])]
@@ -66,6 +73,12 @@ def get_menu_item_data(request):
     - match: Will be used to apply classes.
     - platforms: Only show on the specified platforms (ex: Shopify, chq, gkart...)
     """
+
+    try:
+        is_black = request.user.profile.plan.is_black
+    except:
+        is_black = False
+
     return {
         'orders': {
             'title': 'Orders',
@@ -185,11 +198,11 @@ def get_menu_item_data(request):
             'match': re.compile(r'(/\w+)?/user/profile'),
         },
         'help': {
-            'title': f'{"Dropified " if request.user.profile.plan.is_black else ""}Help Center',
+            'title': f'{"Dropified " if is_black else ""}Help Center',
             'url': 'https://learn.dropified.com/',
         },
         'plod_help': {
-            'title': f'{"PLOD " if request.user.profile.plan.is_black else ""} Help Center',
+            'title': f'{"PLOD " if is_black else ""} Help Center',
             'url': 'https://plod.dropified.com/',
         },
         'settings': {
