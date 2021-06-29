@@ -23,7 +23,7 @@
                     {% include 'home/partial/stores_list.html' %}
                 </div>
 
-                {% if 'research' not in request.user.plan.slug %}
+                {% if 'research' not in request.user.profile.plan.slug %}
                     {% include 'home/partial/training_and_goals.html' %}
                 {% endif %}
             </div>
