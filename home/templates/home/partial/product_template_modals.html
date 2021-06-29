@@ -91,7 +91,11 @@
                     </div>
                     {% else %}
                     <div class="col-sm-12">
-                        {% include "common/partial/upsell.html" with addon_id=21 message="Add Custom Product Description to your Plan" only %}
+                        {% if user.profile.plan.support_addons %}
+                            {% include "common/partial/upsell.html" with addon_id=21 message="Add Custom Product Description to your Plan" only %}
+                        {% else %}
+                            {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Custom Product Description" only %}
+                        {% endif %}
                         <table class="table table-ligthborder">
                             <thead>
                                 <tr>

@@ -80,7 +80,11 @@
 
             <div class="modal-body">
                 {% if not user|can:'advance_markup.use' %}
-                {% include "common/partial/upsell.html" with addon_id=93 message="Add Advanced Markup to your Plan" only %}
+                    {% if user.profile.plan.support_addons %}
+                        {% include "common/partial/upsell.html" with addon_id=93 message="Add Advanced Markup to your Plan" only %}
+                    {% else %}
+                        {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Advanced Markup" only %}
+                    {% endif %}
                 {% endif %}
                 <div class="row">
                     <div class="col-sm-12">
