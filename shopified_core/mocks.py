@@ -5,7 +5,6 @@ from random import randint, randrange, uniform, choice, getrandbits, shuffle
 
 import arrow
 from django.utils.text import Truncator
-
 from profit_dashboard.utils import calculate_profits, calculate_profit_margin
 from shopified_core.utils import dict_val
 
@@ -151,35 +150,26 @@ def get_mocked_bundle_variants(product, bundle_mapping):
     return new_bundles
 
 
-def get_mocked_alert_changes(product_queryset):
-    products = product_queryset.all().order_by('?')[:3]
-
-    def random_integer():
-        return randint(1, 500)
-
-    def random_float():
-        return Decimal(uniform(20, 50)).quantize(Decimal('.01'))
-
-    def random_float_higher():
-        return Decimal(uniform(20, 50)).quantize(Decimal('.01'))
-
+def get_mocked_alert_changes():
     def get_random_change(sku_readable=''):
+        random_integer = randint(1, 500)
+        random_float = Decimal(uniform(20, 50)).quantize(Decimal('.01'))
         random_change = choice([
             {'product': {'offline': [{}]}},
             {'variants': {'var_added': [{'sku_readable': sku_readable}]}},
             {'variants': {'var_removed': [{'sku_readable': sku_readable}]}},
             {'variants': {'quantity': [{
-                'old_value': random_integer(), 'new_value': random_integer(),
-                'shopify_value': random_integer(), 'chq_value': random_integer(),
-                'woo_value': random_integer(), 'gkart_value': random_integer(),
-                'bigcommerce_value': random_integer(), 'sku_readable': sku_readable,
+                'old_value': randint(1, 500), 'new_value': random_integer,
+                'shopify_value': random_integer, 'chq_value': random_integer,
+                'woo_value': random_integer, 'gkart_value': random_integer,
+                'bigcommerce_value': random_integer, 'sku_readable': sku_readable,
             }]}},
             {'variants': {'price': [{
-                'level': 'variant', 'name': 'price', 'new_value': random_float(),
-                'old_value': random_float(), 'bigcommerce_value': random_float_higher(),
-                'gkart_value': random_float_higher(), 'woo_value': random_float_higher(),
-                'chq_value': random_float_higher(), 'shopify_value': random_float_higher(),
-                'sku_readable': sku_readable,
+                'level': 'variant', 'name': 'price', 'new_value': random_float,
+                'old_value': Decimal(uniform(20, 50)).quantize(Decimal('.01')),
+                'bigcommerce_value': random_float, 'gkart_value': random_float,
+                'woo_value': random_float, 'shopify_value': random_float,
+                'chq_value': random_float, 'sku_readable': sku_readable,
             }]}},
         ])
         change_object = next(iter(random_change))
@@ -198,34 +188,25 @@ def get_mocked_alert_changes(product_queryset):
                 change[change_object][change_type] = []
 
             change[change_object][change_type] += random_change[change_object][change_type]
+
         return change
 
-    variant_names = ['Small', 'Long Sleeves', 'Extra Large', 'Large', 'Medium']
-    default_change = {
+    return [{
+        'qelem': {
+            'product': {'title': 'Women Warm Half Finger Gloves'},
+            'updated_at': arrow.get().datetime
+        },
+        'changes': get_product_change(['W', 'BK', 'R'])
+    }, {
+        'qelem': {
+            'product': {'title': 'Air Freshener Fragrance Spray'},
+            'updated_at': arrow.get().datetime
+        },
+        'changes': get_product_change(['Lavender', 'Peach Blossom', 'Apple Cinnamon'])
+    }, {
         'qelem': {
             'product': {'title': 'Leather Jacket'},
             'updated_at': arrow.get().datetime
         },
-        'changes': get_product_change(variant_names)
-    }
-
-    product_changes = []
-    for product in products:
-        try:
-            variants = product.get_variant_mapping()
-            try:
-                variant_names = [' - '.join(i['title'] for i in z) for z in variants.values()][:6]
-            except:
-                variant_names = ['Default Title']
-
-            product_changes.append({
-                'qelem': {
-                    'product': {'title': product.title},
-                    'updated_at': arrow.get().datetime
-                },
-                'changes': get_product_change(variant_names)
-            })
-        except:
-            pass
-
-    return product_changes or [default_change]
+        'changes': get_product_change(['Black - PP', 'Black - S', 'Black - M'])
+    }]
