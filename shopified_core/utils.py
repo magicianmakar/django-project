@@ -1003,7 +1003,9 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
 
                 # Order is already placed (linked to a ShopifyOrderTrack)
                 if line_item.get('order_track') and line_item['order_track'].id:
-                    continue
+                    # Private Label order tracks are sorted at supplements app
+                    if not line_item.get('is_pls'):
+                        continue
 
                 # Return Print On Demand orders separately
                 if is_dropified_print:

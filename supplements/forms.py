@@ -153,6 +153,7 @@ class OrderFilterForm(forms.Form):
 class MyOrderFilterForm(forms.Form):
     order_number = forms.CharField(required=False)
     transaction_id = forms.CharField(required=False)
+    item_id = forms.IntegerField(required=False)
 
 
 class PayoutFilterForm(OrderFilterForm):

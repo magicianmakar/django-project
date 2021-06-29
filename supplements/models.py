@@ -6,6 +6,7 @@ import arrow
 import simplejson as json
 from django.contrib.auth.models import User
 from django.db import models
+from django.urls import reverse
 from django.utils.functional import cached_property
 from PIL import Image
 
@@ -257,11 +258,25 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
             'currency': 'USD',
         }}
 
+    @property
+    def source_url(self):
+        return f"{reverse('pls:my_orders')}?transaction_id={self.id}"
+
+    @property
+    def source_status(self):
+        return {
+            PLSOrder.PENDING: 'D_PENDING_PAYMENT',
+            PLSOrder.PAID: 'D_PAID',
+            PLSOrder.SHIPPED: 'D_SHIPPED',
+        }.get(self.status, 'PLACE_ORDER_SUCCESS')
+
+    @cached_property
     def tracking_numbers_str(self):
-        tracking_str = ""
-        for pls_item in self.order_items.all():
-            tracking_str += f' {pls_item.tracking_number},'
-        return tracking_str.rstrip(',')
+        return ', '.join(self.order_items.exclude(tracking_number='').values_list('tracking_number', flat=True))
+
+    @cached_property
+    def has_bundles(self):
+        return self.order_items.filter(is_bundled=True).exists()
 
 
 class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
@@ -322,11 +337,24 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
             self._store_api_request = MockRequest()
         return self._store_api_request
 
+    @property
+    def source_url(self):
+        return f"{reverse('pls:my_orders')}?item_id={self.id}"
+
+    @cached_property
+    def track(self):
+        from shopified_core.models_utils import get_track_model
+        try:
+            return get_track_model(self.store_type).objects.get(id=self.order_track_id)
+        except models.ObjectDoesNotExist:
+            return None
+
     def save_order_track(self):
         if not self.order_track_id:
             self.create_tracking()
 
         self.update_tracking()
+        self.save()
 
     def create_tracking(self):
         api_data = {
@@ -350,7 +378,7 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
     def update_tracking(self):
         api_data = {
             'store': self.store_id,
-            'status': self.pls_order.status,
+            'status': self.pls_order.source_status,
             'order': self.order_track_id,
             'order_details': json.dumps(self.pls_order.payment_details),
             'tracking_number': self.tracking_number,
@@ -360,10 +388,13 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
         if self.is_bundled:
             api_data['bundle'] = True
 
+        if self.tracking_number:
+            self.is_fulfilled = True
+
         try:
             response = self.store_api.post_order_fulfill_update(self.store_api_request, self.pls_order.user, api_data)
+            result = json.loads(response.content.decode("utf-8"))
             if response.status_code != 200:
-                result = json.loads(response.content.decode("utf-8"))
                 raise Exception(result)
         except:
             capture_exception()

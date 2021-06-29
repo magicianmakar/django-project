@@ -1,6 +1,5 @@
 import arrow
 import json
-from decimal import Decimal
 from io import BytesIO
 
 from django.conf import settings
@@ -248,35 +247,22 @@ class SupplementsApi(ApiResponseMixin, View):
         if order is None:
             return self.api_error('Order not found', status=404)
 
-        status = {
-            PLSOrder.PENDING: 'D_PENDING_PAYMENT',
-            PLSOrder.PAID: 'D_PAID',
-            PLSOrder.SHIPPED: 'D_SHIPPED',
-        }.get(order.status, 'PLACE_ORDER_SUCCESS')
+        order_item = order.order_items.filter(order_track_id=data['track_id']).first()
+        if not order_item:
+            [i.save_order_track() for i in order.order_items.all()]
 
-        total_price = Decimal(order.amount) / Decimal(100)
-        shipping_price = Decimal(order.shipping_price) / Decimal(100)
-        products_price = total_price - shipping_price
-
-        tracking_numbers = []
-        for item in order.order_items.values('tracking_number'):
-            if item['tracking_number'] and item['tracking_number'] not in tracking_numbers:
-                tracking_numbers.append(item['tracking_number'])
-        tracking_number = ','.join(tracking_numbers)
-        return self.api_success({
-            'details': {
-                'status': status,
-                'orderStatus': status,  # Mock extension
-                'tracking_number': tracking_number,
-                'order_details': {'cost': {
-                    'total': str(total_price.quantize(Decimal('0.01'))),
-                    'products': str(products_price.quantize(Decimal('0.01'))),
-                    'shipping': str(shipping_price.quantize(Decimal('0.01'))),
-                    'currency': 'USD',
-                }},
+        order_items = order.order_items.filter(order_track_id=data['track_id'])
+        return self.api_success({'orders': [{
+            "source": {
+                'id': order.id,
+                'status': order.source_status,
+                'orderStatus': order.source_status,
+                'tracking_number': order.tracking_numbers_str,
+                'order_details': order.payment_details,
                 'source_id': order.get_dropified_source_id(),
+                'source_url': order.source_url
             }
-        })
+        } for order_item in order_items]})
 
     def post_delete_usersupplement(self, request, user, data):
         if request.user.can('pls.use'):

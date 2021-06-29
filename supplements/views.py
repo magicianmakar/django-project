@@ -1348,6 +1348,10 @@ class MyOrders(common_views.OrderView):
                     | Q(id=transaction_id)
                 )
 
+            item_id = form.cleaned_data['item_id']
+            if item_id:
+                queryset = queryset.filter(order_items__id=item_id)
+
             date = self.request.GET.get('date', None)
             created_at_start, created_at_end = None, None
             if date:
