@@ -58,6 +58,7 @@
                     data-toggle="tab" href="#tab-6"
                     ><i class="fa fa-file-o"></i> Reviews</a></li>
                 {% endif %}
+                {% if request.user|can:'price_change_options.use' %}
                 <li>
                     <a data-toggle="tab" href="#tab-7"
                        data-auto-click="#alerts"
@@ -68,6 +69,7 @@
                         <i class="fa fa-line-chart"></i> Alerts
                     </a>
                 </li>
+                {% endif %}
                 {% if request.user|can:'youtube_ads.use' %}
                 <li>
                     <a href="{% url 'youtube_ads.views.index' %}?type=all&q={{ product.product.title }}" target="_blank">
