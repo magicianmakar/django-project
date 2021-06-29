@@ -340,12 +340,13 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
                 try:
                     order_number, order_id = order_number.split('-')
                 except ValueError:
-                    queryset = queryset.filter(order_number=order_number)
+                    query_search = Q(pls_order__order_number__endswith=order_number)
+                    order_id = safe_int(order_number)
+                    if order_id:
+                        query_search |= Q(pls_order_id=order_id)
+                    queryset = queryset.filter(query_search)
                 else:
-                    try:
-                        queryset = queryset.filter(id=order_id)
-                    except ValueError:
-                        queryset = queryset.filter(order_number=order_number)
+                    queryset = queryset.filter(pls_order__order_number__endswith=order_number, pls_order_id=order_id)
 
             status = form.cleaned_data['status']
             if status:
@@ -511,12 +512,13 @@ class OrderItemListView(LoginRequiredMixin, ListView, PagingMixin):
                 try:
                     order_number, order_id = order_number.split('-')
                 except ValueError:
-                    queryset = queryset.filter(pls_order__order_number=order_number)
+                    query_search = Q(pls_order__order_number__endswith=order_number)
+                    order_id = safe_int(order_number)
+                    if order_id:
+                        query_search |= Q(pls_order_id=order_id)
+                    queryset = queryset.filter(query_search)
                 else:
-                    try:
-                        queryset = queryset.filter(pls_order_id=order_id)
-                    except ValueError:
-                        queryset = queryset.filter(pls_order__order_number=order_number)
+                    queryset = queryset.filter(pls_order__order_number__endswith=order_number, pls_order_id=order_id)
 
             status = form.cleaned_data['status']
             if status:
