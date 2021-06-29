@@ -442,13 +442,18 @@ class UserProfile(models.Model):
 
     @cached_property
     def get_perms(self):
-        perms = list(self.plan.permissions.all().values_list('name', flat=True))
+        if self.plan.parent_plan:
+            plan = self.plan.parent_plan
+        else:
+            plan = self.plan
+
+        perms = list(plan.permissions.all().values_list('name', flat=True))
         for bundle in self.bundles.all():
             for i in bundle.permissions.values_list('name', flat=True):
                 if i not in perms:
                     perms.append(i)
 
-        if self.plan.support_addons:
+        if plan.support_addons:
             for addon in self.addons.all():
                 for i in addon.permissions.values_list('name', flat=True):
                     if i not in perms:
@@ -2093,6 +2098,7 @@ class GroupPlan(models.Model):
     private_label = models.BooleanField(default=False, verbose_name='Private Label Plan')
 
     permissions = models.ManyToManyField(AppPermission, blank=True)
+
     goals = models.ManyToManyField('goals.Goal', related_name='plans', blank=True)
 
     payment_gateway = models.CharField(max_length=25, choices=PLAN_PAYMENT_GATEWAY, default=PLAN_PAYMENT_GATEWAY[0][0])
@@ -2101,6 +2107,8 @@ class GroupPlan(models.Model):
     revision = models.CharField(max_length=128, blank=True, null=True)
     hidden = models.BooleanField(default=False, verbose_name='Hidden from users')
     locked = models.BooleanField(default=False, verbose_name='Disable Direct Subscription')
+
+    parent_plan = models.ForeignKey('GroupPlan', null=True, on_delete=models.SET_NULL, blank=True, verbose_name='Use permissions from selected plan')
 
     def __str__(self):
         return f'Plan: {self.title}'

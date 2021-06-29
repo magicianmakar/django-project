@@ -69,6 +69,20 @@ class GroupPlanAdmin(admin.ModelAdmin):
 
         return super().formfield_for_manytomany(db_field, request=request, **kwargs)
 
+    def get_fields(self, request, obj=None, **kwargs):
+        fields = super().get_fields(request, obj, **kwargs)
+        fields.remove('parent_plan')
+
+        permissions_index = fields.index("permissions")
+        fields.insert(permissions_index, 'parent_plan')
+
+        return fields
+
+    class Media:
+        js = (
+            'shopified/js/admin_groupplan.js',  # handle permissions UI
+        )
+
 
 @admin.register(GroupPlanChangeLog)
 class GroupPlanChangeLogAdmin(admin.ModelAdmin):
