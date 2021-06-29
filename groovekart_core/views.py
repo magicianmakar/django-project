@@ -989,11 +989,15 @@ class OrderPlaceRedirectView(RedirectView):
         return super(OrderPlaceRedirectView, self).dispatch(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
-        product = None
-        supplier = None
+        if not self.request.user.can('auto_order.use'):
+            messages.error(self.request, "Your plan does not allow auto-ordering.")
+            return '/gkart/orders'
 
         if not self.request.GET.get('SAStore'):
             return set_url_query(self.request.get_full_path(), 'SAStore', 'gkart')
+
+        product = None
+        supplier = None
 
         if self.request.GET.get('supplier'):
             supplier = get_object_or_404(GrooveKartSupplier, id=self.request.GET['supplier'])

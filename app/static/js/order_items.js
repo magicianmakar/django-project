@@ -5,6 +5,11 @@
     function addOrderToQueue(order, warn) {
 
         warn = typeof(warn) !== 'undefined' ? warn : true;
+        var autoOrder = $('.order').data('auto-order');
+        if (autoOrder === false) {
+            toastr.error('Your plan does not support auto ordering.', 'Auto Order not allowed');
+            return;
+        }
 
         if (!window.extensionSendMessage) {
             swal('Please Reload the page and make sure you are using the latest version of the extension');

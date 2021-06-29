@@ -207,7 +207,8 @@
                             order-id="{{order.id}}"
                             connected="{{order.connected_lines}}"
                             data-placed-orders="{{order.placed_orders}}"
-                            data-lines-count="{{order.lines_count}}">
+                            data-lines-count="{{order.lines_count}}"
+                            data-auto-order="{{user|can:'auto_order.use'|lower}}">
                             <div class="header">
                                 <div class="row">
                                     <div class="col-xs-2">

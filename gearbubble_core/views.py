@@ -435,12 +435,15 @@ class OrderPlaceRedirectView(RedirectView):
         return super(OrderPlaceRedirectView, self).dispatch(request, *args, **kwargs)
 
     def get_redirect_url(self, *args, **kwargs):
-        product = None
-        supplier = None
+        if not self.request.user.can('auto_order.use'):
+            messages.error(self.request, "Your plan does not allow auto-ordering.")
+            return '/gear/orders'
 
         if not self.request.GET.get('SAStore'):
             return set_url_query(self.request.get_full_path(), 'SAStore', 'gear')
 
+        product = None
+        supplier = None
         disable_affiliate = self.request.user.get_config('_disable_affiliate', False)
 
         if self.request.GET.get('nff'):

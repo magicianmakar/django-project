@@ -332,7 +332,9 @@
 
                     <div class="orders">
                         {% for order in orders %}
-                        <div class="order" order-id="{{order.id}}" connected="{{order.connected_lines}}">
+                        <div class="order" order-id="{{order.id}}"
+                            connected="{{order.connected_lines}}"
+                            data-auto-order="{{user|can:'auto_order.use'|lower}}">
                             <div class="header">
                                 <div class="row">
                                     <div class="col-md-2 col-xs-6 xs-m-t">

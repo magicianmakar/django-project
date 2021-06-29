@@ -340,6 +340,11 @@ class AffiliateTestCase(BaseTestCase):
         self.user.set_password(self.password)
         self.user.save()
 
+        self.user.profile.plan = f.GroupPlanFactory()
+        permission = f.AppPermissionFactory(name='auto_order.use')
+        self.user.profile.plan.permissions.add(permission)
+        self.user.profile.save()
+
         self.client.login(username=self.user.username, password=self.password)
 
         self.place_order_data = {
@@ -481,6 +486,11 @@ class AutoFulfillLimitsTestCase(BaseTestCase):
         self.password = 'test'
         self.user.set_password(self.password)
         self.user.save()
+
+        self.user.profile.plan = f.GroupPlanFactory()
+        permission = f.AppPermissionFactory(name='auto_order.use')
+        self.user.profile.plan.permissions.add(permission)
+        self.user.profile.save()
 
         self.client.login(username=self.user.username, password=self.password)
 

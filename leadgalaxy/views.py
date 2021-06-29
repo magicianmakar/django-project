@@ -2919,9 +2919,12 @@ def orders_track(request):
 
 @login_required
 def orders_place(request):
+    if not request.user.can('auto_order.use'):
+        messages.error(request, "Your plan does not allow auto-ordering.")
+        return HttpResponseRedirect('/orders')
+
     product = None
     supplier = None
-
     disable_affiliate = request.user.get_config('_disable_affiliate', False)
 
     if request.GET.get('nff'):
