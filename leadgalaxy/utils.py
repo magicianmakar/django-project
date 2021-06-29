@@ -204,11 +204,11 @@ def apply_shared_registration(user, registration):
 
 def create_user_without_signals(**kwargs):
     password = kwargs.get('password')
-    if password:
+    if 'password' in kwargs:
         del kwargs['password']
 
     plan = kwargs.get('sub_profile_plan')
-    if plan:
+    if 'sub_profile_plan' in kwargs:
         del kwargs['sub_profile_plan']
 
     user = User(**kwargs)
