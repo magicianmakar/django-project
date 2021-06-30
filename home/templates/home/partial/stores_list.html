@@ -472,12 +472,18 @@
                 {% endif %}
 
                 {% empty %}
+                {% if user.profile.plan.stores > 0 %}
                 <tr>
                     <td colspan="4" class="text-center">No store found.</td>
                 </tr>
-                {% endfor %}
+                {% endif %}
+            {% endfor %}
           </tbody>
         </table>
+
+        {% if user.profile.plan.stores == 0 and user.profile.get_stores_count == 0 %}
+        {% include 'home/partial/store_upsell.html' %}
+        {% endif %}
 
         {% if add_store_btn %}
         <a class="add-store-btn btn btn-primary " href="#"
@@ -493,11 +499,18 @@
 
         {% include 'partial/help_tooltip.html' with help="Dropified supports multiple eCommerce platforms, learn about which one is best for you." qtipstyle="color:#BBB" %}
 
+        {% elif user.profile.plan.stores == 0 %}
+            {% if user.profile.get_stores_count == 0 %}
+                {% include "common/partial/upsell.html" with message="Add Stores to your Plan" only %}
+            {% else %}
+                {% include "common/partial/upsell.html" with message="Add Stores to your Plan" show_close_btn=True only %}
+            {% endif %}
         {% elif user.profile.plan.is_upgradable %}
         <a href="{% url 'user_profile' %}#plan" class="btn btn-success">Upgrade</a>
         <span class="m-l m-r-xs">Upgrade to the Premier plan to add up to 5 stores</span>
 
         {% include 'partial/help_tooltip.html' with help="Connect 5 stores in one account with the Premier plan, Click Upgrade to learn more." qtipstyle="color:#BBB" %}
+
         {% endif %}
 
     <a href="https://chrome.google.com/webstore/detail/shopified-app/aogkkekoinpipjlolpcicigndjlcpdcn"

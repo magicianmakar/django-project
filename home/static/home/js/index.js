@@ -14,6 +14,10 @@
         });
     });
 
+    $('#upsell-close').on('click', function(){
+        $('.upsell-backdrop, .upsell').hide();
+    });
+
     $('.clickable').hover(function () {
         if ($(this).hasClass('clickable')) {
             $(this).removeClass('fa-circle');
