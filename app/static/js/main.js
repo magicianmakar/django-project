@@ -1346,6 +1346,39 @@ $(function() {
         }, 1000);
     }
 
+    if (window.intercomSettings) {
+        Candu.init({
+            clientToken: 'l2aWk6HTWT',
+            userId: '{{ user.id }}',
+            traits: {
+                name: window.intercomSettings.name,
+                plan: window.intercomSettings.parent_plan || window.intercomSettings.plan,
+                email: window.intercomSettings.email,
+            },
+        });
+
+        var portalMap = {
+            'dashboard': '#candu-mount',
+            'stores-info-above': '#candu-stores-info-above',
+            'saved-products-info-above': '#candu-saved-products-info-above',
+            'boards-info-above': '#candu-boards-info-above',
+            'boards-info-below': '#candu-boards-info-below',
+            'us-products-info-above': '#candu-us-products-info-above',
+            'profit-dashboard-info-above': '#candu-profit-dashboard-info-above',
+        };
+
+        setTimeout(function () {
+            $.each(portalMap, function(slugId, selectorId) {
+                if($(selectorId).is(':visible')) {
+                    Candu.renderPortal({
+                        slug: slugId,
+                        selector: selectorId,
+                    });
+                }
+            });
+        }, 100);
+    }
+
     $.ajaxSetup({
         headers: {'x-frame-size': window.screen.width + '*' + window.screen.height}
     });
