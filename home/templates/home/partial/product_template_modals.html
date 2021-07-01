@@ -43,7 +43,7 @@
         <div class="modal-content">
             <div class="m-t-none modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title">Product Custom Descriptions</h4>
+                <h4 class="modal-title">Custom Product Descriptions</h4>
             </div>
 
             <div class="modal-body">
@@ -92,7 +92,7 @@
                     {% else %}
                     <div class="col-sm-12">
                         {% if user.profile.plan.support_addons %}
-                            {% include "common/partial/upsell.html" with addon_id=21 message="Add Custom Product Description to your Plan" only %}
+                            {% include "common/partial/upsell.html" with addon_id=21 message="Add Custom Product Descriptions to your Plan" only %}
                         {% else %}
                             {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Custom Product Description" only %}
                         {% endif %}
