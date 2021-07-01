@@ -212,7 +212,7 @@ def product_alerts(request):
     if not request.user.can('price_changes.use'):
         return render(request, 'bigcommerce/product_alerts.html', {
             'upsell': True,
-            'product_changes': get_mocked_alert_changes(BigCommerceProduct.objects),
+            'product_changes': get_mocked_alert_changes(),
             'page': 'product_alerts',
             'store': store,
             'breadcrumbs': [{'title': 'Products', 'url': '/bigcommerce/products'}, 'Alerts'],
