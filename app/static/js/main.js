@@ -1346,43 +1346,56 @@ $(function() {
         }, 1000);
     }
 
-    if (window.intercomSettings) {
-        Candu.init({
-            clientToken: 'l2aWk6HTWT',
-            userId: '{{ user.id }}',
-            traits: {
-                name: window.intercomSettings.name,
-                plan: window.intercomSettings.parent_plan || window.intercomSettings.plan,
-                email: window.intercomSettings.email,
-            },
-        });
-
-        var portalMap = {
-            'dashboard': '#candu-mount',
-            'stores-info-above': '#candu-stores-info-above',
-            'saved-products-info-above': '#candu-saved-products-info-above',
-            'boards-info-above': '#candu-boards-info-above',
-            'boards-info-below': '#candu-boards-info-below',
-            'us-products-info-above': '#candu-us-products-info-above',
-            'profit-dashboard-info-above': '#candu-profit-dashboard-info-above',
-        };
-
-        setTimeout(function () {
-            $.each(portalMap, function(slugId, selectorId) {
-                if($(selectorId).is(':visible')) {
-                    Candu.renderPortal({
-                        slug: slugId,
-                        selector: selectorId,
-                    });
-                }
-            });
-        }, 100);
-    }
-
     $.ajaxSetup({
         headers: {'x-frame-size': window.screen.width + '*' + window.screen.height}
     });
 });
+
+if (window.intercomSettings) {
+    var portalMap = [
+        {
+            name: 'dashboard',
+            selector: '#candu-mount'
+        }, {
+            name: 'stores-info-above',
+            selector: '#candu-stores-info-above'
+        }, {
+            name: 'saved-products-info-above',
+            selector: '#candu-saved-products-info-above'
+        }, {
+            name: 'boards-info-above',
+            selector: '#candu-boards-info-above'
+        }, {
+            name: 'boards-info-below',
+            selector: '#candu-boards-info-below'
+        }, {
+            name: 'us-products-info-above',
+            selector: '#candu-us-products-info-above'
+        }, {
+            name: 'profit-dashboard-info-above',
+            selector: '#candu-profit-dashboard-info-above'
+        }, {
+            name: 'starter-dashboard',
+            selector: '#candu-starter-dashboard'
+        }, {
+            name: 'bulk-edit',
+            selector: '#candu-bulk-edit'
+        }, {
+            name: 'shopify-migrate',
+            selector: '#candu-shopify-migrate'
+        },
+    ];
+
+    portalMap.forEach(function(el) {
+        console.log(el.name,'=>', el.selector);
+        if(document.querySelector(el.selector)) {
+            Candu.renderPortal({
+                slug: el.name,
+                selector: el.selector,
+            });
+        }
+    });
+}
 
 var ravenOptions = {
   // Will cause a deprecation warning, but the demise of `ignoreErrors` is still under discussion.
