@@ -340,13 +340,12 @@ class OrderView(LoginRequiredMixin, ListView, BaseMixin, PagingMixin):
                 try:
                     order_number, order_id = order_number.split('-')
                 except ValueError:
-                    query_search = Q(pls_order__order_number__endswith=order_number)
                     order_id = safe_int(order_number)
+                finally:
+                    query_search = Q(order_number__endswith=order_number)
                     if order_id:
-                        query_search |= Q(pls_order_id=order_id)
+                        query_search |= Q(id=order_id)
                     queryset = queryset.filter(query_search)
-                else:
-                    queryset = queryset.filter(pls_order__order_number__endswith=order_number, pls_order_id=order_id)
 
             status = form.cleaned_data['status']
             if status:
