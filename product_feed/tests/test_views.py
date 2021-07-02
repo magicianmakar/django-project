@@ -410,31 +410,31 @@ class ProductFeeds(BaseTestCase):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
         self.client.get(reverse('product_feeds', kwargs={'store_type': 'chq'}))
-        self.assertTemplateUsed('commercehq/upgrade.html')
+        self.assertTemplateUsed('upgrade.html')
 
     def test_must_show_upgrade_page_for_woo_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
         self.client.get(reverse('product_feeds', kwargs={'store_type': 'woo'}))
-        self.assertTemplateUsed('woocommerce/upgrade.html')
+        self.assertTemplateUsed('upgrade.html')
 
     def test_must_show_upgrade_page_for_gear_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
         self.client.get(reverse('product_feeds', kwargs={'store_type': 'gear'}))
-        self.assertTemplateUsed('gearbubble/upgrade.html')
+        self.assertTemplateUsed('upgrade.html')
 
     def test_must_show_upgrade_page_for_gkart_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
         self.client.get(reverse('product_feeds', kwargs={'store_type': 'gkart'}))
-        self.assertTemplateUsed('groovekart/upgrade.html')
+        self.assertTemplateUsed('upgrade.html')
 
     def test_must_show_upgrade_page_for_bigcommerce_store(self):
         self.login()
         self.user.profile.plan.permissions.remove(self.permission)
         self.client.get(reverse('product_feeds', kwargs={'store_type': 'bigcommerce'}))
-        self.assertTemplateUsed('bigcommerce/upgrade.html')
+        self.assertTemplateUsed('upgrade.html')
 
     def test_must_set_brand_for_gkart_google_feed_settings(self):
         self.login()

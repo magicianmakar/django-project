@@ -717,7 +717,7 @@ class VariantsEditView(DetailView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if not request.user.can('product_variant_setup.use'):
-            return render(request, 'gearbubble/upgrade.html')
+            return render(request, 'upgrade.html')
 
         return super(VariantsEditView, self).dispatch(request, *args, **kwargs)
 

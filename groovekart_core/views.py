@@ -369,7 +369,7 @@ class OrdersList(ListView):
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.can('orders.use'):
-            return render(request, 'groovekart/upgrade.html')
+            return render(request, 'upgrade.html')
 
         store = self.get_store()
         if not store:

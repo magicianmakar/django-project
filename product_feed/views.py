@@ -198,7 +198,7 @@ def get_shopify_product_feed(request, store_id, revision=None):
 
 def chq_product_feeds(request):
     if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
-        return render(request, 'commercehq/upgrade.html')
+        return render(request, 'upgrade.html')
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
         if request.method == 'GET':
@@ -307,7 +307,7 @@ def get_chq_product_feed(request, store_id, revision=None):
 
 def woo_product_feeds(request):
     if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
-        return render(request, 'woocommerce/upgrade.html')
+        return render(request, 'upgrade.html')
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
         if request.method == 'GET':
@@ -416,7 +416,7 @@ def get_woo_product_feed(request, store_id, revision=None):
 
 def gear_product_feeds(request):
     if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
-        return render(request, 'gearbubble/upgrade.html')
+        return render(request, 'upgrade.html')
 
     if request.method == 'POST':
         if request.POST.get('feed'):
@@ -501,7 +501,7 @@ def get_gear_product_feed(request, store_id, revision=None):
 
 def gkart_product_feeds(request):
     if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
-        return render(request, 'groovekart/upgrade.html')
+        return render(request, 'upgrade.html')
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
         if request.method == 'GET':
@@ -610,7 +610,7 @@ def get_gkart_product_feed(request, store_id, revision=None):
 
 def bigcommerce_product_feeds(request):
     if not request.user.can('product_feeds.use') and not request.user.can('google_product_feed.use'):
-        return render(request, 'bigcommerce/upgrade.html')
+        return render(request, 'upgrade.html')
 
     if request.GET.get('type') == 'google-feed-settings' or request.POST.get('type') == 'google-feed-settings':
         if request.method == 'GET':

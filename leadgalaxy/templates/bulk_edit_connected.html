@@ -14,6 +14,8 @@
                 <h5>Connected Products<small></small></h5>
             </div>
             <div class="ibox-content">
+                {% include 'home/partial/candu.html' with mount_id='candu-bulk-edit' %}
+
                 <div id="bulk-edit">
                     <bulk-edit-table :products="products"></bulk-edit-table>
                 </div>
@@ -95,4 +97,3 @@
     {% endcompress %}
 
 {% endblock %}
-

@@ -1609,9 +1609,11 @@
         });
 
         setTimeout(function() {
-            editor_sync_content();
+            try {
+                editor_sync_content();
 
-            setup_full_editor('default_desc', false, 'default_desc', true);
+                setup_full_editor('default_desc', false, 'default_desc', true);
+            } catch(e) {}
         }, 1000);
 
         $(".tag-it").tagit({

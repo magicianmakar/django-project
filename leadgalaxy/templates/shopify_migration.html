@@ -11,6 +11,8 @@
 {% endblock %}
 
 {% block main-container %}
+    {% include 'home/partial/candu.html' with mount_id='candu-shopify-migrate' %}
+
     <div class="tabs-container">
        <ul class="nav nav-tabs">
        {% for item in user.profile.get_shopify_stores %}
@@ -169,4 +171,3 @@
     <script type="text/javascript" src="{% static 'shopified/js/shopify_migration.js' %}"></script>
 {% endcompress %}
 {% endblock %}
-
