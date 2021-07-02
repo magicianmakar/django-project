@@ -2242,6 +2242,10 @@ class GroupPlan(models.Model):
     def is_plod(self):
         return self.slug in ['plod-yearly-shopify', 'plod-monthly-shopify', 'plod-yearly', 'plod-monthly']
 
+    @property
+    def is_starter(self):
+        return self.slug in ['research-shopify', 'research-free']
+
     def get_internal_plan(self):
         if self.slug in ['build-lifetime-monthly', 'build-lifetime-yearly']:
             return GroupPlan.objects.get(slug='build-lifetime-free')

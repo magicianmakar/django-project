@@ -23,7 +23,10 @@ class HomePageMixing(TemplateView):
     @method_decorator(login_required)
     @method_decorator(xframe_options_exempt)
     def dispatch(self, request, *args, **kwargs):
-        return super().dispatch(request, *args, **kwargs)
+        if request.path == '/' and request.user.profile.plan.is_starter:
+            return redirect('dashboard')
+        else:
+            return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
@@ -111,7 +114,6 @@ class HomePageMixing(TemplateView):
             'templates': templates,
             'markup_rules': markup_rules,
             'user_statistics': cache.get('user_statistics_{}'.format(user.id)),
-            'breadcrumbs': ['Stores'],
             'user_goals': user_goals,
             'platform_videos': platform_videos,
             'upsell_alerts': upsell_alerts,
@@ -128,6 +130,7 @@ class HomePageView(HomePageMixing):
         ctx = super().get_context_data(**kwargs)
 
         ctx['page'] = 'index'
+        ctx['breadcrumbs'] = ['Stores']
 
         return ctx
 
@@ -139,6 +142,19 @@ class SettingsPageView(HomePageMixing):
         ctx = super().get_context_data(**kwargs)
 
         ctx['page'] = 'settings'
+        ctx['breadcrumbs'] = ['Settings']
+
+        return ctx
+
+
+class DashboardView(HomePageMixing):
+    template_name = 'home/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+
+        ctx['page'] = 'dashboard'
+        ctx['breadcrumbs'] = ['Dashboard']
 
         return ctx
 

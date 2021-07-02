@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+{#    {% include 'home/partial/candu.html' with mount_id='candu-starter-dashboard' %}#}
+    {% include 'home/partial/candu.html' with mount_id='candu-stores-info-above' %}
+{% endblock %}

@@ -5,5 +5,6 @@ import home.views
 urlpatterns = [
     path('', home.views.HomePageView.as_view(), name='index'),
     path('settings', home.views.SettingsPageView.as_view(), name='settings'),
+    path('dashboard', home.views.DashboardView.as_view(), name='dashboard'),
     path('goto/page/<str:url_name>', home.views.GotoPage.as_view(), name='goto-page'),
 ]

@@ -31,12 +31,15 @@ def get_menu_structure(namespace, request):
         ('settings', ['settings']),
     ]
 
+    is_black = False
+    is_plod = False
+
     try:
-        is_black = request.user.profile.plan.is_black
-        is_plod = request.user.profile.plan.is_plod
+        if request.user.is_authenticated:
+            is_black = request.user.profile.plan.is_black
+            is_plod = request.user.profile.plan.is_plod
     except:
-        is_black = False
-        is_plod = False
+        pass
 
     if is_black:
         footer = [('help', ['help']), ('plod_help', ['plod_help'])]
@@ -74,10 +77,15 @@ def get_menu_item_data(request):
     - platforms: Only show on the specified platforms (ex: Shopify, chq, gkart...)
     """
 
+    is_black = False
+    is_starter = False
+
     try:
-        is_black = request.user.profile.plan.is_black
+        if request.user.is_authenticated:
+            is_black = request.user.profile.plan.is_black
+            is_starter = request.user.profile.plan.is_starter
     except:
-        is_black = False
+        pass
 
     return {
         'orders': {
@@ -212,8 +220,8 @@ def get_menu_item_data(request):
             'is_ns_aware': False,
         },
         'get-started': {
-            'title': 'Home',
-            'url_name': 'index',
+            'title': 'Dashboard' if is_starter else 'Manage Stores',
+            'url_name': 'dashboard' if is_starter else 'index',
             'match': re.compile(r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$'),
         },
         'prints': {
