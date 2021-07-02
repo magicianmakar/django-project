@@ -23,7 +23,7 @@ class HomePageMixing(TemplateView):
     @method_decorator(login_required)
     @method_decorator(xframe_options_exempt)
     def dispatch(self, request, *args, **kwargs):
-        if request.path == '/' and request.user.profile.plan.is_starter:
+        if request.path == '/' and request.user.profile.plan.is_research:
             return redirect('dashboard')
         else:
             return super().dispatch(request, *args, **kwargs)

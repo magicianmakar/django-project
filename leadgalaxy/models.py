@@ -2243,7 +2243,7 @@ class GroupPlan(models.Model):
         return self.slug in ['plod-yearly-shopify', 'plod-monthly-shopify', 'plod-yearly', 'plod-monthly']
 
     @property
-    def is_starter(self):
+    def is_research(self):
         return self.slug in ['research-shopify', 'research-free']
 
     def get_internal_plan(self):

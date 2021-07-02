@@ -27,6 +27,7 @@ def get_menu_structure(namespace, request):
     ]
 
     header = [
+        ('dashboard', ['dashboard']),
         ('get-started', ['get-started']),
         ('settings', ['settings']),
     ]
@@ -78,12 +79,12 @@ def get_menu_item_data(request):
     """
 
     is_black = False
-    is_starter = False
+    is_research = False
 
     try:
         if request.user.is_authenticated:
             is_black = request.user.profile.plan.is_black
-            is_starter = request.user.profile.plan.is_starter
+            is_research = request.user.profile.plan.is_research
     except:
         pass
 
@@ -220,9 +221,15 @@ def get_menu_item_data(request):
             'is_ns_aware': False,
         },
         'get-started': {
-            'title': 'Dashboard' if is_starter else 'Manage Stores',
-            'url_name': 'dashboard' if is_starter else 'index',
+            'title': 'Manage Stores',
+            'url_name': 'manage_stores' if is_research else 'index',
             'match': re.compile(r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$'),
+        },
+        'dashboard': {
+            'title': 'Dashboard',
+            'url_name': 'dashboard',
+            'match': re.compile(r'^/dashboard'),
+            'hidden': not is_research,
         },
         'prints': {
             'title': 'Print On Demand',
@@ -277,6 +284,9 @@ def create_menu(menu_structure, menu_data, request, namespace):
                 search_ns = namespace if namespace else 'shopify'
                 if search_ns not in item['platforms']:
                     continue
+
+            if item.get('hidden'):
+                continue
 
             check_active = item.get('match')
             if check_active and check_active.match(request_path):
