@@ -5,7 +5,7 @@ import arrow
 from leadgalaxy.models import UserProfile, AppPermission
 from leadgalaxy.utils import get_plan
 from product_alerts.models import ProductChange
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import send_email_from_template
 from stripe_subscription.utils import invoice_extra_stores, invoice_extra_subusers
 from shopify_subscription.models import ShopifySubscription

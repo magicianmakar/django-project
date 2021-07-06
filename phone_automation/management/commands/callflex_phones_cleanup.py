@@ -6,7 +6,7 @@ from django.db.models import Q
 from lib.exceptions import capture_exception
 
 from phone_automation.models import TwilioPhoneNumber
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 
 
 class Command(DropifiedBaseCommand):

@@ -8,7 +8,7 @@ from django.utils import timezone
 from lib.exceptions import capture_exception
 
 from leadgalaxy.models import UserProfile, ShopifyOrderTrack
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import (
     safe_int,
     app_link,

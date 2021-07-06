@@ -8,7 +8,7 @@ from django.core.management.base import CommandError
 from django.contrib.auth.models import User
 from django.db.models import Q
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import url_join
 from leadgalaxy.models import AppPermission, GroupPlan, ShopifyProduct
 from commercehq_core.models import CommerceHQProduct

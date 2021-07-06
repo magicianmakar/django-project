@@ -3,7 +3,7 @@ from django.core.cache import cache
 from requests.exceptions import HTTPError
 from tqdm import tqdm
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import http_exception_response
 from leadgalaxy.models import ShopifyStore
 from shopify_subscription.utils import BaremetricsRequest

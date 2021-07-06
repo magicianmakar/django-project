@@ -1,7 +1,7 @@
 import arrow
 import time
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from django.db.models import Count
 from django.utils.timesince import timesince
 

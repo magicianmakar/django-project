@@ -1,5 +1,5 @@
 from django.core.cache import cache
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 
 
 class Command(DropifiedBaseCommand):

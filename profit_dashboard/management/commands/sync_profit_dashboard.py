@@ -3,7 +3,7 @@ import arrow
 from lib.exceptions import capture_exception
 from django.contrib.contenttypes.models import ContentType
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.models_utils import get_track_model, get_store_model
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track

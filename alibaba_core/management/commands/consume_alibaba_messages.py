@@ -7,7 +7,7 @@ from django.test import RequestFactory
 from alibaba_core.models import AlibabaOrder
 from alibaba_core.utils import APIRequest, save_alibaba_products
 from lib.exceptions import capture_exception, capture_message
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 
 
 class Command(DropifiedBaseCommand):

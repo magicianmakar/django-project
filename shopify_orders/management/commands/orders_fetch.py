@@ -2,7 +2,7 @@ import time
 
 from lib.exceptions import capture_exception
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder, ShopifyOrderLine
 from shopify_orders.utils import update_shopify_order, get_customer_name, get_datetime, safe_int, str_max, delete_store_orders
 from leadgalaxy.models import ShopifyStore

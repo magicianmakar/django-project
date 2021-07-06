@@ -2,7 +2,7 @@ from django.db import transaction
 from django.template.defaultfilters import slugify
 
 from leadgalaxy.models import GroupPlan
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from stripe_subscription.models import StripePlan
 
 

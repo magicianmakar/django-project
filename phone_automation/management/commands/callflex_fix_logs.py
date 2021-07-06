@@ -1,7 +1,7 @@
 from lib.exceptions import capture_exception
 
 from phone_automation.models import TwilioLog
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 
 
 class Command(DropifiedBaseCommand):

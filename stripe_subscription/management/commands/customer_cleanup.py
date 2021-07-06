@@ -5,7 +5,7 @@ import traceback
 from django.contrib.auth.models import User
 
 from last_seen.models import LastSeen
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from stripe_subscription.models import StripeCustomer
 from stripe_subscription.stripe_api import stripe
 

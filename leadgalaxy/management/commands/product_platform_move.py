@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.models_utils import get_product_model, get_supplier_model
 from shopified_core.utils import safe_int
 

@@ -7,7 +7,7 @@ from simplejson import JSONDecodeError
 
 from django.utils import timezone
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
 from leadgalaxy import utils
 from leadgalaxy import tasks

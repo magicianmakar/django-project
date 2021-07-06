@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from leadgalaxy.models import UserProfile
 
 import arrow

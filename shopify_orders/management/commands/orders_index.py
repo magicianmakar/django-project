@@ -1,7 +1,7 @@
 import arrow
 from tqdm import tqdm
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus, ShopifyOrder
 from shopify_orders.utils import is_store_synced, is_store_sync_enabled, get_elastic
 from leadgalaxy.models import ShopifyStore

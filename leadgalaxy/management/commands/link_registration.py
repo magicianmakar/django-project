@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from leadgalaxy.models import PlanRegistration
 
 from lib.exceptions import capture_exception

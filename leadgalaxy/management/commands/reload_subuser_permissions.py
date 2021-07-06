@@ -1,6 +1,6 @@
 from tqdm import tqdm
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from leadgalaxy.models import (
     User,
     ShopifyStore,

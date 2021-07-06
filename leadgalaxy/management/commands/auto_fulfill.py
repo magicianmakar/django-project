@@ -9,7 +9,7 @@ from simplejson import JSONDecodeError
 
 from metrics.tasks import add_number_metric
 from shopified_core.utils import http_exception_response, using_replica, last_executed
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
 from shopify_orders.models import ShopifyOrderLog
 from leadgalaxy import utils

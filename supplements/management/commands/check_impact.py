@@ -5,7 +5,7 @@ from django.db.models import Q
 
 from leadgalaxy.models import ShopifyProduct
 from lib.exceptions import capture_exception
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import get_store_api
 from supplements.models import PLSOrderLine
 

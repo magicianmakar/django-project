@@ -5,7 +5,7 @@ from django.utils import timezone
 from lib.exceptions import capture_exception
 from shopified_core.utils import last_executed
 from phone_automation.models import TwilioPhoneNumber
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import send_email_from_template
 
 

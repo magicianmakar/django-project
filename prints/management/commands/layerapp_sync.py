@@ -1,4 +1,4 @@
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 
 from prints.models import Product, Category
 from prints.utils import LayerApp, import_layerapp_product

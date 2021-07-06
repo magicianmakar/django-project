@@ -2,7 +2,7 @@ from lib.exceptions import capture_exception
 
 import phone_automation.notifications_utils as notifications
 from phone_automation.models import TwilioSummary
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 
 
 class Command(DropifiedBaseCommand):

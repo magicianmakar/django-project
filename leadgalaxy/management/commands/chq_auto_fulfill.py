@@ -6,7 +6,7 @@ import requests
 import time
 from simplejson import JSONDecodeError
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from commercehq_core.models import CommerceHQOrderTrack
 from commercehq_core import utils
 from lib.exceptions import capture_exception, capture_message

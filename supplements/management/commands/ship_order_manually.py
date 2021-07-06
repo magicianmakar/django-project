@@ -1,6 +1,6 @@
 from django.core.management.base import CommandError
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.shipping_helper import country_from_code
 
 from supplements.lib.shipstation import create_shipstation_order, prepare_shipstation_data

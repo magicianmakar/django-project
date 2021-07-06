@@ -9,7 +9,7 @@ import requests
 from pdfrw import PdfReader
 
 from lib.exceptions import capture_exception
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import send_email_from_template
 from supplements.models import UserSupplement
 

@@ -11,7 +11,7 @@ from django.core.mail import EmailMessage
 from django.contrib.auth.models import User
 from django.template import Context, Template
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from bigcommerce_core.models import BigCommerceStore
 from shopified_core.utils import safe_float
 

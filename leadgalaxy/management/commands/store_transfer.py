@@ -12,7 +12,7 @@ from leadgalaxy.models import (
     ShopifyOrderTrack
 )
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 
 
 class Command(DropifiedBaseCommand):

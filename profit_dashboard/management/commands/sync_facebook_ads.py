@@ -5,7 +5,7 @@ from django.db.models import Q
 from lib.exceptions import capture_exception
 from facebook_business.exceptions import FacebookRequestError
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from profit_dashboard.models import FacebookAccess
 from profit_dashboard.utils import create_facebook_ads
 

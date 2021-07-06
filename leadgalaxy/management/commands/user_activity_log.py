@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 
 from leadgalaxy.utils import generate_user_activity
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 
 
 class Command(DropifiedBaseCommand):

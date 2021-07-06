@@ -1,4 +1,4 @@
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from django.contrib.auth.models import User
 from churnzero_core.utils import post_churnzero_actions, SetAccountActionBuilder
 

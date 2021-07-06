@@ -2,7 +2,7 @@ import traceback
 from queue import Queue
 from threading import Thread
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from django.contrib.auth.models import User
 from churnzero_core.utils import set_churnzero_account
 

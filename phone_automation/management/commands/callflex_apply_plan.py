@@ -4,7 +4,7 @@ import arrow
 import simplejson as json
 from lib.exceptions import capture_exception
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from stripe_subscription.models import CustomStripePlan, CustomStripeSubscription
 from stripe_subscription.stripe_api import stripe
 

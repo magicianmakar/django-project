@@ -6,7 +6,7 @@ import requests
 import time
 from simplejson import JSONDecodeError
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from bigcommerce_core.models import BigCommerceOrderTrack
 from bigcommerce_core import utils
 from lib.exceptions import capture_exception, capture_message

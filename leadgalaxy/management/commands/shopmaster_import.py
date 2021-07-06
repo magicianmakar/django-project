@@ -10,7 +10,7 @@ from leadgalaxy import tasks
 from leadgalaxy.utils import get_shopify_product
 from product_alerts.utils import parse_supplier_sku, get_supplier_variants
 from shopified_core import permissions
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import get_domain, remove_link_query
 from shopified_core.models_utils import get_store_model, get_supplier_model, get_product_model
 

@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse
 
 from lib.exceptions import capture_exception
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import app_link, send_email_from_template
 from addons_core.models import AddonUsage
 from addons_core.utils import (

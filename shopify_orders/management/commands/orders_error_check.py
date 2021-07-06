@@ -4,7 +4,7 @@ from tqdm import tqdm
 
 from datetime import timedelta
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from leadgalaxy.models import ShopifyOrderTrack
 from shopify_orders.utils import OrderErrorsCheck
 

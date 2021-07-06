@@ -1,6 +1,6 @@
 import simplejson as json
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from supplements.models import PLSupplement
 
 

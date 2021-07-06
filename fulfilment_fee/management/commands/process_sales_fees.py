@@ -1,5 +1,5 @@
 from lib.exceptions import capture_exception
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from fulfilment_fee.models import SaleTransactionFee
 from stripe_subscription.utils import add_invoice
 from shopify_subscription.utils import add_shopify_usage_invoice

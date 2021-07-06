@@ -1,4 +1,4 @@
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from django.utils import timezone
 from django.core.cache import cache
 

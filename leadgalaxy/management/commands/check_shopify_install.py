@@ -5,7 +5,7 @@ import requests
 import arrow
 
 from leadgalaxy.models import ShopifyStore
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 
 
 class Command(DropifiedBaseCommand):

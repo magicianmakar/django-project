@@ -7,7 +7,7 @@ from django.core.cache import cache
 
 from lib.exceptions import capture_exception
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import safe_int, send_email_from_template, using_replica
 from product_alerts.models import ProductChange
 from product_alerts.managers import ProductChangeManager

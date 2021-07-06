@@ -19,7 +19,7 @@ from product_feed.models import (
     GrooveKartFeedStatus,
     BigCommerceFeedStatus,
 )
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.models_utils import get_store_model
 
 

@@ -1,4 +1,4 @@
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from fulfilment_fee.utils import process_sale_transaction_fee
 from leadgalaxy.models import ShopifyOrderTrack
 from bigcommerce_core.models import BigCommerceOrderTrack

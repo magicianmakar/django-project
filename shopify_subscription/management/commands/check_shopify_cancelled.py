@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from lib.exceptions import capture_exception
 from leadgalaxy.models import GroupPlan
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopify_subscription.models import ShopifySubscription, ShopifySubscriptionWarning
 
 

@@ -1,6 +1,6 @@
 from django.core.management.base import CommandError
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopify_orders.models import ShopifySyncStatus
 from leadgalaxy.models import ShopifyStore, GroupPlan, AppPermission, UserProfile
 from leadgalaxy import utils

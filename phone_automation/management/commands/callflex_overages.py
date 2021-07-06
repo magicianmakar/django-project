@@ -1,7 +1,7 @@
 from lib.exceptions import capture_exception
 from django.db.models import Sum
 from phone_automation import billing_utils as billing
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 # from phone_automation import utils as utils
 from stripe_subscription.models import CustomStripeSubscription
 from phone_automation.models import TwilioPhoneNumber, CallflexShopifyUsageCharge

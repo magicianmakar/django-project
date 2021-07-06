@@ -5,7 +5,7 @@ from collections import defaultdict
 import arrow
 
 from leadgalaxy.utils import aws_s3_upload, random_filename
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import using_replica, send_email_from_template
 from shopify_orders.models import ShopifyOrder
 

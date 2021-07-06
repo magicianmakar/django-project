@@ -10,7 +10,7 @@ from tqdm import tqdm
 from last_seen.models import LastSeen
 from leadgalaxy.models import ShopifyProduct, ShopifyStore, ShopifyOrderTrack, GroupPlan
 from lib.exceptions import capture_message
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from shopified_core.utils import using_replica, safe_str
 from shopify_orders.models import ShopifyOrder, ShopifySyncStatus, ShopifyOrderLog
 from shopify_orders.utils import get_elastic

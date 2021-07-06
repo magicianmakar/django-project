@@ -1,6 +1,6 @@
 import arrow
 
-from shopified_core.management import DropifiedBaseCommand
+from shopified_core.commands import DropifiedBaseCommand
 from order_exports.utils import ShopifyOrderExport
 from order_exports.models import OrderExport
 
