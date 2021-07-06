@@ -66,7 +66,7 @@ def get_menu_item_data(request):
         'url_args': None,
         'url_kwargs': None,
         'permissions': ['orders.view'],
-        'match': re.compile(r'/orders$'),
+        'match': r'/orders$',
     - title: Text of link.
     - classes: The classes applied when active
     - url: URL in string
@@ -98,13 +98,13 @@ def get_menu_item_data(request):
             'title': 'Place Orders',
             'url_name': 'orders_list',
             'permissions': ['orders.view'],
-            'match': re.compile(r'(/\w+)?/orders$'),
+            'match': r'(/\w+)?/orders$',
         },
         'tracking': {
             'title': 'Tracking',
             'url_name': 'orders_track',
             'permissions': ['orders.view'],
-            'match': re.compile(r'(/\w+)?/orders/track'),
+            'match': r'(/\w+)?/orders/track',
         },
         'products': {
             'title': 'Products',
@@ -113,33 +113,33 @@ def get_menu_item_data(request):
         'all-products': {
             'title': 'Saved Products',
             'url_name': 'products_list',
-            'match': re.compile(r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/products$'),
+            'match': r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/products$',
         },
         'import-products': {
             'title': 'Import Products',
             'url_name': 'article-content-page',
             'url_kwargs': {"slug_article": "source-import-products"},
             'permissions': ["import_list.use"],
-            'match': re.compile(r'(/\w+)?/pages/content/source-import-products'),
+            'match': r'(/\w+)?/pages/content/source-import-products',
         },
         'alibaba-products': {
             'title': 'Alibaba Products',
             'url_name': 'alibaba:products',
             'permissions': ['alibaba_integration.use'],
-            'match': re.compile(r'(/\w+)?/alibaba/products'),
+            'match': r'(/\w+)?/alibaba/products',
             'is_ns_aware': False,
         },
         'boards': {
             'title': 'Boards',
             'url_name': 'boards_list',
             'permissions': ['view_product_boards.use', 'view_product_boards.sub'],
-            'match': re.compile(r'(/\w+)?/boards/list'),
+            'match': r'(/\w+)?/boards/list',
         },
         'alerts': {
             'title': 'Alerts',
             'url_name': 'product_alerts',
             'permissions': ['price_changes.use', 'price_change_options.use'],
-            'match': re.compile(r'(/\w+)?/products/update'),
+            'match': r'(/\w+)?/products/update',
             'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']
         },
         'business': {
@@ -150,13 +150,13 @@ def get_menu_item_data(request):
             'title': 'Profit Dashboard',
             'url_name': 'profit_dashboard.views.index',
             'permissions': ['profit_dashboard.view'],
-            'match': re.compile(r'(/\w+)?/profit-dashboard'),
+            'match': r'(/\w+)?/profit-dashboard',
             'platforms': ['shopify', 'gkart', 'bigcommerce', 'woo', 'chq']
         },
         'callflex': {
             'title': 'CallFlex',
             'url_name': 'phone_automation_index',
-            'match': re.compile(r'(/\w+)?/callflex'),
+            'match': r'(/\w+)?/callflex',
             'permissions': ['phone_automation.use'],
             'is_ns_aware': False,
         },
@@ -164,13 +164,13 @@ def get_menu_item_data(request):
             'title': 'Marketing Feeds',
             'url_name': 'product_feeds',
             'permissions': ['product_feeds.use', 'google_product_feed.use'],
-            'match': re.compile(r'(/\w+)?/marketing/feeds'),
+            'match': r'(/\w+)?/marketing/feeds',
         },
         'tubehunt': {
             'title': 'TubeHunt',
             'url_name': 'youtube_ads.views.index',
             'permissions': ['youtube_ads.use'],
-            'match': re.compile(r'(/\w+)?/tubehunt'),
+            'match': r'(/\w+)?/tubehunt',
             'is_ns_aware': False,
         },
         'us-product-database': {
@@ -178,20 +178,20 @@ def get_menu_item_data(request):
             'url_name': 'products_collections',
             'permissions': ['us_products.use'],
             'url_kwargs': {'collection': 'us'},
-            'match': re.compile(r'/products/collections/\w+'),
+            'match': r'/products/collections/\w+',
         },
         'subusers': {
             'title': 'Sub Users',
             'url_name': 'subusers',
             'permissions': ['sub_users.use'],
-            'match': re.compile(r'(/\w+)?/subusers'),
+            'match': r'(/\w+)?/subusers',
         },
         'tools': {
             'title': 'Tools',
             'url_name': 'article-content-page',
             'url_kwargs': {"slug_article": "tools-business-tools"},
             'permissions': ['businesstools_page.use'],
-            'match': re.compile(r'(/\w+)?/pages/content/tools-business-tools'),
+            'match': r'(/\w+)?/pages/content/tools-business-tools',
         },
         'academy': {
             'title': '<span id="academy-span">Dropshipping 101</span>',
@@ -204,7 +204,7 @@ def get_menu_item_data(request):
         'account': {
             'title': 'Manage Account',
             'url_name': 'user_profile',
-            'match': re.compile(r'(/\w+)?/user/profile'),
+            'match': r'(/\w+)?/user/profile',
         },
         'help': {
             'title': f'{"Dropified " if is_black else ""}Help Center',
@@ -217,31 +217,31 @@ def get_menu_item_data(request):
         'settings': {
             'title': 'Settings',
             'url_name': 'settings',
-            'match': re.compile(r'(/\w+)?/settings'),
+            'match': r'(/\w+)?/settings',
             'is_ns_aware': False,
         },
         'get-started': {
             'title': 'Manage Stores',
             'url_name': 'manage_stores' if is_research else 'index',
-            'match': re.compile(r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$'),
+            'match': r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$',
         },
         'dashboard': {
             'title': 'Dashboard',
             'url_name': 'dashboard',
-            'match': re.compile(r'^/dashboard'),
+            'match': r'^/dashboard',
             'hidden': not is_research,
         },
         'prints': {
             'title': 'Print On Demand',
             'url_name': 'prints:index',
-            'match': re.compile(r'^/print-on-demand'),
+            'match': r'^/print-on-demand',
             'is_ns_aware': False,
             'permissions': ['print_on_demand.use'],
         },
         'dropified-product': {
             'title': 'Fulfilled by Dropified',
             'url_name': 'dropified_product:index',
-            'match': re.compile(r'^/dropified_product'),
+            'match': r'^/dropified_product',
             'is_ns_aware': False,
             'permissions': ['dropified_product.use'],
         },
@@ -289,7 +289,7 @@ def create_menu(menu_structure, menu_data, request, namespace):
                 continue
 
             check_active = item.get('match')
-            if check_active and check_active.match(request_path):
+            if check_active and re.match(check_active, request_path):
                 item['classes'] = 'active'
 
             item['url'] = create_url(item, namespace)
@@ -365,7 +365,7 @@ def get_static(path):
 def get_active_item(request):
     for item in get_menu_item_data(request).values():
         check_active = item.get('match')
-        if check_active and check_active.match(request.path):
+        if check_active and re.match(check_active, request.path):
             return item
 
 
