@@ -1683,6 +1683,21 @@ def save_image_s3(request):
     })
 
 
+class OrdersViewUpsell(TemplateView):
+    template_name = 'orders_new.html'
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.orders_ids = []
+        self.products_ids = []
+        self.orders_track = {}
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+
 class OrdersView(TemplateView):
     template_name = 'orders_new.html'
     post_per_page = 20
@@ -1730,7 +1745,7 @@ class OrdersView(TemplateView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if not request.user.can('orders.use'):
-            return HttpResponseRedirect(f"{reverse('upgrade_required')}?feature=orders")
+            return HttpResponseRedirect(f"{reverse('orders_upsell')}")
 
         self.user = self.request.user
         self.models_user = self.request.user.models_user
@@ -2742,7 +2757,7 @@ class OrdersView(TemplateView):
 @login_required
 def orders_track(request):
     if not request.user.can('orders.use'):
-        return render(request, 'upgrade.html')
+        return HttpResponseRedirect(f"{reverse('orders_upsell')}")
 
     try:
         assert not request.is_ajax(), 'AJAX Request Detected - Orders Track'

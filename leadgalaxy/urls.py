@@ -23,6 +23,7 @@ urlpatterns = [
     url(r'^autocomplete/(?P<target>[a-z-]+)$', leadgalaxy.views.autocomplete),
     url(r'^upgrade-required$', leadgalaxy.views.upgrade_required, name='upgrade_required'),
     url(r'^orders/?$', leadgalaxy.views.OrdersView.as_view(), name='orders'),
+    url(r'^orders/upselll?$', leadgalaxy.views.OrdersViewUpsell.as_view(), name='orders_upsell'),
     url(r'^orders/track$', leadgalaxy.views.orders_track, name='orders_track'),
     url(r'^orders/place$', leadgalaxy.views.orders_place, name='orders_place'),
     url(r'^locate/(?P<what>[a-z-]+)$', leadgalaxy.views.locate),
