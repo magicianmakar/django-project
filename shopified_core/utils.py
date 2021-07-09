@@ -1020,9 +1020,6 @@ def format_queueable_orders(request, orders, current_page, store_type='shopify')
                     if not line_item.get('is_pls'):
                         continue
 
-                    if line_item.get('is_paid'):
-                        continue
-
                 elif single_supplier:
                     if single_supplier != 'alibaba':
                         continue

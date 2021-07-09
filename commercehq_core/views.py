@@ -796,7 +796,6 @@ class OrdersList(ListView):
     def get_orders(self, ctx):
         store = self.get_store()
         models_user = self.request.user.models_user
-        auto_orders = self.request.user.can('auto_order.use')
         fix_order_variants = self.request.user.get_config('fix_order_variants')
         aliexpress_fix_address = models_user.get_config('aliexpress_fix_address', True)
         aliexpress_fix_city = models_user.get_config('aliexpress_fix_city', True)
@@ -1071,10 +1070,6 @@ class OrdersList(ListView):
 
                 products_cache[line['product_id']] = product
 
-                if not auto_orders or not order.get('shipping_address') or order['pending_payment']:
-                    order['items'][ldx] = line
-                    continue
-
                 _order, customer_address = chq_customer_address(
                     order=order,
                     aliexpress_fix=aliexpress_fix_address,
@@ -1083,6 +1078,10 @@ class OrdersList(ListView):
                     shipstation_fix=supplier.is_pls if supplier else False)
 
                 order['customer_address'] = customer_address
+
+                if not order.get('shipping_address') or order['pending_payment']:
+                    order['items'][ldx] = line
+                    continue
 
                 order_data = {
                     'id': '{}_{}_{}'.format(self.store.id, order['id'], line['id']),

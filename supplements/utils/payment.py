@@ -305,7 +305,12 @@ class Util:
         orders_status = {}
         orders = {}
         for order_data_id in order_data_ids:
-            orders_status[order_data_id] = {'id': order_data_id, 'status': 'Awaiting payment', 'supplements': []}
+            orders_status[order_data_id] = {
+                'id': order_data_id,
+                'status': 'Awaiting payment',
+                'supplements': [],
+                'success': True,
+            }
             try:
                 api_result = StoreApi.get_order_data(None, user, {
                     'order': order_data_id, 'original': '1'})
@@ -366,57 +371,82 @@ class Util:
                     orders_status[order_data_id].update({'success': False, 'status': "Product not found"})
                     break
 
+                pl_supplement_id = user_supplement.pl_supplement_id
+                product_quantity = safe_int(product['quantity'])
+                image_url = user_supplement.current_label.image
+                product_weight = Decimal(product['weight'])
+                total_weight += product_weight
+                total_wholesale += user_supplement.pl_supplement.wholesale_price
+
+                supplement = {
+                    'title': user_supplement.title,
+                    'price': user_supplement.cost_price,
+                    'subtotal': user_supplement.cost_price * product_quantity,
+                    'quantity': product_quantity,
+                    'image_url': image_url,
+                    'weight': product_weight,
+                }
+                orders_status[order_data_id]['supplements'].append(supplement)
+
                 # Labels must be approved prior to ordering
                 if not user_supplement.is_approved:
                     orders_status[order_data_id].update({
                         'success': False,
+                        'status': "Fix bundle issue",
+                    })
+                    supplement.update({
                         'status': "Label not approved",
                         'status_link': reverse('pls:user_supplement', kwargs={
                             'supplement_id': user_supplement.id
-                        })
+                        }),
                     })
-                    break
+                    continue
 
                 # Deleted supplements are not longer supported for ordering
                 if user_supplement.is_deleted:
                     orders_status[order_data_id].update({
                         'success': False,
-                        'status': f"Related supplement not found ({user_supplement.pl_supplement_id})"
+                        'status': "Fix bundle issue",
                     })
-                    break
+                    supplement.update({
+                        'status': f"Discontinued Supplement ({user_supplement.pl_supplement_id})",
+                    })
+                    continue
 
                 # Shallow check for supplement inventory, error is thrown if inventory
                 # gets negative once we start ordering
-                pl_supplement_id = user_supplement.pl_supplement_id
                 if inventory_mapping.get(pl_supplement_id) is None:
                     inventory_mapping[pl_supplement_id] = user_supplement.pl_supplement.inventory
 
-                product_quantity = safe_int(product['quantity'])
                 if inventory_mapping[pl_supplement_id] < product_quantity:
                     orders_status[order_data_id].update({
                         'success': False,
-                        'status': "Out of stock"
+                        'status': "Fix bundle issue",
                     })
-                    break
+                    supplement.update({
+                        'status': "Out of Stock",
+                        'status_link': reverse('pls:user_supplement', kwargs={
+                            'supplement_id': user_supplement.id
+                        }),
+                    })
+                    continue
 
                 # Shipping supplements must be allowed to locations
                 if shipping_country not in user_supplement.shipping_locations \
                         and shipping_province not in user_supplement.shipping_locations:
                     orders_status[order_data_id].update({
                         'success': False,
+                        'status': "Fix bundle issue",
+                    })
+                    supplement.update({
                         'status': 'Shipping location not supported for this product',
                         'status_link': reverse('pls:user_supplement', kwargs={
                             'supplement_id': user_supplement.id
-                        })
+                        }),
                     })
-                    break
+                    continue
 
-                image_url = user_supplement.current_label.image
                 inventory_mapping[pl_supplement_id] -= product_quantity
-                product_weight = Decimal(product['weight'])
-                total_weight += product_weight
-                total_wholesale += user_supplement.pl_supplement.wholesale_price
-
                 items.append({
                     'order_data_id': order_data_id,
                     'id': order_data['line_id'],
@@ -428,15 +458,6 @@ class Util:
                     'quantity': product_quantity,
                     'price': order_data['total'],
                     'is_bundle': order_data.get('is_bundle'),
-                })
-
-                orders_status[order_data_id]['supplements'].append({
-                    'title': user_supplement.title,
-                    'price': user_supplement.cost_price,
-                    'subtotal': user_supplement.cost_price * product_quantity,
-                    'quantity': product_quantity,
-                    'image_url': image_url,
-                    'weight': product_weight,
                 })
             else:
                 # Define order and shipping only if no errors happen
@@ -465,18 +486,16 @@ class Util:
                         item['price'] = Decimal(item['price']) * ((item['user_supplement'].cost_price * item['quantity']) / total_paid)
                         item['price'] = item['price'] / item['quantity']
 
-                orders[order_id]['items'] += items
-                orders_status[order_data_id].update({'success': True})
-
-                # Initialize shipping mapping for order
-                if order_data['order_id'] not in shipping_mapping:
-                    shipping_mapping[order_data['order_id']] = {
+                if orders_status[order_data_id]['success']:
+                    # Initialize shipping mapping for order
+                    shipping_mapping.setdefault(order_data['order_id'], {
                         'total_weight': Decimal('0.0'),
                         'country_code': order_data['shipping_address']['country_code'],
                         'province_code': dict_val(order_data['shipping_address'],
                                                   ['province_code', 'province']),
-                    }
-                shipping_mapping[order_data['order_id']]['total_weight'] += total_weight
+                    })
+                    shipping_mapping[order_data['order_id']]['total_weight'] += total_weight
+                    orders[order_id]['items'] += items
 
         # Gather successful order shipping methods to show customer
         order_costs = {'shipping': {}, 'taxes': {}}

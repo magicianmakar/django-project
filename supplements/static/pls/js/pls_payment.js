@@ -16,7 +16,10 @@ var formatter = new Intl.NumberFormat('en-US', {
   currency: 'USD',
 });
 function formatUSD(amount) {
-    return formatter.format(parseFloat(amount));
+    if (amount) {
+        return formatter.format(parseFloat(amount));
+    }
+    return amount;
 }
 
 function reloadPLTableStripes() {
@@ -275,13 +278,13 @@ function formatAPIDetails(data) {
             for (var s = 0, sLength = orderStatus.supplements.length; s < sLength; s++) {
                 var supplement = orderStatus.supplements[s];
                 var newOrderStatus = $.extend(true, {}, orderStatus, {supplement: supplement});
-                if (supplement.price) {
-                    newOrderStatus.supplement.price = formatUSD(supplement.price);
-                }
-                if (supplement.subtotal) {
-                    newOrderStatus.supplement.currency_subtotal = formatUSD(supplement.subtotal);
-                }
 
+                if (supplement.status) {
+                    newOrderStatus.status = supplement.status;
+                    newOrderStatus.status_link = supplement.status_link;
+                }
+                newOrderStatus.supplement.price = formatUSD(supplement.price);
+                newOrderStatus.supplement.currency_subtotal = formatUSD(supplement.subtotal);
                 details[orderStatus.order_id].items.push(newOrderStatus);
             }
         } else {

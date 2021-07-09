@@ -73,6 +73,9 @@ class SupplementsApi(ApiResponseMixin, View):
 
                 unpaid_orders = []
                 for order in orders.values():
+                    if not order.get('items'):
+                        continue
+
                     order_shippings = order_costs['shipping'].get(order['id'])
                     if not order_shippings or order_shippings[0].get('error'):
                         continue

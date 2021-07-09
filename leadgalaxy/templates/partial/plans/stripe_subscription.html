@@ -116,9 +116,15 @@
                                                     </p>
 
                                                     <div class="plan-more-features" style="">
-                                                        <a class="btn btn-default btn-outline" href="http://www.dropified.com/pricing/" target="_blank">
+                                                        {% if item|plan_have_feature:'pls.use' %}
+                                                        <a class="btn btn-default btn-outline" href="https://www.dropified.com/plod-pricing/" target="_blank">
                                                             <i class="fa fa-plus"></i> More Features
                                                         </a>
+                                                        {% else %}
+                                                        <a class="btn btn-default btn-outline" href="https://www.dropified.com/pricing/" target="_blank">
+                                                            <i class="fa fa-plus"></i> More Features
+                                                        </a>
+                                                        {% endif %}
                                                     </div>
                                                 </td>
                                             {% endfor %}
@@ -224,9 +230,15 @@
                                                         ></i>
                                                     </p>
                                                     <div class="plan-more-features" style="">
-                                                        <a class="btn btn-default btn-outline" href="http://www.dropified.com/pricing/" target="_blank">
+                                                        {% if item|plan_have_feature:'pls.use' %}
+                                                        <a class="btn btn-default btn-outline" href="https://www.dropified.com/plod-pricing/" target="_blank">
                                                             <i class="fa fa-plus"></i> More Features
                                                         </a>
+                                                        {% else %}
+                                                        <a class="btn btn-default btn-outline" href="https://www.dropified.com/pricing/" target="_blank">
+                                                            <i class="fa fa-plus"></i> More Features
+                                                        </a>
+                                                        {% endif %}
                                                     </div>
                                                 </td>
                                             {% endfor %}

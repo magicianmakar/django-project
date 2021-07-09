@@ -566,9 +566,13 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                     api_data = self.get_api_data(new_user_supplement)
                 return JsonResponse({'data': api_data, 'success': True})
 
-            elif form.cleaned_data['action'] == 'approve' \
-                    or upload_url and is_draft_label:  # Restart review process
+            elif form.cleaned_data['action'] == 'approve':  # Restart review process
                 new_user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
+                new_user_supplement.current_label.save()
+                SupplementLabelForApprovalEvent.objects.create(user=request.user,
+                                                               product_name=new_user_supplement.title)
+            elif form.cleaned_data['action'] == 'save' and is_draft_label:
+                new_user_supplement.current_label.status = UserSupplementLabel.DRAFT
                 new_user_supplement.current_label.save()
                 SupplementLabelForApprovalEvent.objects.create(user=request.user,
                                                                product_name=new_user_supplement.title)
