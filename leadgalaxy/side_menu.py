@@ -1,7 +1,9 @@
 import re
 from django.conf import settings
-from django.urls import reverse_lazy
+from django.urls import reverse
 from django.urls import resolve
+
+from lib.exceptions import capture_exception
 
 
 def get_menu_structure(namespace, request):
@@ -294,7 +296,12 @@ def create_menu(menu_structure, menu_data, request, namespace):
             if check_active and re.match(check_active, request_path):
                 item['classes'] = 'active'
 
-            item['url'] = create_url(item, namespace)
+            try:
+                item['url'] = create_url(item, namespace)
+            except:
+                capture_exception(level='warning')
+                continue
+
             items.append(item)
 
         if not items:
@@ -340,7 +347,7 @@ def create_url(item, namespace):
         # Add namespace
         url_name = f"{namespace}:{url_name}"
 
-    return reverse_lazy(url_name, args=args, kwargs=kwargs)
+    return reverse(url_name, args=args, kwargs=kwargs)
 
 
 def fix_url_name(url_name, namespace):
