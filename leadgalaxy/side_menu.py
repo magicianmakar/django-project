@@ -1,5 +1,4 @@
 import re
-from django.conf import settings
 from django.urls import reverse
 from django.urls import resolve
 
@@ -93,7 +92,7 @@ def get_menu_item_data(request):
     return {
         'orders': {
             'title': 'Orders',
-            'icon': get_static('vector-orders.svg'),
+            'icon': 'vector-orders.svg',
             'permissions': ['orders.view'],
         },
         'place-orders': {
@@ -110,7 +109,7 @@ def get_menu_item_data(request):
         },
         'products': {
             'title': 'Products',
-            'icon': get_static('vector-products.svg'),
+            'icon': 'vector-products.svg',
         },
         'all-products': {
             'title': 'Saved Products',
@@ -146,7 +145,7 @@ def get_menu_item_data(request):
         },
         'business': {
             'title': 'Business',
-            'icon': get_static('vector-business.svg'),
+            'icon': 'vector-business.svg',
         },
         'profit-dashboard': {
             'title': 'Profit Dashboard',
@@ -365,10 +364,6 @@ def fix_url_name(url_name, namespace):
         url_name = 'profits'
 
     return url_name
-
-
-def get_static(path):
-    return f"{settings.STATIC_URL}{path}"
 
 
 def get_active_item(request):

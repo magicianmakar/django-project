@@ -85,7 +85,7 @@
       <li class="section">
         <span class="section-header">
           <div>
-            <img src="{{ section.icon }}"/>
+            <img src="{% static section.icon %}"/>
           </div>
           <span class="item-title">{{ section.title }}</span>
         </span>
@@ -165,7 +165,6 @@
       {% endfor %}
       {% endfor %}
 
-      
     </ul>
   </div>
 </nav>
