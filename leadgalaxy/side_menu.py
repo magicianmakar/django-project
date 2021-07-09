@@ -224,12 +224,14 @@ def get_menu_item_data(request):
             'title': 'Manage Stores',
             'url_name': 'manage_stores' if is_research else 'index',
             'match': r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/$',
+            'is_ns_aware': not is_research,
         },
         'dashboard': {
             'title': 'Dashboard',
             'url_name': 'dashboard',
             'match': r'^/dashboard',
             'hidden': not is_research,
+            'is_ns_aware': False,
         },
         'prints': {
             'title': 'Print On Demand',
