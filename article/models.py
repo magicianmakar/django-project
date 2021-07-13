@@ -41,7 +41,13 @@ class Article(models.Model):
     views = models.IntegerField(default=0)
     style = models.TextField(blank=True, null=True)
     body_format = models.CharField(choices=ARTICLE_FORMAT, max_length=64, default='wysiwyg', verbose_name='Article format')
-    show_header = models.BooleanField(default=True)
+
+    show_header = models.BooleanField(default=True, verbose_name='Show Page Title')
+    show_sidebar = models.BooleanField(default=True)
+    show_searchbar = models.BooleanField(default=True)
+    show_breadcrumb = models.BooleanField(default=True)
+
+    candu_slug = models.TextField(blank=True, null=True)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Submittion date')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Last update')

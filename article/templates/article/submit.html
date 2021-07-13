@@ -6,55 +6,148 @@
 
 {% block main-container %}
 
-<form method="post" class="well-box form" role="form">
- {% csrf_token %}
+    <form method="post" class="well-box form" role="form">
+        {% csrf_token %}
+        <div class="tabs-container m-b-xl">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active">
+                    <a class="nav-link active" data-toggle="tab" href="#basic"><i class="fa fa-bars"></i> Basic</a>
+                </li>
+                <li>
+                    <a class="nav-link" data-toggle="tab" href="#advanced"><i class="fa fa-bars"></i> Advanced</a>
+                </li>
+            </ul>
+            <div class="tab-content">
+                <div role="tabpanel" id="basic" class="tab-pane active">
+                    <div class="panel-body">
+                        <div class="row form-group {% if form.title.errors %}has-error has-feedback{% endif %}">
+                            <label class="control-label" for="title">{{ form.title.errors|striptags }}</label>
+                            <div class="col-xs-12 col-sm-8 col-md-8">
+                                {% render_field form.title class+="form-control input-lg" placeholder="Page Title" %}
+                            </div>
+                        </div>
 
-    {% if not article or article.show_header %}
-    <div class="row form-group {% if form.title.errors %}has-error has-feedback{% endif %}">
-        <label class="control-label" for="title">{{ form.title.errors|striptags }}</label>
-        <div class="col-xs-12 col-sm-8 col-md-8">
-            {% render_field form.title class+="form-control input-lg" placeholder="Page Title" %}
-     </div>
-    </div>
-    {% else %}
-    <input type="hidden" name="title" value="{{ article.title }}">
-    {% endif %}
+                        <div class="form-group {% if form.body.errors %}has-error has-feedback{% endif %}">
+                            <label class="control-label" for="body">{{ form.body.errors|striptags }}</label>
+                            <div class="controls">
+                                {% render_field form.body cols="40" rows="10" style="width: 99%" %}
+                            </div>
+                        </div>
 
-    <div class="form-group {% if form.body.errors %}has-error has-feedback{% endif %}">
-        <label class="control-label" for="body">{{ form.body.errors|striptags }}</label>
-        <div class="controls">
-            {% render_field form.body cols="40" rows="10" style="width: 99%" %}
-        </div>
-    </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group {% if form.stat.errors %}has-error has-feedback{% endif %}">
+                                    <label class="control-label" for="stat">{{ form.stat.errors|striptags }}</label>
+                                    <label class="" for="stat">Publish Status</label>
+                                    <div class="controls">
+                                        {% render_field form.stat class+="form-control input-md " placeholder="Tags" %}
+                                    </div>
+                                </div>
+                            </div>
 
-    {% if not article or article.show_header %}
-    <div class="form-group {% if form.body.errors %}has-error has-feedback{% endif %}">
-        <label class="control-label" for="body">{{ form.body.errors|striptags }}</label>
-        <label class="" for="tags">Tags</label>
-        <div class="controls">
-            {% render_field form.tags class+="form-control input-md tag-it" placeholder="Tags" %}
-        </div>
-    </div>
-    {% endif %}
+                            <div class="col-md-4">
+                                <div class="form-group {% if form.tags.errors %}has-error has-feedback{% endif %}">
+                                    <label class="control-label" for="body">{{ form.tags.errors|striptags }}</label>
+                                    <label class="" for="tags">Tags</label>
+                                    <div class="controls">
+                                        {% render_field form.tags class+="form-control input-md tag-it" placeholder="Tags" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-    <div class="form-group {% if form.body.errors %}has-error has-feedback{% endif %}">
-        <label class="control-label" for="stat">{{ form.stat.errors|striptags }}</label>
-        <label class="" for="stat">Publish Status</label>
-        <div class="controls">
-            {% render_field form.stat class+="form-control input-md " placeholder="Tags" %}
-        </div>
-    </div>
+                <div role="tabpanel" id="advanced" class="tab-pane">
+                    <div class="panel-body">
+                        <h2>Page Style</h2>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group {% if form.show_header.errors %}has-error has-feedback{% endif %}">
+                                    <label class="control-label" for="body">{{ form.show_header.errors|striptags }}</label>
+                                    <label class="" for="show_header">
+                                        {% render_field form.show_header %}
+                                        Show Page Title
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
-    <p><input type="submit" name="" value="Submit" class="btn btn-primary btn-lg" /></p>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group {% if form.show_sidebar.errors %}has-error has-feedback{% endif %}">
+                                    <label class="control-label" for="body">{{ form.show_sidebar.errors|striptags }}</label>
+                                    <label class="" for="show_sidebar">
+                                        {% render_field form.show_sidebar %}
+                                        Show Sidebar
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
-</form>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group {% if form.show_searchbar.errors %}has-error has-feedback{% endif %}">
+                                    <label class="control-label" for="body">{{ form.show_searchbar.errors|striptags }}</label>
+                                    <label class="" for="show_searchbar">
+                                        {% render_field form.show_searchbar %}
+                                        Show Top Search Bar
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group {% if form.show_breadcrumb.errors %}has-error has-feedback{% endif %}">
+                                    <label class="control-label" for="body">{{ form.show_breadcrumb.errors|striptags }}</label>
+                                    <label class="" for="show_breadcrumb">
+                                        {% render_field form.show_breadcrumb %}
+                                        Show Breadcrumb
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+                        <h2>Candu</h2>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="row form-group {% if form.candu_slug.errors %}has-error has-feedback{% endif %}">
+                                    <label class="control-label" for="candu_slug">{{ form.candu_slug.errors|striptags }}</label>
+                                    <div class="col-xs-12 col-sm-8 col-md-8">
+                                        {% render_field form.candu_slug class+="form-control input-lg" placeholder="Candu Portal Slug" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+                        <h2>CSS</h2>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="row form-group {% if form.style.errors %}has-error has-feedback{% endif %}">
+                                    <label class="control-label" for="style">{{ form.style.errors|striptags }}</label>
+                                    <div class="col-xs-12 col-sm-8 col-md-8">
+                                        {% render_field form.style class+="form-control input-lg" placeholder="Custom CSS" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <p><input type="submit" name="" value="Submit" class="btn btn-primary btn-lg"/></p>
+
+    </form>
 
 {% endblock %}
 
 {% block extracss %}
-<link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
-<link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
-<link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+    <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
+    <link href="{% static 'css/jquery.tagit.min.css' %}" rel="stylesheet">
 {% endblock %}
 
 {% block extrajs %}
@@ -70,7 +163,7 @@
     <script type="text/javascript">
         var source_variants = {{tags|safe}};
 
-        $(function() {
+        $(function () {
             $(".tag-it").tagit({
                 availableTags: source_variants,
                 autocomplete: {delay: 0, minLength: 0},
@@ -78,7 +171,7 @@
             });
 
             {% if article.body_format != 'markdown' %}
-            setup_admin_editor('body', true);
+                setup_admin_editor('body', true);
             {% endif %}
         });
 

@@ -62,8 +62,6 @@
         {% if request.user|can:'bigcommerce.use' %}
         var bigcommerce_app_id = "{% app_setting 'BIGCOMMERCE_APP_ID' %}";
         {% endif %}
-
-        ChurnZero.push(['setModule', 'Settings Page']);
     </script>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/ckeditor/4.5.4/ckeditor.js"></script>

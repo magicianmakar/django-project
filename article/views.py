@@ -93,7 +93,12 @@ def submit(request):
         else:
             messages.error(request, 'Unknown error')
     else:
-        form = ArticleForm()
+        form = ArticleForm(initial={
+            'show_header': True,
+            'show_sidebar': True,
+            'show_searchbar': True,
+            'show_breadcrumb': True,
+        })
 
     tags = []
     for i in ArticleTag.objects.all():
@@ -126,7 +131,14 @@ def edit(request, article_id):
             'title': article.title,
             'body': article.body,
             'stat': article.stat,
-            'tags': ','.join(article.tags.all().values_list('title', flat=1))})
+            'tags': ','.join(article.tags.all().values_list('title', flat=1)),
+            'show_header': article.show_header,
+            'show_sidebar': article.show_sidebar,
+            'show_searchbar': article.show_searchbar,
+            'show_breadcrumb': article.show_breadcrumb,
+            'candu_slug': article.candu_slug,
+            'style': article.style,
+        })
 
     tags = []
     for i in ArticleTag.objects.all():
@@ -149,18 +161,26 @@ def _save_submittion(request, form, article=None):
 
         if not article:
             article = Article(title=article_title, body=article_text, author=request.user, stat=stat)
-        else:
-            if article.show_header:
-                article.title = article_title
 
-            article.body = article_text
-            article.stat = stat
+        if article.show_header:
+            article.title = article_title
 
-            article.tags.clear()
+        article.body = article_text
+        article.stat = stat
+
+        article.show_header = form.cleaned_data['show_header']
+        article.show_sidebar = form.cleaned_data['show_sidebar']
+        article.show_searchbar = form.cleaned_data['show_searchbar']
+        article.show_breadcrumb = form.cleaned_data['show_breadcrumb']
+
+        article.candu_slug = form.cleaned_data['candu_slug']
+        article.style = form.cleaned_data['style']
+
+        article.tags.clear()
 
         article.save()
 
-        if tags.strip() and article.show_header:
+        if tags.strip():
             for i in tags.split(','):
                 try:
                     i = i.strip()
