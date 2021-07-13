@@ -19,12 +19,19 @@
 <div class="ibox-content forum-container">
     <div class="forum-title">
         <div class="pull-right forum-desc">
-            <samll>Total courses: {{articles.count}}</samll>
+            <samll>Total Pages: {{articles.count}}</samll>
         </div>
         {% if tag %}
         <h3>{{tag}} Pages</h3>
         {% endif %}
     </div>
+
+    {% if user.is_staff %}
+        <a class="btn btn-sm btn-success" href="{% url template_config.url.namespace|add:'add-page' %}">
+            <i class="fa fa-plus"></i> Add Page
+        </a>
+    {% endif %}
+
 
     {% for article in articles %}
     <div class="forum-item active">
@@ -40,13 +47,13 @@
                     {{ article.text_title }}
                 </a>
                 <div class="forum-sub-title">
-                    {% if user.is_superuser %}
+                    {% if user.is_staff %}
                     By <a herf="#">{{ article.author.username }}</a>,
                     {% endif %}
 
                     Last update: <span class="date">{{ article.updated_at|date:"d/m/Y" }}</span>
 
-                    {% if user.is_superuser %}
+                    {% if user.is_staff %}
                     , Views: <b class="">{{ article.views }}</b>
                     {% endif %}
                 </div>
@@ -55,8 +62,10 @@
     </div>
     {% endfor %}
 
-    {% if user.is_superuser %}
-        <a class="btn btn-sm btn-success" href="{% url template_config.url.namespace|add:'add-page' %}"><i class="fa fa-plus"></i> Create Page</a>
+    {% if user.is_staff %}
+        <a class="btn btn-sm btn-success" href="{% url template_config.url.namespace|add:'add-page' %}">
+            <i class="fa fa-plus"></i> Add Page
+        </a>
     {% endif %}
 
 </div>

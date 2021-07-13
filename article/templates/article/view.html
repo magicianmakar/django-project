@@ -42,7 +42,7 @@
                             <div class="col-md-6 col-md-offset-6">
                                 <hr/>
                                 <div class="small text-right">
-                                    {% if user.is_superuser %}
+                                    {% if user.is_staff %}
                                         <a class="btn btn-xs btn-success" href="{% url template_config.url.namespace|add:'edit' article.id %}"><i
                                                 class="fa fa-edit"></i> Edit</a>
                                         <a class="btn btn-xs btn-danger" href="{% url 'admin:article_article_delete' article.id %}"><i

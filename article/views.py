@@ -5,9 +5,11 @@ from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import Http404
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 
 from article.forms import ArticleForm
 from article.models import Article, ArticleTag
+from leadgalaxy.models import AdminEvent
 
 
 def index(request, tag=None):
@@ -38,15 +40,21 @@ def view(request, id_article=None, slug_article=None):
     except Article.DoesNotExist:
         article = get_object_or_404(Article, slug=slug_article)
 
-    if article.stat != 0 and (not request.user.is_superuser and not request.user.is_staff):
+    if article.stat != 0 and not request.user.is_staff:
         raise Http404('Not published')
 
     if not request.user.is_staff:
         # Update this way so we don't change updated_at
         Article.objects.filter(id=article.id).update(views=article.views + 1)
 
+    if request.user.is_staff:
+        breadcrumbs = [{'title': 'Pages', 'url': reverse(index)}, article.title]
+    else:
+        breadcrumbs = [article.title]
+
     return render(request, 'article/view.html', {
         'article': article,
+        'breadcrumbs': breadcrumbs,
     })
 
 
@@ -64,7 +72,7 @@ def content(request, slug_article=None):
             author=request.user,
             show_header=False
         )
-        if request.user.is_superuser or request.user.is_staff:
+        if request.user.is_staff:
             article.save()
 
     if not request.user.is_staff:
@@ -80,7 +88,7 @@ def content(request, slug_article=None):
 
 @login_required
 def submit(request):
-    if not request.user.is_superuser:
+    if not request.user.is_staff:
         raise PermissionDenied()
 
     if request.method == 'POST':
@@ -112,10 +120,10 @@ def submit(request):
 
 @login_required
 def edit(request, article_id):
-    article = Article.objects.get(pk=article_id)
-
-    if not request.user.is_superuser:
+    if not request.user.is_staff:
         raise PermissionDenied()
+
+    article = Article.objects.get(pk=article_id)
 
     if request.method == 'POST':
         form = ArticleForm(request.POST)
@@ -138,6 +146,7 @@ def edit(request, article_id):
             'show_breadcrumb': article.show_breadcrumb,
             'candu_slug': article.candu_slug,
             'style': article.style,
+            'body_format': article.body_format,
         })
 
     tags = []
@@ -154,19 +163,17 @@ def edit(request, article_id):
 @login_required
 def _save_submittion(request, form, article=None):
     if form.is_valid():
-        article_title = form.cleaned_data['title']
-        article_text = form.cleaned_data['body']
-        tags = form.cleaned_data['tags']
-        stat = form.cleaned_data['stat']
 
         if not article:
-            article = Article(title=article_title, body=article_text, author=request.user, stat=stat)
+            event_name = 'add'
+            article = Article(author=request.user)
+        else:
+            event_name = 'edit'
 
-        if article.show_header:
-            article.title = article_title
+        article.title = form.cleaned_data['title']
 
-        article.body = article_text
-        article.stat = stat
+        article.body = form.cleaned_data['body']
+        article.stat = form.cleaned_data['stat']
 
         article.show_header = form.cleaned_data['show_header']
         article.show_sidebar = form.cleaned_data['show_sidebar']
@@ -175,11 +182,11 @@ def _save_submittion(request, form, article=None):
 
         article.candu_slug = form.cleaned_data['candu_slug']
         article.style = form.cleaned_data['style']
-
-        article.tags.clear()
+        article.body_format = form.cleaned_data['body_format']
 
         article.save()
 
+        tags = form.cleaned_data['tags']
         if tags.strip():
             for i in tags.split(','):
                 try:
@@ -195,6 +202,12 @@ def _save_submittion(request, form, article=None):
                 article.tags.add(tag)
 
         article.save()
+
+        AdminEvent.objects.create(
+            user=request.user,
+            event_type=f'{event_name}_article',
+            target_user=None,
+            data=json.dumps({'article': article.id}))
 
         return article
     else:

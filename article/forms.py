@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import PUBLISH_STAT
+from .models import PUBLISH_STAT, ARTICLE_FORMAT
 
 
 class ArticleForm(forms.Form):
@@ -16,6 +16,7 @@ class ArticleForm(forms.Form):
 
     candu_slug = forms.CharField(required=False)
     style = forms.CharField(widget=forms.Textarea, required=False)
+    body_format = forms.ChoiceField(choices=ARTICLE_FORMAT, required=False)
 
 
 class AnonymouseArticleForm(ArticleForm):

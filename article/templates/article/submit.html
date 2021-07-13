@@ -108,6 +108,21 @@
                                 </div>
                             </div>
                         </div>
+
+                        <hr />
+                        <h2>Editor</h2>
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div class="form-group {% if form.body_format.errors %}has-error has-feedback{% endif %}">
+                                    <label class="control-label">{{ form.body_format.errors|striptags }}</label>
+                                    <label class="" for="body_format">Editor to use</label>
+                                    <div class="controls">
+                                        {% render_field form.body_format class+="form-control input-md" %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <hr />
                         <h2>Candu</h2>
                         <div class="row">
