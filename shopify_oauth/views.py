@@ -3,6 +3,7 @@ import hashlib
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.http import JsonResponse
@@ -168,11 +169,11 @@ def index(request):
         if request.user.is_authenticated:
             return HttpResponseRedirect('/')
         else:
-            return HttpResponseRedirect('/accounts/login/')
+            return HttpResponseRedirect(redirect('login'))
 
     except:
         capture_exception()
-        return HttpResponseRedirect('/accounts/login/')
+        return HttpResponseRedirect(redirect('login'))
 
     if request.user.is_authenticated:
         if permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
@@ -213,11 +214,11 @@ def private_label_index(request):
         if request.user.is_authenticated:
             return HttpResponseRedirect('/')
         else:
-            return HttpResponseRedirect('/accounts/login/')
+            return HttpResponseRedirect(redirect('login'))
 
     except:
         capture_exception()
-        return HttpResponseRedirect('/accounts/login/')
+        return HttpResponseRedirect(redirect('login'))
 
     if request.user.is_authenticated:
         if permissions.user_can_view(request.user, store, raise_on_error=False, superuser_can=False):
