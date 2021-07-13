@@ -59,6 +59,7 @@
                     ><i class="fa fa-file-o"></i> Reviews</a></li>
                 {% endif %}
                 {% if request.user|can:'price_change_options.use' %}
+                {% if product.qelem.is_connected %}
                 <li>
                     <a data-toggle="tab" href="#tab-7"
                        data-auto-click="#alerts"
@@ -69,6 +70,7 @@
                         <i class="fa fa-line-chart"></i> Alerts
                     </a>
                 </li>
+                {% endif %}
                 {% endif %}
                 {% if request.user|can:'youtube_ads.use' %}
                 <li>
@@ -752,7 +754,7 @@
                 {% if request.user.profile.plan.support_addons %}
                 {% include "common/partial/upsell.html" with addon_id=20 message="Add Alerts to your Plan" only %}
                 {% else %}
-                {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Bundles" only %}
+                {% include "common/partial/upsell.html" with addon_id='' message="Please upgrade your Plan to add Alerts" only %}
                 {% endif %}
                 {% endif %}
                 <form id="product-config-form" role="form">
