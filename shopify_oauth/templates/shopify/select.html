@@ -1,0 +1,98 @@
+{% load widget_tweaks %}
+{% load static %}
+{% load compress %}
+{% load template_helper %}
+
+{% app_setting 'RECAPTCHA_SITE_KEY' as RECAPTCHA_SITE_KEY %}
+
+<html>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon"  href="{% static 'favicon.png' %}">
+    <link rel="icon" href="{% static 'favicon.png' %}" >
+
+    <title>Dropified | Login</title>
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:300,400,400i,700,700i|Roboto+Slab:400,700" rel="stylesheet">
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'font-awesome/css/font-awesome.css' %}" rel="stylesheet">
+
+    {% compress css %}
+    <link href="{% static 'css/animate.css' %}" rel="stylesheet">
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    {% endcompress %}
+
+    {% include "partial/custom_tags.html" %}
+
+    <style type="text/css">
+        .store-select-btn {
+            display: flex;
+            align-content: center;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: nowrap;
+        }
+
+         .store-select-store-info {
+            display: flex;
+            flex-direction: column;
+            flex-wrap: nowrap;
+            align-content: stretch;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+    </style>
+</head>
+
+<body class="login-body gray-bg">
+
+    <div class="d-table">
+    <div class="d-table-cell">
+
+    <div class="middle-box text-center loginscreen" style="max-width: 600px">
+        <div>
+            <div>
+                <h1 class="logo-name" style="font-size: 16px">
+                    <img src="{% static 'dropified-logo.png' %}" style="width:220px;margin-bottom:30px;">
+                </h1>
+            </div>
+
+            <p class="welcome-text">You have multiple accounts associated with your Shopify store</p>
+            <h5 class="welcome-subtitle font-alt ">Please select the account you want to login to:</h5>
+
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{request.GET.next|default:'/'}}" />
+
+            {% for item in stores %}
+                <a href="{% url 'shopify_account_select' %}?login={{ item.url_token }}" class="btn btn-primary btn-block btn-lg m-b store-select-btn">
+                    <div class="store-select-store-info">
+                        <b>{{ item.store.title }}</b>
+                        <span>{{ item.store.shop }}</span>
+                        <i>{{ item.store.user.profile.plan.title }}</i>
+                    </div>
+                    <div>
+                        <i class="fa fa-arrow-right pull-right" style="align-self:flex-end"></i>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    </div>
+    </div>
+
+    <!-- Mainly scripts -->
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+
+    {% if RECAPTCHA_SITE_KEY %}
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+    {% endif %}
+</body>
+
+</html>

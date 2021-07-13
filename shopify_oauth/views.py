@@ -1,6 +1,8 @@
 import hmac
 import hashlib
 
+import arrow
+import jwt
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
@@ -13,6 +15,7 @@ from django.contrib.auth import login as user_login
 from django.contrib.auth import logout as user_logout
 
 import shopify
+from django.views.generic import TemplateView
 from requests_oauthlib import OAuth2Session
 
 from lib.exceptions import capture_exception, capture_message
@@ -20,6 +23,7 @@ from lib.exceptions import capture_exception, capture_message
 from shopified_core import permissions
 from leadgalaxy.models import User, ShopifyStore, UserProfile, GroupPlan
 from leadgalaxy.utils import attach_webhooks, detach_webhooks, get_plan, create_user_without_signals
+from shopified_core.utils import app_link
 
 
 AUTHORIZATION_URL = 'https://{}/admin/oauth/authorize'
@@ -169,7 +173,12 @@ def index(request):
         if request.user.is_authenticated:
             return HttpResponseRedirect('/')
         else:
-            return HttpResponseRedirect(redirect('login'))
+            token = jwt.encode({
+                'shop': request.GET['shop'],
+                'exp': arrow.utcnow().replace(hours=1).timestamp
+            }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
+
+            return HttpResponseRedirect(app_link(reverse('shopify_account_select'), token=token))
 
     except:
         capture_exception()
@@ -494,3 +503,45 @@ def callback(request):
             messages.success(request, 'Your store <b>{}</b> has been added!'.format(store.title))
 
     return HttpResponseRedirect('/')
+
+
+class AccountSelectView(TemplateView):
+    template_name = 'shopify/select.html'
+
+    def get_context_data(self, **kwargs: dict) -> dict:
+        ctx = super().get_context_data(**kwargs)
+
+        token = self.request.GET.get('token')
+        if token:
+            data = jwt.decode(token, settings.API_SECRECT_KEY, algorithm='HS256')
+            stores = ShopifyStore.objects.exclude(private_label=True).filter(shop=data['shop'], is_active=True)
+
+            ctx['stores'] = []
+            for store in stores:
+                ctx['stores'].append({
+                    'store': store,
+                    'url_token': jwt.encode({
+                        'store': store.id,
+                        'exp': arrow.utcnow().replace(minutes=10).timestamp
+                    }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
+                })
+
+        return ctx
+
+    def get(self, request, *args, **kwargs):
+        login = self.request.GET.get('login')
+        if login:
+            data = jwt.decode(login, settings.API_SECRECT_KEY, algorithm='HS256')
+            store = ShopifyStore.objects.get(id=data['store'])
+            user = store.user
+
+            if not have_subusers(user) or user.profile.from_shopify_app_store():
+                user.backend = settings.AUTHENTICATION_BACKENDS[0]
+                user_login(request, user)
+                return HttpResponseRedirect('/')
+            else:
+                request.session['sudo_user'] = user.id
+                return HttpResponseRedirect(reverse('sudo_login'))
+
+        else:
+            return super().get(request, *args, **kwargs)
