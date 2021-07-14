@@ -90,10 +90,14 @@ class SupplementsApi(ApiResponseMixin, View):
                 paid_orders = util.create_payment(user.models_user, unpaid_orders)
         except Exception as e:
             error_code = str(e).split(':')
-            error_code_lookup = f'https://developer.authorize.net/api/reference/responseCodes.html?code={error_code[0]}'
-            return self.api_error(f'Payment failed with Error Code {str(e)} \
-                                  <a target="_blank" href="{error_code_lookup}"> Learn more.</a>',
-                                  status=500)
+            if error_code[0] == "User has no authorize_net_customer.":
+                error_msg = f'Please enter your billing information in the Private Label > Billing tab \
+                            <a target="_blank" href="{reverse("pls:billing")}"> <u>here.</u></a>'
+            else:
+                error_code_lookup = f'https://developer.authorize.net/api/reference/responseCodes.html?code={error_code[0]}'
+                capture_exception(level='warning')
+                error_msg = f'Payment failed with Error Code {str(e)} <a target="_blank" href="{error_code_lookup}"> Learn more.</a>'
+            return self.api_error(error_msg, status=500)
         for pls_order, order in paid_orders:
             shipstation_data = prepare_shipstation_data(pls_order,
                                                         order,
@@ -584,11 +588,14 @@ class SupplementsApi(ApiResponseMixin, View):
         except Exception as e:
             basket_order.delete()
             error_code = str(e).split(':')
-            error_code_lookup = f'https://developer.authorize.net/api/reference/responseCodes.html?code={error_code[0]}'
-            capture_exception(level='warning')
-            return self.api_error(f'Payment failed with Error Code {str(e)} \
-                                  <a target="_blank" href="{error_code_lookup}"> Learn more.</a>',
-                                  status=500)
+            if error_code[0] == "User has no authorize_net_customer.":
+                error_msg = f'Please enter your billing information in the Private Label > Billing tab \
+                            <a target="_blank" href="{reverse("pls:billing")}"> <u>here.</u></a>'
+            else:
+                error_code_lookup = f'https://developer.authorize.net/api/reference/responseCodes.html?code={error_code[0]}'
+                capture_exception(level='warning')
+                error_msg = f'Payment failed with Error Code {str(e)} <a target="_blank" href="{error_code_lookup}"> Learn more.</a>'
+            return self.api_error(error_msg, status=500)
         else:
             # clear basket items
             user.basket_items.all().delete()
