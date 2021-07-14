@@ -117,18 +117,14 @@ def create_shipstation_order(pls_order, data, raw_request=False):
         return response['orderKey']
 
     else:
-        for i in range(2):
-            try:
-                response = requests.post(url, data=json.dumps(data), headers=headers)
-                response.raise_for_status()
-                response = response.json()
-                if response.get('orderKey'):
-                    break
+        try:
+            response = requests.post(url, data=json.dumps(data), headers=headers)
+            response.raise_for_status()
+            response = response.json()
+        except requests.HTTPError:
+            pass
 
-            except requests.HTTPError:
-                pass
-
-            capture_message('ShipStation Order Retry', level='warning', extra={'retry': i + 1, 'data': data})
+        capture_message('ShipStation Order Retry', level='warning', extra={'retry': 1, 'data': data})
 
         if response.get('orderKey'):
             pls_order.shipstation_key = response['orderKey']
