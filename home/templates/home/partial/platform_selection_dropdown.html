@@ -1,3 +1,4 @@
+{% if 'research' not in request.user.profile.plan.slug %}
 {% if request.GET.store == 'n' or request.GET.store == 'c' or request.GET.store == None %}
 <div class="row filter-col m-b">
     <div class="col-md-1">
@@ -45,4 +46,5 @@
 
     </div>
 </div>
+{% endif %}
 {% endif %}
