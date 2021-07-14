@@ -132,21 +132,19 @@
                 {% endif %}
 
                 <div class="row">
-                    {% if not user|can:"product_feeds.use" %}
-                    <br>
-                        {% if user.profile.plan.support_addons %}
-                            {% include "common/partial/upsell.html" with alter_upsell_pos=True addon_id=15 message="Add Facebook feeds to your Plan" only %}
-                        {% else %}
-                            {% include "common/partial/upsell.html" with alter_upsell_pos=True addon_id='' message="Please upgrade your Plan to add Facebook feeds" only %}
+                    {% if not user.profile.plan.support_addons %}
+                        {% if not user|can:"product_feeds.use" or not user|can:"google_product_feed.use" %}
+                            {% include "common/partial/upsell.html" with alter_upsell_pos=True addon_id='' message="Please Upgrade your plan to add Facebook and Google feeds" only %}
                         {% endif %}
-                    {% endif %}
+                    {% else %}
+                        {% if not user|can:"product_feeds.use" %}
+                        <br>
+                                {% include "common/partial/upsell.html" with alter_upsell_pos=True addon_id=15 message="Add Facebook feeds to your Plan" only %}
+                        {% endif %}
 
-                    {% if not user|can:"google_product_feed.use" %}
-                    <br>
-                        {% if user.profile.plan.support_addons %}
+                        {% if not user|can:"google_product_feed.use" %}
+                        <br>
                             {% include "common/partial/upsell.html" with alter_upsell_pos=True addon_id=13 message="Add Google feeds to your Plan" only %}
-                        {% else %}
-                            {% include "common/partial/upsell.html"  with alter_upsell_pos=True addon_id='' message="Please upgrade your Plan to add Google feeds" only %}
                         {% endif %}
                     {% endif %}
                 </div>
