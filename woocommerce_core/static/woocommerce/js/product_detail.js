@@ -9,12 +9,17 @@ var image_cache = {};
 function showProductInfo(rproduct) {
     product = rproduct;
     if (product) {
+        var product_price = product.price;
+        var compare_price = '';
+        if (product.sale_price) {
+            compare_price = product.compare_at_price;
+        }
         $('#product-title').val(product.title);
-        $('#product-price').val(product.price);
+        $('#product-price').val(product_price);
         $('#product-type').val(product.type);
         $('#product-tag').val(product.tags);
         $('#product-vendor').val(product.vendor);
-        $('#product-compare-at').val(product.compare_at_price);
+        $('#product-compare-at').val(compare_price);
 
         if (product.variants.length && !config.connected) {
             $.each(product.variants, function(i, el) {
@@ -150,6 +155,14 @@ function productExport(btn) {
 
 $('#product-update-btn').click(function (e) {
     e.preventDefault();
+
+    var productPrice = parseFloat($('#product-price').val());
+    var productComparePrice = parseFloat($('#product-compare-at').val());
+
+    if(productComparePrice != '' && productComparePrice < productPrice) {
+        toastr.warning('Compare at price should be greater than Product Price');
+        return;
+    }
 
     var btn = $(this);
     btn.bootstrapBtn('loading');
@@ -1034,6 +1047,16 @@ $('.remove-background-image-editor').click(function(e) {
 
     initClippingMagic($(this));
 });
+
+$('tr.woocommerce-variant [name="compare_at_price"]').on('blur', function() {
+    var compare_price = $(this).val();
+    var productPrice = $(this).parents('tr.woocommerce-variant').find('[name="price"]').val();
+    if (compare_price != '' && compare_price < productPrice) {
+        $(this).val('');
+        toastr.warning(' Compare at price should be greater than Price');
+        $(this).css("border", "1px solid red");
+    }
+    });
 
 function initClippingMagic(el) {
 
