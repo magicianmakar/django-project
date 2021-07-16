@@ -1383,6 +1383,9 @@ if (window.intercomSettings) {
         }, {
             name: 'shopify-migrate',
             selector: '#candu-shopify-migrate'
+        }, {
+            name: 'dashboard-content',
+            selector: '#candu-dashboard-content'
         },
     ];
 
