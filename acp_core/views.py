@@ -8,8 +8,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from django.db.models import Q
 from django.http import HttpResponseRedirect
+from django.template.defaultfilters import slugify
 from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
@@ -18,7 +20,8 @@ from addons_core.models import AddonUsage
 from last_seen.models import LastSeen
 from leadgalaxy.models import AdminEvent, AccountRegistration, PlanRegistration, GroupPlan, FeatureBundle
 from leadgalaxy.shopify import ShopifyAPI
-from shopified_core.utils import safe_int, url_join, hash_list
+from shopified_core.utils import safe_int, url_join, hash_list, safe_float
+from stripe_subscription.models import StripePlan
 from stripe_subscription.stripe_api import stripe
 from lib.exceptions import capture_exception
 
@@ -320,6 +323,123 @@ class ACPPlansView(BaseTemplateView):
         plans = GroupPlan.objects.all().order_by('-id')
 
         ctx['plans'] = plans
+
+        return ctx
+
+
+class ACPAddPlanView(BaseTemplateView):
+    def post(self, request, *args, **kwargs):
+        plan_name = request.POST['name']
+        plan_name_visible_to_users = request.POST['description']
+
+        payment_gateway = request.POST.getlist('gateway')
+        payment_interval = request.POST.getlist('interval')
+
+        stores_limit = safe_float(request.POST['stores_limit'])
+        products_limit = safe_float(request.POST['products_limit'])
+        boards_limit = safe_float(request.POST['boards_limit'])
+        auto_fulfill_limit = safe_float(request.POST['fulfill_limit'])
+        unique_supplements_limit = safe_float(request.POST['supplements_limit'])
+        user_supplements_limit = safe_float(request.POST['user_supplements'])
+
+        extra_store_cost = safe_float(request.POST['extra_store'])
+        support_adding_extra_stores = bool(extra_store_cost)
+
+        support_addons = 'addons' in request.POST
+
+        free_plan = 'free_plan' in request.POST
+        trial_days = safe_int('Trial days: ') if not free_plan else 0
+        monthly_price = safe_float(request.POST['monthly_price']) if 'monthly' in payment_interval else 0.00
+        yearly_price = safe_float(request.POST['yearly_price']) if 'yearly' in payment_interval else 0.00
+        lifetime_price = safe_float(request.POST['lifetime_price']) if 'lifetime' in payment_interval else 0.00
+
+        with transaction.atomic():
+            for gateway in payment_gateway:
+                for interval in payment_interval:
+                    name = plan_name
+                    price = 0.00
+
+                    if free_plan:
+                        name = f'{name} Free'
+                    elif interval == 'monthly':
+                        name = f'{name} Monthly'
+                        price = monthly_price
+                    elif interval == 'yearly':
+                        name = f'{name} Yearly'
+                        price = yearly_price / 12.0
+                    elif interval == 'lifetime':
+                        name = f'{name} Lifetime'
+                        price = lifetime_price
+
+                    if gateway == 'shopify':
+                        name = f'{name} Shopify'
+
+                    slug = slugify(name)
+
+                    plan = GroupPlan.objects.create(
+                        title=name,
+                        description=plan_name_visible_to_users,
+                        slug=slug,
+
+                        stores=stores_limit,
+                        products=products_limit,
+                        boards=boards_limit,
+                        unique_supplements=unique_supplements_limit,
+                        user_supplements=user_supplements_limit,
+                        auto_fulfill_limit=auto_fulfill_limit,
+
+                        extra_stores=support_adding_extra_stores,
+                        extra_store_cost=extra_store_cost,
+
+                        support_addons=support_addons,
+
+                        monthly_price=price,
+                        free_plan=free_plan,
+                        trial_days=trial_days,
+
+                        payment_gateway=gateway,
+                        payment_interval=interval,
+                        hidden=True,
+                        locked=True,
+                    )
+
+                    if gateway == 'stripe':
+                        self.create_stripe_plan(plan, monthly_price, yearly_price)
+
+                    messages.success(request, f'Plan {plan.title} created (id: {plan.id})')
+
+            return HttpResponseRedirect(reverse('acp_plans_view'))
+
+    def create_stripe_plan(self, plan, monthly_price, yearly_price):
+        amount = 0.00
+        interval = None
+
+        if plan.payment_interval == 'monthly':
+            amount = monthly_price
+            interval = 'month'
+
+        elif plan.payment_interval == 'yearly':
+            amount = yearly_price
+            interval = 'year'
+
+        else:
+            interval = 'month'
+
+        StripePlan.objects.create(
+            name=plan.title,
+            plan=plan,
+            amount=amount,
+            retail_amount=0.00,
+
+            interval=interval,
+            trial_period_days=plan.trial_days,
+        )
+
+    template_name = 'acp/add_plan.html'
+
+    def get_context_data(self, **kwargs: dict) -> dict:
+        ctx = super().get_context_data(**kwargs)
+        ctx['breadcrumbs'].extend(["Plans", "Add"])
 
         return ctx
 

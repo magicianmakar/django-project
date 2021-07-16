@@ -1,10 +1,152 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+
+{% block main-container %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="ibox float-e-margins">
+
+                <div class="ibox-title">
+                    <h5>Plans<small></small></h5>
+                    <div class="ibox-tools">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                            <i class="fa fa-wrench"></i>
+                        </a>
+
+                        <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                    </div>
+                </div>
+
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="row col-md-offset-2 col-md-6">
+                            <form method="POST">
+                                <div class="form-group">
+                                    <label for="">Plan name</label>
+                                    <input name="name" type="text" class="form-control">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="">Plan name visible to users</label>
+                                    <input name="description" type="text" class="form-control">
+                                </div>
+
+                                <div class="checkbox">
+                                    <p class="help-block">Payment gateway</p>
+
+                                    <label class="m-l">
+                                        <input name="gateway" value="stripe" type="checkbox" checked> Stripe
+                                    </label>
+                                    <label class="m-l">
+                                        <input name="gateway" value="shopify" type="checkbox" checked> Shopify
+                                    </label>
+                                    <label class="m-l">
+                                        <input name="gateway" value="jvzoo" type="checkbox"> JVZoo
+                                    </label>
+                                </div>
+
+                                <div class="checkbox">
+                                    <p class="help-block">Payment interval</p>
+
+                                    <label class="m-l">
+                                        <input name="interval" value="monthly" type="checkbox"> Monthly
+                                    </label>
+                                    <label class="m-l">
+                                        <input name="interval" value="yearly" type="checkbox"> Yearly
+                                    </label>
+                                    <label class="m-l">
+                                        <input name="interval" value="lifetime" type="checkbox"> Lifetime
+                                    </label>
+                                </div>
+
+                                <hr />
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Stores Limit</label>
+                                    <input name="stores_limit" type="number" class="form-control" id="">
+                                </div>
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Products Limit</label>
+                                    <input name="products_limit" type="number" class="form-control" id="">
+                                </div>
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Boards Limit</label>
+                                    <input name="boards_limit" type="number" class="form-control" id="">
+                                </div>
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Auto Fulfill Limit</label>
+                                    <input name="fulfill_limit" type="number" class="form-control" id="">
+                                </div>
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Unique Supplements Limit</label>
+                                    <input name="supplements_limit" type="number" class="form-control" id="">
+                                </div>
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">User Supplements Limit</label>
+                                    <input name="user_supplements" type="number" class="form-control" id="">
+                                </div>
+
+                                <hr />
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Extra store cost per store</label>
+                                    <input name="extra_store" type="number" class="form-control" id="">
+                                    <p class="help-block">Leave empty if plan doesn't allow extra stores</p>
+                                </div>
+
+                                <div class="checkbox">
+                                    <label class="">
+                                        <input name="addons" value="1" type="checkbox"> Support Addons
+                                    </label>
+                                </div>
+
+                                <div class="checkbox">
+                                    <label class="">
+                                        <input name="free_plan" value="1" type="checkbox"> Free plan
+                                    </label>
+                                </div>
+
+                                <hr />
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Trial days:</label>
+                                    <input name="trial_days" type="number" class="form-control" id="">
+                                </div>
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Monthly Price:</label>
+                                    <input name="monthly_price" type="number" class="form-control" id="">
+                                </div>
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Yearly Price:</label>
+                                    <input name="yearly_price" type="number" class="form-control" id="">
+                                </div>
+
+                                <div class="form-group" style="max-width:300px">
+                                    <label for="">Lifetime Price:</label>
+                                    <input name=lifetime_price"" type="number" class="form-control" id="">
+                                </div>
+
+
+                                <button type="submit" class="btn btn-default">Submit</button>
+                            </form>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
