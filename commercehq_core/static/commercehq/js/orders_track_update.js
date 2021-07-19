@@ -311,20 +311,8 @@
                     'track_id': order.id,
                 }
             }).then(function(responseData) {
-                for (var i = 0, iLength = responseData.orders.length; i < iLength; i++) {
-                    var data = responseData.orders[i];
-                    // Got Supplier order info
-                    if (order.source_status == data.source.orderStatus &&
-                        order.source_tracking == data.source.tracking_number &&
-                        $('#update-unfulfilled-only').is(':checked') &&
-                        !order.bundle) {
-                        // Order info hasn't changed
-                        orders.success += 1;
-                        addOrderUpdateItem(order, data.source);
-                    } else {
-                        return updateOrderStatus(order, data.source);
-                    }
-                }
+                addOrderUpdateItem(order, responseData.orders[0].source);
+
             }).fail(function(data) {
                 // Couldn't get Supplier order info
                 orders.error += 1;

@@ -64,6 +64,8 @@ class BasketStore:
 
             basket_order_track.data = json.dumps(order_data)
             basket_order_track.save()
+            order_item.order_track_id = basket_order_track.id
+            order_item.save()
 
     def generate_order_metadata(self, order_data):
         order_metadata = {}

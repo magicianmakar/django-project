@@ -257,6 +257,8 @@ class SupplementsApi(ApiResponseMixin, View):
         order_item = order.order_items.filter(order_track_id=data['track_id']).first()
         if not order_item:
             [i.save_order_track() for i in order.order_items.all()]
+        else:
+            order_item.save_order_track()
 
         order_items = order.order_items.filter(order_track_id=data['track_id'])
         return self.api_success({'orders': [{

@@ -1,9 +1,8 @@
 import arrow
-from decimal import Decimal
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, F
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render, reverse
 from django.utils import timezone
@@ -11,10 +10,8 @@ from django.views import View
 from django.views.generic.list import ListView
 
 import simplejson as json
-from lib.exceptions import capture_message, capture_exception
 
-from shopified_core.utils import get_store_api, safe_int
-from shopified_core.models_utils import get_track_model
+from shopified_core.utils import safe_int
 
 from .forms import OrderFilterForm, PayoutFilterForm, ProductEditForm, ProductForm
 from .lib.shipstation import get_shipstation_orders, get_shipstation_shipments
@@ -214,93 +211,22 @@ class OrdersShippedWebHookView(View, BaseMixin):
     order_line_model = OrderLine
 
     def fulfill_order(self, shipment):
-        try:
-            order_key = shipment['orderKey']
-        except KeyError:
-            return
-
-        try:
-            order = self.order_model.objects.get(shipstation_key=order_key)
-        except self.order_model.DoesNotExist:
-            return
-
-        tracking_number = shipment['trackingNumber']
-        get_line = self.order_line_model.objects.get
-
-        source_data = {}
         with transaction.atomic():
-            order_ids = set()
-            for item in shipment.get('shipmentItems', []):
+            items = shipment.get('shipmentItems', [])
+            self.order_model.objects.filter(order_items__shipstation_key__in=[i['lineItemKey'] for i in items]).update(
+                status=self.order_model.SHIPPED if shipment['trackingNumber'] else F('status'),
+                batch_number=shipment['batchNumber'],
+                is_fulfilled=True,
+            )
+
+            for item in items:
                 try:
-                    line = get_line(shipstation_key=item['lineItemKey'])
-                    line.tracking_number = tracking_number
-                    line.save()
-                    order_ids.add(line.pls_order_id)
+                    line = self.order_line_model.objects.get(shipstation_key=item['lineItemKey'])
+                    line.tracking_number = shipment['trackingNumber']
+                    line.save_order_track()
+
                 except self.order_line_model.DoesNotExist:
                     continue
-
-            for order in self.order_model.objects.filter(id__in=order_ids):
-                total_price = Decimal(order.amount) / Decimal(100)
-                shipping_price = Decimal(order.shipping_price) / Decimal(100)
-                products_price = total_price - shipping_price
-                source_data[order.get_dropified_source_id()] = {
-                    'status': 'D_SHIPPED' if tracking_number else 'D_PENDING_SHIPMENT',
-                    'tracking_number': tracking_number,
-                    'order_details': json.dumps({'cost': {
-                        'products': str(products_price.quantize(Decimal('0.01'))),
-                        'shipping': str(shipping_price.quantize(Decimal('0.01'))),
-                        'total': str(total_price.quantize(Decimal('0.01'))),
-                        'currency': 'USD',
-                    }}),
-                    'source_id': order.get_dropified_source_id(),
-                }
-
-                order.batch_number = shipment['batchNumber']
-                if tracking_number:
-                    order.is_fulfilled = True
-                    order.status = Order.SHIPPED
-                order.save()
-
-        try:
-            store_type = order.store_type
-            StoreApi = get_store_api(store_type)
-            OrderTrack = get_track_model(store_type)
-        except:
-            capture_exception()
-            return
-
-        tracks = OrderTrack.objects.filter(
-            source_id__in=source_data.keys(),
-            source_type='supplements'
-        )
-        for track in tracks:
-            try:
-                track_data = json.loads(track)
-                track_currency = track_data['aliexpress']['order_details']['cost']['currency']
-            except:
-                # no currency or old order
-                track_currency = "USD"
-
-            basic_data = source_data.get(track.source_id)
-            if not basic_data:
-                continue
-            # update currnecy from store order data
-            order_details = json.loads(basic_data.get('order_details'))
-            order_details['cost']['currency'] = track_currency
-            basic_data['order_details'] = json.dumps(order_details)
-
-            data = {
-                **basic_data,
-                'store': track.store_id,
-                'order': track.id,
-            }
-
-            api_result = StoreApi.post_order_fulfill_update(self.request, order.user, data)
-            if api_result.status_code != 200:
-                capture_message('Unable to update tracking for supplement', extra={
-                    'api_result': json.loads(api_result.content.decode("utf-8")),
-                    'api_data': data
-                }, level='warning')
 
     def get_shipments(self):
         data = json.loads(self.request.body.decode())
