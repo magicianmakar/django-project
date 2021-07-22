@@ -207,9 +207,17 @@ def create_variants_api_data(data, image_id_by_hash, attributes=None):
     variant_list = []
 
     titles, values = [], []
-    for variant in variants:
-        titles.append(variant.get('title', ''))
-        values.append(variant.get('values', []))
+    if len(variants) > 1:
+        for variant in variants:
+            titles.append(variant.get('title', ''))
+            values.append(variant.get('values', []))
+    elif len(variants) == 1:
+        for variant in variants:
+            titles.append(variant.get('title', ''))
+        val = []
+        for key in variants_info:
+            val.append(key)
+        values.append(val)
 
     # Iterates through all possible variants e.g. [(RED, LARGE), (RED, SMALL)]
     for product in itertools.product(*values):

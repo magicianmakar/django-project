@@ -306,6 +306,12 @@ def product_export(store_id, product_id, user_id, publish=None):
                     'thumbnails': []
                 }
 
+                if len(p['variants']) == 1:
+                    v = []
+                    for key in p['variants_info']:
+                        v.append(key)
+                    option['values'] = v
+
                 for v in var['values']:
                     if v in thumbs_uploads:
                         option['thumbnails'].append({
@@ -318,8 +324,15 @@ def product_export(store_id, product_id, user_id, publish=None):
                 api_data['options'].append(option)
 
             vars_list = []
-            for v in p['variants']:
-                vars_list.append(v['values'])
+            product_variants = p['variants']
+            if len(product_variants) > 1:
+                for variant in product_variants:
+                    vars_list.append(variant.get('values', []))
+            elif len(product_variants) == 1:
+                v = []
+                for key in p['variants_info']:
+                    v.append(key)
+                vars_list.append(v)
 
             vars_list = all_possible_cases(vars_list)
 
