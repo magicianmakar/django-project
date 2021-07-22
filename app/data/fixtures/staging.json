@@ -5588,6 +5588,13 @@
         "description": "Send products to store"
     }
 }, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 150,
+    "fields": {
+        "name": "allow_groovekart.use",
+        "description": "Allow Users to add Groovekart store"
+    }
+}, {
     "model": "stripe_subscription.stripeplan",
     "pk": 1,
     "fields": {
