@@ -100,7 +100,7 @@
     </ul>
 
     {# Dropified Black #}
-  {% if user|can:'pls.use' or user.profile.private_label %}
+  {% if user|can:'pls.use' or user.profile.private_label or request.user|can:'pls_staff.use' %}
     <ul style="padding:0;margin: 0 0 0 24px">
         <li class="section">
           <span class="section-header">
@@ -127,8 +127,7 @@
             </a>
         </li>
     </ul>
-
-    {% if user|can:'pls_admin.use' or user|can:'pls_staff.use' %}
+    {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
     <ul style="margin:0">
         <li class="item">
             <a href="{% url 'pls:all_user_supplements' %}">
