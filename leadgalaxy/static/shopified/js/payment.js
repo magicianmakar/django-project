@@ -455,12 +455,6 @@
         });
     });
 
-    $('.downgrade-to-import-plan').on('click', function(e) {
-        $(this).button('loading');
-
-        selectPlan(97);
-    });
-
     $('.downgrade-to-free-plan').on('click', function(e) {
         $(this).button('loading');
 
