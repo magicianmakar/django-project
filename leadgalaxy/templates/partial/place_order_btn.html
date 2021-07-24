@@ -1,4 +1,5 @@
 {% load template_helper %}
+{% load perms_helper %}
 
 {% if original %}
     {% if not item.supplier.is_dropified_print %}
@@ -93,10 +94,12 @@
     </div>
     {% endif %}
 {% elif item.product_id %}
+    {% if user|can:'product_supplier.use' %}
     <button class="btn btn-xs btn-info add-supplier-btn"
             store-id="{{store.id}}" shopify-product="{{item.product_id}}">
         <i class="fa fa-plus"></i> Add Supplier
     </button>
+    {% endif %}
 
 {% else %}
     <span class="label label-warning">Not Tracked</span>
