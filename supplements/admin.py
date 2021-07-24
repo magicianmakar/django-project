@@ -390,6 +390,7 @@ class BasketItemAdmin(admin.ModelAdmin):
         'quantity',
         'created_at',
     )
+    raw_id_fields = ('user', 'user_supplement')
 
 
 @admin.register(BasketOrder)
@@ -400,6 +401,7 @@ class BasketOrderAdmin(admin.ModelAdmin):
         'status',
         'created_at',
     )
+    raw_id_fields = ('user',)
 
 
 @admin.register(UserUnpaidOrder)
