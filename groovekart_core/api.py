@@ -543,6 +543,8 @@ class GrooveKartApi(ApiBase):
         return self.api_success()
 
     def post_import_product(self, request, user, data):
+        if not user.can('product_supplier.use'):
+            return self.api_error('Your current plan doesn\'t have this feature.', status=500)
         store_id = safe_int(data.get('store'))
 
         try:

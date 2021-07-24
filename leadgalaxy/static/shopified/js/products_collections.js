@@ -130,6 +130,41 @@
                 return;
             }
 
+            // if no items in array, try to fetch them from itemList
+            if (rep.data.items && !rep.data.items.length && rep.data.mods && rep.data.mods.itemList.content.length) {
+                // try to make list from mods.itemList and support both V3 and old format
+                $.each(rep.data.mods.itemList.content, function (i, item) {
+                    var item_obj = {};
+                    if (item.itemType=='productV3'){
+                        item_obj={
+                        imageUrl: item.image.imgUrl,
+                        productDetailUrl: "https://www.aliexpress.com/item/"+item.productId+".html",
+                        productId: item.productId,
+                        price: item.prices.salePrice.formattedPrice,
+                        title: item.title.displayTitle,
+                        tradeDesc: (item.trade?item.trade.tradeDesc:''),
+                        logisticsDesc: (item.logistics?item.logistics.logisticsDesc:''),
+                        store: item.store,
+                        starRating: (item.evaluation?item.evaluation.starRating:false)
+                        };
+                    }
+                    else {
+                        item_obj={
+                        imageUrl: item.image.imageUrl,
+                        productDetailUrl: "https://www.aliexpress.com/item/"+item.productId+".html",
+                        productId: item.productId,
+                        price: item.prices.sale_price.formattedPrice,
+                        title: item.title.displayTitle,
+                        tradeDesc: (item.trade?item.trade.tradeDesc:''),
+                        logisticsDesc: (item.logistics?item.logistics.logisticsDesc:''),
+                        store: item.store,
+                        starRating: (item.evaluation?item.evaluation.starRating:false)
+                        };
+                    }
+                    rep.data.items.push(item_obj);
+                });
+            }
+
             var produtcTpl = Handlebars.compile($("#products-collection-product-template").html());
 
             $('.products-list').empty();

@@ -26,19 +26,6 @@ class AlibabaAccountTestCase(BaseTestCase):
         )
 
     @patch('alibaba_core.utils.APIRequest.post')
-    def test_get_orders(self, mock_post):
-        mock_post.side_effect = [
-            mock_data.orders_list_response,
-            mock_data.order_get_reaponse,
-        ]
-
-        order = self.alibaba_account.get_orders()[0]
-
-        self.assertEqual(order['buyer']['full_name'], 'jack ma')
-        self.assertEqual(order['shipping_address']['country_code'], 'US')
-        self.assertEqual(order['total_amount']['amount'], '123')
-
-    @patch('alibaba_core.utils.APIRequest.post')
     def test_get_product(self, mock_post):
         mock_post.return_value = mock_data.product_get_response
 

@@ -87,6 +87,7 @@ def prepare_shipstation_data(pls_order, order, line_items, service_code=None):
         advancedOptions['customField2'] = 'Duties Paid'
 
     shipping_data = {
+        'orderKey': str(pls_order.id),
         'orderNumber': pls_order.shipstation_order_number,
         'orderDate': pls_order.created_at.strftime('%Y-%m-%dT%H:%M:%S%z'),
         'orderStatus': 'awaiting_shipment',

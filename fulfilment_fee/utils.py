@@ -6,12 +6,14 @@ import requests
 import re
 import simplejson as json
 from lib.exceptions import capture_exception
+from supplements.models import PLSOrderLine
+from django.db.models import Sum
 
 
 def generate_sale_transaction_fee(source_type, source, amount, currency_data):
     try:
         fee_percent = safe_float(source.user.profile.plan.sales_fee_config.fee_percent)
-
+        fee_flat = safe_float(source.user.profile.plan.sales_fee_config.fee_flat)
         # searching transaction fee
         try:
             SaleTransactionFee.objects.get(
@@ -20,12 +22,18 @@ def generate_sale_transaction_fee(source_type, source, amount, currency_data):
                 source_id=source.source_id
             )
         except SaleTransactionFee.DoesNotExist:
+            sales_fee_value = safe_float(amount) * safe_float(fee_percent) / 100
+            if source.source_type == 'supplements' and fee_flat > 0:
+                total_items = PLSOrderLine.objects.filter(store_order_id=source.order_id).\
+                    aggregate(Sum('quantity'))['quantity__sum']
+                sales_fee_value += fee_flat * total_items
+
             # generating full fee when any of order items is fulfilled
             sale_transaction_fee = SaleTransactionFee.objects.create(
                 user=source.user,
                 source_model=source_type,
                 source_id=source.source_id,
-                fee_value=safe_float(amount) * safe_float(fee_percent) / 100,
+                fee_value=sales_fee_value,
                 currency_conversion_data=json.dumps(currency_data)
             )
             return sale_transaction_fee

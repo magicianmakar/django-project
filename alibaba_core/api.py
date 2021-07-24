@@ -96,15 +96,20 @@ class AlibabaApi(ApiResponseMixin):
             return self.api_error('Your current plan doesn\'t have this feature.', status=500)
 
         try:
-            order = AlibabaOrder.objects.filter(trade_id=data['source_id'], user=user.models_user)
+            order = AlibabaOrder.objects.get(trade_id=data['source_id'], user=user.models_user)
         except AlibabaOrder.DoesNotExist:
             return self.api_error('Order not found', status=404)
 
         if order.alibaba_account is None:
             return self.api_error('Missing alibaba account, did you connected at settings?', status=403)
 
-        # TODO: Check how bundles work here
         details = order.reload_details()
+        items = order.items.filter(order_track_id=data['track_id'])
+        if len(items):
+            [i.save_order_track() for i in items]
+        else:
+            [i.save_order_track() for i in order.items.all()]
+
         return self.api_success(details)
 
     def get_import(self, request, user, data):

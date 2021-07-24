@@ -98,6 +98,7 @@ class SupplementsApi(ApiResponseMixin, View):
                 capture_exception(level='warning')
                 error_msg = f'Payment failed with Error Code {str(e)} <a target="_blank" href="{error_code_lookup}"> Learn more.</a>'
             return self.api_error(error_msg, status=500)
+
         for pls_order, order in paid_orders:
             shipstation_data = prepare_shipstation_data(pls_order,
                                                         order,

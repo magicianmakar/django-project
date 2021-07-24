@@ -1820,8 +1820,10 @@ class ProductSupplier(SupplierBase):
 
     def get_source_id(self):
         try:
-            if self.is_aliexpress or self.is_alibaba:
+            if self.is_aliexpress:
                 return int(re.findall('[/_]([0-9]+).html', self.product_url)[0])
+            elif self.is_alibaba:
+                return int(re.findall('[/_]([0-9]+)(?:.html|-[0-9]+)', self.product_url)[0])
             elif self.is_ebay:
                 return int(re.findall(r'ebay\.[^/]+\/itm\/(?:[^/]+\/)?([0-9]+)', self.product_url)[0])
             elif self.is_dropified_print:

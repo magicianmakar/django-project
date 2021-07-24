@@ -323,6 +323,29 @@
             });
         }
 
+        if (order.source_type === 'alibaba') {
+            return $.ajax({
+                url: api_url('sync-order', 'alibaba'),
+                type: 'POST',
+                data: {
+                    'store_id': window.store.id,
+                    'store_type': window.store.type,
+                    'source_id': order.source_id,
+                    'track_id': order.id,
+                }
+            }).then(function(data) {
+                orders.success += 1;
+                addOrderUpdateItem(order, data.source);
+
+            }).fail(function(data) {
+                // Couldn't get Supplier order info
+                orders.error += 1;
+                addOrderUpdateItem(order, {'error': getAjaxError(data)});
+            }).always(function() {
+                updateProgress();
+            });
+        }
+
         return new P(function(resolve, reject) {
             window.extensionSendMessage({
                 subject: 'getOrderStatus',
@@ -404,10 +427,11 @@
             order.source_url = 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId=' + order.source_id;
         } else if (order.source_type == 'supplements') {
             order.source_url = source.source_url;
+        } else if (order.source_type == 'alibaba') {
+            order.source_url = source.source_url;
         } else {
             order.source_url = 'https://trade.aliexpress.com/order_detail.htm?orderId=' + order.source_id;
         }
-
         var trItem = $(order_update_tpl({
             order: order,
             source: source,

@@ -30,6 +30,13 @@
     <span>{{ shipping_address|key_value:'address1' }}</span>
   </div>
 </div>
+{% if shipping_address|key_value:'address2' %}
+<div class="row">
+  <div class="col-md-6 col-sm-6 col-md-offset-6 col-sm-offset-6 text-right">
+    <span>{{ shipping_address|key_value:'address2' }}</span>
+  </div>
+</div>
+{%  endif %}
 <div class="row">
   <div class="col-md-6 col-sm-6 col-md-offset-6 col-sm-offset-6 text-right">
     <span>{{ shipping_address|key_value:'city' }}, {{ shipping_address|key_value:'province' }}, {{ shipping_address|key_value:'zip' }}</span>

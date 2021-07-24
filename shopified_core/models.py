@@ -408,8 +408,15 @@ class OrderTrackBase(models.Model):
             # Alibaba
             "ALIBABA_to_be_audited": "High risk order, awaiting manual review",
             "ALIBABA_unpay": "Awaiting Payment",
+            "ALIBABA_paying": "Verifying payment",
+            "ALIBABA_payment_failed": "Payment Failed",
             "ALIBABA_undeliver": "Pending Shipment",
             "ALIBABA_delivering": "Shipped",
+            "ALIBABA_wait_confirm_receipt": "Waiting delivery confirmation",
+            "ALIBABA_frozen": "Under Dispute",
+            "ALIBABA_charge_back": "Refunded",
+            "ALIBABA_trade_close": "Closed",
+            "ALIBABA_trade_success": "Order Completed",
         }
 
         if self.source_status and ',' in self.source_status:

@@ -348,7 +348,7 @@ class ACPAddPlanView(BaseTemplateView):
         support_addons = 'addons' in request.POST
 
         free_plan = 'free_plan' in request.POST
-        trial_days = safe_int('Trial days: ') if not free_plan else 0
+        trial_days = safe_int('trial_days') if not free_plan else 0
         monthly_price = safe_float(request.POST['monthly_price']) if 'monthly' in payment_interval else 0.00
         yearly_price = safe_float(request.POST['yearly_price']) if 'yearly' in payment_interval else 0.00
         lifetime_price = safe_float(request.POST['lifetime_price']) if 'lifetime' in payment_interval else 0.00

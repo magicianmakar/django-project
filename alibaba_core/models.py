@@ -7,7 +7,7 @@ from django.core.cache import cache
 from django.db import models
 from django.utils.functional import cached_property
 
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 from metrics.tasks import add_number_metric
 from shopified_core.utils import float_to_str, get_store_api, hash_text, hash_url_filename
 
@@ -55,47 +55,12 @@ class AlibabaAccount(models.Model):
         self.save()
         return self.ecology_token
 
-    def get_order_ids(self):
-        response = self.request.post('alibaba.seller.order.list', params={
-            'param_trade_ecology_order_list_query': json.dumps({
-                'start_page': 0,
-                'role': 'seller',
-            })
-        })
-
-        order_ids = []
-        value = response['alibaba_seller_order_list_response']['result']['value']
-        if value:
-            for order in value['order_list']['trade_ecology_order']:
-                order_ids.append(order['trade_id'])
-
-        return order_ids
-
-    def get_orders(self):
-        orders = []
-        for order_id in self.get_order_ids():
-            response = self.request.post('alibaba.seller.order.get', params={
-                'e_trade_id': order_id,
-                'language': 'en_Us'
-            })
-
-            orders.append(response['alibaba_seller_order_get_response']['value'])
-
-        return orders
-
-    def get_order(self, alibaba_order_id):
-        response = self.request.post('alibaba.seller.order.get', params={
-            'e_trade_id': alibaba_order_id,
-            'language': 'en_Us'
-        })
-        return response['alibaba_seller_order_get_response']['value']
-
     def get_logistic_detail(self, alibaba_order_id):
         response = self.request.post('alibaba.seller.order.logistics.get', params={
             'e_trade_id': alibaba_order_id,
             'data_select': 'logistic_order'
         })
-        return response['alibaba.seller.order.logistics.get']['value']
+        return response['alibaba_seller_order_logistics_get_response']['value']
 
     def get_products(self, product_ids, raw=False, use_cache=True):
         from .utils import get_batches
@@ -453,14 +418,6 @@ class AlibabaOrder(models.Model):
             'currency': self.currency or 'USD',
         }}
 
-    def get_api(self):
-        return get_store_api(self.store_type)
-
-    def get_mock_request(self):
-        class MockRequest:
-            META = {}
-        return MockRequest()
-
     def get_fulfilled_items(self, items=None):
         if not items:
             items = self.items.all()
@@ -472,13 +429,11 @@ class AlibabaOrder(models.Model):
         } for i in items}
 
     def handle_tracking(self):
-        api = self.get_api()
-        request = self.get_mock_request()
         order_data_ids = []
 
         items = self.items.all()
         for item in items:
-            item.save_order_track(api, request)
+            item.save_order_track()
             item.save()
 
             if not item.order_track_id:
@@ -490,31 +445,59 @@ class AlibabaOrder(models.Model):
         self.save()
         return self.get_fulfilled_items(items)
 
-    def reload_details(self, order_detail=None):
-        if not order_detail:
-            order_detail = self.alibaba_account.get_order(self.trade_id)
-            order_detail['status'] = order_detail['status_action']['status']
-            self.products_cost = float_to_str(order_detail['product_total_amount']['amount'])
-            self.shipping_cost = float_to_str(order_detail['shipment_fee']['amount'])
-            self.currency = order_detail['total_amount']['currency'] or 'USD'
+    def reload_details(self, status=None):
+        if status:
+            self.status = status
 
-        self.status = order_detail['status']
-        # TODO: Update trackings by product when available in API
-        if self.status in ['ALIBABA_delivering', 'ALIBABA_wait_confirm_receipt', 'ALIBABA_trade_success'] \
-                and self.items.filter(source_tracking='').exists():
-            tracking_details = self.alibaba_account.get_logistic_detail(self.trade_id)
-            self.status = tracking_details['logistic_status']
-            source_tracking = tracking_details['shipping_order_list']['shippingorderlist'][0]['voucher']['tracking_number']
-            self.items.all().update(source_tracking=source_tracking)
+        if self.source_status in ['to_be_audited', 'unpay', 'paying', 'payment_failed']:
+            payments = self.alibaba_account.get_order_payments(self.trade_id)
+            # TODO: check payment sort
+            payment_status = payments['fund_pay_list']['fund_pay'][-1]['pay_status']
+            status = {
+                'UNPAY': 'unpay',
+                'PAYING': 'paying',
+                'FAILED': 'payment_failed',
+                'CANCELED': 'payment_failed',
+                'PAID': 'undeliver',
+                'FULFILLED': 'undeliver',
+                'CLOSED': 'trade_close',
+            }.get(payment_status)
+            if status:
+                self.status = status
+            else:
+                capture_message(f'Alibaba Status not Found {payment_status}')
+
+        if self.source_status in ['undeliver', 'delivering', 'wait_confirm_receipt']:
+            logistic_details = self.alibaba_account.get_logistic_detail(self.trade_id)
+            logistic_status = logistic_details['logistic_status']
+            status = {
+                'UNDELIVERED': 'undeliver',
+                'DELIVERING': 'delivering',
+                'PART_DELIVERED': 'delivering',
+                'DELIVERED': 'wait_confirm_receipt',
+                'CONFIRM_RECEIPT': 'trade_success',
+            }.get(logistic_status)
+            if status:
+                self.status = status
+            else:
+                capture_message(f'Alibaba Status not Found {logistic_status}')
+
+            for shipping in logistic_details['shipping_order_list']['shippingorderlist']:
+                self.items.filter(
+                    product_id__in=[g['product_id'] for g in shipping['goods']['goods']]
+                ).update(
+                    source_tracking=shipping['voucher']['tracking_number']
+                )
 
         self.save()
         return {
-            'details': {
-                'status': self.status,
-                'orderStatus': self.status,
+            'source': {
+                'status': self.order.status,
+                'orderStatus': self.order.status,
                 'tracking_number': self.source_tracking,
-                'source_id': str(self.trade_id),
-                'order_details': self.payment_details,
+                'source_id': str(self.order.trade_id),
+                'order_details': self.order.payment_details,
+                'source_url': f'https://biz.alibaba.com/ta/detail.htm?orderId={self.trade_id}',
             }
         }
 
@@ -540,10 +523,22 @@ class AlibabaOrderItem(models.Model):
     def data_source_id(self):
         return f"{self.product_id}_{self.variant_id}"
 
-    def save_order_track(self, api, request):
-        self.store_api = api
-        self.store_api_request = request
+    @property
+    def store_api(self):
+        if not hasattr(self, '_store_api') or not self._store_api:
+            self._store_api = get_store_api(self.store_type)
+        return self._store_api
 
+    @property
+    def store_api_request(self):
+        if not hasattr(self, '_store_api_request') or not self._store_api_request:
+            class MockRequest:
+                META = {}
+
+            self._store_api_request = MockRequest()
+        return self._store_api_request
+
+    def save_order_track(self):
         if not self.order_track_id:
             self.create_tracking()
 

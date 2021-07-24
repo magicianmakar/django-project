@@ -330,20 +330,13 @@
                 data: {
                     'store_id': window.store.id,
                     'store_type': window.store.type,
-                    'source_id': order.source_id
+                    'source_id': order.source_id,
+                    'track_id': order.id,
                 }
             }).then(function(data) {
-                // Got Supplier order info
-                if (order.source_status == data.details.orderStatus &&
-                    order.source_tracking == data.details.tracking_number &&
-                    $('#update-unfulfilled-only').is(':checked') &&
-                    !order.bundle) {
-                    // Order info hasn't changed
-                    orders.success += 1;
-                    addOrderUpdateItem(order, data.details);
-                } else {
-                    return updateOrderStatus(order, data.details);
-                }
+                orders.success += 1;
+                addOrderUpdateItem(order, data.source);
+
             }).fail(function(data) {
                 // Couldn't get Supplier order info
                 orders.error += 1;
@@ -352,6 +345,7 @@
                 updateProgress();
             });
         }
+
         return new P(function(resolve, reject) {
             window.extensionSendMessage({
                 subject: 'getOrderStatus',
@@ -432,6 +426,8 @@
         if (order.source_type == 'ebay') {
             order.source_url = 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId=' + order.source_id;
         } else if (order.source_type == 'supplements') {
+            order.source_url = source.source_url;
+        } else if (order.source_type == 'alibaba') {
             order.source_url = source.source_url;
         } else {
             order.source_url = 'https://trade.aliexpress.com/order_detail.htm?orderId=' + order.source_id;
