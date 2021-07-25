@@ -401,6 +401,10 @@ class AlibabaOrder(models.Model):
     def alibaba_account(self):
         return self.user.alibaba.first()
 
+    @cached_property
+    def source_tracking(self):
+        return ','.join(set(self.items.values_list('source_tracking', flat=True)))
+
     @property
     def status(self):
         return f"ALIBABA_{self.source_status or 'unpay'}"
@@ -492,11 +496,11 @@ class AlibabaOrder(models.Model):
         self.save()
         return {
             'source': {
-                'status': self.order.status,
+                'status': self.status,
                 'orderStatus': self.order.status,
                 'tracking_number': self.source_tracking,
-                'source_id': str(self.order.trade_id),
-                'order_details': self.order.payment_details,
+                'source_id': str(self.trade_id),
+                'order_details': self.payment_details,
                 'source_url': f'https://biz.alibaba.com/ta/detail.htm?orderId={self.trade_id}',
             }
         }
