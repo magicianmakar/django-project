@@ -5587,13 +5587,6 @@
         "name": "send_to_store.use",
         "description": "Send products to store"
     }
-},{
-    "model": "leadgalaxy.apppermission",
-    "pk": 150,
-    "fields": {
-        "name": "product_supplier.use",
-        "description": "Add Supplier to product"
-    }
 }, {
     "model": "leadgalaxy.apppermission",
     "pk": 150,

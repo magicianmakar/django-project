@@ -1251,10 +1251,6 @@ class ApiTestCase(BaseTestCase):
     @patch('commercehq_core.models.CommerceHQProduct.sync', Mock(return_value=None))
     @patch('shopified_core.permissions.can_add_product')
     def test_post_import_product(self, can_add_product_mock):
-        self.user.profile.plan.permissions.add(
-            AppPermissionFactory(name='product_supplier.use')
-        )
-        self.user.profile.save()
         source_id = 12345678
         data = {
             'store': self.store.id,

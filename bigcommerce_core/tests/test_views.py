@@ -820,10 +820,6 @@ class ApiTestCase(BaseTestCase):
     @patch('bigcommerce_core.models.BigCommerceProduct.sync')
     @patch('shopified_core.permissions.can_add_product')
     def test_post_import_product(self, can_add_product_mock, sync_mock):
-        self.user.profile.plan.permissions.add(
-            AppPermissionFactory(name='product_supplier.use')
-        )
-        self.user.profile.save()
         source_id = 12345678
         data = {
             'store': self.store.id,

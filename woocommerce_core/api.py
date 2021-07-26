@@ -314,9 +314,6 @@ class WooStoreApi(ApiBase):
             return self.api_error('Store not found', status=404)
 
     def post_import_product(self, request, user, data):
-
-        if not user.can('product_supplier.use'):
-            return self.api_error('Your current plan doesn\'t have this feature.', status=500)
         try:
             store = WooStore.objects.get(id=data.get('store'))
             permissions.user_can_view(user, store)
