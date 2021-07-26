@@ -42,11 +42,9 @@
                             {% endif %}
 
                             {% if store.id %}
-                            {% if user|can:'product_supplier.use' %}
                             <a href="#" class="woocommerce-product-import-btn filter-col-item" store="{{store.id}}">
                                 <i class="fa fa-plus"></i> Import From WooCommerce
                             </a>
-                            {% endif %}
 
                             {% if user|can:'manual_suppliers_sync.use' %}
                             <a href="#" class="product-supplier-sync-btn filter-col-item m-l" store="{{store.id}}">
@@ -124,7 +122,7 @@
 
                         {% empty %}
                             <h3 class="text-center">No product found.</h3>
-                            {% if store.id and user|can:'product_supplier.use' %}
+                            {% if store.id %}
                                 <p class="text-center">
                                     <a href="#" class="woocommerce-product-import-btn filter-col-item" store="{{store.id}}">
                                         <i class="fa fa-plus"></i> Import from WooCommerce

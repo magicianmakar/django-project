@@ -1,5 +1,4 @@
 {% load template_helper %}
-{% load perms_helper %}
 
 {% if item.supplier %}
     <div class="btn-group dropup order-line-group"
@@ -65,12 +64,10 @@
     </div>
 
 {% elif item.product_id %}
-{% if request.user|can:'product_supplier.use'}
     <button class="btn btn-xs btn-info add-supplier-btn"
             store-id="{{store.id}}" bigcommerce-product="{{item.product_id}}">
         <i class="fa fa-plus"></i> Add Supplier
     </button>
-{% endif %}
 
 {% else %}
     <span class="label label-warning">Not Tracked</span>

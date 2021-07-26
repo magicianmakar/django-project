@@ -462,10 +462,6 @@ class ProductsApiTestCase(BaseTestCase):
 
     @patch('shopified_core.permissions.can_add_product')
     def test_post_import_product(self, can_add_product_mock):
-        self.user.profile.plan.permissions.add(
-            f.AppPermissionFactory(name='product_supplier.use')
-        )
-        self.user.profile.save()
         product = f.ShopifyProductFactory(store=self.store, user=self.user, shopify_id=12345678)
         data = {
             'store': self.store.id,
