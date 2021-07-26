@@ -18,6 +18,7 @@ from shopified_core.utils import safe_float
 REVENUE_TAX_PERCENT = 20
 REVENUE_REPORT_EMAIL = [
     'bigcommerce@dropified.com',
+    'ben@thedevelopmentmachine.com',
     'weaver@arndtcpas.com'
 ]
 
@@ -26,15 +27,11 @@ class Command(DropifiedBaseCommand):
     help = 'Generates Tax report for Big Commerce users'
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            '-user_id',
-            '--user_id',
-            default=False,
-            help='Process only specified user'
-        )
+        parser.add_argument('-user_id', '--user_id', default=False, help='Process only specified user')
+        parser.add_argument('--now', action='store_true', help='Send data right now instead of 1st day in month')
 
     def start_command(self, *args, **options):
-        if arrow.utcnow().day != 1:
+        if not options['now'] and arrow.utcnow().day != 1:
             return
 
         if options['user_id']:
