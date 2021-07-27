@@ -641,9 +641,15 @@ def process_webhook_event(request, event_id):
         sub_plan = get_main_subscription_item_plan(sub)
 
         try:
+            plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) | Q(stripe_plan__stripe_id=sub_plan.id))
+        except:
+            plan = None
+
+        try:
             customer = StripeCustomer.objects.get(customer_id=sub.customer)
-            customer.can_trial = False
-            customer.save()
+            if plan and not plan.free_plan:
+                customer.can_trial = False
+                customer.save()
 
             reg_coupon = customer.user.get_config('registration_discount')
             try:
