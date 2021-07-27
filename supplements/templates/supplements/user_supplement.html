@@ -44,6 +44,7 @@
            data-loading-text="Please wait..."
            >
     {% else %}
+    {% if total_allowed_label != 0 %}
     <input type="submit"
           value="Create Product"
           data-action="approve"
@@ -51,6 +52,7 @@
           class="btn btn-primary confirm-create"
           data-loading-text="Please wait..."
           >
+    {% endif %}
 
     <input type="submit"
         value="Save for Later"

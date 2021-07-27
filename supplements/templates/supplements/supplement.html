@@ -54,6 +54,7 @@
             {% block form_action %}
             <div class="form-group">
               <div class="col-sm-offset-2 col-sm-10 col-xs-12">
+                {% if total_allowed_label != 0 %}
                 <input type="submit"
                        value="Create Product"
                        data-action="approve"
@@ -61,6 +62,7 @@
                        class="btn btn-primary confirm-create"
                        data-loading-text="Please wait..."
                        >
+                {% endif %}
 
                 <input type="submit"
                        value="Save for Later"
@@ -114,7 +116,7 @@
                 </div>
 
                 <div class="col-md-5 col-md-offset-1 m-t">
-                  {% if label_limit_left %}
+                  {% if label_limit_left  or total_allowed_label == 0 %}
                   <a href="" data-toggle="modal" data-target="#modal-mockup-images" data-backdrop="static" class="btn btn-success">Customize Label</a>
                   {% endif %}
                 </div>
@@ -123,7 +125,11 @@
               {% if total_allowed_label != -1 %}
                 <div class="row">
                   <div class="col-md-11 col-md-offset-1 alert-info m-t label-upload-limit">
-                    <h3>You have {{ label_limit_left}} labels left of your monthly limit of {{ total_allowed_label }}. </h3>
+                    {% if total_allowed_label == 0 %}
+                      <h3>Ready to submit your labels for review? <a href="/user/profile#plan"><u>Upgrade your plan now</u></a></h3>
+                    {% else %}
+                      <h3>You have {{ label_limit_left}} labels left of your monthly limit of {{ total_allowed_label }}. </h3>
+                    {% endif %}
                   </div>
                 </div>
               {% endif %}

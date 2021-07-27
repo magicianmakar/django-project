@@ -310,7 +310,7 @@ class LabelMixin:
     def save_label(self, user, url, user_supplement, action=''):
 
         can_add_label, total_allowed_label, label_limit_left = self.check_user_can_upload_label(user)
-        if not can_add_label and action != 'preapproved':
+        if not can_add_label and action != 'preapproved' and total_allowed_label != 0:
             messages.error(self.request, "You have exhausted your monthly label upload limit.")
             return HttpResponseRedirect(self.request.path_info)
 
@@ -401,7 +401,7 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         if request.resolver_match.url_name == 'supplement':
             can_add, total_allowed, user_count = permissions.can_add_supplement(request.user)
             if not can_add:
-                messages.error(request, f"Your plan allow up to {total_allowed} "
+                messages.error(request, f"Your plan allows up to {total_allowed} "
                                + f"products, currently you have {user_count} products.")
                 return redirect('pls:index')
             else:
@@ -524,13 +524,15 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
         form = self.get_form()
         if form.is_valid():
             can_add_label, total_allowed_label, label_limit_left = self.check_user_can_upload_label(user)
-            if not can_add_label and form.cleaned_data['action'] != 'preapproved':
-                messages.error(self.request, "You have exhausted your monthly label upload limit.")
-                return HttpResponseRedirect(self.request.path_info)
             new_user_supplement = self.save_supplement(form)
 
             # Always use saved label URL for pre-approved labels
             upload_url = form.cleaned_data['upload_url']
+
+            if not can_add_label and form.cleaned_data['action'] != 'preapproved' and total_allowed_label != 0 and upload_url:
+                messages.error(self.request, "You have exhausted your monthly label upload limit.")
+                return HttpResponseRedirect(self.request.path_info)
+
             if form.cleaned_data['action'] == 'preapproved':
                 upload_url = new_user_supplement.pl_supplement.approved_label_url
                 self.save_label(user, upload_url, new_user_supplement, form.cleaned_data['action'])
@@ -567,7 +569,10 @@ class Supplement(LabelMixin, LoginRequiredMixin, View, SendToStoreMixin):
                 return JsonResponse({'data': api_data, 'success': True})
 
             elif form.cleaned_data['action'] == 'approve':  # Restart review process
-                new_user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
+                if total_allowed_label == 0:
+                    new_user_supplement.current_label.status = UserSupplementLabel.DRAFT
+                else:
+                    new_user_supplement.current_label.status = UserSupplementLabel.AWAITING_REVIEW
                 new_user_supplement.current_label.save()
                 SupplementLabelForApprovalEvent.objects.create(user=request.user,
                                                                product_name=new_user_supplement.title)
