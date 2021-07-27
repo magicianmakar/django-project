@@ -1,13 +1,11 @@
+{% load perms_helper %}
+
 <div class="orders">
     <div class="order">
         <div class="header">
             <div class="row">
                 <div class="col-md-2 col-xs-6 xs-m-t">
-                    <b>Order <a href="https://dropified-test-store.myshopify.com/admin/orders/3755203690540" target="_blank" id="order_#1125">#1125</a></b>
-
-                    
-                        <a class="badge badge-info hidden-xs" target="_blank" href="https://:df000fff63a90072c833c1f9cb4de019@dropified-test-store.myshopify.com/admin/api/2021-01/orders/3755203690540.json">order</a>
-                    
+                    <b>Order <a href="" target="_blank" id="order_#1125">#1125</a></b>
                 </div>
                 <div class="col-md-1 col-xs-6 xs-m-t xs-text-right">
                     <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">
@@ -19,114 +17,74 @@
                         Paid
                     </span>
                 </div>
-                
                 <div class="col-md-2 col-xs-3 xs-m-t">
                     <span class="badge badge-warning">
                         Unfulfilled
                     </span>
                 </div>
                 <div class="col-md-2 col-xs-7 order-status text-right xs-text-right xs-m-t">
-                    
-                        <span class="badge badge-danger primary">&nbsp;</span>
+                    <span class="badge badge-danger primary">&nbsp;</span>
                         No Products Ordered
-                    
                 </div>
                 <div class="col-md-4 text-right hidden-xs" style="padding:0">
-                    <button store="2" order-id="3755203690540" style="display:none" class="btn btn-xs m-r-xs btn-outline track-details itooltip
-                            
-                                btn-white
-                            
-                            " title="" data-original-title="Order History Logs">
+                    <button store="2" order-id="3755203690540" style="display:none" class="btn btn-xs m-r-xs btn-outline track-details itooltip btn-white" title="" data-original-title="Order History Logs">
                         Logs
                     </button>
-
-                    
-
-                    
-
-                    
-
-                    
-                        <div class="btn-group pull">
-                            <button class="btn btn-success btn-xs order-items" order-id="3755203690540" type="button" style="border-right:1px solid #66a8cc; ">
-                                Order Items
-                            </button>
-
-                            <button type="button" class="btn btn-success btn-xs dropdown-toggle order-by-supplier" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                
-                                <span class="caret"></span>
-                            </button>
-
-                            <ul class="dropdown-menu pull-right">
-                                
-                                    <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
-                                
-                            </ul>
+                    <div class="btn-group pull">
+                        <button class="btn btn-success btn-xs order-items" order-id="3755203690540" type="button" style="border-right:1px solid #66a8cc; ">
+                            Order Items
+                        </button>
+                        <button type="button" class="btn btn-success btn-xs dropdown-toggle order-by-supplier" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu pull-right">
+                            <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
+                        </ul>
                         </div>
-
-                    
                 </div>
             </div>
         </div>
         <div class="details container-fluid">
             <div class="row shipping-info">
                 <div class="col-md-3" style="padding-left:5px">
-
                     <p class="m-n">
                         <span class="itooltip" title="" data-placement="auto right" data-original-title="Customer Name">
                             Mr Admin                            
                         </span>
                     </p>
-
                     <p class="m-n">
                         <span class="itooltip" title="" data-placement="auto right" data-original-title="Address">
                             Address line 1
                         </span>
                     </p>
-
-                    
                     <p class="m-n" data-placement="auto right">
                         <span class="itooltip" title="" data-placement="auto right" data-original-title="Address (second line)">
                             Address line 2
                         </span>
                     </p>
-                    
-
                     <p class="m-n">
                         <span class="itooltip" title="" data-placement="auto right" data-original-title="City">
                             City 
                         </span>
-
-                        
                     </p>
-
                     <p class="m-n">
                         <span class="itooltip shipping-province-code" title="" data-placement="auto right" shipping-province-code="AL" data-original-title="Province">
                             Province 
                         </span>
-
-                        
                     </p>
-
                     <p class="m-n">
                         <span class="itooltip" title="" data-placement="auto right" data-original-title="Zip code &amp; Country">
                             <span class="zip-code">35235</span>,
                             <b>United States</b>
                         </span>
-                    </p>
-
-                    
+                    </p>                    
                 </div>
                 <div class="col-md-1 hidden-xs">
                     <img class="itooltip m-r-xs shipping-country-code" shipping-country-code="us" style="width: 16px" title="" src="//cdn.dropified.com/static/flags/us.svg" data-original-title="United States">
                     <a href="" class="itooltip m-r-xs" title="" data-original-title="Send Email To The Customer"> <i class="fa fa-envelope-o fa-lg"></i></a>                   
                 </div>
                 <div class="col-md-2 xs-text-right">
-                    <b>$44.70</b>       
-
-                    <div>
-                        
-                    </div>
+                    <b>$44.70</b>
                 </div>
                 <div class="col-md-3 col-md-offset-3">
                     <div class="note-panel panel panel-default hidden-sm hidden-xs" style="height: 129px; overflow: hidden;">
@@ -157,9 +115,13 @@
                 <div class="line container-fluid">
                     <div class="row source-order">
                         <div class="col-md-3 no-text-overflow">
-                            <a class="badge badge-info hidden-xs" target="_blank">data</a>
+                            {% if user|can:'pls.use' %}
+                            <span>Dropified</span>
+                            <a href="" target="_blank">Private label on Demand</a>
+                            {% else %}
                             <span>Aliexpress</span>
                             <a href="//www.aliexpress.com/store/5710030" target="_blank">Beautifully Women Store</a>
+                            {% endif %}
                         </div>
                         <div class="col-md-3 line-order-id">Order ID:
                             <a class="mark-as-ordered" href="#">Add</a>
@@ -181,10 +143,20 @@
                                 <tr>
                                     <td class="product-preview" style="width:64px">
                                         <input class="line-checkbox hidden-xs" type="checkbox" style="position: absolute; top: 0px; left: 5px; ">
+                                        {% if user|can:'pls.use' %}
+                                        <img class="product-img cached-img no-img no-img-sm unveil" src="https://www.dropified.com/wp-content/uploads/2020/01/DROP_11018_AdrenalSupport_60_200cc_MOCKUP.png" no-img-width="32px">
+                                        {% else %}
                                         <img class="product-img cached-img no-img no-img-sm unveil" src="https://ae01.alicdn.com/kf/HTB1Y.0RQVXXXXXKXFXXq6xXFXXXd/Nevenka-Women-Backpack-Leather-Backpacks-Softback-Bags-Brand-Name-Bag-Preppy-Style-Bag-Casual-Backpacks-Teenagers.jpg_Q90.jpg_.webp" no-img-width="32px">
+                                        {% endif %}
                                      </td>
                                     <td class="no-text-overflow" style="max-width: 140px;">
-                                         <a class="open-product-in" target="_blank">Women Backpack Leather Backpacks Softback Bags Brand Name …</a>
+                                         <a class="open-product-in" target="_blank">
+                                            {% if user|can:'pls.use' %}
+                                            Adrenal Support
+                                            {% else %}
+                                            Women Backpack Leather Backpacks Softback Bags Brand Name …</a>
+                                             {% endif %}
+                                             </a>
                                     </td>
                                     <td class="text-center no-wrap hidden-xs" style="width:10%">
                                         <a href="" target="_blank">S / 1</a>
@@ -215,11 +187,10 @@
                                     <td class="text-center no-wrap hidden-xs" style="width:6%">
                                     <div class="btn-group dropup">
                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
-                                      <span class="caret"></span>Unfulfilled</button>
-                                    
-                                        <ul class="dropdown-menu pull-right">
-                                            <li><a class="fulfill-btn">Fulfill in Shopify</a></li>
-                                        </ul>
+                                    <span class="caret"></span>Unfulfilled</button>
+                                    <ul class="dropdown-menu pull-right">
+                                        <li><a class="fulfill-btn">Fulfill in Shopify</a></li>
+                                    </ul>
                                     </div>
                                     </td>
                                     <td class="text-center no-text-overflow hidden-sm-down hidden-xs" style="width:8%;max-width: 115px;">
@@ -238,11 +209,7 @@
         <div class="header">
             <div class="row">
                 <div class="col-md-2 col-xs-6 xs-m-t">
-                    <b>Order <a href="https://dropified-test-store.myshopify.com/admin/orders/3755203690540" target="_blank" id="order_#1125">#1125</a></b>
-
-                    
-                        <a class="badge badge-info hidden-xs" target="_blank" href="https://:df000fff63a90072c833c1f9cb4de019@dropified-test-store.myshopify.com/admin/api/2021-01/orders/3755203690540.json">order</a>
-                    
+                    <b>Order <a href="" target="_blank" id="order_#1125">#1125</a></b>                    
                 </div>
                 <div class="col-md-1 col-xs-6 xs-m-t xs-text-right">
                     <span class="badge badge-default" style="background-color:#fff;color:#888;border:1px solid #eee;border-radius: 3px;">
@@ -254,52 +221,31 @@
                         Paid
                     </span>
                 </div>
-                
                 <div class="col-md-2 col-xs-3 xs-m-t">
                     <span class="badge badge-warning">
                         Unfulfilled
                     </span>
                 </div>
                 <div class="col-md-2 col-xs-7 order-status text-right xs-text-right xs-m-t">
-                    
-                        <span class="badge badge-danger primary">&nbsp;</span>
-                        No Products Ordered
-                    
+                    <span class="badge badge-danger primary">&nbsp;</span>
+                    No Products Ordered
                 </div>
                 <div class="col-md-4 text-right hidden-xs" style="padding:0">
-                    <button store="2" order-id="3755203690540" style="display:none" class="btn btn-xs m-r-xs btn-outline track-details itooltip
-                            
-                                btn-white
-                            
-                            " title="" data-original-title="Order History Logs">
+                    <button store="2" order-id="3755203690540" style="display:none" class="btn btn-xs m-r-xs btn-outline track-details itooltip btn-white" title="" data-original-title="Order History Logs">
                         Logs
                     </button>
-
-                    
-
-                    
-
-                    
-
-                    
-                        <div class="btn-group pull">
+                    <div class="btn-group pull">
                             <button class="btn btn-success btn-xs order-items" order-id="3755203690540" type="button" style="border-right:1px solid #66a8cc; ">
                                 Order Items
                             </button>
 
                             <button type="button" class="btn btn-success btn-xs dropdown-toggle order-by-supplier" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                
-                                <span class="caret"></span>
+                               <span class="caret"></span>
                             </button>
-
-                            <ul class="dropdown-menu pull-right">
-                                
-                                    <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
-                                
+                            <ul class="dropdown-menu pull-right">                                
+                                <li><a class="order-seleted-lines" href="#">Order Selected Items</a></li>
                             </ul>
-                        </div>
-
-                    
+                        </div>                   
                 </div>
             </div>
         </div>
@@ -317,30 +263,22 @@
                         <span class="itooltip" title="" data-placement="auto right" data-original-title="Address">
                             Address line 1
                         </span>
-                    </p>
-
-                    
+                    </p>                    
                     <p class="m-n" data-placement="auto right">
                         <span class="itooltip" title="" data-placement="auto right" data-original-title="Address (second line)">
                             Address line 2
                         </span>
                     </p>
-                    
-
                     <p class="m-n">
                         <span class="itooltip" title="" data-placement="auto right" data-original-title="City">
                             City 
                         </span>
-
-                        
-                    </p>
+                   </p>
 
                     <p class="m-n">
                         <span class="itooltip shipping-province-code" title="" data-placement="auto right" shipping-province-code="AL" data-original-title="Province">
                             Province 
-                        </span>
-
-                        
+                        </span>                       
                     </p>
 
                     <p class="m-n">
@@ -349,27 +287,13 @@
                             <b>United States</b>
                         </span>
                     </p>
-
-                    
                 </div>
-                <div class="col-md-1 hidden-xs">
-                    
-                    <img class="itooltip m-r-xs shipping-country-code" shipping-country-code="us" style="width: 16px" title="" src="//cdn.dropified.com/static/flags/us.svg" data-original-title="United States">
-                    
-
-                    
+                <div class="col-md-1 hidden-xs">                    
+                    <img class="itooltip m-r-xs shipping-country-code" shipping-country-code="us" style="width: 16px" title="" src="//cdn.dropified.com/static/flags/us.svg" data-original-title="United States">                   
                     <a href="" class="itooltip m-r-xs" title="" data-original-title="Send Email To The Customer"> <i class="fa fa-envelope-o fa-lg"></i></a>
-                    
-
-                    
                 </div>
                 <div class="col-md-2 xs-text-right">
                     <b>$44.70</b>
-                    
-
-                    <div>
-                        
-                    </div>
                 </div>
                 <div class="col-md-3 col-md-offset-3">
                     <div class="note-panel panel panel-default hidden-sm hidden-xs" style="height: 129px; overflow: hidden;">
@@ -400,9 +324,13 @@
                 <div class="line container-fluid">
                     <div class="row source-order">
                         <div class="col-md-3 no-text-overflow">
-                            <a class="badge badge-info hidden-xs" target="_blank">data</a>
+                            {% if user|can:'pls.use' %}
+                            <span>Dropified</span>
+                            <a href="" target="_blank">Private Label on Demand</a>
+                            {% else %}
                             <span>Aliexpress</span>
                             <a href="//www.aliexpress.com/store/5710030" target="_blank">Beautifully Women Store</a>
+                            {% endif %}
                         </div>
                         <div class="col-md-3 line-order-id">Order ID:
                             <a class="mark-as-ordered" href="#">Add</a>
@@ -424,10 +352,19 @@
                                 <tr>
                                     <td class="product-preview" style="width:64px">
                                         <input class="line-checkbox hidden-xs" type="checkbox" style="position: absolute; top: 0px; left: 5px; ">
+                                        {% if user|can:'pls.use' %}
+                                        <img class="product-img cached-img no-img no-img-sm unveil" src="https://www.dropified.com/wp-content/uploads/2020/11/DB-65_29050_AdvancedImmuneSupport_90_200cc_mockup.png" no-img-width="32px">
+                                        {% else %}
                                         <img class="product-img cached-img no-img no-img-sm unveil" src="https://cdn.shopify.com/s/files/1/0287/7689/0412/products/v-1__900852327_64x64_crop_center.jpg?v=1624306738" no-img-width="32px">
+                                        {% endif %}
                                      </td>
                                     <td class="no-text-overflow" style="max-width: 140px;">
-                                         <a class="open-product-in" target="_blank">2020 Autumn Winter Women Cardigan Warm Knitted Sweater Jacket …</a>
+                                         <a class="open-product-in" target="_blank">
+                                            {% if user|can:'pls.use' %}
+                                            Advanced Immune Support
+                                            {% else %}
+                                             2020 Autumn Winter Women Cardigan Warm Knitted Sweater Jacket …</a>
+                                             {% endif %}
                                     </td>
                                     <td class="text-center no-wrap hidden-xs" style="width:10%">
                                         <a href="" target="_blank">S / 1</a>
