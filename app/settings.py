@@ -141,7 +141,6 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'home.context_processors.all_stores',
-                'article.context_processors.sidebarlinks',
                 'leadgalaxy.context_processors.extra_bundles',
                 'leadgalaxy.context_processors.extension_release',
                 'leadgalaxy.context_processors.intercom',
