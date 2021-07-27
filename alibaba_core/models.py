@@ -308,9 +308,6 @@ class AlibabaAccount(models.Model):
 
                 shippings = []
                 for shipping in response['alibaba_order_freight_calculate_response']['value']['logistics_solution']:
-                    if shipping.get('shipping_type', '') != 'EXPRESS':
-                        continue
-
                     shipping['fee']['amount'] = float_to_str(shipping['fee']['amount'])
                     shippings.append(shipping)
 
