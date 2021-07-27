@@ -454,9 +454,12 @@ class AlibabaOrder(models.Model):
             self.status = status
 
         if self.source_status in ['to_be_audited', 'unpay', 'paying', 'payment_failed']:
-            payments = self.alibaba_account.get_order_payments(self.trade_id)
             # TODO: check payment sort
-            payment_status = payments['fund_pay_list']['fund_pay'][-1]['pay_status']
+            payments = self.alibaba_account.get_order_payments(self.trade_id)
+            payment_status = None
+            if payments.get('fund_pay_list', {}).get('fund_pay'):
+                payment_status = payments['fund_pay_list']['fund_pay'][-1]['pay_status']
+
             status = {
                 'UNPAY': 'unpay',
                 'PAYING': 'paying',
@@ -497,7 +500,7 @@ class AlibabaOrder(models.Model):
         return {
             'source': {
                 'status': self.status,
-                'orderStatus': self.order.status,
+                'orderStatus': self.status,
                 'tracking_number': self.source_tracking,
                 'source_id': str(self.trade_id),
                 'order_details': self.payment_details,

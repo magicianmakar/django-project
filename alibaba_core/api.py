@@ -8,7 +8,7 @@ from shopified_core.utils import safe_int
 
 from .decorators import can_access_store
 from .models import AlibabaOrder
-from .utils import OrderException, OrderProcess, save_alibaba_products
+from .utils import AlibabaUnknownError, OrderProcess, save_alibaba_products
 
 
 class AlibabaApi(ApiResponseMixin):
@@ -51,7 +51,7 @@ class AlibabaApi(ApiResponseMixin):
             if place_order:
                 orders, alibaba_order_ids = order_process.create_unpaid_orders(orders)
 
-        except OrderException as e:
+        except AlibabaUnknownError as e:
             return self.api_success({'error': str(e), 'orders': orders}, status=500)
 
         return self.api_success({'orders': orders, 'alibaba_order_ids': alibaba_order_ids or None})

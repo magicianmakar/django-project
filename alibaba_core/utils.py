@@ -127,7 +127,7 @@ class APIRequest():
             if e.subcode == '4012' and 'repeated' in e.submsg.lower():
                 return {'error': 'Ordering repeated products, please review your suppliers'}
 
-            raise OrderException('Unkonwn error in Alibaba')
+            raise AlibabaUnknownError('Unknown error in Alibaba')
 
     def get(self, resource, params=None):
         return self._request(resource, params, method='GET')
@@ -307,7 +307,7 @@ def save_alibaba_products(request, products_data):
             add_number_metric.apply_async(args=['product', 'alibaba', 1])
 
 
-class OrderException(Exception):
+class AlibabaUnknownError(Exception):
     pass
 
 
@@ -370,7 +370,7 @@ class OrderProcess:
         for order_data_id in set(order_data_ids):
             cached_order_key, cached_order = get_cached_order(self.user, self.store_type, order_data_id)
             if cached_order is None:
-                raise OrderException('Orders not found, try refreshing the page')
+                raise AlibabaUnknownError('Orders not found, try refreshing the page')
 
             if cached_order['is_refunded']:
                 continue
@@ -905,12 +905,12 @@ class OrderProcess:
                 trade_id = self.alibaba_account.create_order(param_order_create)
             except:
                 capture_exception()
-                raise OrderException('Failed to place orders, please contact support')
+                raise AlibabaUnknownError('Failed to place orders, please contact support')
 
             if not trade_id:
-                raise OrderException('Failed to place orders, try again or contact support')
+                raise AlibabaUnknownError('Failed to place orders, try again or contact support')
             elif isinstance(trade_id, dict) and 'error' in trade_id:
-                raise OrderException(trade_id['error'])
+                raise AlibabaUnknownError(trade_id['error'])
 
             trade = {'trade_id': trade_id, 'order_id': order['id'], 'items': [], 'defaults': {
                 'shipping_cost': Decimal(param_order_create['payment_detail']['shipment_fee']),
@@ -955,7 +955,7 @@ class OrderProcess:
                     defaults=trade['defaults']
                 )
                 if not created:
-                    raise OrderException('Found Alibaba attempt to duplicate placed order')
+                    raise AlibabaUnknownError('Found Alibaba attempt to duplicate placed order')
 
                 for item in trade['items']:
                     order_data_id = item['order_data_id']
