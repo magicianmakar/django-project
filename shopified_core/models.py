@@ -430,11 +430,18 @@ class OrderTrackBase(models.Model):
         else:
             return status_map.get(self.source_status, '')
 
+    @cached_property
+    def custom_tracking_url(self):
+        custom_tracking = self.user.get_config(self.CUSTOM_TRACKING_KEY)
+        if type(custom_tracking) is dict:
+            return custom_tracking.get(str(self.store_id), 'https://track.aftership.com/{{tracking_number}}')
+        return None
+
     def get_tracking_link(self):
         custom_tracking = 'https://track.aftership.com/{{tracking_number}}'
 
-        if type(self.user.get_config(self.CUSTOM_TRACKING_KEY)) is dict:
-            custom_tracking = self.user.get_config(self.CUSTOM_TRACKING_KEY).get(str(self.store_id), custom_tracking)
+        if self.custom_tracking_url:
+            custom_tracking = self.custom_tracking_url
 
             if '{{tracking_number}}' not in custom_tracking:
                 custom_tracking = "https://{}.aftership.com/{{{{tracking_number}}}}".format(custom_tracking)

@@ -11,6 +11,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
+from django.utils.functional import cached_property
 from lib.exceptions import capture_exception
 
 from product_alerts.utils import monitor_product
@@ -758,3 +759,10 @@ class GrooveKartOrderTrack(OrderTrackBase):
 
     def __str__(self):
         return f'<GrooveKartOrderTrack: {self.id}>'
+
+    @cached_property
+    def custom_tracking_url(self):
+        custom_tracking = self.user.get_config(self.CUSTOM_TRACKING_KEY)
+        if type(custom_tracking) is dict:
+            return custom_tracking.get(str(self.store_id))
+        return None

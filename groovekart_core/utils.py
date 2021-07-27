@@ -540,9 +540,13 @@ def order_track_fulfillment(order_track, user_config=None):
     tracking_number = order_track.source_tracking
     send_email = user_config.get('send_shipping_confirmation')
 
-    carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
-    carrier_name = 'AfterShip' if not carrier_name else carrier_name
-    carrier_url = order_track.get_tracking_link()
+    if order_track.custom_tracking_url:
+        carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
+        carrier_name = 'AfterShip' if not carrier_name else carrier_name
+        carrier_url = order_track.get_tracking_link()
+    else:
+        carrier_name = ''
+        carrier_url = ''
 
     tracking_numbers = []
     carrier_names = []
