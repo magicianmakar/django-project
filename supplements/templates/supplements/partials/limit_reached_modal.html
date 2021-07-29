@@ -10,9 +10,9 @@
                     <div class="col-sm-12 b-r">
                         <p class="m-b">
                             {% if total_allowed >= 0 %}
-                            Your current plan allows up to <b>{{ total_allowed }} supplement(s)</b>. Currently you have <b>{{ user_count }} supplements</b>.<br>
+                            "Woohoo! 🎉. You are growing and you've hit your product limit for this month. Upgrade your plan to keep creating custom products this month"..<br>
                             {% else %}
-                            Your current plan allows up to <b>{{ label_total_allowed }} label(s)</b>. Currently you have <b>{{ label_user_count }} labels</b>.<br>
+                            Woohoo! 🎉. You are growing and you've hit your label upload limit for this month. Upgrade your plan to keep uploading labels this month.<br>
                             {% endif %}
                             Please <a href="/user/profile#plan">upgrade your plan</a> to add more.</h3>
                         </p>

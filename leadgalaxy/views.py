@@ -3024,7 +3024,9 @@ def orders_place(request):
             auto_fulfill_limit *= 2
 
         if not settings.DEBUG and not auto_fulfill_limit or orders_count + 1 > auto_fulfill_limit:
-            messages.error(request, "You have reached your plan auto fulfill limit ({} orders/month)".format(auto_fulfill_limit))
+            messages.error(request, "Woohoo! 🎉. You are growing and you've hit your orders limit for this month."
+                                    " Upgrade now to keep placing orders or wait until next "
+                                    "month for your limit to reset.")
             return HttpResponseRedirect('/')
 
         cache.set(limit_check_key, arrow.utcnow().timestamp, timeout=3600)
