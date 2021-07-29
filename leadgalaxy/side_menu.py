@@ -81,11 +81,13 @@ def get_menu_item_data(request):
 
     is_black = False
     is_research = False
+    is_plod = False
 
     try:
         if request.user.is_authenticated:
             is_black = request.user.profile.plan.is_black
             is_research = request.user.profile.plan.is_research
+            is_plod = request.user.profile.plan.is_plod
     except:
         pass
 
@@ -213,7 +215,7 @@ def get_menu_item_data(request):
             'url': 'https://learn.dropified.com/',
         },
         'plod_help': {
-            'title': f'{"PLOD " if is_black else ""} Help Center',
+            'title': f'{"PLOD " if is_black or is_plod else ""} Help Center',
             'url': 'https://plod.dropified.com/',
         },
         'settings': {
