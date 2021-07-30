@@ -243,6 +243,3 @@ class AddonUsageAdmin(admin.ModelAdmin):
         if obj:
             return self.readonly_fields + ('user',)
         return self.readonly_fields
-
-    def has_delete_permission(self, request, obj=None):
-        return False
