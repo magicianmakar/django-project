@@ -19,10 +19,8 @@
                         <h3 class="m-t-none m-b">
                             {% if stores_limit_max == 0 %}
                             Your current plan doesn't include any stores.
-                            {% elif stores_limit_max == 1%}
-                            You've exceeded the number of stores for your plan. <br>Only one store can be active.
                             {% else %}
-                            You've exceeded the number of stores for your plan. <br>Only {{stores_limit_max}} stores can be active.
+                            Woohoo! 🎉. You are growing and you've hit your account limit for stores. Upgrade your plan to keep adding new stores.
                             {% endif %}
                         </h3>
 

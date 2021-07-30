@@ -2225,7 +2225,10 @@ class GroupPlan(models.Model):
 
     @property
     def is_black(self):
-        return self.slug in ['new-black-yearly-shopify', 'new-black-monthly-shopify', 'new-black-yearly', 'new-black-monthly']
+        return self.slug in ['supplements-premier-black-year', 'supplements-premier-black',
+                             'new-black-yearly-shopify', 'new-black-monthly-shopify', 'new-black-yearly',
+                             'new-black-monthly', 'black-yearly-webinar', 'dropified-black-affiliates',
+                             'black-yearly-lifetime', 'black-m onthly', 'black-3-payments', 'black-yearly']
 
     @property
     def has_installments(self):
@@ -2242,7 +2245,8 @@ class GroupPlan(models.Model):
 
     @property
     def is_plod(self):
-        return self.slug in ['plod-yearly-shopify', 'plod-monthly-shopify', 'plod-yearly', 'plod-monthly']
+        return self.slug in ['plod-lifetime-yearly-shopify', 'plod-lifetime-monthly-shopify', 'plod-lifetime-yearly',
+                             'plod-lifetime-monthly', 'plod']
 
     @property
     def is_research(self):
