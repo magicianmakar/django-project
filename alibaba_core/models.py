@@ -455,7 +455,11 @@ class AlibabaOrder(models.Model):
             payments = self.alibaba_account.get_order_payments(self.trade_id)
             payment_status = None
             if payments.get('fund_pay_list', {}).get('fund_pay'):
-                payment_status = payments['fund_pay_list']['fund_pay'][-1]['pay_status']
+                payment_steps = [p for p in payments['fund_pay_list']['fund_pay'] if p.get('pay_step').lower() == 'advance']
+                if len(payment_steps):
+                    payment_status = payment_steps[0]['pay_status']
+                else:
+                    payment_status = payments['fund_pay_list']['fund_pay'][0]['pay_status']
 
             status = {
                 'UNPAY': 'unpay',
