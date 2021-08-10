@@ -17,14 +17,24 @@ class AlibabaAccountAdmin(admin.ModelAdmin):
 
 @admin.register(AlibabaOrder)
 class AlibabaOrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'trade_id', 'source_status', 'products_cost', 'shipping_cost', 'store_type', 'get_alibaba_account', 'get_user_email')
+    list_display = (
+        'id',
+        'trade_id',
+        'source_status',
+        'created_at',
+        'products_cost',
+        'shipping_cost',
+        'store_type',
+        'get_alibaba_account',
+        'get_user_email',
+    )
     search_fields = (
         'trade_id',
         'order_data_ids',
         'user__id',
         'user__email',
-        'order__user__alibaba__id',
-        'order__user__alibaba__alibaba_user_id',
+        'user__alibaba__id',
+        'user__alibaba__alibaba_user_id',
     )
     list_filter = ('source_status',)
     raw_id_fields = ('user',)

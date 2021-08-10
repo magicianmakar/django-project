@@ -530,7 +530,7 @@ class AlibabaOrderItem(models.Model):
     @property
     def store_api(self):
         if not hasattr(self, '_store_api') or not self._store_api:
-            self._store_api = get_store_api(self.store_type)
+            self._store_api = get_store_api(self.order.store_type)
         return self._store_api
 
     @property
