@@ -321,13 +321,19 @@ def can_add_board(user):
         total_allowed = profile.plan.boards  # -1 mean unlimited
     else:
         total_allowed = user_boards
-
-    user_count = profile.user.shopifyboard_set.count()
-    user_count += profile.user.commercehqboard_set.count()
-    user_count += profile.user.wooboard_set.count()
-    user_count += profile.user.gearbubbleboard_set.count()
-    user_count += profile.user.groovekartboard_set.count()
-    user_count += profile.user.bigcommerceboard_set.count()
+    user_count = 0
+    if profile.get_shopify_stores().count():
+        user_count = profile.user.shopifyboard_set.count()
+    if profile.get_chq_stores().count():
+        user_count += profile.user.commercehqboard_set.count()
+    if profile.get_woo_stores().count():
+        user_count += profile.user.wooboard_set.count()
+    if profile.get_gear_stores().count():
+        user_count += profile.user.gearbubbleboard_set.count()
+    if profile.get_gkart_stores().count():
+        user_count += profile.user.groovekartboard_set.count()
+    if profile.get_bigcommerce_stores().count():
+        user_count += profile.user.bigcommerceboard_set.count()
     can_add = True
 
     if (total_allowed > -1) and (user_count + 1 > total_allowed):
