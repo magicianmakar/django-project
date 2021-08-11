@@ -21,7 +21,7 @@ from shopified_core.mixins import ApiResponseMixin
 
 from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
-from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem
+from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem, PLSupplement
 from .utils import user_can_download_label
 from .utils.payment import Util, get_shipping_costs
 from .utils.basket import BasketStore
@@ -34,6 +34,8 @@ from shopified_core.utils import (
 from shopified_core.shipping_helper import province_code_from_name, country_from_code
 from my_basket.models import BasketOrderTrack
 from fulfilment_fee.utils import process_sale_transaction_fee
+from basicauth.decorators import basic_auth_required
+from django.utils.decorators import method_decorator
 
 
 class SupplementsApi(ApiResponseMixin, View):
@@ -673,3 +675,51 @@ class BasketApi(ApiResponseMixin, View):
         process_sale_transaction_fee(order)
 
         return self.api_success()
+
+
+# PLOD public api (Inventory sync)
+class SupplementsPublicApi(ApiResponseMixin, View):
+    http_method_names = ['get', 'post']
+    login_non_required = ['inventory', 'decrease_inventory']
+
+    @method_decorator(basic_auth_required)
+    def get_inventory(self, request, user, data):
+        sku = data.get('shipstation_sku', False)
+
+        # getting PLSupplement by sku
+        try:
+            pl_supplement = PLSupplement.objects.get(shipstation_sku=sku)
+            return self.api_success({
+                'somevar': "okok",
+                "sku": sku,
+                "pl_supplement": pl_supplement.to_dict(),
+                "inventory": pl_supplement.inventory
+            })
+        except PLSupplement.DoesNotExist:
+            return self.api_error('SKU Not Found', status=404)
+
+    @method_decorator(basic_auth_required)
+    def post_decrease_inventory(self, request, user, data):
+        sku = data.get('shipstation_sku', False)
+        inventory = data.get('inventory', False)
+
+        # getting PLSupplement by sku
+        try:
+            pl_supplement = PLSupplement.objects.get(shipstation_sku=sku)
+            if inventory:
+                new_inventory = safe_int(pl_supplement.inventory) - safe_int(inventory)
+                if new_inventory < 0:
+                    return self.api_error('Not enough inventory', status=500)
+                pl_supplement.inventory = new_inventory
+                pl_supplement.save()
+            return self.api_success({
+                "sku": sku,
+                "pl_supplement": pl_supplement.to_dict(),
+                "inventory": pl_supplement.inventory
+            })
+        except PLSupplement.DoesNotExist:
+            return self.api_error('SKU Not Found', status=404)
+
+    # disable user Auth, use api Basic AUTH settings instead
+    def get_user(self, request, data=None, assert_login=True):
+        return None

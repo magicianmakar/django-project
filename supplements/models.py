@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils.functional import cached_property
 from PIL import Image
 
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 from product_common import models as model_base
 from shopified_core.utils import safe_float, get_store_api
 from .mixin import (
@@ -23,6 +23,9 @@ from .mixin import (
     UserSupplementLabelMixin,
     UserSupplementMixin
 )
+from django.conf import settings
+import requests
+from shopified_core.utils import last_executed
 
 SUPPLEMENTS_SUPPLIER = [
     'Supplements on Demand',
@@ -59,8 +62,59 @@ class PLSupplement(PLSupplementMixin, model_base.Product):
                                default='2936.29.50.50',
                                verbose_name='HS (Harmonized System) code')
 
+    inventory_synced = False
+
     def __str__(self):
         return self.title
+
+    # Gets called when an attribute is accessed
+    def __getattribute__(self, item):
+        if item == 'inventory':
+
+            # sync inventory, but not often than once per 1 min
+            if not self.inventory_synced and settings.PLOD_INVENTORY_API_HOST and not last_executed(f'plod_invsync_{self.id}', 60):
+                try:
+                    self.sync_inventory()
+                except:
+                    capture_message("Inventory sync failed")
+
+            return super(PLSupplement, self).__getattribute__(item)
+
+        # Calling the super class to avoid recursion
+        return super(PLSupplement, self).__getattribute__(item)
+
+    def sync_inventory(self):
+        # trying to fetch inventory from parent DB
+        inventory_response = requests.get(
+            settings.PLOD_INVENTORY_API_HOST + '/api/supplements-public/inventory?shipstation_sku=' + self.shipstation_sku,
+            verify=False, auth=self.get_inventory_auth()).json()
+        if inventory_response['inventory']:
+            self.inventory = inventory_response['inventory']
+            self.inventory_synced = True
+            self.save()
+
+    def deduct_inventory(self, value):
+
+        if settings.PLOD_INVENTORY_API_HOST:
+            # deduct inventory on parent DB
+            try:
+                inventory_response = requests.post(
+                    settings.PLOD_INVENTORY_API_HOST + '/api/supplements-public/decrease_inventory',
+                    {'shipstation_sku': self.shipstation_sku, 'inventory': value},
+                    verify=False, auth=self.get_inventory_auth()).json()
+                if inventory_response['status'] == 'ok':
+                    return inventory_response
+                else:
+                    return False
+            except:
+                capture_message("Inventory deduct failed")
+        else:
+            return True
+
+    def get_inventory_auth(self):
+        auth_username = list(settings.BASICAUTH_USERS.keys())[0]
+        auth_password = settings.BASICAUTH_USERS[auth_username]
+        return (auth_username, auth_password)
 
 
 class ShippingGroup(models.Model):

@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.urls import reverse
 
-from lib.exceptions import capture_exception
+from lib.exceptions import capture_exception, capture_message
 from shopified_core.utils import get_store_api, safe_int, safe_float, dict_val
 from shopified_core.models_utils import get_store_model
 from supplements.models import UserSupplement, PLSupplement, PLSOrder, PLSOrderLine, ShippingGroup
@@ -157,6 +157,12 @@ class Util:
                 line_amount = int(user_supplement.cost_price * 100)
                 wholesale_price = int(user_supplement.wholesale_price * 100)
                 pl_supplement.inventory -= quantity
+
+                # deduct inventory on parent DB
+                if not pl_supplement.deduct_inventory(quantity):
+                    # TODO: probably need to add "out of inventory" warning
+                    capture_message(f"Out of inventory for Supplement ID# {pl_supplement.id}")
+
                 pl_supplement.save()
 
                 PLSOrderLine.objects.create(

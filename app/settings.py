@@ -196,6 +196,7 @@ DROPIFIED_API = {
     'subusers': 'subusers.api.SubusersApi',
     'goals': 'goals.api.GoalsApi',
     'supplements': 'supplements.api.SupplementsApi',
+    'supplements-public': 'supplements.api.SupplementsPublicApi',
     'profits': 'profits.api.ProfitsApi',
     'metrics': 'metrics.api.MetricsApi',
     'prints': 'prints.api.PrintsApi',
@@ -627,3 +628,7 @@ ALIBABA_COMMON_SHIPPINGS = (
 )
 
 SUBUSERS_LIMIT_CHECK = os.environ.get('SUBUSERS_LIMIT_CHECK')
+
+# PLOD APIs
+BASICAUTH_USERS = os.environ.get('BASICAUTH_USERS', {"plod-api": "plod-api-password"})
+PLOD_INVENTORY_API_HOST = os.environ.get('PLOD_INVENTORY_API_HOST', False)  # False must be set for main Dropified webapp

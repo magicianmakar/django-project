@@ -29,6 +29,7 @@ curlify==2.1.1
 dj-database-url==0.5.0
 django-admin-sortable2==0.7.7
 django-appconf==1.0.2
+django-basicauth==0.5.3
 django-ckeditor==6.0.0
 django-compat==1.0.15
 django-compressor==2.3
