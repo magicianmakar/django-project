@@ -1,8 +1,10 @@
 import base64
+import re
 from io import BytesIO
 from decimal import Decimal
 
 import arrow
+import requests
 import simplejson as json
 from django.contrib.auth.models import User
 from django.db import models
@@ -250,7 +252,12 @@ class UserSupplementLabel(models.Model, UserSupplementLabelMixin):
 
         from leadgalaxy.utils import upload_file_to_s3
         url = f'https://app.dropified.com/pdf/convert/?url={self.url}&ext=.png'
-        self.image_url = upload_file_to_s3(url, self.user_supplement.user.id, prefix='/labels')
+        self.image_url = upload_file_to_s3(
+            url=re.sub(r'\.pdf$', '.png', self.url.split('/')[-1]),
+            user_id=self.user_supplement.user.id,
+            fp=BytesIO(requests.get(url).content),
+            prefix='/labels'
+        )
         self.save()
 
         return self.image_url
