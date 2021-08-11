@@ -80,6 +80,35 @@
       </li>
       {% endif %}
 
+      {# Dropified Black #}
+      {% if user|can:'pls.use' or user.profile.private_label or request.user|can:'pls_staff.use' %}
+      <li class="section">
+        <span class="section-header">
+          <div>
+            <img src="https://cdn.dropified.com/static/img/black/pallet-solid.svg"/>
+          </div>
+          <span class="item-title">Private Label</span>
+        </span>
+      </li>
+      <li class="item">
+          <a href="{% url 'pls:index' %}">
+            Products
+          </a>
+      </li>  
+      <li class="item">
+          <a href="https://www.dropified.com/dropified-black-catalog/" target="_blank">
+            Updates
+          </a>
+      </li>   
+      {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
+        <li class="item">
+            <a href="{% url 'pls:all_user_supplements' %}">
+              Admin
+            </a>
+        </li>
+      {% endif %}  
+    {% endif %}
+
       {# body #}
       {% for section in sidemenu.body %}
       <li class="section">
@@ -98,47 +127,7 @@
         {% endfor %}
       {% endfor %}
     </ul>
-
-    {# Dropified Black #}
-  {% if user|can:'pls.use' or user.profile.private_label or request.user|can:'pls_staff.use' %}
-    <ul style="padding:0;margin: 0 0 0 24px">
-        <li class="section">
-          <span class="section-header">
-            <div>
-              <img src="https://cdn.dropified.com/static/img/black/pallet-solid.svg"/>
-            </div>
-            <span class="item-title">Private Label</span>
-          </span>
-        </li>
-    </ul>
-
-    <ul style="margin:0">
-        <li class="item">
-            <a href="https://www.dropified.com/dropified-black-catalog/" target="_blank">
-              Product Catalog
-            </a>
-        </li>
-    </ul>
-
-    <ul style="margin:0">
-        <li class="item">
-            <a href="{% url 'pls:index' %}">
-              Customizable Products
-            </a>
-        </li>
-    </ul>
-    {% if request.user|can:'pls_admin.use' or request.user|can:'pls_staff.use' %}
-    <ul style="margin:0">
-        <li class="item">
-            <a href="{% url 'pls:all_user_supplements' %}">
-              Products Admin
-            </a>
-        </li>
-    </ul>
-    {% endif %}
-
-  {% endif %}
-
+  
     {# footer #}
     <ul class="navfooter {% if user.is_staff %}staff{% endif %}">
       <li class="section-no-icon">
