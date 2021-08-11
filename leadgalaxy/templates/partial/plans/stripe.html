@@ -47,9 +47,9 @@
                                            continue-cancel
                                            itooltip"
                                     {% if item.plan.is_build or item.plan.is_plod %}
-                                    data-steps="#modal-keep-my-plan,#modal-lifetime-use,#modal-pause-plan"
+                                    data-steps="#modal-keep-my-plan,#modal-pause-plan"
                                     {% else %}
-                                    data-steps="#modal-on-grandfathered-plan,#modal-lifetime-use,#modal-pause-plan"
+                                    data-steps="#modal-on-grandfathered-plan,#modal-pause-plan"
                                     {% endif %}
                                     title="Cancel Your Subscription"
                                     data-subscription="{{item.id}}"

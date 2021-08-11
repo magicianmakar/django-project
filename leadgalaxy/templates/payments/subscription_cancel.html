@@ -61,54 +61,6 @@
     </div>
 </div>
 
-<div id="modal-lifetime-use" class="modal stripe-cancel-step" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h3 class="modal-title">Lifetime Use, Invest Today!</h3>
-            </div>
-            <div class="modal-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <p class="h5">
-                            Looking to invest and build over a longer period of time? Check out our Lifetime Plans.
-                        </p>
-                        <p class="h5">
-                            Our lifetime plans were designed for those who are looking to continually evolve in the eCommerce space, learning and
-                            building as they go. This removes the pressure of monthly payments and the need to succeed in a short amount of time.
-                            Look at this as an investment, be patient, chip away and you can still realize that dream!
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button"
-                        class="btn btn-primary update-plan"
-                        {% if user.profile.private_label %}
-                            {% if current_plan.interval == "yearly" %}
-                            data-plan="147"
-                            {% else %}
-                            data-plan="139"
-                            {% endif %}
-                        {% else %}
-                            {% if current_plan.interval == "yearly" %}
-                            data-plan="149"
-                            {% else %}
-                            data-plan="145"
-                            {% endif %}
-                        {% endif %}
-                        style="filter: brightness(115%);">
-                    Switch to the Lifetime Plan
-                </Button>
-                <button type="button" data-dismiss="modal" class="btn btn-default continue-cancel pull-left" style="filter: brightness(115%); color: #035b9f;">
-                    Continue to Cancel
-                </button>
-              </div>
-        </div>
-    </div>
-</div>
-
 <div id="modal-pause-plan" class="modal stripe-cancel-step" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
