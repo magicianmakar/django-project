@@ -799,7 +799,7 @@
                                                             {% endif %}
                                                         </td>
                                                         <td class="text-center no-wrap hidden-xs" style="width:6%">
-                                                            {% if not item.is_bundle and not item.fulfillment_status and not order.pending_payment %}
+                                                            {% if not item.fulfillment_status and not order.pending_payment %}
                                                                 <div class="btn-group dropup">
                                                                     <button data-toggle="dropdown" class="btn btn-success btn-outline btn-xs dropdown-toggle" aria-expanded="false">
                                                                         Unfulfilled
