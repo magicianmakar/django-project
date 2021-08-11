@@ -26,7 +26,6 @@ from .mixin import (
     UserSupplementMixin
 )
 from django.conf import settings
-import requests
 from shopified_core.utils import last_executed
 
 SUPPLEMENTS_SUPPLIER = [
