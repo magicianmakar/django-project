@@ -57,7 +57,7 @@ class Command(DropifiedBaseCommand):
             try:
                 active_stores = user.bigcommercestore_set.filter(is_active=True)
                 # processing only users with BG stores
-                if active_stores.count() > 0 and not user.is_staff and user.email != 'joan@thedevelopmentmachine.com':
+                if active_stores.count() > 0 and not user.is_staff:
                     for bc_store in active_stores:
                         data_item = []
                         data_item.append(settings.BIGCOMMERCE_APP_ID)
