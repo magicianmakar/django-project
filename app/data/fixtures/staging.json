@@ -5596,10 +5596,17 @@
     }
 }, {
     "model": "leadgalaxy.apppermission",
-    "pk": 150,
+    "pk": 151,
     "fields": {
         "name": "allow_groovekart.use",
         "description": "Allow Users to add Groovekart store"
+    }
+}, {
+    "model": "leadgalaxy.apppermission",
+    "pk": 152,
+    "fields": {
+        "name": "unlimited_labels.use",
+        "description": "Allow Users to upload unlimited labels"
     }
 }, {
     "model": "stripe_subscription.stripeplan",

@@ -600,6 +600,34 @@ class ShopifyStoreApi(ApiBase):
             }
         })
 
+    def post_delete_bundle(self, request, user, data):
+        if not user.is_superuser and not user.is_staff:
+            raise PermissionDenied()
+
+        target_user = User.objects.get(id=data.get('user'))
+        bundle = FeatureBundle.objects.get(id=data.get('bundle'))
+
+        if target_user.is_subuser:
+            return self.api_error('Sub User Account', status=422)
+
+        AdminEvent.objects.create(
+            user=user,
+            target_user=target_user,
+            event_type='delete_bundle',
+            data=json.dumps({'bundle': bundle.title}))
+
+        target_user.profile.bundles.remove(bundle)
+
+        return self.api_success({
+            'user': {
+                'email': target_user.email
+            },
+            'bundle': {
+                'title': bundle.title,
+                'id': bundle.id
+            }
+        })
+
     def post_stripe_refund_charge(self, request, user, data):
         if not user.is_superuser and not user.is_staff:
             raise PermissionDenied()

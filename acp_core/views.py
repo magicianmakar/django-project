@@ -291,11 +291,13 @@ class ACPUserInfoView(BaseTemplateView):
                 messages.warning(self.request, 'You have to cancel monthly subscription if the user is on Lifetime plan')
 
         bundles = FeatureBundle.objects.all().order_by('-id')
+        installed_bundles = target_user.profile.bundles.all()
 
         ctx.update({
             'target_user': target_user,
             'addon_logs': addon_logs,
             'bundles': bundles,
+            'installed_bundles': installed_bundles,
             'plans': GroupPlan.objects.all().order_by('-id'),
             'customer_id': customer_id,
             'customer_ids': customer_ids,

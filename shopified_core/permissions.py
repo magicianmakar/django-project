@@ -421,7 +421,7 @@ def can_upload_label(user):
     else:
         total_allowed = total_allowed_labels
 
-    if total_allowed == -1:  # No need for query
+    if total_allowed == -1 or user.can('unlimited_labels.use'):  # No need for query
         return True, -1, -1
 
     labels_count_keys = 'label_limit_count_{}'.format(user.id)

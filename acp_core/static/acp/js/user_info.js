@@ -14,6 +14,11 @@ $(document).ready(function () {
         $('#modal-bundle-select').prop('user-id', $(this).attr('user-id')).modal('show');
     });
 
+    $('.remove-bundle-btn').on('click', function (e) {
+        e.preventDefault();
+        $('#modal-bundle-delete').prop('user-id', $(this).attr('user-id')).modal('show');
+    });
+
     $('.deactivate-account').click(function (e) {
         e.preventDefault();
 
@@ -260,6 +265,39 @@ $(document).ready(function () {
             },
             error: function (data) {
                 displayAjaxError('Add Bundle', data);
+            },
+            complete: function () {
+                btn.button('reset');
+            }
+        });
+    });
+
+    $('#select-bundle-remove').on('click', function (e) {
+
+        if (!$('#bundle-remove-select option').length) {
+            toastr.info('No Bundle to Delete');
+            $('#modal-bundle-delete').modal('hide');
+            return;
+        }
+
+        var btn = $(this);
+        var user = $('#modal-bundle-delete').prop('user-id');
+        var bundle = $('#modal-bundle-delete select').val();
+        btn.button('loading');
+        $.ajax({
+            type: 'POST',
+            url: '/api/delete-bundle',
+            context: {},
+            data: {
+                'bundle': bundle,
+                'user': user
+            },
+            success: function (data) {
+                toastr.success('Bundle Deleted');
+                $('#modal-bundle-delete').modal('hide');
+            },
+            error: function (data) {
+                displayAjaxError('Delete Bundle', data);
             },
             complete: function () {
                 btn.button('reset');
