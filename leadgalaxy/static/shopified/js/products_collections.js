@@ -97,6 +97,9 @@
             zIndex: 9990
         });
 
+        var requests_inprogress = $(loadingContainer).data('requests_inprogress')?$(loadingContainer).data('requests_inprogress'):0;
+        $(loadingContainer).data('requests_inprogress',requests_inprogress+1);
+
         var info = getHashUrl();
         var extra = {
             shipFromCountry: info.shipFrom,
@@ -123,7 +126,12 @@
             searchSort: info.sort,
             extra: extra,
         }, function(rep) {
-            $(loadingContainer).LoadingOverlay("hide", true);
+
+            var requests_inprogress = $(loadingContainer).data('requests_inprogress')?$(loadingContainer).data('requests_inprogress'):0;
+            $(loadingContainer).data('requests_inprogress',requests_inprogress-1);
+
+            if ($(loadingContainer).data('requests_inprogress')<=0)
+                {$(loadingContainer).LoadingOverlay("hide", true);}
 
             if (!rep.success) {
                 swal('Products Database', 'Could not get products list, please try again', 'error');
