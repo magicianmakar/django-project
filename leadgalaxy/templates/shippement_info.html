@@ -105,7 +105,8 @@
 
 {% block extrajs %}
     <script type="text/javascript">
-        var base_url = '{% url_replace 'country' '' %}';
+        {% url_replace 'country' '' as base_url %}
+        var base_url = '{{ base_url | safe }}';
 
         $(function() {
             $.get('/api/countries',function(countries){
