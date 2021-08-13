@@ -2,6 +2,7 @@ from django.utils.module_loading import import_string
 
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.db.models import ObjectDoesNotExist
 from django.views.generic import View
 
 import requests
@@ -66,6 +67,10 @@ class ShopifiedApiBase(ApiResponseMixin, View):
         except PermissionDenied as e:
             reason = str(e) if str(e) else "You don't have permission to perform this action"
             return self.api_error('Permission Denied: %s' % reason, status=403)
+
+        except ObjectDoesNotExist:
+            capture_exception(level='warning')
+            return self.api_error('Requested resource not found', status=404)
 
         except requests.Timeout:
             capture_exception()
