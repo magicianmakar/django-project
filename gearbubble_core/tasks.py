@@ -115,7 +115,7 @@ def product_save(req_data, user_id):
 
             product.set_default_supplier(supplier, commit=True)
 
-            post_churnzero_product_import(user, product.title, store_info.get('name', ''))
+            post_churnzero_product_import(user, product.title, getattr(store_info, 'name', ''))
 
         except PermissionDenied as e:
             capture_exception()

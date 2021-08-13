@@ -470,9 +470,7 @@ def export_product(req_data, target, user_id):
 
                     product.set_default_supplier(supplier, commit=True)
 
-                    post_churnzero_product_import(user, product.title, supplier_info.get('name', ''))
-                else:
-                    post_churnzero_product_import(user, product.title, '')
+                    post_churnzero_product_import(user, product.title, getattr(supplier_info, 'name', ''))
 
             except PermissionDenied as e:
                 capture_exception()
