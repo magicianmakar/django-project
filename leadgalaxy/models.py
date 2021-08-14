@@ -2245,8 +2245,7 @@ class GroupPlan(models.Model):
 
     @property
     def is_plod(self):
-        return self.slug in ['plod-lifetime-yearly-shopify', 'plod-lifetime-monthly-shopify', 'plod-lifetime-yearly',
-                             'plod-lifetime-monthly', 'plod']
+        return 'plod' in self.slug
 
     @property
     def is_research(self):
