@@ -2024,7 +2024,7 @@ class OrdersView(TemplateView):
             if order_id:
                 _must_term.append({'term': {'order_id': order_id}})
             else:
-                source_id = safe_int(self.filters.query_order.replace('#', '').strip(), 123)
+                source_id = self.filters.query_order.replace('#', '').strip()
                 order_ids = ShopifyOrderTrack.objects.filter(store=self.store, source_id=source_id) \
                                                      .defer('data') \
                                                      .values_list('order_id', flat=True)
