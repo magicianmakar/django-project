@@ -792,7 +792,10 @@ class ShopifyStoreApi(ApiBase):
                 stripe_sub = StripeSubscription.objects.get(subscription_id=sub.id)
                 stripe_sub.refresh(sub=sub)
             except StripeSubscription.DoesNotExist:
-                plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) | Q(stripe_plan__stripe_id=sub_plan.id))
+                try:
+                    plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) | Q(stripe_plan__stripe_id=sub_plan.id))
+                except GroupPlan.MultipleObjectsReturned:
+                    plan = GroupPlan.objects.get(stripe_plan__stripe_id=sub_plan.id)
 
                 if plan.is_stripe():
                     target_user.profile.change_plan(plan)

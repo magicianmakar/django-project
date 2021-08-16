@@ -642,6 +642,8 @@ def process_webhook_event(request, event_id):
 
         try:
             plan = GroupPlan.objects.get(Q(id=sub.metadata.get('plan_id')) | Q(stripe_plan__stripe_id=sub_plan.id))
+        except GroupPlan.MultipleObjectsReturned:
+            plan = GroupPlan.objects.get(stripe_plan__stripe_id=sub_plan.id)
         except:
             plan = None
 
