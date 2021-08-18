@@ -912,64 +912,68 @@ def process_webhook_event(request, event_id):
         if not charge.customer:
             return HttpResponse('Customer Is Not Set')
 
+        stripe_customer = stripe.Customer.retrieve(charge.customer)
+        description = safe_str(charge.description)
+
+        is_unlimited = request.POST.get('unlimited') or \
+            ('Unlimited' in description and ('ECOM Jam' in description or '$997' in description)) or \
+            (charge.metadata.get('products') in ['$997 Lifetime Offer', 'Dropified Lifetime Unlimited'])
+
+        is_lifetime = request.POST.get('lifetime') or \
+            'Lifetime Plan - (one-time fee)' in description or \
+            charge.metadata.get('products') == 'Lifetime Plan - (one-time fee)'
+
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)
             response_message = "User Found"
         except User.MultipleObjectsReturned:
             response_message = "Multiple users with same email"
         except User.DoesNotExist:
-            description = safe_str(charge.description)
-
-            is_unlimited = request.POST.get('unlimited') or \
-                ('Unlimited' in description and ('ECOM Jam' in description or '$997' in description)) or \
-                (charge.metadata.get('products') in ['$997 Lifetime Offer', 'Dropified Lifetime Unlimited'])
-
-            if is_unlimited:
-                stripe_customer = stripe.Customer.retrieve(charge.customer)
-
-                fullname = ''
-                email = stripe_customer.email
-                intercom_attrs = {
-                    "register_source": 'clickfunnels',
-                    "register_medium": 'webhook',
-                }
-
-                if stripe_customer.metadata and 'phone' in stripe_customer.metadata:
-                    intercom_attrs['phone'] = stripe_customer.metadata.phone
-
+            if is_unlimited or is_lifetime:
                 if stripe_customer.sources and stripe_customer.sources.data:
                     fullname = stripe_customer.sources.data[0].name
+                else:
+                    fullname = ''
 
-                user, created = register_new_user(email, fullname, intercom_attributes=intercom_attrs, without_signals=True)
-
+                user, created = register_new_user(email=stripe_customer.email, fullname=fullname, without_signals=True)
                 if not created:
                     StripeCustomer.objects.filter(user=user).delete()
+                else:
+                    response_message = f'New User Registration'
 
-                customer = update_customer(user, stripe_customer)[0]
+        if is_unlimited or is_lifetime:
+            customer = update_customer(user, stripe_customer)[0]
+            plan_id = request.POST.get('plan')
+            if not plan_id:
+                if is_unlimited:
+                    plan_id = 31
+                elif is_lifetime:
+                    plan_id = 194
 
+            plan = GroupPlan.objects.get(id=plan_id)
+
+            try:
                 profile = user.profile
-                if profile.subuser_parent:
-                    profile.subuser_parent = None
-                    profile.subuser_stores.clear()
-                    profile.subuser_chq_stores.clear()
-                    profile.save()
+            except UserProfile.DoesNotExist:
+                profile = UserProfile.objects.create(user=user, plan=plan)
 
-                plan = GroupPlan.objects.get(id=request.POST.get('plan', 31))
-                profile.change_plan(plan)
+            if profile.subuser_parent:
+                profile.subuser_parent = None
+                profile.subuser_stores.clear()
+                profile.subuser_chq_stores.clear()
+                profile.save()
 
-                if plan.is_stripe():
-                    profile.apply_subscription(plan)
+            profile.change_plan(plan)
 
-                user.set_config('_stripe_lifetime', plan.id)
+            if plan.is_stripe():
+                profile.apply_subscription(plan)
 
-                SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
-                    'charge': charge.to_dict(),
-                    'count': 1
-                }))
+            user.set_config('_stripe_lifetime', plan.id)
 
-                return HttpResponse('New Registration to {}'.format(plan.title))
-
-            response_message = 'User Not Found'
+            SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
+                'charge': charge.to_dict(),
+                'count': 1
+            }))
 
         commission_from_stripe.apply_async(
             args=[charge.id],
