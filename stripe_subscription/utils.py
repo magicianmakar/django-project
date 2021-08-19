@@ -923,6 +923,8 @@ def process_webhook_event(request, event_id):
             'Lifetime Plan - (one-time fee)' in description or \
             charge.metadata.get('products') == 'Lifetime Plan - (one-time fee)'
 
+        response_message = "OK"
+
         try:
             user = User.objects.get(stripe_customer__customer_id=charge.customer)
             response_message = "User Found"
@@ -937,9 +939,10 @@ def process_webhook_event(request, event_id):
 
                 user, created = register_new_user(email=stripe_customer.email, fullname=fullname, without_signals=True)
                 if not created:
+                    response_message = 'Existing Registration Found'
                     StripeCustomer.objects.filter(user=user).delete()
                 else:
-                    response_message = f'New User Registration'
+                    response_message = 'New User Registration'
 
         if is_unlimited or is_lifetime:
             customer = update_customer(user, stripe_customer)[0]
@@ -950,30 +953,35 @@ def process_webhook_event(request, event_id):
                 elif is_lifetime:
                     plan_id = 194
 
-            plan = GroupPlan.objects.get(id=plan_id)
+            if plan_id:
+                plan = GroupPlan.objects.get(id=plan_id)
+                response_message = f'{response_message},  Change plan to {plan.slug}'
 
-            try:
-                profile = user.profile
-            except UserProfile.DoesNotExist:
-                profile = UserProfile.objects.create(user=user, plan=plan)
+                try:
+                    profile = user.profile
+                except UserProfile.DoesNotExist:
+                    profile = UserProfile.objects.create(user=user, plan=plan)
 
-            if profile.subuser_parent:
-                profile.subuser_parent = None
-                profile.subuser_stores.clear()
-                profile.subuser_chq_stores.clear()
-                profile.save()
+                if profile.subuser_parent:
+                    response_message = f'{response_message},  Convert sub user'
+                    profile.subuser_parent = None
+                    profile.subuser_stores.clear()
+                    profile.subuser_chq_stores.clear()
+                    profile.save()
 
-            profile.change_plan(plan)
+                profile.change_plan(plan)
 
-            if plan.is_stripe():
-                profile.apply_subscription(plan)
+                if plan.is_stripe():
+                    profile.apply_subscription(plan)
 
-            user.set_config('_stripe_lifetime', plan.id)
+                user.set_config('_stripe_lifetime', plan.id)
 
-            SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
-                'charge': charge.to_dict(),
-                'count': 1
-            }))
+                SuccessfulPaymentEvent.objects.create(user=user, charge=json.dumps({
+                    'charge': charge.to_dict(),
+                    'count': 1
+                }))
+            else:
+                response_message = f'{response_message},  No Plan ID found'
 
         commission_from_stripe.apply_async(
             args=[charge.id],
