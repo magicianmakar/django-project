@@ -45,7 +45,7 @@ class SubusersApiTest(BaseTestCase):
 
         # Not found
         r = self.client.delete('/api/subusers/invite?invite=12345')
-        self.assertEqual(r.status_code, 500)
+        self.assertEqual(r.status_code, 404)
 
     def test_post_delete(self):
         data = {
