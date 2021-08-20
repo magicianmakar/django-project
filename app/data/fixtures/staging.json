@@ -118,7 +118,7 @@
     "model": "leadgalaxy.shopifystore",
     "pk": 1,
     "fields": {
-        "title": "Uncommon Now",
+        "title": "Shopify Test Store (Uncommon Now)",
         "currency_format": "${{amount}}",
         "api_url": "https://:42d49c9a1e1eefb1755e507a52f4effa@rank-engine.myshopify.com",
         "shop": "rank-engine.myshopify.com",
@@ -137,7 +137,92 @@
         "uninstalled_at": null,
         "delete_request_at": null
     }
-}, {
+},
+  {
+	"model": "leadgalaxy.shopifystore",
+	"pk": 2,
+	"fields": {
+		"list_index": 0,
+		"currency_format": "${{amount}}",
+		"title": "Shopify Test Store 2",
+		"api_url": "https://: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@dropified-staging-dev.myshopify.com",
+		"shop": "dropified-staging-dev.myshopify.com",
+		"access_token": "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",
+		"scope": "write_content,write_products,write_customers,write_orders,write_fulfillments,write_shipping,read_analytics,write_inventory,read_locations,read_all_orders",
+		"primary_location": null,
+		"is_active": true,
+		"store_hash": "4a3bd37e117cd48c32347b3a2755ba79",
+		"version": 2,
+		"info": "{\"id\": 59630813375, \"name\": \"dropified-staging-dev\", \"email\": \"devs@dropified.com\", \"domain\": \"dropified-staging-dev.myshopify.com\", \"province\": \"Something\", \"country\": \"BR\", \"address1\": \"909 Irving Road\", \"zip\": \"35209\", \"city\": \"Birmingham\", \"source\": null, \"phone\": \"\", \"latitude\": null, \"longitude\": null, \"primary_locale\": \"en\", \"address2\": null, \"created_at\": \"2021-08-20T13:24:48+03:00\", \"updated_at\": \"2021-08-20T13:25:31+03:00\", \"country_code\": \"BR\", \"country_name\": \"Brazil\", \"currency\": \"BRL\", \"customer_email\": \"devs@dropified.com\", \"timezone\": \"(GMT+02:00) Europe/Zaporozhye\", \"iana_timezone\": \"Europe/Zaporozhye\", \"shop_owner\": \"dropified-staging-dev Admin\", \"money_format\": \"R$ {{amount_with_comma_separator}}\", \"money_with_currency_format\": \"R$ {{amount_with_comma_separator}} BRL\", \"weight_unit\": \"kg\", \"province_code\": \"RS\", \"taxes_included\": false, \"auto_configure_tax_inclusivity\": null, \"tax_shipping\": null, \"county_taxes\": true, \"plan_display_name\": \"Development\", \"plan_name\": \"affiliate\", \"has_discounts\": false, \"has_gift_cards\": false, \"myshopify_domain\": \"dropified-staging-dev.myshopify.com\", \"google_apps_domain\": null, \"google_apps_login_enabled\": null, \"money_in_emails_format\": \"R$ {{amount_with_comma_separator}}\", \"money_with_currency_in_emails_format\": \"R$ {{amount_with_comma_separator}} BRL\", \"eligible_for_payments\": false, \"requires_extra_payments_agreement\": false, \"password_enabled\": true, \"has_storefront\": true, \"eligible_for_card_reader_giveaway\": false, \"finances\": true, \"primary_location_id\": 64969343167, \"cookie_consent_level\": \"implicit\", \"visitor_tracking_consent_preference\": \"allow_all\", \"checkout_api_supported\": false, \"multi_location_enabled\": true, \"setup_required\": false, \"pre_launch_enabled\": false, \"enabled_presentment_currencies\": [\"BRL\"], \"force_ssl\": true}",
+		"auto_fulfill": "enable",
+		"user": ["admin"],
+		"private_label": false,
+		"uninstall_reason": null,
+		"created_at": "2021-08-20T10:26:11.644Z",
+		"updated_at": "2021-08-20T10:26:13.047Z",
+		"uninstalled_at": null,
+		"delete_request_at": null
+	}
+},
+  {
+	"model": "woocommerce_core.woostore",
+	"pk": 1,
+	"fields": {
+		"list_index": 0,
+		"currency_format": null,
+		"user": ["admin"],
+		"title": "Woo Test Store",
+		"api_url": "https://woo.dropified.com",
+		"api_key": "ck_f517cb92130af79fc5930a69c9b61c76beac6574",
+		"api_password": "cs_79b50f175488d908e7c5986659615a99044cdd58",
+		"api_version": "wc/v2",
+		"api_string_auth": true,
+		"api_timeout": 30,
+		"is_active": true,
+		"store_hash": "8d9f76f125da4d9969ad01eaffe91461",
+		"auto_fulfill": "disable",
+		"created_at": "2018-12-28T15:43:04.180Z",
+		"updated_at": "2018-12-28T15:44:25.868Z"
+	}
+},
+    {
+	"model": "commercehq_core.commercehqstore",
+	"pk": 1,
+	"fields": {
+		"list_index": 0,
+		"currency_format": null,
+		"user": ["admin"],
+		"title": "CHQ Test Store",
+		"api_url": "https://chq-shopified-dev.commercehqdev.com",
+		"api_key": "uVlgBcvwRtP2GvIkp6HbxDNA-PJ9c3Z7",
+		"api_password": "7zg_g6yr1L4SEY50X2Ur_J57G0O6RhyM",
+		"is_active": true,
+		"store_hash": "9736ff766b036d2a71ab95109d60fb50",
+		"auto_fulfill": "disable",
+		"created_at": "2019-06-07T14:43:21.746Z",
+		"updated_at": "2019-09-20T12:23:33.449Z"
+	}
+},
+{
+	"model": "bigcommerce_core.bigcommercestore",
+	"pk": 1,
+	"fields": {
+		"list_index": 0,
+		"currency_format": null,
+		"user": ["admin"],
+		"title": "Dropified_CS BC Test Store",
+		"api_url": "dropifiedcs.mybigcommerce.com",
+		"api_key": "g101ss976a",
+		"api_token": "8o60sidxzbeg6ralfrcgiz0lqxr0qkb",
+		"is_active": true,
+		"store_hash": "00413f84147e8cbd92e6f9e20c5abbb5",
+		"auto_fulfill": "disable",
+		"created_at": "2021-08-20T11:21:07.091Z",
+		"updated_at": "2021-08-20T11:21:07.091Z",
+		"uninstalled_at": null
+	}
+},
+  {
     "model": "leadgalaxy.shopifyproduct",
     "pk": 1,
     "fields": {
