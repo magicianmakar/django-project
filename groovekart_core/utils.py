@@ -544,6 +544,7 @@ def order_track_fulfillment(order_track, user_config=None):
         carrier_name = leadgalaxy_utils.shipping_carrier(tracking_number)
         carrier_name = 'AfterShip' if not carrier_name else carrier_name
         carrier_url = order_track.get_tracking_link()
+        carrier_url = carrier_url if not isinstance(carrier_url, list) else ','.join([c[1] for c in carrier_url])
     else:
         carrier_name = ''
         carrier_url = ''

@@ -1647,7 +1647,19 @@ def order_track_fulfillment(**kwargs):
             and type(user_aftership_domain) is dict \
             and user_aftership_domain.get(str(store_id))
 
-        if (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
+        alibaba_tracking_urls = None
+        if kwargs.get('order_track') and kwargs.get('order_track').source_type == 'alibaba':
+            from alibaba_core.utils import get_tracking_links as get_alibaba_tracking_links
+            alibaba_tracking_urls = get_alibaba_tracking_links(kwargs.get('order_track').source_id.split(','))
+
+        if alibaba_tracking_urls:
+            data['fulfillment']['tracking_company'] = "Other"
+            if tracking_numbers:
+                data['fulfillment']['tracking_urls'] = [t[1] for t in alibaba_tracking_urls]
+            else:
+                data['fulfillment']['tracking_url'] = alibaba_tracking_urls
+
+        elif (kwargs.get('use_usps') is None and is_usps and not have_custom_domain) or kwargs.get('use_usps'):
             data['fulfillment']['tracking_company'] = user_config.get('_default_shipping_carrier', 'USPS')
         elif (kwargs.get('use_usps') is None and not have_custom_domain) and is_shipping_carrier(source_tracking, 'FedEx', any_match=True):
             data['fulfillment']['tracking_company'] = "FedEx"

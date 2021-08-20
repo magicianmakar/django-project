@@ -1013,3 +1013,31 @@ def alibaba_shipping_info(alibaba_account, product_id, country_code):
     cache.set(cache_key, freight_data, timeout=43200)
 
     return freight_data
+
+
+def get_tracking_links(trade_ids, default_url=None):
+    result = []
+
+    for trade_id in trade_ids:
+        order = AlibabaOrder.objects.get(trade_id=trade_id)
+        item = order.items.first()
+        if not item:
+            continue
+
+        if not item.source_tracking:
+            continue
+
+        tracking_url = order.tracking_url
+        if not tracking_url:
+            if not default_url:
+                continue
+            tracking_url = default_url.format(item.source_tracking)
+
+        result.append([item.source_tracking, tracking_url])
+
+    if not result:
+        return ''
+    elif len(result) == 1:
+        return result[0][1]
+    else:
+        return result

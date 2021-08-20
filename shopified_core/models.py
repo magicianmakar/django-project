@@ -438,11 +438,15 @@ class OrderTrackBase(models.Model):
         return None
 
     def get_tracking_link(self):
-        custom_tracking = 'https://track.aftership.com/{{tracking_number}}'
+        custom_tracking = self.custom_tracking_url or 'https://track.aftership.com/{{tracking_number}}'
+
+        if self.source_type == 'alibaba':
+            from alibaba_core.utils import get_tracking_links as get_alibaba_tracking_links
+            links = get_alibaba_tracking_links(self.source_id.split(','), custom_tracking)
+            if links:
+                return links
 
         if self.custom_tracking_url:
-            custom_tracking = self.custom_tracking_url
-
             if '{{tracking_number}}' not in custom_tracking:
                 custom_tracking = "https://{}.aftership.com/{{{{tracking_number}}}}".format(custom_tracking)
             elif not custom_tracking.startswith('http'):

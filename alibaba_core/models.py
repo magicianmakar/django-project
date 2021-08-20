@@ -387,6 +387,7 @@ class AlibabaOrder(models.Model):
     currency = models.CharField(max_length=3, default='USD', verbose_name='ISO4217 Currency Code')
     products_cost = models.DecimalField(max_digits=10, decimal_places=2)
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    tracking_url = models.TextField(default='', blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     delivered_at = models.DateTimeField(null=True)
@@ -490,6 +491,7 @@ class AlibabaOrder(models.Model):
             else:
                 capture_message(f'Alibaba Status not Found {logistic_status}')
 
+            self.tracking_url = logistic_details['tracking_url']
             for shipping in logistic_details['shipping_order_list']['shippingorderlist']:
                 self.items.filter(
                     product_id__in=[g['product_id'] for g in shipping['goods']['goods']]
