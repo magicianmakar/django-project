@@ -79,7 +79,11 @@ class ApiBase(ApiResponseMixin, View):
         board_name = data.get('title', '').strip()
 
         if not len(board_name):
+
             return self.api_error('Board name is required', status=501)
+
+        if self.board_model.objects.filter(user=user, title=board_name).exists():
+            return self.api_error('Board name is already exist.', status=501)
 
         board = self.board_model(title=board_name, user=user.models_user)
         permissions.user_can_add(user, board)
