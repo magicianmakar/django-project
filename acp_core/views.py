@@ -20,7 +20,7 @@ from addons_core.models import AddonUsage
 from last_seen.models import LastSeen
 from leadgalaxy.models import AdminEvent, AccountRegistration, PlanRegistration, GroupPlan, FeatureBundle
 from leadgalaxy.shopify import ShopifyAPI
-from shopified_core.utils import safe_int, url_join, hash_list, safe_float
+from shopified_core.utils import app_link, safe_int, url_join, hash_list, safe_float
 from stripe_subscription.models import StripePlan
 from stripe_subscription.stripe_api import stripe
 from lib.exceptions import capture_exception
@@ -118,7 +118,16 @@ class ACPUserSearchView(BaseTemplateView):
                 data=json.dumps({'query': q}))
 
         if len(users) == 1:
-            self.redirect_url = reverse('acp_user_view', kwargs={'user': users[0].id})
+            params = {
+                'user': request.GET.get('user'),
+                'bundle': request.GET.get('bundle'),
+                'auto': request.GET.get('auto')
+            }
+
+            if all(params.values()):
+                self.redirect_url = app_link(reverse('acp_user_view', kwargs={'user': users[0].id}), **params)
+            else:
+                self.redirect_url = reverse('acp_user_view', kwargs={'user': users[0].id})
         else:
             self.redirect_url = None
 
