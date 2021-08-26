@@ -75,7 +75,7 @@ def prepare_shipstation_data(pls_order, order, line_items, service_code=None):
             'quantity': quantity,
             'sku': label.sku,
             'unitPrice': 0,
-            'imageUrl': label.url,
+            'imageUrl': label.image,
             'lineItemKey': key,
         })
 
