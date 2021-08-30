@@ -21,7 +21,7 @@ from requests_oauthlib import OAuth2Session
 from lib.exceptions import capture_exception, capture_message
 
 from shopified_core import permissions
-from leadgalaxy.models import User, ShopifyStore, UserProfile, GroupPlan
+from leadgalaxy.models import SHOPIFY_API_VERSION, User, ShopifyStore, UserProfile, GroupPlan
 from leadgalaxy.utils import attach_webhooks, detach_webhooks, get_plan, create_user_without_signals
 from shopified_core.utils import app_link
 
@@ -385,7 +385,12 @@ def callback(request):
             user = User.objects.get(username__iexact=shop_username(shop), profile__shopify_app_store=True)
         else:
             # TODO: Check if email already exists and ask the user what to do
-            shopify.ShopifyResource.activate_session(shopify.Session(shop, token['access_token']))
+            session = shopify.Session(
+                shop_url=shop,
+                version=SHOPIFY_API_VERSION,
+                token=token['access_token'])
+
+            shopify.ShopifyResource.activate_session(session)
 
             shop_info = shopify.Shop.current()
             username = shop_username(shop)
@@ -472,7 +477,12 @@ def callback(request):
             return HttpResponseRedirect('/')
 
         try:
-            shopify.ShopifyResource.activate_session(shopify.Session(shop, token['access_token']))
+            session = shopify.Session(
+                shop_url=shop,
+                version=SHOPIFY_API_VERSION,
+                token=token['access_token'])
+
+            shopify.ShopifyResource.activate_session(session)
 
             shop_info = shopify.Shop.current()
             store.title = shop_info.name

@@ -1084,7 +1084,10 @@ class ShopifyStore(StoreBase):
     @property
     def shopify(self):
         import shopify
-        session = shopify.Session(self.shop, self.get_api_credintals()['api_secret'])
+        session = shopify.Session(
+            shop_url=self.shop,
+            version=SHOPIFY_API_VERSION,
+            token=self.get_api_credintals()['api_secret'])
         shopify.ShopifyResource.activate_session(session)
 
         return shopify
