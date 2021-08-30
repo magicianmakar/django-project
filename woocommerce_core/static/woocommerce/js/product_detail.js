@@ -11,7 +11,7 @@ function showProductInfo(rproduct) {
     if (product) {
         var product_price = product.price;
         var compare_price = '';
-        if (product.sale_price) {
+        if (product.sale_price || !config.connected) {
             compare_price = product.compare_at_price;
         }
         $('#product-title').val(product.title);
