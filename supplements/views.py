@@ -52,6 +52,7 @@ from churnzero_core.utils import post_churnzero_product_import
 from analytic_events.models import SupplementLabelForApprovalEvent
 from supplements.lib.authorizenet import create_customer_profile, create_payment_profile
 from supplements.lib.image import get_order_number_label, get_payment_pdf
+from supplements.lib.shipstation import send_shipstation_orders
 from supplements.models import (
     AuthorizeNetCustomer,
     Payout,
@@ -1577,6 +1578,13 @@ class OrderItemListView(common_views.OrderItemListView):
     @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
         if request.user.can('pls_admin.use') or request.user.can('pls_staff.use'):
+            if request.GET.get('send_shipstation'):
+                if send_shipstation_orders():
+                    messages.success(request, 'Sending shipstation missing orders, this can take a few moments')
+                else:
+                    messages.warning(request, 'Send shipstation missing orders have been triggered already')
+                return redirect('supplements:orderitem_list')
+
             return super().dispatch(request, *args, **kwargs)
         else:
             raise permissions.PermissionDenied()

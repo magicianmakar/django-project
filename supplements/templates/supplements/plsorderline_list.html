@@ -1,5 +1,5 @@
 {% extends "supplements/tab_view_admin.html" %}
-{% load static compress template_helper %}
+{% load static compress template_helper widget_tweaks %}
 
 {% block extra_pls_css %}
 <link href="{% static 'libs/bower_components/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css' %}" rel="stylesheet">
@@ -8,7 +8,105 @@
 {% block tab_content %}
 
 <div>
-  {% include "supplements/partials/line_filter_form.html" %}
+  <form role="form" autocomplete="off">
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.order_number.errors }}
+          <label class="control-label">Order ID:</label>
+          {{ form.order_number|add_class:"form-control" }}
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.line_status.errors }}
+          <label class="control-label">Printed Status:</label>
+          {{ form.line_status|add_class:"form-control" }}
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.label_size.errors }}
+          <label class="control-label">Label Size:</label>
+          {{ form.label_size|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.email.errors }}
+          <label class="control-label">Customer Email:</label>
+          {{ form.email|add_class:"form-control" }}
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.product_sku.errors }}
+          <label class="control-label">Product SKU:</label>
+          {{ form.product_sku|add_class:"form-control" }}
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.label_sku.errors }}
+          <label class="control-label">Label SKU:</label>
+          {{ form.label_sku|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="form-group">
+          <label class="control-label">Date Range:</label>
+          <div id="date" class="form-control">
+            <i class="fa fa-calendar m-r-xs"></i>
+            <span>All Time</span>
+            <b class="caret pull-right" style="position:relative;right:-7px;top:8px;"></b>
+          </div>
+          <input type="hidden" type="text" name="date" value="{{ date_range|default:'' }}" />
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.batch_number.errors }}
+          <label class="control-label">Batch Number:</label>
+          {{ form.batch_number|add_class:"form-control" }}
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.shipstation_status.errors }}
+          <label class="control-label">Fulfillment Status:</label>
+          {{ form.shipstation_status|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.supplier.errors }}
+          <label class="control-label">Supplier:</label>
+          {{ form.supplier|add_class:"form-control" }}
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-4">
+        <div class="form-group">
+          {{ form.cancelled.errors }}
+          {{ form.cancelled }}
+          <label class="control-label m-l-xs" for="id_cancelled">Hide Cancelled in ShipStation</label>
+        </div>
+      </div>
+    </div>
+
+    <input type="submit" class="btn btn-primary" value="Filter" />
+    <input type="button" class="btn btn-default pls-reset-btn" value="Clear" />
+  </form>
 </div>
 
 <hr />
@@ -33,9 +131,10 @@
         <span class="caret"></span>
       </button>
       <ul id="store-dropdown-menu" class="dropdown-menu" style="display: none;">
-        <li><a href="#" id='print-all-labels'>Print Labels</a></li>
-        <li><a href="#" id='mark-all-labels'>Mark as Printed</a></li>
-        <li><a href="#" id='unmark-all-labels'>Mark as Not Printed</a></li>
+        <li><a href="#" id="print-all-labels">Print Labels</a></li>
+        <li><a href="#" id="mark-all-labels">Mark as Printed</a></li>
+        <li><a href="#" id="unmark-all-labels">Mark as Not Printed</a></li>
+        <li><a href="{% url 'supplements:orderitem_list' %}?send_shipstation=1">Send to Shipstation</a></li>
       </ul>
     </div>
 

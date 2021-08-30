@@ -20,7 +20,7 @@ from shopified_core import permissions
 from shopified_core.mixins import ApiResponseMixin
 
 from .lib.image import get_order_number_label
-from .lib.shipstation import create_shipstation_order, prepare_shipstation_data
+from .lib.shipstation import create_shipstation_order, send_shipstation_orders
 from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem, PLSupplement
 from .utils import user_can_download_label
 from .utils.payment import Util, get_shipping_costs
@@ -87,7 +87,7 @@ class SupplementsApi(ApiResponseMixin, View):
                         user.models_user,
                         order_shippings
                     )
-                    unpaid_orders.append([unpaid_order, order])
+                    unpaid_orders.append(unpaid_order)
 
                 paid_orders = util.create_payment(user.models_user, unpaid_orders)
         except Exception as e:
@@ -101,13 +101,8 @@ class SupplementsApi(ApiResponseMixin, View):
                 error_msg = f'Payment failed with Error Code {str(e)} <a target="_blank" href="{error_code_lookup}"> Learn more.</a>'
             return self.api_error(error_msg, status=500)
 
-        for pls_order, order in paid_orders:
-            shipstation_data = prepare_shipstation_data(pls_order,
-                                                        order,
-                                                        order['items'],
-                                                        service_code=order['shipping_service'])
-            create_shipstation_order(pls_order, shipstation_data)
-
+        send_shipstation_orders()
+        for pls_order in paid_orders:
             item_track_map = {}
             for item in pls_order.order_items.all():
                 if item_track_map.get(item.line_id):  # Bundled items
@@ -589,6 +584,7 @@ class SupplementsApi(ApiResponseMixin, View):
                 order_info,
                 order_line_items,
                 user.models_user,
+                order,
             )
         except Exception as e:
             basket_order.delete()
@@ -605,11 +601,7 @@ class SupplementsApi(ApiResponseMixin, View):
             # clear basket items
             user.basket_items.all().delete()
 
-            shipstation_data = prepare_shipstation_data(pls_order,
-                                                        order,
-                                                        order_line_items,
-                                                        service_code=data.get('shipping_service'))
-            create_shipstation_order(pls_order, shipstation_data)
+            create_shipstation_order(pls_order)
             basket_order.set_paid(True)
             basket_order.save()
 

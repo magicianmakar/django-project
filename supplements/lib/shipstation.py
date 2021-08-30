@@ -1,13 +1,17 @@
 import json
 from urllib.parse import urlencode
 
-from django.conf import settings
-
 import requests
+from django.conf import settings
+from django.core.cache import cache
 
-from lib.exceptions import capture_message
 from shopified_core.utils import base64_encode, hash_text
-from supplements.models import PLSOrderLine
+
+
+class LimitExceededError(Exception):
+    def __init__(self, *args, **kwargs):
+        self.retry_after = kwargs.pop('retry_after') or 0
+        super().__init__(*args, **kwargs)
 
 
 def get_auth_header():
@@ -37,101 +41,69 @@ def get_address(store_data, hashed=False):
     return ship_to
 
 
-def prepare_shipstation_data(pls_order, order, line_items, service_code=None):
-    ship_to = get_address(order['shipping_address'])
+def prepare_shipping_data(order):
+    ship_to = json.dumps(order['shipping_address'], sort_keys=True)
     try:
-        bill_to = get_address(order['billing_address'])
-        if not bill_to['address1'].strip():
+        bill_to = json.dumps(order['billing_address'])
+        if not order['billing_address']['address1'].strip():
             raise KeyError('address1')
     except KeyError:
         bill_to = ship_to
 
-    hash = hash_text(json.dumps(ship_to, sort_keys=True))
-    pls_order.shipping_address_hash = hash
-    pls_order.save()
-
-    get_shipstation_line_key = PLSOrderLine.get_shipstation_key
-
-    items = []
-    for item in line_items:
-        label = item['label']
-        quantity = item['quantity']
-        items.append({
-            'name': item['title'] or label.user_supplement.title,  # Shipstation name is required
-            'quantity': quantity,
-            'sku': item['sku'],
-            'unitPrice': float(item['user_supplement'].cost_price),
-            'imageUrl': item.get('image_url', ''),
-        })
-
-        key = get_shipstation_line_key(pls_order.store_type,
-                                       pls_order.store_id,
-                                       pls_order.store_order_id,
-                                       item['id'],
-                                       label.id)
-
-        items.append({
-            'name': f'Label for {label.user_supplement.title}',
-            'quantity': quantity,
-            'sku': label.sku,
-            'unitPrice': 0,
-            'imageUrl': label.image,
-            'lineItemKey': key,
-        })
-
-    advancedOptions = {
-        'customField1': order['order_number'],
-    }
-
-    if pls_order.is_taxes_paid:
-        advancedOptions['customField2'] = 'Duties Paid'
-
-    shipping_data = {
-        'orderKey': str(pls_order.id),
-        'orderNumber': pls_order.shipstation_order_number,
-        'orderDate': pls_order.created_at.strftime('%Y-%m-%dT%H:%M:%S%z'),
-        'orderStatus': 'awaiting_shipment',
-        'amountPaid': pls_order.amount / 100.,
-        'shipTo': ship_to,
-        'billTo': bill_to,
-        'items': items,
-        'advancedOptions': advancedOptions,
-    }
-    if service_code:
-        shipping_data['requestedShippingService'] = service_code
-
-    return shipping_data
+    return [ship_to, bill_to]
 
 
-def create_shipstation_order(pls_order, data, raw_request=False):
+def create_shipstation_order(pls_order, raw_request=False):
     headers = {'Content-Type': 'application/json'}
     headers.update(get_auth_header())
     url = f'{settings.SHIPSTATION_API_URL}/orders/createOrder'
+    data = pls_order.to_shipstation_order()
+    r = requests.post(url, data=json.dumps(data), headers=headers)
 
-    if raw_request:
-        response = requests.post(url, data=json.dumps(data), headers=headers)
-        response.raise_for_status()
-        response = response.json()
-        if not response.get('orderKey'):
-            raise Exception(response)
+    if r.status_code == 429:
+        retry_after = r.headers.get('Retry-After', 0)
+        if not retry_after:
+            # Shipstation has a custom header posing as Retry-After of HTTP 429
+            retry_after = r.headers.get('X-Rate-Limit-Reset', 0)
 
-        return response['orderKey']
+        raise LimitExceededError(retry_after=retry_after)
 
-    else:
-        try:
-            response = requests.post(url, data=json.dumps(data), headers=headers)
-            response.raise_for_status()
-            response = response.json()
-        except requests.HTTPError:
-            pass
+    r.raise_for_status()
+    result = r.json()
 
-        capture_message('ShipStation Order Retry', level='warning', extra={'retry': 1, 'data': data})
+    if not result.get('orderKey'):
+        raise Exception(result)
 
-        if response.get('orderKey'):
-            pls_order.shipstation_key = response['orderKey']
-            pls_order.save()
-        else:
-            capture_message('ShipStation Error', extra={'response': response})
+    pls_order.shipstation_key = result['orderKey']
+    pls_order.save()
+
+
+def get_orders_lock(token=None):
+    lock = cache.lock('create_shipstation_orders_lock', timeout=10)
+
+    if token:
+        lock.local.token = token.encode() if isinstance(token, str) else token
+
+    if lock.owned():
+        lock.reacquire()
+        return lock
+
+    if lock.acquire(blocking=False):
+        return lock
+
+    return False
+
+
+def send_shipstation_orders():
+    from supplements.tasks import create_shipstation_orders
+
+    lock = get_orders_lock()
+    if lock:
+        create_shipstation_orders.delay(lock.local.token)
+
+        return True
+
+    return False
 
 
 def get_shipstation_order(order_number):
