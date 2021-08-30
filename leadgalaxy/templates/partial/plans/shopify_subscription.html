@@ -29,7 +29,6 @@
                                                     data-trial-days="{{item.stripe_plan.trial_period_days}}"
                                                     style="width: {% widthratio 100 shopify_plans|length 1 %}%"
                                                     >
-
                                                     <h3>{{item.description}}</h3>
                                                     {% if item.monthly_price and not item.is_free %}
                                                         <p class="price">${{item.monthly_price}}<span>/mo</span></p>
@@ -57,6 +56,11 @@
                                                             <button class="btn btn-primary choose-shopify-plan" >
                                                                 Try for {{item.trial_days}} days</button>
                                                         {% else %}
+
+                                                            {% if item.slug == 'new-free-shopify' and not user.profile.phone %}
+                                                                <input type="text" name="contact-phone" id="contact-phone" class="form-control" placeholder="Enter your contact Phone" style="display:none;position: relative !important;left: 0 !important;margin-bottom: 10px;text-align: center;"/>
+                                                            {% endif %}
+
                                                             <button class="btn btn-success choose-shopify-plan">Choose Plan</button>
                                                         {% endif %}
                                                     </p>

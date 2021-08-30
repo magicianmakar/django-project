@@ -37,7 +37,9 @@
                 created_at: dataLayer[0].created_at,
                 plan: dataLayer[0].userPlan,
                 extension_version: dataLayer[0].extension_version,
-
+                {% if  user.profile.phone %}
+                phone: "{{ user.profile.phone  }}",
+                {% endif %}
                 {% cache 3600 user_addons user.id %}
                 addons: '{{ user.profile.get_installed_addon_titles|join:"," }}',
                 {% endcache %}

@@ -108,14 +108,16 @@ class AbstractOrder(AbstractOrderInfo, OrderMixin):
     class Meta:
         abstract = True
 
-    PAID = 'paid'
     PENDING = 'pending'
+    PAID = 'paid'
     SHIPPED = 'shipped'
+    SHIPPING_ERROR = 'ship_error'
 
     STATUSES = [
-        (PAID, 'Paid'),
         (PENDING, 'Pending'),
+        (PAID, 'Paid'),
         (SHIPPED, 'Shipped'),
+        (SHIPPING_ERROR, 'Has Shipping Error'),
     ]
 
     order_number = models.CharField(max_length=50)

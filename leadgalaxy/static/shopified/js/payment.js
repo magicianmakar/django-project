@@ -293,12 +293,18 @@
     $('.choose-shopify-plan').click(function(e) {
         var parent = $(this).parents('.subsciption-plan');
         var plan = parent.data('data-plan');
+        var contact_phone = '';
+        try {
+            contact_phone = parent.find('#contact-phone').val();
+        }
+        catch (e) {}
 
         $.ajax({
             url: config.shopify_plan,
             type: 'POST',
             data: {
-                plan: parent.data('plan')
+                plan: parent.data('plan'),
+                contact_phone: contact_phone
             },
             success: function(data) {
                 setTimeout(function() {
@@ -311,6 +317,9 @@
             },
             error: function(data) {
                 displayAjaxError('Plan Subscription', data);
+                if (data.responseJSON.require_phone) {
+                    parent.find('#contact-phone').show();
+                }
             }
         });
     });

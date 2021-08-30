@@ -11,8 +11,9 @@ from django.utils import timezone
 from django.urls import reverse
 
 from lib.exceptions import capture_exception, capture_message
-from shopified_core.utils import get_store_api, safe_int, safe_float, dict_val
+from shopified_core.utils import get_store_api, safe_int, safe_float, dict_val, hash_text
 from shopified_core.models_utils import get_store_model
+from supplements.lib.shipstation import prepare_shipping_data
 from supplements.models import UserSupplement, PLSupplement, PLSOrder, PLSOrderLine, ShippingGroup
 from supplements.utils import supplement_customer_address
 
@@ -98,7 +99,7 @@ def get_shipping(country_code, province_code, total_weight, shipping_service=Non
 
 class Util:
 
-    def make_payment(self, order_info, lines, user):
+    def make_payment(self, order_info, lines, user, order):
         order_number, order_id, shipping_country_code, shipping_province_code, shipping_service = order_info
         store_id = self.store.id
         store_type = self.store.store_type
@@ -115,6 +116,7 @@ class Util:
             wholesale_price += line_wholesale
             total_weight += user_supplement.pl_supplement.weight * quantity
 
+        ship_to, bill_to = prepare_shipping_data(order)
         shipping = get_shipping(
             shipping_country_code,
             shipping_province_code,
@@ -139,6 +141,9 @@ class Util:
                 wholesale_price=wholesale_price,
                 shipping_price=int(shipping_price * 100),
                 user=user,
+                shipping_address_hash=hash_text(ship_to),
+                shipping_address=ship_to,
+                billing_address=bill_to,
             )
 
             for line in lines:
@@ -172,12 +177,14 @@ class Util:
                     line_id=line_id,
                     shipstation_key=key,
                     pls_order=pls_order,
+                    title=user_supplement.title,
                     label=label,
                     sale_price=item_price,
                     amount=line_amount,
                     quantity=quantity,
                     wholesale_price=wholesale_price,
                     shipping_service=shipping.get('service', {}).get('service_name'),
+                    shipping_service_id=shipping.get('service', {}).get('service_id') or '',
                     sku=line['sku'],  # Product SKU
                 )
 
@@ -214,6 +221,8 @@ class Util:
             sale_price += Decimal(item['price']) * quantity
 
         shipping_cost = order['selected_shipping']['shipping_cost']
+        ship_to, bill_to = prepare_shipping_data(order)
+
         # Taken from cached taxes, taking too long will throw an error
         # TODO: Handle cache error and ask for a page reload if it happens often
         if order['pay_taxes']:
@@ -233,6 +242,9 @@ class Util:
             duties=int(duties * 100),
             user=user,
             status=PLSOrder.PENDING,
+            shipping_address_hash=hash_text(ship_to),
+            shipping_address=ship_to,
+            billing_address=bill_to,
         )
 
         for item in order['items']:
@@ -266,12 +278,14 @@ class Util:
                 line_id=item['id'],
                 shipstation_key=shipstation_key,
                 pls_order=pls_order,
+                title=item['title'],
                 label=item['label'],
                 sale_price=item_price,
                 amount=line_amount,
                 quantity=quantity,
                 wholesale_price=wholesale_price,
                 shipping_service=order['selected_shipping'].get('service', {}).get('service_name'),
+                shipping_service_id=order['selected_shipping'].get('service', {}).get('service_id') or '',
                 sku=item['sku'],  # Product SKU
                 is_bundled=item.get('is_bundle') or False,
             )
@@ -280,7 +294,7 @@ class Util:
 
     def create_payment(self, user, orders):
         payment_items = []
-        for order, order_data in orders:
+        for order in orders:
             payment_items.append({
                 'id': order.id,
                 'name': f'Process Order # {order.id}',
@@ -292,7 +306,7 @@ class Util:
         if not transaction_id:
             raise Exception(error)
 
-        for order, order_data in orders:
+        for order in orders:
             order.status = order.PAID
             order.payment_date = timezone.now()
             order.stripe_transaction_id = transaction_id
@@ -458,7 +472,7 @@ class Util:
                     'id': order_data['line_id'],
                     'user_supplement': user_supplement,
                     'label': user_supplement.current_label,
-                    'title': user_supplement.title,
+                    'title': product.get('title') or user_supplement.title,
                     'sku': user_supplement.shipstation_sku,
                     'image_url': image_url,
                     'quantity': product_quantity,

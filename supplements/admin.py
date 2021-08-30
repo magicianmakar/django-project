@@ -10,8 +10,7 @@ from django.utils import timezone
 from django.utils.html import format_html
 
 from lib.exceptions import capture_exception
-from shopified_core.models_utils import get_store_model
-from .lib.shipstation import get_shipstation_order, prepare_shipstation_data, create_shipstation_order
+from .lib.shipstation import get_shipstation_order, create_shipstation_order
 from .forms import ShippingGroupAdminForm
 from .models import (
     AuthorizeNetCustomer,
@@ -130,12 +129,12 @@ class PLSOrderAdmin(admin.ModelAdmin):
         'order_number',
         'stripe_transaction_id',
         'get_shipstation_key',
+        'status',
         'store_type',
         'store_id',
         'store_order_id',
         'amount',
         'sale_price',
-        'status',
         'user',
         'created_at',
         'payment_date',
@@ -162,8 +161,6 @@ class PLSOrderAdmin(admin.ModelAdmin):
     def get_shipstation_key(self, obj):
         if obj.shipstation_key:
             return obj.shipstation_key
-        elif obj.store_type == 'mybasket':
-            return 'No Support for Basket Order'
         else:
             return format_html(f'<a href="{reverse("admin:shipstation_sync", kwargs={"order_id": obj.pk})}">Sync Shipstation</a>')
 
@@ -189,27 +186,7 @@ class PLSOrderAdmin(admin.ModelAdmin):
             return HttpResponseRedirect(reverse('admin:supplements_plsorder_changelist'))
 
         try:
-            store = get_store_model(pls_order.store_type).objects.get(id=pls_order.store_id)
-            order = store.get_order(pls_order.store_order_id)
-            order['items'] = []
-            for item in pls_order.order_items.all():
-                order['items'].append({
-                    'label': item.label,
-                    'user_supplement': item.label.user_supplement,
-                    'id': item.line_id,
-                    'title': item.label.user_supplement.title,
-                    'quantity': item.quantity,
-                    'sku': item.label.user_supplement.shipstation_sku,
-                    'image_url': item.label.user_supplement.current_label.image,
-                })
-                order['shipping_service'] = item.shipping_service
-            shipstation_data = prepare_shipstation_data(pls_order,
-                                                        order,
-                                                        order['items'],
-                                                        service_code=order['shipping_service'])
-            pls_order.shipstation_key = create_shipstation_order(pls_order, shipstation_data, raw_request=True)
-            pls_order.save()
-
+            create_shipstation_order(pls_order)
         except:
             capture_exception()
             return HttpResponse(status=500)

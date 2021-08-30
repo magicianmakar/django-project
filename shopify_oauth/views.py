@@ -394,9 +394,8 @@ def callback(request):
                 username=username,
                 email=shop_info.email,
                 password=get_random_string(20))
-
+            user.set_config('__phone', shop_info.phone)
             user.set_config('shopify_app_store', True)
-
             profile.shopify_app_store = True
 
             if is_private_label_app(request):

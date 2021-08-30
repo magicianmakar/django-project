@@ -380,6 +380,8 @@ class PLSOrderLineMixin:
 
         if self.pls_order.is_fulfilled:
             return get_string("primary", "Fulfilled")
+        elif self.pls_order.status == self.pls_order.SHIPPING_ERROR:
+            return get_string("danger", "Error")
         else:
             return get_string("warning", "Unfulfilled")
 

@@ -2712,7 +2712,7 @@ class OrdersView(TemplateView):
                 # Order items can be placed separately at shipstation
                 for pls_order_id, line_items in update_shipstation_items.items():
                     update_shipstation_address.apply_async(
-                        args=[pls_order_id, line_items, self.store.id, 'shopify'],
+                        args=[pls_order_id, self.store.id, 'shopify'],
                         countdown=5
                     )
 

@@ -14,7 +14,8 @@ from PIL import Image
 
 from lib.exceptions import capture_exception, capture_message
 from product_common import models as model_base
-from shopified_core.utils import safe_float, get_store_api
+from shopified_core.utils import safe_float, get_store_api, hash_text
+
 from .mixin import (
     AuthorizeNetCustomerMixin,
     LabelCommentMixin,
@@ -299,6 +300,8 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
     duties = models.IntegerField(default=0)
     batch_number = models.CharField(max_length=30, null=True, blank=True)
     shipping_address_hash = models.CharField(max_length=250, null=True, blank=True)
+    shipping_address = models.TextField(default='{}', null=True, blank=True)
+    billing_address = models.TextField(default='{}', null=True, blank=True)
 
     refund = models.OneToOneField('RefundPayments',
                                   related_name='refund_items',
@@ -335,8 +338,68 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
         return ', '.join(self.order_items.exclude(tracking_number='').values_list('tracking_number', flat=True))
 
     @cached_property
+    def shipping_service_id(self):
+        first_item = self.order_items.first()
+        return first_item.shipping_service_id if first_item else ''
+
+    @cached_property
     def has_bundles(self):
         return self.order_items.filter(is_bundled=True).exists()
+
+    @cached_property
+    def shipstation_address(self):
+        from supplements.lib.shipstation import get_address, prepare_shipping_data
+        from shopified_core.models_utils import get_store_model
+
+        if not self.shipping_address:
+            store = get_store_model(self.store_type).objects.get(id=self.store_id)
+            order = store.get_order(self.store_order_id)
+
+            ship_to, bill_to = prepare_shipping_data(order)
+            self.shipping_address_hash = hash_text(ship_to)
+            self.shipping_address = ship_to
+            self.billing_address = bill_to
+            self.save()
+
+            return self.shipstation_address
+        else:
+            return {
+                'shipTo': get_address(json.loads(self.shipping_address)),
+                'billTo': get_address(json.loads(self.billing_address)),
+            }
+
+    def to_shipstation_order(self):
+        status = {
+            'pending': 'awaiting_payment',
+            'paid': 'awaiting_shipment',
+            'shipped': 'shipped'
+        }.get(self.status, 'awaiting_shipment')
+
+        extra_info = {
+            'items': [],
+            'advancedOptions': {
+                'customField1': self.order_number,
+            }
+        }
+
+        if self.is_taxes_paid:
+            extra_info['advancedOptions']['customField2'] = 'Duties Paid'
+
+        if self.shipping_service_id:
+            extra_info['requestedShippingService'] = self.shipping_service_id
+
+        for item in self.order_items.all():
+            extra_info['items'] += item.to_shipstation_item()
+
+        return {
+            **self.shipstation_address,
+            **extra_info,
+            'orderKey': str(self.id),
+            'orderNumber': self.shipstation_order_number,
+            'orderDate': self.created_at.isoformat(),
+            'orderStatus': status,
+            'amountPaid': self.amount / 100.,
+        }
 
 
 class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
@@ -351,10 +414,12 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
                            'line_id',
                            'label']
 
+    title = models.CharField(max_length=255, blank=True, default='')
     is_label_printed = models.BooleanField(default=False)
     sale_price = models.IntegerField()
     wholesale_price = models.IntegerField()
     shipping_service = models.CharField(max_length=255, blank=True, null=True)
+    shipping_service_id = models.CharField(max_length=255, blank=True, default='')
     is_bundled = models.BooleanField(default=False)
     order_track_id = models.BigIntegerField(null=True, blank=True)
 
@@ -458,6 +523,26 @@ class PLSOrderLine(PLSOrderLineMixin, model_base.AbstractOrderLine):
                 raise Exception(result)
         except:
             capture_exception()
+
+    def to_shipstation_item(self):
+        title = self.title or self.label.user_supplement.title
+        if '**low stock**' in title.lower():
+            title = re.sub(r'(\*\*.*?\*\*) ?', '', title)
+
+        return [{
+            'name': title,
+            'quantity': self.quantity,
+            'sku': self.label.user_supplement.shipstation_sku,
+            'unitPrice': float(self.label.user_supplement.cost_price),
+            'imageUrl': self.label.image,
+        }, {
+            'name': f'Label for {title}',
+            'quantity': self.quantity,
+            'sku': self.label.sku,
+            'unitPrice': 0,
+            'imageUrl': self.label.image,
+            'lineItemKey': self.shipstation_key,
+        }]
 
 
 class PLSUnpaidOrderManager(models.Manager):

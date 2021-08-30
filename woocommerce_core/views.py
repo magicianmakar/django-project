@@ -1137,7 +1137,7 @@ class OrdersList(ListView):
                 # Order items can be placed separately at shipstation
                 for pls_order_id, line_items in update_shipstation_items.items():
                     update_shipstation_address.apply_async(
-                        args=[pls_order_id, line_items, self.store.id, 'woo'],
+                        args=[pls_order_id, self.store.id, 'woo'],
                         countdown=5
                     )
 
