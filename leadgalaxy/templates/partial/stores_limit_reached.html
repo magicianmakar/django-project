@@ -206,23 +206,37 @@
                         complete: LimitReached.ajaxCallbacks.complete
                     });
                 },
+                gkart: function(storeId) {
+                    $.ajax({
+                        url: api_url('store', 'gkart') +'?' + $.param({id: storeId}),
+                        method: 'DELETE',
+                        context: {storeId: storeId, type: 'gkart'},
+                        beforeSend: LimitReached.ajaxCallbacks.beforeSend,
+                        success: LimitReached.ajaxCallbacks.success,
+                        error: LimitReached.ajaxCallbacks.error,
+                        complete: LimitReached.ajaxCallbacks.complete
+                    });
+                },
             },
             removeStore: function(storeId, storeType) {
-                if (storeType == 'shopify') {
+                if (storeType === 'shopify') {
                     LimitReached.call.shopify(storeId);
                 }
-                if (storeType == 'chq') {
+                if (storeType === 'chq') {
                     LimitReached.call.chq(storeId);
                 }
-                if (storeType == 'woo') {
+                if (storeType === 'woo') {
                     LimitReached.call.woo(storeId);
                 }
-                if (storeType == 'bigcommerce') {
+                if (storeType === 'bigcommerce') {
                     LimitReached.call.bigcommerce(storeId);
+                }
+                if (storeType === 'gkart') {
+                    LimitReached.call.gkart(storeId);
                 }
             },
             checkComplete: function() {
-                if (LimitReached.countStores == LimitReached.countCompleteStores) {
+                if (LimitReached.countStores === LimitReached.countCompleteStores) {
                     LimitReached.loading.remove();
                     syncConfig();
                     setTimeout(function() {
@@ -252,6 +266,8 @@
                 return 'WooCommerce';
             } else if (type === 'bigcommerce') {
                 return 'BigCommerce';
+            } else if (type === 'gkart') {
+                return 'GrooveKart';
             } else {
                 return type;
             }
