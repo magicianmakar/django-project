@@ -14,6 +14,7 @@ from lib.exceptions import capture_message
 
 from leadgalaxy.api import ShopifyStoreApi
 from commercehq_core.api import CHQStoreApi
+from product_core.models import ProductBoard
 from woocommerce_core.api import WooStoreApi
 from gearbubble_core.api import GearBubbleApi
 from groovekart_core.api import GrooveKartApi
@@ -407,3 +408,27 @@ class ShopifiedApi(ApiResponseMixin, View):
         return self.api_success({
             'view_id': view_id
         })
+
+    def get_boards(self, request, user, data):
+        boards = []
+
+        for i in ProductBoard.objects.filter(user=self.request.user.models_user):
+            boards.append({
+                'id': i.id,
+                'title': i.title,
+            })
+
+        return self.api_success({
+            'boards': boards
+        })
+
+    def post_boards(self, request, user, data):
+        board = ProductBoard.objects.create(
+            user=self.request.user.models_user,
+            title=data['title']
+        )
+
+        return self.api_success({'board': {
+            'id': board.id,
+            'title': board.title
+        }})

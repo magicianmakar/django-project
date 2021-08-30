@@ -3,6 +3,7 @@ import re
 
 import arrow
 from django.contrib.auth.models import User
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.db.models import Q
 from django.urls import reverse, Resolver404, resolve
@@ -131,6 +132,7 @@ class ProductBase(models.Model):
     price = models.FloatField(default=0.0)
     product_type = models.CharField(max_length=255, blank=True, default='')
     tags = models.TextField(blank=True, null=True, default='')
+    boards_list = ArrayField(models.IntegerField(), null=True, blank=True)
 
     data = models.TextField(default='{}', null=True, blank=True)
     notes = models.TextField(null=True, blank=True)

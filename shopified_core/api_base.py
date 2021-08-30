@@ -34,6 +34,7 @@ from shopified_core.utils import (
 from shopified_core.models_utils import get_store_model, get_user_upload_model
 from shopified_core.shipping_helper import aliexpress_country_code_map, ebay_country_code_map
 from shopified_core.decorators import HasSubuserPermission
+from product_core.models import ProductBoard
 
 from stripe_subscription.models import ExtraSubUser
 from stripe_subscription.signals import get_extra_model_from_store
@@ -203,6 +204,34 @@ class ApiBase(ApiResponseMixin, View):
                 board.products.add(product)
                 board.save()
                 return self.api_success({'board': {'id': board.id, 'title': board.title}})
+            except ObjectDoesNotExist:
+                return self.api_error('Board not found.', status=404)
+
+    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
+    def post_product_board_list(self, request, user, data):
+        try:
+            product = self.product_model.objects.get(id=data.get('product'))
+            permissions.user_can_edit(user, product)
+        except ObjectDoesNotExist:
+            return self.api_error('Product not found.', status=404)
+
+        if data.get('board') == '0':
+            product.boards_list = []
+            product.save()
+            return self.api_success()
+        else:
+            try:
+                board = ProductBoard.objects.get(id=data.get('board'))
+                permissions.user_can_edit(user, board)
+
+                if not product.boards_list:
+                    product.boards_list = []
+
+                product.boards_list.append(board.id)
+                product.save()
+
+                return self.api_success({'board': {'id': board.id, 'title': board.title}})
+
             except ObjectDoesNotExist:
                 return self.api_error('Board not found.', status=404)
 

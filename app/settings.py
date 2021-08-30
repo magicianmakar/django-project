@@ -99,6 +99,7 @@ INSTALLED_APPS = (
     'gearbubble_core',
     'groovekart_core',
     'bigcommerce_core',
+    'product_core',
     'phone_automation',
     'aliextractor',
     'prints',

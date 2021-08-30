@@ -81,9 +81,9 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
             except:
                 pass
 
-    UserGoalRelationship.objects.filter(user=user).delete()
-    for goal in Goal.objects.filter(plans=current_plan):
-        UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
+        UserGoalRelationship.objects.filter(user=user).delete()
+        for goal in Goal.objects.filter(plans=current_plan):
+            UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
 
     if instance.plan and not instance.has_churnzero_account and not user.is_subuser and not user.is_staff:
         set_churnzero_account(user)

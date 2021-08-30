@@ -153,6 +153,8 @@ class UserProfile(models.Model):
     private_label = models.NullBooleanField(default=False, verbose_name='Using Private Label App')
     dropified_private_label = models.NullBooleanField(default=False, verbose_name='PLOD user on Dropified App')
 
+    index_products = models.BooleanField(default=False, null=True, verbose_name='Index user products')
+
     plan_expire_at = models.DateTimeField(blank=True, null=True, verbose_name="Plan Expire Date")
     plan_after_expire = models.ForeignKey('GroupPlan', blank=True, null=True, related_name="expire_plan",
                                           on_delete=models.SET_NULL, verbose_name="Plan to user after Expire Date")

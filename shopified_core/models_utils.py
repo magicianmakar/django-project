@@ -44,7 +44,7 @@ def get_product_model(store_type):
         return WooProduct
     elif store_type in ['gkart', 'GrooveKartProduct']:
         return GrooveKartProduct
-    elif store_type in ['bigcommerce', 'BigCommerceStore']:
+    elif store_type in ['bigcommerce', 'BigCommerceProduct']:
         return BigCommerceProduct
     elif store_type in ['mybasket']:
         return BasketStore

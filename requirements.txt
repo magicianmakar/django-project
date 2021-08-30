@@ -46,6 +46,7 @@ django-widget-tweaks==1.4.2
 Django==2.2.24
 djangorestframework==3.8.2
 docutils==0.14
+elasticsearch-dsl==6.4.0
 elasticsearch==6.4.0
 enum34==1.1.6
 facebook-business==3.2.10

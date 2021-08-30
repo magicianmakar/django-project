@@ -405,3 +405,13 @@ def min_value(amount, minimum):
 def show_closeable_view(user, view_id):
     view_id = f"_dismissible_{slugify(view_id).replace('-', '_')}"
     return not user.get_config(view_id)
+
+
+@register.simple_tag(takes_context=True)
+def select_option(context, **kwargs):
+    request = context['request']
+    select = []
+    for key, val in kwargs.items():
+        select.append(request.GET.get(key) == str(val))
+
+    return 'selected' if select and all(select) else ''

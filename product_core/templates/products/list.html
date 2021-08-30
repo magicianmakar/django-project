@@ -1,0 +1,412 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load template_helper %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+{% load product_helper %}
+
+{% block breadcrumb-right %}
+    {% include 'partial/right_breadcrumbs.html' %}
+{% endblock %}
+
+{% block main-container %}
+
+    {% if not request.GET.store or request.GET.store == 'n' %}
+        {% include 'home/partial/candu.html' with mount_id='candu-saved-products-info-above' %}
+    {% endif %}
+
+    <div class="tabs-container">
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+
+                    <div class="row m-b-lg">
+                        <form id="product-list-filter" action="{{ request.path }}">
+                            <div class="col-md-12 filter-col">
+                                {# <label for="selected-actions" class="filter-col-item">Store:</label> #}
+                                <select class="form-control filter-col-item change-submit m-r" name="store">
+                                    <option value="" hidden>Store</option>
+                                    <option value="">Any Store</option>
+                                    <option disabled>-------------</option>
+                                    {% for platform, stores in user_stores.grouped.items %}
+                                        <optgroup label="{{ platform | display_platform }}">
+                                        {% for item in stores %}
+                                            <option value="{{ platform }}:{{ item.id }}" {% select_option store=item.id platform=platform %}>
+                                                {{ item.title }}
+                                            </option>
+                                        {% endfor %}
+                                        </optgroup>
+                                    {% endfor %}
+                                </select>
+
+                                {# <label for="selected-actions" class="filter-col-item">Status:</label> #}
+                                <select class="form-control filter-col-item change-submit m-r" name="status">
+                                    <option value="" hidden>Status</option>
+                                    <option value="">Any Status</option>
+                                    <option disabled>--------------</option>
+                                    <option value="c" {% select_option status='c' %}>Connected</option>
+                                    <option value="n" {% select_option status='n' %}>Non Connected</option>
+                                </select>
+
+                                {# <label for="selected-actions" class="filter-col-item">Board:</label> #}
+                                <select class="form-control filter-col-item change-submit m-r" name="board">
+                                    <option value="" hidden>Board</option>
+                                    <option value="">Any Board</option>
+                                    <option disabled>--------------</option>
+                                    {% for item in boards %}
+                                        <option value="{{ item.id }}" {% select_option board=item.id %}>
+                                            {{ item.title }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+
+                                <input type="text" class="form-control m-r keypress-submit" name="title" placeholder="Title" value="{{ request.GET.title | default:'' }}">
+                                <input type="text" class="form-control m-r keypress-submit" name="tags" placeholder="Tags" value="{{ request.GET.tags | default:'' }}">
+                                <input type="hidden" name="sort" value="{{ request.GET.sort | default:'' }}">
+                                <a class="btn btn-outline btn-white m-r products-sort-btn"><i class="fa fa-sort-alpha-asc "></i></a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="row">
+                        {% for item in products %}
+                            <div class="col-xs-12 col-md-3">
+                                <div class="ibox">
+                                    <div class="ibox-content product-box" product-id="{{ item.id }}" product-title="{{ item.title }}">
+                                        <div class="product-imitation" style="padding: 0;">
+{#                                            <input class="item-select icheck" id="product_{{ item.id }}" name="product" value="{{ item.id }}" type="checkbox" style="position:absolute; left:20px;top:5px"/>#}
+                                            <a href="{{ item | product_url }}">
+                                                <img class="no-img unveil" src="{% static 'img/blank.gif' %}"
+                                                     data-src="{{ item | product_image | force_https }}" style="width: 100%">
+                                            </a>
+{#                                            <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{ item.id }}" style="position: absolute; top: 5px; right: 20px; background-color:#cc6666;border: none;"><i class="fa fa-times"></i></button>#}
+                                        </div>
+                                        <div class="product-desc">
+                                            <span class="product-price">
+                                                {% if item.price_range %}
+                                                    {{ item.price_range }}
+                                                {% else %}
+                                                    {{ item.price }}
+                                                {% endif %}
+                                            </span>
+                                            {% if item.source %}
+                                                <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
+                                                    <a href="{{ item.product.original_url }}" target="_blank">{{ item.source }}</a>
+                                                </small>
+                                            {% endif %}
+                                            <a href="/product/{{ item.id }}" class="hidden-xs product-name"> {{ item.title|truncatewords:13 }}</a>
+                                            <a href="/product/{{ item.id }}" class="visible-xs product-name"
+                                               style="font-size: 12px"> {{ item.title|truncatewords:5 }}</a>
+
+                                            <div class="text-right">
+                                                <button product-id="{{item.id}}" product-platform="{{ item | product_platform }}" class="btn btn-xs btn-outline btn-success set-board-btn _pull-right">
+                                                        {{ item.board.title | default:'Board' }}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% if forloop.counter|divisibleby:"4" %}
+                                </div>
+                                <div class="row">
+                            {% endif %}
+
+                        {% empty %}
+                            <h3 class="text-center">No product found.</h3>
+                            {% if store.id %}
+                                <p class="text-center">
+                                    <a href="#" class="shopify-product-import-btn filter-col-item" store="{{ store.id }}">
+                                        Import
+                                    </a>
+                                    Or
+                                    <a href="{% url 'shopify_migration' %}?store={{ store.id }}&status=not_connected" class="filter-col-item">
+                                        Migrate
+                                    </a>
+
+                                    From Shopify
+                                </p>
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+
+                    {% include "partial/paginator.html" %}
+                </div>
+            </div>
+        </div> <!-- /div.tab-content -->
+    </div> <!-- /div.tabs-container -->
+
+    <!--
+    </div>
+    </div> -->
+
+    {% include "partial/product_edit_modal.html" %}
+
+    <div id="modal-board-product" class="modal fade" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <h3 class="m-t-none m-b">Add to board</h3>
+                            <form role="form">
+                                <div class="form-group text-center">
+                                    <label for="selected-board">Select board</label>
+                                    <select class="form-control" name="selected-board" id="selected-board"
+                                            style="display: inline-block; width: 191px; ">
+                                        <!-- <option value=""></option> -->
+                                        {% for item in request.user.get_boards %}
+                                            <option value="{{ item.id }}">{{ item.title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <button id="board-product-send" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                        <strong>Apply</strong>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'partial/shopify_send_modal.html' %}
+
+    {% include 'partial/filter_modal.html' %}
+
+    {% include "partial/shopify_product_selector.html" %}
+
+    {% include 'partial/product_supplier_sync_modal.html' with store=store only %}
+
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+
+        .filter-col {
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-col .filter-col-item {
+            /*margin-right: 5px;*/
+        }
+
+        .filter-col .shopify-product-import-btn {
+            margin-left: 15px;
+        }
+
+        #selected-actions {
+            padding-top: 2px;
+            display: inline-block;
+            width: 191px;
+        }
+
+        #modal-product-supplier-sync .icheckbox_square-blue {
+            position: static;
+        }
+
+        optgroup {
+            font-weight: 700;
+        }
+
+        .product-price {
+            border-radius: 15px 0 0 15px;
+        }
+
+        .product-desc {
+            padding: 10px;
+            position: relative;
+        }
+
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <script type="text/javascript">
+        var sub_conf = {
+            key: "{% app_setting 'PUSHER_KEY' %}",
+            {% if store %}
+                channel: "{{store.pusher_channel}}",
+                store: {{store.id}},
+            {% endif %}
+        };
+
+        var boardsMenu = {
+        {% for item in boards %}
+            "{{item.id}}": {name: "{{item.title}}"},
+        {% endfor %}
+
+        {% if boards %}
+            "sep1": "---------",
+        {% endif %}
+
+            "add": {name: "Add new board", icon: 'add'},
+            "clear": {name: "Clear", icon: 'quit'}
+        };
+
+        $('.change-submit').on('change', function (e) {
+            $('#product-list-filter').trigger('submit');
+        });
+
+        $('.keypress-submit').on('keypress', function(e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                $('#product-list-filter').trigger('submit');
+                return false;
+            }
+        });
+
+        $('#product-list-filter').on('submit', function(e) {
+            e.preventDefault();
+
+            var f = e.currentTarget;
+            var filters = {};
+            if (f.store.value) {
+                filters.store = f.store.value.split(':')[1];
+                filters.platform = f.store.value.split(':')[0];
+            }
+
+            if (f.status.value) {
+                filters.status = f.status.value;
+            }
+
+            if (f.tags.value) {
+                filters.tags = f.tags.value;
+            }
+
+            if (f.title.value) {
+                filters.title = f.title.value;
+            }
+
+            if (f.sort.value) {
+                filters.sort = f.sort.value;
+            }
+
+            if (f.board.value) {
+                filters.board = f.board.value;
+            }
+
+            window.location.href = f.action + '?' + $.param(filters);
+        });
+
+        $.contextMenu({
+            selector: '.products-sort-btn',
+            trigger: 'left',
+             callback: function(key, options) {
+                $('input[name="sort"]').val(key);
+                $('#product-list-filter').trigger('submit');
+            },
+            items: {
+                "-created_at": {name: "Added Desc"},
+                "created_at": {name: "Added Asc"},
+                "sep1": "---------",
+                "-updated_at": {name: "Updated Desc"},
+                "updated_at": {name: "Updated Asc"},
+                "sep2": "---------",
+                "-price": {name: "Price Desc"},
+                "price": {name: "Price Asc"},
+            }
+        });
+
+        function addBoard(options) {
+            swal({
+                title: 'Add New Board',
+                type: "input",
+                showCancelButton: true,
+                closeOnConfirm: false,
+                animation: "slide-from-top",
+                inputPlaceholder: 'Title',
+                showLoaderOnConfirm: true
+            }, function(inputValue) {
+                if (inputValue === false) return false;
+                inputValue = inputValue.trim();
+                if (inputValue === "") {
+                    return false;
+                }
+
+                $.post(api_url('boards'), {title: inputValue}).done(function (data) {
+                    swal.close();
+                    changeBoard(data.board.id, options);
+                    loadBoards();
+                }).fail(function (data) {
+                    displayAjaxError('Add Board', data);
+                });
+            });
+        }
+
+        function changeBoard(board_id, options) {
+            // options.$trigger.button('loading');
+            $.ajax({
+                url: api_url('product-board-list', options.$trigger.attr("product-platform")),
+                type: 'POST',
+                data: {
+                    'product': options.$trigger.attr("product-id"),
+                    'board': board_id
+                },
+                success: function(data) {
+                    // options.$trigger.button('reset');
+
+                    if ('board' in data) {
+                        options.$trigger.text(data.board.title);
+                    } else {
+                        options.$trigger.text('Board');
+                    }
+                },
+                error: function(data) {
+                    options.$trigger.button('reset');
+                    displayAjaxError('Board Products', data);
+                },
+                complete: function() {
+                    // options.$trigger.button('reset');
+                }
+            });
+        }
+
+        function setupContextMenus() {
+            $.contextMenu({
+                selector: '.set-board-btn',
+                trigger: 'left',
+                callback: function (key, options) {
+                    if (key == 'add') {
+                        addBoard(options);
+                    } else {
+                        changeBoard(key, options);
+                    }
+                },
+                items: boardsMenu,
+                events: {
+                }
+            });
+        }
+
+        function loadBoards() {
+            $.get(api_url('boards')).done(function (data) {
+                boardsMenu = data.boards;
+            });
+        }
+
+        setupContextMenus();
+
+    </script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+
+    {% compress js %}
+        <script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+        <script type="text/javascript" src="{% static 'shopified/js/shopify_send_modal.js' %}"></script>
+        <script type="text/javascript" src="{% static 'shopified/js/shopify_product_selector.js' %}"></script>
+        <script type="text/javascript" src="{% static 'shopified/js/products_grid.js' %}"></script>
+        <script type="text/javascript" src="{% static 'shopified/js/product_supplier_sync.js' %}"></script>
+    {% endcompress %}
+
+{% endblock %}

@@ -23,13 +23,6 @@ if [ "$?" == "0" ]; then
     EXIT_CODE="-1"
 fi
 
-grep django.contrib.postgres --exclude-dir='venv*' --include="*.py" --exclude-dir="phone_automation" --recursive .
-if [ "$?" == "0" ]; then
-    echo
-    echo "[-] Do not use 'django.contrib.postgres' unless necessary"
-    EXIT_CODE="-1"
-fi
-
 grep pdb --exclude-dir='venv*' --include="*.py" --recursive .
 if [ "$?" == "0" ]; then
     echo
