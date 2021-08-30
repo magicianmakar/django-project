@@ -481,7 +481,7 @@
           </tbody>
         </table>
 
-        {% if user.profile.plan.stores == 0 and user.profile.get_stores_count == 0 %}
+        {% if user.models_user.profile.plan.stores == 0 and user.models_user.profile.get_stores_count == 0 %}
         {% include 'home/partial/store_upsell.html' %}
         {% endif %}
 
@@ -498,9 +498,8 @@
         </a>
 
         {% include 'partial/help_tooltip.html' with help="Dropified supports multiple eCommerce platforms, learn about which one is best for you." qtipstyle="color:#BBB" %}
-
-        {% elif user.profile.plan.stores == 0 %}
-            {% if user.profile.get_stores_count == 0 %}
+        {% elif user.models_user.profile.plan.stores == 0 %}
+            {% if user.models_user.profile.get_stores_count == 0 %}
                 {% include "common/partial/upsell.html" with message="Add Stores to your Plan" only %}
             {% else %}
                 {% include "common/partial/upsell.html" with message="Add Stores to your Plan" show_close_btn=True only %}
