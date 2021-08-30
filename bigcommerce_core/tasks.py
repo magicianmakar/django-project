@@ -460,7 +460,7 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
     products = BigCommerceProduct.objects.filter(id__in=products, user=store.user, store=store, source_id__gt=0)
     total_count = 0
     for product in products:
-        if product.have_supplier() and product.default_supplier.is_aliexpress:
+        if product.have_supplier() and (product.default_supplier.is_aliexpress or product.default_supplier.is_ebay):
             total_count += 1
 
     push_data = {
@@ -472,7 +472,7 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
     store.pusher_trigger('products-supplier-sync', push_data)
 
     for product in products:
-        if not product.have_supplier() or not product.default_supplier.is_aliexpress:
+        if not product.have_supplier() or not (product.default_supplier.is_aliexpress or product.default_supplier.is_ebay):
             continue
 
         bigcommerce_id = product.get_bigcommerce_id()
