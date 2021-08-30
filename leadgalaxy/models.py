@@ -743,6 +743,10 @@ class UserProfile(models.Model):
     def is_black(self):
         return self.can('pls.use')
 
+    @property
+    def phone(self):
+        return self.get_config_value('__phone', False)
+
 
 class AddressBase(models.Model):
     class Meta:

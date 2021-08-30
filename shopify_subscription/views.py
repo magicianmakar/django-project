@@ -41,6 +41,21 @@ def subscription_plan(request):
     is_shopify_staff = store.get_info['plan_name'] == 'staff'
     extra_description = '' if not is_shopify_staff else '- Shopify Staff 50% Discount'
 
+    # check phone number for plan with slug new-free-shopify
+    contact_phone = request.POST.get('contact_phone', False)
+    if contact_phone:
+        user.set_config('__phone', contact_phone)
+    if plan.slug == 'new-free-shopify' and not user.profile.phone:
+        # try to fetch phone from Shopify store
+        try:
+            shop_info = store.shopify.Shop.current()
+            user.set_config('__phone', shop_info.phone)
+        except:
+            capture_exception()
+
+        if not user.profile.phone:
+            return JsonResponse({'error': 'You need to enter your contact Phone to apply this plan', 'require_phone': True}, status=422)
+
     if plan.is_free:
         for charge in store.shopify.RecurringApplicationCharge.find():
             if charge.status == 'active':
