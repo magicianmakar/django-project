@@ -512,7 +512,7 @@ class AccountSelectView(TemplateView):
 
         token = self.request.GET.get('token')
         if token:
-            data = jwt.decode(token, settings.API_SECRECT_KEY, algorithm='HS256')
+            data = jwt.decode(token, settings.API_SECRECT_KEY, algorithms=['HS256'])
             stores = ShopifyStore.objects.exclude(private_label=True).filter(shop=data['shop'], is_active=True)
 
             ctx['stores'] = []
@@ -530,7 +530,7 @@ class AccountSelectView(TemplateView):
     def get(self, request, *args, **kwargs):
         login = self.request.GET.get('login')
         if login:
-            data = jwt.decode(login, settings.API_SECRECT_KEY, algorithm='HS256')
+            data = jwt.decode(login, settings.API_SECRECT_KEY, algorithms=['HS256'])
             store = ShopifyStore.objects.get(id=data['store'])
             user = store.user
 

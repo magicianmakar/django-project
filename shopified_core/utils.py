@@ -904,7 +904,7 @@ def encode_api_token(data):
 
 
 def decode_api_token(token):
-    return jwt.decode(token, settings.API_SECRECT_KEY, algorithm='HS256')
+    return jwt.decode(token, settings.API_SECRECT_KEY, algorithms=['HS256'])
 
 
 def bulk_order_format(queue_order, first_line_id):

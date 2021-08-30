@@ -1565,7 +1565,8 @@ def save_image_s3(request):
     if request_token:
         decoded_token = jwt.decode(request_token,
                                    settings.API_SECRECT_KEY,
-                                   algorithm='HS256')
+                                   algorithms=['HS256'])
+
         user = User.objects.filter(pk=decoded_token.get('id')).first()  # Ensure None if doesn't exist
     elif request.user.is_authenticated:
         user = request.user
@@ -3471,7 +3472,7 @@ def sudo_login(request):
     if request.GET.get('token'):
         token = request.GET.get('token')
 
-        data = jwt.decode(token, settings.API_SECRECT_KEY, algorithm='HS256')
+        data = jwt.decode(token, settings.API_SECRECT_KEY, algorithms=['HS256'])
         if not request.user.is_authenticated:
             return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, quote_plus(request.GET.urlencode())))
 
