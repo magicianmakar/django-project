@@ -410,7 +410,7 @@ if DEBUG and not TESTING_MODE:
     MIDDLEWARE = MIDDLEWARE + ('debug_toolbar.middleware.DebugToolbarMiddleware',)
 
 # JVZoo
-JVZOO_SECRET_KEY = os.environ['JVZOO_SECRET']
+JVZOO_SECRET_KEY = os.environ.get('JVZOO_SECRET')
 
 # Zaxaa
 ZAXAA_API_SIGNATURE = os.environ.get('ZAXAA_API_SIGNATURE')

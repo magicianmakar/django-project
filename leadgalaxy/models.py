@@ -29,7 +29,7 @@ from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
 from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
 
-SHOPIFY_API_VERSION = "2021-01"
+SHOPIFY_API_VERSION = "2021-07"
 
 ENTITY_STATUS_CHOICES = (
     (0, 'Pending'),

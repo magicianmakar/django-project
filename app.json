@@ -57,10 +57,6 @@
 
         "FULFILLBOX_API_URL": {"required": true},
 
-        "TAPFILIATE_API_KEY": {"required": true},
-        "JVZOO_SECRET": {"required": true},
-        "ZAXAA_API_SIGNATURE": {"required": true},
-
         "PRICE_MONITOR_HOSTNAME": {"required": true},
         "PRICE_MONITOR_PASSWORD": {"required": true},
         "PRICE_MONITOR_USERNAME": {"required": true},

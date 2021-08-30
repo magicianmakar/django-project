@@ -2,7 +2,7 @@ version: 2
 defaults: &defaults
   working_directory: ~/ShopifiedApp/webapp
   docker:
-    - image: circleci/python:3.6.10-node
+    - image: circleci/python:3.8.10-node
       environment:
         SECRET_KEY: dBEn2nkwPvlKuEwrQtBwMLlOOTm3TObmllyOb0j6ZepIqztLQh28oItsJQCbVsF1
 
@@ -38,21 +38,16 @@ defaults: &defaults
 
         FOUNDELASTICSEARCH_URL: https://search-dropified-ci-tests-thechx2xa2if5bonuiyobhyamq.us-east-1.es.amazonaws.com/
 
-        SENDGRID_PASSWORD: ""
-        SENDGRID_USERNAME: ""
-
         STRIPE_PUBLIC_KEY: ""
         STRIPE_SECRET_KEY: ""
 
-        JVZOO_SECRET: ""
-
-    - image: circleci/postgres:9.5
+    - image: circleci/postgres:12.7
       environment:
         POSTGRES_USER: ubuntu
         POSTGRES_DB: circle_test
         POSTGRES_PASSWORD: "ubuntu1"
 
-    - image: redis:3.2.7
+    - image: redis:6.0.9
 
 jobs:
   build:
@@ -61,13 +56,14 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v4-dep-{{ .Branch }}-
-          - v4-dep-master-
-          - v4-dep-
+          - v5-dep-{{ .Branch }}-
+          - v5-dep-master-
+          - v5-dep-
 
       - run:
           name: Install Dependencies
           command: |
+              ./scripts/prepare_build.sh
               source venv/bin/activate
               pip install -r requirements.txt
               pip install -r requirements-dev.txt
@@ -99,7 +95,7 @@ jobs:
 
       # Save dependency cache
       - save_cache:
-          key: v4-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
+          key: v5-dep-{{ .Branch }}-{{ checksum "requirements.txt" }}-{{ checksum "bower.json" }}-{{ checksum "package.json" }}
           paths:
           - app/static/libs/bower_components
           - node_modules
@@ -113,9 +109,9 @@ jobs:
 
       - restore_cache:
           keys:
-          - v4-dep-{{ .Branch }}-
-          - v4-dep-master-
-          - v4-dep-
+          - v5-dep-{{ .Branch }}-
+          - v5-dep-master-
+          - v5-dep-
 
       - run:
           name: Install Codecov
@@ -134,12 +130,6 @@ jobs:
           command: |
             source venv/bin/activate
             coverage report --skip-covered
-      - run:
-          name: Codecov upload
-          command: |
-            source venv/bin/activate
-            coverage xml -i
-            codecov --token=1e92f142-d3e3-4ef4-9feb-e4146b378ca4
 
   statics:
     <<: *defaults
@@ -149,9 +139,9 @@ jobs:
 
       - restore_cache:
           keys:
-          - v4-dep-{{ .Branch }}-
-          - v4-dep-master-
-          - v4-dep-
+          - v5-dep-{{ .Branch }}-
+          - v5-dep-master-
+          - v5-dep-
 
       - run:
           name: Static Files
