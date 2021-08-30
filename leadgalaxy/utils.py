@@ -1663,6 +1663,8 @@ def order_track_fulfillment(**kwargs):
             data['fulfillment']['tracking_company'] = user_config.get('_default_shipping_carrier', 'USPS')
         elif (kwargs.get('use_usps') is None and not have_custom_domain) and is_shipping_carrier(source_tracking, 'FedEx', any_match=True):
             data['fulfillment']['tracking_company'] = "FedEx"
+        elif (not kwargs.get('use_usps') and not have_custom_domain) and is_shipping_carrier(source_tracking, 'UPS', any_match=True):
+            data['fulfillment']['tracking_company'] = "UPS"
         else:
             aftership_domain = 'https://track.aftership.com/{{tracking_number}}'
 
