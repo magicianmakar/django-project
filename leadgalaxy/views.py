@@ -484,7 +484,7 @@ def product_view(request, pid):
     token = jwt.encode({
         'id': request.user.id,
         'exp': arrow.utcnow().replace(hours=6).timestamp
-    }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
+    }, settings.API_SECRECT_KEY, algorithm='HS256')
 
     original_images = []
     if product.parent_product is None:

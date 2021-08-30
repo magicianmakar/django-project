@@ -176,7 +176,7 @@ def index(request):
             token = jwt.encode({
                 'shop': request.GET['shop'],
                 'exp': arrow.utcnow().replace(hours=1).timestamp
-            }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
+            }, settings.API_SECRECT_KEY, algorithm='HS256')
 
             return HttpResponseRedirect(app_link(reverse('shopify_account_select'), token=token))
 
@@ -522,7 +522,7 @@ class AccountSelectView(TemplateView):
                     'url_token': jwt.encode({
                         'store': store.id,
                         'exp': arrow.utcnow().replace(minutes=10).timestamp
-                    }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
+                    }, settings.API_SECRECT_KEY, algorithm='HS256')
                 })
 
         return ctx

@@ -20,7 +20,7 @@ def _generate_jwt_token(user):
         'exp': dt
     }, settings.SSO_SECRET_KEY, algorithm='HS256')
 
-    return token.decode('utf-8')
+    return token
 
 
 @login_required

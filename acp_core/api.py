@@ -103,7 +103,7 @@ class ACPApi(ApiResponseMixin):
         token = jwt.encode({
             'id': target_user.id,
             'exp': arrow.utcnow().replace(hours=1).timestamp
-        }, settings.API_SECRECT_KEY, algorithm='HS256').decode()
+        }, settings.API_SECRECT_KEY, algorithm='HS256')
 
         link = app_link(reverse('sudo_login'), token=token)
 
