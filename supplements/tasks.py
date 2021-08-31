@@ -53,7 +53,7 @@ def create_shipstation_orders(self, token):
                 order.save()
                 capture_exception()
 
-            order = PLSOrder.objects.filter(shipstation_key='', status=PLSOrder.PAID)
+            order = PLSOrder.objects.filter(shipstation_key='', status=PLSOrder.PAID).first()
 
     except SoftTimeLimitExceeded:
         pass

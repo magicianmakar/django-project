@@ -184,7 +184,7 @@ class Util:
                     quantity=quantity,
                     wholesale_price=wholesale_price,
                     shipping_service=shipping.get('service', {}).get('service_name'),
-                    shipping_service_id=shipping.get('service', {}).get('service_id') or '',
+                    shipping_service_id=shipping.get('service', {}).get('service_code') or '',
                     sku=line['sku'],  # Product SKU
                 )
 
@@ -285,7 +285,7 @@ class Util:
                 quantity=quantity,
                 wholesale_price=wholesale_price,
                 shipping_service=order['selected_shipping'].get('service', {}).get('service_name'),
-                shipping_service_id=order['selected_shipping'].get('service', {}).get('service_id') or '',
+                shipping_service_id=order['selected_shipping'].get('service', {}).get('service_code') or '',
                 sku=item['sku'],  # Product SKU
                 is_bundled=item.get('is_bundle') or False,
             )
