@@ -911,9 +911,9 @@ def jwt_encode(payload, key=settings.API_SECRECT_KEY, expire=1):
     return token
 
 
-def jwt_decode(jwt, key=settings.API_SECRECT_KEY):
+def jwt_decode(payload, key=settings.API_SECRECT_KEY):
     return jwt.decode(
-        jwt=jwt,
+        jwt=payload,
         key=key,
         algorithms=['HS256'])
 
