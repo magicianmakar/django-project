@@ -9,7 +9,6 @@ from urllib.parse import urlencode, quote_plus
 
 import arrow
 import requests
-import jwt
 import simplejson as json
 from munch import Munch
 
@@ -60,6 +59,8 @@ from shopified_core.mocks import (
 )
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
+    jwt_decode,
+    jwt_encode,
     safe_int,
     safe_float,
     app_link,
@@ -481,10 +482,7 @@ def product_view(request, pid):
 
     aws = aws_s3_context()
 
-    token = jwt.encode({
-        'id': request.user.id,
-        'exp': arrow.utcnow().replace(hours=6).timestamp
-    }, settings.API_SECRECT_KEY, algorithm='HS256')
+    token = jwt_encode({'id': request.user.id})
 
     original_images = []
     if product.parent_product is None:
@@ -1563,9 +1561,7 @@ def save_image_s3(request):
     request_token = request.GET.get('token')
     user = None
     if request_token:
-        decoded_token = jwt.decode(request_token,
-                                   settings.API_SECRECT_KEY,
-                                   algorithms=['HS256'])
+        decoded_token = jwt_decode(request_token)
 
         user = User.objects.filter(pk=decoded_token.get('id')).first()  # Ensure None if doesn't exist
     elif request.user.is_authenticated:
@@ -3472,7 +3468,7 @@ def sudo_login(request):
     if request.GET.get('token'):
         token = request.GET.get('token')
 
-        data = jwt.decode(token, settings.API_SECRECT_KEY, algorithms=['HS256'])
+        data = jwt_decode(token)
         if not request.user.is_authenticated:
             return redirect('%s?next=%s%%3F%s' % (settings.LOGIN_URL, request.path, quote_plus(request.GET.urlencode())))
 

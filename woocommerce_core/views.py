@@ -1,7 +1,6 @@
 import json
 import re
 import arrow
-import jwt
 import requests
 from decimal import Decimal
 
@@ -41,6 +40,7 @@ from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     app_link,
     aws_s3_context,
+    jwt_encode,
     safe_int,
     url_join,
     clean_query_id,
@@ -440,10 +440,7 @@ class ProductDetailView(DetailView):
 
         context['alert_config'] = safe_json(self.object.config)
 
-        context['token'] = jwt.encode({
-            'id': self.request.user.id,
-            'exp': arrow.utcnow().replace(hours=6).timestamp
-        }, settings.API_SECRECT_KEY, algorithm='HS256')
+        context['token'] = jwt_encode({'id': self.request.user.id})
 
         context['upsell_alerts'] = not self.request.user.can('price_changes.use')
         context['config'] = self.request.user.get_config()

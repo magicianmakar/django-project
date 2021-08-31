@@ -1,8 +1,5 @@
 import json
-import arrow
-import jwt
 
-from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
@@ -10,7 +7,7 @@ from django.urls import reverse
 from addons_core.models import Addon
 from leadgalaxy.models import AdminEvent
 from shopified_core.mixins import ApiResponseMixin
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, jwt_encode
 
 
 class ACPApi(ApiResponseMixin):
@@ -100,10 +97,7 @@ class ACPApi(ApiResponseMixin):
         if target_user.is_superuser or target_user.is_staff:
             return self.api_error(f'Can not login as {target_user.email} (Staff account)', 422)
 
-        token = jwt.encode({
-            'id': target_user.id,
-            'exp': arrow.utcnow().replace(hours=1).timestamp
-        }, settings.API_SECRECT_KEY, algorithm='HS256')
+        token = jwt_encode({'id': target_user.id}, expire=1)
 
         link = app_link(reverse('sudo_login'), token=token)
 

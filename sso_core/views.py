@@ -1,24 +1,17 @@
-import arrow
-import jwt
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponseRedirect, JsonResponse
-from shopified_core.utils import get_domain
+from shopified_core.utils import get_domain, jwt_decode, jwt_encode
 import simplejson as json
 
 
 def _generate_jwt_token(user):
     """
-    Generates a JSON Web Token that stores this user's ID and has an expiry
-    date set to 60 days into the future.
+    Generates a JSON Web Token that stores this user's ID.
     """
-    dt = arrow.utcnow().replace(minutes=1).timestamp
 
-    token = jwt.encode({
-        'id': user.id,
-        'exp': dt
-    }, settings.SSO_SECRET_KEY, algorithm='HS256')
+    token = jwt_encode({'id': user.id}, key=settings.SSO_SECRET_KEY)
 
     return token
 
@@ -40,14 +33,9 @@ def validate(request):
         return JsonResponse({'error': 'Token is not set'}, status=401)
 
     try:
-        info = jwt.decode(token, settings.SSO_SECRET_KEY, algorithms=['HS256'])
+        info = jwt_decode(token, key=settings.SSO_SECRET_KEY)
     except:
         return JsonResponse({'error': 'Token is not valid'}, status=406)
-
-    now = arrow.utcnow().timestamp
-
-    if now > info['exp']:
-        return JsonResponse({'error': 'Token have expired'}, status=406)
 
     user = User.objects.get(id=info['id'])
 

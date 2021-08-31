@@ -1,7 +1,6 @@
 import re
 import arrow
 import json
-import jwt
 import requests
 
 from django.views.generic import ListView
@@ -22,6 +21,7 @@ from shopified_core.paginators import SimplePaginator
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.decorators import HasSubuserPermission
 from shopified_core.utils import (
+    jwt_encode,
     safe_int,
     safe_float,
     aws_s3_context,
@@ -146,10 +146,7 @@ class ProductDetailView(DetailView):
 
         context.update(aws_s3_context())
 
-        context['token'] = jwt.encode({
-            'id': self.request.user.id,
-            'exp': arrow.utcnow().replace(hours=6).timestamp
-        }, settings.API_SECRECT_KEY, algorithm='HS256')
+        context['token'] = jwt_encode({'id': self.request.user.id})
 
         context['config'] = self.request.user.get_config()
 

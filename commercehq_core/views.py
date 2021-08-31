@@ -2,7 +2,6 @@ import re
 import arrow
 import simplejson as json
 import requests
-import jwt
 
 from lib.exceptions import capture_exception
 
@@ -40,6 +39,7 @@ from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
     ALIEXPRESS_REJECTED_STATUS,
     app_link,
+    jwt_encode,
     safe_int,
     safe_float,
     aws_s3_context,
@@ -401,10 +401,7 @@ class ProductDetailView(DetailView):
         except:
             context['alert_config'] = {}
 
-        context['token'] = jwt.encode({
-            'id': self.request.user.id,
-            'exp': arrow.utcnow().replace(hours=6).timestamp
-        }, settings.API_SECRECT_KEY, algorithm='HS256')
+        context['token'] = jwt_encode({'id': self.request.user.id})
 
         context['upsell_alerts'] = not self.request.user.can('price_changes.use')
         context['config'] = self.request.user.get_config()

@@ -1,8 +1,6 @@
 import hmac
 import hashlib
 
-import arrow
-import jwt
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import redirect
@@ -23,7 +21,7 @@ from lib.exceptions import capture_exception, capture_message
 from shopified_core import permissions
 from leadgalaxy.models import SHOPIFY_API_VERSION, User, ShopifyStore, UserProfile, GroupPlan
 from leadgalaxy.utils import attach_webhooks, detach_webhooks, get_plan, create_user_without_signals
-from shopified_core.utils import app_link
+from shopified_core.utils import app_link, jwt_decode, jwt_encode
 
 
 AUTHORIZATION_URL = 'https://{}/admin/oauth/authorize'
@@ -173,10 +171,7 @@ def index(request):
         if request.user.is_authenticated:
             return HttpResponseRedirect('/')
         else:
-            token = jwt.encode({
-                'shop': request.GET['shop'],
-                'exp': arrow.utcnow().replace(hours=1).timestamp
-            }, settings.API_SECRECT_KEY, algorithm='HS256')
+            token = jwt_encode({'shop': request.GET['shop']})
 
             return HttpResponseRedirect(app_link(reverse('shopify_account_select'), token=token))
 
@@ -522,17 +517,14 @@ class AccountSelectView(TemplateView):
 
         token = self.request.GET.get('token')
         if token:
-            data = jwt.decode(token, settings.API_SECRECT_KEY, algorithms=['HS256'])
+            data = jwt_decode(token)
             stores = ShopifyStore.objects.exclude(private_label=True).filter(shop=data['shop'], is_active=True)
 
             ctx['stores'] = []
             for store in stores:
                 ctx['stores'].append({
                     'store': store,
-                    'url_token': jwt.encode({
-                        'store': store.id,
-                        'exp': arrow.utcnow().replace(minutes=10).timestamp
-                    }, settings.API_SECRECT_KEY, algorithm='HS256')
+                    'url_token': jwt_encode({'store': store.id}, expire=0.16)
                 })
 
         return ctx
@@ -540,7 +532,7 @@ class AccountSelectView(TemplateView):
     def get(self, request, *args, **kwargs):
         login = self.request.GET.get('login')
         if login:
-            data = jwt.decode(login, settings.API_SECRECT_KEY, algorithms=['HS256'])
+            data = jwt_decode(login)
             store = ShopifyStore.objects.get(id=data['store'])
             user = store.user
 

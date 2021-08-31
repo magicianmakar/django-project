@@ -896,15 +896,26 @@ def get_first_valid_option(most_commons, valid_options):
             return option
 
 
-def encode_api_token(data):
-    token = jwt.encode(data, settings.API_SECRECT_KEY, algorithm='HS256')
+def jwt_encode(payload, key=settings.API_SECRECT_KEY, expire=1):
+    if expire:
+        payload['exp'] = arrow.utcnow().replace(hours=expire).timestamp
+
+    token = jwt.encode(
+        payload=payload,
+        key=key,
+        algorithm='HS256')
+
     if isinstance(token, bytes):
         token = token.decode('utf-8')
+
     return token
 
 
-def decode_api_token(token):
-    return jwt.decode(token, settings.API_SECRECT_KEY, algorithms=['HS256'])
+def jwt_decode(jwt, key=settings.API_SECRECT_KEY):
+    return jwt.decode(
+        jwt=jwt,
+        key=key,
+        algorithms=['HS256'])
 
 
 def bulk_order_format(queue_order, first_line_id):

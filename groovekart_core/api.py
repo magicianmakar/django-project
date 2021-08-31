@@ -23,7 +23,7 @@ from shopified_core.utils import (
     safe_float,
     remove_link_query,
     get_domain,
-    encode_api_token,
+    jwt_encode,
     clean_tracking_number
 )
 
@@ -143,7 +143,7 @@ class GrooveKartApi(ApiBase):
         store.save()
 
         if is_lite:
-            token = encode_api_token({'store_id': store.id, 'user_id': store.user_id})
+            token = jwt_encode({'store_id': store.id, 'user_id': store.user_id})
             return self.api_success({'t': token})
 
         return self.api_success()
