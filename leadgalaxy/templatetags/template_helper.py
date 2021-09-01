@@ -364,7 +364,11 @@ def order_track_status(context, track, html=True):
 
 @register.simple_tag(takes_context=True)
 def order_track_tracking_urls(context, track, html=True):
-    tracking = track.get_tracking_link()
+    try:
+        tracking = track.get_tracking_link()
+    except:
+        return ''
+
     if tracking:
         if type(tracking) is list:
             urls = []

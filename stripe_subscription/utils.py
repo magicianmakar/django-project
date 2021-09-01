@@ -554,7 +554,6 @@ def process_webhook_event(request, event_id):
             if not sub:
                 return HttpResponse('Subscription Not found')
 
-            capture_message("Issue with source.")
             return HttpResponse('Issue with source.')
 
         else:
