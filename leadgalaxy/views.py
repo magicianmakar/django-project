@@ -3139,6 +3139,8 @@ def locate(request, what):
 @login_required
 def product_alerts(request):
     store = utils.get_store_from_request(request)
+    if not store:
+        return HttpResponseRedirect(reverse('goto-page', kwargs={'url_name': 'product_alerts'}))
 
     if not request.user.can('price_changes.use'):
         return render(request, 'product_alerts.html', {
