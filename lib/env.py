@@ -5,7 +5,7 @@ import yaml
 def read_file(fname):
     if os.path.isfile(fname):
         with open(fname) as infile:
-            config = yaml.load(infile)
+            config = yaml.load(infile, Loader=yaml.FullLoader)
             environment = config.get('environment')
             if type(environment) is dict:
                 for key, val in environment.items():

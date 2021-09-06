@@ -265,7 +265,6 @@ if os.environ.get('DATA_STORE_DATABASE_URL'):
 
     STORE_DATABASE = 'store_db'
     DATABASES[STORE_DATABASE] = dj_database_url.parse(store_db_url)
-    DATABASES[STORE_DATABASE]['ENGINE'] = 'django_postgrespool'
 
 READ_REPLICA = None
 if os.environ.get('REPLICA_DATABASE_URL'):
