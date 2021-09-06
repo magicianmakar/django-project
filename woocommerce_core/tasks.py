@@ -34,6 +34,7 @@ from .utils import (
     add_store_tags_to_api_data,
     update_product_api_data,
     update_variants_api_data,
+    sync_variants_api_data,
     update_product_images_api_data,
     create_variants_api_data,
     get_latest_order_note,
@@ -562,7 +563,7 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
                         updated = True
 
                 # check unmapped variants
-                variants = update_variants_api_data(variants)
+                variants = sync_variants_api_data(variants, sync_inventory)
                 for variant in variants:
                     if not mapped_variants.get(str(variant['id']), False):
                         unmapped_variants.append(variant['title'])

@@ -1049,14 +1049,14 @@ $('.remove-background-image-editor').click(function(e) {
 });
 
 $('tr.woocommerce-variant [name="compare_at_price"]').on('blur', function() {
-    var compare_price = $(this).val();
-    var productPrice = $(this).parents('tr.woocommerce-variant').find('[name="price"]').val();
+    var compare_price = parseFloat($(this).val());
+    var productPrice = parseFloat($(this).parents('tr.woocommerce-variant').find('[name="price"]').val());
     if (compare_price != '' && compare_price < productPrice) {
         $(this).val('');
         toastr.warning(' Compare at price should be greater than Price');
         $(this).css("border", "1px solid red");
     }
-    });
+});
 
 function initClippingMagic(el) {
 

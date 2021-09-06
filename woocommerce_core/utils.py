@@ -326,6 +326,26 @@ def update_variants_api_data(data):
     return variants
 
 
+def sync_variants_api_data(data, sync_inventory):
+    variants = []
+
+    for item in data:
+        variant = {'id': item['id'], 'sku': item['sku'], 'title': ' / '.join(item['variant'])}
+
+        if item.get('compare_at_price'):
+            variant['sale_price'] = str(item['price'])
+            variant['regular_price'] = str(item['compare_at_price'])
+        else:
+            variant['regular_price'] = str(item['price'])
+
+        if sync_inventory:
+            variant['stock_quantity'] = item['stock_quantity']
+            variant['manage_stock'] = True
+        variants.append(variant)
+
+    return variants
+
+
 def map_images(product, product_data):
     variants_images = {}
     image_options_map = {}
