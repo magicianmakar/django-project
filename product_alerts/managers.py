@@ -290,7 +290,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
     def handle_product_disappear(self, api_product_data, product_data):
         if self.config['product_disappears'] == 'unpublish':
             self.product_data_changed = True
-            api_product_data['published'] = False
+            api_product_data['status'] = 'draft'
             product_data['published'] = False
         elif self.config['product_disappears'] == 'zero_quantity':
             for idx, variant in enumerate(api_product_data.get('variants', [])):
@@ -754,7 +754,13 @@ class WooProductChangeManager(ProductChangeManager):
             product_data['published'] = False
             api_product_data['status'] = 'draft'
         elif self.config['product_disappears'] == 'zero_quantity':
-            api_product_data['stock_status'] = 'outofstock'
+            self.product_data_changed = True
+            api_product_data['stock_quantity'] = 0
+            api_product_data['manage_stock'] = True
+            if len(api_product_data.get('variants', [])) > 0:
+                for i, variant in enumerate(api_product_data['variants']):
+                    api_product_data['variants'][i]['stock_quantity'] = 0
+                    api_product_data['variants'][i]['manage_stock'] = True
 
     def handle_product_appear(self, api_product_data, product_data):
         if self.config['product_disappears'] == 'unpublish':
