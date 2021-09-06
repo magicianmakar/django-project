@@ -477,10 +477,26 @@ def ebay_shipping_info(item_id, country_name, zip_code=''):
             'zip': zip_code,
         })
 
+    def date_to_days(date):
+        has_year = re.compile(r'.*\d{4}$')
+        if has_year.match(date):
+            delta = arrow.get(date, 'ddd. MMM. D YYYY') - arrow.get()
+            return delta.days
+
+        date += arrow.get().format(' YYYY')
+        return date_to_days(date)
+
     try:
         shippement_data = {
             "freight": r.json()
         }
+
+        for item in shippement_data['freight']:
+            timeFrom, timeTo = item['estimatedDelivery'].split(' and ')
+            try:
+                item['time'] = f"{date_to_days(timeFrom)}-{date_to_days(timeTo)}"
+            except:
+                item['time'] = item['estimatedDelivery']
 
         cache.set(shippement_key, shippement_data, timeout=43200)
     except requests.exceptions.ConnectTimeout:

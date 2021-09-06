@@ -408,7 +408,7 @@
                     var price = parseFloat(el.price);
 
                     shippingSelect.append($('<option>', {
-                        text: el.text || (el.companyDisplayName + ' (' + (price ? '$' + price : 'Free') + ')'),
+                        text: el.text || (el.companyDisplayName + ' ' + el.time + ' days (' + (price ? '$' + price : 'Free') + ')'),
                         value: el.company,
                     }));
                 });

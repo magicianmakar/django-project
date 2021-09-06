@@ -1037,7 +1037,7 @@ def get_shipping_info(request):
         if supplier_type == 'ebay':
             shippement_data = utils.ebay_shipping_info(item_id, country_name, zip_code)
         elif supplier_type == 'alibaba':
-            shippement_data = alibaba_utils.alibaba_shipping_info(request.user.alibaba.first(), item_id, country_code)
+            shippement_data = alibaba_utils.alibaba_shipping_info(request.user.models_user.alibaba.first(), item_id, country_code)
         else:
             shippement_data = utils.aliexpress_shipping_info(item_id, country_code)
 
