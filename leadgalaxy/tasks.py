@@ -1367,7 +1367,7 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
                     updated = True
 
             if (sync_price and not seem_price) or sync_inventory:
-                for variant in supplier_variants:
+                for index, variant in enumerate(supplier_variants):
                     sku = variant.get('sku')
                     if not sku:
                         if len(product_data['variants']) == 1 and len(supplier_variants) == 1:
@@ -1385,8 +1385,8 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
                     mapped_variants[str(product_data['variants'][idx]['id'])] = True
                     # Sync price
                     if sync_price and not seem_price:
-                        api_variants_data[i]['price'] = round(supplier_variants[idx]['price'] * (100 + price_markup) / 100.0, 2)
-                        api_variants_data[i]['compare_at_price'] = round(api_variants_data[idx]['price'] * (100 + compare_markup) / 100.0, 2)
+                        api_variants_data[idx]['price'] = round(supplier_variants[index]['price'] * (100 + price_markup) / 100.0, 2)
+                        api_variants_data[idx]['compare_at_price'] = round(api_variants_data[idx]['price'] * (100 + compare_markup) / 100.0, 2)
                         updated = True
                     # Sync inventory
                     if sync_inventory:
