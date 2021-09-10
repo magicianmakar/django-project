@@ -22,8 +22,10 @@
                                        m-r-sm
                                        continue-cancel
                                        cancel-shopify-sub-btn"
-                            {% if item.plan.is_build or item.plan.is_plod %}
+                            {% if item.plan.is_build %}
                             data-steps="#modal-keep-my-plan-shopify,#modal-pause-plan-shopify"
+                            {% elif item.plan.is_plod %}
+                            data-steps="#modal-keep-my-plan-shopify"
                             {% else %}
                             data-steps="#modal-on-grandfathered-plan-shopify,#modal-pause-plan-shopify"
                             {% endif %}

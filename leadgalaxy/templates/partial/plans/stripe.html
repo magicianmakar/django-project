@@ -46,8 +46,10 @@
                                            cancel-sub-btn
                                            continue-cancel
                                            itooltip"
-                                    {% if item.plan.is_build or item.plan.is_plod %}
+                                    {% if item.plan.is_build %}
                                     data-steps="#modal-keep-my-plan,#modal-pause-plan"
+                                    {% elif item.plan.is_plod %}
+                                    data-steps="#modal-keep-my-plan"
                                     {% else %}
                                     data-steps="#modal-on-grandfathered-plan,#modal-pause-plan"
                                     {% endif %}
