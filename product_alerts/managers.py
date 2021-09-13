@@ -861,8 +861,11 @@ class WooProductChangeManager(ProductChangeManager):
             if variant_id > 0:
                 self.product_data_changed = True
                 api_product_data['variants'][idx]['stock_quantity'] = variant_change.get('new_value')
+                api_product_data['variants'][idx]['manage_stock'] = True
             elif len(api_product_data.get('variants', [])) == 0 or variant_id < 0:
+                self.product_data_changed = True
                 api_product_data['stock_quantity'] = variant_change.get('new_value')
+                api_product_data['manage_stock'] = True
 
     def handle_variant_added(self, api_product_data, product_data, variant_change):
         # TODO: Handle this case (Add setting, update logic...)

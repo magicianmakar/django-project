@@ -513,10 +513,13 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
 
         try:
             # Check if there's only one price
-            same_price = (len('variants') == 1
-                          or len(set([v['price'] for v in variants])) == 1
-                          or len(supplier_variants) == 1
-                          or supplier_min_price == supplier_max_price)
+            # 'price' key exception is thrown if there is no variant
+            if len(variants) > 1:
+                same_price = (len(set([v['price'] for v in variants])) == 1
+                              or supplier_min_price == supplier_max_price)
+            else:
+                same_price = (len(variants) == 1
+                              or len(supplier_variants) == 1)
             # New Data
             updated = False
             mapped_variants = {}
@@ -563,10 +566,16 @@ def products_supplier_sync(self, store_id, products, sync_price, price_markup, c
                         updated = True
 
                 # check unmapped variants
-                variants = sync_variants_api_data(variants, sync_inventory)
-                for variant in variants:
-                    if not mapped_variants.get(str(variant['id']), False):
-                        unmapped_variants.append(variant['title'])
+                if len(variants) == 1 and len(supplier_variants) == 1 and variants[idx]['id'] < 0:
+                    product_data['stock_quantity'] = supplier_variants[0]["availabe_qty"]
+                    product_data['manage_stock'] = True
+                    product_data['regular_price'] = str(round(supplier_variants[0]['price'] * (100 + price_markup) / 100.0, 2))
+                    updated = True
+                else:
+                    variants = sync_variants_api_data(variants, sync_inventory)
+                    for variant in variants:
+                        if not mapped_variants.get(str(variant['id']), False):
+                            unmapped_variants.append(variant['title'])
 
             if updated or sync_inventory:
                 update_endpoint = 'products/{}'.format(product.source_id)
