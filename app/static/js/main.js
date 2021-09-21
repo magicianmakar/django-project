@@ -1225,6 +1225,18 @@ $('.find-user-cp').click(function(e) {
     });
 });
 
+$(".copy-text-btn").on("click", function() {
+    var text = $(this).attr("data-link");
+
+    navigator.clipboard.writeText(text)
+    .then(function(text){
+        toastr.info("Registration Link copied");
+    })
+    .catch(function(err){
+        toastr.warning("Unable to copy the Registration link");
+    });
+});
+
 $(function() {
     setTimeout(function() {
         var version = $('.extension-version').data('extension-version');

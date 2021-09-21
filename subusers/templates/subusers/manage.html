@@ -98,8 +98,8 @@
                              </td>
                             <td class="no-wrap">
                                 {% if not item.expired %}
-                                    <a class="btn btn-success btn-xs" href="{% app_link 'accounts/register' item.register_hash %}" target="_blank">
-                                        <i class="fa fa-external-link"></i> Link</a>
+                                    <a class="btn btn-success btn-xs copy-text-btn" href="javascript:void(0)" data-link="{% app_link 'accounts/register' item.register_hash %}">
+                                        <i class="fa fa-external-link"></i> Copy Link</a>
 
                                     <a class="btn btn-primary btn-xs email-link-btn"
                                         href="mailto:{{item.email}}?subject=Invitation to join Dropified&body=Hello%2C%0D%0AYou%20can%20register%20at%20Dropified%20using%20this%20link%3A%0D%0A{% app_link 'accounts/register' item.register_hash %}"><i class="fa fa-envelope-o"></i> Email Link</a>
