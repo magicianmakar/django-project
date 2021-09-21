@@ -47,6 +47,7 @@ from leadgalaxy.models import (
     ShopifyStore,
     UserProfile,
 )
+from supplements.models import UserSupplement
 from leadgalaxy import utils
 from leadgalaxy.shopify import ShopifyAPI
 
@@ -575,7 +576,35 @@ def sync_shopify_product_quantities(self, product_id):
         if not product.default_supplier:
             return
 
-        variant_quantities = get_supplier_variants(product.default_supplier.supplier_type(), product.default_supplier.get_source_id())
+        if product.default_supplier.supplier_type() == 'pls':
+            mapping_config = product.get_mapping_config()
+            supplier = ''
+            if mapping_config:
+                supplier = mapping_config['supplier']
+            variant_quantities = {}
+            if len(product_data['variants']) > 1:
+                if supplier is not None:
+                    supplier_mapping = product.get_suppliers_mapping()
+                    for variant in product_data['variants']:
+                        v_id = variant['id']
+                        supplier_source = supplier_mapping.get(str(v_id))
+                        if supplier_source is not None:
+                            supplier_id = supplier_source['supplier']
+                            variant_source_id = ProductSupplier.objects.get(id=supplier_id).get_source_id()
+                            inv = UserSupplement.objects.get(id=variant_source_id).pl_supplement.inventory
+                            product.set_variant_quantity(quantity=inv, variant_id=v_id)
+                            time.sleep(0.5)
+            else:
+                variant_quantities = [{
+                    'variant_ids': None,
+                    'sku': None,
+                    'sku_short': None,
+                    'availabe_qty': product.default_supplier.user_supplement.pl_supplement.inventory,
+                    'ships_from_id': None,
+                    'ships_from_title': None,
+                }]
+        else:
+            variant_quantities = get_supplier_variants(product.default_supplier.supplier_type(), product.default_supplier.get_source_id())
         if product_data and variant_quantities:
             for variant in variant_quantities:
                 sku = variant.get('sku')

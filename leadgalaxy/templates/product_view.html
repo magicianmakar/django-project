@@ -1054,6 +1054,11 @@
                             <i class="fa fa-refresh"></i> Sync Inventory with Supplier
                         </a>
                         {{/if}}
+                        {{#if is_pls}}
+                        <a class="btn btn-success btn-xs sync-inventory-btn pull-left" href="#">
+                            <i class="fa fa-refresh"></i> Sync Inventory with Supplier
+                        </a>
+                        {{/if}}
                         <a class="btn btn-default btn-xs is-default-btn" href="#">
                             <i class="fa fa-check"></i> Default
                         </a>
@@ -1259,6 +1264,7 @@ var config = {
             is_default: {% if item.id == product.qelem.default_supplier_id %}true{% else %}false{% endif %},
             is_aliexpress: {% if item.is_aliexpress %}true{% else %}false{% endif %},
             is_ebay: {% if item.is_ebay %}true{% else %}false{% endif %},
+            is_pls: {% if item.is_pls %}true{% else %}false{% endif %},
             original: {
                 url: '{{item.product_url|escapejs}}'
             },
