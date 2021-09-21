@@ -318,6 +318,9 @@ $('#smartboard-save-changes').click(function(e) {
         success: function(data) {
             $('#smartboard-modal').modal('hide');
             window.location = window.location;
+        },
+        error: function(data) {
+            displayAjaxError('Edit Board', data);
         }
     });
 });

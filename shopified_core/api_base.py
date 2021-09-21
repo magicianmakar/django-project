@@ -132,8 +132,9 @@ class ApiBase(ApiResponseMixin, View):
             'config': config
         })
 
-    @method_decorator(HasSubuserPermission('edit_product_boards.sub'))
     def post_board_config(self, request, user, data):
+        if not request.user.can('edit_product_boards.sub'):
+            return self.api_error('This action is not allowed', status=403)
         try:
             pk = dict_val(data, ['board', 'board_id'])
             board = self.board_model.objects.get(pk=pk)
