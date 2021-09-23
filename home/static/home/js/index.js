@@ -260,6 +260,14 @@
             toastr.error('Phone Number is not valid');
         }
 
+        if($('.js_validate_input-message').is(':visible')){
+            $('.js_validate_input-message:visible').each(function(){
+                toastr.error($(this).attr('data-message'));
+            });
+
+            return;
+        }
+
         var config = $(this).serialize();
 
         $.ajax({
@@ -716,6 +724,12 @@
 
     $('input[name="order_phone_number"]').trigger('keyup');
 
+    $(document).on('keyup', '.js_validate_input', function (){
+        var regExp = new RegExp($(this).attr('data-regular'));
+        var message = $(this).closest('div').find('.js_validate_input-message');
+
+        message.toggle(regExp.test($(this).val()));
+    });
 
     $('.show-clippingmagic-key-btn').click(function (e) {
         e.preventDefault();

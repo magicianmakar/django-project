@@ -22,9 +22,15 @@
                                 {% include 'partial/help_tooltip.html' with help="For example: If you set Price Markup to <b>50%</b>, a product that costs $10.00 will be set to $15.00." qtipstyle="color:#BBB" %}
                             </label>
                             <div class="col-sm-3">
-                            <input style="padding:5px 2px;text-align:center" type="text"
-                                class="form-control col-sm-2" id="auto_margin" name="auto_margin"
-                                value="{% if config.auto_margin != '%' %}{{config.auto_margin}}{% endif %}">
+                                <input style="padding:5px 2px;text-align:center" type="text"
+                                       data-regular="[^\d\%]"
+                                       class="form-control col-sm-2 js_validate_input" id="auto_margin" name="auto_margin"
+                                       value="{% if config.auto_margin != '%' %}{{config.auto_margin}}{% endif %}">
+                                <div class="pull-left has-error js_validate_input-message"
+                                     data-message="Price Markup is not valid"
+                                     style="clear:left;padding-bottom:15px;display:none">
+                                    <span class="help-block m-b-none">Invalid Price markup.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -36,8 +42,16 @@
                             </label>
                             <div class="col-sm-3">
                                 <input style="padding:5px 2px;text-align:center" type="text"
-                                       class="form-control col-sm-2" id="auto_margin_cents" name="auto_margin_cents"
+                                       data-regular="[^\d\.]"
+                                       class="form-control col-sm-2 js_validate_input"
+                                       id="auto_margin_cents"
+                                       name="auto_margin_cents"
                                        value="{{config.auto_margin_cents}}">
+                                <div class="pull-left has-error js_validate_input-message"
+                                     data-message="Price Cents Value is not valid"
+                                     style="clear:left;padding-bottom:15px;display:none">
+                                    <span class="help-block m-b-none">Invalid Price Cents Value.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -68,8 +82,14 @@
                             </label>
                             <div class="col-sm-3">
                                 <input style="padding:5px 2px;text-align:center" type="text"
-                                       class="form-control col-sm-2" id="auto_compare_at" name="auto_compare_at"
+                                       data-regular="[^\d\%]"
+                                       class="form-control col-sm-2 js_validate_input" id="auto_compare_at" name="auto_compare_at"
                                        value="{% if config.auto_compare_at != '%' %}{{config.auto_compare_at}}{% endif %}">
+                                <div class="pull-left has-error js_validate_input-message"
+                                     data-message="Compare At Price Markup is not valid"
+                                     style="clear:left;padding-bottom:15px;display:none">
+                                    <span class="help-block m-b-none">Invalid Price Markup.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -80,7 +100,17 @@
                                 {% include 'partial/help_tooltip.html' with help="For example: If you set Compare At Price Cents Value to <b>95</b>, product compare price will end always by .95" qtipstyle="color:#BBB" %}
                             </label>
                             <div class="col-sm-3">
-                                <input style="padding:5px 2px;text-align:center" type="text" class="form-control col-sm-2" id="auto_compare_at_cents" name="auto_compare_at_cents" value="{{config.auto_compare_at_cents}}">
+                                <input style="padding:5px 2px;text-align:center" type="text"
+                                       data-regular="[^\d\.]"
+                                       class="form-control col-sm-2 js_validate_input"
+                                       id="auto_compare_at_cents"
+                                       name="auto_compare_at_cents"
+                                       value="{{config.auto_compare_at_cents}}">
+                                <div class="pull-left has-error js_validate_input-message"
+                                     data-message="Compare At Price Cents Value is not valid"
+                                     style="clear:left;padding-bottom:15px;display:none">
+                                    <span class="help-block m-b-none">Invalid Price Cents Value.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -110,7 +140,17 @@
                         <div class="form-group">
                             <label for="default_weight_number" class="col-sm-4 control-label">Fixed Weight</label>
                             <div class="col-sm-3">
-                                <input type="text" class="form-control text-center col-sm-2" id="default_weight_number" name="default_weight_number" value="{{config.default_weight_number}}">
+                                <input type="text"
+                                       data-regular="[^\d\.]"
+                                       class="form-control text-center col-sm-2  js_validate_input"
+                                       id="default_weight_number"
+                                       name="default_weight_number"
+                                       value="{{config.default_weight_number}}">
+                                <div class="pull-left has-error js_validate_input-message"
+                                     data-message="Fixed Weight is not valid"
+                                     style="clear:left;padding-bottom:15px;display:none">
+                                    <span class="help-block m-b-none">Invalid Fixed Weight.</span>
+                                </div>
                             </div>
                             <span class="help-block "></span>
                         </div>
