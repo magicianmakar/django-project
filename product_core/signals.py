@@ -17,7 +17,6 @@ from .tasks import index_product_task, delete_product_task
 @receiver(post_save, sender=GrooveKartProduct)
 @receiver(post_save, sender=BigCommerceProduct)
 def product_update_es_signal(sender, instance: ProductBase, created, **kwargs):
-    print(f'product_update_es_signal: {type(sender)} => {sender}')
     if instance.user.profile.index_products:
         index_product_task.delay(instance.id, sender.__name__)
 
@@ -28,6 +27,5 @@ def product_update_es_signal(sender, instance: ProductBase, created, **kwargs):
 @receiver(post_delete, sender=GrooveKartProduct)
 @receiver(post_delete, sender=BigCommerceProduct)
 def product_delete_es_signal(sender, instance, **kwargs):
-    print(f'product_delete_es_signal: {type(sender)} => {sender} | {kwargs}')
     if instance.user.profile.index_products:
         delete_product_task.delay(instance.id, sender.__name__)
