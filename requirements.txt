@@ -10,9 +10,9 @@ beautifulsoup4==4.8.0
 bigcommerce==0.20.0
 billiard==3.6.3.0
 bleach==4.1.0
-boto3==1.18.32
+boto3==1.18.46
 boto==2.49.0
-botocore==1.21.32
+botocore==1.21.46
 cachetools==3.0.0
 celery==4.4.7
 certifi==2019.9.11
@@ -85,7 +85,7 @@ measurement==3.2.0
 mpmath==1.2.1
 munch==2.3.2
 ndg-httpsclient==0.5.0
-newrelic==6.8.1.164
+newrelic==7.0.0.166
 oauth2client==4.1.2
 oauthlib==2.0.7
 ordereddict==1.1
