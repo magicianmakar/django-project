@@ -42,7 +42,7 @@
         "BIGCOMMERCE_CLIENT_ID": "4knwnz7vmlddsjmtn6ae7xknpqvnm66",
         "BIGCOMMERCE_CLIENT_SECRET": "abc69e93dd1303289100372282694a60cebe6b397d90307beca12133d48e9c20",
 
-        "SENTRY_URL": "https://56ee6f4ecf714073b8608ec7697e8c88:06389ef924014d688d955666e7890f6d@sentry.io/145440",
+        "SENTRY_DSN": "https://d61f65e226c846be9c4febc6118c04c9:32fd946f6fcf48d6b13798177206dcef@o33519.ingest.sentry.io/5977833",
 
         "BAREMETRICS_ACCESS_TOKEN": {"required": true},
         "BAREMETRICS_API_KEY": {"required": true},
