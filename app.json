@@ -86,12 +86,17 @@
             "plan": "heroku-redis",
             "as": "REDISCLOUD"
         },
-        "heroku-postgresql"
+        {
+            "plan": "heroku-postgresql:hobby-basic",
+            "options": {
+                "version": "12"
+            }
+        }
     ],
     "buildpacks": [{
         "url": "heroku/nodejs"
     }, {
         "url": "heroku/python"
     }],
-    "stack": "heroku-18"
+    "stack": "heroku-20"
 }
