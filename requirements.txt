@@ -73,7 +73,7 @@ ipaddress==1.0.22
 itsdangerous==0.24
 Jinja2==3.0.1
 jmespath==0.9.4
-keen==0.6.1
+keen==0.7.0
 kombu==4.6.11
 lockfile==0.12.2
 logfmt==0.4
