@@ -1,4 +1,5 @@
 from celery.exceptions import SoftTimeLimitExceeded
+from django.conf import settings
 
 from app.celery_base import celery_app, CaptureFailure
 from lib.exceptions import capture_exception
@@ -29,7 +30,7 @@ def update_shipstation_address(pls_order_id, store_id, store_type):
         capture_exception(level='warning')
 
 
-@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, time_limit=3, soft_time_limit=10)
+@celery_app.task(base=CaptureFailure, bind=True, ignore_result=True, soft_time_limit=settings.SEND_SHIPSTATION_TIMEOUT)
 def create_shipstation_orders(self, token):
     """Send all paid orders to shipstation while respecting any http 429 responses"""
 
@@ -39,7 +40,11 @@ def create_shipstation_orders(self, token):
         return False
 
     try:
-        order = PLSOrder.objects.filter(shipstation_key='', status=PLSOrder.PAID).first()
+        order = PLSOrder.objects.filter(
+            shipstation_key='',
+            status__in=[PLSOrder.PAID, PLSOrder.SHIPPING_ERROR],
+            shipstation_retries__lt=settings.SHIPSTATION_MAX_RETRIES
+        ).first()
         while order:
             try:
                 create_shipstation_order(order)
@@ -49,11 +54,16 @@ def create_shipstation_orders(self, token):
                 raise self.retry(exc=e, countdown=e.retry_after)
 
             except:
+                capture_exception()
+                order.shipstation_retries += 1
                 order.status = PLSOrder.SHIPPING_ERROR
                 order.save()
-                capture_exception()
 
-            order = PLSOrder.objects.filter(shipstation_key='', status=PLSOrder.PAID).first()
+            order = PLSOrder.objects.filter(
+                shipstation_key='',
+                status__in=[PLSOrder.PAID, PLSOrder.SHIPPING_ERROR],
+                shipstation_retries__lt=settings.SHIPSTATION_MAX_RETRIES
+            ).first()
 
     except SoftTimeLimitExceeded:
         pass

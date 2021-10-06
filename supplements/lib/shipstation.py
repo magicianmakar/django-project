@@ -72,14 +72,14 @@ def create_shipstation_order(pls_order, raw_request=False):
     result = r.json()
 
     if not result.get('orderKey'):
-        raise Exception(result)
+        raise Exception('Error returning order key from shipstation')
 
     pls_order.shipstation_key = result['orderKey']
     pls_order.save()
 
 
 def get_orders_lock(token=None):
-    lock = cache.lock('create_shipstation_orders_lock', timeout=10)
+    lock = cache.lock('create_shipstation_orders_lock', timeout=settings.SEND_SHIPSTATION_TIMEOUT)
 
     if token:
         lock.local.token = token.encode() if isinstance(token, str) else token

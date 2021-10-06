@@ -569,6 +569,8 @@ LAYERAPP_TEST = bool(os.getenv('LAYERAPP_TEST', False))
 SHIPSTATION_API_KEY = os.environ.get('SHIPSTATION_API_KEY')
 SHIPSTATION_API_SECRET = os.environ.get('SHIPSTATION_API_SECRET')
 SHIPSTATION_API_URL = 'https://ssapi.shipstation.com'
+SHIPSTATION_MAX_RETRIES = int(os.environ.get('SHIPSTATION_MAX_RETRIES', '5'))
+SEND_SHIPSTATION_TIMEOUT = int(os.environ.get('SEND_SHIPSTATION_TIMEOUT', '60'))
 
 # Authorize.Net
 AUTH_NET_LOGIN_ID = os.environ.get('AUTHORIZENET_LOGIN_ID')

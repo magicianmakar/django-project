@@ -293,6 +293,9 @@ class LabelComment(models.Model, LabelCommentMixin):
 
 
 class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
+    class Meta:
+        ordering = 'shipstation_retries',
+
     sale_price = models.IntegerField()
     wholesale_price = models.IntegerField()
     shipping_price = models.IntegerField(default=0)
@@ -302,6 +305,7 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
     shipping_address_hash = models.CharField(max_length=250, null=True, blank=True)
     shipping_address = models.TextField(default='{}', null=True, blank=True)
     billing_address = models.TextField(default='{}', null=True, blank=True)
+    shipstation_retries = models.PositiveIntegerField(default=0)
 
     refund = models.OneToOneField('RefundPayments',
                                   related_name='refund_items',
