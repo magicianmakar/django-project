@@ -21,7 +21,6 @@
     "app/static/libs/bower_components"
   ],
   "engines": {
-    "node": "14.x",
-    "yarn": "1.22.5"
+    "node": "12.x"
   }
 }

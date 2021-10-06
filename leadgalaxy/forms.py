@@ -6,7 +6,7 @@ from django.forms.utils import ErrorList
 
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-from django.core.validators import validate_email, ValidationError
+from django.core.validators import validate_email, ValidationError, RegexValidator
 from django.conf import settings
 
 from .models import UserProfile, SubuserPermission, SubuserCHQPermission, SubuserWooPermission, SubuserBigCommercePermission
@@ -131,6 +131,7 @@ class RegisterForm(forms.ModelForm):
 
 
 class UserProfileForm(forms.Form):
+    vat_format = RegexValidator(r'^[a-zA-Z]{2}\d{9}$|^\d{9}$', 'Wrong VAT format')
     first_name = forms.CharField(required=False, max_length=140)
     last_name = forms.CharField(required=False, max_length=140)
 
@@ -146,7 +147,7 @@ class UserProfileForm(forms.Form):
     company_state = forms.CharField(max_length=100, required=False)
     company_country = forms.CharField(max_length=100, required=False)
     company_zip_code = forms.CharField(max_length=100, required=False)
-    vat = forms.CharField(max_length=100, required=False)
+    vat = forms.CharField(min_length=9, max_length=11, required=False, validators=[vat_format])
     invoice_to_company = forms.BooleanField(required=False)
 
     user_address_name = forms.CharField(max_length=100, required=False)

@@ -678,6 +678,18 @@ class ProductsApiTestCase(BaseTestCase):
             args = call[1]
             self.assertNotIn('.sub', args[0])
 
+    def test_vat_number(self):
+        data = {
+            'vat': '123456789',
+        }
+        r = self.client.post('/api/user-profile', data)
+        self.assertEqual(r.status_code, 200)
+        data = {
+            'vat': '123456789123',
+        }
+        r = self.client.post('/api/user-profile', data)
+        self.assertEqual(r.status_code, 400)
+
 
 # Fix for last_seen cache
 @override_settings(CACHES={'default': {'BACKEND': 'django.core.cache.backends.dummy.DummyCache'}})

@@ -2253,6 +2253,9 @@ class ShopifyStoreApi(ApiBase):
 
             return self.api_success({'reload': True})
 
+        if form.errors.get('vat'):
+            return self.api_error(description="Please enter valid VAT number.", status=400)
+
     def post_user_email(self, request, user, data):
         # TODO: Handle Payements and email changing
         form = UserProfileEmailForm(data=data, user=user)
