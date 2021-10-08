@@ -591,3 +591,15 @@ fieldset[disabled] .btn-primary.active {
   background-color: #b3d5a4;
   border-color: #b3d5a4;
 }
+
+.calendar .daterangepicker_input .fa-calendar:before {
+    content: "\f073";
+}
+
+.calendar .calendar-table .table-condensed .fa-chevron-left:before {
+    content: "\f053";
+}
+
+.calendar .calendar-table .table-condensed .fa-chevron-right:before {
+    content: "\f054";
+}
