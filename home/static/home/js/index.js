@@ -718,8 +718,18 @@
 
     $('input[name="order_phone_number"]').on('keyup', function() {
         var value = $(this).val();
+        var $this = $(this);
 
-        $('#phone-invalid').toggle(/[^\d\+-]/.test(value));
+        if(/[^\d\+-]/.test(value)) {
+            $('#phone-invalid').show();
+            // a delay to show user the invalid input before clearing it
+            setTimeout(function(){
+                $this.val('');
+            }, 1000);
+        }
+        else {
+            $('#phone-invalid').hide();
+        }
     });
 
     $('input[name="order_phone_number"]').trigger('keyup');
