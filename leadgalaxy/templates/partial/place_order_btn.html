@@ -4,7 +4,7 @@
 {% if original %}
     {% if not item.supplier.is_dropified_print %}
 
-    {% if use_fulfillbox %}
+    {% if use_aliexpress_api %}
     <a class="place-order btn btn-info btn-xs pull-right m-r-xs" href="#"
        store="{{store.id}}" order-id="{{order.id}}" line-id="{{item.id}}"
        style="margin:4px 2px;"><i class="fa fa-bolt"></i> Quick Order Item</a>

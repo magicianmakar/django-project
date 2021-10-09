@@ -15,6 +15,7 @@ from shopified_core.mocks import get_mocked_config_alerts
 from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule, DashboardVideo, GroupPlan
 from leadgalaxy.shopify import ShopifyAPI
 from goals.utils import get_dashboard_user_goals
+from aliexpress_core.models import AliexpressAccount
 
 from .context_processors import all_stores
 
@@ -117,7 +118,8 @@ class HomePageMixing(TemplateView):
             'user_goals': user_goals,
             'platform_videos': platform_videos,
             'upsell_alerts': upsell_alerts,
-            'alibaba_login_url': get_alibaba_access_token_url(user.models_user)
+            'alibaba_login_url': get_alibaba_access_token_url(user.models_user),
+            'aliexpress_accounts': AliexpressAccount.objects.filter(user=user.models_user),
         })
 
         return ctx

@@ -9,28 +9,7 @@ from lib.exceptions import capture_exception, capture_message
 from .exceptions import ApiLoginException
 
 
-class ApiResponseMixin(View):
-    login_non_required = []
-
-    def api_error(self, description, status=500):
-        return JsonResponse({
-            'error': description
-        }, status=status)
-
-    def api_success(self, rep=None, status=200, safe=True):
-        if rep is None:
-            rep = {}
-
-        if safe:
-            rep.update({'status': 'ok'})
-
-        return JsonResponse(rep, status=status, safe=safe)
-
-    def method_name(self, *args):
-        return '_'.join([
-            i.lower().replace('-', '_') for i in args
-        ])
-
+class RequestDataMixin:
     def request_data(self, request):
         if request.method == 'POST':
             if request.POST:
@@ -55,6 +34,8 @@ class ApiResponseMixin(View):
         elif request.method == 'GET':
             return request.GET
 
+
+class AuthenticationMixin(RequestDataMixin):
     def get_user(self, request, data=None, assert_login=True):
         """
             Return User from the current request data
@@ -126,6 +107,29 @@ class ApiResponseMixin(View):
             return None
 
         return user
+
+
+class ApiResponseMixin(AuthenticationMixin, View):
+    login_non_required = []
+
+    def api_error(self, description, status=500):
+        return JsonResponse({
+            'error': description
+        }, status=status)
+
+    def api_success(self, rep=None, status=200, safe=True):
+        if rep is None:
+            rep = {}
+
+        if safe:
+            rep.update({'status': 'ok'})
+
+        return JsonResponse(rep, status=status, safe=safe)
+
+    def method_name(self, *args):
+        return '_'.join([
+            i.lower().replace('-', '_') for i in args
+        ])
 
     def dispatch(self, request, *args, **kwargs):
         if request.method.lower() not in self.http_method_names:

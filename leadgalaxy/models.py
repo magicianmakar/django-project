@@ -1248,6 +1248,12 @@ class AccessToken(models.Model):
     def __str__(self):
         return f'<AccessToken: {self.id}>'
 
+    def save(self, *args, **kwargs):
+        if not self.token:
+            self.token = get_random_string(128)
+
+        super().save(*args, **kwargs)
+
 
 class ShopifyProduct(ProductBase):
     class Meta:
@@ -2513,10 +2519,7 @@ def user_get_access_token(self):
     try:
         access_token = AccessToken.objects.filter(user=self).latest('created_at')
     except:
-        token = get_random_string(32)
-        token = hashlib.md5(token.encode()).hexdigest()
-
-        access_token = AccessToken(user=self, token=token)
+        access_token = AccessToken(user=self)
         access_token.save()
 
     return access_token.token

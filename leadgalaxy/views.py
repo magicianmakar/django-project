@@ -48,7 +48,8 @@ from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier, Big
 from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
 from phone_automation import billing_utils as billing
 from shopified_core import permissions
-from shopified_core.exceptions import ApiProcessException
+from shopified_core.exceptions import ApiLoginException, ApiProcessException
+from shopified_core.mixins import AuthenticationMixin
 from shopified_core.tasks import keen_order_event
 from shopified_core.paginators import SimplePaginator, FakePaginator
 from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
@@ -1695,7 +1696,7 @@ class OrdersViewUpsell(TemplateView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class OrdersView(TemplateView):
+class OrdersView(AuthenticationMixin, TemplateView):
     template_name = 'orders_new.html'
     post_per_page = 20
 
@@ -1739,8 +1740,13 @@ class OrdersView(TemplateView):
         self.open_orders = None  # Found orders count
         self.current_page = None  # current Page instance returned by paginator
 
-    @method_decorator(login_required)
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            try:
+                self.request.user = self.get_user(request)
+            except ApiLoginException:
+                return HttpResponseRedirect(app_link(reverse('login'), next=request.get_full_path()))
+
         if not request.user.can('orders.use'):
             return HttpResponseRedirect(f"{reverse('orders_upsell')}")
 
@@ -1825,7 +1831,8 @@ class OrdersView(TemplateView):
             show_actual_supplier=self.models_user.get_config('_show_actual_supplier', False) or self.models_user.id in [883, 21064, 24767],
             order_risk_all_getaways=self.models_user.get_config('_order_risk_all_getaways', False),
             aliexpress_mobile_order=self.models_user.can('aliexpress_mobile_order.use'),
-            ebay_manual_affiliate_link=self.models_user.can('ebay_manual_affiliate_link.use')
+            ebay_manual_affiliate_link=self.models_user.can('ebay_manual_affiliate_link.use'),
+            use_aliexpress_api=self.models_user.can('aliexpress_api_integration.use'),
         )
 
         self.config['admitad_site_id'], self.config['user_admitad_credentials'] = utils.get_admitad_credentials(self.models_user)

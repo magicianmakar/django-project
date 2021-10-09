@@ -2,12 +2,15 @@
 
 import requests
 
-from django.conf import settings
+from aliexpress_core.models import AliexpressAccount
 
 from app.celery_base import celery_app, CaptureFailure
+from leadgalaxy.templatetags.template_helper import app_link
 
 from lib.exceptions import capture_exception
 
+from aliexpress_core.settings import API_KEY, API_SECRET
+from aliexpress_core.utils import MaillingAddress, PlaceOrder, PlaceOrderRequest, ProductBaseItem
 from leadgalaxy.models import ShopifyStore, ShopifyProduct, ShopifyOrderTrack
 from shopify_orders.utils import OrderErrorsCheck, update_elasticsearch_shopify_order
 from shopify_orders.models import ShopifyOrder
@@ -71,40 +74,76 @@ def fulfill_shopify_order_line(self, store_id, order, customer_address, line_id=
 
 
 def fulfill_aliexpress_order(store, order_id, line_id=None):
-    if not settings.FULFILLBOX_API_URL:
+    if not API_SECRET:
         return 'Service API is not set'
 
-    aliexpress_email = store.user.get_config('ali_email')
-    if not aliexpress_email:
-        return 'Aliexpress Account is not set'
+    if not store.user.aliexpress_account.count():
+        return 'Aliexpress Account is not connected'
 
-    url = settings.FULFILLBOX_API_URL + '/api/aliexpress/order'
-    rep = requests.put(
-        url=url,
-        json={
-            'shop': str(store.shop),
-            'order': str(order_id),
-            'line_id': str(line_id if line_id else ''),
-            'user': str(store.user.id),
-            'user_email': store.user.email,
-            'token': store.user.get_access_token(),
-            'store': {
-                'id': str(store.id),
-                'type': 'shopify',
-                'title': store.title,
-                'shop': store.shop,
-            },
-            'aliexpress': {
-                'email': aliexpress_email,
-            }
-        })
+    req = requests.get(
+        url=app_link('orders'),
+        params=dict(store=store.id, query_order=order_id, line_id=line_id, bulk_queue=1, live=1),
+        headers=dict(Authorization=store.user.get_access_token())
+    )
 
-    try:
-        rep.raise_for_status()
-    except:
-        capture_exception()
+    orders = req.json()
+    results = []
+    for order in orders['orders']:
+        order_data = req = requests.get(
+            url=app_link('api/order-data'),
+            params=dict(order=order['order_data']),
+            headers=dict(Authorization=store.user.get_access_token())
+        ).json()
 
-    return rep.ok
+        results.append(do_fulfill_aliexpress_order(order, order_data, store, order_id, line_id))
+
+    return all(results)
+
+
+def do_fulfill_aliexpress_order(order, order_data, store, order_id, line_id=None):
+    aliexpress_order = PlaceOrder()
+    aliexpress_order.set_app_info(API_KEY, API_SECRET)
+
+    shipping_address = order_data['shipping_address']
+    address = MaillingAddress()
+    address.contact_person = shipping_address['name']
+    address.full_name = shipping_address['name']
+    address.address = shipping_address['address1']
+    address.address2 = shipping_address['address2']
+    address.city = shipping_address['city']
+    address.province = shipping_address['province']
+    address.zip = shipping_address['zip']
+    address.country = shipping_address['country_code']
+    address.phone_country = order_data['order']['phoneCountry']
+    address.mobile_no = order_data['order']['phone']
+
+    req = PlaceOrderRequest()
+    req.setAddress(address)
+
+    item = ProductBaseItem()
+    item.product_count = order_data['quantity']
+    item.product_id = order_data['source_id']
+    item.sku_attr = ';'.join([f"{v['sku']}#{v['title'] or ''}".strip('#') for v in order_data['variant']])
+    # item.logistics_service_name = "DHL"  # TODO: handle shipping method
+    item.order_memo = order_data['order']['note']
+    req.add_item(item)
+
+    aliexpress_order.set_info(req)
+
+    aliexpress_account = AliexpressAccount.objects.filter(user=store.user).first()
+
+    result = aliexpress_order.getResponse(authrize=aliexpress_account.access_token)
+    result = result.get('aliexpress_trade_buy_placeorder_response')
+    if result and result.get('result') and result['result']['is_success']:
+        aliexpress_order_id = ','.join(set([str(i) for i in result['result']['order_list']['number']]))
+
+        req = requests.post(
+            url=app_link('api/order-fulfill'),
+            data=dict(store=store.id, order_id=order_id, line_id=line_id, aliexpress_order_id=aliexpress_order_id, source_type=''),
+            headers=dict(Authorization=store.user.get_access_token())
+        )
+
+        return req.ok
 
 
 @celery_app.task(base=CaptureFailure, bind=True, ignore_result=True)

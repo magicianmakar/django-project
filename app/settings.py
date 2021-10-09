@@ -109,6 +109,7 @@ INSTALLED_APPS = (
     'my_basket',
     'fulfilment_fee',
     'alibaba_core',
+    'aliexpress_core',
 )
 
 MIDDLEWARE = (

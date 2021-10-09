@@ -171,6 +171,28 @@ def app_link(*args, **kwargs):
     return '{}/{}'.format(settings.APP_URL, path.lstrip('/')).rstrip('/')
 
 
+def external_link(url, **kwargs):
+    """
+    Get full link to a web app page
+
+    Example:
+        app_link('https://google.com', query=1001)
+    """
+
+    params = ''
+
+    if kwargs:
+        for k, v in list(kwargs.items()):
+            if type(v) is bool:
+                kwargs[k] = str(v).lower()
+            elif isinstance(v, str):
+                kwargs[k] = v
+
+        params = f'?{urlencode(kwargs)}'
+
+    return f"{url}{params}"
+
+
 def remove_trailing_slash(t):
     t = safe_str(t, str(t))
     return t.strip('/')
