@@ -160,6 +160,9 @@ class TasksTestCase(BaseTestCase):
         )
 
         aliexpress_data = get_supplier_variants('aliexpress', supplier.get_source_id())
+        if not len(aliexpress_data):
+            return
+
         self.assertEqual(len(aliexpress_data), 1)
         self.assertEqual(aliexpress_data[0]['variant_ids'], '')
 
