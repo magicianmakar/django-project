@@ -41,6 +41,7 @@ urlpatterns = [
     url(r'^alibaba/', include('alibaba_core.urls', 'alibaba')),
     url(r'^webhook/', include('webhooks.urls')),
     url(r'^products/', include('product_core.urls')),
+    url(r'^insider-reports/', include('insider_reports.urls')),
 ]
 
 if settings.DEBUG:

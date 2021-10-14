@@ -24,6 +24,7 @@ def get_menu_structure(namespace, request):
             'callflex',
             'tubehunt',
             'tools',
+            'insider-reports'
         ]),
     ]
 
@@ -250,6 +251,13 @@ def get_menu_item_data(request):
             'match': r'^/dropified_product',
             'is_ns_aware': False,
             'permissions': ['dropified_product.use'],
+        },
+        'insider-reports': {
+            'title': 'Insider Reports',
+            'url_name': 'ranked-products',
+            'match': r'^/insider-reports',
+            'is_ns_aware': False,
+            'permissions': ['insider_reports.use'],
         },
     }
 

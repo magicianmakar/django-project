@@ -109,6 +109,7 @@ INSTALLED_APPS = (
     'my_basket',
     'fulfilment_fee',
     'alibaba_core',
+    'insider_reports'
 )
 
 MIDDLEWARE = (
@@ -634,3 +635,7 @@ SUBUSERS_LIMIT_CHECK = os.environ.get('SUBUSERS_LIMIT_CHECK')
 # PLOD APIs
 BASICAUTH_USERS = os.environ.get('BASICAUTH_USERS', {"plod-api": "plod-api-password"})
 PLOD_INVENTORY_API_HOST = os.environ.get('PLOD_INVENTORY_API_HOST', False)  # False must be set for main Dropified webapp
+
+
+# Insider Reports APIs
+INSIDER_REPORT_HOST = os.environ.get('INSIDER_REPORT_HOST', 'https://admin:insider-admin@dropified-insider-report.herokuapp.com/')

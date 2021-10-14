@@ -1263,7 +1263,14 @@
     "description": "Allow Users to upload unlimited labels"
   }
 },
-
+{
+  "model": "leadgalaxy.apppermission",
+  "pk": 203,
+  "fields": {
+    "name": "insider_reports.use",
+    "description": "Dropshipping Insider Reports"
+  }
+},
 {
   "model": "leadgalaxy.groupplan",
   "pk": 1,
