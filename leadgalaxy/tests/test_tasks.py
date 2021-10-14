@@ -167,7 +167,8 @@ class TasksTestCase(BaseTestCase):
         self.assertEqual(aliexpress_data[0]['variant_ids'], '')
 
         with patch('leadgalaxy.models.ShopifyProduct.set_variant_quantity') as mock_set_variant_quantity, \
-                patch('leadgalaxy.utils.get_shopify_product', return_value=product_data):
+                patch('leadgalaxy.utils.get_shopify_product', return_value=product_data), \
+                patch('product_alerts.utils.get_supplier_variants', return_value=aliexpress_data):
             sync_shopify_product_quantities(product.id)
             mock_set_variant_quantity.assert_called_with(
                 quantity=aliexpress_data[0]['availabe_qty'],
