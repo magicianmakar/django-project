@@ -354,6 +354,15 @@ class AffiliateTestCase(BaseTestCase):
 
         cache.delete_pattern('admitad_redirect_*')
 
+    def test_get_admitad_affiliate_url(self):
+        from leadgalaxy.utils import get_admitad_affiliate_url
+
+        url = get_admitad_affiliate_url('123456', '000000000000000', user=self.user)
+        self.assertTrue('subid=' in url, 'subid should be set')
+
+        url = get_admitad_affiliate_url('123456', '000000000000000')
+        self.assertFalse('subid=' in url, 'subid should be empty')
+
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
     @patch('leadgalaxy.utils.get_aliexpress_affiliate_url')
     def test_user_without_affiliate(self, aliexpress_url, admitad_url):
@@ -453,7 +462,8 @@ class AffiliateTestCase(BaseTestCase):
 
         affiliate_url.assert_called_with(
             self.user.get_config('admitad_site_id'),
-            self.place_order_data['product']
+            self.place_order_data['product'],
+            user=self.user
         )
 
     @patch('leadgalaxy.utils.get_admitad_affiliate_url')
@@ -473,7 +483,8 @@ class AffiliateTestCase(BaseTestCase):
 
         get_admitad_affiliate_url.assert_called_with(
             self.user.get_config('admitad_site_id'),
-            self.place_order_data['product']
+            self.place_order_data['product'],
+            user=self.user
         )
 
         # Use Admitad only when user have both Aliexpress and Admitad

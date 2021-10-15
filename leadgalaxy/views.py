@@ -2991,7 +2991,7 @@ def orders_place(request):
                 redirect_url = utils.get_aliexpress_affiliate_url(ali_api_key, ali_tracking_id, product)
 
             elif service == 'admitad':
-                redirect_url = utils.get_admitad_affiliate_url(admitad_site_id, product)
+                redirect_url = utils.get_admitad_affiliate_url(admitad_site_id, product, user=request.user)
 
     if not redirect_url:
         redirect_url = product
