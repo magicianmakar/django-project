@@ -1402,8 +1402,7 @@ if (window.intercomSettings) {
     ];
 
     portalMap.forEach(function(el) {
-        console.log(el.name,'=>', el.selector);
-        if(document.querySelector(el.selector)) {
+        if (window.Candu && document.querySelector(el.selector)) {
             Candu.renderPortal({
                 slug: el.name,
                 selector: el.selector,
