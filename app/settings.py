@@ -96,6 +96,7 @@ INSTALLED_APPS = (
 
     'commercehq_core',
     'woocommerce_core',
+    'ebay_core',
     'gearbubble_core',
     'groovekart_core',
     'bigcommerce_core',
@@ -109,7 +110,8 @@ INSTALLED_APPS = (
     'my_basket',
     'fulfilment_fee',
     'alibaba_core',
-    'insider_reports'
+    'insider_reports',
+    'suredone_core',
 )
 
 MIDDLEWARE = (
@@ -192,6 +194,7 @@ DROPIFIED_API = {
     'chq': 'commercehq_core.api.CHQStoreApi',
     'gear': 'gearbubble_core.api.GearBubbleApi',
     'woo': 'woocommerce_core.api.WooStoreApi',
+    'ebay': 'ebay_core.api.EbayStoreApi',
     'gkart': 'groovekart_core.api.GrooveKartApi',
     'bigcommerce': 'bigcommerce_core.api.BigCommerceStoreApi',
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
@@ -354,6 +357,11 @@ S3_UPLOADS_BUCKET = os.environ.get('S3_UPLOADS_BUCKET', 'shopifiedapp-uploads')
 S3_SECRET_BUCKET = os.environ.get('S3_SECRET_BUCKET', S3_STATIC_BUCKET)
 
 AWS_STORAGE_BUCKET_NAME = S3_STATIC_BUCKET  # Default bucket
+
+# SureDone Partner API
+SUREDONE_PARTNER_API_NAME = os.environ.get('SUREDONE_PARTNER_API_NAME')
+SUREDONE_PARTNER_API_USERNAME = os.environ.get('SUREDONE_PARTNER_API_USERNAME')
+SUREDONE_PARTNER_API_TOKEN = os.environ.get('SUREDONE_PARTNER_API_TOKEN')
 
 USE_WHITENOISE = os.environ.get('USE_WHITENOISE')
 
@@ -636,6 +644,27 @@ SUBUSERS_LIMIT_CHECK = os.environ.get('SUBUSERS_LIMIT_CHECK')
 BASICAUTH_USERS = os.environ.get('BASICAUTH_USERS', {"plod-api": "plod-api-password"})
 PLOD_INVENTORY_API_HOST = os.environ.get('PLOD_INVENTORY_API_HOST', False)  # False must be set for main Dropified webapp
 
-
 # Insider Reports APIs
 INSIDER_REPORT_HOST = os.environ.get('INSIDER_REPORT_HOST', 'https://admin:insider-admin@dropified-insider-report.herokuapp.com/')
+
+# SureDone Custom Fields configuration grouped by type and length
+SUREDONE_CUSTOM_FIELDS_CONFIG = [
+    {
+        'name': ['dropifiedconnectedstoreid'],
+        'type': 'int'
+    },
+    {
+        'name': ['store', 'originalurl', 'variantsconfig', 'allimages'],
+        'type': 'text',
+    },
+    {
+        'name': ['suppliersku', 'varianttitle', 'weightunit', 'dropifiedconnectedstoretype'],
+        'type': 'varchar',
+        'length': 50
+    },
+    {
+        'name': ['compareatprice'],
+        'type': 'float',
+        'length': 10,
+    },
+]

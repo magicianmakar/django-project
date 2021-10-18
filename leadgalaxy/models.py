@@ -1,33 +1,27 @@
-from django.db import models
-from django.db.models import Q
-from django.conf import settings
-from django.contrib.auth.models import User
-from django.utils.functional import cached_property
-from django.core.cache import cache
-from django.utils.crypto import get_random_string
-
-import re
-import simplejson as json
-import requests
-import hmac
+import arrow
 import hashlib
+import hmac
+import re
+import requests
+import simplejson as json
+from pusher import Pusher
 from urllib.parse import urlparse
 
-import arrow
-from pusher import Pusher
+from django.conf import settings
+from django.contrib.auth.models import User
+from django.core.cache import cache
+from django.db import models
+from django.db.models import Q
+from django.utils.crypto import get_random_string
+from django.utils.functional import cached_property
 
-from leadgalaxy.graphql import ShopifyGraphQL
-from stripe_subscription.stripe_api import stripe
 from data_store.models import DataStore
-from shopified_core.utils import (
-    safe_int,
-    url_join,
-    get_domain,
-    using_store_db,
-)
+from leadgalaxy.graphql import ShopifyGraphQL
 from product_alerts.utils import monitor_product
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
+from shopified_core.models import BoardBase, OrderTrackBase, ProductBase, StoreBase, SupplierBase, UserUploadBase
+from shopified_core.utils import get_domain, safe_int, url_join, using_store_db
+from stripe_subscription.stripe_api import stripe
 
 SHOPIFY_API_VERSION = "2021-07"
 
@@ -127,9 +121,11 @@ class UserProfile(models.Model):
     subuser_stores = models.ManyToManyField('ShopifyStore', blank=True, related_name='subuser_stores')
     subuser_chq_stores = models.ManyToManyField('commercehq_core.CommerceHQStore', blank=True, related_name='subuser_chq_stores')
     subuser_woo_stores = models.ManyToManyField('woocommerce_core.WooStore', blank=True, related_name='subuser_woo_stores')
+    subuser_ebay_stores = models.ManyToManyField('ebay_core.EbayStore', blank=True, related_name='subuser_ebay_stores')
     subuser_gear_stores = models.ManyToManyField('gearbubble_core.GearBubbleStore', blank=True, related_name='subuser_gear_stores')
     subuser_gkart_stores = models.ManyToManyField('groovekart_core.GrooveKartStore', blank=True, related_name='subuser_gkart_stores')
     subuser_bigcommerce_stores = models.ManyToManyField('bigcommerce_core.BigCommerceStore', blank=True, related_name='subuser_bigcommerce_stores')
+    subuser_sd_accounts = models.ManyToManyField('suredone_core.SureDoneAccount', blank=True, related_name='subuser_sd_accounts')
 
     stores = models.IntegerField(default=-2)
     products = models.IntegerField(default=-2)
@@ -182,6 +178,7 @@ class UserProfile(models.Model):
             self.user.shopifyproduct_set.exists(),
             self.user.commercehqproduct_set.exists(),
             self.user.wooproduct_set.exists(),
+            self.user.ebayproduct_set.exists(),
             self.user.gearbubbleproduct_set.exists(),
             self.user.groovekartproduct_set.exists(),
             self.user.bigcommerceproduct_set.exists(),
@@ -387,6 +384,20 @@ class UserProfile(models.Model):
 
         return stores
 
+    def get_ebay_stores(self, flat=False, do_sync=False):
+        if do_sync:
+            # The function is defined in ebay_core.utils.py
+            self.sync_ebay_stores()
+        if self.is_subuser:
+            stores = self.subuser_ebay_stores.filter(is_active=True)
+        else:
+            stores = self.user.ebaystore_set.filter(is_active=True)
+
+        if flat:
+            stores = stores.values_list('id', flat=True)
+
+        return stores
+
     def get_gear_stores(self, flat=False):
         if self.is_subuser:
             stores = self.subuser_gear_stores.filter(is_active=True)
@@ -428,10 +439,22 @@ class UserProfile(models.Model):
             self.get_shopify_stores().count(),
             self.get_chq_stores().count(),
             self.get_woo_stores().count(),
+            self.get_ebay_stores().count(),
             self.get_gear_stores().count(),
             self.get_gkart_stores().count(),
             self.get_bigcommerce_stores().count(),
         ])
+
+    def get_sd_accounts(self, flat=False):
+        if self.is_subuser:
+            accounts = self.subuser_sd_accounts.filter(is_active=True)
+        else:
+            accounts = self.user.suredoneaccount_set.filter(is_active=True)
+
+        if flat:
+            accounts = accounts.values_list('id', flat=True)
+
+        return accounts
 
     def get_sub_users_count(self):
         if not self.is_subuser:
@@ -687,7 +710,7 @@ class UserProfile(models.Model):
 
     def sync_tags(self):
         """ Send current user tags to Intercom and Baremetrics """
-        from shopified_core.tasks import update_intercom_tags, update_baremetrics_attributes
+        from shopified_core.tasks import update_baremetrics_attributes, update_intercom_tags
 
         update_intercom_tags.apply_async(
             args=[self.user.email, 'user_tags', self.tags],
@@ -1122,7 +1145,7 @@ class ShopifyStore(StoreBase):
         return is_store_synced(self)
 
     def is_sync_enabled(self):
-        from shopify_orders.utils import is_store_synced, is_store_sync_enabled
+        from shopify_orders.utils import is_store_sync_enabled, is_store_synced
         return is_store_synced(self) and is_store_sync_enabled(self)
 
     def connected_count(self):

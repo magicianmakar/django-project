@@ -24,6 +24,11 @@
                 <h3 class="list-group-item-heading">Cards</h3>
             </a>
             {% endif %}
+            {% if request.user.is_superuser %}
+            <a class="list-group-item " href="{% url 'acp_sd_users_view' %}">
+                <h3 class="list-group-item-heading">SureDone Users</h3>
+            </a>
+            {% endif %}
         </div>
     </div>
 

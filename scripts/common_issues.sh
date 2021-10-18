@@ -131,7 +131,7 @@ fi
 
 cat << EOF | md5sum -c > /dev/null
     d0abd1802f933365d176a8c703eeb26c  .env
-    87e2b2d85d27a166e80a0b0fca2aa145  env.yaml
+    b2e3982ec145d493da9d013ec91f2978  env.yaml
 EOF
 
 if [ ! "$?" == "0" ]; then

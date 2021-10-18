@@ -9,4 +9,5 @@ urlpatterns = [
     path('plans', acp_core.views.ACPPlansView.as_view(), name='acp_plans_view'),
     path('plans/add', acp_core.views.ACPAddPlanView.as_view(), name='acp_add_plan_view'),
     path('cards', acp_core.views.ACPCardsView.as_view(), name='acp_cards_view'),
+    path('sd_users', acp_core.views.ACPSureDoneUsersView.as_view(), name='acp_sd_users_view'),
 ]

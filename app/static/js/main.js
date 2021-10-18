@@ -184,7 +184,8 @@ function allPossibleCases(arr, top) {
     }
 }
 
-function displayAjaxError(desc, data) {
+function displayAjaxError(desc, data, useHtml) {
+    useHtml = useHtml === undefined ? false : useHtml;
     var error_msg = 'Server error.';
 
     if (typeof (data.error) == 'string') {
@@ -195,7 +196,11 @@ function displayAjaxError(desc, data) {
         error_msg = data;
     }
 
-    swal(desc, error_msg, 'error');
+    if (useHtml) {
+        swal({ html:true, title: desc, text: error_msg, type: 'error'});
+    } else {
+        swal(desc, error_msg, 'error');
+    }
 }
 
 function getAjaxError(data) {
@@ -539,6 +544,17 @@ function sendProductToWooCommerce(productId, storeId, publish, callback) {
     };
 
     return $.post(api_url('product-export', 'woo'), data, callback);
+}
+
+function sendProductToEbay(productId, storeId, publish, callback) {
+    callback = typeof(callback) === 'undefined' ? function() {} : callback;
+    var data = {
+        product: productId,
+        store: storeId,
+        publish: publish
+    };
+
+    return $.post(api_url('product-export', 'ebay'), data, callback);
 }
 
 function sendProductToBigCommerce(productId, storeId, publish, callback) {

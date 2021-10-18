@@ -15,6 +15,9 @@
             {% elif item|model_name == 'woostore' %}
                 <li><a href="{% url 'woo:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
 
+            {% elif item|model_name == 'ebaystore' %}
+                <li><a href="{% url 'ebay:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+
             {% elif item|model_name == 'gearbubblestore' %}
                 <li><a href="{% url 'gear:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
 
@@ -60,6 +63,13 @@
                     <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
                 {% else %}
                     <li><a href="{% url 'woo:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
+                {% endif %}
+
+            {% elif item|model_name == 'ebaystore' %}
+                {% if item == store %}
+                    <li class="active"><a data-toggle="tab" href="#tab-1">{{item.title}}</a></li>
+                {% else %}
+                    <li><a href="{% url 'ebay:products_list' %}?store={{item.id}}">{{item.title}}</a></li>
                 {% endif %}
 
             {% elif item|model_name == 'gearbubblestore' %}

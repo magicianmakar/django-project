@@ -262,9 +262,9 @@
 
         if($('.js_validate_input-message').is(':visible')){
             $('.js_validate_input-message:visible').each(function(){
-                toastr.error($(this).attr('data-message'));
+                var message = $(this).attr('data-message');
+                toastr.error(message);
             });
-
             return;
         }
 
@@ -735,10 +735,11 @@
     $('input[name="order_phone_number"]').trigger('keyup');
 
     $(document).on('keyup', '.js_validate_input', function (){
+        var value = $(this).val();
         var regExp = new RegExp($(this).attr('data-regular'));
         var message = $(this).closest('div').find('.js_validate_input-message');
 
-        message.toggle(regExp.test($(this).val()));
+        message.toggle(regExp.test(value));
     });
 
     $('.show-clippingmagic-key-btn').click(function (e) {
@@ -1555,6 +1556,70 @@
                 window.location.reload();
             }
         }
+    });
+
+    $('#ebay-store-create-submit-btn').click(function(e) {
+        var buttonEl = $(this);
+        buttonEl.bootstrapBtn('loading');
+
+        $.ajax({
+            url: api_url('store-add', 'ebay'),
+            type: 'GET',
+            success: function(data) {
+                var pusher = new Pusher(data.pusher.key);
+                var channel = pusher.subscribe(data.pusher.channel);
+
+                channel.bind('ebay-store-add', function(data) {
+                    buttonEl.bootstrapBtn('reset');
+                    pusher.unsubscribe(channel);
+
+                    if (data.success) {
+                        window.location.href = data.auth_url;
+                    } else {
+                        displayAjaxError('Add eBay Store', data);
+                    }
+                });
+            },
+            error: function(data, status) {
+                if (status === 'timeout') {
+                    buttonEl.bootstrapBtn('reset');
+                    displayAjaxError('Add Store', 'Request timed out. Please try again');
+                } else {
+                    buttonEl.bootstrapBtn('reset');
+                    displayAjaxError('Add Store', data);
+                }
+            },
+        });
+    });
+
+    $('.ebay-delete-store-btn').click(function(e) {
+        e.preventDefault();
+        var storeId = $(this).data('store-id');
+
+        swal({
+            title: 'Are you sure?',
+            text: 'Please, confirm that you want to delete this store. This action cannot be undone.',
+            type: 'warning',
+            showCancelButton: true,
+            showLoaderOnConfirm: true,
+            confirmButtonColor: '#DD6B55',
+            confirmButtonText: 'Yes, delete it!',
+            closeOnConfirm: false
+        }, function() {
+            $.ajax({
+                url: api_url('store', 'ebay') + '?' + $.param({id: storeId}),
+                method: 'DELETE',
+                success: function() {
+                    $('#ebay-store-row-' + storeId).hide();
+                    swal('Deleted!', 'The store has been deleted.', 'success');
+
+                    ChurnZero.push(['trackEvent', 'Removed Store', 'eBay']);
+                },
+                error: function(data) {
+                    displayAjaxError('Delete Store', data);
+                }
+            });
+        });
     });
 
     $('.filter-store-btn').click(function (e) {

@@ -1,53 +1,47 @@
 import arrow
 import simplejson as json
 
-from django.dispatch import receiver
-from django.dispatch import Signal
 from django.conf import settings
+from django.contrib.auth.models import User
+from django.contrib.auth.signals import user_logged_in
 from django.core.cache import cache
 from django.core.cache.utils import make_template_fragment_key
 from django.db.models import Q
-from django.db.models.signals import post_save, m2m_changed, post_delete
-from django.contrib.auth.signals import user_logged_in
-from django.contrib.auth.models import User
+from django.db.models.signals import m2m_changed, post_delete, post_save
+from django.dispatch import Signal, receiver
 
-from lib.exceptions import capture_exception
+from addons_core.models import Addon
+from addons_core.tasks import cancel_all_addons
+from analytic_events.models import LoginEvent, StoreCreatedEvent
+from churnzero_core.utils import post_churnzero_addon_update, post_churnzero_change_plan_event, set_churnzero_account
+from goals.models import Goal, UserGoalRelationship
 from leadgalaxy.models import (
-    UserProfile,
+    SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
+    SUBUSER_CHQ_STORE_PERMISSIONS,
+    SUBUSER_GEAR_STORE_PERMISSIONS,
+    SUBUSER_GKART_STORE_PERMISSIONS,
+    SUBUSER_STORE_PERMISSIONS,
+    SUBUSER_WOO_STORE_PERMISSIONS,
     GroupPlan,
     GroupPlanChangeLog,
     ShopifyOrderTrack,
-    ShopifyStore,
     ShopifyProduct,
-    SubuserPermission,
+    ShopifyStore,
+    SubuserBigCommercePermission,
     SubuserCHQPermission,
-    SubuserWooPermission,
     SubuserGearPermission,
     SubuserGKartPermission,
-    SubuserBigCommercePermission,
-    SUBUSER_STORE_PERMISSIONS,
-    SUBUSER_CHQ_STORE_PERMISSIONS,
-    SUBUSER_WOO_STORE_PERMISSIONS,
-    SUBUSER_GEAR_STORE_PERMISSIONS,
-    SUBUSER_GKART_STORE_PERMISSIONS,
-    SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
+    SubuserPermission,
+    SubuserWooPermission,
+    UserProfile
 )
-
-from addons_core.tasks import cancel_all_addons
+from lib.exceptions import capture_exception
 from metrics.tasks import activecampaign_update_plan, activecampaign_update_store_count
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
-from stripe_subscription.stripe_api import stripe
 from shopified_core.tasks import keen_send_event
 from shopified_core.utils import get_domain
-from goals.models import Goal, UserGoalRelationship
-from analytic_events.models import LoginEvent, StoreCreatedEvent
-from addons_core.models import Addon
-from churnzero_core.utils import (
-    post_churnzero_addon_update,
-    post_churnzero_change_plan_event,
-    set_churnzero_account
-)
+from stripe_subscription.stripe_api import stripe
 
 
 @receiver(post_save, sender=UserProfile)
@@ -95,7 +89,7 @@ def invalidate_acp_users(sender, instance, created, **kwargs):
 
     if not created and not instance.is_subuser:
         auto_fulfill = instance.get_config_value('auto_shopify_fulfill', 'enable')
-        for store_type in ['shopify', 'chq', 'woo', 'bigcommerce']:
+        for store_type in ['shopify', 'chq', 'woo', 'bigcommerce', 'ebay']:
             stores = getattr(instance, f'get_{store_type}_stores')()
             stores.update(auto_fulfill=auto_fulfill)
 

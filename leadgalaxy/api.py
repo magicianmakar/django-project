@@ -1,72 +1,62 @@
+import arrow
 import re
+import requests
+import simplejson as json
 import traceback
 from functools import cmp_to_key
 from urllib.parse import parse_qs, urlparse
 from urllib.request import urlopen
 
-import arrow
-import requests
-import simplejson as json
-
+from django.conf import settings
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.conf import settings
 from django.core.cache import cache
 from django.core.exceptions import PermissionDenied
-from django.urls import reverse
 from django.db.models import Q
 from django.forms.models import model_to_dict
-from django.http import HttpResponse, HttpResponseRedirect
-from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, render
 from django.template.defaultfilters import truncatewords
+from django.urls import reverse
 from django.utils import timezone
 
-from lib.exceptions import capture_exception, capture_message
-from app.celery_base import celery_app
-
 from alibaba_core.models import AlibabaOrderItem
-from stripe_subscription.stripe_api import stripe
-from stripe_subscription.models import StripeSubscription, StripeCustomer
-from stripe_subscription.utils import update_subscription
-
+from app.celery_base import celery_app
+from ebay_core.utils import EbayUtils
+from fulfilment_fee.utils import process_sale_transaction_fee
+from lib.exceptions import capture_exception, capture_message
+from metrics.tasks import activecampaign_update_email
+from product_alerts.utils import unmonitor_store
 from shopified_core import permissions
 from shopified_core.api_base import ApiBase
-from shopified_core.encryption import save_aliexpress_password, delete_aliexpress_password
+from shopified_core.encryption import delete_aliexpress_password, save_aliexpress_password
 from shopified_core.shipping_helper import get_counrties_list
 from shopified_core.utils import (
-    safe_int,
-    safe_float,
-    app_link,
-    hash_list,
-    get_domain,
-    remove_link_query,
-    send_email_from_template,
-    order_data_cache,
+    CancelledOrderAlert,
     add_http_schema,
+    app_link,
     base64_encode,
     clean_tracking_number,
-    CancelledOrderAlert,
+    get_domain,
+    hash_list,
+    order_data_cache,
+    remove_link_query,
+    safe_float,
+    safe_int,
+    send_email_from_template
 )
-
-from shopify_orders import utils as shopify_orders_utils
 from shopify_orders import tasks as shopify_orders_tasks
-from shopify_orders.models import (
-    ShopifyOrder,
-    ShopifySyncStatus,
-    ShopifyOrderVariant,
-    ShopifyOrderLog,
-)
-from product_alerts.utils import unmonitor_store
-from metrics.tasks import activecampaign_update_email
+from shopify_orders import utils as shopify_orders_utils
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLog, ShopifyOrderVariant, ShopifySyncStatus
+from stripe_subscription import utils as stripe_utils
+from stripe_subscription.models import StripeCustomer, StripeSubscription
+from stripe_subscription.stripe_api import stripe
+from stripe_subscription.utils import update_subscription
+from supplements.models import UserSupplement
 
-from . import tasks
-from . import utils
+from . import tasks, utils
 from .api_helper import ShopifyApiHelper
-from .forms import (
-    UserProfileEmailForm,
-    UserProfileForm,
-)
+from .forms import UserProfileEmailForm, UserProfileForm
 from .models import (
     AdminEvent,
     ClippingMagic,
@@ -84,13 +74,9 @@ from .models import (
     UserAddress,
     UserCompany,
     UserProfile,
-    UserUpload,
+    UserUpload
 )
-
-from supplements.models import UserSupplement
-from .templatetags.template_helper import shopify_image_thumb, money_format
-from stripe_subscription import utils as stripe_utils
-from fulfilment_fee.utils import process_sale_transaction_fee
+from .templatetags.template_helper import money_format, shopify_image_thumb
 
 
 class ShopifyStoreApi(ApiBase):
@@ -1180,6 +1166,14 @@ class ShopifyStoreApi(ApiBase):
                     'url': i.get_admin_url()
                 })
 
+            for i in user.profile.get_ebay_stores(do_sync=True):
+                stores.append({
+                    'id': i.id,
+                    'name': i.title,
+                    'type': 'ebay',
+                    'url': i.get_admin_url()
+                })
+
             for i in user.profile.get_gear_stores():
                 stores.append({
                     'id': i.id,
@@ -1236,6 +1230,8 @@ class ShopifyStoreApi(ApiBase):
             config = json.loads(profile.config)
         except:
             config = {}
+
+        ebay_settings_config = {}
 
         if data.get('single'):
             config[data.get('name')] = data.get('value')
@@ -1307,6 +1303,13 @@ class ShopifyStoreApi(ApiBase):
                     config[key] = remove_link_query(data[key]).strip('/ ').split('/').pop()
                 elif not data[key]:
                     config[key] = ''
+
+            elif key == 'ebay_business_country':
+                ebay_settings_config['business_country'] = data[key]
+
+            elif key == 'ebay_business_country_zipcode':
+                ebay_settings_config['business_zip'] = data[key]
+
             else:
                 if key != 'access_token':
                     config[key] = data[key]
@@ -1331,6 +1334,13 @@ class ShopifyStoreApi(ApiBase):
 
         profile.config = json.dumps(config)
         profile.save()
+
+        # Update the ebay settings
+        if len(ebay_settings_config) and len(profile.get_sd_accounts()):
+            result = EbayUtils(user).update_user_business_settings(ebay_settings_config)
+
+            if result.get('error'):
+                return self.api_error(f'Failed to update eBay settings. {result.get("error_message", "")}')
 
         return self.api_success()
 

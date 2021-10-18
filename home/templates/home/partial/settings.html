@@ -23,9 +23,9 @@
                             </label>
                             <div class="col-sm-3">
                                 <input style="padding:5px 2px;text-align:center" type="text"
-                                       data-regular="[^\d\%]"
-                                       class="form-control col-sm-2 js_validate_input" id="auto_margin" name="auto_margin"
-                                       value="{% if config.auto_margin != '%' %}{{config.auto_margin}}{% endif %}">
+                                   data-regular="[^\d\%]"
+                                   class="form-control col-sm-2 js_validate_input" id="auto_margin" name="auto_margin"
+                                   value="{% if config.auto_margin != '%' %}{{config.auto_margin}}{% endif %}">
                                 <div class="pull-left has-error js_validate_input-message"
                                      data-message="Price Markup is not valid"
                                      style="clear:left;padding-bottom:15px;display:none">
@@ -997,6 +997,58 @@
                                         <option value="{{ shipping.code }}" {% if config.alibaba_default_shipping == shipping.code %}selected="selected"{% endif %}>{{ shipping.name }}</option>
                                         {% endfor %}
                                     </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if user|can:'ebay.use' and user.profile.get_sd_accounts|length and ebay_settings %}
+            <div id="ebay-settings" class="panel panel-default">
+                <div class="panel-heading">
+                    eBay
+                </div>
+
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <div class="form-group">
+                                <label for="ebay_business_country" class="col-sm-4 col-xs-8 control-label">
+                                    Default Business Country
+                                    {% include 'partial/help_tooltip.html' with help="The country in which the business is registered." qtipstyle="color:#BBB" %}
+                                </label>
+                                <div class="col-sm-4 col-xs-8">
+                                    <select class="form-control col-sm-2" id="ebay_business_country" name="ebay_business_country"
+                                            data-placeholder="Business Country">
+                                        <option value="">Select Business Country...</option>
+                                        {% for item in countries %}
+                                        <option value="{{item.0}}" {% if ebay_settings.business_country == item.0 %} selected="selected" {% endif %}>
+                                            {{item.1}}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div id="ebay_business_country_invalid" class="pull-left col-sm-offset-2 col-sm-6 has-error" style="clear:left;padding-bottom:15px;display:none">
+                                    <span class="help-block m-b-none">Invalid business country</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <div class="form-group">
+                                <label for="ebay_business_country_zipcode" class="col-sm-4 col-xs-8 control-label">
+                                    Default Business Zip Code
+                                    {% include 'partial/help_tooltip.html' with help="The country ZIP code in which the business is registered." qtipstyle="color:#BBB" %}
+                                </label>
+                                <div class="col-sm-2 col-xs-5">
+                                    <input type="text" class="form-control col-sm-2" id="ebay_business_country_zipcode" name="ebay_business_country_zipcode"
+                                           value="{{ebay_settings.business_zip}}">
+                                </div>
+                                <div id="ebay_business_country_zipcode_invalid" class="pull-left col-sm-offset-2 col-sm-6 has-error" style="clear:left;padding-bottom:15px;display:none">
+                                    <span class="help-block m-b-none">Invalid business country zipcode</span>
                                 </div>
                             </div>
                         </div>

@@ -47,7 +47,8 @@
                 {% if request.user|can:'product_filters.view' %}
                     <button class="btn btn-success btn-outline filter-btn filter-col-item">Filter</button>
                     {% if filter_products %}
-                    <a href="/product" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
+                        <a href="{% url 'product' %}?store={{ request.GET.store }}" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
+{#                    <a href="/product" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>#}
                     {% endif %}
                 {% endif %}
 

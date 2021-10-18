@@ -48,6 +48,13 @@
                             BigCommerce
                         </a>
                     {% endif %}
+
+                    {% if user_stores.ebay|length %}
+                    <a href="{% url 'ebay:products_list' %}" class="label m-xs filter-store-btn" filter-store="ebay">
+                        <span class="num">{{ user_stores.ebay|length }}</span>
+                        eBay
+                    </a>
+                    {% endif %}
                 {% endif %}
                 </th>
             </tr>
@@ -269,6 +276,77 @@
                                 <li>
                                     <a
                                         class="woo-delete-store-btn btn-danger btn-outline"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-times"></i> Delete
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endif %}
+
+
+                {% if item|model_name == 'ebaystore' %}
+                <tr id="ebay-store-row-{{item.id}}" class="store-item" store-id="{{item.id}}" store-type="ebay">
+                    <td class="drag-show">
+                        <i class="fa fa-bars order-handle" style="color:#ccc;font-size:12px;margin-right:5px;cursor:move"></i>
+                        <a class="store-link" href="{% url 'ebay:products_list' %}?store={{item.id}}">{{item.title}}</a>
+                    </td>
+                    <td class="no-wrap text-right">
+                        <a href="{% url 'ebay:products_list' %}?store={{ item.id }}" class="label">Products</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'ebay:orders_list' %}?store={{ item.id }}" class="label">Orders</a>
+                    </td>
+                    <td>
+                        <a href="{% url 'ebay:orders_track' %}?store={{ item.id }}" class="label">Tracking</a>
+                    </td>
+                    {% if not user.is_subuser %}
+                    <td style="white-space:nowrap" class="hidden-sm hidden-xs">
+                        <div class="btn-group ">
+                            <button data-toggle="dropdown" class="btn btn-default btn-outline btn-xs dropdown-toggle" aria-expanded="false">
+                                <i class="fa fa-cog"></i> <span class=""></span></button>
+                            <ul class="dropdown-menu pull-right">
+
+                                <li>
+                                    <a class="visit-store " href="#" target="_blank">
+                                        <i class="fa fa-external-link"></i> Visit Store
+                                    </a>
+                                </li>
+
+                                <li class="divider"></li>
+                                <li>
+                                    <a data-store-id="{{item.pk}}" class="ebay-verify-api-url btn-success btn-outline"
+                                        data-loading-text="<i class='fa fa-circle-o-notch fa-spin'></i> Verifying">
+                                        <i class="fa fa-check-circle-o"></i> Verify
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a store-id="{{item.pk}}" store-type="ebay" class="change-tracking-url btn-success btn-outline">
+                                        <i class="fa fa-chain"></i> Custom Tracking URL
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a store-id="{{item.pk}}" store-type="ebay" class="change-currency btn-success btn-outline">
+                                        <i class="fa fa-dollar"></i> Store Currency
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a
+                                        class="ebay-edit-store-btn"
+                                        data-store-id="{{ item.pk }}">
+                                        <i class="fa fa-edit"></i> Edit
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a
+                                        class="ebay-delete-store-btn btn-danger btn-outline"
                                         data-store-id="{{ item.pk }}">
                                         <i class="fa fa-times"></i> Delete
                                     </a>

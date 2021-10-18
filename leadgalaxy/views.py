@@ -1,114 +1,95 @@
-import re
-import csv
-import io
-import hmac
-import time
-
-from hashlib import sha1
-from urllib.parse import urlencode, quote_plus
-
 import arrow
+import csv
+import hmac
+import io
+import re
 import requests
 import simplejson as json
+import time
+from hashlib import sha1
 from munch import Munch
+from urllib.parse import quote_plus, urlencode
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout as user_logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.contrib.auth.views import LoginView
 from django.contrib.auth.password_validation import validate_password
-from django.conf import settings
+from django.contrib.auth.views import LoginView
 from django.core.cache import cache, caches
 from django.core.cache.utils import make_template_fragment_key
-from django.urls import reverse
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.signing import Signer
-from django.db.models import Count, Max, F, Q
-from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, Http404
-from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Count, F, Max, Q
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.template.defaultfilters import truncatewords
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
-from django.views.decorators.http import require_http_methods
 from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
+from django.views.decorators.http import require_http_methods
 from django.views.generic.base import TemplateView
 
 from alibaba_core import utils as alibaba_utils
-from infinite_pagination.paginator import InfinitePaginator
-from lib.exceptions import capture_exception
 from analytic_events.models import RegistrationEvent
-from commercehq_core.models import CommerceHQProduct, CommerceHQSupplier, CommerceHQOrderTrack, CommerceHQUserUpload
-from woocommerce_core.models import WooProduct, WooSupplier, WooUserUpload
+from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier, BigCommerceUserUpload
+from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, CommerceHQSupplier, CommerceHQUserUpload
+from ebay_core.models import EbayProduct, EbaySupplier
 from gearbubble_core.models import GearBubbleProduct, GearBubbleSupplier, GearUserUpload
 from groovekart_core.models import GrooveKartProduct, GrooveKartSupplier, GrooveKartUserUpload
-from bigcommerce_core.models import BigCommerceProduct, BigCommerceSupplier, BigCommerceUserUpload
-from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
+from infinite_pagination.paginator import InfinitePaginator
+from lib.exceptions import capture_exception
 from phone_automation import billing_utils as billing
-from shopified_core import permissions
-from shopified_core.exceptions import ApiProcessException
-from shopified_core.tasks import keen_order_event
-from shopified_core.paginators import SimplePaginator, FakePaginator
-from shopified_core.shipping_helper import get_counrties_list, country_from_code, aliexpress_country_code_map
-from shopified_core.mocks import (
-    get_mocked_bundle_variants,
-    get_mocked_supplier_variants,
-    get_mocked_alert_changes,
-)
-from shopified_core.utils import (
-    ALIEXPRESS_REJECTED_STATUS,
-    jwt_decode,
-    jwt_encode,
-    safe_int,
-    safe_float,
-    app_link,
-    url_join,
-    hash_text,
-    hash_list,
-    clean_query_id,
-    version_compare,
-    order_data_cache,
-    update_product_data_images,
-    aws_s3_context,
-    encode_params,
-    decode_params,
-    base64_encode,
-    base64_decode,
-    using_replica,
-    format_queueable_orders,
-    products_filter,
-    page_rpm_counter,
-)
-from supplements.lib.shipstation import get_address as get_shipstation_address
-from supplements.tasks import update_shipstation_address
-from supplements.models import PLSOrder
-from shopify_orders import utils as shopify_orders_utils
-from shopify_orders.models import (
-    ShopifyOrder,
-    ShopifySyncStatus,
-    ShopifyOrderShippingLine,
-    ShopifyOrderVariant,
-    ShopifyOrderLog,
-)
-from stripe_subscription.stripe_api import stripe
-from stripe_subscription.models import CustomStripePlan
-from stripe_subscription.invoices.pdf import draw_pdf
-from stripe_subscription.utils import (
-    get_stripe_invoice,
-    get_stripe_invoice_list,
-)
+from phone_automation.utils import get_month_limit, get_month_totals, get_phonenumber_usage
 from product_alerts.models import ProductChange
 from product_alerts.utils import variant_index_from_supplier_sku
-
-from . import tasks
-from . import utils
-from .forms import (
-    EmailAuthenticationForm,
-    EmailForm,
-    RegisterForm
+from shopified_core import permissions
+from shopified_core.exceptions import ApiProcessException
+from shopified_core.mocks import get_mocked_alert_changes, get_mocked_bundle_variants, get_mocked_supplier_variants
+from shopified_core.paginators import FakePaginator, SimplePaginator
+from shopified_core.shipping_helper import aliexpress_country_code_map, country_from_code, get_counrties_list
+from shopified_core.tasks import keen_order_event
+from shopified_core.utils import (
+    ALIEXPRESS_REJECTED_STATUS,
+    app_link,
+    aws_s3_context,
+    base64_decode,
+    base64_encode,
+    clean_query_id,
+    decode_params,
+    encode_params,
+    format_queueable_orders,
+    hash_list,
+    hash_text,
+    jwt_decode,
+    jwt_encode,
+    order_data_cache,
+    page_rpm_counter,
+    products_filter,
+    safe_float,
+    safe_int,
+    update_product_data_images,
+    url_join,
+    using_replica,
+    version_compare
 )
+from shopify_orders import utils as shopify_orders_utils
+from shopify_orders.models import ShopifyOrder, ShopifyOrderLog, ShopifyOrderShippingLine, ShopifyOrderVariant, ShopifySyncStatus
+from stripe_subscription.invoices.pdf import draw_pdf
+from stripe_subscription.models import CustomStripePlan
+from stripe_subscription.stripe_api import stripe
+from stripe_subscription.utils import get_stripe_invoice, get_stripe_invoice_list
+from supplements.lib.shipstation import get_address as get_shipstation_address
+from supplements.models import PLSOrder
+from supplements.tasks import update_shipstation_address
+from woocommerce_core.models import WooProduct, WooSupplier, WooUserUpload
+
+from . import tasks, utils
+from .forms import EmailAuthenticationForm, EmailForm, RegisterForm
 from .models import (
     AccountRegistration,
     AdminEvent,
@@ -126,10 +107,10 @@ from .models import (
     ShopifyProductImage,
     ShopifyStore,
     UserBlackSampleTracking,
-    UserUpload,
+    UserUpload
 )
-from .templatetags.template_helper import money_format
 from .paginator import ShopifyOrderPaginator
+from .templatetags.template_helper import money_format
 
 
 def get_product(request, filter_products, post_per_page=25, sort=None, store=None, board=None, load_boards=False):
@@ -988,6 +969,15 @@ def get_shipping_info(request):
             else:
                 supplier = WooSupplier.objects.get(id=supplier)
 
+        elif request.GET.get('ebay'):
+
+            if int(supplier) == 0:
+                product = EbayProduct.objects.get(guid=product)
+                permissions.user_can_view(request.user, product)
+                supplier = product.default_supplier
+            else:
+                supplier = EbaySupplier.objects.get(id=supplier)
+
         elif request.GET.get('gear'):
 
             if int(supplier) == 0:
@@ -1066,6 +1056,8 @@ def get_shipping_info(request):
         product = get_object_or_404(GrooveKartProduct, id=request.GET.get('product'))
     elif request.GET.get('bigcommerce'):
         product = get_object_or_404(BigCommerceProduct, id=request.GET.get('product'))
+    elif request.GET.get('ebay'):
+        product = get_object_or_404(EbayProduct, guid=request.GET.get('product'))
     else:
         product = get_object_or_404(ShopifyProduct, id=request.GET.get('product'))
 

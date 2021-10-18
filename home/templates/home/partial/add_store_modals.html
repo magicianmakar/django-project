@@ -1,4 +1,5 @@
 {% load perms_helper %}
+{% load static %}
 
 <div id="modal-add-all-store-form" class="modal fade" aria-hidden="true">
     <div class="modal-dialog">
@@ -14,7 +15,9 @@
                     <li><a href="#shopify-section" data-toggle="tab"></a></li>
                     <li><a href="#chq-section" data-toggle="tab"></a></li>
                     <li><a href="#woo-section" data-toggle="tab"></a></li>
-                    
+                    {% if request.user|can:'ebay.use' %}
+                    <li><a href="#ebay-section" data-toggle="tab"></a></li>
+                    {% endif %}
                     {% if request.user|can:'allow_groovekart.use' %}
                     <li><a href="#gk-section" data-toggle="tab"></a></li>
                     <li><a href="#gk-lite-section" data-toggle="tab"></a></li>
@@ -60,6 +63,13 @@
                                 <label style="display: block;">
                                     <input name="amt" value="#bigcommerce-section" type="radio">
                                     <span class="label-text"><strong>BigCommerce</strong></span>
+                                </label>
+                                {% endif %}
+
+                                {% if request.user|can:'ebay.use' %}
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input name="amt" value="#ebay-section" type="radio">
+                                    <span class="label-text"><strong>eBay</strong></span>
                                 </label>
                                 {% endif %}
                             </fieldset>
@@ -231,6 +241,42 @@
 
                             <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
                             <button class="btn btn-primary pull-right install-store" type="button" data-store-type="bigcommerce"><strong>Add store</strong></button>
+                        </div>
+                    </div>
+
+                     <!-- eBay -->
+                    <div id="ebay-section" class="tab-pane fade">
+                        <div class="row">
+                            <div class="col-sm-12" style="max-height: 500px; overflow-y: scroll;">
+                                <h3 class="m-t-none m-b">Add eBay Store</h3>
+                                <p class="m-b">
+                                    <strong>Login with eBay & Grant Application Access</strong><br/>
+                                    Click "Authorize eBay" below to start the authorization process.
+                                    Grant application access to Dropified to enable management of your listings and orders.
+                                </p>
+                                {% if not user.profile.get_sd_accounts|length %}
+                                    <div class="alert alert-info" role="alert">
+                                        <i class="fa fa-info-circle"></i>
+                                        Please note that eBay setup may take longer when adding an eBay store for the first time.
+                                    </div>
+                                {% endif %}
+
+                                <img src="{% static 'img/ebay-auth-grant-access-page.png' %}"
+                                     class="img-responsive center-block"
+                                     style="max-width: 80%;"
+                                     alt="eBay App Authorization page">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <hr style="margin:20px -15px">
+
+                                <button type="button" class="btn btn-outline btn-default pull-left" data-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn btn-primary pull-right" id="ebay-store-create-submit-btn"
+                                        {% if not user.profile.get_sd_accounts|length %}data-loading-text="Setting up eBay configurations..."{% endif %}>
+                                        <strong>Add store</strong>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
