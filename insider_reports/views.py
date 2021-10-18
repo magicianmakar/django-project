@@ -9,7 +9,10 @@ from django.template.defaulttags import register
 
 @register.filter
 def get_item(dictionary, key):
-    return dictionary.get(str(key))['key_value']
+    try:
+        return dictionary.get(str(key))['key_value']
+    except:
+        return False
 
 
 @login_required
@@ -94,27 +97,30 @@ def products_details(request, alibaba_product_id):
 
     # build sku map
     ranked_product['sku_map'] = {}
-    for key in ranked_product['full_data']['globalData']['product']['sku']['skuInfoMap']:
+    try:
+        for key in ranked_product['full_data']['globalData']['product']['sku']['skuInfoMap']:
 
-        # parse optionset
-        key_value = ''
-        variants = key.split(sep=';')
-        for variant in variants:
-            variant_values = variant.split(sep=':')
-            try:
-                variant_value = variant_values[1]
-            except:
-                variant_value = False
+            # parse optionset
+            key_value = ''
+            variants = key.split(sep=';')
+            for variant in variants:
+                variant_values = variant.split(sep=':')
+                try:
+                    variant_value = variant_values[1]
+                except:
+                    variant_value = False
 
-            for option in ranked_product['full_data']['globalData']['product']['sku']['skuAttrs']:
-                for value in option['values']:
-                    if str(value['id']) == str(variant_value):
-                        key_value = key_value + value['name'] + ", "
-        key_value = key_value.rstrip(", ")
+                for option in ranked_product['full_data']['globalData']['product']['sku']['skuAttrs']:
+                    for value in option['values']:
+                        if str(value['id']) == str(variant_value):
+                            key_value = key_value + value['name'] + ", "
+            key_value = key_value.rstrip(", ")
 
-        ranked_product['sku_map'][str(ranked_product['full_data']['globalData']['product']['sku']
-                                      ['skuInfoMap'][key]['id'])] = {'key': key, 'key_value': key_value}
-
+            ranked_product['sku_map'][str(ranked_product['full_data']['globalData']['product']['sku']
+                                          ['skuInfoMap'][key]['id'])] = {'key': key, 'key_value': key_value}
+    except:
+        # no sku map
+        pass
     try:
         alibaba_account_id = request.user.models_user.alibaba.first().alibaba_user_id
     except:
