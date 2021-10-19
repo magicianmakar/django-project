@@ -1579,6 +1579,14 @@
                         displayAjaxError('Add eBay Store', data);
                     }
                 });
+
+                channel.bind('ebay-config-setup', function(data) {
+                    if (!data.success) {
+                        buttonEl.bootstrapBtn('reset');
+                        pusher.unsubscribe(channel);
+                        displayAjaxError('Add eBay Store', data);
+                    }
+                });
             },
             error: function(data, status) {
                 if (status === 'timeout') {

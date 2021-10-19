@@ -12,7 +12,7 @@ def register_new_sd_user(pusher_channel, user_id):
     result = SureDoneAdminUtils().register_new_user(user)
     sd_account = result.get('account')
     pusher = SureDonePusher(pusher_channel)
-    default_event = 'ebay-store-add'
+    default_event = 'ebay-config-setup'
 
     if result.get('error') or sd_account is None:
         capture_message('Error creating a new account.', extra={'error_message': result.get('error')})

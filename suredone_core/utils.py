@@ -89,7 +89,7 @@ class SureDoneUtils:
             if verify_custom_fields:
                 failed_sets = self.sd_account.verify_custom_fields_created(all_options_data)
                 if failed_sets:
-                    from tasks import configure_user_custom_fields
+                    from .tasks import configure_user_custom_fields
                     configure_user_custom_fields.apply_async(kwargs={
                         'sd_account_id': self.sd_account.id,
                         'user_id': self.user.id,
