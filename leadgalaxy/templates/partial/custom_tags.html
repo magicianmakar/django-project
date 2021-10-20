@@ -5,15 +5,11 @@
 <script src="//h2sbr9ckt5yj.statuspage.io/embed/script.js" async></script>
 
 <script>
-window.hsConversationsSettings = {
-   identificationEmail: "{{ user.email }}",
-};
+
 </script>
-<script type="text/javascript"  async defer src="//js-eu1.hs-scripts.com/25107003.js"></script>
 
 <script>
-    {% if user.is_authenticated  %}
-
+    {% if user.is_authenticated and not DEBUG  %}
         {% with plan=user.profile.plan %}
         var dataLayer = [{
             userPlan: '{{plan.title}}',
@@ -82,6 +78,10 @@ window.hsConversationsSettings = {
                 }
             };
 
+            window.hsConversationsSettings = {
+                identificationEmail: currentUser.email,
+            };
+
             {% if user.is_stripe_customer %}
             window.onboardFlowSettings = {
                 "siteKey": "lCcWxLzX",
@@ -122,17 +122,6 @@ window.hsConversationsSettings = {
     '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-TPLKSQ');
 
-    {% if 1 %}
-    // HubSpot
-
-/*
-    (function(w,d,s){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s);j.async=true;j.id="hs-script-loader";j.defer=true;j.src=
-    '//js-eu1.hs-scripts.com/25107003.js';f.parentNode.insertBefore(j,f);
-    })(window,document,'script');
- */
-    {% else %}
     //Intercom
     if(typeof(window.intercomSettings)!=="undefined"){(function(){var c=window;
     var a=c.Intercom;if(typeof a==="function"){a("reattach_activator");
@@ -143,7 +132,6 @@ window.hsConversationsSettings = {
     var d=f.getElementsByTagName("script")[0];d.parentNode.insertBefore(g,d)
     }if(c.attachEvent){c.attachEvent("onload",b)}else{c.addEventListener("load",b,false)
     }}})()};
-    {% endif %}
 
     {% if not disable_appcuse %}
     // AppCuse
