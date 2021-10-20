@@ -389,6 +389,9 @@ class PLSOrder(PLSOrderMixin, model_base.AbstractOrder):
         if self.is_taxes_paid:
             extra_info['advancedOptions']['customField2'] = 'Duties Paid'
 
+        if self.user.profile.company:
+            extra_info['advancedOptions']['customField3'] = self.user.profile.company.vat
+
         if self.shipping_service_id:
             extra_info['requestedShippingService'] = self.shipping_service_id
 
