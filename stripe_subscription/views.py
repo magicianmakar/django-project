@@ -156,6 +156,12 @@ def subscription_plan(request):
                 else:
                     sub.trial_end = arrow.get(sub.trial_end).timestamp
 
+            if not user.get_config('research_upgraded') and "research" in user.profile.plan.slug:
+                sub.trial_end = arrow.utcnow().replace(days=plan.trial_days).timestamp
+                set_research_upgraded = True
+            else:
+                set_research_upgraded = False
+
             try:
                 main_plan_item = get_main_subscription_item(sub)
 
@@ -170,6 +176,10 @@ def subscription_plan(request):
                     plan=plan.stripe_plan.stripe_id
                 )
                 subscription.refresh()
+
+                if set_research_upgraded:
+                    user.set_config('research_upgraded', True)
+
                 sub.save()
 
             except (SubscriptionException, stripe.error.CardError, stripe.error.InvalidRequestError) as e:
