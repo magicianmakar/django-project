@@ -41,7 +41,7 @@ def generate_create_contact(user: User):
             "phone": profile.phone,
             "country": profile.country,
 
-            "dr_join_date": arrow.get(user.date_joined).timestamp,
+            "dr_join_date": arrow.get(user.date_joined).isoformat(),
             "dr_plan": plan.title if plan else '',
             "dr_bundles": ','.join(profile.bundles_list()),
             "dr_user_tags": profile.tags,
