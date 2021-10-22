@@ -75,23 +75,25 @@ function prepareApiData(productData, variants) {
         });
     }
 
-    if (variants.length > 0 && variantsConfig.length > 0) {
-        if (config.connected || $('#advanced_variants').prop('checked')) {
-            var attrs = ['price', 'compareatprice', 'weight', 'weightunit', 'stock', 'suppliersku'];
-            $('#ebay-variants tr.ebay-variant').each(function(j, tr) {
-                var variant_data = variants[j];
+    var attrs = ['price', 'compareatprice', 'weight', 'weightunit', 'stock', 'suppliersku'];
 
-                $.each(attrs, function(k, att) {
-                    var att_val = $('[name="' + att + '"]', tr).val();
-                    if (att_val !== undefined) {
-                        variant_data[att] = att_val;
-                    }
-                });
+    if (variants.length > 0) {
+        // TODO: when modifying variants is implemented, add this back
+        /*if (config.connected || $('#advanced_variants').prop('checked')) {*/
+        $('#ebay-variants tr.ebay-variant').each(function(j, tr) {
+            var variant_data = variants[j];
 
-                apiData.variants.push(variant_data);
-
+            $.each(attrs, function(k, att) {
+                var att_val = $('[name="' + att + '"]', tr).val();
+                if (att_val !== undefined) {
+                    variant_data[att] = att_val;
+                }
             });
-        } else {
+
+            apiData.variants.push(variant_data);
+
+        });
+        /*} else {
             var updatedVariantsConfig = [];
             $('#variants .variant').each(function (i, el) {
                 updatedVariantsConfig.push({
@@ -110,7 +112,7 @@ function prepareApiData(productData, variants) {
                 variant.variantsconfig = JSON.stringify(updatedVariantsConfig);
                 return variant;
             });
-        }
+        }*/
     }
     return apiData;
 }
