@@ -1,6 +1,7 @@
 import re
 import arrow
 import requests
+import time
 
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -14,6 +15,10 @@ def api_requests(url, data, method='post'):
         json=data,
         params={'hapikey': settings.HUPSPOT_API_KEY}
     )
+
+    if not r.ok and r.status_code == 429:
+        time.sleep(1)
+        return api_requests(url=url, data=data, method=method)
 
     r.raise_for_status()
 
@@ -41,7 +46,7 @@ def generate_create_contact(user: User):
             "phone": profile.phone,
             "country": profile.country,
 
-            "dr_join_date": arrow.get(user.date_joined).isoformat(),
+            "dr_join_date": arrow.get(user.date_joined).timestamp * 1000,
             "dr_plan": plan.title if plan else '',
             "dr_bundles": ','.join(profile.bundles_list()),
             "dr_user_tags": profile.tags,

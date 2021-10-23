@@ -34,15 +34,21 @@ class Command(DropifiedBaseCommand):
 
         q = Queue()
 
-        for i in range(3):
+        for i in range(2):
             t = Thread(target=create_contact_worker, args=(self, q))
             t.daemon = True
             t.start()
 
         users = User.objects.all()
 
-        self.progress_total(users.count())
+        SKIP = 0
+        self.progress_total(users.count() - SKIP)
+        total_count = 0
         for user in users.all():
+            total_count += 1
+            if total_count < SKIP:
+                continue
+
             try:
                 last_seen = LastSeen.objects.when(user, 'website')
             except:
