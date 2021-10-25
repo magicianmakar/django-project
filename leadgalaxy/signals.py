@@ -41,6 +41,7 @@ from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
 from shopified_core.tasks import keen_send_event
 from shopified_core.utils import get_domain
+from hubspot_core.tasks import update_hubspot_user
 from stripe_subscription.stripe_api import stripe
 
 
@@ -78,6 +79,9 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         UserGoalRelationship.objects.filter(user=user).delete()
         for goal in Goal.objects.filter(plans=current_plan):
             UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
+
+    if settings.HUPSPOT_API_KEY:
+        update_hubspot_user.apply_async([user.id], expires=500)
 
     if instance.plan and not instance.has_churnzero_account and not user.is_subuser and not user.is_staff:
         set_churnzero_account(user)

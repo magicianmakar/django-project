@@ -1414,6 +1414,9 @@ if (window.intercomSettings) {
         }, {
             name: 'dashboard-content',
             selector: '#candu-dashboard-content'
+        }, {
+            name: 'plod-product-announcements',
+            selector: '#candu-plod-product-announcements'
         },
     ];
 

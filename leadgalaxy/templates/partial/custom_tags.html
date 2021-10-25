@@ -5,8 +5,11 @@
 <script src="//h2sbr9ckt5yj.statuspage.io/embed/script.js" async></script>
 
 <script>
-    {% if user.is_authenticated and not DEBUG %}
 
+</script>
+
+<script>
+    {% if user.is_authenticated and not DEBUG  %}
         {% with plan=user.profile.plan %}
         var dataLayer = [{
             userPlan: '{{plan.title}}',
@@ -73,6 +76,10 @@
                 widget: {
                 activator: '.navbar-default a[href="#support"]',
                 }
+            };
+
+            window.hsConversationsSettings = {
+                identificationEmail: currentUser.email,
             };
 
             {% if user.is_stripe_customer %}

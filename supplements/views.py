@@ -2832,3 +2832,23 @@ class BasketCheckout(LoginRequiredMixin, TemplateView):
         }
 
         return render(request, "supplements/basket_ckeckout.html", context)
+
+
+class ProductAnnouncements(LoginRequiredMixin, TemplateView):
+
+    @method_decorator(login_required)
+    def dispatch(self, request, *args, **kwargs):
+        # Permission check
+        if request.user.can('pls_product_news.use'):
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            raise permissions.PermissionDenied()
+
+    def get(self, request, **kwargs):
+        breadcrumbs = [
+            {'title': 'Supplements', 'url': reverse('pls:index')},
+            {'title': 'Product News', 'url': reverse('pls:plod-product-announcements')},
+        ]
+        context = {'breadcrumbs': breadcrumbs}
+
+        return render(request, "supplements/plod_product_announcements.html", context)

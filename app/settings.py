@@ -92,6 +92,7 @@ INSTALLED_APPS = (
     'acp_core',
     'churnzero_core',
     'offers',
+    'hubspot_core',
     'webhooks',
 
     'commercehq_core',
@@ -346,6 +347,8 @@ SHOPIFY_PRIVATE_LABEL_SECRET = os.environ.get('SHOPIFY_PRIVATE_LABEL_SECRET')
 INTERCOM_APP_ID = os.environ.get('INTERCOM_APP_ID')
 INTERCOM_SECRET_KEY = os.environ.get('INTERCOM_SECRET_KEY')
 INTERCOM_ACCESS_TOKEN = os.environ.get('INTERCOM_ACCESS_TOKEN')
+
+HUPSPOT_API_KEY = os.environ.get('HUPSPOT_API_KEY')
 
 # AWS S3
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
