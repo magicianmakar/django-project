@@ -5,6 +5,7 @@ import arrow
 from django.contrib.auth.models import User
 
 from hubspot_core.utils import create_contact, api_requests
+from hubspot_core.models import HubspotAccount
 from last_seen.models import LastSeen
 from shopified_core.commands import DropifiedBaseCommand
 
@@ -26,6 +27,7 @@ def create_contact_worker(cmd, q):
 class Command(DropifiedBaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--create', action='store_true', help='Create Properties only')
+        parser.add_argument('--missing', action='store_true', help='Add Missing users only')
 
     def start_command(self, *args, **options):
         if options['create']:
@@ -55,7 +57,10 @@ class Command(DropifiedBaseCommand):
                 last_seen = None
 
             if last_seen and last_seen > arrow.utcnow().replace(years=-2).datetime:
-                q.put(user)
+                if not options['missing'] or not HubspotAccount.objects.filter(hubspot_user=user).exists():
+                    q.put(user)
+
+            self.progress_update()
 
         q.join()
 

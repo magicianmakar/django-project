@@ -6,6 +6,7 @@ import time
 from django.contrib.auth.models import User
 from django.conf import settings
 
+from shopified_core.utils import safe_str
 from .models import HubspotAccount
 
 
@@ -41,8 +42,8 @@ def generate_create_contact(user: User):
     data = {
         "properties": {
             "email": user.email,
-            "firstname": user.first_name,
-            "lastname": user.last_name,
+            "firstname": safe_str(user.first_name).replace('.', ' '),
+            "lastname": safe_str(user.last_name).replace('.', ' '),
             "phone": profile.phone,
             "country": profile.country,
 
