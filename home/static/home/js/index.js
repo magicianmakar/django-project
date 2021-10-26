@@ -1559,44 +1559,53 @@
     });
 
     $('#ebay-store-create-submit-btn').click(function(e) {
+        if (typeof(Pusher) === 'undefined') {
+            toastr.error('This could be due to using Adblocker extensions<br>' +
+                'Please whitelist Dropified website and reload the page<br>' +
+                'Contact us for further assistance',
+                'Pusher service is not loaded', {timeOut: 0});
+            return;
+        }
+
         var buttonEl = $(this);
         buttonEl.bootstrapBtn('loading');
+        var pusher = new Pusher(sub_conf.key);
+        var channel = pusher.subscribe(sub_conf.channel);
 
-        $.ajax({
-            url: api_url('store-add', 'ebay'),
-            type: 'GET',
-            success: function(data) {
-                var pusher = new Pusher(data.pusher.key);
-                var channel = pusher.subscribe(data.pusher.channel);
+        channel.bind('ebay-store-add', function(data) {
+            buttonEl.bootstrapBtn('reset');
+            pusher.unsubscribe(channel);
 
-                channel.bind('ebay-store-add', function(data) {
+            if (data.success) {
+                window.location.href = data.auth_url;
+            } else {
+                displayAjaxError('Add eBay Store', data);
+            }
+        });
+
+        channel.bind('ebay-config-setup', function(data) {
+            if (!data.success) {
+                buttonEl.bootstrapBtn('reset');
+                pusher.unsubscribe(channel);
+                displayAjaxError('Add eBay Store', data);
+            }
+        });
+
+        channel.bind('pusher:subscription_succeeded', function() {
+            $.ajax({
+                url: api_url('store-add', 'ebay'),
+                type: 'GET',
+                success: function(data) {},
+                error: function(data, status) {
                     buttonEl.bootstrapBtn('reset');
                     pusher.unsubscribe(channel);
-
-                    if (data.success) {
-                        window.location.href = data.auth_url;
+                    if (status === 'timeout') {
+                        displayAjaxError('Add Store', 'Request timed out. Please try again');
                     } else {
-                        displayAjaxError('Add eBay Store', data);
+                        displayAjaxError('Add Store', data);
                     }
-                });
-
-                channel.bind('ebay-config-setup', function(data) {
-                    if (!data.success) {
-                        buttonEl.bootstrapBtn('reset');
-                        pusher.unsubscribe(channel);
-                        displayAjaxError('Add eBay Store', data);
-                    }
-                });
-            },
-            error: function(data, status) {
-                if (status === 'timeout') {
-                    buttonEl.bootstrapBtn('reset');
-                    displayAjaxError('Add Store', 'Request timed out. Please try again');
-                } else {
-                    buttonEl.bootstrapBtn('reset');
-                    displayAjaxError('Add Store', data);
-                }
-            },
+                },
+            });
         });
     });
 

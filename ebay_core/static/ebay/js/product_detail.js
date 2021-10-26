@@ -117,6 +117,17 @@ function prepareApiData(productData, variants) {
     return apiData;
 }
 
+function verifyPusherIsDefined() {
+    if (typeof(Pusher) === 'undefined') {
+        toastr.error('This could be due to using Adblocker extensions<br>' +
+            'Please whitelist Dropified website and reload the page<br>' +
+            'Contact us for further assistance',
+            'Pusher service is not loaded', {timeOut: 0});
+        return false;
+    }
+    return true;
+}
+
 $("#txtSearch").autocomplete({
     source: "/ajax_calls/search/",
     minLength: 2,
@@ -224,52 +235,54 @@ function productExport(btn) {
         swal('Product Export', 'Please choose an eBay store first!', 'error');
         return;
     }
+    if (!verifyPusherIsDefined()) {
+        return;
+    }
 
     btn.bootstrapBtn('loading');
 
-    $.ajax({
-        url: api_url('product-export', 'ebay'),
-        type: 'POST',
-        data: {
-            'product': product.guid,
-            'store': store_id,
-        },
-        context: {btn: btn},
-        success: function (data) {
-            var pusher = new Pusher(data.pusher.key);
-            var channel = pusher.subscribe(data.pusher.channel);
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
 
-            channel.bind('product-export', function(eventData) {
-                if (eventData.product === product.guid) {
-                    if (eventData.progress) {
-                        btn.text(eventData.progress);
-                        return;
-                    }
+    channel.bind('product-export', function(eventData) {
+        if (eventData.product === product.guid) {
+            if (eventData.progress) {
+                btn.text(eventData.progress);
+                return;
+            }
 
-                    btn.bootstrapBtn('reset');
-                    pusher.unsubscribe(data.pusher.channel);
-
-                    if (eventData.success) {
-                        toastr.success('Product Exported.','eBay Export');
-
-                        setTimeout(function () {
-                            window.location.reload(true);
-                        }, 1500);
-                    } else {
-                        displayAjaxError('eBay Export', eventData, true);
-                    }
-                }
-            });
-        },
-        error: function (data) {
             btn.bootstrapBtn('reset');
-            displayAjaxError('eBay Export', data, true);
+            pusher.unsubscribe(channel);
+
+            if (eventData.success) {
+                toastr.success('Product Exported.','eBay Export');
+
+                setTimeout(function () {
+                    window.location.reload(true);
+                }, 1500);
+            } else {
+                displayAjaxError('eBay Export', eventData, true);
+            }
         }
     });
-}
 
-function getEbayStoreInstancePrefix(storeIndex) {
-    return 'ebay' + storeIndex;
+    channel.bind('pusher:subscription_succeeded', function() {
+        $.ajax({
+            url: api_url('product-export', 'ebay'),
+            type: 'POST',
+            data: {
+                'product': product.guid,
+                'store': store_id,
+            },
+            context: {btn: btn},
+            success: function (data) {},
+            error: function (data) {
+                btn.bootstrapBtn('reset');
+                pusher.unsubscribe(channel);
+                displayAjaxError('eBay Export', data, true);
+            }
+        });
+    });
 }
 
 $('#product-update-btn').click(function (e) {
@@ -283,50 +296,56 @@ $('#product-update-btn').click(function (e) {
         toastr.warning('Compare at price should be greater than Product Price');
         return;
     }
+    if (!verifyPusherIsDefined()) {
+        return;
+    }
 
     var btn = $(this);
     btn.bootstrapBtn('loading');
 
     var apiData = prepareApiData(product, variants, variantsConfig);
 
-    $.ajax({
-        url: api_url('product-update', 'ebay'),
-        type: 'POST',
-        data: JSON.stringify ({
-            product_data: JSON.stringify(apiData),
-            site_id: product.ebay_site_id,
-            store: store_id,
-        }),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        context: {btn: btn},
-        success: function (data) {
-            var pusher = new Pusher(data.pusher.key);
-            var channel = pusher.subscribe(data.pusher.channel);
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
 
-            channel.bind('product-update', function(eventData) {
-                if (eventData.product === product.guid) {
-                    if (eventData.progress) {
-                        btn.text(data.progress);
-                        return;
-                    }
+    channel.bind('product-update', function(eventData) {
+        if (eventData.product === product.guid) {
+            if (eventData.progress) {
+                btn.text(eventData.progress);
+                return;
+            }
 
-                    btn.bootstrapBtn('reset');
-                    pusher.unsubscribe(data.pusher.channel);
-
-                    if (eventData.success) {
-                        toastr.success('Product Updated.','eBay Update');
-                    }
-                    if (eventData.error) {
-                        displayAjaxError('eBay Update', eventData, true);
-                    }
-                }
-            });
-        },
-        error: function (data) {
             btn.bootstrapBtn('reset');
-            displayAjaxError('Update Product', data);
+            pusher.unsubscribe(channel);
+
+            if (eventData.success) {
+                toastr.success('Product Updated.','eBay Update');
+            }
+            if (eventData.error) {
+                displayAjaxError('eBay Update', eventData, true);
+            }
         }
+    });
+
+    channel.bind('pusher:subscription_succeeded', function() {
+        $.ajax({
+            url: api_url('product-update', 'ebay'),
+            type: 'POST',
+            data: JSON.stringify ({
+                product_data: JSON.stringify(apiData),
+                site_id: product.ebay_site_id,
+                store: store_id,
+            }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            context: {btn: btn},
+            success: function (data) {},
+            error: function (data) {
+                btn.bootstrapBtn('reset');
+                pusher.unsubscribe(channel);
+                displayAjaxError('Update Product', data);
+            }
+        });
     });
 });
 
@@ -351,33 +370,40 @@ $('#advanced_variants').on('change', function(){
 });
 
 function deleteProduct(productGuid) {
-    $.ajax({
-        url: api_url('product', 'ebay') + '?' + $.param({product: productGuid}),
-        type: 'DELETE',
-        success: function(data) {
-            var pusher = new Pusher(data.pusher.key);
-            var channel = pusher.subscribe(data.pusher.channel);
+    if (!verifyPusherIsDefined()) {
+        return;
+    }
 
-            channel.bind('product-delete', function(eventData) {
-                if (eventData.product === product.guid) {
-                    swal.close();
-                    pusher.unsubscribe(data.pusher.channel);
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
 
-                    if (eventData.success) {
-                        toastr.success("The product has been deleted.", "Deleted!");
-                        setTimeout(function() {
-                            window.location.href = 'redirect_url' in eventData ? eventData.redirect_url : '/ebay/products';
-                        }, 1000);
-                    }
-                    if (eventData.error) {
-                        displayAjaxError('Delete Product', data);
-                    }
-                }
-            });
-        },
-        error: function(data) {
-            displayAjaxError('Delete Product', data);
+    channel.bind('product-delete', function(eventData) {
+        if (eventData.product === product.guid) {
+            swal.close();
+            pusher.unsubscribe(channel);
+
+            if (eventData.success) {
+                toastr.success("The product has been deleted.", "Deleted!");
+                setTimeout(function() {
+                    window.location.href = 'redirect_url' in eventData ? eventData.redirect_url : '/ebay/products';
+                }, 1000);
+            }
+            if (eventData.error) {
+                displayAjaxError('Delete Product', eventData);
+            }
         }
+    });
+
+    channel.bind('pusher:subscription_succeeded', function() {
+        $.ajax({
+            url: api_url('product', 'ebay') + '?' + $.param({product: productGuid}),
+            type: 'DELETE',
+            success: function(data) {},
+            error: function(data) {
+                pusher.unsubscribe(channel);
+                displayAjaxError('Delete Product', data);
+            }
+        });
     });
 }
 
@@ -490,51 +516,58 @@ $('#product-save-btn').click(function (e) {
 });
 
 function productSave(btn, callback) {
+    if (!verifyPusherIsDefined()) {
+        return;
+    }
+
     btn.bootstrapBtn('loading');
     var store_id = $('#store-select').val();
 
     var apiData = prepareApiData(product, variants, variantsConfig);
 
-    $.ajax({
-        url: api_url('product-update', 'ebay'),
-        type: 'POST',
-        data: JSON.stringify ({
-            store: store_id,
-            product_data: JSON.stringify(apiData),
-            site_id: product.ebay_site_id,
-            skip_publishing: true,
-            variants_config: JSON.stringify(variantsConfig)
-        }),
-        contentType: "application/json; charset=utf-8",
-        dataType: "json",
-        context: {btn: btn},
-        success: function (data) {
-            var pusher = new Pusher(data.pusher.key);
-            var channel = pusher.subscribe(data.pusher.channel);
+    var pusher = new Pusher(config.sub_conf.key);
+    var channel = pusher.subscribe(config.sub_conf.channel);
 
-            channel.bind('product-update', function(eventData) {
-                if (eventData.product === product.guid) {
-                    if (eventData.progress) {
-                        btn.text(data.progress);
-                        return;
-                    }
+    channel.bind('product-update', function(eventData) {
+        if (eventData.product === product.guid) {
+            if (eventData.progress) {
+                btn.text(eventData.progress);
+                return;
+            }
 
-                    btn.bootstrapBtn('reset');
-                    pusher.unsubscribe(data.pusher.channel);
-
-                    if (eventData.success && callback) {
-                        callback();
-                    }
-                    if (eventData.error) {
-                        displayAjaxError('Save Product', data, true);
-                    }
-                }
-            });
-        },
-        error: function (data) {
-            displayAjaxError('Save Product', data, true);
             btn.bootstrapBtn('reset');
-        },
+            pusher.unsubscribe(channel);
+
+            if (eventData.success && callback) {
+                callback();
+            }
+            if (eventData.error) {
+                displayAjaxError('Save Product', eventData, true);
+            }
+        }
+    });
+
+    channel.bind('pusher:subscription_succeeded', function() {
+        $.ajax({
+            url: api_url('product-update', 'ebay'),
+            type: 'POST',
+            data: JSON.stringify ({
+                store: store_id,
+                product_data: JSON.stringify(apiData),
+                site_id: product.ebay_site_id,
+                skip_publishing: true,
+                variants_config: JSON.stringify(variantsConfig)
+            }),
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            context: {btn: btn},
+            success: function (data) {},
+            error: function (data) {
+                pusher.unsubscribe(channel);
+                btn.bootstrapBtn('reset');
+                displayAjaxError('Save Product', data, true);
+            },
+        });
     });
 }
 

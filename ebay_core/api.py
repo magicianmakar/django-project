@@ -6,7 +6,6 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.utils.crypto import get_random_string
 
 import suredone_core.tasks as sd_tasks
 from alibaba_core.models import AlibabaOrderItem
@@ -79,7 +78,7 @@ class EbayStoreApi(ApiBase):
                     return self.api_error('Your plan does not support connecting another eBay store. '
                                           'Please contact support@dropified.com to learn how to connect more stores.')
 
-        pusher_channel = f"add_ebay_store_{get_random_string(32, 'abcdef0123456789')}"
+        pusher_channel = f'user_{user.id}'
         tasks_base_kwargs = {'pusher_channel': pusher_channel, 'user_id': user.id}
         sd_account = None
 
