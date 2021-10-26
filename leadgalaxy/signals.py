@@ -15,6 +15,7 @@ from addons_core.tasks import cancel_all_addons
 from analytic_events.models import LoginEvent, StoreCreatedEvent
 from churnzero_core.utils import post_churnzero_addon_update, post_churnzero_change_plan_event, set_churnzero_account
 from goals.models import Goal, UserGoalRelationship
+from hubspot_core.tasks import update_hubspot_user
 from leadgalaxy.models import (
     SUBUSER_BIGCOMMERCE_STORE_PERMISSIONS,
     SUBUSER_CHQ_STORE_PERMISSIONS,
@@ -39,10 +40,9 @@ from lib.exceptions import capture_exception
 from metrics.tasks import activecampaign_update_plan, activecampaign_update_store_count
 from profit_dashboard.models import AliexpressFulfillmentCost
 from profit_dashboard.utils import get_costs_from_track
+from stripe_subscription.stripe_api import stripe
 from shopified_core.tasks import keen_send_event
 from shopified_core.utils import get_domain
-from hubspot_core.tasks import update_hubspot_user
-from stripe_subscription.stripe_api import stripe
 
 
 @receiver(post_save, sender=UserProfile)
@@ -79,6 +79,9 @@ def update_plan_changed_date(sender, instance, created, **kwargs):
         UserGoalRelationship.objects.filter(user=user).delete()
         for goal in Goal.objects.filter(plans=current_plan):
             UserGoalRelationship.objects.get_or_create(user=user, goal=goal)
+
+    if settings.HUPSPOT_API_KEY:
+        update_hubspot_user.apply_async([user.id], expires=500)
 
     if settings.HUPSPOT_API_KEY:
         update_hubspot_user.apply_async([user.id], expires=500)
