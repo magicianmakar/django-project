@@ -335,7 +335,7 @@ class OrderTrackBase(models.Model):
     def get_source_url(self):
         if self.source_id:
             if self.source_type == 'ebay':
-                return 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={}'.format(self.source_id)
+                return f'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId={self.source_id}&orderId={self.source_id}'
             elif self.source_type == 'other':
                 return ''
             elif self.source_type == 'supplements':

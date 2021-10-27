@@ -424,7 +424,7 @@
         }
 
         if (order.source_type == 'ebay') {
-            order.source_url = 'https://vod.ebay.com/vod/FetchOrderDetails?purchaseOrderId=' + order.source_id;
+            order.source_url = 'https://vod.ebay.com/vod/FetchOrderDetails?orderId=' + order.source_id + 'purchaseOrderId=' + order.source_id;
         } else if (order.source_type == 'supplements') {
             order.source_url = source.source_url;
         } else if (order.source_type == 'alibaba') {
