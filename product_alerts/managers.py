@@ -282,6 +282,14 @@ class ProductChangeManager():
 
         return changes_map
 
+    def save_newly_calculated_price(self, data, variant_change, new_price, variant_change_obj):
+        for index, vrnt in enumerate(data):
+            if data[index]['sku'] == variant_change.get('sku', ''):
+                variant_change['new_store_price'] = new_price
+                data[index]['new_store_price'] = new_price
+                variant_change_obj.data = json.dumps(data)
+                variant_change_obj.save()
+
 
 class ShopifyProductChangeManager(ProductChangeManager):
     def get_api_product_data(self):
@@ -314,6 +322,7 @@ class ShopifyProductChangeManager(ProductChangeManager):
 
         new_value = variant_change.get('new_value')
         old_value = variant_change.get('old_value')
+        variant_change_obj = self.product_change
 
         if self.config['price_change'] == 'update':
             if idx is not None:
@@ -343,6 +352,8 @@ class ShopifyProductChangeManager(ProductChangeManager):
                         self.product_data_changed = True
                         api_product_data['variants'][idx]['price'] = new_price
                         api_product_data['variants'][idx]['compare_at_price'] = new_compare_at_price
+
+                    self.save_newly_calculated_price(json.loads(variant_change_obj.data), variant_change, new_price, variant_change_obj)
 
     def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
         if self.config['quantity_change'] == 'update':
@@ -431,6 +442,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
 
     def handle_variant_price_change(self, api_product_data, product_data, variant_change):
         idx = self.get_variant(api_product_data, variant_change)
+        variant_change_obj = self.product_change
         if idx is not None:
             variant_id = api_product_data['variants'][idx]['id']
             self.add_price_history(variant_id, variant_change)
@@ -462,6 +474,7 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                         self.product_data_changed = True
                         api_product_data['variants'][idx]['price'] = new_price
                         api_product_data['variants'][idx]['compare_price'] = new_compare_at_price
+                    self.save_newly_calculated_price(json.loads(variant_change_obj.data), variant_change, new_price, variant_change_obj)
             elif api_product_data.get('is_multi') is False:
                 current_price = safe_float(api_product_data['price'])
                 current_compare_at_price = safe_float(api_product_data.get('compare_price'))
@@ -489,6 +502,8 @@ class CommerceHQProductChangeManager(ProductChangeManager):
                         product_data['compare_at_price'] = new_compare_at_price
                         api_product_data['price'] = new_price
                         api_product_data['compare_price'] = new_compare_at_price
+
+                    self.save_newly_calculated_price(json.loads(variant_change_obj.data), variant_change, new_price, variant_change_obj)
 
     def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
         if self.config['quantity_change'] == 'update':
@@ -772,6 +787,7 @@ class WooProductChangeManager(ProductChangeManager):
 
     def handle_variant_price_change(self, api_product_data, product_data, variant_change):
         variant_id = 0
+        variant_change_obj = self.product_change
         idx = self.get_variant(api_product_data, variant_change)
         if idx is not None:
             variant_id = api_product_data['variants'][idx]['id']
@@ -815,6 +831,8 @@ class WooProductChangeManager(ProductChangeManager):
                     api_product_data['variants'][idx]['sale_price'] = sale_price
                     api_product_data['variants'][idx]['regular_price'] = regular_price
 
+                self.save_newly_calculated_price(json.loads(variant_change_obj.data), variant_change, new_price, variant_change_obj)
+
             elif len(api_product_data.get('variants', [])) == 0 or variant_id < 0:
                 current_price = safe_float(api_product_data['sale_price'])
                 current_compare_at_price = safe_float(api_product_data.get('regular_price'))
@@ -851,6 +869,8 @@ class WooProductChangeManager(ProductChangeManager):
                     product_data['compare_at_price'] = new_compare_at_price or new_price
                     api_product_data['sale_price'] = sale_price
                     api_product_data['regular_price'] = regular_price
+
+                self.save_newly_calculated_price(json.loads(variant_change_obj.data), variant_change, new_price, variant_change_obj)
 
     def handle_variant_quantity_change(self, api_product_data, product_data, variant_change):
         if self.config['quantity_change'] == 'update':

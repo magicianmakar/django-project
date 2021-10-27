@@ -129,26 +129,42 @@
                                             </td>
                                         </tr>
                                         <tr class="details" alert-id="{{item.id}}">
-                                            <td class="well" colspan="4">
+                                            <td class="well" colspan="5">
                                                 <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
-                                                    <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
+                                                    <div class="col-md-offset-1 col-md-1 var-name"><b>Variant</b></div>
                                                     <div class="col-md-2"></div>
                                                     <div class="col-md-2"><b>Old Price</b></div>
                                                     <div class="col-md-2"><b>New Price</b></div>
+                                                    <div class="col-md-2"><b>Store Price(before change)</b></div>
+                                                    {% if change.new_store_price %}
+                                                    <div class="col-md-2"><b>Store Price</b></div>
+                                                    {% else %}
                                                     <div class="col-md-2"><b>Shopify</b></div>
+                                                    {% endif %}
                                                 </div>
 
                                         {% endif %}
                                                 <div class="row">
-                                                    <div class="col-md-offset-1 col-md-3 var-name">{{change.sku_readable}}</div>
+                                                    <div class="col-md-offset-1 col-md-1 var-name">{{change.sku_readable}}</div>
                                                     <div class="col-md-2"> {% price_diff change.old_value change.new_value %}</div>
                                                     <div class="col-md-2">{% money_format change.old_value store %}</div>
                                                     <div class="col-md-2">{% money_format change.new_value store %}</div>
                                                     <div class="col-md-2">
-                                                    {% if change.shopify_value_label %}
-                                                    {{ change.shopify_value_label }}
+                                                        {% if change.store_price_before_change %}
+                                                        {% money_format change.store_price_before_change store %}
+                                                        {% else %}
+                                                        N/A
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                    {% if change.new_store_price %}
+                                                        {% money_format change.new_store_price store %}
                                                     {% else %}
-                                                    {% money_format change.shopify_value store %}
+                                                        {% if change.shopify_value_label %}
+                                                        {{ change.shopify_value_label }}
+                                                        {% else %}
+                                                        {% money_format change.shopify_value store %}
+                                                        {% endif %}
                                                     {% endif %}
                                                     </div>
                                                 </div>
@@ -176,7 +192,7 @@
                                             </td>
                                         </tr>
                                         <tr class="details" alert-id="{{item.id}}">
-                                            <td class="well" colspan="4">
+                                            <td class="well" colspan="5">
                                                 <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
                                                     <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
                                                     <div class="col-md-2"></div>
@@ -218,7 +234,7 @@
                                             </td>
                                         </tr>
                                         <tr class="details" alert-id="{{item.id}}">
-                                            <td class="well" colspan="4">
+                                            <td class="well" colspan="5">
                                                 <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
                                                     <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
                                                     <div class="col-md-2"></div>
@@ -256,7 +272,7 @@
                                             </td>
                                         </tr>
                                         <tr class="details" alert-id="{{item.id}}">
-                                            <td class="well" colspan="4">
+                                            <td class="well" colspan="5">
                                                 <div class="row" style="margin-bottom: 12px; border-bottom: 1px solid rgb(230, 230, 230);">
                                                     <div class="col-md-offset-1 col-md-3 var-name"><b>Variant</b></div>
                                                     <div class="col-md-2"></div>
@@ -277,7 +293,7 @@
                                     {% endfor %}
                                 {% empty %}
                                     <tr>
-                                        <td class="text-center" colspan="4">
+                                        <td class="text-center" colspan="5">
                                             <i>No alerts to display at this time</i>
                                         </td>
                                     </tr>

@@ -23,6 +23,7 @@ from django.views import View
 from alibaba_core import utils as alibaba_utils
 from churnzero_core.utils import post_churnzero_cancellation_event
 from leadgalaxy import utils, tasks
+from commercehq_core.utils import get_chq_products
 from leadgalaxy.models import (
     FeatureBundle,
     GroupPlan,
@@ -42,7 +43,7 @@ from woocommerce_core.tasks import update_woo_order
 from lib.exceptions import capture_message, capture_exception
 from metrics.activecampaign import ActiveCampaignAPI
 from product_alerts.models import ProductChange
-from product_alerts.utils import delete_product_monitor, unmonitor_store
+from product_alerts.utils import delete_product_monitor, unmonitor_store, variant_index_from_supplier_sku
 from profit_dashboard.models import FacebookAccess
 from shopified_core.models_utils import get_product_model
 from shopified_core.tasks import export_user_activity
@@ -723,6 +724,43 @@ def price_monitor_webhook(request):
 
     if product.user.can('price_changes.use') and product.is_connected and product.store.is_active:
         data = json.loads(request.body.decode())
+
+        vrnts = ''
+        if dropified_type == 'shopify':
+            try:
+                products = utils.get_shopify_products(store=product.store, product_ids=product.shopify_id, fields='id,title,variants')
+                for p in products:
+                    vrnts = p['variants']
+            except:
+                capture_exception()
+
+        if dropified_type == 'woo':
+            try:
+                vrnts = product.retrieve_variants()
+            except:
+                capture_exception()
+
+        if dropified_type == 'chq':
+            chq_id = product.get_chq_id()
+            try:
+                if chq_id:
+                    products = get_chq_products(store=product.store, product_ids=[chq_id], expand='variants')
+                    for p in products:
+                        if p.get('id') is not None:
+                            vrnts = p.get('variants', None)
+            except:
+                capture_exception()
+
+        for i, changes in enumerate(data):
+            if data[i]['name'] == 'price':
+                variant_id = 0
+                index = variant_index_from_supplier_sku(product, changes['sku'], vrnts)
+                if index is not None:
+                    variant_id = vrnts[index]['id']
+                if variant_id > 0:
+                    if vrnts[index].get('price') is not None:
+                        price = vrnts[index]['price']
+                        data[i]['store_price_before_change'] = price
 
         product_change = ProductChange.objects.create(
             store_type=dropified_type,
