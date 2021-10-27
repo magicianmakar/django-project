@@ -1,7 +1,6 @@
 import json
 
 from .aliexpress_api import RestApi
-from .settings import API_KEY, API_SECRET
 
 TOKEN = '50002001035rqggaZzI2hlT9Uxf9iFv4tTuHJdwgyHwSADa1e7759d89ORfe4gfBGlF8'
 
