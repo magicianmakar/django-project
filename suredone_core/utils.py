@@ -4,6 +4,7 @@ import re
 import uuid
 from copy import deepcopy
 from pusher import Pusher
+from tenacity import RetryError, retry, stop_after_attempt, wait_fixed
 from unidecode import unidecode
 
 from django.conf import settings
@@ -88,7 +89,8 @@ class SureDoneUtils:
                 self.sd_account.update_options_config(all_options_data, overwrite=True)
             if verify_custom_fields:
                 failed_sets = self.sd_account.verify_custom_fields_created(all_options_data)
-                if failed_sets:
+                failed_variant_fields = self.sd_account.verify_variation_fields(all_options_data)
+                if failed_sets or failed_variant_fields:
                     from .tasks import configure_user_custom_fields
                     configure_user_custom_fields.apply_async(kwargs={
                         'sd_account_id': self.sd_account.id,
@@ -447,6 +449,95 @@ class SureDoneUtils:
             variant_images = [all_images[i] for i in variant_images]
             variant.update(self.format_image_urls_as_sd_media(variant_images))
 
+    @retry(stop=stop_after_attempt(8), wait=wait_fixed(15))
+    def poll_verify_custom_fields_created(self, pending_fields: list):
+        all_options_data = self.get_all_user_options(update_db=False)
+        if not self.sd_account.has_fields_defined(pending_fields, all_options_data):
+            raise Exception
+        else:
+            self.sd_account.update_options_config(all_options_data, overwrite=True)
+
+    def handle_non_variant_fields(self, non_created_fields: list, non_variation_fields: list):
+        all_options_data = self.get_all_user_options()
+
+        # Verify that the fields don't exist and not that the options are not synced
+        all_fields_defined = self.sd_account.has_fields_defined(non_created_fields, all_options_data)
+        all_variations_set = self.sd_account.has_variation_fields(non_variation_fields, all_options_data)
+
+        # Create missing fields
+        pending_fields = []
+        if not all_fields_defined and non_created_fields:
+            pending_fields = [self.sd_account.format_custom_field(x) for x in non_created_fields]
+            failed_sets = self.create_custom_fields([{
+                'name': pending_fields,
+                'label': non_created_fields,
+                'type': 'varchar',
+                'length': 200
+            }], tries=1)
+            if failed_sets:
+                try:
+                    # Try parsing errors
+                    failed_field_names = []
+                    if isinstance(failed_sets[0], dict):
+                        errors = failed_sets[0].get('errors', {}).get('user_field_names_addname')
+                        if errors and isinstance(errors, str):
+                            # Remove extra error text
+                            errors = errors.replace(' error adding user fields', '').replace('"', '')
+                            # Extract failed field names
+                            failed_field_names = errors.split(',')
+                            # Filter out failed field names from the pending fields
+                            pending_fields = [x for x in pending_fields if x not in failed_field_names]
+                    if not isinstance(failed_sets[0], dict) or failed_field_names:
+                        capture_message('Error creating custom fields for a product', extra={
+                            'failed_sets': failed_sets,
+                            'failed_field_names': failed_field_names,
+                            'non_created_fields': non_created_fields,
+                            'sd_account_id': self.sd_account.id
+                        })
+                except IndexError:
+                    capture_message('Error creating custom fields', extra={
+                        'failed_sets': failed_sets,
+                        'non_created_fields': non_created_fields,
+                        'sd_account_id': self.sd_account.id
+                    })
+
+        # Add variation fields settings
+        if not all_variations_set and non_variation_fields:
+            # Poll options to wait for the fields to get created
+            if pending_fields:
+                try:
+                    self.poll_verify_custom_fields_created(pending_fields)
+                except RetryError:
+                    capture_message('Timed out waiting for pending fields to get created', extra={
+                        'pending_fields': pending_fields,
+                        'sd_account_id': self.sd_account.id
+                    })
+
+            # Try updating variation settings
+            formatted_fields = [x if x not in non_created_fields else self.sd_account.format_custom_field(x)
+                                for x in non_variation_fields]
+            request_data = {'site_cart_variants_set': formatted_fields}
+            api_resp = self.api.update_user_settings(request_data)
+            try:
+                api_resp_data = api_resp.json()
+                error_messages = api_resp_data.get('errors', {}).get('site_cart_variants_set')
+                if api_resp_data.get('result') != 'success' or error_messages:
+                    capture_message('Request to set custom fields variations failed.', extra={
+                        'suredone_account_id': self.sd_account.id,
+                        'response_code': api_resp.status_code,
+                        'response_reason': api_resp.reason,
+                        'response_data': api_resp_data,
+                        'failed_variant_fields': non_variation_fields,
+                    })
+            except Exception:
+                capture_exception(extra={
+                    'description': 'Exception error when trying to set custom field variants.',
+                    'suredone_account_id': self.sd_account.id,
+                    'response_code': api_resp.status_code,
+                    'response_reason': api_resp.reason,
+                    'failed_variant_fields': non_variation_fields
+                })
+
     def parse_product_details_in_ext_format(self, product_data: dict):
         computed_product_data = deepcopy(product_data)
         data_per_variant = []
@@ -513,14 +604,22 @@ class SureDoneUtils:
 
                 # Add values for the variation fields
                 var_unique_values = [i.strip() for i in variant_title.split('/')]
+                non_created_fields = []
+                non_variation_fields = []
                 for i, key in enumerate(variation_types):
                     try:
-                        current_variant_data[f'ebay{store_instance_id}itemspecifics{key}'] = var_unique_values[i]
                         current_variant_data[key] = var_unique_values[i]
-                        # if key.lower() == 'qty':
-                        #     current_variant_data['type'] = var_unique_values[i]
+                        current_variant_data[f'ebay{store_instance_id}itemspecifics{key}'] = var_unique_values[i]
+                        current_variant_data[self.sd_account.format_custom_field(key)] = var_unique_values[i]
+                        if not self.sd_account.has_field_defined(key):
+                            non_created_fields.append(key)
+                        if not self.sd_account.has_variation_field(key):
+                            non_variation_fields.append(key)
                     except IndexError:
                         continue
+
+                if non_created_fields or non_variation_fields:
+                    self.handle_non_variant_fields(non_created_fields, non_variation_fields)
 
                 # For each field within the current variant (price, compare_at, sku, image)
                 for key in req_variants_info[variant_title]:
@@ -680,11 +779,13 @@ class SureDoneUtils:
             self.sd_account.update_options_config(config)
         return {'error': error, 'error_message': error_message}
 
-    def configure_new_account_settings(self, custom_fields_sets: list):
+    def create_custom_fields(self, custom_fields_sets: list, tries=3):
         """
         Run new SureDone user account setup steps
         :param custom_fields_sets: Groups of custom fields configuration
         :type custom_fields_sets: list
+        :param tries: Number of times to reattempt in case of an error
+        :type tries: int
         :return: A dictionary containing keys of failed fields groups and api responses for each as its value
         :rtype: dict
         """
@@ -693,7 +794,7 @@ class SureDoneUtils:
 
         failed_set_indices = {}
         for i, fields_set in enumerate(custom_fields_sets):
-            tries_left = 3
+            tries_left = tries
             success = False
             request_data = {f'user_field_names_add{k}': v for k, v in fields_set.items()}
             request_data['user_field_names_addbulk'] = True
@@ -701,7 +802,7 @@ class SureDoneUtils:
             api_resp = {}
             while tries_left > 0:
                 api_resp = self.api.update_settings(request_data)
-                if isinstance(api_resp, dict) and api_resp.get('result') == 'success':
+                if isinstance(api_resp, dict) and api_resp.get('result') == 'success' and not api_resp.get('errors'):
                     success = True
                     break
                 tries_left -= 1

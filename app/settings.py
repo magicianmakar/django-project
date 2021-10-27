@@ -661,13 +661,25 @@ SUREDONE_CUSTOM_FIELDS_CONFIG = [
         'type': 'text',
     },
     {
-        'name': ['suppliersku', 'varianttitle', 'weightunit', 'dropifiedconnectedstoretype'],
+        'name': ['suppliersku', 'weightunit', 'dropifiedconnectedstoretype'],
         'type': 'varchar',
         'length': 50
     },
     {
         'name': ['compareatprice'],
         'type': 'float',
-        'length': 10,
     },
+    # Variation fields (ucf == user custom field) to differentiate between default and custom-created fields
+    {
+        'label': ['varianttitle', 'Ships From', 'Bundle', 'Gem Color', 'Ring Size', 'Main Stone Color',
+                  'Metal Color', 'US Size', 'Train Length', 'Height', 'Belt Length', 'Plug Type', 'Quantity'],
+        'name': ['varianttitle', 'ucfshipsfrom', 'ucfbundle', 'ucfgemcolor', 'ucfringsize', 'ucfmainstonecolor',
+                 'ucfmetalcolor', 'ucfussize', 'ucftrainlength', 'ucfheight', 'ucfbeltlength', 'ucfplugtype',
+                 'ucfquantity'],
+        'type': 'varchar',
+        'length': 200
+    }
 ]
+SUREDONE_DEFAULT_VARIANTS_FIELDS_CONFIG = [
+    'material', 'ucfshipsfrom', 'ucfbundle', 'ucfgemcolor', 'ucfringsize', 'ucfmainstonecolor', 'ucfmetalcolor',
+    'ucfussize', 'ucftrainlength', 'ucfheight', 'ucfbeltlength', 'ucfplugtype', 'model', 'ucfquantity']
