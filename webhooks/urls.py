@@ -23,6 +23,10 @@ urlpatterns = [
     path('gdpr-shopify/delete-customer', webhooks.views.ShopifyGDPRDeleteCustomerWebhook.as_view()),
     path('gdpr-shopify/delete-store', webhooks.views.ShopifyGDPRDeleteStoreWebhook.as_view()),
 
+    # Woo Commerce Order Webhooks
+    path('woo/order-created', webhooks.views.WooOrderCreateWebhook.as_view()),
+    path('woo/order-updated', webhooks.views.WooOrderUpdateWebhook.as_view()),
+
     path('stripe/subs', webhooks.views.stripe_webhook),
     path('clickfunnels/register/<int:funnel_id>/<int:funnel_step_id>/<int:plan_id>', webhooks.views.clickfunnels_register),
     path('clickfunnels/checklogin', webhooks.views.clickfunnels_checklogin),

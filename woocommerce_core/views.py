@@ -2,6 +2,7 @@ import json
 import re
 import arrow
 import requests
+from munch import Munch
 from decimal import Decimal
 
 from lib.exceptions import capture_exception
@@ -81,6 +82,7 @@ from .utils import (
 )
 
 from . import utils
+from . import tasks
 
 
 @login_required
@@ -718,23 +720,42 @@ class OrdersList(ListView):
 
         return super().render_to_response(context, **response_kwargs)
 
-    def get_filters(self):
-        filters = {}
-        params = self.request.GET
+    def use_db_filters(self, params, filters):
+        filtered, woo_orders = utils.orders_after_filters(self.get_store(), params)
+        if filtered:
+            woo_order_ids = woo_orders.values_list('order_id', flat=True)
+            include_ids = woo_order_ids or [0]
+            filters['include'] = ','.join([str(id_) for id_ in include_ids])
+
+        return filters
+
+    def use_api_filters(self, params, filters):
+        if params.get('status') and not params['status'] == 'any':
+            filters['status'] = params['status']
+
+        daterange = params.get('created_at_daterange')
+        if daterange and not daterange == 'all':
+            filters['after'], filters['before'] = get_daterange_filters(daterange)
 
         product_id = params.get('product')
         if product_id:
             self.product_filter = WooProduct.objects.filter(pk=safe_int(product_id)).first()
             filters['product'] = self.product_filter.source_id if self.product_filter else 0
 
-        daterange = params.get('created_at_daterange')
-        if daterange and not daterange == 'all':
-            filters['after'], filters['before'] = get_daterange_filters(daterange)
+        if params.get('query_customer'):
+            filters['customer'] = get_customer_id(self.get_store(), params['query_customer'])
 
-        store = self.get_store()
-        customer = params.get('query_customer')
-        if customer:
-            filters['customer'] = get_customer_id(store, customer)
+        return filters
+
+    def get_filters(self):
+        filters = {}
+        params = self.request.GET
+        filters = {}
+
+        if self.sync.store_sync_enabled:
+            filters = self.use_db_filters(params, filters)
+        else:
+            filters = self.use_api_filters(params, filters)
 
         if params.get('sort') in ['order_date', '!order_date']:
             filters['orderby'] = 'date'
@@ -743,15 +764,13 @@ class OrdersList(ListView):
             if params.get('sort') == '!order_date':
                 filters['order'] = 'desc'
 
-        if params.get('status') and not params.get('status') == 'any':
-            filters['status'] = params.get('status')
-
         if params.get('query'):
             filters['include'] = params.get('query')
 
         return filters
 
     def get_queryset(self):
+        self.get_sync_status()
         return WooListQuery(self.get_store(), 'orders', self.get_filters())
 
     def get_context_data(self, **kwargs):
@@ -772,6 +791,7 @@ class OrdersList(ListView):
         context['shipping_carriers'] = store_shipping_carriers(store)
         context['created_at_daterange'] = self.request.GET.get('created_at_daterange', '')
         context['product_filter'] = getattr(self, 'product_filter', None)
+        context['countries'] = get_counrties_list()
 
         context['breadcrumbs'] = [
             {'title': 'Orders', 'url': self.url},
@@ -790,6 +810,7 @@ class OrdersList(ListView):
             messages.error(self.request, f'Error while trying to show your Store Orders: {api_error}')
 
         context['api_error'] = api_error
+        context.update(**self.get_sync_status())
 
         return context
 
@@ -817,6 +838,32 @@ class OrdersList(ListView):
             return product.get_shipping_for_variant(supplier_id=item['supplier'].id,
                                                     variant_id=variant_id,
                                                     country_code=country_code)
+
+    def get_sync_status(self):
+        if not hasattr(self, 'sync'):
+            self.sync = Munch()
+            store = self.get_store()
+
+            if self.request.GET.get('old') == '1':
+                store.disable_sync()
+            elif self.request.GET.get('old') == '0':
+                store.enable_sync()
+
+            self.sync.store_order_synced = store.is_synced()
+            self.sync.store_sync_enabled = self.sync.store_order_synced \
+                and (store.is_sync_enabled() or self.request.GET.get('new')) \
+                and not self.request.GET.get('live')
+
+            if self.sync.store_sync_enabled:
+                if store.get_sync_status().sync_status in [0, 6]:
+                    messages.info(self.request, 'Your store orders are being imported.')
+
+            orders_sync_check_key = f'woo_store_orders_sync_check_{self.store.id}'
+            if self.sync.store_sync_enabled and cache.get(orders_sync_check_key) is None:
+                cache.set(orders_sync_check_key, True, timeout=43200)
+                tasks.sync_woo_orders.apply_async(args=[self.store.id], expires=600)
+
+        return self.sync
 
     def get_order_data(self, order, item, product, supplier):
         store = self.get_store()

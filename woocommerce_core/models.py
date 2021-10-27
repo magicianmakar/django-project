@@ -1,5 +1,6 @@
 import json
 import re
+import arrow
 from urllib.parse import urlencode, urlparse
 
 from pusher import Pusher
@@ -16,7 +17,9 @@ from shopified_core.utils import (
     safe_str,
 )
 from shopified_core.decorators import add_to_class
-from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase
+from shopified_core.models import StoreBase, ProductBase, SupplierBase, BoardBase, OrderTrackBase, UserUploadBase, OrdersSyncStatusAbstract
+
+from .mixins import WooAPIDataMixin
 
 
 @add_to_class(User, 'get_woo_boards')
@@ -155,6 +158,44 @@ class WooStore(StoreBase):
 
     def get_product(self, product_id, store):
         return WooProduct.objects.get(source_id=product_id, store=store)
+
+    def get_sync_status(self):
+        if not self.sync_statuses.count() == 1:
+            return
+
+        return self.sync_statuses.first()
+
+    def enable_sync(self):
+        sync = self.get_sync_status()
+        sync.sync_status = 2 if sync.sync_status == 5 else sync.sync_status
+        sync.save()
+
+    def disable_sync(self):
+        sync = self.get_sync_status()
+        sync.sync_status = 5 if sync.sync_status == 2 else sync.sync_status
+        sync.save()
+
+    def is_synced(self):
+        sync = self.get_sync_status()
+
+        return sync.sync_status in [2, 5, 6] if sync else False
+
+    def is_sync_enabled(self):
+        sync = self.get_sync_status()
+
+        return sync.sync_status in [2, 6] if sync else False
+
+    def is_store_indexed(self):
+        sync = self.get_sync_status()
+
+        return sync.sync_status in [2, 6] and sync.elastic if sync else False
+
+    def count_saved_orders(self, days=None):
+        orders = self.wooorder_set.all()
+        if days:
+            orders = orders.filter(date_created__gte=arrow.utcnow().replace(days=-abs(days)).datetime)
+
+        return orders.count()
 
 
 class WooProduct(ProductBase):
@@ -708,3 +749,174 @@ class WooBoard(BoardBase):
 
 class WooUserUpload(UserUploadBase):
     product = models.ForeignKey(WooProduct, null=True, on_delete=models.CASCADE)
+
+
+class WooSyncStatus(OrdersSyncStatusAbstract):
+    class Meta:
+        verbose_name = 'Woo Sync Status'
+        verbose_name_plural = 'Woo Sync Statuses'
+
+    store = models.ForeignKey('woocommerce_core.WooStore',
+                              related_name='sync_statuses',
+                              on_delete=models.CASCADE)
+
+
+class WooOrder(WooAPIDataMixin, models.Model):
+    class Meta:
+        verbose_name = "Woo Order"
+        verbose_name_plural = "Woo Orders"
+
+    data = models.TextField()
+    store = models.ForeignKey('WooStore', on_delete=models.CASCADE)
+    order_id = models.IntegerField(db_index=True)
+    date_created = models.DateTimeField(db_index=True)
+    status = models.CharField(max_length=20)
+
+    def __str__(self):
+        return str(self.order_id)
+
+    def save(self, *args, **kwargs):
+        data = self.parsed
+        if data.get('id') is not None:
+            self.order_id = data['id']
+        if data.get('date_created_gmt') is not None:
+            self.date_created = arrow.get(data['date_created_gmt']).datetime
+        if data.get('status') is not None:
+            self.status = data['status']
+
+        super().save(*args, **kwargs)
+
+
+class WooOrderLine(WooAPIDataMixin, models.Model):
+    class Meta:
+        verbose_name = "Woo Order Line"
+        verbose_name_plural = "Woo Order lines"
+
+    data = models.TextField()
+    order = models.ForeignKey('WooOrder', on_delete=models.CASCADE)
+    line_id = models.IntegerField(db_index=True)
+    product_id = models.IntegerField(db_index=True)
+
+    def __str__(self):
+        return str(self.line_id)
+
+    def save(self, *args, **kwargs):
+        data = self.parsed
+        if data.get('id') is not None:
+            self.line_id = data['id']
+        if data.get('product_id') is not None:
+            self.product_id = data['product_id']
+
+        super().save(*args, **kwargs)
+
+
+class WooOrderShippingAddress(WooAPIDataMixin, models.Model):
+    class Meta:
+        verbose_name = "Woo Order Shipping Address"
+        verbose_name_plural = "Woo Order Shipping Addresses"
+
+    data = models.TextField()
+    order = models.OneToOneField('WooOrder', on_delete=models.CASCADE, related_name='shipping_address')
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
+    company = models.CharField(max_length=200)
+    address_1 = models.CharField(max_length=200)
+    address_2 = models.CharField(max_length=200)
+    city = models.CharField(max_length=200)
+    state = models.CharField(max_length=200)
+    postcode = models.CharField(max_length=20)
+    country = models.CharField(max_length=3)
+
+    def __str__(self):
+        return str(self.address_1)
+
+    def save(self, *args, **kwargs):
+        data = self.parsed
+        if data.get('first_name') is not None:
+            self.first_name = data['first_name']
+        if data.get('last_name') is not None:
+            self.last_name = data['last_name']
+        if data.get('company') is not None:
+            self.company = data['company']
+        if data.get('address_1') is not None:
+            self.address_1 = data['address_1']
+        if data.get('address_2') is not None:
+            self.address_2 = data['address_2']
+        if data.get('city') is not None:
+            self.city = data['city']
+        if data.get('state') is not None:
+            self.state = data['state']
+        if data.get('postcode') is not None:
+            self.postcode = data['postcode']
+        if data.get('country') is not None:
+            self.country = data['country']
+
+        super().save(*args, **kwargs)
+
+
+class WooOrderBillingAddress(WooAPIDataMixin, models.Model):
+    class Meta:
+        verbose_name = "Woo Order Billing Address"
+        verbose_name_plural = "Woo Order Billing Addresses"
+
+    data = models.TextField()
+    order = models.OneToOneField('WooOrder', on_delete=models.CASCADE, related_name='billing_address')
+    first_name = models.CharField(max_length=200)
+    last_name = models.CharField(max_length=200)
+    company = models.CharField(max_length=200)
+    address_1 = models.CharField(max_length=200)
+    address_2 = models.CharField(max_length=200)
+    city = models.CharField(max_length=200)
+    state = models.CharField(max_length=200)
+    postcode = models.CharField(max_length=20)
+    country = models.CharField(max_length=3)
+    email = models.CharField(max_length=100)
+    phone = models.CharField(max_length=100)
+
+    def __str__(self):
+        return str(self.address_1)
+
+    def save(self, *args, **kwargs):
+        data = self.parsed
+        if data.get('first_name') is not None:
+            self.first_name = data['first_name']
+        if data.get('last_name') is not None:
+            self.last_name = data['last_name']
+        if data.get('company') is not None:
+            self.company = data['company']
+        if data.get('address_1') is not None:
+            self.address_1 = data['address_1']
+        if data.get('address_2') is not None:
+            self.address_2 = data['address_2']
+        if data.get('city') is not None:
+            self.city = data['city']
+        if data.get('state') is not None:
+            self.state = data['state']
+        if data.get('postcode') is not None:
+            self.postcode = data['postcode']
+        if data.get('country') is not None:
+            self.country = data['country']
+        if data.get('email') is not None:
+            self.email = data['email']
+        if data.get('phone') is not None:
+            self.phone = data['phone']
+
+        super().save(*args, **kwargs)
+
+
+class WooWebhook(models.Model):
+    class Meta:
+        verbose_name = "WooCommerce Order Webhooks"
+        ordering = ['-created_at']
+        unique_together = ('store', 'topic')
+
+    store = models.ForeignKey(WooStore, on_delete=models.CASCADE)
+    topic = models.CharField(max_length=60)
+    webhook_id = models.BigIntegerField(default=0, verbose_name='Webhook ID')
+    call_count = models.IntegerField(default=0)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'<WooWebhook: {self.id}>'

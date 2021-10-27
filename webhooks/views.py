@@ -36,6 +36,9 @@ from leadgalaxy.models import (
     UserProfile,
     AppPermission
 )
+
+from woocommerce_core.tasks import update_woo_order
+
 from lib.exceptions import capture_message, capture_exception
 from metrics.activecampaign import ActiveCampaignAPI
 from product_alerts.models import ProductChange
@@ -49,7 +52,7 @@ from shopify_orders.models import ShopifyOrder
 from stripe_subscription.utils import process_webhook_event
 from supplements.models import PLSOrder
 from webhooks.tasks import setup_free_account
-from webhooks.utils import ShopifyWebhookMixing
+from webhooks.utils import ShopifyWebhookMixing, WooWebhookProcessing
 
 
 def jvzoo_webhook(request, option):
@@ -1364,3 +1367,50 @@ def alibaba_webhook(request):
     alibaba_utils.save_alibaba_products(request, products_data)
 
     return HttpResponse('ok')
+
+
+class WooOrderCreateWebhook(WooWebhookProcessing):
+    def process_webhook(self, store, webhook_data):
+        cache.set(f'woo_saved_orders_clear_{store.id}', True, timeout=300)
+        queue = 'priority_high'
+        countdown = 1
+
+        cache.set(f'woo_webhook_order_{store.id}_{webhook_data["id"]}', webhook_data, timeout=600)
+        countdown_key = f'woo_eta_order__{store.id}_{webhook_data["id"]}_updated'
+        countdown_saved = cache.get(countdown_key)
+        if countdown_saved is None:
+            cache.set(countdown_key, countdown, timeout=countdown * 2)
+        else:
+            countdown = countdown_saved + random.randint(2, 5)
+            cache.set(countdown_key, countdown, timeout=countdown * 2)
+
+        update_woo_order.apply_async(
+            args=[store.id, webhook_data['id']],
+            queue=queue,
+            countdown=countdown)
+
+        return JsonResponse({'status': 'ok'})
+
+
+class WooOrderUpdateWebhook(WooWebhookProcessing):
+    def process_webhook(self, store, webhook_data):
+        cache.set(f'woo_saved_orders_clear_{store.id}', True, timeout=300)
+
+        queue = 'celery'
+        countdown = random.randint(2, 9)
+
+        cache.set(f'woo_webhook_order_{store.id}_{webhook_data["id"]}', webhook_data, timeout=600)
+        countdown_key = f'woo_eta_order__{store.id}_{webhook_data["id"]}_updated'
+        countdown_saved = cache.get(countdown_key)
+        if countdown_saved is None:
+            cache.set(countdown_key, countdown, timeout=countdown * 2)
+        else:
+            countdown = countdown_saved + random.randint(2, 5)
+            cache.set(countdown_key, countdown, timeout=countdown * 2)
+
+        update_woo_order.apply_async(
+            args=[store.id, webhook_data['id']],
+            queue=queue,
+            countdown=countdown)
+
+        return JsonResponse({'status': 'ok'})
