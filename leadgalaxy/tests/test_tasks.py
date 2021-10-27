@@ -159,12 +159,22 @@ class TasksTestCase(BaseTestCase):
             }]
         )
 
-        aliexpress_data = get_supplier_variants('aliexpress', supplier.get_source_id())
+        aliexpress_data = [{
+            "variant_ids": "",
+            "sku": "",
+            "sku_short": "",
+            "price": 105.8,
+            "compareAtPrice": 115.0,
+            "availabe_qty": 12543,
+            "ships_from_id": None,
+            "ships_from_title": None}]
+
         self.assertEqual(len(aliexpress_data), 1)
         self.assertEqual(aliexpress_data[0]['variant_ids'], '')
 
         with patch('leadgalaxy.models.ShopifyProduct.set_variant_quantity') as mock_set_variant_quantity, \
-                patch('leadgalaxy.utils.get_shopify_product', return_value=product_data):
+                patch('leadgalaxy.utils.get_shopify_product', return_value=product_data), \
+                patch('leadgalaxy.tasks.get_supplier_variants', return_value=aliexpress_data):
             sync_shopify_product_quantities(product.id)
             mock_set_variant_quantity.assert_called_with(
                 quantity=aliexpress_data[0]['availabe_qty'],

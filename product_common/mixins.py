@@ -1,14 +1,15 @@
+from bs4 import BeautifulSoup
+
 from django.db.models import Q
 from django.shortcuts import reverse
 from django.utils.html import format_html
 
-from bs4 import BeautifulSoup
-
+import bigcommerce_core
 import commercehq_core
+import ebay_core
 import gearbubble_core
 import leadgalaxy
 import woocommerce_core
-import bigcommerce_core
 
 
 class ProductMixin:
@@ -119,6 +120,7 @@ class OrderMixin:
         ShopifyStore = leadgalaxy.models.ShopifyStore
         CommerceHQStore = commercehq_core.models.CommerceHQStore
         WooStore = woocommerce_core.models.WooStore
+        EbayStore = ebay_core.models.EbayStore
         GearBubbleStore = gearbubble_core.models.GearBubbleStore
         BigCommerceStore = bigcommerce_core.models.BigCommerceStore
 
@@ -132,6 +134,8 @@ class OrderMixin:
             return cls.GEAR
         elif isinstance(store, BigCommerceStore):
             return cls.BIGCOMMERCE
+        elif isinstance(store, EbayStore):
+            return cls.EBAY
 
         raise Exception("Invalid Store")
 

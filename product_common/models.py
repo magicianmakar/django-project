@@ -75,6 +75,7 @@ class AbstractOrderInfo(models.Model):
     SHOPIFY = 'shopify'
     CHQ = 'chq'
     WOO = 'woo'
+    EBAY = 'ebay'
     GEAR = 'gear'
     GKART = 'gkart'
     BIGCOMMERCE = 'bigcommerce'
@@ -84,6 +85,7 @@ class AbstractOrderInfo(models.Model):
         (SHOPIFY, 'Shopify'),
         (CHQ, 'CommerceHQ'),
         (WOO, 'WooCommerce'),
+        (EBAY, 'eBay'),
         (GEAR, 'GearBubble'),
         (GKART, 'GrooveKart'),
         (BIGCOMMERCE, 'BigCommerce'),

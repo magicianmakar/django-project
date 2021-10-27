@@ -53,6 +53,7 @@ class Command(DropifiedBaseCommand):
                 'shopify_count': len(profile.get_shopify_stores()),
                 'chq_count': len(profile.get_chq_stores()),
                 'woo_count': len(profile.get_woo_stores()),
+                'ebay_count': len(profile.get_ebay_stores()),
                 'gkart_count': len(profile.get_gkart_stores()),
                 'gear_count': len(profile.get_gear_stores()),
                 'bigcommerce_count': len(profile.get_bigcommerce_stores()),

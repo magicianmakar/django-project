@@ -41,6 +41,11 @@
                     <a href="{% url 'bigcommerce:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">BigCommerce</a>
                 </li>
                 {% endif %}
+                {% if section != 'eBay' %}
+                <li>
+                    <a href="{% url 'ebay:products_list' %}?store={% if request.GET.store %}{{ request.GET.store }}{% else %}n{% endif %}">eBay</a>
+                </li>
+                {% endif %}
             </ul>
         </div>
 

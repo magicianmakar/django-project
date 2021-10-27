@@ -1,36 +1,36 @@
+import arrow
+
 from django.conf import settings
+from django.contrib.auth import authenticate
 from django.contrib.auth import login as user_login
 from django.contrib.auth import logout as user_logout
-from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from django.core.cache import cache
-from django.core.validators import validate_email, ValidationError
+from django.core.validators import ValidationError, validate_email
 from django.http import JsonResponse
-from django.views.generic import View
 from django.template.defaultfilters import slugify
+from django.views.generic import View
 
-import arrow
-from lib.exceptions import capture_message
-
-from leadgalaxy.api import ShopifyStoreApi
+from bigcommerce_core.api import BigCommerceStoreApi
+from bigcommerce_core.models import BigCommerceOrderTrack, BigCommerceStore
 from commercehq_core.api import CHQStoreApi
+from commercehq_core.models import CommerceHQOrderTrack, CommerceHQStore
+from ebay_core.api import EbayStoreApi
+from ebay_core.models import EbayOrderTrack, EbayStore
+from gearbubble_core.api import GearBubbleApi
+from gearbubble_core.models import GearBubbleOrderTrack, GearBubbleStore
+from groovekart_core.api import GrooveKartApi
+from groovekart_core.models import GrooveKartOrderTrack, GrooveKartStore
+from leadgalaxy.api import ShopifyStoreApi
+from leadgalaxy.models import ShopifyOrderTrack, ShopifyStore
+from lib.exceptions import capture_message
 from product_core.models import ProductBoard
 from woocommerce_core.api import WooStoreApi
-from gearbubble_core.api import GearBubbleApi
-from groovekart_core.api import GrooveKartApi
-from bigcommerce_core.api import BigCommerceStoreApi
+from woocommerce_core.models import WooOrderTrack, WooStore
 
-from leadgalaxy.models import ShopifyStore, ShopifyOrderTrack
-from commercehq_core.models import CommerceHQStore, CommerceHQOrderTrack
-from woocommerce_core.models import WooStore, WooOrderTrack
-from gearbubble_core.models import GearBubbleStore, GearBubbleOrderTrack
-from groovekart_core.models import GrooveKartStore, GrooveKartOrderTrack
-from bigcommerce_core.models import BigCommerceStore, BigCommerceOrderTrack
-
-from .mixins import ApiResponseMixin
-
-from . import utils as core_utils
 from . import permissions
+from . import utils as core_utils
+from .mixins import ApiResponseMixin
 
 
 class ShopifiedApi(ApiResponseMixin, View):
@@ -135,6 +135,14 @@ class ShopifiedApi(ApiResponseMixin, View):
                 'url': i.get_admin_url()
             })
 
+        for i in user.profile.get_ebay_stores():
+            stores.append({
+                'id': i.id,
+                'name': i.title,
+                'type': 'ebay',
+                'url': i.get_admin_url()
+            })
+
         for i in user.profile.get_gear_stores():
             stores.append({
                 'id': i.id,
@@ -172,6 +180,8 @@ class ShopifiedApi(ApiResponseMixin, View):
                 store_model = CommerceHQStore
             elif store_type == 'woo':
                 store_model = WooStore
+            elif store_type == 'ebay':
+                store_model = EbayStore
             elif store_type == 'gear':
                 store_model = GearBubbleStore
             elif store_type == 'gkart':
@@ -193,6 +203,7 @@ class ShopifiedApi(ApiResponseMixin, View):
         shopify_count = user.profile.get_shopify_stores().count()
         chq_count = user.profile.get_chq_stores().count()
         woo_count = user.profile.get_woo_stores().count()
+        ebay_count = user.profile.get_ebay_stores().count()
         gear_count = user.profile.get_gear_stores().count()
         gkart_count = user.profile.get_gkart_stores().count()
         bigcommerce_count = user.profile.get_bigcommerce_stores().count()
@@ -205,7 +216,8 @@ class ShopifiedApi(ApiResponseMixin, View):
             else:
                 cache.set('quick_save_limit_{}'.format(user.id), True, timeout=user.get_config('_quick_save_limit', 5))
 
-        other_stores_empty = woo_count == 0 and chq_count == 0 and gear_count == 0 and gkart_count == 0 and bigcommerce_count == 0
+        other_stores_empty = woo_count == 0 and chq_count == 0 and gear_count == 0 and gkart_count == 0 and bigcommerce_count == 0\
+            and ebay_count == 0
 
         if shopify_count > 0 or other_stores_empty:
             return ShopifyStoreApi.as_view()(request, **self.request_kwargs)
@@ -217,6 +229,8 @@ class ShopifiedApi(ApiResponseMixin, View):
             return GearBubbleApi.as_view()(request, **self.request_kwargs)
         elif bigcommerce_count > 0:
             return BigCommerceStoreApi.as_view()(request, **self.request_kwargs)
+        elif ebay_count > 0:
+            return EbayStoreApi.as_view()(request, **self.request_kwargs)
         else:
             return GrooveKartApi.as_view()(request, **self.request_kwargs)
 
@@ -337,6 +351,23 @@ class ShopifiedApi(ApiResponseMixin, View):
                 order_tracks = order_tracks.filter(store=data.get('store'))
 
             orders.extend(core_utils.serializers_orders_track(order_tracks, 'bigcommerce'))
+
+        # eBay
+        store_ids = list(user.profile.get_ebay_stores(flat=True))
+        if store_ids:
+            order_tracks = core_utils.using_replica(EbayOrderTrack) \
+                .filter(store__in=store_ids) \
+                .filter(created_at__gte=since) \
+                .filter(source_tracking='') \
+                .exclude(source_status='FINISH') \
+                .filter(hidden=False) \
+                .defer('data') \
+                .order_by('created_at')
+
+            if data.get('store'):
+                order_tracks = order_tracks.filter(store=data.get('store'))
+
+            orders.extend(core_utils.serializers_orders_track(order_tracks, 'ebay'))
 
         return self.api_success({
             'orders': orders,

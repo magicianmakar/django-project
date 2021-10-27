@@ -1,20 +1,21 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.cache import cache
-from django.contrib import messages
 from django.shortcuts import redirect
-from django.views.generic import View, TemplateView
-from django.views.decorators.clickjacking import xframe_options_exempt
 from django.utils.decorators import method_decorator
-
-from lib.exceptions import capture_message
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.views.generic import TemplateView, View
 
 from alibaba_core.utils import get_access_token_url as get_alibaba_access_token_url
-from shopified_core import permissions
-from shopified_core.utils import last_executed
-from shopified_core.mocks import get_mocked_config_alerts
-from leadgalaxy.models import DescriptionTemplate, PriceMarkupRule, DashboardVideo, GroupPlan
-from leadgalaxy.shopify import ShopifyAPI
+from ebay_core.utils import EbayUtils
 from goals.utils import get_dashboard_user_goals
+from leadgalaxy.models import DashboardVideo, DescriptionTemplate, GroupPlan, PriceMarkupRule
+from leadgalaxy.shopify import ShopifyAPI
+from lib.exceptions import capture_message
+from shopified_core import permissions
+from shopified_core.mocks import get_mocked_config_alerts
+from shopified_core.shipping_helper import get_counrties_list
+from shopified_core.utils import last_executed
 from aliexpress_core.models import AliexpressAccount
 
 from .context_processors import all_stores
@@ -145,6 +146,10 @@ class SettingsPageView(HomePageMixing):
 
         ctx['page'] = 'settings'
         ctx['breadcrumbs'] = ['Settings']
+
+        # eBay Settings
+        ctx['ebay_settings'] = EbayUtils(self.request.user).get_ebay_user_settings_config()
+        ctx['countries'] = get_counrties_list()
 
         return ctx
 

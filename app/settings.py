@@ -92,10 +92,12 @@ INSTALLED_APPS = (
     'acp_core',
     'churnzero_core',
     'offers',
+    'hubspot_core',
     'webhooks',
 
     'commercehq_core',
     'woocommerce_core',
+    'ebay_core',
     'gearbubble_core',
     'groovekart_core',
     'bigcommerce_core',
@@ -110,6 +112,8 @@ INSTALLED_APPS = (
     'fulfilment_fee',
     'alibaba_core',
     'aliexpress_core',
+    'insider_reports',
+    'suredone_core',
 )
 
 MIDDLEWARE = (
@@ -192,6 +196,7 @@ DROPIFIED_API = {
     'chq': 'commercehq_core.api.CHQStoreApi',
     'gear': 'gearbubble_core.api.GearBubbleApi',
     'woo': 'woocommerce_core.api.WooStoreApi',
+    'ebay': 'ebay_core.api.EbayStoreApi',
     'gkart': 'groovekart_core.api.GrooveKartApi',
     'bigcommerce': 'bigcommerce_core.api.BigCommerceStoreApi',
     'tubehunt': 'youtube_ads.api.TubeHuntApi',
@@ -344,6 +349,8 @@ INTERCOM_APP_ID = os.environ.get('INTERCOM_APP_ID')
 INTERCOM_SECRET_KEY = os.environ.get('INTERCOM_SECRET_KEY')
 INTERCOM_ACCESS_TOKEN = os.environ.get('INTERCOM_ACCESS_TOKEN')
 
+HUPSPOT_API_KEY = os.environ.get('HUPSPOT_API_KEY')
+
 # AWS S3
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
@@ -354,6 +361,11 @@ S3_UPLOADS_BUCKET = os.environ.get('S3_UPLOADS_BUCKET', 'shopifiedapp-uploads')
 S3_SECRET_BUCKET = os.environ.get('S3_SECRET_BUCKET', S3_STATIC_BUCKET)
 
 AWS_STORAGE_BUCKET_NAME = S3_STATIC_BUCKET  # Default bucket
+
+# SureDone Partner API
+SUREDONE_PARTNER_API_NAME = os.environ.get('SUREDONE_PARTNER_API_NAME')
+SUREDONE_PARTNER_API_USERNAME = os.environ.get('SUREDONE_PARTNER_API_USERNAME')
+SUREDONE_PARTNER_API_TOKEN = os.environ.get('SUREDONE_PARTNER_API_TOKEN')
 
 USE_WHITENOISE = os.environ.get('USE_WHITENOISE')
 
@@ -635,3 +647,28 @@ SUBUSERS_LIMIT_CHECK = os.environ.get('SUBUSERS_LIMIT_CHECK')
 # PLOD APIs
 BASICAUTH_USERS = os.environ.get('BASICAUTH_USERS', {"plod-api": "plod-api-password"})
 PLOD_INVENTORY_API_HOST = os.environ.get('PLOD_INVENTORY_API_HOST', False)  # False must be set for main Dropified webapp
+
+# Insider Reports APIs
+INSIDER_REPORT_HOST = os.environ.get('INSIDER_REPORT_HOST', 'https://admin:insider-admin@dropified-insider-report.herokuapp.com/')
+
+# SureDone Custom Fields configuration grouped by type and length
+SUREDONE_CUSTOM_FIELDS_CONFIG = [
+    {
+        'name': ['dropifiedconnectedstoreid'],
+        'type': 'int'
+    },
+    {
+        'name': ['store', 'originalurl', 'variantsconfig', 'allimages'],
+        'type': 'text',
+    },
+    {
+        'name': ['suppliersku', 'varianttitle', 'weightunit', 'dropifiedconnectedstoretype'],
+        'type': 'varchar',
+        'length': 50
+    },
+    {
+        'name': ['compareatprice'],
+        'type': 'float',
+        'length': 10,
+    },
+]

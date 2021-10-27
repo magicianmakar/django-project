@@ -1,35 +1,33 @@
-import os
-import re
+import arrow
 import base64
-import hashlib
-import time
-import hmac
-import mimetypes
 import ctypes
+import hashlib
+import hmac
+import jwt
+import mimetypes
+import os
+import phonenumbers
+import re
 import simplejson as json
+import time
+from copy import deepcopy
 from decimal import Decimal
 from functools import wraps
-from copy import deepcopy
-from urllib.parse import urlencode, urlparse, parse_qs, urlunparse
+from premailer import transform
+from tld import get_tld
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 from django.conf import settings
-from django.core import serializers
-from django.core.mail import send_mail
-from django.core.cache import cache, caches
-from django.urls import reverse
 from django.contrib.auth.models import User
+from django.core import serializers
+from django.core.cache import cache, caches
+from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.template import Context, Template
 from django.template.defaultfilters import pluralize
+from django.urls import reverse
 from django.utils.crypto import get_random_string
 from django.utils.module_loading import import_string
-
-import arrow
-import phonenumbers
-import jwt
-from tld import get_tld
-from premailer import transform
-
 
 ALIEXPRESS_REJECTED_STATUS = {
     "buyer_pay_timeout": "Order Payment Timeout",
@@ -123,6 +121,8 @@ def prefix_from_model(model):
         return 'gear'
     elif prefix == 'bigcommerce_core':
         return 'bigcommerce'
+    elif prefix == 'ebay_core':
+        return 'ebay'
     else:
         return None
 

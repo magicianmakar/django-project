@@ -1,12 +1,11 @@
 import mimetypes
+import simplejson as json
 from decimal import Decimal
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.shortcuts import reverse
 from django.utils.crypto import get_random_string
-
-import simplejson as json
 
 from leadgalaxy.utils import aws_s3_upload
 
@@ -47,12 +46,14 @@ class SendToStoreMixin:
         gkart_stores = user.profile.get_gkart_stores()
         woo_stores = user.profile.get_woo_stores()
         big_stores = user.profile.get_bigcommerce_stores()
+        ebay_stores = user.profile.get_ebay_stores(do_sync=True)
 
         store_data = dict(
             shopify=[{'id': s.id, 'value': s.title} for s in shopify_stores],
             chq=[{'id': s.id, 'value': s.title} for s in chq_stores],
             gkart=[{'id': s.id, 'value': s.title} for s in gkart_stores],
             woo=[{'id': s.id, 'value': s.title} for s in woo_stores],
+            ebay=[{'id': s.id, 'value': s.title} for s in ebay_stores],
             bigcommerce=[{'id': s.id, 'value': s.title} for s in big_stores],
         )
 
@@ -68,6 +69,9 @@ class SendToStoreMixin:
 
         if store_data['woo']:
             store_types.append(('woo', 'WooCommerce'))
+
+        if store_data['ebay']:
+            store_types.append(('ebay', 'eBay'))
 
         if store_data['bigcommerce']:
             store_types.append(('bigcommerce', 'BigCommerce'))

@@ -1,0 +1,408 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+
+
+{% block search-form %}
+
+{% endblock search-form %}
+
+{% block breadcrumb %}
+
+
+{% endblock %}
+
+{% block main-container %}
+
+
+    <div class="tabs-container">
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="_panel-body ">
+
+
+                    <div class="products-details row smallpadding alibaba-products" >
+
+                        {% if ranked_product %}
+
+                            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-2">
+                                 <img class="product-large-image" src="{{ranked_product.big_image}}" data-src="{{ranked_product.big_image}}" style="width: 100%">
+
+                                <div class="images-carousel slider " >
+
+                                        {% for item in ranked_product.full_data.globalData.product.mediaItems %}
+                                                {% if item.type == 'image' %}
+                                                    <a href="#" class="item _thumbnail extra-image" data-imagelarge="{{ item.imageUrl.big }}"><img class="extra-img" src="{{ item.imageUrl.thumb }}" ></a>
+                                                {% endif %}
+                                        {%  endfor %}
+
+                                </div>
+                            </div>
+
+                            <div class="col-xs-12 col-sm-6 col-md-8 col-lg-8 col-xl-10">
+                                <small class="product-cat-title" style="">
+                                                    {{ ranked_product.category.title }}
+                                            </small>
+                                <div class="product-details-title">
+                                    {{ ranked_product.title }}
+                                </div>
+                                <div class="stars">
+
+                                    <div class="star-ratings">
+                                      <div class="fill-ratings" style="width: {{ ranked_product.reviews_rank_percent }}%;">
+                                        <span>★★★★★</span>
+                                      </div>
+                                      <div class="empty-ratings">
+                                        <span>★★★★★</span>
+                                      </div>
+                                    </div>
+                                    <span class="stars-total">
+                                        {{ ranked_product.total_reviews }}
+                                    </span>
+                                </div>
+                                <div class="details-ranks">
+
+                                    <span title="Shipping time (days)" ><i class="fa fa-truck"></i> Shipping time (days): {{ ranked_product.shipping_time }} </span> &nbsp;&nbsp;<br>
+                                    <span title="Total Transactions" ><i class="fa fa-credit-card"></i> Total Transactions: {{ranked_product.total_transactions}} </span>&nbsp;<br>
+                                    <span title="Total Quantities" ><i class="fa fa-database"></i> Total Quantities: {{ranked_product.total_quantities}} </span>&nbsp;&nbsp;<br>
+                                    <span title="Total Buyers" ><i class="fa fa-shopping-cart"></i> Total Buyers: {{ranked_product.total_buyers}} </span>&nbsp;&nbsp;<br>
+                                </div>
+
+
+                                <br><br>
+                                <div class="product-description">
+                                    {{ ranked_product.description|safe}}
+                                </div>
+                                <div class="details-price-range">
+                                    {{ ranked_product.price_range }}
+                                    {%  if ranked_product.data.freightPrice %}
+                                        <span class="details-freight-price">+ {{ ranked_product.data.freightPrice }} Shipping</span>
+                                    {% endif %}
+                                </div>
+                                <div class="m-t row bottom-buttons">
+                                        <div class="col-md-6 col-xs-6 col-sm-6">
+                                            <a target="_blank" class="btn-sm btn-primary details-import-alibaba-product-btn" style="" data-alibaba-account-id="{{ alibaba_account_id }}"
+                                               product-id="{{ranked_product.id}}" data-alibaba-product-id="{{ ranked_product.alibaba_product_id }}">
+                                                Add to Store
+                                            </a>
+                                        </div>
+                                        <div class="col-md-6 col-xs-6 col-sm-6 text-right">
+                                            <a href="{{ ranked_product.url }}" target="_blank" class="view-on-alibaba" title="View on Alibaba website">
+                                                View on Alibaba website <i class=" btn-sm btn-white  url-alibaba-product-btn fa fa-external-link" aria-hidden="true"></i>
+                                            </a>
+
+                                        </div>
+                                 </div>
+
+                            </div>
+
+                        {% else %}
+                                Product not found
+                        {% endif %}
+
+
+                    </div>
+
+                    <div class="products-details row smallpadding alibaba-products" >
+                        <div class="col-xs-12 col-sm-2 col-md-2 col-lg-2 col-xl-2">
+                            <ul class="nav nav-pills nav-stacked" role="tablist">
+                                <li role="presentation" class="nav-link active"><a href="#details-tab-1" aria-controls="details-tab-1" role="tab" data-toggle="tab">General</a></li>
+                                <li role="presentation" class="nav-link"><a href="#details-tab-2" aria-controls="details-tab-2" role="tab" data-toggle="tab">Inventory</a></li>
+                                <li role="presentation" class="nav-link"><a href="#details-tab-3" aria-controls="details-tab-3" role="tab" data-toggle="tab">Seller Information</a></li>
+                            </ul>
+
+
+                        </div>
+                        <div class="col-xs-12 col-sm-10 col-md-10 col-lg-10 col-xl-10">
+
+                            <div class="tab-content">
+                                <div role="tabpanel" class="tab-pane active" id="details-tab-1">
+                                    <h2>General Information</h2>
+                                    <div class="row">
+                                        <div class="col-md-6 row">
+                                            <div class=" col-md-12">
+                                                <h3><i class="fa fa-table"></i> Product Properties</h3>
+                                            </div>
+
+                                            {% for property in ranked_product.full_data.globalData.product.productBasicProperties %}
+
+                                                    <div class="col-md-3">
+                                                        {{ property.attrName }}
+                                                    </div>
+                                                    <div class="col-md-9">
+                                                        <b>{{ property.attrValue }}</b>
+                                                    </div>
+
+                                            {%  endfor %}
+                                        </div>
+                                        <div class="col-md-6">
+                                             <div class=" col-md-12">
+                                                <h3><i class="fa fa-list"></i> Product Variants</h3>
+                                            </div>
+
+                                            {% for sku in ranked_product.full_data.globalData.product.sku.skuAttrs %}
+
+                                                    <div class="col-md-3">
+                                                        {{ sku.name }}
+                                                    </div>
+                                                    <div class="col-md-9">
+                                                        {% for sku_value in sku.values %}
+                                                            <div><b>{{ sku_value.name }}</b></div>
+                                                        {% endfor %}
+
+                                                    </div>
+
+                                            {% endfor %}
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <br>
+                                    <div class="row">
+                                            <div class="col-md-6 row">
+                                                <div class=" col-md-12">
+                                                    <h3><i class="fa fa-dollar"></i> Pricing</h3>
+                                                </div>
+
+                                                {% for price in ranked_product.full_data.globalData.product.price.productLadderPrices %}
+                                                        <div class="col-md-3">
+                                                            {{ price.formatPrice }}
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            <b>When buying {{ price.min }} - {% if price.max == -1 %}Unlmited{% else %}{{ price.max }}{% endif %} items  </b>
+                                                        </div>
+
+                                                {%  endfor %}
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class=" col-md-12">
+                                                    <h3><i class="fa fa-pencil" aria-hidden="true"></i> Available Customization</h3>
+                                                </div>
+
+                                                {% for customization in ranked_product.full_data.globalData.product.productLightCustomizationList %}
+                                                        <div class="col-md-12">
+                                                            {{ customization.customType }}
+                                                        </div>
+
+
+                                                {%  endfor %}
+
+
+                                            </div>
+                                    </div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane" id="details-tab-2">
+                                    <h2>Inventory</h2>
+                                    <div class="row">
+
+                                            <div class="col-md-6">
+                                                <div class=" col-md-12 row">
+                                                    <h3><i class="fa fa-database" aria-hidden="true"></i> Variants Inventory</h3>
+                                                </div>
+
+                                                {% for key, inventory in ranked_product.full_data.globalData.inventory.skuInventory.items %}
+                                                    <div class="row">
+                                                        <div class="col-md-9">
+                                                            {{ ranked_product.sku_map|get_item:key }}
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            {% for warehouse in inventory.warehouseInventoryList %}
+                                                                <div>{{ warehouse.inventoryCount }} items ( {{ warehouse.placeOfDispatchId }} )</div>
+                                                            {%  endfor %}
+                                                        </div>
+                                                    </div>
+                                                {%  endfor %}
+
+
+                                            </div>
+                                            <div class="col-md-6 row">
+                                                <div class=" col-md-12">
+                                                    <h3><i class="fa fa-dollar"></i> Places of Dispatches</h3>
+                                                </div>
+
+                                                {% for place in ranked_product.full_data.globalData.inventory.placeOfDispatches %}
+                                                        <div class="col-md-12">
+                                                            {{ place.name }} ( {{ place.id }} )
+                                                        </div>
+                                                {%  endfor %}
+                                            </div>
+                                    </div>
+                                </div>
+                                <div role="tabpanel" class="tab-pane" id="details-tab-3">
+                                   <h2>Seller Information</h2>
+                                    <div class="row">
+                                            <div class="col-md-6 row">
+                                                <div class=" col-md-12">
+                                                    <h3><i class="fa fa-user"></i> Account Info</h3>
+                                                </div>
+                                                        <div class="col-md-3">
+                                                            Name
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{ ranked_product.full_data.globalData.seller.accountFirstName }} {{ ranked_product.full_data.globalData.seller.accountLastName }}
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Photo
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            <a href="{{ ranked_product.full_data.globalData.seller.accountPortraitImage.original }}" target="_blank" >
+                                                                <img src="{{ ranked_product.full_data.globalData.seller.accountPortraitImage.original }}" style="max-width:100px;">
+                                                            </a>
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            Gold Supplier
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{ ranked_product.full_data.globalData.seller.accountIsGoldPlusSupplier|yesno:"Yes,No,Undefined" }}
+                                                        </div>
+                                                        <div class="col-md-3">
+                                                            Paid Member
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{ ranked_product.full_data.globalData.seller.accountIsPaidMember|yesno:"Yes,No,Undefined" }}
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Account Amount
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{ ranked_product.full_data.globalData.seller.baoAccountAmount }}
+                                                        </div>
+
+
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class=" col-md-12">
+                                                    <h3><i class="fa fa-building"></i> Company Info</h3>
+                                                </div>
+                                                        <div class="col-md-3">
+                                                            Company Name
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            <a href="{{ ranked_product.full_data.globalData.seller.companyProfileUrl }}">{{ ranked_product.full_data.globalData.seller.companyName }}</a>
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Logo
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            <a href="{{ ranked_product.full_data.globalData.seller.companyLogoFileUrlSmall }}" target="_blank" >
+                                                                <img src="{{ ranked_product.full_data.globalData.seller.companyLogoFileUrlSmall }}" style="max-width:100px;">
+                                                            </a>
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Country
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{  ranked_product.full_data.globalData.seller.companyRegisterCountry }}
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Contact Name
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{  ranked_product.full_data.globalData.seller.contactName }}
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Employees
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{  ranked_product.full_data.globalData.seller.employeesCount }}
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Staf num.
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{  ranked_product.full_data.globalData.seller.rndStaffNum }}
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Avg. Response time
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{  ranked_product.full_data.globalData.seller.responseTimeText }}
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            subdomain
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{  ranked_product.full_data.globalData.seller.subDomain }}
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Average rank
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{ ranked_product.full_data.globalData.seller.supplierRatingReviews.averageStar }}
+                                                        </div>
+
+                                                        <div class="col-md-3">
+                                                            Trade half year
+                                                        </div>
+                                                        <div class="col-md-9">
+                                                            {{ ranked_product.full_data.globalData.seller.tradeHalfYear.ordAmt }} ( {{ ranked_product.full_data.globalData.seller.tradeHalfYear.ordCnt6m }} )
+                                                        </div>
+
+
+                                            </div>
+                                    </div>
+
+
+
+
+                                </div>
+
+                            <br><br>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+
+    </style>
+
+    <link href="{% static 'insider_reports/css/products_list.css' %}" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+    <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+    <link rel="stylesheet" type="text/css" href="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css"/>
+{% endblock %}
+
+{% block extrajs %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-loading-overlay/2.1.6/loadingoverlay.min.js"
+        integrity="sha256-CImtjQVvmu/mM9AW+6gYkksByF4RBCeRzXMDA9MuAso=" crossorigin="anonymous"></script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-hashchange/1.3/jquery.ba-hashchange.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+    <script src="{% static 'insider_reports/js/product_details.js' %}" type="text/javascript" ></script>
+
+{% endblock %}

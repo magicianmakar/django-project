@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^shopify/', include('shopify_oauth.urls')),
     url(r'^chq/', include(('commercehq_core.urls', 'commercehq_core'), 'chq')),
     url(r'^woo/', include(('woocommerce_core.urls', 'woocommerce_core'), 'woo')),
+    url(r'^ebay/', include(('ebay_core.urls', 'ebay_core'), 'ebay')),
     url(r'^gear/', include(('gearbubble_core.urls', 'gearbubble_core'), 'gear')),
     url(r'^gkart/', include(('groovekart_core.urls', 'groovekart_core'), 'gkart')),
     url(r'^bigcommerce/', include(('bigcommerce_core.urls', 'bigcommerce_core'), 'bigcommerce')),
@@ -42,6 +43,7 @@ urlpatterns = [
     url(r'^aliexpress/', include('aliexpress_core.urls')),
     url(r'^webhook/', include('webhooks.urls')),
     url(r'^products/', include('product_core.urls')),
+    url(r'^insider-reports/', include('insider_reports.urls')),
 ]
 
 if settings.DEBUG:

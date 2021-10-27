@@ -1,6 +1,6 @@
 import re
-from django.urls import reverse
-from django.urls import resolve
+
+from django.urls import resolve, reverse
 
 from lib.exceptions import capture_exception
 
@@ -24,6 +24,7 @@ def get_menu_structure(namespace, request):
             'callflex',
             'tubehunt',
             'tools',
+            'insider-reports'
         ]),
     ]
 
@@ -116,7 +117,7 @@ def get_menu_item_data(request):
         'all-products': {
             'title': 'Saved Products',
             'url_name': 'products_list',
-            'match': r'(/chq|/gear|/gkart|/woo|/bigcommerce)?/products$',
+            'match': r'(/chq|/gear|/gkart|/woo|/ebay|/bigcommerce)?/products$',
         },
         'import-products': {
             'title': 'Import Products',
@@ -144,7 +145,7 @@ def get_menu_item_data(request):
             'url_name': 'product_alerts',
             'permissions': ['price_changes.use', 'price_change_options.use'],
             'match': r'(/\w+)?/products/update',
-            'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce']
+            'platforms': ['shopify', 'chq', 'woo', 'gkart', 'bigcommerce', 'ebay']
         },
         'business': {
             'title': 'Business',
@@ -250,6 +251,13 @@ def get_menu_item_data(request):
             'match': r'^/dropified_product',
             'is_ns_aware': False,
             'permissions': ['dropified_product.use'],
+        },
+        'insider-reports': {
+            'title': 'Insider Reports',
+            'url_name': 'ranked-products',
+            'match': r'^/insider-reports',
+            'is_ns_aware': False,
+            'permissions': ['insider_reports.use'],
         },
     }
 

@@ -193,6 +193,7 @@ class MakePaymentTestCase(PLSBaseTestCase):
         GB = ShippingGroup.objects.get(slug='GB')
         self.user_supplement.pl_supplement.shipping_countries.add(GB)
         self.user_supplement.pl_supplement.save()
+        self.data['validate'] = True
         self.do_test(count=0)
 
     def test_post_no_country(self):
@@ -398,6 +399,7 @@ class MakePaymentBundleTestCase(PLSBaseTestCase):
         GB = ShippingGroup.objects.get(slug='GB')
         self.user_supplement.pl_supplement.shipping_countries.add(GB)
         self.user_supplement.pl_supplement.save()
+        self.data['validate'] = True
         self.do_test(count=0, item_count=0)
 
     def test_post_no_country(self):
@@ -737,6 +739,7 @@ class BasketTestCase(PLSBaseTestCase):
             'shipping_phone': '555555',
             'shipping_country': 'US',
             'shipping_state': 'California',
+            'shipping_service': 'UPS',
         }
 
         with patch('leadgalaxy.models.requests.get',

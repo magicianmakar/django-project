@@ -1,5 +1,6 @@
 import arrow
 import json
+from decimal import Decimal
 from io import BytesIO
 
 from django.conf import settings
@@ -23,7 +24,7 @@ from .lib.image import get_order_number_label
 from .lib.shipstation import create_shipstation_order, send_shipstation_orders
 from .models import Payout, PLSOrder, PLSOrderLine, UserSupplement, UserSupplementLabel, BasketItem, PLSupplement
 from .utils import user_can_download_label
-from .utils.payment import Util, get_shipping_costs
+from .utils.payment import Util, get_shipping, get_shipping_costs
 from .utils.basket import BasketStore
 from shopified_core.utils import (
     safe_int,
@@ -65,6 +66,30 @@ class SupplementsApi(ApiResponseMixin, View):
                 'shippings': order_costs['shipping'],
                 'taxes': order_costs['taxes'],
             })
+
+        total_amount = 0
+        order = list(orders.values())[0]
+        country = order.get('shipping_address').get('country')
+        country_code = order.get('shipping_address').get('country_code')
+
+        for item in order['items']:
+            total_amount += item['quantity'] * item['user_supplement'].pl_supplement.cost_price
+
+        total_amount = Decimal(total_amount)
+        total_amount += order["selected_shipping"]["shipping_cost"]
+
+        if (country == 'United Kingdom' or country_code == 'GB') \
+                and total_amount < Decimal('180'):
+            error = ''
+            if not user.profile.company:
+                error = f'Please add your company information in Profile settings \
+                        <a target="_blank" href="{reverse("user_profile")}"> <u>here.</u></a>'
+            elif not user.profile.company.vat:
+                error = f'Please add VAT number under company information in Profile settings \
+                        <a target="_blank" href="{reverse("user_profile")}"> <u>here.</u></a>'
+
+            if error:
+                return self.api_error(error, status=500)
 
         paid_orders = []
         try:
@@ -500,6 +525,7 @@ class SupplementsApi(ApiResponseMixin, View):
         province = data['shipping_state']
         billing_country_code = data['billing_country']
         billing_province = data['billing_state']
+        shipping_service = data['shipping_service']
 
         if user.basket_items.count() <= 0:
             return self.api_error("No items in basket", status=500)
@@ -527,6 +553,7 @@ class SupplementsApi(ApiResponseMixin, View):
         except Exception:
             pass
 
+        total_weight = 0
         order_line_items = []
         pl_supplement_inventory = {}
         basket_items = user.basket_items.select_related('user_supplement__pl_supplement').all()
@@ -570,6 +597,7 @@ class SupplementsApi(ApiResponseMixin, View):
             order_line['title'] = basket_item.user_supplement.title
             order_line['sku'] = basket_item.user_supplement.pl_supplement.shipstation_sku
 
+            total_weight += basket_item.user_supplement.pl_supplement.weight * basket_item.quantity
             order_line_items.append(order_line)
 
         util = Util()
@@ -577,8 +605,38 @@ class SupplementsApi(ApiResponseMixin, View):
         checkout_data['line_items'] = order_line_items
         basket_order = util.store.create_order(user, checkout_data)
         order_info = (basket_order.id, basket_order.id, country_code,
-                      province_code, data.get('shipping_service'))
+                      province_code, shipping_service)
         order = basket_order.get_order()
+
+        shipping = get_shipping(
+            country_code,
+            province_code,
+            total_weight,
+            shipping_service,
+        )
+
+        total_amount = 0
+        country = order.get('shipping_address').get('country')
+        country_code = order.get('shipping_address').get('country_code')
+
+        for item in order['line_items']:
+            total_amount += item['quantity'] * item['price']
+
+        total_amount = Decimal(total_amount)
+        total_amount += Decimal(shipping['shipping_cost'])
+
+        if (country == 'United Kingdom' or country_code == 'GB') \
+                and total_amount < Decimal('180'):
+            error = ''
+            if not user.profile.company:
+                error = f'Please add your company information in Profile settings \
+                        <a target="_blank" href="{reverse("user_profile")}"> <u>here.</u></a>'
+            elif not user.profile.company.vat:
+                error = f'Please add VAT number under company information in Profile settings \
+                        <a target="_blank" href="{reverse("user_profile")}"> <u>here.</u></a>'
+            if error:
+                return self.api_error(error, status=500)
+
         try:
             pls_order = util.make_payment(
                 order_info,

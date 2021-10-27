@@ -1,10 +1,11 @@
-from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, CommerceHQStore, CommerceHQSupplier, CommerceHQUserUpload
-from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore, WooSupplier, WooUserUpload
-from groovekart_core.models import GrooveKartOrderTrack, GrooveKartProduct, GrooveKartStore, GrooveKartSupplier, GrooveKartUserUpload
 from bigcommerce_core.models import BigCommerceOrderTrack, BigCommerceProduct, BigCommerceStore, BigCommerceSupplier, BigCommerceUserUpload
-from leadgalaxy.models import ShopifyOrderTrack, ShopifyProduct, ShopifyStore, ProductSupplier, UserUpload
+from commercehq_core.models import CommerceHQOrderTrack, CommerceHQProduct, CommerceHQStore, CommerceHQSupplier, CommerceHQUserUpload
+from ebay_core.models import EbayOrderTrack, EbayProduct, EbayStore, EbaySupplier
+from groovekart_core.models import GrooveKartOrderTrack, GrooveKartProduct, GrooveKartStore, GrooveKartSupplier, GrooveKartUserUpload
+from leadgalaxy.models import ProductSupplier, ShopifyOrderTrack, ShopifyProduct, ShopifyStore, UserUpload
 from my_basket.models import BasketOrderTrack
 from supplements.utils.basket import BasketStore
+from woocommerce_core.models import WooOrderTrack, WooProduct, WooStore, WooSupplier, WooUserUpload
 
 
 def get_track_model(store_type=''):
@@ -12,6 +13,8 @@ def get_track_model(store_type=''):
         return CommerceHQOrderTrack
     elif store_type in ['woo', 'WooOrderTrack']:
         return WooOrderTrack
+    elif store_type in ['ebay', 'EbayOrderTrack']:
+        return EbayOrderTrack
     elif store_type in ['gkart', 'GrooveKartOrderTrack']:
         return GrooveKartOrderTrack
     elif store_type in ['bigcommerce', 'BigCommerceOrderTrack']:
@@ -27,6 +30,8 @@ def get_store_model(store_type=''):
         return CommerceHQStore
     elif store_type in ['woo', 'WooStore']:
         return WooStore
+    elif store_type in ['ebay', 'EbayStore']:
+        return EbayStore
     elif store_type in ['gkart', 'GrooveKartStore']:
         return GrooveKartStore
     elif store_type in ['bigcommerce', 'BigCommerceStore']:
@@ -42,6 +47,8 @@ def get_product_model(store_type):
         return CommerceHQProduct
     elif store_type in ['woo', 'WooProduct']:
         return WooProduct
+    elif store_type in ['ebay', 'EbayProduct']:
+        return EbayProduct
     elif store_type in ['gkart', 'GrooveKartProduct']:
         return GrooveKartProduct
     elif store_type in ['bigcommerce', 'BigCommerceProduct']:
@@ -57,6 +64,8 @@ def get_supplier_model(store_type):
         return CommerceHQSupplier
     elif store_type in ['woo', 'WooSupplier']:
         return WooSupplier
+    elif store_type in ['ebay', 'EbaySupplier']:
+        return EbaySupplier
     elif store_type in ['gkart', 'GrooveKartSupplier']:
         return GrooveKartSupplier
     elif store_type in ['bigcommerce', 'BigCommerceSupplier']:

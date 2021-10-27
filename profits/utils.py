@@ -9,18 +9,19 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Sum
 from django.utils import timezone
 
+from bigcommerce_core import utils as bigcommerce_utils
+from bigcommerce_core.models import BigCommerceOrderTrack
 from commercehq_core import utils as chq_utils
-from woocommerce_core import utils as woo_utils
+from commercehq_core.models import CommerceHQOrderTrack
+from ebay_core import utils as ebay_utils
+from ebay_core.models import EbayOrderTrack
 from gearbubble_core import utils as gear_utils
 from groovekart_core import utils as gkart_utils
-from bigcommerce_core import utils as bigcommerce_utils
 from groovekart_core.models import GrooveKartOrderTrack
-from bigcommerce_core.models import BigCommerceOrderTrack
-from woocommerce_core.models import WooOrderTrack
-from commercehq_core.models import CommerceHQOrderTrack
-
 from shopified_core.paginators import SimplePaginator
 from shopified_core.utils import safe_float
+from woocommerce_core import utils as woo_utils
+from woocommerce_core.models import WooOrderTrack
 
 from . import models
 
@@ -44,6 +45,8 @@ def get_stores(user, store_type):
         return user.profile.get_bigcommerce_stores()
     elif store_type == 'woo':
         return user.profile.get_woo_stores()
+    elif store_type == 'ebay':
+        return user.profile.get_ebay_stores()
     elif store_type == 'chq':
         return user.profile.get_chq_stores()
     else:
@@ -57,6 +60,8 @@ def get_store_from_request(request, store_type=''):
 
     if store_type == 'chq':
         return chq_utils.get_store_from_request(request)
+    if store_type == 'ebay':
+        return ebay_utils.get_store_from_request(request)
     if store_type == 'woo':
         return woo_utils.get_store_from_request(request)
     if store_type == 'gear':
@@ -74,6 +79,8 @@ def get_store_order_track(store_type):
         return GrooveKartOrderTrack
     elif store_type == 'bigcommerce':
         return BigCommerceOrderTrack
+    elif store_type == 'ebay':
+        return EbayOrderTrack
     elif store_type == 'woo':
         return WooOrderTrack
     elif store_type == 'chq':

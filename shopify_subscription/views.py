@@ -74,6 +74,12 @@ def subscription_plan(request):
         if user.get_config('_can_trial', True):
             charge_params["trial_days"] = plan.trial_days
 
+        if not user.get_config('research_upgraded') and "research" in user.profile.plan.slug:
+            charge_params["trial_days"] = plan.trial_days
+            set_research_upgraded = True
+        else:
+            set_research_upgraded = False
+
         try:
             if plan.payment_interval != 'yearly':
                 charge_type = 'recurring'
@@ -99,6 +105,8 @@ def subscription_plan(request):
                     "capped_amount": price,
                     "terms": "Dropified Yearly Subscription",
                 })
+            if set_research_upgraded:
+                user.set_config('research_upgraded', True)
         except Exception as e:
             if hasattr(e, 'response') and e.response.code == 401:
                 return JsonResponse({

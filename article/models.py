@@ -1,4 +1,5 @@
 from bleach import clean
+
 from django.contrib.auth.models import User
 from django.db import models
 from django.template.defaultfilters import slugify
@@ -23,6 +24,7 @@ STORE_TYPES = (
     ('woo', 'WooCommerce'),
     ('gkart', 'GrooveKart'),
     ('bigcommerce', 'BigCommerce'),
+    ('ebay', 'eBay'),
 )
 
 

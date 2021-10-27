@@ -1,12 +1,14 @@
-from shopified_core.commands import DropifiedBaseCommand
-from fulfilment_fee.utils import process_sale_transaction_fee
-from leadgalaxy.models import ShopifyOrderTrack
-from bigcommerce_core.models import BigCommerceOrderTrack
-from groovekart_core.models import GrooveKartOrderTrack
-from woocommerce_core.models import WooOrderTrack
-from commercehq_core.models import CommerceHQOrderTrack
-from my_basket.models import BasketOrderTrack
 from django.contrib.auth.models import User
+
+from bigcommerce_core.models import BigCommerceOrderTrack
+from commercehq_core.models import CommerceHQOrderTrack
+from ebay_core.models import EbayOrderTrack
+from fulfilment_fee.utils import process_sale_transaction_fee
+from groovekart_core.models import GrooveKartOrderTrack
+from leadgalaxy.models import ShopifyOrderTrack
+from my_basket.models import BasketOrderTrack
+from shopified_core.commands import DropifiedBaseCommand
+from woocommerce_core.models import WooOrderTrack
 
 
 class Command(DropifiedBaseCommand):
@@ -46,6 +48,7 @@ class Command(DropifiedBaseCommand):
                            BigCommerceOrderTrack,
                            GrooveKartOrderTrack,
                            WooOrderTrack,
+                           EbayOrderTrack,
                            CommerceHQOrderTrack,
                            BasketOrderTrack]
             for track_type in track_types:

@@ -1,0 +1,158 @@
+{% extends template_config.base|default:'base.html' %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+
+
+{% block search-form %}
+    <form role="search" class="navbar-form-custom" method="get" id="top-search-form" >
+        <div class="form-group">
+            <input type="text" placeholder="{% if request.GET.store == 'c' %}Search products{% else %}Search products{% endif %}" class="form-control" name="keyword" id="top-search"
+            {% if request.GET.keyword  %}
+                   value="{% base64_decode_params request.GET.keyword %}"
+            {% endif %}
+            >
+
+        </div>
+    </form>
+{% endblock search-form %}
+
+{% block breadcrumb-right %}
+
+
+{% endblock %}
+
+{% block main-container %}
+
+
+    <div class="tabs-container">
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="_panel-body ">
+
+                    <div class="row sub-panel">
+
+                        <div class="col-md-8">
+                            <h1>Subscribe to Unlock</h1>
+                            <p>Detailed product reports are avaiable only for paid customers</p>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <h3 class="sub-period">Monthly</h3>
+                            <div class="sub-price">$12.99</div>
+                            <a target="_blank" class="btn-sm btn-white details-import-alibaba-product-btn sub-btn" style="" >Choose Plan</a>
+                        </div>
+                        <div class="col-md-2 text-center">
+                            <h3 class="sub-period">Yearly</h3>
+                            <div class="sub-price">$139.99</div>
+                            <a target="_blank" class="btn-sm btn-white details-import-alibaba-product-btn sub-btn" style="" >Choose Plan</a>
+                        </div>
+
+                        </div>
+                    </div>
+                    <div class="products-list row smallpadding alibaba-products" data-alibaba-account-id="{{ alibaba_account_id }}">
+                        {% for product in range %}
+
+
+                            <div class="col-xs-12 col-sm-4 col-md-4 col-lg-2 col-xl-1">
+                                <div class="ibox">
+                                    <div class="ibox-content product-box alibaba-product" >
+                                        <small class="text-muted cat-title" style="">
+                                                    Category
+                                            </small>
+                                        <div class="selection-cont"></div>
+                                        <div class="product-imitation" style="padding: 0;">
+                                            <a href="#" >
+                                                <img class="unveil" src="{% static 'insider_reports/img/mock-product.jpg' %}" style="width: 100%">
+                                            </a>
+                                        </div>
+
+                                        <div class="row">
+                                                <div class="col-md-12 price-range">
+                                                    $1.95-$15-95
+                                                </div>
+                                         </div>
+
+                                        <div class="product-desc">
+                                            <a href="#" class="hidden-xs product-name" style="" > Product Title</a>
+
+                                            <div class=" row ranks">
+                                                <div class="col-xs-12" style="padding-right:0" >
+                                                    <span title="Shipping time (days)" ><i class="fa fa-truck"></i> X </span> &nbsp;&nbsp;
+                                                    <span title="Total Transactions" ><i class="fa fa-credit-card"></i> XXX </span>&nbsp;&nbsp;
+                                                    <span title="Total Quantities" ><i class="fa fa-database"></i> XXX </span>&nbsp;&nbsp;
+                                                    <span title="Total Buyers" ><i class="fa fa-shopping-cart"></i> XXX </span>&nbsp;&nbsp;
+                                                </div>
+
+                                            </div>
+
+                                            <a href="#" class="visible-xs category-name" style="font-size: 12px" target="_blank"> Category</a>
+                                        <div class="m-t row bottom-buttons">
+                                                <div class="col-md-2 col-xs-2 col-sm-2">
+                                                    <a  target="_blank" class="btn-sm btn-white  url-alibaba-product-btn" title="View on Alibaba website">
+                                                        <i class="fa fa-external-link" aria-hidden="true"></i>
+                                                    </a>
+                                                </div>
+                                                <div class="col-md-10 col-xs-10 col-sm-10 text-right">
+                                                    <a  class="btn-sm btn-primary import-alibaba-product-btn-disabled">
+                                                        Add to Store
+                                                    </a>
+                                                </div>
+                                         </div>
+                                            <div class="small m-t-xs">
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        {% endfor %}
+                    </div>
+
+
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+{% endblock %}
+
+{% block extracss %}
+    <style type="text/css">
+
+    </style>
+
+    <link href="{% static 'insider_reports/css/products_list.css' %}" rel="stylesheet">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/themes/base/jquery-ui.css" rel="stylesheet">
+    <link href="//ajax.googleapis.com/ajax/libs/jqueryui/1/themes/flick/jquery-ui.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css">
+{% endblock %}
+
+{% block extrajs %}
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-loading-overlay/2.1.6/loadingoverlay.min.js"
+        integrity="sha256-CImtjQVvmu/mM9AW+6gYkksByF4RBCeRzXMDA9MuAso=" crossorigin="anonymous"></script>
+
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-hashchange/1.3/jquery.ba-hashchange.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.9.2/jquery-ui.min.js"></script>
+{% compress js %}
+    <script src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}" type="text/javascript" ></script>
+    <script src="{% static 'insider_reports/js/products_list.js' %}" type="text/javascript" ></script>
+{% endcompress %}
+
+
+{% endblock %}

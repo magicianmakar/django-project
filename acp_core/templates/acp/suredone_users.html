@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+
+{% block main-container %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+             <div class="ibox-title">
+                <h5>SureDone Users<small></small></h5>
+                <div class="ibox-tools">
+                    <a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
+                </div>
+            </div>
+
+            <div class="ibox-content" style="overflow-x: auto;">
+                <table class="table table-bordered dataTables">
+                    <thead>
+                        <tr>
+                            <th>UID</th>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            {% comment %}
+                            <th>Verified</th>
+                            {% endcomment %}
+                            <th>Status</th>
+                            <th>API Token</th>
+                            <th>Last Login Time</th>
+                            <th>Cycle</th>
+                            {% comment %}
+                            <th>Port</th>
+                            <th>Node</th>
+                            <th>Plan</th>
+                            <th>CRM ID</th>
+                            <th>Open ID</th>
+                            <th>Amazon ID</th>
+                            <th>eBay ID</th>
+                            <th>Avatar</th>
+                            <th>Display</th>
+                            <th>Agree</th>
+                            <th>Bio</th>
+                            {% endcomment %}
+                            <th>Notes</th>
+                            {% comment %}
+                            <th>Accounts</th>
+                            {% endcomment %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for item in users %}
+                        <tr sd-users-id="{{item.uid}}">
+                            <td><b>{{item.uid}}</b></td>
+                            <td>{{item.id}}</td>
+                            <td>{{item.email}}</td>
+                            <td>{{item.name}}</td>
+                            <td>{{item.role}}</td>
+                            {% comment %}
+                            <td>{{item.verified}}</td>
+                            {% endcomment %}
+                            <td>{{item.status}}</td>
+                            <td>{{item.token}}</td>
+                            <td>{{item.last_login_time}}</td>
+                            <td>{{item.cycle}}</td>
+                            {% comment %}
+                            <td>{{item.port}}</td>
+                            <td>{{item.node}}</td>
+                            <td>{{item.plan}}</td>
+                            <td>{{item.crmid}}</td>
+                            <td>{{item.openid}}</td>
+                            <td>{{item.amznid}}</td>
+                            <td>{{item.ebayid}}</td>
+                            <td>{{item.avatar}}</td>
+                            <td>{{item.display}}</td>
+                            <td>{{item.agree}}</td>
+                            <td>{{item.bio}}</td>
+                            {% endcomment %}
+                            <td>{{item.notes}}</td>
+                            {% comment %}
+                            <td>{{item.accts}}</td>
+                            {% endcomment %}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td class="text-center" colspan="4">No SureDone Users found</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extracss %}
+    <!-- Data Tables -->
+    <link href="{% static 'css/plugins/dataTables/dataTables.bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.responsive.css' %}" rel="stylesheet">
+    <link href="{% static 'css/plugins/dataTables/dataTables.tableTools.min.css' %}" rel="stylesheet">
+
+    <style type="text/css">
+    tbody td {
+        padding: 0;
+        margin: 0;
+    }
+    </style>
+{% endblock %}
+
+{% block extrajs %}
+    <!-- Data Tables -->
+    <script src="{% static 'js/plugins/dataTables/jquery.dataTables.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.bootstrap.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.responsive.js' %}"></script>
+    <script src="{% static 'js/plugins/dataTables/dataTables.tableTools.min.js' %}"></script>
+
+    <script type="text/javascript">
+        $('.dataTables').dataTable({
+            responsive: true,
+            dom: 'T<"clear">lfrtip',
+            bLengthChange: false,
+            iDisplayLength: 50,
+            tableTools: {
+                sSwfPath: '{% static 'js/plugins/dataTables/swf/copy_csv_xls_pdf.swf' %}'
+            }
+        });
+
+    </script>
+{% endblock %}

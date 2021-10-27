@@ -17,6 +17,7 @@
 {% url 'pls:upload_json' as pls_upload_json %}
 {% url 'pls:my_basket' as my_basket %}
 {% url 'pls:checkout' as checkout %}
+{% url 'pls:plod-product-announcements' as plod_product_announcements %}
 
 <div id="supplement-container" class="tabs-container">
   <ul class="nav nav-tabs scrolling-tabs">
@@ -49,10 +50,16 @@
     {% endif %}
     {% endif %}
 
-    {% if request.path ==  pls_my_orders %}
+    {% if request.path == pls_my_orders %}
     <li class="active"><a data-toggle="tab" href="#tab-1">My Payments</a></li>
     {% else %}
     <li><a href="{% url 'pls:my_orders' %}">My Payments</a></li>
+    {% endif %}
+
+    {% if request.path == plod_product_announcements %}
+    <li class="active"><a data-toggle="tab" href="#tab-1">Product News</a></li>
+    {% else %}
+    <li><a href="{{ plod_product_announcements }}">Product News</a></li>
     {% endif %}
 
   {% endif %}

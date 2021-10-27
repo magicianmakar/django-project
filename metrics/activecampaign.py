@@ -217,6 +217,7 @@ class ActiveCampaignAPI:
         return {
             'SHOPIFY_COUNT': user.profile.get_shopify_stores().count(),
             'WOOCOMMERCE_COUNT': user.profile.get_woo_stores().count(),
+            'EBAY_COUNT': user.profile.get_ebay_stores().count(),
             'COMMERCEHQ_COUNT': user.profile.get_chq_stores().count(),
             'GROOVEKART_COUNT': user.profile.get_gkart_stores().count(),
             'BIGCOMMERCE_COUNT': user.profile.get_bigcommerce_stores().count(),

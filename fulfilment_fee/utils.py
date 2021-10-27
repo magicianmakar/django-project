@@ -1,13 +1,15 @@
-from leadgalaxy.utils import safe_float
-from fulfilment_fee.models import SaleTransactionFee
-from profit_dashboard.utils import get_costs_from_track
-from django.core.cache import cache
-import requests
 import re
+import requests
 import simplejson as json
-from lib.exceptions import capture_exception
-from supplements.models import PLSOrderLine
+
+from django.core.cache import cache
 from django.db.models import Sum
+
+from fulfilment_fee.models import SaleTransactionFee
+from leadgalaxy.utils import safe_float
+from lib.exceptions import capture_exception
+from profit_dashboard.utils import get_costs_from_track
+from supplements.models import PLSOrderLine
 
 
 def generate_sale_transaction_fee(source_type, source, amount, currency_data):
@@ -51,6 +53,7 @@ def process_sale_transaction_fee(instance):
             'BigCommerceOrderTrack': 'bigcommerce_status',
             'GrooveKartOrderTrack': 'groovekart_status',
             'WooOrderTrack': 'woocommerce_status',
+            'EbayOrderTrack': 'ebay_status',
             'CommerceHQOrderTrack': 'commercehq_status',
             'BasketOrderTrack': 'basket_order_status'
         }

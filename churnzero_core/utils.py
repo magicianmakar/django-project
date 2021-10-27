@@ -72,6 +72,9 @@ class SetAccountActionBuilder:
     def add_woo_stores_count(self):
         self._action['attr_WooCommerce Stores Count'] = self._profile.get_woo_stores().count()
 
+    def add_ebay_stores_count(self):
+        self._action['attr_eBay Stores Count'] = self._profile.get_ebay_stores().count()
+
     def add_chq_stores_count(self):
         self._action['attr_CommerceHQ Stores Count'] = self._profile.get_chq_stores().count()
 
@@ -118,6 +121,7 @@ class SetAccountActionBuilder:
         self.add_plan()
         self.add_shopify_stores_count()
         self.add_woo_stores_count()
+        self.add_ebay_stores_count()
         self.add_chq_stores_count()
         self.add_gear_stores_count()
         self.add_gkart_stores_count()

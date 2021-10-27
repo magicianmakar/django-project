@@ -106,10 +106,12 @@
 {% block extrajs %}
     {% if article.candu_slug %}
         <script>
-            Candu.renderPortal({
-                slug: '{{ article.candu_slug }}',
-                selector: '#candu-content',
-            });
+            if(window.Candu) {
+                Candu.renderPortal({
+                    slug: '{{ article.candu_slug }}',
+                    selector: '#candu-content',
+                });
+            }
         </script>
     {% endif %}
 {% endblock %}

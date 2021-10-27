@@ -21,6 +21,14 @@ def template_config(request):
                 'prefix': '/woo'
             }
         }
+    elif namespace == 'ebay':
+        template_config = {
+            'base': 'base_ebay_core.html',
+            'url': {
+                'namespace': 'ebay:',
+                'prefix': '/ebay'
+            }
+        }
     elif namespace == 'gear':
         template_config = {
             'base': 'base_gearbubble_core.html',

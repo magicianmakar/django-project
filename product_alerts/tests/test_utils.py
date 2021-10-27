@@ -29,6 +29,8 @@ class UtilTestCase(BaseTestCase):
             return
 
         variants = get_supplier_variants('aliexpress', self.product_id)
+        if not len(variants):
+            return
 
         self.assertEqual(len(variants), 8)
 
@@ -43,6 +45,8 @@ class UtilTestCase(BaseTestCase):
             return
 
         variants = get_supplier_variants('aliexpress', 32955059114)
+        if not len(variants):
+            return
 
         self.assertEqual(len(variants), 17)
 

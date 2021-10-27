@@ -1,0 +1,241 @@
+{% extends "base_ebay_core.html" %}
+
+{% load static %}
+{% load url_tools %}
+{% load perms_helper %}
+{% load template_helper %}
+{% load compress %}
+
+{% block main-container %}
+
+    <div class="tabs-container">
+        {% include 'home/partial/tabs/products.html' %}
+
+
+        <div class="tab-content">
+            <div id="tab-1" class="tab-pane active">
+                <div class="panel-body">
+                {% if products %}
+                    {% include 'home/partial/platform_selection_dropdown.html' with section='eBay' %}
+
+                    <div class="row m-b-lg">
+                        <div class="col-md-8 filter-col">
+                            <label for="selected-actions" class="filter-col-item">Selected Items:</label>
+                            <select class="form-control filter-col-item" name="selected-actions" id="selected-actions">
+                                <option value="">Select Action...</option>
+                                {% if request.GET.store == 'n' and user|can:'myshopify_integration.use' %}
+                                {% comment %}<option value="edit">Edit...</option>{% endcomment %}
+                                {% endif %}
+                                {% comment %}<option value="board">Add to Board...</option>{% endcomment %}
+                                {% if not request.GET.store or request.GET.store == 'n' %}
+                                    <option value="ebay-send">Send To My Store...</option>
+                                {% endif %}
+                                <option value="delete">Delete</option>
+                            </select>
+                            <button id="apply-btn" class="btn btn-primary filter-col-item">Apply</button>
+                            <button class="btn btn-default btn-outline select-all-btn filter-col-item">Select All</button>
+                            {% comment %}{% if request.user|can:'product_filters.view' %}
+                                <button class="btn btn-success btn-outline filter-btn filter-col-item">Filter</button>
+                                {% if filter_products %}
+                                <a href="{% url 'ebay:products' tpl='grid' %}?store={{ request.GET.store }}" class="btn btn-outline btn-default filter-col-item">Clear Filter</a>
+                                {% endif %}
+                            {% endif %}{% endcomment %}
+
+                            {% comment %}{% if store.id %}
+                            {% if user|can:'product_supplier.use' %}
+                            <a href="#" class="ebay-product-import-btn filter-col-item" store="{{store.id}}">
+                                <i class="fa fa-plus"></i> Import From eBay
+                            </a>
+                            {% endif %}
+
+                            {% if user|can:'manual_suppliers_sync.use' %}
+                            <a href="#" class="product-supplier-sync-btn filter-col-item m-l" store="{{store.id}}">
+                                <i class="fa fa-refresh"></i> Sync Products with Supplier
+                            </a>
+                            {% endif %}
+
+                            {% endif %}{% endcomment %}
+                        </div>
+
+                        <!-- <div class="col-md-1 pull-right text-right" style="padding:6px  5px">
+                            <a href="{% url_path '/product/table' %}" title="Table Layout"><i class="fa fa-lg fa-list"></i></a>
+                            <a href="#" style="cursor:default;color: rgba(0, 0, 0, 0.76)" title="Grid Layout"><i class="fa fa-lg fa-th"></i></a>
+                        </div> -->
+                    </div>
+                {% else %}
+                    {% include 'home/partial/platform_selection_dropdown.html' with section='eBay' %}
+                {% endif %}
+
+                    <div class="row">
+                        {% for item in products %}
+                        <div class="col-xs-12 col-md-3">
+                            <div class="ibox">
+                                <div class="ibox-content product-box" product-id="{{item.guid}}">
+                                    <div class="product-imitation" style="padding: 0;">
+                                        <input class="item-select icheck" id="product_{{item.guid}}" name="product" value="{{item.guid}}" type="checkbox" style="position:absolute; left:20px;top:5px"/>
+                                        <a href="{% url 'ebay:product_detail' store_index=item.store.id pk=item.guid %}">
+                                            <img class="no-img unveil" src="{% static 'img/blank.gif' %}" data-src="{{item.thumbnail_image}}" style="width: 100%">
+                                        </a>
+                                        <button class="btn btn-xs btn-danger delete-product-btn" product-id="{{item.guid}}" style="position: absolute; top: 5px; right: 20px; background-color:#cc6666;border: none;"><i class="fa fa-times"></i></button>
+                                    </div>
+                                    <div class="product-desc">
+                                        <span class="product-price">
+                                            {% money_format item.price item.store %}
+                                        </span>
+                                        <small class="text-muted">{{item.parsed.type}}</small>
+                                        {% if item.default_supplier %}
+                                        <small class="text-muted" style="float:right;font-weight: bold;border: 1px solid #ccc;padding: 1px 5px;border-radius: 3px">
+                                            <a href="{{item.default_supplier.product_url}}" target="_blank">{{item.default_supplier.supplier_name}}</a>
+                                        </small>
+                                        {% endif %}
+                                        <a href="{% url 'ebay:product_detail' store_index=item.store.id pk=item.guid %}" class="hidden-xs product-name"> {{item.title|truncatewords:13}}</a>
+                                        <a href="{% url 'ebay:product_detail' store_index=item.store.id pk=item.guid %}" class="visible-xs product-name" style="font-size: 12px"> {{item.title|truncatewords:5}}</a>
+
+                                        <div class="small m-t-xs">
+                                            Submitted at {{item.created_at|date}}
+                                        </div>
+                                        <div class="m-t row">
+                                            <div class="col-md-4" style="padding-right:0">
+                                            {% if item.source_id %}
+                                            <a href="{{ item.ebay_url }}" class="btn btn-xs btn-outline btn-primary"> View <i class="fa fa-long-arrow-right"></i> </a>
+                                            {% endif %}
+                                            </div>
+                                            <div class="col-md-8 text-right" style="overflow:hidden;padding-left:5px">
+                                            <button product-id="{{item.guid}}" class="btn btn-xs btn-outline btn-success board-btn _pull-right" target="_blank">
+                                                {% with board=item.ebayboard_set.first %}
+                                                    {% if board %}
+                                                    Board: {{board.title}}
+                                                    {% else %}
+                                                    Board
+                                                    {% endif %}
+                                                {% endwith %}
+
+                                            </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if forloop.counter|divisibleby:"4" %}
+                            </div><div class="row">
+                        {% endif %}
+
+                        {% empty %}
+                            <h3 class="text-center">No product found.</h3>
+                            {% if store.id and user|can:'product_supplier.use' %}
+                                <p class="text-center">
+                                    <a href="#" class="ebay-product-import-btn filter-col-item" store="{{store.id}}">
+                                        <i class="fa fa-plus"></i> Import from eBay
+                                    </a>
+                                </p>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+
+                    {% include "partial/paginator.html" %}
+            </div>
+        </div>
+    </div> <!-- /div.tab-content -->
+</div> <!-- /div.tabs-container -->
+
+{% include "ebay/partial/product_edit_modal.html" %}
+<div id="modal-board-product" class="modal fade" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-12">
+                        <h3 class="m-t-none m-b">Add to board</h3>
+                        <form role="form">
+                            <div class="form-group text-center">
+                            <label for="selected-board">Select board</label>
+                            <select class="form-control" name="selected-board" id="selected-board" style="display: inline-block; width: 191px; ">
+                                {% for item in request.user.get_ebay_boards %}
+                                <option value="{{item.guid}}">{{item.title}}</option>
+                                {% endfor %}
+                            </select>
+                            </div>
+
+                            <div>
+                                <button id="board-product-send" class="btn btn-sm btn-primary pull-right m-t-n-xs" type="button">
+                                    <strong>Apply</strong>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+{% include 'partial/filter_modal.html' %}
+
+{% include 'ebay/ebay_send_modal.html' %}
+
+{% include "ebay/partial/ebay_product_selector.html" %}
+
+{#{% include 'ebay/partial/product_supplier_sync_modal.html' with store=store only %}#}
+
+{% endblock %}
+
+{% block extracss %}
+<style type="text/css">
+
+.filter-col {
+    display: flex;
+    align-items: center;
+}
+
+.filter-col .filter-col-item {
+    margin-right: 5px;
+}
+
+.filter-col .shopify-product-import-btn {
+    margin-left: 15px;
+}
+
+#selected-actions {
+    padding-top: 2px;
+    display: inline-block;
+    width: 191px;
+}
+
+#modal-product-supplier-sync .icheckbox_square-blue {
+    position: static;
+}
+
+</style>
+{% endblock %}
+
+{% block extrajs %}
+<script type="text/javascript">
+    var boardsMenu = {
+    {% for item in request.user.get_ebay_boards %}
+        "{{item.guid|safe}}": {name: "{{item.title|safe}}"},
+    {% endfor %}
+        "sep1": "---------",
+        "add": {name: "Add new board", icon: 'add'},
+        "clear": {name: "Clear", icon: 'quit'}
+    };
+</script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/pusher/3.2.4/pusher.min.js"></script>
+<script>
+    var sub_conf = {
+        key: "{% app_setting 'PUSHER_KEY' %}",
+        {% if store %}
+        channel: "{{store.pusher_channel}}",
+        store: {{store.id}},
+        {% endif %}
+    };
+</script>
+{% compress js %}
+<script type="text/javascript" src="{% static 'libs/bower_components/handlebars/handlebars.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'ebay/js/ebay_product_selector.js' %}"></script>
+<script type="text/javascript" src="{% static 'ebay/js/products_grid.js' %}"></script>
+{#<script type="text/javascript" src="{% static 'ebay/js/product_supplier_sync.js' %}"></script>#}
+{% endcompress %}
+
+{% endblock %}
