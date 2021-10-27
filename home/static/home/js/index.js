@@ -258,6 +258,7 @@
 
         if ($('#phone-invalid').is(':visible')) {
             toastr.error('Phone Number is not valid');
+            return;
         }
 
         if($('.js_validate_input-message').is(':visible')){
@@ -718,18 +719,7 @@
 
     $('input[name="order_phone_number"]').on('keyup', function() {
         var value = $(this).val();
-        var $this = $(this);
-
-        if(/[^\d\+-]/.test(value)) {
-            $('#phone-invalid').show();
-            // a delay to show user the invalid input before clearing it
-            setTimeout(function(){
-                $this.val('');
-            }, 1000);
-        }
-        else {
-            $('#phone-invalid').hide();
-        }
+        $('#phone-invalid').toggle(/[^\d\+-]/.test(value));
     });
 
     $('input[name="order_phone_number"]').trigger('keyup');
