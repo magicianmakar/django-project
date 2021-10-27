@@ -541,6 +541,7 @@ class SureDoneUtils:
     def parse_product_details_in_ext_format(self, product_data: dict):
         computed_product_data = deepcopy(product_data)
         data_per_variant = []
+
         # Generate parent GUID and SKU
         parent_guid_prefix = uuid.uuid4().hex[:10].upper()
         main_sku = f'{parent_guid_prefix}-1'
@@ -575,6 +576,8 @@ class SureDoneUtils:
 
         # Step 4: Split variants into separate products
         req_variants = computed_product_data.pop('variants', [])
+        # Save variant titles to keep formatting
+        variant_titles = [v.get('title') for v in req_variants]
         req_variants_info = computed_product_data.pop('variants_info', {})
         req_variants_sku = computed_product_data.pop('variants_sku', {})
         req_variants_images = computed_product_data.pop('variants_images', {})
@@ -597,13 +600,13 @@ class SureDoneUtils:
             # Generate parent GUID and SKU
             computed_product_data['sku'] = main_sku
 
-            for i, variant_title in enumerate(req_variants_info.keys()):
+            for var_info_i, variant_title in enumerate(req_variants_info.keys()):
                 current_variant_data = deepcopy(computed_product_data)
                 current_variant_data['varianttitle'] = variant_title
-                current_variant_data['guid'] = f'{parent_guid_prefix}-{i+1}'
+                current_variant_data['guid'] = f'{parent_guid_prefix}-{var_info_i+1}'
 
                 # Add values for the variation fields
-                var_unique_values = [i.strip() for i in variant_title.split('/')]
+                var_unique_values = [x.strip() for x in variant_title.split('/')]
                 non_created_fields = []
                 non_variation_fields = []
                 for i, key in enumerate(variation_types):
@@ -612,9 +615,9 @@ class SureDoneUtils:
                         current_variant_data[f'ebay{store_instance_id}itemspecifics{key}'] = var_unique_values[i]
                         current_variant_data[self.sd_account.format_custom_field(key)] = var_unique_values[i]
                         if not self.sd_account.has_field_defined(key):
-                            non_created_fields.append(key)
+                            non_created_fields.append(variant_titles[i])
                         if not self.sd_account.has_variation_field(key):
-                            non_variation_fields.append(key)
+                            non_variation_fields.append(variant_titles[i])
                     except IndexError:
                         continue
 
