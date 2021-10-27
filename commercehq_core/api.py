@@ -511,15 +511,24 @@ class CHQStoreApi(ApiBase):
                     return self.api_error('Please Activate your account first by visiting:\n{}'.format(
                         request.build_absolute_uri('/user/profile#plan')), status=401)
                 else:
-                    return self.api_error('Your plan does not support connecting another Shopify store. '
+                    return self.api_error('Your plan does not support connecting another CommerceHQ store. '
                                           'Please contact support@dropified.com to learn how to connect more stores.')
 
-        store = CommerceHQStore(
-            title=data.get('title').strip(),
-            api_url=url,
-            api_key=data.get('api_key').strip(),
-            api_password=data.get('api_password').strip(),
-            user=user.models_user)
+        try:
+            store = CommerceHQStore.objects.filter(
+                user=user.models_user,
+                api_url=url,
+            ).latest('-pk')
+        except CommerceHQStore.DoesNotExist:
+            store = CommerceHQStore(
+                user=user.models_user,
+                api_url=url,
+            )
+
+        store.title = data.get('title').strip()
+        store.api_key = data.get('api_key').strip()
+        store.api_password = data.get('api_password').strip()
+        store.is_active = True
 
         permissions.user_can_add(user, store)
 

@@ -131,13 +131,25 @@ class GrooveKartApi(ApiBase):
             if stores_count > 0:
                 return self.api_error('Only one store allowed per customer', status=400)
 
-        store = GrooveKartStore()
-        store.user = user.models_user
+        api_url = data.get('api_url', '').strip()
+
+        try:
+            store = GrooveKartStore.objects.filter(
+                user=user.models_user,
+                api_url=api_url,
+                is_lite=is_lite,
+            ).latest('-pk')
+        except GrooveKartStore.DoesNotExist:
+            store = GrooveKartStore(
+                user=user.models_user,
+                api_url=api_url,
+                is_lite=is_lite,
+            )
+
         store.title = data.get('title', '').strip()
-        store.api_url = data.get('api_url', '').strip()
         store.api_token = data.get('api_token', '').strip()
         store.api_key = data.get('api_key', '').strip()
-        store.is_lite = is_lite
+        store.is_active = True
 
         permissions.user_can_add(user, store)
         store.save()

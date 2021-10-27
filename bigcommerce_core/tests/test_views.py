@@ -44,6 +44,17 @@ class StoreInstallTestCase(BaseTestCase):
 
         self.store = BigCommerceStoreFactory(user=self.user, is_active=True)
 
+    def test_auth(self):
+        self.client.force_login(self.user)
+
+        self.assertEqual(BigCommerceStore.objects.count(), 1)
+        self.client.get(reverse('bigcommerce:bigcommerce_auth'), {
+            'code': 'testcode123',
+            'context': 'store/98765test',
+            'scope': 'read/write',
+        })
+        self.assertEqual(BigCommerceStore.objects.count(), 1)
+
     def test_multiple_accounts_loaded_in_single_store(self):
         bigcommerce_data = {
             'user': {'id': 1, 'email': 'test@dropified.com'},
