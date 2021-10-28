@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 from hubspot_core.utils import create_contact, api_requests
 from hubspot_core.models import HubspotAccount
 from last_seen.models import LastSeen
+from leadgalaxy.models import GroupPlan
 from shopified_core.commands import DropifiedBaseCommand
 
 
@@ -28,6 +29,7 @@ class Command(DropifiedBaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--create', action='store_true', help='Create Properties only')
         parser.add_argument('--missing', action='store_true', help='Add Missing users only')
+        parser.add_argument('--skip', action='store', type=int, default=0, help='Skip this number of users')
 
     def start_command(self, *args, **options):
         if options['create']:
@@ -43,12 +45,12 @@ class Command(DropifiedBaseCommand):
 
         users = User.objects.all()
 
-        SKIP = 0
-        self.progress_total(users.count() - SKIP)
+        skip = options['skip']
+        self.progress_total(users.count() - skip)
         total_count = 0
         for user in users.all():
             total_count += 1
-            if total_count < SKIP:
+            if total_count < skip:
                 continue
 
             try:
@@ -98,6 +100,8 @@ class Command(DropifiedBaseCommand):
         self.create_property('dr_gkart_count', 'Groovekart Store Count', 'number', 'number')
         self.create_property('dr_bigcommerce_count', 'Bigcommerce Store Count', 'number', 'number')
 
+        self.update_plan_property_options()
+
     def create_property(self, name, label, ptype, field, is_bool=False):
         self.write(f'> {name}')
         url = 'https://api.hubapi.com/crm/v3/properties/contacts'
@@ -135,3 +139,29 @@ class Command(DropifiedBaseCommand):
             return api_requests(url, data, 'POST')
         except:
             self.write(f'Add Property error: {name}')
+
+    def update_plan_property_options(self):
+        plans = GroupPlan.objects.all()
+        options = []
+        for plan in plans:
+            options.append({
+                "label": plan.title,
+                "value": plan.title,
+                "displayOrder": plan.id,
+                "hidden": False
+            })
+
+        data = {
+            "name": "plan",
+            "label": "Plan",
+            "type": "enumeration",
+            "fieldType": "select",
+            "description": "Dropified Plan",
+            "groupName": "subscription",
+            "formField": True,
+            "options": options
+        }
+
+        url = 'https://api.hubapi.com/crm/v3/properties/0-1/plan'
+
+        return api_requests(url, data, 'PATCH')

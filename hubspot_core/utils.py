@@ -63,6 +63,10 @@ def generate_create_contact(user: User):
             "dr_gear_count": profile.get_gear_stores().count(),
             "dr_gkart_count": profile.get_gkart_stores().count(),
             "dr_bigcommerce_count": profile.get_bigcommerce_stores().count(),
+
+            "plan": plan.title if plan else '',
+            "install_source": parent_plan.payment_gateway if parent_plan else '',
+            "user_level": 'Sub User' if user.is_subuser else 'User',
         }
     }
 
@@ -85,6 +89,11 @@ def generate_create_contact(user: User):
         data['properties']['dr_state'] = address.state
         data['properties']['dr_country'] = address.country
 
+        data['properties']['company'] = address.name
+        data['properties']['city'] = address.state
+        data['properties']['state'] = address.state
+        data['properties']['country'] = address.country
+
     data['properties']['dr_stores_count'] = sum([
         data['properties']['dr_shopify_count'],
         data['properties']['dr_chq_count'],
@@ -93,6 +102,8 @@ def generate_create_contact(user: User):
         data['properties']['dr_gkart_count'],
         data['properties']['dr_bigcommerce_count'],
     ])
+
+    data['properties']['number_of_stores'] = data['properties']['dr_stores_count']
 
     return data
 
